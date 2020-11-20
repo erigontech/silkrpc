@@ -1,0 +1,17 @@
+{
+  "configurations": [
+    {
+      "name": "x64-Debug",
+      "generator": "Visual Studio 16 2019 Win64",
+      "configurationType": "Debug",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${env.USERPROFILE}\\CMakeBuilds\\silkrpc\\build\\${name}",
+      "installRoot": "${env.USERPROFILE}\\CMakeBuilds\\silkrpc\\install\\${name}",
+      "cmakeCommandArgs": "-Wno-dev",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "addressSanitizerEnabled": true,
+      "variables": []
+    }
+  ]
+}

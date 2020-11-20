@@ -1,0 +1,3 @@
+[submodule "silkworm"]
+	path = silkworm
+	url = git@github.com:torquem-ch/silkworm.git
