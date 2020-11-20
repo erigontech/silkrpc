@@ -2,10 +2,10 @@
 
 C++ implementation of the daemon component exposing the [Ethereum JSON RPC protocol](https://eth.wiki/json-rpc/API) within the [Turbo-Geth](https://github.com/ledgerwatch/turbo-geth) architecture.
 
-[![CircleCI](https://circleci.com/gh/torquem-ch/silksnake.svg?style=shield)](https://circleci.com/gh/torquem-ch/silksnake)
-[![Codecov master](https://img.shields.io/codecov/c/github/torquem-ch/silksnake/master.svg?style=shield&logo=codecov&logoColor=white)](https://codecov.io/gh/torquem-ch/silksnake)
-![version](https://img.shields.io/github/v/release/torquem-ch/silksnake?sort=semver&color=normal)
-[![License](https://img.shields.io/github/license/torquem-ch/silksnake?color=lightgrey)](https://img.shields.io/github/license/torquem-ch/silksnake)
+[![CircleCI](https://circleci.com/gh/torquem-ch/silkrpc.svg?style=shield)](https://circleci.com/gh/torquem-ch/silkrpc)
+[![Codecov master](https://img.shields.io/codecov/c/github/torquem-ch/silkrpc/master.svg?style=shield&logo=codecov&logoColor=white)](https://codecov.io/gh/torquem-ch/silkrpc)
+![version](https://img.shields.io/github/v/release/torquem-ch/silkrpc?sort=semver&color=normal)
+[![License](https://img.shields.io/github/license/torquem-ch/silkrpc?color=lightgrey)](https://img.shields.io/github/license/torquem-ch/silkrpc)
 ![semver](https://img.shields.io/badge/semver-2.0.0-blue)
 
 <br>
@@ -15,7 +15,7 @@ C++ implementation of the daemon component exposing the [Ethereum JSON RPC proto
 # Clone the repository
 
 ```
-git clone --recurse-submodules https://github.com/torquem-ch/silkrpc.git
+git clone --recurse-submodules git@github.com:torquem-ch/silkrpc.git
 ```
 
 To update the submodules later on run 
