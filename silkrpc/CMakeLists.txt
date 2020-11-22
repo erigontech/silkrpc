@@ -19,6 +19,9 @@ find_package(gRPC CONFIG REQUIRED)
 find_package(intx CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
 
+# This doesn't work - need to install buf, need a target?
+# add_custom_command(OUTPUT "protos/*.proto" COMMAND buf ARGS check lint)
+
 file(GLOB_RECURSE SILKRPC_SRC CONFIGURE_DEPENDS "*.cpp" "*.cc" "*.hpp" "*.c" "*.h")
 list(FILTER SILKRPC_SRC EXCLUDE REGEX "_test\.cpp$")
 

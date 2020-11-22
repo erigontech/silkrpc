@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+// option java_multiple_files = true;
+// option java_package = "io.grpc.examples.rpcdaemon";
+// option java_outer_classname = "EthProto";
+// option objc_class_prefix = "ETH";
+
+// The primary namespace/package in the generated code
+package rpcdaemon;
+
+// Serves the eth_ RPC routines among other things
+service EthService {
+    // Returns block data as per request
+    rpc GetBlock(GetBlockRequest) returns(GetBlockResponse) {
+//        option (google.api.http) = {
+//            post: "/v1/example/echo"
+//            body: "*"
+//        };
+    }
+    // Returns transaction data as per request
+    rpc GetTransaction(GetTransRequest) returns(GetTransResponse) {
+    }
+}
+
+// Structure used to handle requests for eth_getBlock*, eth_getUncle, etc.
+message GetBlockRequest {
+  uint64 first = 1;
+  uint64 last = 3;
+  uint64 step = 5;
+  string hash = 7;
+  bool hashes_only = 9;
+  bool include_receipts = 11;
+}
+
+// The returned data from GetBlock related requests
+message GetBlockResponse { string message = 1; }
+
+// Structure used to handle requests for eth_getTrans* related calls
+message GetTransRequest {
+  uint64 block = 1;
+  uint64 tx_id = 3;
+  string hash = 5;
+}
+
+// The returned data from GetTrans related requests
+message GetTransResponse { string message = 1; }
