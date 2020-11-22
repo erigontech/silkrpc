@@ -14,6 +14,8 @@
    limitations under the License.
 */
 
+#include <iostream>
 int main(int argc, char* argv[]) {
+    std::cout << "In the daemon" << std::endl;
     return 0;
 }
