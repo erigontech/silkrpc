@@ -1,0 +1,22 @@
+version: v1beta1
+build:
+  roots:
+    - ./silkrpc/protos/
+lint:
+  use:
+    - DEFAULT
+    - FILE_LOWER_SNAKE_CASE
+    - COMMENT_RPC
+    - COMMENT_SERVICE
+    - COMMENT_MESSAGE
+    - COMMENT_ENUM
+    - STYLE_DEFAULT
+  except:
+    - IMPORT_NO_PUBLIC
+    - PACKAGE_VERSION_SUFFIX
+    - PACKAGE_DIRECTORY_MATCH
+  ignore:
+    - google
+breaking:
+  use:
+    - WIRE_JSON
