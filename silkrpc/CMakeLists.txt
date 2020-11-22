@@ -22,9 +22,11 @@ find_package(Protobuf CONFIG REQUIRED)
 # This doesn't work - need to install buf, need a target?
 # add_custom_command(OUTPUT "protos/*.proto" COMMAND buf ARGS check lint)
 
-file(GLOB_RECURSE SILKRPC_SRC CONFIGURE_DEPENDS "*.cpp" "*.cc" "*.hpp" "*.c" "*.h")
-list(FILTER SILKRPC_SRC EXCLUDE REGEX "_test\.cpp$")
+file(GLOB_RECURSE DAEMON_SOURCES CONFIGURE_DEPENDS "*.cpp" "*.hpp")
+list(FILTER DAEMON_SOURCES EXCLUDE REGEX "_test\.cpp$")
 
-add_executable(silkrpc ${SILKRPC_SRC})
+file(GLOB_RECURSE GENERATED_SOURCES CONFIGURE_DEPENDS "*.cc" "*.c" "*.h")
+
+add_executable(silkrpc ${DAEMON_SOURCES} ${GENERATED_SOURCES})
 target_include_directories(silkrpc PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(silkrpc absl::flat_hash_map absl::flat_hash_set absl::btree intx::intx gRPC::grpc++ protobuf::libprotobuf silkworm)
