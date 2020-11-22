@@ -28,9 +28,15 @@ file(GLOB_RECURSE SILKRPC_SRC CONFIGURE_DEPENDS
     "${CMAKE_SOURCE_DIR}/silkrpc/kv/remote/*.h"
 )
 
+# kv_seek
 add_executable(kv_seek kv_seek.cpp ${SILKRPC_SRC})
 target_include_directories(kv_seek PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(kv_seek absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm)
+
+# test only client
+add_executable(test_client test_client.cpp ${SILKRPC_SRC})
+target_include_directories(test_client PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(test_client absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm)
 
 # Unit tests
 enable_testing()
