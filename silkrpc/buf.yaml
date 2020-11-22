@@ -1,7 +1,7 @@
 version: v1beta1
 build:
   roots:
-    - ./silkrpc/protos/
+    - ./protos/
 lint:
   use:
     - DEFAULT
