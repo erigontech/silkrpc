@@ -1,0 +1,15 @@
+syntax = "proto3";
+package web3.v1;
+option go_package = "github.com/yourorg/yourprotos/gen/go/your/service/v1";
+
+import "google/api/annotations.proto";
+
+message VersionRequest {}
+
+message VersionResponse {}
+
+service YourService {
+  rpc Echo(VersionRequest) returns(VersionResponse) {
+    option(google.api.http) = {post : "/v1/example/echo" body : "*"};
+  }
+}

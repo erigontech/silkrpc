@@ -34,8 +34,13 @@ target_include_directories(kv_seek PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(kv_seek absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm)
 
 # test only client
-add_executable(test_client test_client.cpp ${SILKRPC_SRC})
-target_include_directories(test_client PRIVATE ${CMAKE_SOURCE_DIR})
+file(GLOB_RECURSE GENERATED_SOURCES CONFIGURE_DEPENDS "${CMAKE_BINARY_DIR}/*.cc")
+#message(STATUS "CMAKE_BINARY_DIR: " ${CMAKE_BINARY_DIR})
+#message(STATUS "GENERATED_SOURCES: " ${GENERATED_SOURCES})
+
+add_executable(test_client test_client.cpp ${SILKRPC_SRC} ${GENERATED_SOURCES})
+target_include_directories(test_client PUBLIC ${CMAKE_BINARY_DIR})
+target_include_directories(test_client PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(test_client absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm)
 
 # Unit tests
