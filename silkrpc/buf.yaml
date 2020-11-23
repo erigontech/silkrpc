@@ -6,10 +6,10 @@ lint:
   use:
     - DEFAULT
     - FILE_LOWER_SNAKE_CASE
-    - COMMENT_RPC
+#    - COMMENT_RPC
     - COMMENT_SERVICE
-    - COMMENT_MESSAGE
-    - COMMENT_ENUM
+#    - COMMENT_MESSAGE
+#    - COMMENT_ENUM
     - STYLE_DEFAULT
   except:
     - IMPORT_NO_PUBLIC

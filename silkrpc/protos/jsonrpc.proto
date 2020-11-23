@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+// option java_multiple_files = true;
+// option java_package = "io.grpc.examples.rpcdaemon";
+// option java_outer_classname = "EthProto";
+// option objc_class_prefix = "ETH";
+
+// The primary namespace/package in the generated code
+package rpcdaemon;
+
+// Serves JSON Rpc calls
+service JsonRpcService {
+    // Handles JSON Rpc calls
+    rpc JsonRpc(JsonRpcRequest) returns(JsonRpcResponse) {
+        option (google.api.http) = {
+            post: "/"
+            body: "*"
+        };
+    }
+}
+
+// JSON RPC structure
+message JsonRpcRequest {
+    string jsonrpc = 1;
+    string method = 3;
+    string params = 5;
+    uint64 id = 7;
+}
+
+// Return the requested data
+message JsonRpcResponse {
+    string result = 1;
+}

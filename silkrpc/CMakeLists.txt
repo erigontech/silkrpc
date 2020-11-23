@@ -14,6 +14,8 @@
    limitations under the License.
 ]]
 
+cmake_minimum_required(VERSION 3.13)
+
 find_package(absl CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
 find_package(intx CONFIG REQUIRED)
@@ -87,4 +89,6 @@ list(FILTER DAEMON_SOURCES EXCLUDE REGEX "_test\.cpp$")
 add_executable(silkrpc ${DAEMON_SOURCES} ${GENERATED_SOURCES})
 target_include_directories(silkrpc PUBLIC ${DEST_ROOT})
 target_include_directories(silkrpc PUBLIC "/Users/jrush/Development/silkrpc/build/")
-target_link_libraries(silkrpc absl::flat_hash_map absl::flat_hash_set absl::btree intx::intx gRPC::grpc++ protobuf::libprotobuf silkworm)
+target_link_libraries(silkrpc absl::flat_hash_map absl::flat_hash_set absl::btree intx::intx gRPC::grpc++ gRPC::grpc++_reflection protobuf::libprotobuf silkworm)
+
+file(COPY ${GENERATED_SOURCES} DESTINATION ${PROTO_ROOT}/generated/)
