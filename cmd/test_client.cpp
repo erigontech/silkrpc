@@ -14,13 +14,17 @@
    limitations under the License.
 */
 
-#if 1
+#if 0
+
 #include <iostream>
 int main(int argc, char* argv[]) {
     std::cout << "In the client" << std::endl;
     return 0;
 }
+
 #else
+
+#include <grpc/support/log.h>
 #include <grpcpp/grpcpp.h>
 
 #include <iostream>
@@ -34,7 +38,9 @@ int main(int argc, char* argv[]) {
 #endif
 
 using grpc::Channel;
+using grpc::ClientAsyncResponseReader;
 using grpc::ClientContext;
+using grpc::CompletionQueue;
 using grpc::Status;
 using rpcdaemon::EthService;
 using rpcdaemon::GetBlockRequest;
@@ -63,22 +69,23 @@ std::string EthServiceClient::GetBlock(uint64_t f, uint64_t l, uint64_t s) {
     request.set_last(l == UINT_MAX ? f : l);
     request.set_step(s);
 
+    ClientContext context;
+    CompletionQueue cq;
     GetBlockResponse reply;
-    ClientContext context;
-    Status status = stub_->GetBlock(&context, request, &reply);
-    return (status.ok() ? reply.message() : "RPC failed");
-}
+    Status status;
 
-//----------------------------------------------------------------------------------------------
-std::string EthServiceClient::GetTransaction(uint64_t b, uint64_t id) {
-    GetTransRequest request;
-    request.set_block(b);
-    request.set_tx_id(id);
+    std::unique_ptr<ClientAsyncResponseReader<GetBlockResponse> > rpc(stub_->PrepareAsyncGetBlock(&context, request, &cq));
 
-    GetTransResponse reply;
-    ClientContext context;
-    Status status = stub_->GetTransaction(&context, request, &reply);
-    return (status.ok() ? reply.message() : "RPC failed");
+    rpc->StartCall();
+    rpc->Finish(&reply, &status, (void*)1);
+
+    void* got_tag;
+    bool ok = false;
+    GPR_ASSERT(cq.Next(&got_tag, &ok));
+    GPR_ASSERT(got_tag == (void*)1);
+    GPR_ASSERT(ok);
+
+    return status.ok() ? reply.message() : "RPC failed";
 }
 
 //----------------------------------------------------------------------------------------------
@@ -86,27 +93,8 @@ int main(int argc, char** argv) {
     auto credentials = grpc::InsecureChannelCredentials();
     auto channel = grpc::CreateChannel("localhost:50051", credentials);
 
-    EthServiceClient client(channel);
-
-    std::cout << std::string(120, '~') << std::endl;
-    std::cout << "{\"blocks\":[";
-    for (int i = 0; i < 1; i++) {
-        if (i != 0) std::cout << ",";
-        std::cout << client.GetBlock(i) << std::endl;
-        std::cerr << "received block: " << i << std::endl;
-        std::cerr.flush();
-    }
-    std::cout << "],\"txs\":[";
-    for (int i = 0; i < 1; i++) {
-        if (i != 0) std::cout << ",";
-        std::cout << client.GetBlock(i) << std::endl;
-//        std::cout << client.GetTransaction(i, 0) << std::endl;
-        std::cerr << "received transaction: " << i << std::endl;
-        std::cerr.flush();
-    }
-    std::cout << "]}";
-    std::cout << std::string(120, '~') << std::endl;
-    std::cout << std::endl;
+    EthServiceClient EthService(channel);
+    std::cout << "\n\t" << EthService.GetBlock(12) << std::endl;
 
     return 0;
 }
