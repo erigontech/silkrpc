@@ -1,4 +1,4 @@
-# SikRPC Daemon
+# SilkRPC Daemon
 
 C++ implementation of the daemon component exposing the [Ethereum JSON RPC protocol](https://eth.wiki/json-rpc/API) within the [Turbo-Geth](https://github.com/ledgerwatch/turbo-geth) architecture.
 
@@ -12,7 +12,7 @@ C++ implementation of the daemon component exposing the [Ethereum JSON RPC proto
 
 # Building the source
 
-# Clone the repository
+## Clone the repository
 
 ```
 git clone --recurse-submodules git@github.com:torquem-ch/silkrpc.git
@@ -24,7 +24,7 @@ git submodule update --init --recursive
 ```
 
 ## Linux & MacOS
-Building SikRPC Daemon requires:
+Building SilkRPC Daemon requires:
 * C++17 compiler (GCC or Clang)
 * [CMake](http://cmake.org)
 * [GMP](http://gmplib.org) (`sudo apt-get install libgmp3-dev` or `brew install gmp`)
