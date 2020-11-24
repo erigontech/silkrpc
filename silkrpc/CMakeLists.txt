@@ -91,4 +91,4 @@ target_include_directories(silkrpc PUBLIC ${DEST_ROOT})
 target_include_directories(silkrpc PUBLIC "/Users/jrush/Development/silkrpc/build/")
 target_link_libraries(silkrpc absl::flat_hash_map absl::flat_hash_set absl::btree intx::intx gRPC::grpc++ gRPC::grpc++_reflection protobuf::libprotobuf silkworm)
 
-file(COPY ${GENERATED_SOURCES} DESTINATION ${PROTO_ROOT}/generated/)
+#file(COPY ${GENERATED_SOURCES} DESTINATION ${PROTO_ROOT}/generated/)
