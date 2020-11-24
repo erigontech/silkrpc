@@ -27,8 +27,6 @@
 #include <silkworm/db/tables.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/kv/remote_client.hpp>
-#include <silkrpc/kv/types.hpp>
 #include <silkrpc/kv/remote/kv.grpc.pb.h>
 
 ABSL_FLAG(std::string, table, "", "database table name");
