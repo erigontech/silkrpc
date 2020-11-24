@@ -21,6 +21,7 @@
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
+#include <asio/io_service.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkworm/common/util.hpp>
@@ -28,45 +29,9 @@
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/kv/remote/kv.grpc.pb.h>
 
-ABSL_FLAG(std::string, table, "", "database table name");
-ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
-ABSL_FLAG(std::string, target, silkrpc::kv::kDefaultTarget, "server location as string <address>:<port>");
-ABSL_FLAG(uint32_t, timeout, silkrpc::kv::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
-
-int main(int argc, char* argv[]) {
-    absl::SetProgramUsageMessage("Seek Turbo-Geth/Silkworm Key-Value (KV) remote interface to database");
-    absl::ParseCommandLine(argc, argv);
-
+int kv_seek_async(std::string table_name, std::string target, std::string seek_key, uint32_t timeout) {
     using namespace std::chrono;
     using namespace silkworm;
-
-    auto table_name{absl::GetFlag(FLAGS_table)};
-    if (table_name.empty()) {
-        std::cerr << "Parameter table is invalid: [" << table_name << "]\n";
-        std::cerr << "Use --table flag to specify the name of Turbo-Geth database table\n";
-        return -1;
-    }
-
-    auto seek_key{absl::GetFlag(FLAGS_seekkey)};
-    if (seek_key.empty() || false /*is not hex*/) {
-        std::cerr << "Parameter seek key is invalid: [" << seek_key << "]\n";
-        std::cerr << "Use --seekkey flag to specify the seek key in Turbo-Geth database table\n";
-        return -1;
-    }
-
-    auto target{absl::GetFlag(FLAGS_target)};
-    if (target.empty() || target.find(":") == std::string::npos) {
-        std::cerr << "Parameter target is invalid: [" << target << "]\n";
-        std::cerr << "Use --target flag to specify the location of Turbo-Geth running instance\n";
-        return -1;
-    }
-
-    auto timeout{absl::GetFlag(FLAGS_timeout)};
-    if (timeout < 0) {
-        std::cerr << "Parameter timeout is invalid: [" << timeout << "]\n";
-        std::cerr << "Use --timeout flag to specify the timeout in msecs for Turbo-Geth KV gRPC calls\n";
-        return -1;
-    }
 
     // Create KV stub using insecure channel to target
     grpc::ClientContext context;
@@ -168,6 +133,58 @@ int main(int argc, char* argv[]) {
         std::cout << "KV Tx Status <- error_details: " << status.error_details() << "\n";
         return -1;
     }
+
+    return 0;
+}
+
+ABSL_FLAG(std::string, table, "", "database table name");
+ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
+ABSL_FLAG(std::string, target, silkrpc::kv::kDefaultTarget, "server location as string <address>:<port>");
+ABSL_FLAG(uint32_t, timeout, silkrpc::kv::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
+
+int main(int argc, char* argv[]) {
+    absl::SetProgramUsageMessage("Seek Turbo-Geth/Silkworm Key-Value (KV) remote interface to database");
+    absl::ParseCommandLine(argc, argv);
+
+    using namespace std::chrono;
+    using namespace silkworm;
+
+    auto table_name{absl::GetFlag(FLAGS_table)};
+    if (table_name.empty()) {
+        std::cerr << "Parameter table is invalid: [" << table_name << "]\n";
+        std::cerr << "Use --table flag to specify the name of Turbo-Geth database table\n";
+        return -1;
+    }
+
+    auto seek_key{absl::GetFlag(FLAGS_seekkey)};
+    if (seek_key.empty() || false /*is not hex*/) {
+        std::cerr << "Parameter seek key is invalid: [" << seek_key << "]\n";
+        std::cerr << "Use --seekkey flag to specify the seek key in Turbo-Geth database table\n";
+        return -1;
+    }
+
+    auto target{absl::GetFlag(FLAGS_target)};
+    if (target.empty() || target.find(":") == std::string::npos) {
+        std::cerr << "Parameter target is invalid: [" << target << "]\n";
+        std::cerr << "Use --target flag to specify the location of Turbo-Geth running instance\n";
+        return -1;
+    }
+
+    auto timeout{absl::GetFlag(FLAGS_timeout)};
+    if (timeout < 0) {
+        std::cerr << "Parameter timeout is invalid: [" << timeout << "]\n";
+        std::cerr << "Use --timeout flag to specify the timeout in msecs for Turbo-Geth KV gRPC calls\n";
+        return -1;
+    }
+
+    asio::io_service service;
+
+    service.post(
+        [table_name, target, seek_key, timeout] () {
+            kv_seek_async(table_name, target, seek_key, timeout);
+    });
+
+    service.run();
 
     return 0;
 }

@@ -30,6 +30,10 @@ file(GLOB_RECURSE SILKRPC_SRC CONFIGURE_DEPENDS
     "${CMAKE_SOURCE_DIR}/silkrpc/kv/remote/*.h"
 )
 
+add_executable(kv_seek_async_asio kv_seek_async_asio.cpp ${SILKRPC_SRC})
+target_include_directories(kv_seek_async_asio PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(kv_seek_async_asio absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm)
+
 add_executable(kv_seek_async kv_seek_async.cpp ${SILKRPC_SRC})
 target_include_directories(kv_seek_async PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(kv_seek_async absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm)
