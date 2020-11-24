@@ -57,7 +57,7 @@ jobs:
       BUILD_TYPE: Debug
     docker:
       - image: ethereum/cpp-build-env:15-gcc-9
-    resource_class: large
+    resource_class: medium+
     steps:
       - build
       - test
