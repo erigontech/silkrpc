@@ -15,6 +15,7 @@
 ]]
 
 hunter_add_package(abseil)
+hunter_add_package(asio)
 hunter_add_package(Boost COMPONENTS filesystem)
 hunter_add_package(Catch)
 hunter_add_package(cryptopp)

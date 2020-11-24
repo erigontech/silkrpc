@@ -23,7 +23,6 @@
 #include <grpcpp/grpcpp.h>
 
 #include <silkworm/common/util.hpp>
-#include <silkworm/db/tables.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/kv/remote/kv.grpc.pb.h>
 
