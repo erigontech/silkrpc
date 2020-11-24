@@ -179,12 +179,12 @@ int main(int argc, char* argv[]) {
 
     asio::io_service service;
 
-    service.post(
-        [table_name, target, seek_key, timeout] () {
-            kv_seek_async(table_name, target, seek_key, timeout);
+    int rv;
+    service.post([&] () {
+        rv = kv_seek_async(table_name, target, seek_key, timeout);
     });
 
     service.run();
 
-    return 0;
+    return rv;
 }
