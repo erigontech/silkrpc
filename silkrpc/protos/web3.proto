@@ -4,12 +4,13 @@ package rpcdaemon;
 import "google/api/annotations.proto";
 //option go_package = "github.com/yourorg/yourprotos/gen/go/your/service/v1";
 
-message EchoRequest {}
+message VersionRequest {}
 
-message EchoResponse {}
+message VersionResponse {}
 
-service YourService {
-  rpc Echo(EchoRequest) returns(EchoResponse) {
+// Handles web3_* requests
+service Web3Service {
+  rpc Version(VersionRequest) returns(VersionResponse) {
     option(google.api.http) = {post : "/v1/example/echo" body : "*"};
   }
 }

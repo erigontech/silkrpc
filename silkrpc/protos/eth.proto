@@ -19,7 +19,7 @@ service EthService {
 //        };
     }
     // Returns transaction data as per request
-    rpc GetTransaction(GetTransRequest) returns(GetTransResponse) {
+    rpc GetTransaction(GetTransactionRequest) returns(GetTransactionResponse) {
     }
 }
 
@@ -37,11 +37,11 @@ message GetBlockRequest {
 message GetBlockResponse { string message = 1; }
 
 // Structure used to handle requests for eth_getTrans* related calls
-message GetTransRequest {
+message GetTransactionRequest {
   uint64 block = 1;
   uint64 tx_id = 3;
   string hash = 5;
 }
 
-// The returned data from GetTrans related requests
-message GetTransResponse { string message = 1; }
+// The returned data from eth_getTrans* related requests
+message GetTransactionResponse { string message = 1; }
