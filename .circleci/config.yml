@@ -40,6 +40,7 @@ commands:
           key: *hunter-cache-key
           paths:
             - ~/.hunter
+      # Build the silkrpc folder first so the generated files are available for the other folders
       - run:
           name: "Build"
           working_directory: ~/build
