@@ -42,7 +42,8 @@ commands:
             - ~/.hunter
       - run:
           name: "Build"
-          command: cmake --build ~/build -j
+          working_directory: ~/build
+          command: cmake --build ~/build --verbose -j
 
   test:
     steps:
