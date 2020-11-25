@@ -45,8 +45,10 @@ target_link_libraries(kv_seek absl::flags_parse gRPC::grpc++_unsecure protobuf::
 
 # test only client
 file(GLOB_RECURSE GENERATED_SOURCES CONFIGURE_DEPENDS "${CMAKE_BINARY_DIR}/*.cc")
-#message(STATUS "CMAKE_BINARY_DIR: " ${CMAKE_BINARY_DIR})
-#message(STATUS "GENERATED_SOURCES: " ${GENERATED_SOURCES})
+message(STATUS "CMAKE_BINARY_DIR: " ${CMAKE_SOURCE_DIR})
+message(STATUS "CMAKE_BINARY_DIR: " ${CMAKE_BINARY_DIR})
+message(STATUS "GENERATED_SOURCES: " ${SILKRPC_SOURCES})
+message(STATUS "GENERATED_SOURCES: " ${GENERATED_SOURCES})
 
 add_executable(test_client test_client.cpp ${SILKRPC_SRC} ${GENERATED_SOURCES})
 target_include_directories(test_client PUBLIC ${CMAKE_BINARY_DIR})
