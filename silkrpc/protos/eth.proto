@@ -19,7 +19,7 @@ service EthService {
 //        };
     }
     // Returns transaction data as per request
-    rpc GetTrans(GetTransRequest) returns(GetTransResponse) {
+    rpc GetTransaction(GetTransRequest) returns(GetTransResponse) {
     }
 }
 
