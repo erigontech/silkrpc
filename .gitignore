@@ -2,3 +2,5 @@ build
 .vscode
 .vs
 *.code-workspace
+
+tjr*
