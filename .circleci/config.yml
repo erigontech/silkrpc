@@ -43,7 +43,11 @@ commands:
       - run:
           name: "Build"
           working_directory: ~/build
-          command: cmake --build ~/build --verbose -j
+          command: cmake --build ~/build/silkrpc
+      - run:
+          name: "Build"
+          working_directory: ~/build
+          command: cmake --build ~/build -j
 
   test:
     steps:
