@@ -44,6 +44,7 @@ int kv_seek_async(std::string table_name, std::string target, std::string seek_k
     const auto stub = remote::KV::NewStub(channel);
 
     // Prepare RPC call context and stream
+    context.set_initial_metadata_corked(true); // Initial metadata coalasced with first write message
     context.set_deadline(std::chrono::system_clock::system_clock::now() + std::chrono::milliseconds{timeout});
     const auto reader_writer = stub->PrepareAsyncTx(&context, &queue);
 
@@ -53,12 +54,8 @@ int kv_seek_async(std::string table_name, std::string target, std::string seek_k
     const uint CLOSE_TAG = 3;
     const uint FINISH_TAG = 4;
 
-    // 1) StartCall + Next
+    // 1) StartCall (+ Next if initial metadata not coalesced)
     reader_writer->StartCall((void *)START_TAG);
-    bool has_event = queue.Next(&got_tag, &ok);
-    if (!has_event || got_tag != (void *)START_TAG) {
-        return -1;
-    }
 
     // 2) Open cursor
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n";
@@ -67,7 +64,7 @@ int kv_seek_async(std::string table_name, std::string target, std::string seek_k
     open_message.set_op(remote::Op::OPEN);
     open_message.set_bucketname(table_name);
     reader_writer->Write(open_message, (void *)OPEN_TAG);
-    has_event = queue.Next(&got_tag, &ok);
+    bool has_event = queue.Next(&got_tag, &ok);
     if (!has_event || got_tag != (void *)OPEN_TAG) {
         return -1;
     }
@@ -111,7 +108,7 @@ int kv_seek_async(std::string table_name, std::string target, std::string seek_k
     auto close_message = remote::Cursor{};
     close_message.set_op(remote::Op::CLOSE);
     close_message.set_cursor(cursor_id);
-    reader_writer->Write(close_message, (void *)CLOSE_TAG);
+    reader_writer->WriteLast(close_message, grpc::WriteOptions(), (void *)CLOSE_TAG);
     has_event = queue.Next(&got_tag, &ok);
     if (!has_event || got_tag != (void *)CLOSE_TAG) {
         return -1;
@@ -131,6 +128,10 @@ int kv_seek_async(std::string table_name, std::string target, std::string seek_k
         std::cout << "KV Tx Status <- error_code: " << status.error_code() << "\n";
         std::cout << "KV Tx Status <- error_message: " << status.error_message() << "\n";
         std::cout << "KV Tx Status <- error_details: " << status.error_details() << "\n";
+        return -1;
+    }
+    has_event = queue.Next(&got_tag, &ok);
+    if (!has_event || got_tag != (void *)FINISH_TAG) {
         return -1;
     }
 

@@ -20,8 +20,30 @@ find_package(intx CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
 
 file(GLOB_RECURSE SILKRPC_SRC CONFIGURE_DEPENDS "*.cpp" "*.cc" "*.hpp" "*.c" "*.h")
-list(FILTER SILKRPC_SRC EXCLUDE REGEX "_test\.cpp$")
+list(FILTER SILKRPC_SRC EXCLUDE REGEX "main\.cpp$|_test\.cpp$")
 
-add_executable(silkrpc ${SILKRPC_SRC})
+add_compile_options(-fcoroutines)
+
+add_library(silkrpc ${SILKRPC_SRC})
 target_include_directories(silkrpc PUBLIC ${CMAKE_SOURCE_DIR})
-target_link_libraries(silkrpc absl::flat_hash_map absl::flat_hash_set absl::btree intx::intx gRPC::grpc++ protobuf::libprotobuf silkworm)
+target_link_libraries(silkrpc
+    absl::flat_hash_map
+    absl::flat_hash_set
+    absl::btree
+    intx::intx
+    gRPC::grpc++
+    protobuf::libprotobuf
+    silkworm)
+
+add_executable(silkrpcdaemon main.cpp)
+target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
+target_link_libraries(silkrpcdaemon
+    absl::btree
+    absl::flags_parse
+    absl::flat_hash_map
+    absl::flat_hash_set
+    gRPC::grpc++
+    intx::intx
+    protobuf::libprotobuf
+    silkrpc
+    silkworm)

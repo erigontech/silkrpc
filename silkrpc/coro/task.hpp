@@ -1,0 +1,150 @@
+/*
+    Copyright 2020 The Silkrpc Authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+
+#ifndef SILKRPC_CORO_TASK_HPP
+#define SILKRPC_CORO_TASK_HPP
+
+#include <coroutine>
+#include <iostream>
+#include <thread>
+
+template<typename T>
+struct task {
+    struct promise_type {
+        std::variant<std::monostate, T, std::exception_ptr> result;
+        std::coroutine_handle<> caller_coro;
+
+        task get_return_object() { return {this}; }
+        auto initial_suspend() { return std::suspend_always{}; }
+        auto final_suspend() {
+            struct Awaiter {
+                promise_type* self;
+                bool await_ready() { return false; }
+                void await_suspend(std::coroutine_handle<>) {
+                    std::cout << "task::promise_type::final_suspend::Awaiter::await_suspend thread=" << std::this_thread::get_id() << "\n" << std::flush;
+                    if (self->caller_coro) {
+                        self->caller_coro.resume();
+                    }
+                }
+                void await_resume() {}
+            };
+            return Awaiter{this};
+        }
+        template <typename U>
+        void return_value(U&& value) {
+            result.template emplace<1>(std::forward<U>(value));
+            std::cout << "task::return_value thread=" << std::this_thread::get_id() << " value=" << value << "\n" << std::flush;
+        }
+        void set_exception(std::exception_ptr eptr) {
+            result.template emplace<2>(std::move(eptr));
+        }
+        void unhandled_exception() noexcept { std::terminate(); }
+    };
+
+    task(task&& rhs) noexcept : coro(rhs.coro) { rhs.coro = nullptr; }
+    task(const task&) = delete;
+    task& operator=(const task&) = delete;
+    task& operator=(task&&) = delete;
+
+    ~task() {
+        if (coro) coro.destroy();
+    }
+
+    bool await_ready() { return false; }
+
+    auto await_suspend(std::coroutine_handle<> caller_coro) {
+        std::cout << "task::await_suspend thread=" << std::this_thread::get_id() << " caller_coro=" << caller_coro.address() << "\n" << std::flush;
+        coro.promise().caller_coro = caller_coro;
+        coro.resume();
+    }
+
+    T await_resume() {
+        if (coro.promise().result.index() == 2) {
+            std::rethrow_exception(std::get<2>(coro.promise().result));
+        }
+        return std::get<1>(coro.promise().result);
+    }
+
+    auto coroutine_handle() const { return coro; }
+
+private:
+    task(promise_type* p) noexcept : coro(std::coroutine_handle<promise_type>::from_promise(*p)) {
+        std::cout << "task thread=" << std::this_thread::get_id() << " coro=" << coro.address() << "\n" << std::flush;
+    }
+
+    std::coroutine_handle<promise_type> coro;
+};
+
+template<>
+struct task<void> {
+    struct promise_type {
+        std::coroutine_handle<> caller_coro;
+
+        task get_return_object() { return task{this}; }
+        auto initial_suspend() { return std::suspend_always{}; }
+        auto final_suspend() {
+            struct Awaiter {
+                promise_type* self;
+                bool await_ready() { return false; }
+                void await_suspend(std::coroutine_handle<>) {
+                    std::cout << "task::promise_type::final_suspend::Awaiter::await_suspend caller_coro=" << self->caller_coro.address() << "\n" << std::flush;
+                    if (self->caller_coro) {
+                        std::cout << "task::promise_type::final_suspend::Awaiter::await_suspend thread=" << std::this_thread::get_id() << "\n" << std::flush;
+                        self->caller_coro.resume();
+                    }
+                }
+                void await_resume() {}
+            };
+            return Awaiter{this};
+        }
+        void return_void() {
+            std::cout << "task::return_void thread=" << std::this_thread::get_id() << "\n" << std::flush;
+        }
+        void unhandled_exception() noexcept { std::terminate(); }
+    };
+
+    task(task&& rhs) : coro(rhs.coro) { rhs.coro = nullptr; }
+    task(const task&) = delete;
+    task& operator=(const task&) = delete;
+    task& operator=(task&&) = delete;
+
+    ~task() {
+        std::cout << "~task START thread=" << std::this_thread::get_id() << " coro=" << coro.address() << "\n" << std::flush;
+        if (coro) coro.destroy();
+        std::cout << "~task END thread=" << std::this_thread::get_id() << " coro=" << coro.address() << "\n" << std::flush;
+    }
+
+    bool await_ready() { return false; }
+
+    auto await_suspend(std::coroutine_handle<> caller_coro) {
+        std::cout << "task::await_suspend thread=" << std::this_thread::get_id() << " caller_coro=" << caller_coro.address() << "\n" << std::flush;
+        coro.promise().caller_coro = caller_coro;
+        coro.resume();
+    }
+
+    void await_resume() {}
+
+    auto coroutine_handle() const { return coro; }
+
+private:
+    task(promise_type* p) : coro(std::coroutine_handle<promise_type>::from_promise(*p)) {
+        std::cout << "task thread=" << std::this_thread::get_id() << " coro=" << coro.address() << "\n" << std::flush;
+    }
+
+    std::coroutine_handle<promise_type> coro;
+};
+
+#endif // SILKRPC_CORO_TASK_HPP

@@ -1,5 +1,5 @@
 /*
-   Copyright 2020 The SilkRpc Authors
+   Copyright 2020 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,7 +21,10 @@
 
 namespace silkrpc::kv {
 
+constexpr const char* kEmptyChainData{""};
+
 constexpr const char* kDefaultTarget{"localhost:9090"};
+constexpr const char* kEmptyTarget{""};
 
 constexpr const std::chrono::milliseconds kDefaultTimeout{10000};
 

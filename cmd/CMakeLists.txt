@@ -23,24 +23,26 @@ endif()
 find_package(gRPC CONFIG REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
 
-file(GLOB_RECURSE SILKRPC_SRC CONFIGURE_DEPENDS
-    "${CMAKE_SOURCE_DIR}/silkrpc/common/*.cpp"
-    "${CMAKE_SOURCE_DIR}/silkrpc/common/*.hpp"
-    "${CMAKE_SOURCE_DIR}/silkrpc/kv/remote/*.cc"
-    "${CMAKE_SOURCE_DIR}/silkrpc/kv/remote/*.h"
-)
-
-add_executable(kv_seek_async_asio kv_seek_async_asio.cpp ${SILKRPC_SRC})
+add_executable(kv_seek_async_asio kv_seek_async_asio.cpp)
 target_include_directories(kv_seek_async_asio PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(kv_seek_async_asio absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm)
+target_link_libraries(kv_seek_async_asio absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm silkrpc)
 
-add_executable(kv_seek_async kv_seek_async.cpp ${SILKRPC_SRC})
+add_executable(kv_seek_async_callback kv_seek_async_callback.cpp)
+target_include_directories(kv_seek_async_callback PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(kv_seek_async_callback absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm silkrpc)
+
+add_compile_options(-fcoroutines)
+add_executable(kv_seek_async_coroutines kv_seek_async_coroutines.cpp)
+target_include_directories(kv_seek_async_coroutines PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(kv_seek_async_coroutines absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm silkrpc)
+
+add_executable(kv_seek_async kv_seek_async.cpp)
 target_include_directories(kv_seek_async PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(kv_seek_async absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm)
+target_link_libraries(kv_seek_async absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm silkrpc)
 
-add_executable(kv_seek kv_seek.cpp ${SILKRPC_SRC})
+add_executable(kv_seek kv_seek.cpp)
 target_include_directories(kv_seek PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(kv_seek absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm)
+target_link_libraries(kv_seek absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm silkrpc)
 
 # Unit tests
 enable_testing()
