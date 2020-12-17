@@ -25,26 +25,27 @@ find_package(protobuf CONFIG REQUIRED)
 
 add_executable(kv_seek_async_asio kv_seek_async_asio.cpp)
 target_include_directories(kv_seek_async_asio PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(kv_seek_async_asio absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm silkrpc)
+target_link_libraries(kv_seek_async_asio absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
 
 add_executable(kv_seek_async_callback kv_seek_async_callback.cpp)
 target_include_directories(kv_seek_async_callback PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(kv_seek_async_callback absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm silkrpc)
+target_link_libraries(kv_seek_async_callback absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_options(-std=c++2a)
   add_compile_options(-fcoroutines)
 endif()
 add_executable(kv_seek_async_coroutines kv_seek_async_coroutines.cpp)
 target_include_directories(kv_seek_async_coroutines PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(kv_seek_async_coroutines absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm silkrpc)
+target_link_libraries(kv_seek_async_coroutines absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
 
 add_executable(kv_seek_async kv_seek_async.cpp)
 target_include_directories(kv_seek_async PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(kv_seek_async absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm silkrpc)
+target_link_libraries(kv_seek_async absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
 
 add_executable(kv_seek kv_seek.cpp)
 target_include_directories(kv_seek PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(kv_seek absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm silkrpc)
+target_link_libraries(kv_seek absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
 
 # Unit tests
 enable_testing()

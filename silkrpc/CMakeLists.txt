@@ -23,6 +23,7 @@ file(GLOB_RECURSE SILKRPC_SRC CONFIGURE_DEPENDS "*.cpp" "*.cc" "*.hpp" "*.c" "*.
 list(FILTER SILKRPC_SRC EXCLUDE REGEX "main\.cpp$|_test\.cpp$")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_options(-std=c++2a)
   add_compile_options(-fcoroutines)
 endif()
 
@@ -35,7 +36,8 @@ target_link_libraries(silkrpc
     intx::intx
     gRPC::grpc++
     protobuf::libprotobuf
-    silkworm)
+    silkworm_core
+    silkworm_db)
 
 add_executable(silkrpcdaemon main.cpp)
 target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
@@ -48,4 +50,5 @@ target_link_libraries(silkrpcdaemon
     intx::intx
     protobuf::libprotobuf
     silkrpc
-    silkworm)
+    silkworm_core
+    silkworm_db)
