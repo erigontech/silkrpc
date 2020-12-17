@@ -25,6 +25,8 @@ list(FILTER SILKRPC_SRC EXCLUDE REGEX "main\.cpp$|_test\.cpp$")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   add_compile_options(-std=c++2a)
   add_compile_options(-fcoroutines)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  add_compile_options(-std=c++20)
 endif()
 
 add_library(silkrpc ${SILKRPC_SRC})

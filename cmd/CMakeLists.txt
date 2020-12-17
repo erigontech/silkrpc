@@ -34,6 +34,8 @@ target_link_libraries(kv_seek_async_callback absl::flags_parse gRPC::grpc++_unse
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   add_compile_options(-std=c++2a)
   add_compile_options(-fcoroutines)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  add_compile_options(-std=c++20)
 endif()
 add_executable(kv_seek_async_coroutines kv_seek_async_coroutines.cpp)
 target_include_directories(kv_seek_async_coroutines PRIVATE ${CMAKE_SOURCE_DIR})
