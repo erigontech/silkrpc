@@ -42,7 +42,7 @@ commands:
             - ~/.hunter
       - run:
           name: "Build"
-          command: cmake --build ~/build -j
+          command: cmake --build ~/build -j 4
 
   test:
     steps:
