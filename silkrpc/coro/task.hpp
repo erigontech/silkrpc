@@ -17,10 +17,12 @@
 #ifndef SILKRPC_CORO_TASK_HPP
 #define SILKRPC_CORO_TASK_HPP
 
-#include <coroutine>
+//#include <coroutine>
 #include <functional>
 #include <thread>
 #include <variant>
+
+#include <silkrpc/coro/coroutine.hpp>
 
 namespace silkrpc::coro {
 
@@ -28,7 +30,7 @@ template<typename T>
 struct task {
     struct promise_type {
         std::variant<std::monostate, T, std::exception_ptr> result;
-        std::coroutine_handle<> caller_coro;
+        std::coroutine_handle<void> caller_coro;
         std::function<void()> completion_handler;
 
         task get_return_object() { return {this}; }
@@ -37,7 +39,7 @@ struct task {
             struct Awaiter {
                 promise_type* self;
                 bool await_ready() { return false; }
-                void await_suspend(std::coroutine_handle<>) {
+                void await_suspend(std::coroutine_handle<void>) {
                     if (self->caller_coro) {
                         self->caller_coro.resume();
                     } else if (self->completion_handler) {
@@ -69,7 +71,7 @@ struct task {
 
     bool await_ready() { return false; }
 
-    auto await_suspend(std::coroutine_handle<> caller_coro) {
+    auto await_suspend(std::coroutine_handle<void> caller_coro) {
         coro.promise().caller_coro = caller_coro;
         coro.resume();
     }
@@ -95,7 +97,7 @@ private:
 template<>
 struct task<void> {
     struct promise_type {
-        std::coroutine_handle<> caller_coro;
+        std::coroutine_handle<void> caller_coro;
         std::function<void()> completion_handler;
 
         task get_return_object() { return {this}; }
@@ -104,7 +106,7 @@ struct task<void> {
             struct Awaiter {
                 promise_type* self;
                 bool await_ready() { return false; }
-                void await_suspend(std::coroutine_handle<>) {
+                void await_suspend(std::coroutine_handle<void>) {
                     if (self->caller_coro) {
                         self->caller_coro.resume();
                     } else if (self->completion_handler) {
@@ -130,7 +132,7 @@ struct task<void> {
 
     bool await_ready() { return false; }
 
-    auto await_suspend(std::coroutine_handle<> caller_coro) {
+    auto await_suspend(std::coroutine_handle<void> caller_coro) {
         coro.promise().caller_coro = caller_coro;
         coro.resume();
     }

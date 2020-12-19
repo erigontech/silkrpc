@@ -20,14 +20,21 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef HTTP_SERVER_HPP
-#define HTTP_SERVER_HPP
+#ifndef HTTP_SERVER2_HPP
+#define HTTP_SERVER2_HPP
 
+//#include <coroutine>
 #include <string>
 
+#define ASIO_HAS_CO_AWAIT
+#define ASIO_HAS_STD_COROUTINE
+#include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
-#include <asio/ip/tcp.hpp>
 #include <asio/signal_set.hpp>
+#include <asio/use_awaitable.hpp>
+
+#include <silkrpc/coro/coroutine.hpp>
+//#include <silkrpc/coro/task.hpp>
 
 #include "connection.hpp"
 #include "connection_manager.hpp"
@@ -44,20 +51,13 @@ public:
 
     /// Construct the server to listen on the specified TCP address and port, and
     /// serve up files from the given directory.
-    explicit Server(asio::io_context& io_context, const std::string& address, const std::string& port);
+    explicit Server(asio::io_context& io_context, const std::string& address, const std::string& port, const std::string& target);
 
-    /// Run the server's io_context loop.
-    //void run();
+    asio::awaitable<void> start();
 
     void stop();
 
 private:
-  /// Perform an asynchronous accept operation.
-  void do_accept();
-
-  /// Wait for a request to stop the server.
-  //void do_await_stop();
-
   /// The io_context used to perform asynchronous operations.
   asio::io_context& io_context_;
 
@@ -76,4 +76,4 @@ private:
 
 } // namespace silkrpc::http
 
-#endif // HTTP_SERVER_HPP
+#endif // HTTP_SERVER2_HPP

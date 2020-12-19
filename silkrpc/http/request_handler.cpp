@@ -77,13 +77,26 @@ void RequestHandler::handle_request(const Request& request, Reply& reply) {
     reply.headers.resize(2);
     reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
     reply.headers.emplace_back(Header{"Content-Type", "application/json"});
-    //reply.headers[0].name = "Content-Length";
-    //reply.headers[0].value = std::to_string(reply.content.size());
-    //reply.headers[1].name = "Content-Type";
-    //reply.headers[1].value = "application/json";
 }
 
-void RequestHandler::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) const {
+coro::task<void> RequestHandler::kv_seek(const std::string& table_name, const silkworm::Bytes& seek_key) {
+    using namespace silkworm;
+    kv::RemoteClient kv_client{io_context_, grpc_channel_};
+    std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
+    auto cursor_id = co_await kv_client.open_cursor(table_name);
+    std::cout << "KV Tx OPEN <- cursor: " << cursor_id << "\n" << std::flush;
+    std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key << "\n" << std::flush;
+    auto value = co_await kv_client.seek(cursor_id, seek_key);
+    std::cout << "KV Tx SEEK <- key: " << seek_key << " value: " << value << "\n" << std::flush;
+    std::cout << "KV Tx CLOSE -> cursor: " << cursor_id << "\n" << std::flush;
+    co_await kv_client.close_cursor(cursor_id);
+    std::cout << "KV Tx CLOSE <- cursor: 0\n" << std::flush;
+    co_return;
+}
+
+void RequestHandler::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
+    //auto seek_task = kv_seek("b", silkworm::from_hex("000000000033a2d9"));
+
     // TODO use Silkworm to retrieve the latest block number
 
     // TODO: define namespace for JSON RPC structs (eth::jsonrpc), then use arbitrary type conv

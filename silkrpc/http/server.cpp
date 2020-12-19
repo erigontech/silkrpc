@@ -22,67 +22,38 @@
 
 #include "server.hpp"
 
-#include <asio/signal_set.hpp>
-#include <utility>
+#include <string>
+
+#include <asio/ip/tcp.hpp>
+#include <asio/steady_timer.hpp>
 
 namespace silkrpc::http {
 
-Server::Server(asio::io_context& io_context, const std::string& address, const std::string& port)
-  : io_context_(io_context), acceptor_(io_context_), connection_manager_(), request_handler_() {
-    // Register to handle the signals that indicate when the server should exit.
-    // It is safe to register for the same signal multiple times in a program,
-    // provided all registration for the specified signal is made through Asio.
-    //signals.add(SIGINT);
-    //signals.add(SIGTERM);
-    //#if defined(SIGQUIT)
-    //signals.add(SIGQUIT);
-    //#endif // defined(SIGQUIT)
-
-    /*signals.async_wait(
-        [this](std::error_code ec, int signo) {
-            // The server is stopped by cancelling all outstanding asynchronous operations.
-            // Once all operations have finished the io_context::run() call will exit.
-            acceptor_.close();
-            connection_manager_.stop_all();
-        }
-    );*/
-
+Server::Server(asio::io_context& io_context, const std::string& address, const std::string& port, const std::string& target)
+  : io_context_(io_context), acceptor_{io_context_}, request_handler_{io_context, target} {
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-    asio::ip::tcp::resolver resolver(io_context_);
+    asio::ip::tcp::resolver resolver{io_context_};
     asio::ip::tcp::endpoint endpoint = *resolver.resolve(address, port).begin();
     acceptor_.open(endpoint.protocol());
     acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));
     acceptor_.bind(endpoint);
-    acceptor_.listen();
-
-    do_accept();
 }
 
-/*void server::run()
-{
-  // The io_context::run() call will block until all asynchronous operations
-  // have finished. While the server is running, there is always at least one
-  // asynchronous operation outstanding: the asynchronous accept call waiting
-  // for new incoming connections.
-  io_context_.run();
-}*/
+asio::awaitable<void> Server::start() {
+    acceptor_.listen();
 
-void Server::do_accept()
-{
-    acceptor_.async_accept(
-        [this](std::error_code ec, asio::ip::tcp::socket socket) {
-            // Check whether the server was stopped by a signal before this completion handler had a chance to run.
-            if (!acceptor_.is_open()) {
-                return;
-            }
+    while (acceptor_.is_open()) {
+        auto socket = co_await acceptor_.async_accept(asio::use_awaitable);
+        if (!acceptor_.is_open()) {
+            co_return;
+        }
 
-            if (!ec) {
-                auto new_connection = std::make_shared<Connection>(std::move(socket), connection_manager_, request_handler_);
-                connection_manager_.start(new_connection);
-            }
+        auto new_connection = std::make_shared<Connection>(std::move(socket), connection_manager_, request_handler_);
+        connection_manager_.start(new_connection);
 
-            do_accept();
-      });
+        asio::steady_timer timer{io_context_, asio::chrono::seconds(1)};
+        co_await timer.async_wait(asio::use_awaitable);
+    }
 }
 
 void Server::stop() {
@@ -90,17 +61,5 @@ void Server::stop() {
     acceptor_.close();
     connection_manager_.stop_all();
 }
-
-/*void Server::do_await_stop()
-{
-    signals_.async_wait(
-        [this](std::error_code ec, int signo) {
-            // The server is stopped by cancelling all outstanding asynchronous operations.
-            // Once all operations have finished the io_context::run() call will exit.
-            acceptor_.close();
-            connection_manager_.stop_all();
-        }
-    );
-}*/
 
 } // namespace silkrpc::http

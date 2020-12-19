@@ -17,12 +17,13 @@
 #ifndef SILKRPC_KV_REMOTE_CLIENT_HPP
 #define SILKRPC_KV_REMOTE_CLIENT_HPP
 
-#include <coroutine>
+//#include <coroutine>
 #include <memory>
 
 #include <asio/io_context.hpp>
 
 #include <silkworm/common/util.hpp>
+#include <silkrpc/coro/coroutine.hpp>
 #include <silkrpc/coro/task.hpp>
 #include <silkrpc/kv/awaitables.hpp>
 #include <silkrpc/kv/client_callback_reactor.hpp>

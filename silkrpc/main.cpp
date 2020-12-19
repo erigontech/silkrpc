@@ -27,12 +27,13 @@
 #include <asio/co_spawn.hpp>
 #include <asio/io_context.hpp>
 #include <asio/signal_set.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/exception/get_error_info.hpp>
 #include <boost/process/environment.hpp>
-// #include <grpcpp/grpcpp.h>
+#include <boost/stacktrace.hpp>
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/http/server.hpp>
-#include <silkrpc/http/server2.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::kv::kEmptyChainData, "chain data path as string");
 ABSL_FLAG(std::string, target, silkrpc::kv::kEmptyTarget, "server location as string <address>:<port>");
@@ -76,29 +77,31 @@ int main(int argc, char* argv[]) {
         asio::io_context context{1};
         asio::signal_set signals{context, SIGINT, SIGTERM};
 
-        //silkrpc::http::Server http_server{context, "localhost", "51515"};
-        silkrpc::http::Server2 http_server{context, "localhost", "51515"};
+        silkrpc::http::Server http_server{context, "localhost", "51515", target};
 
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
             std::cout << "\nSignal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
             std::cout << "Signal thread: " << std::this_thread::get_id() << "\n" << std::flush;
             http_server.stop();
-            //context.stop();
         });
 
         asio::co_spawn(context, http_server.start(), [&](std::exception_ptr exptr) {
             std::cout << "Completion token thread: " << std::this_thread::get_id() << "\n" << std::flush;
         });
-        //context.post([&handle]() { handle.resume(); });
 
-        std::cout << "Silkrpc is now running [pid=" << pid << ", main thread: " << tid << "]\n";
+        std::cout << "Silkrpc is now running [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
 
         context.run();
     } catch (const std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
+        typedef boost::error_info<struct tag_stacktrace, boost::stacktrace::stacktrace> traced;
+        const boost::stacktrace::stacktrace* st = boost::get_error_info<traced>(e);
+        if (st) {
+            std::cerr << *st << '\n' << std::flush;
+        }
     }
 
-    std::cout << "Exiting Silkrpc [pid=" << pid << ", main thread: " << tid << "]\n";
+    std::cout << "Exiting Silkrpc [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
 
     return 0;
 }

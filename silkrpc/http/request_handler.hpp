@@ -24,9 +24,14 @@
 #define HTTP_REQUEST_HANDLER_HPP
 
 #include <map>
+#include <memory>
 #include <string>
 
+#include <asio/io_context.hpp>
+#include <grpcpp/grpcpp.h>
 #include <nlohmann/json.hpp>
+
+#include <silkrpc/kv/remote_client.hpp>
 
 namespace silkrpc::http {
 
@@ -38,15 +43,21 @@ public:
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
-    explicit RequestHandler() {}
+    explicit RequestHandler(asio::io_context& io_context, const std::string& target) : io_context_(io_context) {
+        grpc_channel_ = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
+    }
     virtual ~RequestHandler() {}
 
     void handle_request(const Request& request, Reply& reply);
 
 private:
-    void handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) const;
+    coro::task<void> kv_seek(const std::string& table_name, const silkworm::Bytes& seek_key);
+    void handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply);
 
-    typedef void (RequestHandler::*HandleMethod)(const nlohmann::json&, nlohmann::json&) const;
+    asio::io_context& io_context_;
+    std::shared_ptr<grpc::Channel> grpc_channel_;
+
+    typedef void (RequestHandler::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
     static std::map<std::string, HandleMethod> handlers_;
 };
 

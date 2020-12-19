@@ -17,18 +17,20 @@
 #ifndef SILKRPC_KV_AWAITABLES_HPP
 #define SILKRPC_KV_AWAITABLES_HPP
 
-#include <coroutine>
+//#include <coroutine>
 #include <functional>
 #include <string>
 #include <system_error>
 #include <thread>
 
 #include <asio/io_context.hpp>
+#include <asio/post.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/coro/coroutine.hpp>
 #include <silkrpc/kv/client_callback_reactor.hpp>
 #include <silkrpc/kv/remote/kv.grpc.pb.h>
 
@@ -50,7 +52,7 @@ struct KvOpenCursorAwaitable : KvAwaitable {
     KvOpenCursorAwaitable(asio::io_context& context, ClientCallbackReactor& reactor, const std::string& table_name)
     : KvAwaitable{context, reactor}, table_name_(table_name) {}
 
-    auto await_suspend(std::coroutine_handle<> handle) {
+    auto await_suspend(std::coroutine_handle<void> handle) {
         auto open_message = remote::Cursor{};
         open_message.set_op(remote::Op::OPEN);
         open_message.set_bucketname(table_name_);
@@ -63,7 +65,7 @@ struct KvOpenCursorAwaitable : KvAwaitable {
                     throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in OPEN cursor"};
                 }
                 cursor_id_ = open_pair.cursorid();
-                context_.post([&handle]() { handle.resume(); });
+                asio::post(context_, [&handle]() { handle.resume(); });
             });
         });
     }
@@ -78,7 +80,7 @@ struct KvSeekAwaitable : KvAwaitable {
     KvSeekAwaitable(asio::io_context& context, ClientCallbackReactor& reactor, uint32_t cursor_id, const silkworm::Bytes& seek_key_bytes)
     : KvAwaitable{context, reactor, cursor_id}, seek_key_bytes_(std::move(seek_key_bytes)) {}
 
-    auto await_suspend(std::coroutine_handle<> handle) {
+    auto await_suspend(std::coroutine_handle<void> handle) {
         auto seek_message = remote::Cursor{};
         seek_message.set_op(remote::Op::SEEK);
         seek_message.set_cursor(cursor_id_);
@@ -94,7 +96,7 @@ struct KvSeekAwaitable : KvAwaitable {
                 const auto& key_bytes = silkworm::byte_view_of_string(seek_pair.k());
                 const auto& value_bytes = silkworm::byte_view_of_string(seek_pair.v());
                 value_bytes_ = std::move(value_bytes);
-                context_.post([&handle]() { handle.resume(); });
+                asio::post(context_, [&handle]() { handle.resume(); });
             });
         });
     }
@@ -110,7 +112,7 @@ struct KvCloseCursorAwaitable : KvAwaitable {
     KvCloseCursorAwaitable(asio::io_context& context, ClientCallbackReactor& reactor, uint32_t cursor_id)
     : KvAwaitable{context, reactor, cursor_id} {}
 
-    auto await_suspend(std::coroutine_handle<> handle) {
+    auto await_suspend(std::coroutine_handle<void> handle) {
         auto close_message = remote::Cursor{};
         close_message.set_op(remote::Op::CLOSE);
         close_message.set_cursor(cursor_id_);
@@ -123,7 +125,7 @@ struct KvCloseCursorAwaitable : KvAwaitable {
                     throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in CLOSE cursor"};
                 }
                 cursor_id_ = close_pair.cursorid();
-                context_.post([&handle]() { handle.resume(); });
+                asio::post(context_, [&handle]() { handle.resume(); });
             });
         });
     }

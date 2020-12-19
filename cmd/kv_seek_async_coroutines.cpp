@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include <coroutine>
+//#include <coroutine>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -28,6 +28,7 @@
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/coro/coroutine.hpp>
 #include <silkrpc/coro/task.hpp>
 #include <silkrpc/kv/awaitables.hpp>
 #include <silkrpc/kv/client_callback_reactor.hpp>
