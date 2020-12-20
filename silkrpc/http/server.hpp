@@ -34,7 +34,6 @@
 #include <asio/use_awaitable.hpp>
 
 #include <silkrpc/coro/coroutine.hpp>
-//#include <silkrpc/coro/task.hpp>
 
 #include "connection.hpp"
 #include "connection_manager.hpp"
@@ -60,9 +59,6 @@ public:
 private:
   /// The io_context used to perform asynchronous operations.
   asio::io_context& io_context_;
-
-  /// The signal_set is used to register for process termination notifications.
-  //asio::signal_set& signals_;
 
   /// Acceptor used to listen for incoming connections.
   asio::ip::tcp::acceptor acceptor_;

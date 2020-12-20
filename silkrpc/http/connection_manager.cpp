@@ -27,9 +27,9 @@ namespace silkrpc::http {
 ConnectionManager::ConnectionManager() {
 }
 
-void ConnectionManager::start(std::shared_ptr<Connection> c) {
+asio::awaitable<void> ConnectionManager::start(std::shared_ptr<Connection> c) {
     connections_.insert(c);
-    c->start();
+    co_await c->start();
 }
 
 void ConnectionManager::stop(std::shared_ptr<Connection> c) {

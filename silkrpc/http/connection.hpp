@@ -26,6 +26,9 @@
 #include <array>
 #include <memory>
 
+#define ASIO_HAS_CO_AWAIT
+#define ASIO_HAS_STD_COROUTINE
+#include <asio/awaitable.hpp>
 #include <asio/ip/tcp.hpp>
 
 #include "reply.hpp"
@@ -48,17 +51,17 @@ public:
       ConnectionManager& manager, RequestHandler& handler);
 
   /// Start the first asynchronous operation for the connection.
-  void start();
+  asio::awaitable<void> start();
 
   /// Stop all asynchronous operations associated with the connection.
   void stop();
 
 private:
   /// Perform an asynchronous read operation.
-  void do_read();
+  asio::awaitable<void> do_read();
 
   /// Perform an asynchronous write operation.
-  void do_write();
+  asio::awaitable<void> do_write();
 
   /// Socket for the connection.
   asio::ip::tcp::socket socket_;

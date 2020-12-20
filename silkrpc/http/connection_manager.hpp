@@ -27,6 +27,10 @@
 
 #include "connection.hpp"
 
+#define ASIO_HAS_CO_AWAIT
+#define ASIO_HAS_STD_COROUTINE
+#include <asio/awaitable.hpp>
+
 namespace silkrpc::http {
 
 /// Manages open connections so that they may be cleanly stopped when the server
@@ -41,7 +45,7 @@ public:
   ConnectionManager();
 
   /// Add the specified connection to the manager and start it.
-  void start(std::shared_ptr<Connection> c);
+  asio::awaitable<void> start(std::shared_ptr<Connection> c);
 
   /// Stop the specified connection.
   void stop(std::shared_ptr<Connection> c);

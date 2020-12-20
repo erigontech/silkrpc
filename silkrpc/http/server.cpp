@@ -49,7 +49,7 @@ asio::awaitable<void> Server::start() {
         }
 
         auto new_connection = std::make_shared<Connection>(std::move(socket), connection_manager_, request_handler_);
-        connection_manager_.start(new_connection);
+        co_await connection_manager_.start(new_connection);
 
         asio::steady_timer timer{io_context_, asio::chrono::seconds(1)};
         co_await timer.async_wait(asio::use_awaitable);

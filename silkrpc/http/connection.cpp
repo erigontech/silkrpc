@@ -22,8 +22,14 @@
 
 #include "connection.hpp"
 
+#include <exception>
 #include <utility>
+#include <system_error>
 #include <vector>
+
+#define ASIO_HAS_CO_AWAIT
+#define ASIO_HAS_STD_COROUTINE
+#include <asio/use_awaitable.hpp>
 
 #include "connection_manager.hpp"
 #include "request_handler.hpp"
@@ -31,60 +37,54 @@
 namespace silkrpc::http {
 
 Connection::Connection(asio::ip::tcp::socket socket, ConnectionManager& manager, RequestHandler& handler)
-  : socket_(std::move(socket)), connection_manager_(manager), request_handler_(handler) {}
+: socket_(std::move(socket)), connection_manager_(manager), request_handler_(handler) {}
 
-void Connection::start() {
-    do_read();
+asio::awaitable<void> Connection::start() {
+    co_await do_read();
 }
 
 void Connection::stop() {
     socket_.close();
 }
 
-void Connection::do_read() {
-    auto self(shared_from_this());
+asio::awaitable<void> Connection::do_read() {
+    try {
+        std::size_t bytes_read = co_await socket_.async_read_some(asio::buffer(buffer_), asio::use_awaitable);
+        RequestParser::ResultType result;
+        std::tie(result, std::ignore) = request_parser_.parse(
+            request_, buffer_.data(), buffer_.data() + bytes_read
+        );
 
-    socket_.async_read_some(
-        asio::buffer(buffer_),
-        [this, self](std::error_code ec, std::size_t bytes_transferred) {
-            if (!ec) {
-                RequestParser::ResultType result;
-                std::tie(result, std::ignore) = request_parser_.parse(
-                    request_, buffer_.data(), buffer_.data() + bytes_transferred
-                );
-
-                if (result == RequestParser::good) {
-                    request_handler_.handle_request(request_, reply_);
-                    do_write();
-                } else if (result == RequestParser::bad) {
-                    reply_ = Reply::stock_reply(Reply::bad_request);
-                    do_write();
-                } else {
-                    do_read();
-                }
-            } else if (ec != asio::error::operation_aborted) {
-                connection_manager_.stop(shared_from_this());
-            }
+        if (result == RequestParser::good) {
+            request_handler_.handle_request(request_, reply_);
+            co_await do_write();
+        } else if (result == RequestParser::bad) {
+            reply_ = Reply::stock_reply(Reply::bad_request);
+            co_await do_write();
+        } else {
+            co_await do_read();
         }
-    );
+    } catch (const std::system_error& se) {
+        if (se.code() != asio::error::operation_aborted) {
+            connection_manager_.stop(shared_from_this());
+        }
+        std::rethrow_exception(std::make_exception_ptr(se));
+    } catch (const std::exception& e) {
+        std::rethrow_exception(std::make_exception_ptr(e));
+    }
 }
 
-void Connection::do_write() {
-    auto self(shared_from_this());
-    socket_.async_write_some(reply_.to_buffers(),
-    //asio::async_write(socket_, reply_.to_buffers(),
-        [this, self](std::error_code ec, std::size_t) {
-            if (!ec) {
-                // Initiate graceful connection closure.
-                asio::error_code ignored_ec;
-                socket_.shutdown(asio::ip::tcp::socket::shutdown_both, ignored_ec);
-            }
-
-            if (ec != asio::error::operation_aborted) {
-                connection_manager_.stop(shared_from_this());
-            }
+asio::awaitable<void> Connection::do_write() {
+    try {
+        co_await socket_.async_write_some(reply_.to_buffers(), asio::use_awaitable);
+    } catch (const std::system_error& se) {
+        if (se.code() != asio::error::operation_aborted) {
+            connection_manager_.stop(shared_from_this());
         }
-    );
+        std::rethrow_exception(std::make_exception_ptr(se));
+    } catch (const std::exception& e) {
+        std::rethrow_exception(std::make_exception_ptr(e));
+    }
 }
 
 } // namespace silkrpc::http
