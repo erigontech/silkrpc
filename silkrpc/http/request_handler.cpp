@@ -38,7 +38,7 @@ std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = 
     {method::k_eth_blockNumber, &RequestHandler::handle_eth_block_number},
 };
 
-void RequestHandler::handle_request(const Request& request, Reply& reply) {
+asio::awaitable<void> RequestHandler::handle_request(const Request& request, Reply& reply) {
     try {
         std::cout << "RequestHandler thread: " << std::this_thread::get_id() << "\n" << std::flush;
 
@@ -61,7 +61,8 @@ void RequestHandler::handle_request(const Request& request, Reply& reply) {
 
         nlohmann::json reply_json;
         auto handle_method = RequestHandler::handlers_[method];
-        std::invoke(handle_method, this, request_json, reply_json);
+        //std::invoke(handle_method, this, request_json, reply_json);
+        co_await (this->*handle_method)(request_json, reply_json);
 
         reply.content = reply_json.dump();
         reply.status = Reply::ok;
@@ -77,6 +78,8 @@ void RequestHandler::handle_request(const Request& request, Reply& reply) {
     reply.headers.resize(2);
     reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
     reply.headers.emplace_back(Header{"Content-Type", "application/json"});
+
+    co_return;
 }
 
 coro::task<void> RequestHandler::kv_seek(const std::string& table_name, const silkworm::Bytes& seek_key) {
@@ -94,13 +97,14 @@ coro::task<void> RequestHandler::kv_seek(const std::string& table_name, const si
     co_return;
 }
 
-void RequestHandler::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
+asio::awaitable<void> RequestHandler::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
     //auto seek_task = kv_seek("b", silkworm::from_hex("000000000033a2d9"));
 
     // TODO use Silkworm to retrieve the latest block number
 
     // TODO: define namespace for JSON RPC structs (eth::jsonrpc), then use arbitrary type conv
     reply = "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"0x3a9e4b\"}";
+    co_return;
 }
 
 } // namespace silkrpc::http

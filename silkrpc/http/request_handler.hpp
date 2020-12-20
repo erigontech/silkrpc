@@ -27,6 +27,9 @@
 #include <memory>
 #include <string>
 
+#define ASIO_HAS_CO_AWAIT
+#define ASIO_HAS_STD_COROUTINE
+#include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 #include <nlohmann/json.hpp>
@@ -48,16 +51,16 @@ public:
     }
     virtual ~RequestHandler() {}
 
-    void handle_request(const Request& request, Reply& reply);
+    asio::awaitable<void> handle_request(const Request& request, Reply& reply);
 
 private:
     coro::task<void> kv_seek(const std::string& table_name, const silkworm::Bytes& seek_key);
-    void handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply);
 
     asio::io_context& io_context_;
     std::shared_ptr<grpc::Channel> grpc_channel_;
 
-    typedef void (RequestHandler::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
+    typedef asio::awaitable<void> (RequestHandler::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
     static std::map<std::string, HandleMethod> handlers_;
 };
 

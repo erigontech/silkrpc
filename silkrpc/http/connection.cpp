@@ -56,7 +56,7 @@ asio::awaitable<void> Connection::do_read() {
         );
 
         if (result == RequestParser::good) {
-            request_handler_.handle_request(request_, reply_);
+            co_await request_handler_.handle_request(request_, reply_);
             co_await do_write();
         } else if (result == RequestParser::bad) {
             reply_ = Reply::stock_reply(Reply::bad_request);
