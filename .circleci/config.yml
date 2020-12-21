@@ -69,9 +69,6 @@ jobs:
     docker:
       - image: ethereum/cpp-build-env:15-clang-10
     steps:
-      - run:
-          name: "Install libstdc++"
-          command: sudo apt-get install libstdc++-9-dev
       - build
       - run:
           name: "Unit Tests"
