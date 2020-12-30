@@ -63,7 +63,7 @@ public:
 private:
     asio::io_context& context_;
     ClientCallbackReactor reactor_;
-    KvAsyncAwaitable<asio::io_context::executor_type> kv_awaitable_;
+    KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
 };
 
 } // namespace silkrpc::kv

@@ -88,12 +88,12 @@ asio::awaitable<void> RequestHandler::kv_seek(const std::string& table_name, con
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
     auto cursor_id = co_await kv_client.open_cursor(table_name);
     std::cout << "KV Tx OPEN <- cursor: " << cursor_id << "\n" << std::flush;
-    //std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key << "\n" << std::flush;
-    //auto value = co_await kv_client.seek(cursor_id, seek_key);
-    //std::cout << "KV Tx SEEK <- key: " << seek_key << " value: " << value << "\n" << std::flush;
-    //std::cout << "KV Tx CLOSE -> cursor: " << cursor_id << "\n" << std::flush;
-    //co_await kv_client.close_cursor(cursor_id);
-    //std::cout << "KV Tx CLOSE <- cursor: 0\n" << std::flush;
+    std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key << "\n" << std::flush;
+    auto kv_pair = co_await kv_client.seek(cursor_id, seek_key);
+    std::cout << "KV Tx SEEK <- key: " << kv_pair.key << " value: " << kv_pair.value << "\n" << std::flush;
+    std::cout << "KV Tx CLOSE -> cursor: " << cursor_id << "\n" << std::flush;
+    co_await kv_client.close_cursor(cursor_id);
+    std::cout << "KV Tx CLOSE <- cursor: 0\n" << std::flush;
     co_return;
 }
 

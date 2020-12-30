@@ -42,14 +42,14 @@
 namespace silkrpc::kv {
 
 template<typename Executor>
-struct KvAsyncAwaitable;
+struct KvAsioAwaitable;
 
 template<typename Executor>
 class initiate_async_open_cursor {
 public:
     typedef Executor executor_type;
 
-    explicit initiate_async_open_cursor(KvAsyncAwaitable<Executor>* self, const std::string& table_name)
+    explicit initiate_async_open_cursor(KvAsioAwaitable<Executor>* self, const std::string& table_name)
     : self_(self), table_name_(table_name) {}
 
     executor_type get_executor() const noexcept { return self_->get_executor(); }
@@ -88,7 +88,7 @@ public:
     }
 
 private:
-    KvAsyncAwaitable<Executor>* self_;
+    KvAsioAwaitable<Executor>* self_;
     const std::string& table_name_;
     void* wrapper_;
 };
@@ -98,7 +98,7 @@ class initiate_async_seek {
 public:
     typedef Executor executor_type;
 
-    explicit initiate_async_seek(KvAsyncAwaitable<Executor>* self, uint32_t cursor_id, const silkworm::Bytes& seek_key_bytes)
+    explicit initiate_async_seek(KvAsioAwaitable<Executor>* self, uint32_t cursor_id, const silkworm::Bytes& seek_key_bytes)
     : self_(self), cursor_id_(cursor_id), seek_key_bytes_(std::move(seek_key_bytes)) {}
 
     executor_type get_executor() const noexcept { return self_->get_executor(); }
@@ -137,7 +137,7 @@ public:
     }
 
 private:
-    KvAsyncAwaitable<Executor>* self_;
+    KvAsioAwaitable<Executor>* self_;
     uint32_t cursor_id_;
     const silkworm::Bytes seek_key_bytes_;
     void* wrapper_;
@@ -148,7 +148,7 @@ class initiate_async_close_cursor {
 public:
     typedef Executor executor_type;
 
-    explicit initiate_async_close_cursor(KvAsyncAwaitable<Executor>* self, uint32_t cursor_id)
+    explicit initiate_async_close_cursor(KvAsioAwaitable<Executor>* self, uint32_t cursor_id)
     : self_(self), cursor_id_(cursor_id) {}
 
     executor_type get_executor() const noexcept { return self_->get_executor(); }
@@ -187,16 +187,16 @@ public:
     }
 
 private:
-    KvAsyncAwaitable<Executor>* self_;
+    KvAsioAwaitable<Executor>* self_;
     uint32_t cursor_id_;
     void* wrapper_;
 };
 
 template<typename Executor>
-struct KvAsyncAwaitable {
+struct KvAsioAwaitable {
     typedef Executor executor_type;
 
-    explicit KvAsyncAwaitable(asio::io_context& context, ClientCallbackReactor& reactor)
+    explicit KvAsioAwaitable(asio::io_context& context, ClientCallbackReactor& reactor)
     : context_(context), reactor_(reactor) {}
 
     template<typename WaitHandler>

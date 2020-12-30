@@ -14,6 +14,7 @@
    limitations under the License.
 */
 
+#include <exception>
 #include <filesystem>
 #include <iostream>
 #include <thread>
@@ -81,15 +82,15 @@ int main(int argc, char* argv[]) {
 
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
             std::cout << "\nSignal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
-            std::cout << "Signal thread: " << std::this_thread::get_id() << "\n" << std::flush;
+            context.stop();
             http_server.stop();
         });
 
-        asio::co_spawn(context, http_server.start(), [&](std::exception_ptr exptr) {
-            std::cout << "Completion token thread: " << std::this_thread::get_id() << "\n" << std::flush;
+        asio::co_spawn(context, http_server.start(), [&](std::exception_ptr eptr) {
+            if (eptr) std::rethrow_exception(eptr);
         });
 
-        std::cout << "Silkrpc is now running [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
+        std::cout << "Silkrpc running [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
 
         context.run();
     } catch (const std::exception& e) {
@@ -101,7 +102,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    std::cout << "Exiting Silkrpc [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
+    std::cout << "Silkrpc exiting [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
 
     return 0;
 }
