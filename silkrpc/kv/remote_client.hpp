@@ -20,9 +20,14 @@
 //#include <coroutine>
 #include <memory>
 
+#define ASIO_HAS_CO_AWAIT
+#define ASIO_HAS_STD_COROUTINE
+#include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
+#include <asio/use_awaitable.hpp>
 
 #include <silkworm/common/util.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/coro/coroutine.hpp>
 #include <silkrpc/coro/task.hpp>
 #include <silkrpc/kv/awaitables.hpp>
@@ -31,28 +36,34 @@
 
 namespace silkrpc::kv {
 
+using namespace silkworm;
+
 class RemoteClient {
 public:
     explicit RemoteClient(asio::io_context& context, std::shared_ptr<grpc::Channel> channel)
-    : context_(context), reactor_{channel} {}
+    : context_(context), reactor_{channel}, kv_awaitable_{context_, reactor_} {}
 
-    coro::task<uint32_t> open_cursor(const std::string& table_name) {
-        auto cursor_id = co_await KvOpenCursorAwaitable{context_, reactor_, table_name};
+    asio::awaitable<uint32_t> open_cursor(const std::string& table_name) {
+        auto cursor_id = co_await kv_awaitable_.async_open_cursor(table_name, asio::use_awaitable);
         co_return cursor_id;
     }
 
-    coro::task<silkworm::ByteView> seek(uint32_t cursor_id, const silkworm::Bytes& seek_key) {
-        auto value_bytes = co_await KvSeekAwaitable{context_, reactor_, cursor_id, seek_key};
-        co_return value_bytes;
+    asio::awaitable<silkrpc::common::KeyValue> seek(uint32_t cursor_id, const silkworm::Bytes& seek_key) {
+        auto seek_pair = co_await kv_awaitable_.async_seek(cursor_id, seek_key, asio::use_awaitable);
+        const auto k = silkworm::bytes_of_string(seek_pair.k());
+        const auto v = silkworm::bytes_of_string(seek_pair.v());
+        co_return silkrpc::common::KeyValue{k, v};
     }
 
-    coro::task<void> close_cursor(uint32_t cursor_id) {
-        co_await KvCloseCursorAwaitable{context_, reactor_, cursor_id};
+    asio::awaitable<void> close_cursor(uint32_t cursor_id) {
+        co_await kv_awaitable_.async_close_cursor(cursor_id, asio::use_awaitable);
+        co_return;
     }
 
 private:
     asio::io_context& context_;
     ClientCallbackReactor reactor_;
+    KvAsyncAwaitable<asio::io_context::executor_type> kv_awaitable_;
 };
 
 } // namespace silkrpc::kv

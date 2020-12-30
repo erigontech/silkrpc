@@ -30,7 +30,6 @@
 #define ASIO_HAS_STD_COROUTINE
 #include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
-#include <asio/signal_set.hpp>
 #include <asio/use_awaitable.hpp>
 
 #include <silkrpc/coro/coroutine.hpp>
@@ -57,17 +56,17 @@ public:
     void stop();
 
 private:
-  /// The io_context used to perform asynchronous operations.
-  asio::io_context& io_context_;
+    /// The io_context used to perform asynchronous operations.
+    asio::io_context& io_context_;
 
-  /// Acceptor used to listen for incoming connections.
-  asio::ip::tcp::acceptor acceptor_;
+    /// Acceptor used to listen for incoming connections.
+    asio::ip::tcp::acceptor acceptor_;
 
-  /// The connection manager which owns all live connections.
-  ConnectionManager connection_manager_;
+    /// The connection manager which owns all live connections.
+    ConnectionManager connection_manager_;
 
-  /// The handler for all incoming requests.
-  RequestHandler request_handler_;
+    /// The handler for all incoming requests.
+    RequestHandler request_handler_;
 };
 
 } // namespace silkrpc::http

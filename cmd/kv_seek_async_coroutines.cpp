@@ -18,10 +18,14 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
+#define ASIO_HAS_CO_AWAIT
+#define ASIO_HAS_STD_COROUTINE
+#include <asio/co_spawn.hpp>
 #include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -29,7 +33,7 @@
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/coro/coroutine.hpp>
-#include <silkrpc/coro/task.hpp>
+//#include <silkrpc/coro/task.hpp>
 #include <silkrpc/kv/awaitables.hpp>
 #include <silkrpc/kv/client_callback_reactor.hpp>
 #include <silkrpc/kv/remote_client.hpp>
@@ -44,13 +48,13 @@ using namespace silkworm;
 using namespace silkrpc::coro;
 using namespace silkrpc::kv;
 
-task<void> kv_seek(asio::io_context& context, RemoteClient& kv_client, const std::string& table_name, const silkworm::Bytes& seek_key) {
+asio::awaitable<void> kv_seek(asio::io_context& context, RemoteClient& kv_client, const std::string& table_name, const silkworm::Bytes& seek_key) {
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
     auto cursor_id = co_await kv_client.open_cursor(table_name);
     std::cout << "KV Tx OPEN <- cursor: " << cursor_id << "\n" << std::flush;
     std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key << "\n" << std::flush;
-    auto value = co_await kv_client.seek(cursor_id, seek_key);
-    std::cout << "KV Tx SEEK <- key: " << seek_key << " value: " << value << "\n" << std::flush;
+    auto kv_pair = co_await kv_client.seek(cursor_id, seek_key);
+    std::cout << "KV Tx SEEK <- key: " << kv_pair.key << " value: " << kv_pair.value << "\n" << std::flush;
     std::cout << "KV Tx CLOSE -> cursor: " << cursor_id << "\n" << std::flush;
     co_await kv_client.close_cursor(cursor_id);
     std::cout << "KV Tx CLOSE <- cursor: 0\n" << std::flush;
@@ -99,9 +103,8 @@ int main(int argc, char* argv[]) {
 
     RemoteClient kv_client{context, channel};
 
-    task<void> seek_task = kv_seek(context, kv_client, table_name, from_hex(seek_key));
-    context.post([&seek_task, &context]() {
-        seek_task.start([&context]() { context.stop(); });
+    asio::co_spawn(context, kv_seek(context, kv_client, table_name, from_hex(seek_key)), [&](std::exception_ptr exptr) {
+        context.stop();
     });
 
     context.run();

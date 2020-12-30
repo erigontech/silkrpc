@@ -54,7 +54,7 @@ public:
     asio::awaitable<void> handle_request(const Request& request, Reply& reply);
 
 private:
-    coro::task<void> kv_seek(const std::string& table_name, const silkworm::Bytes& seek_key);
+    asio::awaitable<void> kv_seek(const std::string& table_name, const silkworm::Bytes& seek_key);
     asio::awaitable<void> handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply);
 
     asio::io_context& io_context_;

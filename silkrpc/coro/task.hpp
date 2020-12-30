@@ -17,10 +17,15 @@
 #ifndef SILKRPC_CORO_TASK_HPP
 #define SILKRPC_CORO_TASK_HPP
 
-//#include <coroutine>
+#include <coroutine>
 #include <functional>
 #include <thread>
 #include <variant>
+
+#define ASIO_HAS_CO_AWAIT
+#define ASIO_HAS_STD_COROUTINE
+#include <asio/awaitable.hpp>
+#include <asio/use_awaitable.hpp>
 
 #include <silkrpc/coro/coroutine.hpp>
 
@@ -39,11 +44,12 @@ struct task {
             struct Awaiter {
                 promise_type* self;
                 bool await_ready() { return false; }
-                void await_suspend(std::coroutine_handle<void>) {
+                void await_suspend(std::coroutine_handle<void>) { // auto // tail call optimization
                     if (self->caller_coro) {
-                        self->caller_coro.resume();
+                        self->caller_coro.resume(); // return self->caller_coro; // tail call optimization
                     } else if (self->completion_handler) {
                         self->completion_handler();
+                        // return {}; // tail call optimization
                     }
                 }
                 void await_resume() {}
@@ -85,7 +91,7 @@ struct task {
 
     void start(std::function<void()> completion_handler = {}) {
         coro.promise().completion_handler = completion_handler;
-        coro.resume();
+        coro.resume(); // return coro; // tail call optimization
     }
 
 private:
@@ -106,11 +112,12 @@ struct task<void> {
             struct Awaiter {
                 promise_type* self;
                 bool await_ready() { return false; }
-                void await_suspend(std::coroutine_handle<void>) {
+                void await_suspend(std::coroutine_handle<void>) { // auto // tail call optimization
                     if (self->caller_coro) {
-                        self->caller_coro.resume();
+                        self->caller_coro.resume(); // return self->caller_coro; // tail call optimization
                     } else if (self->completion_handler) {
                         self->completion_handler();
+                        // return {}; // tail call optimization
                     }
                 }
                 void await_resume() {}
@@ -134,7 +141,7 @@ struct task<void> {
 
     auto await_suspend(std::coroutine_handle<void> caller_coro) {
         coro.promise().caller_coro = caller_coro;
-        coro.resume();
+        coro.resume(); // return coro; // tail call optimization
     }
 
     void await_resume() {}
@@ -143,6 +150,14 @@ struct task<void> {
         coro.promise().completion_handler = completion_handler;
         coro.resume();
     }
+
+    /*template <typename Executor>
+    auto operator()(asio::detail::awaitable_frame<void, Executor>* frame) {
+    //auto operator()(typename asio::awaitable<void, Executor>::promise_type* frame) {
+    //auto operator()(typename std::coroutine_traits<asio::awaitable<void, Executor>>::promise_type* frame) {
+        //return asio::awaitable<void, Executor>(frame);
+        return frame->;
+    }*/
 
 private:
     task(promise_type* p) : coro(std::coroutine_handle<promise_type>::from_promise(*p)) {}

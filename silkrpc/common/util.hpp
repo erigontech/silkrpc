@@ -21,6 +21,13 @@
 #include <string>
 #include <silkworm/common/base.hpp>
 
+namespace silkrpc::common {
+    struct KeyValue {
+        silkworm::Bytes key;
+        silkworm::Bytes value;
+    };
+} // namespace silkrpc
+
 namespace silkworm {
 
 std::ostream& operator<<(std::ostream& out, const ByteView& bytes);
@@ -29,6 +36,10 @@ inline ByteView byte_view_of_string(const std::string& s) {
     return {reinterpret_cast<const uint8_t*>(s.data()), s.length()};
 }
 
-}  // namespace silkworm
+inline Bytes bytes_of_string(const std::string& s) {
+    return Bytes(s.begin(), s.end());
+}
+
+} // namespace silkworm
 
 #endif  // SILKRPC_COMMON_UTIL_H_
