@@ -26,11 +26,10 @@
 #include <asio/io_context.hpp>
 #include <asio/use_awaitable.hpp>
 
-#include <silkworm/common/util.hpp>
-#include <silkrpc/common/util.hpp>
 #include <silkrpc/coro/coroutine.hpp>
 #include <silkrpc/coro/task.hpp>
 #include <silkrpc/kv/awaitables.hpp>
+#include <silkrpc/kv/client.hpp>
 #include <silkrpc/kv/client_callback_reactor.hpp>
 #include <silkrpc/kv/remote/kv.grpc.pb.h>
 
@@ -38,7 +37,7 @@ namespace silkrpc::kv {
 
 using namespace silkworm;
 
-class RemoteClient {
+class RemoteClient : public Client {
 public:
     explicit RemoteClient(asio::io_context& context, std::shared_ptr<grpc::Channel> channel)
     : context_(context), reactor_{channel}, kv_awaitable_{context_, reactor_} {}

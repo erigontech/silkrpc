@@ -25,12 +25,14 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <thread>
 
 #include "methods.hpp"
 #include "mime_types.hpp"
 #include "reply.hpp"
 #include "request.hpp"
+
+#include <silkrpc/kv/database.hpp>
+#include <silkrpc/stagedsync/stages.hpp>
 
 namespace silkrpc::http {
 
@@ -40,8 +42,6 @@ std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = 
 
 asio::awaitable<void> RequestHandler::handle_request(const Request& request, Reply& reply) {
     try {
-        std::cout << "RequestHandler thread: " << std::this_thread::get_id() << "\n" << std::flush;
-
         if (request.content.empty()) {
             reply.content = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"content missing\"}";
             reply.status = Reply::no_content;
@@ -61,7 +61,6 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
 
         nlohmann::json reply_json;
         auto handle_method = RequestHandler::handlers_[method];
-        //std::invoke(handle_method, this, request_json, reply_json);
         co_await (this->*handle_method)(request_json, reply_json);
 
         reply.content = reply_json.dump();
@@ -82,28 +81,15 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
     co_return;
 }
 
-asio::awaitable<void> RequestHandler::kv_seek(const std::string& table_name, const silkworm::Bytes& seek_key) {
-    using namespace silkworm;
-    kv::RemoteClient kv_client{io_context_, grpc_channel_};
-    std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
-    auto cursor_id = co_await kv_client.open_cursor(table_name);
-    std::cout << "KV Tx OPEN <- cursor: " << cursor_id << "\n" << std::flush;
-    std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key << "\n" << std::flush;
-    auto kv_pair = co_await kv_client.seek(cursor_id, seek_key);
-    std::cout << "KV Tx SEEK <- key: " << kv_pair.key << " value: " << kv_pair.value << "\n" << std::flush;
-    std::cout << "KV Tx CLOSE -> cursor: " << cursor_id << "\n" << std::flush;
-    co_await kv_client.close_cursor(cursor_id);
-    std::cout << "KV Tx CLOSE <- cursor: 0\n" << std::flush;
-    co_return;
-}
-
 asio::awaitable<void> RequestHandler::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
-    co_await kv_seek("b", silkworm::from_hex("000000000033a2d9"));
+    using namespace silkworm;
+    kv::RemoteClient client{io_context_, grpc_channel_};
+    kv::Database database{client};
 
-    // TODO use Silkworm to retrieve the latest block number
+    const auto block_height = co_await stages::get_stage_progress(database, stages::kFinish);
 
     // TODO: define namespace for JSON RPC structs (eth::jsonrpc), then use arbitrary type conv
-    reply = "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"0x3a9e4b\"}";
+    reply = "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"" + std::to_string(block_height) + "\"}";
     co_return;
 }
 
