@@ -42,7 +42,7 @@ commands:
             - ~/.hunter
       - run:
           name: "Build"
-          command: cmake --build ~/build -j 4
+          command: cmake --build ~/build -j
 
   test:
     steps:
@@ -64,8 +64,8 @@ jobs:
   linux-clang-coverage:
     environment:
       BUILD_TYPE: Debug
-      CC: /usr/bin/clang-10
-      CXX: /usr/bin/clang++-10
+      #CC: /usr/bin/clang-10
+      #CXX: /usr/bin/clang++-10
     docker:
       - image: ethereum/cpp-build-env:15-clang-10
     steps:
