@@ -17,6 +17,8 @@
 #ifndef SILKRPC_KV_CURSOR_H_
 #define SILKRPC_KV_CURSOR_H_
 
+#include <memory>
+
 #define ASIO_HAS_CO_AWAIT
 #define ASIO_HAS_STD_COROUTINE
 #include <asio/awaitable.hpp>
@@ -29,7 +31,7 @@ namespace silkrpc::kv {
 
 class Cursor {
 public:
-    Cursor(Client& client) : client_(client) {}
+    Cursor(std::shared_ptr<Client> client) : client_(client) {}
 
     Cursor(const Cursor&) = delete;
     Cursor& operator=(const Cursor&) = delete;
@@ -37,7 +39,7 @@ public:
     asio::awaitable<common::KeyValue> seek(const std::string& table_name, const silkworm::Bytes& seek_key);
 
 private:
-    Client& client_;
+    std::shared_ptr<Client> client_;
 };
 
 } // namespace silkrpc::kv

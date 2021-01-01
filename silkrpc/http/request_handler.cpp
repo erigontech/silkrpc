@@ -82,11 +82,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
 }
 
 asio::awaitable<void> RequestHandler::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
-    using namespace silkworm;
-    kv::RemoteClient client{io_context_, grpc_channel_};
-    kv::Database database{client};
-
-    const auto block_height = co_await stages::get_stage_progress(database, stages::kFinish);
+    const auto block_height = co_await stages::get_sync_stage_progress(*database_, stages::kFinish);
 
     // TODO: define namespace for JSON RPC structs (eth::jsonrpc), then use arbitrary type conv
     reply = "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"" + std::to_string(block_height) + "\"}";

@@ -17,6 +17,8 @@
 #ifndef SILKRPC_KV_DATABASE_H_
 #define SILKRPC_KV_DATABASE_H_
 
+#include <memory>
+
 #include <silkworm/common/util.hpp>
 #include <silkrpc/kv/client.hpp>
 #include <silkrpc/kv/cursor.hpp>
@@ -25,7 +27,7 @@ namespace silkrpc::kv {
 
 class Database {
 public:
-    Database(Client& client) : client_(client) {}
+    Database(std::shared_ptr<Client> client) : client_(client) {}
 
     Database(const Database&) = delete;
     Database& operator=(const Database&) = delete;
@@ -33,7 +35,7 @@ public:
     Cursor cursor() { return Cursor{client_}; }
 
 private:
-    Client& client_;
+    std::shared_ptr<Client> client_;
 };
 
 } // namespace silkrpc::kv

@@ -60,7 +60,7 @@ const Bytes kTxLookup            = bytes_of_string("TxLookup");            // Ge
 const Bytes kTxPool              = bytes_of_string("TxPool");              // Starts Backend
 const Bytes kFinish              = bytes_of_string("Finish");              // Nominal stage after all other stages
 
-asio::awaitable<uint64_t> get_stage_progress(kv::Database& database, const Bytes& stage_key) {
+asio::awaitable<uint64_t> get_sync_stage_progress(kv::Database& database, const Bytes& stage_key) {
     const auto kv_pair = co_await database.cursor().seek(silkworm::db::table::kSyncStageProgress.name, stage_key);
     const auto key = kv_pair.key;
     if (key != stage_key) {
