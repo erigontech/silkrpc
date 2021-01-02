@@ -72,7 +72,8 @@ jobs:
       - run:
           name: "Install LLVM C++ Standard Library" # for C++ standard headers clang does not have
           command: |
-            sudo apt-get update
+            sudo apt-get update -y
+            sudo apt-get install -y apt-utils
             sudo apt-get install -y libc++-dev
       - build
       - run:
