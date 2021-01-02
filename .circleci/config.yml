@@ -69,6 +69,11 @@ jobs:
     docker:
       - image: ethereum/cpp-build-env:14-clang-10
     steps:
+      - run:
+          name: "Install LLVM C++ Standard Library" # for C++ standard headers clang does not have
+          command: |
+            sudo apt-get update
+            sudo apt-get install libc++-dev
       - build
       - run:
           name: "Unit Tests"
