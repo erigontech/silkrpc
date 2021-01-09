@@ -17,11 +17,11 @@
 #ifndef SILKRPC_STAGEDSYNC_STAGES_H_
 #define SILKRPC_STAGEDSYNC_STAGES_H_
 
+#include <silkrpc/config.hpp>
+
 #include <exception>
 #include <string>
 
-#define ASIO_HAS_CO_AWAIT
-#define ASIO_HAS_STD_COROUTINE
 #include <asio/awaitable.hpp>
 
 #include <silkworm/common/base.hpp>

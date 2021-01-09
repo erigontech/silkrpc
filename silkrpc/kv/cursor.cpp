@@ -21,7 +21,7 @@ namespace silkrpc::kv {
 asio::awaitable<common::KeyValue> Cursor::seek(const std::string& table_name, const silkworm::Bytes& seek_key) {
     auto cursor_id = co_await client_->open_cursor(table_name);
     auto kv_pair = co_await client_->seek(cursor_id, seek_key);
-    co_await client_->close_cursor(cursor_id);
+    co_await client_->close_cursor(cursor_id); // Can we shoot and forget?
     co_return kv_pair;
 }
 

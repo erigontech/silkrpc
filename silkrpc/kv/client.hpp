@@ -17,8 +17,8 @@
 #ifndef SILKRPC_KV_CLIENT_H_
 #define SILKRPC_KV_CLIENT_H_
 
-#define ASIO_HAS_CO_AWAIT
-#define ASIO_HAS_STD_COROUTINE
+#include <silkrpc/config.hpp>
+
 #include <asio/awaitable.hpp>
 
 #include <silkworm/common/util.hpp>

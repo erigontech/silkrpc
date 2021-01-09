@@ -27,10 +27,6 @@
 #include <system_error>
 #include <vector>
 
-#define ASIO_HAS_CO_AWAIT
-#define ASIO_HAS_STD_COROUTINE
-#include <asio/use_awaitable.hpp>
-
 #include "connection_manager.hpp"
 #include "request_handler.hpp"
 

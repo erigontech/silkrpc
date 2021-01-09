@@ -27,8 +27,6 @@
 
 #include "connection.hpp"
 
-#define ASIO_HAS_CO_AWAIT
-#define ASIO_HAS_STD_COROUTINE
 #include <asio/awaitable.hpp>
 
 namespace silkrpc::http {
@@ -38,24 +36,24 @@ namespace silkrpc::http {
 class ConnectionManager
 {
 public:
-  ConnectionManager(const ConnectionManager&) = delete;
-  ConnectionManager& operator=(const ConnectionManager&) = delete;
+    ConnectionManager(const ConnectionManager&) = delete;
+    ConnectionManager& operator=(const ConnectionManager&) = delete;
 
-  /// Construct a connection manager.
-  ConnectionManager();
+    /// Construct a connection manager.
+    ConnectionManager();
 
-  /// Add the specified connection to the manager and start it.
-  asio::awaitable<void> start(std::shared_ptr<Connection> c);
+    /// Add the specified connection to the manager and start it.
+    asio::awaitable<void> start(std::shared_ptr<Connection> c);
 
-  /// Stop the specified connection.
-  void stop(std::shared_ptr<Connection> c);
+    /// Stop the specified connection.
+    void stop(std::shared_ptr<Connection> c);
 
-  /// Stop all connections.
-  void stop_all();
+    /// Stop all connections.
+    void stop_all();
 
 private:
-  /// The managed connections.
-  std::set<std::shared_ptr<Connection>> connections_;
+    /// The managed connections.
+    std::set<std::shared_ptr<Connection>> connections_;
 };
 
 } // namespace silkrpc::http

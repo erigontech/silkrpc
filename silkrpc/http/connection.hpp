@@ -23,11 +23,11 @@
 #ifndef HTTP_CONNECTION_HPP
 #define HTTP_CONNECTION_HPP
 
+#include <silkrpc/config.hpp>
+
 #include <array>
 #include <memory>
 
-#define ASIO_HAS_CO_AWAIT
-#define ASIO_HAS_STD_COROUTINE
 #include <asio/awaitable.hpp>
 #include <asio/ip/tcp.hpp>
 
@@ -43,46 +43,46 @@ class ConnectionManager;
 /// Represents a single connection from a client.
 class Connection : public std::enable_shared_from_this<Connection> {
 public:
-  Connection(const Connection&) = delete;
-  Connection& operator=(const Connection&) = delete;
+    Connection(const Connection&) = delete;
+    Connection& operator=(const Connection&) = delete;
 
-  /// Construct a connection with the given socket.
-  explicit Connection(asio::ip::tcp::socket socket,
-      ConnectionManager& manager, RequestHandler& handler);
+    /// Construct a connection with the given socket.
+    explicit Connection(asio::ip::tcp::socket socket,
+        ConnectionManager& manager, RequestHandler& handler);
 
-  /// Start the first asynchronous operation for the connection.
-  asio::awaitable<void> start();
+    /// Start the first asynchronous operation for the connection.
+    asio::awaitable<void> start();
 
-  /// Stop all asynchronous operations associated with the connection.
-  void stop();
+    /// Stop all asynchronous operations associated with the connection.
+    void stop();
 
 private:
-  /// Perform an asynchronous read operation.
-  asio::awaitable<void> do_read();
+    /// Perform an asynchronous read operation.
+    asio::awaitable<void> do_read();
 
-  /// Perform an asynchronous write operation.
-  asio::awaitable<void> do_write();
+    /// Perform an asynchronous write operation.
+    asio::awaitable<void> do_write();
 
-  /// Socket for the connection.
-  asio::ip::tcp::socket socket_;
+    /// Socket for the connection.
+    asio::ip::tcp::socket socket_;
 
-  /// The manager for this connection.
-  ConnectionManager& connection_manager_;
+    /// The manager for this connection.
+    ConnectionManager& connection_manager_;
 
-  /// The handler used to process the incoming request.
-  RequestHandler& request_handler_;
+    /// The handler used to process the incoming request.
+    RequestHandler& request_handler_;
 
-  /// Buffer for incoming data.
-  std::array<char, 8192> buffer_;
+    /// Buffer for incoming data.
+    std::array<char, 8192> buffer_;
 
-  /// The incoming request.
-  Request request_;
+    /// The incoming request.
+    Request request_;
 
-  /// The parser for the incoming request.
-  RequestParser request_parser_;
+    /// The parser for the incoming request.
+    RequestParser request_parser_;
 
-  /// The reply to be sent back to the client.
-  Reply reply_;
+    /// The reply to be sent back to the client.
+    Reply reply_;
 };
 
 } // namespace silkrpc::http

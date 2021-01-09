@@ -74,6 +74,7 @@ jobs:
           command: |
             sudo apt-get update -y
             sudo apt-get install -y apt-utils
+            sudo apt-get install -y libc++abi-dev
             sudo apt-get install -y libc++-dev
       - build
       - run:

@@ -17,7 +17,8 @@
 #ifndef SILKRPC_CORO_USE_AWAIT_HPP
 #define SILKRPC_CORO_USE_AWAIT_HPP
 
-#include <coroutine>
+#include <silkrpc/config.hpp>
+
 #include <functional>
 
 #include <asio/async_result.hpp>

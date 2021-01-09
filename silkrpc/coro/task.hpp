@@ -17,17 +17,11 @@
 #ifndef SILKRPC_CORO_TASK_HPP
 #define SILKRPC_CORO_TASK_HPP
 
-#include <coroutine>
+#include <silkrpc/config.hpp>
+
 #include <functional>
 #include <thread>
 #include <variant>
-
-#define ASIO_HAS_CO_AWAIT
-#define ASIO_HAS_STD_COROUTINE
-#include <asio/awaitable.hpp>
-#include <asio/use_awaitable.hpp>
-
-#include <silkrpc/coro/coroutine.hpp>
 
 namespace silkrpc::coro {
 
@@ -150,14 +144,6 @@ struct task<void> {
         coro.promise().completion_handler = completion_handler;
         coro.resume();
     }
-
-    /*template <typename Executor>
-    auto operator()(asio::detail::awaitable_frame<void, Executor>* frame) {
-    //auto operator()(typename asio::awaitable<void, Executor>::promise_type* frame) {
-    //auto operator()(typename std::coroutine_traits<asio::awaitable<void, Executor>>::promise_type* frame) {
-        //return asio::awaitable<void, Executor>(frame);
-        return frame->;
-    }*/
 
 private:
     task(promise_type* p) : coro(std::coroutine_handle<promise_type>::from_promise(*p)) {}

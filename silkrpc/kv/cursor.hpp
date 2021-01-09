@@ -17,10 +17,10 @@
 #ifndef SILKRPC_KV_CURSOR_H_
 #define SILKRPC_KV_CURSOR_H_
 
+#include <silkrpc/config.hpp>
+
 #include <memory>
 
-#define ASIO_HAS_CO_AWAIT
-#define ASIO_HAS_STD_COROUTINE
 #include <asio/awaitable.hpp>
 
 #include <silkworm/common/util.hpp>

@@ -23,16 +23,13 @@
 #ifndef HTTP_SERVER2_HPP
 #define HTTP_SERVER2_HPP
 
-//#include <coroutine>
+#include <silkrpc/config.hpp>
+
 #include <string>
 
-#define ASIO_HAS_CO_AWAIT
-#define ASIO_HAS_STD_COROUTINE
 #include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
 #include <asio/use_awaitable.hpp>
-
-#include <silkrpc/coro/coroutine.hpp>
 
 #include "connection.hpp"
 #include "connection_manager.hpp"

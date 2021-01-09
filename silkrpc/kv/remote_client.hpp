@@ -17,16 +17,14 @@
 #ifndef SILKRPC_KV_REMOTE_CLIENT_HPP
 #define SILKRPC_KV_REMOTE_CLIENT_HPP
 
-//#include <coroutine>
+#include <silkrpc/config.hpp>
+
 #include <memory>
 
-#define ASIO_HAS_CO_AWAIT
-#define ASIO_HAS_STD_COROUTINE
 #include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
 #include <asio/use_awaitable.hpp>
 
-#include <silkrpc/coro/coroutine.hpp>
 #include <silkrpc/coro/task.hpp>
 #include <silkrpc/kv/awaitables.hpp>
 #include <silkrpc/kv/client.hpp>

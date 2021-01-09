@@ -23,12 +23,12 @@
 #ifndef HTTP_REQUEST_HANDLER_HPP
 #define HTTP_REQUEST_HANDLER_HPP
 
+#include <silkrpc/config.hpp>
+
 #include <map>
 #include <memory>
 #include <string>
 
-#define ASIO_HAS_CO_AWAIT
-#define ASIO_HAS_STD_COROUTINE
 #include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>

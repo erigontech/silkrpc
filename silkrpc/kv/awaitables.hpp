@@ -17,6 +17,8 @@
 #ifndef SILKRPC_KV_AWAITABLES_HPP
 #define SILKRPC_KV_AWAITABLES_HPP
 
+#include <silkrpc/config.hpp>
+
 #include <functional>
 #include <string>
 #include <system_error>
@@ -32,7 +34,6 @@
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/coro/coroutine.hpp>
 #include <silkrpc/kv/async_close_cursor.hpp>
 #include <silkrpc/kv/async_open_cursor.hpp>
 #include <silkrpc/kv/async_seek.hpp>
@@ -238,11 +239,11 @@ struct KvOpenCursorAwaitable : KvAwaitable {
         auto open_message = remote::Cursor{};
         open_message.set_op(remote::Op::OPEN);
         open_message.set_bucketname(table_name_);
-        reactor_.write_start(&open_message, [&, handle](bool ok) {
+        reactor_.write_start(&open_message, [this, &handle](bool ok) {
             if (!ok) {
                 throw std::system_error{std::make_error_code(std::errc::io_error), "write failed in OPEN cursor"};
             }
-            reactor_.read_start([&, handle](bool ok, remote::Pair open_pair) {
+            reactor_.read_start([this, &handle](bool ok, remote::Pair open_pair) {
                 if (!ok) {
                     throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in OPEN cursor"};
                 }
@@ -267,11 +268,11 @@ struct KvSeekAwaitable : KvAwaitable {
         seek_message.set_op(remote::Op::SEEK);
         seek_message.set_cursor(cursor_id_);
         seek_message.set_k(seek_key_bytes_.c_str(), seek_key_bytes_.length());
-        reactor_.write_start(&seek_message, [&, handle](bool ok) {
+        reactor_.write_start(&seek_message, [this, &handle](bool ok) {
             if (!ok) {
                 throw std::system_error{std::make_error_code(std::errc::io_error), "write failed in SEEK"};
             }
-            reactor_.read_start([&, handle](bool ok, remote::Pair seek_pair) {
+            reactor_.read_start([this, &handle](bool ok, remote::Pair seek_pair) {
                 if (!ok) {
                     throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in SEEK"};
                 }
@@ -298,11 +299,11 @@ struct KvCloseCursorAwaitable : KvAwaitable {
         auto close_message = remote::Cursor{};
         close_message.set_op(remote::Op::CLOSE);
         close_message.set_cursor(cursor_id_);
-        reactor_.write_start(&close_message, [&, handle](bool ok) {
+        reactor_.write_start(&close_message, [this, &handle](bool ok) {
             if (!ok) {
                 throw std::system_error{std::make_error_code(std::errc::io_error), "write failed in CLOSE cursor"};
             }
-            reactor_.read_start([&, handle](bool ok, remote::Pair close_pair) {
+            reactor_.read_start([this, &handle](bool ok, remote::Pair close_pair) {
                 if (!ok) {
                     throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in CLOSE cursor"};
                 }

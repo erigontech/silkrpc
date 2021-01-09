@@ -24,8 +24,8 @@ git submodule update --init --recursive
 ```
 
 ## Linux & MacOS
-Building SilkRPC Daemon requires:
-* C++17 compiler (GCC or Clang)
+Building SilkRPC daemon requires:
+* C++20 compiler (GCC >= 10.2.0 or Clang >= 10.0.0)
 * [CMake](http://cmake.org)
 * [GMP](http://gmplib.org) (`sudo apt-get install libgmp3-dev` or `brew install gmp`)
 
@@ -63,7 +63,7 @@ cmd/unit_test
 
 # Code style
 
-We use the standard C++17 programming language. We follow the [Google's C++ Style Guide](https://google.github.io/styleguide/cppguide.html) with the following differences:
+We use the standard C++20 programming language. We follow the [Google's C++ Style Guide](https://google.github.io/styleguide/cppguide.html) with the following differences:
 
 * `snake_case` for function names.
 * .cpp & .hpp file extensions are used for C++; .cc are used just for [gRPC](https://grpc.io/) generated C++; .c & .h are reserved for C.

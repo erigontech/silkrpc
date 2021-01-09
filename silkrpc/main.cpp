@@ -14,6 +14,8 @@
    limitations under the License.
 */
 
+#include <silkrpc/config.hpp>
+
 #include <exception>
 #include <filesystem>
 #include <iostream>
@@ -22,8 +24,6 @@
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
-#define ASIO_HAS_CO_AWAIT
-#define ASIO_HAS_STD_COROUTINE
 #include <asio/awaitable.hpp>
 #include <asio/co_spawn.hpp>
 #include <asio/io_context.hpp>

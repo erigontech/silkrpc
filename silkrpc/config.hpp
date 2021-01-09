@@ -18,11 +18,13 @@
 #define SILKRPC_CONFIG_HPP
 
 #if __has_include(<coroutine>)
+# define ASIO_HAS_CO_AWAIT
+# define ASIO_HAS_STD_COROUTINE
+# define SILKRPC_HAS_COROUTINES
 # include <coroutine>
-# define SILKRPC_HAS_COROUTINES 1
 #elif __has_include(<experimental/coroutine>)
+# define SILKRPC_HAS_EXPERIMENTAL_COROUTINES
 # include <experimental/coroutine>
-# define SILKRPC_HAS_EXPERIMENTAL_COROUTINES 1
 namespace std {
     template <typename T>
     using coroutine_handle = std::experimental::coroutine_handle<T>;
