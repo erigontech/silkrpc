@@ -25,21 +25,23 @@
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/kv/client.hpp>
 
 namespace silkrpc::kv {
 
 class Cursor {
 public:
-    Cursor(std::shared_ptr<Client> client) : client_(client) {}
+    Cursor() = default;
 
     Cursor(const Cursor&) = delete;
     Cursor& operator=(const Cursor&) = delete;
 
-    asio::awaitable<common::KeyValue> seek(const std::string& table_name, const silkworm::Bytes& seek_key);
+    virtual asio::awaitable<common::KeyValue> seek(const std::string& table_name, const silkworm::Bytes& seek_key) = 0;
 
-private:
-    std::shared_ptr<Client> client_;
+    virtual asio::awaitable<uint32_t> open_cursor(const std::string& table_name) = 0;
+
+    virtual asio::awaitable<silkrpc::common::KeyValue> seek(uint32_t cursor_id, const silkworm::Bytes& seek_key) = 0;
+
+    virtual asio::awaitable<void> close_cursor(uint32_t cursor_id) = 0;
 };
 
 } // namespace silkrpc::kv

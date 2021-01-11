@@ -32,10 +32,8 @@
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/kv/awaitables.hpp>
-#include <silkrpc/kv/client_callback_reactor.hpp>
-#include <silkrpc/kv/remote_client.hpp>
-#include <silkrpc/kv/remote/kv.grpc.pb.h>
+#include <silkrpc/kv/cursor.hpp>
+#include <silkrpc/kv/remote_database.hpp>
 
 ABSL_FLAG(std::string, table, "", "database table name");
 ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
@@ -43,18 +41,17 @@ ABSL_FLAG(std::string, target, silkrpc::kv::kDefaultTarget, "server location as 
 ABSL_FLAG(uint32_t, timeout, silkrpc::kv::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 
 using namespace silkworm;
-using namespace silkrpc::coro;
 using namespace silkrpc::kv;
 
-asio::awaitable<void> kv_seek(RemoteClient& kv_client, const std::string& table_name, const silkworm::Bytes& seek_key) {
+asio::awaitable<void> kv_seek(Cursor& kv_cursor, const std::string& table_name, const silkworm::Bytes& seek_key) {
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
-    auto cursor_id = co_await kv_client.open_cursor(table_name);
+    auto cursor_id = co_await kv_cursor.open_cursor(table_name);
     std::cout << "KV Tx OPEN <- cursor: " << cursor_id << "\n" << std::flush;
     std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key << "\n" << std::flush;
-    auto kv_pair = co_await kv_client.seek(cursor_id, seek_key);
+    auto kv_pair = co_await kv_cursor.seek(cursor_id, seek_key);
     std::cout << "KV Tx SEEK <- key: " << kv_pair.key << " value: " << kv_pair.value << "\n" << std::flush;
     std::cout << "KV Tx CLOSE -> cursor: " << cursor_id << "\n" << std::flush;
-    co_await kv_client.close_cursor(cursor_id);
+    co_await kv_cursor.close_cursor(cursor_id);
     std::cout << "KV Tx CLOSE <- cursor: 0\n" << std::flush;
     co_return;
 }
@@ -99,9 +96,10 @@ int main(int argc, char* argv[]) {
 
     const auto channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
 
-    RemoteClient kv_client{context, channel};
+    RemoteDatabase kv_database{context, channel};
+    auto kv_cursor = kv_database.begin()->cursor();
 
-    asio::co_spawn(context, kv_seek(kv_client, table_name, from_hex(seek_key)), [&](std::exception_ptr exptr) {
+    asio::co_spawn(context, kv_seek(*kv_cursor, table_name, from_hex(seek_key)), [&](std::exception_ptr exptr) {
         context.stop();
     });
 

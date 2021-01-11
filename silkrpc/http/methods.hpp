@@ -30,7 +30,7 @@
 namespace silkrpc::http::method {
 
 constexpr const char* k_eth_blockNumber{"eth_blockNumber"};
-
+constexpr const char* k_eth_getLogs{"eth_getLogs"};
 
 } // namespace silkrpc::http
 

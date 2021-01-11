@@ -14,8 +14,11 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_KV_CLIENT_H_
-#define SILKRPC_KV_CLIENT_H_
+#ifndef SILKRPC_KV_TRANSACTION_H_
+#define SILKRPC_KV_TRANSACTION_H_
+
+#include <memory>
+#include <string>
 
 #include <silkrpc/config.hpp>
 
@@ -23,25 +26,24 @@
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/kv/cursor.hpp>
 
 namespace silkrpc::kv {
 
-class Client {
+class Transaction {
 public:
-    Client() = default;
+    Transaction() = default;
 
-    Client(const Client&) = delete;
-    Client& operator=(const Client&) = delete;
+    Transaction(const Transaction&) = delete;
+    Transaction& operator=(const Transaction&) = delete;
 
-    virtual ~Client() = default;
+    virtual ~Transaction() = default;
 
-    virtual asio::awaitable<uint32_t> open_cursor(const std::string& table_name) = 0;
+    virtual std::unique_ptr<Cursor> cursor() = 0;
 
-    virtual asio::awaitable<silkrpc::common::KeyValue> seek(uint32_t cursor_id, const silkworm::Bytes& seek_key) = 0;
-
-    virtual asio::awaitable<void> close_cursor(uint32_t cursor_id) = 0;
+    virtual void rollback() = 0;
 };
 
 } // namespace silkrpc::kv
 
-#endif  // SILKRPC_KV_CLIENT_H_
+#endif  // SILKRPC_KV_TRANSACTION_H_

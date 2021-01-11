@@ -27,6 +27,8 @@
 #include <system_error>
 #include <vector>
 
+#include <asio/use_awaitable.hpp>
+
 #include "connection_manager.hpp"
 #include "request_handler.hpp"
 

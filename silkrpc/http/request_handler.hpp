@@ -30,12 +30,9 @@
 #include <string>
 
 #include <asio/awaitable.hpp>
-#include <asio/io_context.hpp>
-#include <grpcpp/grpcpp.h>
-#include <nlohmann/json.hpp>
 
+#include <silkrpc/json/eth_api.hpp>
 #include <silkrpc/kv/database.hpp>
-#include <silkrpc/kv/remote_client.hpp>
 
 namespace silkrpc::http {
 
@@ -47,22 +44,17 @@ public:
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
-    explicit RequestHandler(asio::io_context& io_context, const std::string& target) : io_context_(io_context) {
-        grpc_channel_ = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
-        database_ = std::make_unique<kv::Database>(std::make_shared<kv::RemoteClient>(io_context_, grpc_channel_));
-    }
+    explicit RequestHandler(std::unique_ptr<kv::Database>& database) : database_(database), eth_rpc_api_{database} {}
+
     virtual ~RequestHandler() {}
 
     asio::awaitable<void> handle_request(const Request& request, Reply& reply);
 
 private:
-    asio::awaitable<void> handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply);
+    std::unique_ptr<kv::Database>& database_;
+    json::EthereumRpcApi eth_rpc_api_;
 
-    asio::io_context& io_context_;
-    std::shared_ptr<grpc::Channel> grpc_channel_;
-    std::unique_ptr<kv::Database> database_;
-
-    typedef asio::awaitable<void> (RequestHandler::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
+    typedef asio::awaitable<void> (json::EthereumRpcApi::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
     static std::map<std::string, HandleMethod> handlers_;
 };
 

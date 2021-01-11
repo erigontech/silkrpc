@@ -24,20 +24,17 @@
 
 #include <iostream>
 #include <sstream>
-#include <string>
 
 #include "methods.hpp"
 #include "mime_types.hpp"
 #include "reply.hpp"
 #include "request.hpp"
 
-#include <silkrpc/kv/database.hpp>
-#include <silkrpc/stagedsync/stages.hpp>
-
 namespace silkrpc::http {
 
 std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = {
-    {method::k_eth_blockNumber, &RequestHandler::handle_eth_block_number},
+    {method::k_eth_blockNumber, &json::EthereumRpcApi::handle_eth_block_number},
+    {method::k_eth_getLogs, &json::EthereumRpcApi::handle_eth_get_logs},
 };
 
 asio::awaitable<void> RequestHandler::handle_request(const Request& request, Reply& reply) {
@@ -45,23 +42,35 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
         if (request.content.empty()) {
             reply.content = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"content missing\"}";
             reply.status = Reply::no_content;
+            reply.headers.resize(2);
+            reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
+            reply.headers.emplace_back(Header{"Content-Type", "application/json"});
+            co_return;
         }
 
         auto request_json = nlohmann::json::parse(request.content);
         if (!request_json.contains("method")) {
             reply.content = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"method missing\"}";
             reply.status = Reply::bad_request;
+            reply.headers.resize(2);
+            reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
+            reply.headers.emplace_back(Header{"Content-Type", "application/json"});
+            co_return;
         }
 
         auto method = request_json["method"].get<std::string>();
         if (RequestHandler::handlers_.find(method) == RequestHandler::handlers_.end()) {
             reply.content = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"method not implemented\"}";
             reply.status = Reply::not_implemented;
+            reply.headers.resize(2);
+            reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
+            reply.headers.emplace_back(Header{"Content-Type", "application/json"});
+            co_return;
         }
 
         nlohmann::json reply_json;
         auto handle_method = RequestHandler::handlers_[method];
-        co_await (this->*handle_method)(request_json, reply_json);
+        co_await (&eth_rpc_api_->*handle_method)(request_json, reply_json);
 
         reply.content = reply_json.dump();
         reply.status = Reply::ok;
@@ -78,14 +87,6 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
     reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
     reply.headers.emplace_back(Header{"Content-Type", "application/json"});
 
-    co_return;
-}
-
-asio::awaitable<void> RequestHandler::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
-    const auto block_height = co_await stages::get_sync_stage_progress(*database_, stages::kFinish);
-
-    // TODO: define namespace for JSON RPC structs (eth::jsonrpc), then use arbitrary type conv
-    reply = "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"" + std::to_string(block_height) + "\"}";
     co_return;
 }
 

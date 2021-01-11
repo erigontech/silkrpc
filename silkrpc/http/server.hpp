@@ -44,9 +44,8 @@ public:
     Server(const Server&) = delete;
     Server& operator=(const Server&) = delete;
 
-    /// Construct the server to listen on the specified TCP address and port, and
-    /// serve up files from the given directory.
-    explicit Server(asio::io_context& io_context, const std::string& address, const std::string& port, const std::string& target);
+    /// Construct the server to listen on the specified TCP address and port.
+    explicit Server(asio::io_context& io_context, const std::string& address, const std::string& port, std::unique_ptr<kv::Database>& database);
 
     asio::awaitable<void> start();
 

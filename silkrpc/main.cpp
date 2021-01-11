@@ -19,6 +19,7 @@
 #include <exception>
 #include <filesystem>
 #include <iostream>
+#include <memory>
 #include <thread>
 
 #include <absl/flags/flag.h>
@@ -32,9 +33,11 @@
 #include <boost/exception/get_error_info.hpp>
 #include <boost/process/environment.hpp>
 #include <boost/stacktrace.hpp>
+#include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/http/server.hpp>
+#include <silkrpc/kv/remote_database.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::kv::kEmptyChainData, "chain data path as string");
 ABSL_FLAG(std::string, target, silkrpc::kv::kEmptyTarget, "server location as string <address>:<port>");
@@ -78,7 +81,13 @@ int main(int argc, char* argv[]) {
         asio::io_context context{1};
         asio::signal_set signals{context, SIGINT, SIGTERM};
 
-        silkrpc::http::Server http_server{context, "localhost", "51515", target};
+        // TODO: handle also secure channel for remote
+        auto grpc_channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
+        // TODO: handle also local (shared-memory) database
+        std::unique_ptr<silkrpc::kv::Database> database =
+            std::make_unique<silkrpc::kv::RemoteDatabase>(context, grpc_channel);
+
+        silkrpc::http::Server http_server{context, "localhost", "51515", database};
 
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
             std::cout << "\nSignal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;

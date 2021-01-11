@@ -19,23 +19,18 @@
 
 #include <memory>
 
-#include <silkworm/common/util.hpp>
-#include <silkrpc/kv/client.hpp>
-#include <silkrpc/kv/cursor.hpp>
+#include <silkrpc/kv/transaction.hpp>
 
 namespace silkrpc::kv {
 
 class Database {
 public:
-    Database(std::shared_ptr<Client> client) : client_(client) {}
+    Database() = default;
 
     Database(const Database&) = delete;
     Database& operator=(const Database&) = delete;
 
-    Cursor cursor() { return Cursor{client_}; }
-
-private:
-    std::shared_ptr<Client> client_;
+    virtual std::unique_ptr<Transaction> begin() = 0;
 };
 
 } // namespace silkrpc::kv
