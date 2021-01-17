@@ -25,7 +25,7 @@
 
 #include <silkworm/common/base.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/kv/database.hpp>
+#include <silkrpc/core/rawdb/accessors.hpp>
 
 namespace silkrpc::stages {
 
@@ -46,7 +46,7 @@ const Bytes kTxLookup            = bytes_of_string("TxLookup");            // Ge
 const Bytes kTxPool              = bytes_of_string("TxPool");              // Starts Backend
 const Bytes kFinish              = bytes_of_string("Finish");              // Nominal stage after all other stages
 
-asio::awaitable<uint64_t> get_sync_stage_progress(kv::Database& database, const Bytes& stage_key);
+asio::awaitable<uint64_t> get_sync_stage_progress(core::rawdb::DatabaseReader& database, const Bytes& stage_key);
 
 } // namespace silkrpc::stages
 

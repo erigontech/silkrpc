@@ -60,7 +60,7 @@ public:
     }
 
     virtual asio::awaitable<void> close_cursor(uint32_t cursor_id) {
-        co_await kv_awaitable_.async_close_cursor(cursor_id, asio::use_awaitable);
+        co_await kv_awaitable_.async_close_cursor(cursor_id, asio::use_awaitable); // Can we shoot and forget?
         co_return;
     }
 

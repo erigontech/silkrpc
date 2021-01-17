@@ -34,14 +34,8 @@ protected:
     std::string message_;
 };
 
-asio::awaitable<uint64_t> get_sync_stage_progress(kv::Database& database, const Bytes& stage_key) {
-    const auto kv_pair = co_await database.begin()->cursor()->seek(silkworm::db::table::kSyncStageProgress.name, stage_key);
-    const auto key = kv_pair.key;
-    if (key != stage_key) {
-        throw Exception("stage key mismatch, expected " + to_hex(stage_key) + " got " + to_hex(key));
-    }
-
-    const auto value = kv_pair.value;
+asio::awaitable<uint64_t> get_sync_stage_progress(core::rawdb::DatabaseReader& db_reader, const Bytes& stage_key) {
+    const auto value = co_await db_reader.get(silkworm::db::table::kSyncStageProgress.name, stage_key);
     if (value.length() == 0) {
         co_return 0;
     }

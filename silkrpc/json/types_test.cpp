@@ -21,6 +21,24 @@
 #include <catch2/catch.hpp>
 #include <nlohmann/json.hpp>
 
+namespace silkworm {
+
+TEST_CASE("serialize empty log", "[silkworm][to_json]") {
+    Log l{{}, {}, {}};
+    nlohmann::json j = l;
+    CHECK(j == R"({"address":"0000000000000000000000000000000000000000","topics":[],"data":[]})"_json);
+}
+
+TEST_CASE("deserialize empty log", "[silkworm][from_json]") {
+    auto j1 = R"({"address":"0000000000000000000000000000000000000000","topics":[],"data":[]})"_json;
+    auto f1 = j1.get<Log>();
+    CHECK(f1.address == evmc::address{});
+    CHECK(f1.topics == std::vector<evmc::bytes32>{});
+    CHECK(f1.data == silkworm::Bytes{});
+}
+
+} // namespace silkworm
+
 namespace silkrpc::json::eth {
 
 TEST_CASE("serialize empty filter", "[silkrpc::json::eth][to_json]") {
@@ -35,14 +53,14 @@ TEST_CASE("serialize filter with fromBlock and toBlock", "[silkrpc::json::eth][t
     CHECK(j == R"({"address":["",""],"blockHash":"","fromBlock":1000,"toBlock":2000,"topics":["",""]})"_json);
 }
 
-TEST_CASE("deserialize null filter", "[silkrpc::json::eth][to_json]") {
+TEST_CASE("deserialize null filter", "[silkrpc::json::eth][from_json]") {
     auto j1 = R"({})"_json;
     auto f1 = j1.get<Filter>();
     CHECK(f1.from_block == std::nullopt);
     CHECK(f1.to_block == std::nullopt);
 }
 
-TEST_CASE("deserialize empty filter", "[silkrpc::json::eth][to_json]") {
+TEST_CASE("deserialize empty filter", "[silkrpc::json::eth][from_json]") {
     auto j1 = R"({"address":["",""],"blockHash":"","fromBlock":0,"toBlock":0,"topics":["",""]})"_json;
     auto f1 = j1.get<Filter>();
     CHECK(f1.from_block == 0);

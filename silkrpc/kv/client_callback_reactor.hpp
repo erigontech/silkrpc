@@ -33,6 +33,10 @@ public:
         StartCall();
     }
 
+    ~ClientCallbackReactor() {
+        //context_.TryCancel(); // TODO: check if needed and correct
+    }
+
     void read_start(std::function<void(bool,remote::Pair)> read_completed) {
         read_completed_ = read_completed;
         StartRead(&pair_);

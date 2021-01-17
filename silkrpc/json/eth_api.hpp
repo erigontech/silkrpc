@@ -20,15 +20,24 @@
 #include <silkrpc/config.hpp>
 
 #include <memory>
+#include <vector>
 
 #include <asio/awaitable.hpp>
+#include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
+#include <silkworm/core/silkworm/types/receipt.hpp>
+#include <silkrpc/croaring/roaring.hh>
+#include <silkrpc/ethdb/transaction_database.hpp>
+#include <silkrpc/json/types.hpp>
 #include <silkrpc/kv/database.hpp>
+#include <silkrpc/kv/transaction.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::json {
+
+typedef std::vector<silkworm::Receipt> Receipts;
 
 class EthereumRpcApi {
 public:
@@ -42,6 +51,11 @@ public:
 private:
     asio::awaitable<void> handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply);
+
+    Roaring get_topics_bitmap(ethdb::TransactionDatabase& tx_db, eth::FilterTopics& topics, uint64_t start, uint64_t end);
+    Roaring get_addresses_bitmap(ethdb::TransactionDatabase& tx_db, eth::FilterAddresses& addresses, uint64_t start, uint64_t end);
+    asio::awaitable<Receipts> get_receipts(ethdb::TransactionDatabase& tx_db, uint64_t number, evmc::bytes32 hash);
+    std::vector<silkworm::Log> filter_logs(std::vector<silkworm::Log>& unfiltered, const eth::Filter& filter);
 
     std::unique_ptr<kv::Database>& database_;
 

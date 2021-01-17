@@ -16,30 +16,136 @@
 
 #include "eth_api.hpp"
 
-#include <silkrpc/croaring/roaring.hh>
-#include <silkrpc/json/types.hpp>
-#include <silkrpc/stagedsync/stages.hpp>
+#include "types.hpp"
+
+#include <exception>
+#include <iostream>
+
+#include <silkworm/core/silkworm/common/util.hpp>
+#include <silkworm/core/silkworm/types/receipt.hpp>
+#include <silkrpc/common/log.hpp>
+#include <silkrpc/core/blocks.hpp>
+#include <silkrpc/core/rawdb/chain.hpp>
 
 namespace silkrpc::json {
 
 // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_blockNumber
 asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
-    const auto block_height = co_await stages::get_sync_stage_progress(*database_, stages::kFinish);
+    auto tx = database_->begin();
+    ethdb::TransactionDatabase tx_database{*tx};
 
-    // TODO: define namespace for JSON RPC structs (eth::jsonrpc), then use arbitrary type conv
-    reply = "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"" + std::to_string(block_height) + "\"}";
+    try {
+        const auto block_height = co_await core::get_current_block_number(tx_database);
+        reply = eth::make_json_content(request["id"], block_height);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+        reply = eth::make_json_error(request["id"], e.what());
+
+        tx->rollback(); // co_await when implemented
+    }
+
     co_return;
 }
 
-// https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getlogs
+// https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getLogs
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply) {
     auto filter = request["params"].get<eth::Filter>();
+    std::cout << "filter=" << filter << "\n" << std::flush;
 
-    Roaring r;
+    std::vector<silkworm::Log> logs;
 
-    // TODO: define namespace for JSON RPC structs (eth::jsonrpc), then use arbitrary type conv
-    reply = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"method not YET implemented\"}";
+    auto tx = database_->begin();
+    ethdb::TransactionDatabase tx_database{*tx};
+
+    try {
+        uint64_t start{}, end{};
+        if (filter.block_hash.has_value()) {
+            auto block_hash = silkworm::to_bytes32(silkworm::from_hex(filter.block_hash.value()));
+            auto block_number = co_await core::rawdb::read_header_number(tx_database, block_hash);
+            start = end = block_number;
+        } else {
+            auto latest_block_number = co_await core::get_latest_block_number(tx_database);
+            start = filter.from_block.value_or(latest_block_number);
+            end = filter.from_block.value_or(latest_block_number);
+        }
+
+        Roaring block_numbers;
+        block_numbers.addRange(start, end + 1);
+
+        if (filter.topics.has_value()) {
+            auto topics_bitmap = get_topics_bitmap(tx_database, filter.topics.value(), start, end); // [3] implement
+            if (!topics_bitmap.isEmpty()) {
+                if (block_numbers.isEmpty()) {
+                    block_numbers = topics_bitmap;
+                } else {
+                    block_numbers &= topics_bitmap;
+                }
+            }
+        }
+
+        if (filter.addresses.has_value()) {
+            auto addresses_bitmap = get_addresses_bitmap(tx_database, filter.addresses.value(), start, end); // [3] implement
+            if (!addresses_bitmap.isEmpty()) {
+                if (block_numbers.isEmpty()) {
+                    block_numbers = addresses_bitmap;
+                } else {
+                    block_numbers &= addresses_bitmap;
+                }
+            }
+        }
+
+        if (block_numbers.cardinality() == 0) {
+            reply = eth::make_json_content(request["id"], logs);
+            co_return;
+        }
+
+        std::vector<uint32_t> ans{uint32_t(block_numbers.cardinality())};
+        block_numbers.toUint32Array(ans.data());
+        for (auto block_to_match : block_numbers) {
+            auto block_hash = co_await core::rawdb::read_canonical_block_hash(tx_database, uint64_t(block_to_match));
+            if (block_hash == evmc::bytes32{}) {
+                reply = eth::make_json_content(request["id"], logs);
+                co_return;
+            }
+
+            auto receipts = co_await get_receipts(tx_database, uint64_t(block_to_match), block_hash);
+            std::vector<silkworm::Log> unfiltered_logs{receipts.size()};
+            for (auto receipt: receipts) {
+                unfiltered_logs.insert(unfiltered_logs.end(), receipt.logs.begin(), receipt.logs.end());
+            }
+            auto filtered_logs = filter_logs(unfiltered_logs, filter);
+            logs.insert(logs.end(), filtered_logs.begin(), filtered_logs.end());
+        }
+
+        reply = eth::make_json_content(request["id"], logs);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+        reply = eth::make_json_error(request["id"], e.what());
+
+        tx->rollback(); // co_await when implemented
+    }
+
     co_return;
+}
+
+Roaring EthereumRpcApi::get_topics_bitmap(ethdb::TransactionDatabase& tx_db, eth::FilterTopics& topics, uint64_t start, uint64_t end) {
+    Roaring r;
+    return r;
+}
+
+Roaring EthereumRpcApi::get_addresses_bitmap(ethdb::TransactionDatabase& tx_db, eth::FilterAddresses& addresses, uint64_t start, uint64_t end) {
+    Roaring r;
+    return r;
+}
+
+asio::awaitable<Receipts> EthereumRpcApi::get_receipts(ethdb::TransactionDatabase& tx_db, uint64_t number, evmc::bytes32 hash) {
+    co_return Receipts{};
+}
+
+std::vector<silkworm::Log> EthereumRpcApi::filter_logs(std::vector<silkworm::Log>& unfiltered, const eth::Filter& filter) {
+    std::vector<silkworm::Log> filtered_logs;
+
+    return filtered_logs;
 }
 
 } // namespace silkrpc::json

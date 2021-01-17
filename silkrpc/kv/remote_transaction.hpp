@@ -40,7 +40,9 @@ public:
         return std::make_unique<RemoteCursor>(kv_awaitable_);
     }
 
-    virtual void rollback() override {}
+    virtual void rollback() override {
+        // TODO: trace open cursors, close pending one here (requires cursorId in cursor and making this a coroutine)
+    }
 
 private:
     asio::io_context& context_;

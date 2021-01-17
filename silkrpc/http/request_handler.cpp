@@ -30,7 +30,12 @@
 #include "reply.hpp"
 #include "request.hpp"
 
+#include <silkrpc/common/clock.hpp>
+#include <silkrpc/common/log.hpp>
+
 namespace silkrpc::http {
+
+namespace clock_time = common::clock;
 
 std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = {
     {method::k_eth_blockNumber, &json::EthereumRpcApi::handle_eth_block_number},
@@ -38,6 +43,8 @@ std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = 
 };
 
 asio::awaitable<void> RequestHandler::handle_request(const Request& request, Reply& reply) {
+    auto start = clock_time::now();
+
     try {
         if (request.content.empty()) {
             reply.content = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"content missing\"}";
@@ -45,6 +52,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
             reply.headers.resize(2);
             reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
             reply.headers.emplace_back(Header{"Content-Type", "application/json"});
+            SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n" << std::flush;
             co_return;
         }
 
@@ -55,6 +63,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
             reply.headers.resize(2);
             reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
             reply.headers.emplace_back(Header{"Content-Type", "application/json"});
+            SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n" << std::flush;
             co_return;
         }
 
@@ -65,6 +74,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
             reply.headers.resize(2);
             reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
             reply.headers.emplace_back(Header{"Content-Type", "application/json"});
+            SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n" << std::flush;
             co_return;
         }
 
@@ -87,6 +97,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
     reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
     reply.headers.emplace_back(Header{"Content-Type", "application/json"});
 
+    SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n" << std::flush;
     co_return;
 }
 
