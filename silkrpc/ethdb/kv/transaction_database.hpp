@@ -17,13 +17,14 @@
 #ifndef SILKRPC_ETHDB_TRANSACTIONDATABASE_H_
 #define SILKRPC_ETHDB_TRANSACTIONDATABASE_H_
 
+#include "transaction.hpp"
+
 #include <string>
 
 #include <silkworm/core/silkworm/common/util.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/kv/transaction.hpp>
 
-namespace silkrpc::ethdb {
+namespace silkrpc::ethdb::kv {
 
 class TransactionDatabase : public core::rawdb::DatabaseReader {
 public:
@@ -41,6 +42,6 @@ private:
     kv::Transaction& tx_;
 };
 
-} // namespace silkrpc::ethdb
+} // namespace silkrpc::ethdb::kv
 
 #endif  // SILKRPC_ETHDB_TRANSACTIONDATABASE_H_

@@ -22,9 +22,9 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/kv/remote/kv.grpc.pb.h>
+#include <silkrpc/ethdb/kv/remote/kv.grpc.pb.h>
 
-namespace silkrpc::kv {
+namespace silkrpc::ethdb::kv {
 
 class ClientCallbackReactor final : public grpc::experimental::ClientBidiReactor<remote::Cursor, remote::Pair> {
 public:
@@ -62,6 +62,6 @@ private:
     std::function<void(bool)> write_completed_;
 };
 
-} // namespace silkrpc::kv
+} // namespace silkrpc::ethdb::kv
 
 #endif // SILKRPC_KV_CLIENT_CALLBACK_REACTOR_HPP

@@ -34,13 +34,13 @@
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/kv/async_close_cursor.hpp>
-#include <silkrpc/kv/async_open_cursor.hpp>
-#include <silkrpc/kv/async_seek.hpp>
-#include <silkrpc/kv/client_callback_reactor.hpp>
-#include <silkrpc/kv/remote/kv.grpc.pb.h>
+#include <silkrpc/ethdb/kv/async_close_cursor.hpp>
+#include <silkrpc/ethdb/kv/async_open_cursor.hpp>
+#include <silkrpc/ethdb/kv/async_seek.hpp>
+#include <silkrpc/ethdb/kv/client_callback_reactor.hpp>
+#include <silkrpc/ethdb/kv/remote/kv.grpc.pb.h>
 
-namespace silkrpc::kv {
+namespace silkrpc::ethdb::kv {
 
 template<typename Executor>
 struct KvAsioAwaitable;
@@ -60,7 +60,7 @@ public:
         ASIO_WAIT_HANDLER_CHECK(WaitHandler, handler) type_check;
 
         asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
-        typedef silkrpc::kv::async_open_cursor<WaitHandler, Executor> op;
+        typedef silkrpc::ethdb::kv::async_open_cursor<WaitHandler, Executor> op;
         typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
@@ -77,7 +77,7 @@ public:
                 }
                 auto cursor_id = open_pair.cursorid();
 
-                typedef silkrpc::kv::async_open_cursor<WaitHandler, Executor> op;
+                typedef silkrpc::ethdb::kv::async_open_cursor<WaitHandler, Executor> op;
                 auto open_cursor_op = static_cast<op*>(wrapper_);
 
                 // Make the io_context thread execute the operation completion
@@ -109,7 +109,7 @@ public:
         ASIO_WAIT_HANDLER_CHECK(WaitHandler, handler) type_check;
 
         asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
-        typedef silkrpc::kv::async_seek<WaitHandler, Executor> op;
+        typedef silkrpc::ethdb::kv::async_seek<WaitHandler, Executor> op;
         typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
@@ -126,7 +126,7 @@ public:
                     throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in SEEK"};
                 }
 
-                typedef silkrpc::kv::async_seek<WaitHandler, Executor> op;
+                typedef silkrpc::ethdb::kv::async_seek<WaitHandler, Executor> op;
                 auto seek_op = static_cast<op*>(wrapper_);
 
                 // Make the io_context thread execute the operation completion
@@ -159,7 +159,7 @@ public:
         ASIO_WAIT_HANDLER_CHECK(WaitHandler, handler) type_check;
 
         asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
-        typedef silkrpc::kv::async_close_cursor<WaitHandler, Executor> op;
+        typedef silkrpc::ethdb::kv::async_close_cursor<WaitHandler, Executor> op;
         typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
@@ -176,7 +176,7 @@ public:
                 }
                 auto cursor_id = close_pair.cursorid();
 
-                typedef silkrpc::kv::async_close_cursor<WaitHandler, Executor> op;
+                typedef silkrpc::ethdb::kv::async_close_cursor<WaitHandler, Executor> op;
                 auto close_cursor_op = static_cast<op*>(wrapper_);
 
                 // Make the io_context thread execute the operation completion
@@ -316,6 +316,6 @@ struct KvCloseCursorAwaitable : KvAwaitable {
     auto await_resume() noexcept { return cursor_id_; }
 };
 
-} // namespace silkrpc::kv
+} // namespace silkrpc::ethdb::kv
 
 #endif // SILKRPC_KV_AWAITABLES_HPP

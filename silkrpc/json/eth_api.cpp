@@ -32,7 +32,7 @@ namespace silkrpc::json {
 // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_blockNumber
 asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = database_->begin();
-    ethdb::TransactionDatabase tx_database{*tx};
+    ethdb::kv::TransactionDatabase tx_database{*tx};
 
     try {
         const auto block_height = co_await core::get_current_block_number(tx_database);
@@ -55,7 +55,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
     std::vector<silkworm::Log> logs;
 
     auto tx = database_->begin();
-    ethdb::TransactionDatabase tx_database{*tx};
+    ethdb::kv::TransactionDatabase tx_database{*tx};
 
     try {
         uint64_t start{}, end{};
@@ -128,17 +128,17 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
     co_return;
 }
 
-Roaring EthereumRpcApi::get_topics_bitmap(ethdb::TransactionDatabase& tx_db, eth::FilterTopics& topics, uint64_t start, uint64_t end) {
+Roaring EthereumRpcApi::get_topics_bitmap(ethdb::kv::TransactionDatabase& tx_db, eth::FilterTopics& topics, uint64_t start, uint64_t end) {
     Roaring r;
     return r;
 }
 
-Roaring EthereumRpcApi::get_addresses_bitmap(ethdb::TransactionDatabase& tx_db, eth::FilterAddresses& addresses, uint64_t start, uint64_t end) {
+Roaring EthereumRpcApi::get_addresses_bitmap(ethdb::kv::TransactionDatabase& tx_db, eth::FilterAddresses& addresses, uint64_t start, uint64_t end) {
     Roaring r;
     return r;
 }
 
-asio::awaitable<Receipts> EthereumRpcApi::get_receipts(ethdb::TransactionDatabase& tx_db, uint64_t number, evmc::bytes32 hash) {
+asio::awaitable<Receipts> EthereumRpcApi::get_receipts(ethdb::kv::TransactionDatabase& tx_db, uint64_t number, evmc::bytes32 hash) {
     co_return Receipts{};
 }
 

@@ -16,7 +16,7 @@
 
 #include "transaction_database.hpp"
 
-namespace silkrpc::ethdb {
+namespace silkrpc::ethdb::kv {
 
 asio::awaitable<bool> TransactionDatabase::has(const std::string& table_name, const silkworm::Bytes& key) {
     co_return false;
@@ -29,4 +29,4 @@ asio::awaitable<silkworm::Bytes> TransactionDatabase::get(const std::string& tab
 
 void TransactionDatabase::close() {}
 
-} // namespace silkrpc::ethdb
+} // namespace silkrpc::ethdb::kv

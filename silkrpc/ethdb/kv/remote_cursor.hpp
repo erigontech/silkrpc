@@ -27,10 +27,10 @@
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/kv/awaitables.hpp>
-#include <silkrpc/kv/cursor.hpp>
+#include <silkrpc/ethdb/kv/awaitables.hpp>
+#include <silkrpc/ethdb/kv/cursor.hpp>
 
-namespace silkrpc::kv {
+namespace silkrpc::ethdb::kv {
 
 class RemoteCursor : public Cursor {
 public:
@@ -68,6 +68,6 @@ private:
     KvAsioAwaitable<asio::io_context::executor_type>& kv_awaitable_;
 };
 
-} // namespace silkrpc::kv
+} // namespace silkrpc::ethdb::kv
 
 #endif  // SILKRPC_KV_REMOTE_CURSOR_H_

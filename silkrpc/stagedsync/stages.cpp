@@ -18,8 +18,9 @@
 
 #include <exception>
 
+#include <boost/endian/conversion.hpp>
+
 #include <silkworm/db/tables.hpp>
-#include <silkworm/rlp/decode.hpp>
 
 namespace silkrpc::stages {
 
@@ -42,9 +43,7 @@ asio::awaitable<uint64_t> get_sync_stage_progress(core::rawdb::DatabaseReader& d
     if (value.length() < 8) {
         throw Exception("data too short, expected 8 got " + std::to_string(value.length()));
     }
-    ByteView data{value.substr(0, 8)};
-    uint64_t block_height = rlp::read_uint64(data, /*allow_leading_zeros=*/true);
-
+    uint64_t block_height = boost::endian::load_big_u64(value.substr(0, 8).data());
     co_return block_height;
 }
 

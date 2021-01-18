@@ -19,7 +19,7 @@
 
 #include <asio/detail/handler_tracking.hpp>
 
-namespace silkrpc::kv {
+namespace silkrpc::ethdb::kv {
 
 // Base class for gRPC async operations using Asio completion tokens.
 template<typename R, typename... Args>
@@ -48,6 +48,6 @@ private:
     func_type func_;
 };
 
-} // namespace silkrpc::kv
+} // namespace silkrpc::ethdb::kv
 
 #endif // SILKRPC_KV_ASYNC_OPERATION_HPP

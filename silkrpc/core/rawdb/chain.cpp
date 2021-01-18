@@ -26,7 +26,7 @@
 namespace silkrpc::core::rawdb {
 
 asio::awaitable<uint64_t> read_header_number(DatabaseReader& reader, evmc::bytes32 block_hash) {
-    silkworm::ByteView value {co_await reader.get(silkworm::db::table::kHeaderNumbers.name, block_hash.bytes)};
+    silkworm::ByteView value{co_await reader.get(silkworm::db::table::kHeaderNumbers.name, block_hash.bytes)};
     if (value.empty()) {
         co_return 0;
     }

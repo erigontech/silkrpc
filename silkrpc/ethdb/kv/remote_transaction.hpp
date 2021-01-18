@@ -21,13 +21,13 @@
 
 #include <silkrpc/config.hpp>
 
-#include <silkrpc/kv/awaitables.hpp>
-#include <silkrpc/kv/cursor.hpp>
-#include <silkrpc/kv/remote_cursor.hpp>
-#include <silkrpc/kv/transaction.hpp>
-#include <silkrpc/kv/client_callback_reactor.hpp>
+#include <silkrpc/ethdb/kv/awaitables.hpp>
+#include <silkrpc/ethdb/kv/cursor.hpp>
+#include <silkrpc/ethdb/kv/remote_cursor.hpp>
+#include <silkrpc/ethdb/kv/transaction.hpp>
+#include <silkrpc/ethdb/kv/client_callback_reactor.hpp>
 
-namespace silkrpc::kv {
+namespace silkrpc::ethdb::kv {
 
 using namespace silkworm;
 
@@ -50,6 +50,6 @@ private:
     KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
 };
 
-} // namespace silkrpc::kv
+} // namespace silkrpc::ethdb::kv
 
 #endif // SILKRPC_KV_REMOTE_TRANSACTION_HPP

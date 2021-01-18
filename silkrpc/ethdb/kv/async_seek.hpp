@@ -24,10 +24,10 @@
 #include <asio/detail/handler_work.hpp>
 #include <asio/detail/memory.hpp>
 
-#include <silkrpc/kv/async_operation.hpp>
-#include <silkrpc/kv/remote/kv.grpc.pb.h>
+#include <silkrpc/ethdb/kv/async_operation.hpp>
+#include <silkrpc/ethdb/kv/remote/kv.grpc.pb.h>
 
-namespace silkrpc::kv {
+namespace silkrpc::ethdb::kv {
 
 template <typename Handler, typename IoExecutor>
 class async_seek : public async_operation<void, remote::Pair>
@@ -75,6 +75,6 @@ private:
     asio::detail::handler_work<Handler, IoExecutor> work_;
 };
 
-} // namespace silkrpc::kv
+} // namespace silkrpc::ethdb::kv
 
 #endif // SILKRPC_KV_ASYNC_SEEK_HPP

@@ -26,7 +26,7 @@
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/util.hpp>
 
-namespace silkrpc::kv {
+namespace silkrpc::ethdb::kv {
 
 class Cursor {
 public:
@@ -44,6 +44,6 @@ public:
     virtual asio::awaitable<void> close_cursor(uint32_t cursor_id) = 0;
 };
 
-} // namespace silkrpc::kv
+} // namespace silkrpc::ethdb::kv
 
 #endif  // SILKRPC_KV_CURSOR_H_

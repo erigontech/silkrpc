@@ -45,7 +45,7 @@ public:
     Server& operator=(const Server&) = delete;
 
     /// Construct the server to listen on the specified TCP address and port.
-    explicit Server(asio::io_context& io_context, const std::string& address, const std::string& port, std::unique_ptr<kv::Database>& database);
+    explicit Server(asio::io_context& io_context, const std::string& address, const std::string& port, std::unique_ptr<ethdb::kv::Database>& database);
 
     asio::awaitable<void> start();
 

@@ -19,9 +19,9 @@
 
 #include <memory>
 
-#include <silkrpc/kv/transaction.hpp>
+#include <silkrpc/ethdb/kv/transaction.hpp>
 
-namespace silkrpc::kv {
+namespace silkrpc::ethdb::kv {
 
 class Database {
 public:
@@ -33,6 +33,6 @@ public:
     virtual std::unique_ptr<Transaction> begin() = 0;
 };
 
-} // namespace silkrpc::kv
+} // namespace silkrpc::ethdb::kv
 
 #endif  // SILKRPC_KV_DATABASE_H_

@@ -32,16 +32,16 @@
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/kv/cursor.hpp>
-#include <silkrpc/kv/remote_database.hpp>
+#include <silkrpc/ethdb/kv/cursor.hpp>
+#include <silkrpc/ethdb/kv/remote_database.hpp>
 
 ABSL_FLAG(std::string, table, "", "database table name");
 ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
-ABSL_FLAG(std::string, target, silkrpc::kv::kDefaultTarget, "server location as string <address>:<port>");
-ABSL_FLAG(uint32_t, timeout, silkrpc::kv::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
+ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location as string <address>:<port>");
+ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 
 using namespace silkworm;
-using namespace silkrpc::kv;
+using namespace silkrpc::ethdb::kv;
 
 asio::awaitable<void> kv_seek(Cursor& kv_cursor, const std::string& table_name, const silkworm::Bytes& seek_key) {
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;

@@ -26,9 +26,9 @@
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/kv/cursor.hpp>
+#include <silkrpc/ethdb/kv/cursor.hpp>
 
-namespace silkrpc::kv {
+namespace silkrpc::ethdb::kv {
 
 class Transaction {
 public:
@@ -44,6 +44,6 @@ public:
     virtual void rollback() = 0;
 };
 
-} // namespace silkrpc::kv
+} // namespace silkrpc::ethdb::kv
 
 #endif  // SILKRPC_KV_TRANSACTION_H_

@@ -29,12 +29,12 @@
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/kv/remote/kv.grpc.pb.h>
+#include <silkrpc/ethdb/kv/remote/kv.grpc.pb.h>
 
 ABSL_FLAG(std::string, table, "", "database table name");
 ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
-ABSL_FLAG(std::string, target, silkrpc::kv::kDefaultTarget, "server location as string <address>:<port>");
-ABSL_FLAG(uint32_t, timeout, silkrpc::kv::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
+ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location as string <address>:<port>");
+ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 
 class GrpcKvCallbackReactor final : public grpc::experimental::ClientBidiReactor<remote::Cursor, remote::Pair> {
 public:

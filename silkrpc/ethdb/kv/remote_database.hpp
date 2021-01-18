@@ -22,10 +22,10 @@
 #include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/kv/database.hpp>
-#include <silkrpc/kv/remote_transaction.hpp>
+#include <silkrpc/ethdb/kv/database.hpp>
+#include <silkrpc/ethdb/kv/remote_transaction.hpp>
 
-namespace silkrpc::kv {
+namespace silkrpc::ethdb::kv {
 
 class RemoteDatabase :public Database {
 public:
@@ -44,6 +44,6 @@ private:
     std::shared_ptr<grpc::Channel> channel_;
 };
 
-} // namespace silkrpc::kv
+} // namespace silkrpc::ethdb::kv
 
 #endif  // SILKRPC_KV_REMOTE_RemoteDatabase_H_
