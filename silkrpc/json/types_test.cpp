@@ -39,7 +39,7 @@ TEST_CASE("deserialize empty log", "[silkworm][from_json]") {
 
 } // namespace silkworm
 
-namespace silkrpc::json::eth {
+namespace silkrpc::json {
 
 TEST_CASE("serialize empty filter", "[silkrpc::json::eth][to_json]") {
     Filter f{{0}, {0}, {{"", ""}}, {{"", ""}}, {""}};
@@ -67,4 +67,4 @@ TEST_CASE("deserialize empty filter", "[silkrpc::json::eth][from_json]") {
     CHECK(f1.to_block == 0);
 }
 
-} // namespace silkrpc
+} // namespace silkrpc::json

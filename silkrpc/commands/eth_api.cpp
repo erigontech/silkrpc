@@ -16,8 +16,6 @@
 
 #include "eth_api.hpp"
 
-#include "types.hpp"
-
 #include <exception>
 #include <iostream>
 
@@ -26,8 +24,9 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
+#include <silkrpc/json/types.hpp>
 
-namespace silkrpc::json {
+namespace silkrpc::commands {
 
 // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_blockNumber
 asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
@@ -36,10 +35,10 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
 
     try {
         const auto block_height = co_await core::get_current_block_number(tx_database);
-        reply = eth::make_json_content(request["id"], block_height);
+        reply = json::make_json_content(request["id"], block_height);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
-        reply = eth::make_json_error(request["id"], e.what());
+        reply = json::make_json_error(request["id"], e.what());
 
         tx->rollback(); // co_await when implemented
     }
@@ -49,7 +48,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
 
 // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getLogs
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply) {
-    auto filter = request["params"].get<eth::Filter>();
+    auto filter = request["params"].get<json::Filter>();
     std::cout << "filter=" << filter << "\n" << std::flush;
 
     std::vector<silkworm::Log> logs;
@@ -95,7 +94,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
         }
 
         if (block_numbers.cardinality() == 0) {
-            reply = eth::make_json_content(request["id"], logs);
+            reply = json::make_json_content(request["id"], logs);
             co_return;
         }
 
@@ -104,7 +103,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
         for (auto block_to_match : block_numbers) {
             auto block_hash = co_await core::rawdb::read_canonical_block_hash(tx_database, uint64_t(block_to_match));
             if (block_hash == evmc::bytes32{}) {
-                reply = eth::make_json_content(request["id"], logs);
+                reply = json::make_json_content(request["id"], logs);
                 co_return;
             }
 
@@ -117,10 +116,10 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
             logs.insert(logs.end(), filtered_logs.begin(), filtered_logs.end());
         }
 
-        reply = eth::make_json_content(request["id"], logs);
+        reply = json::make_json_content(request["id"], logs);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
-        reply = eth::make_json_error(request["id"], e.what());
+        reply = json::make_json_error(request["id"], e.what());
 
         tx->rollback(); // co_await when implemented
     }
@@ -128,12 +127,12 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
     co_return;
 }
 
-Roaring EthereumRpcApi::get_topics_bitmap(ethdb::kv::TransactionDatabase& tx_db, eth::FilterTopics& topics, uint64_t start, uint64_t end) {
+Roaring EthereumRpcApi::get_topics_bitmap(ethdb::kv::TransactionDatabase& tx_db, json::FilterTopics& topics, uint64_t start, uint64_t end) {
     Roaring r;
     return r;
 }
 
-Roaring EthereumRpcApi::get_addresses_bitmap(ethdb::kv::TransactionDatabase& tx_db, eth::FilterAddresses& addresses, uint64_t start, uint64_t end) {
+Roaring EthereumRpcApi::get_addresses_bitmap(ethdb::kv::TransactionDatabase& tx_db, json::FilterAddresses& addresses, uint64_t start, uint64_t end) {
     Roaring r;
     return r;
 }
@@ -142,10 +141,10 @@ asio::awaitable<Receipts> EthereumRpcApi::get_receipts(ethdb::kv::TransactionDat
     co_return Receipts{};
 }
 
-std::vector<silkworm::Log> EthereumRpcApi::filter_logs(std::vector<silkworm::Log>& unfiltered, const eth::Filter& filter) {
+std::vector<silkworm::Log> EthereumRpcApi::filter_logs(std::vector<silkworm::Log>& unfiltered, const json::Filter& filter) {
     std::vector<silkworm::Log> filtered_logs;
 
     return filtered_logs;
 }
 
-} // namespace silkrpc::json
+} // namespace silkrpc::commands

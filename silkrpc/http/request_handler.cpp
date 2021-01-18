@@ -38,8 +38,8 @@ namespace silkrpc::http {
 namespace clock_time = common::clock;
 
 std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = {
-    {method::k_eth_blockNumber, &json::EthereumRpcApi::handle_eth_block_number},
-    {method::k_eth_getLogs, &json::EthereumRpcApi::handle_eth_get_logs},
+    {method::k_eth_blockNumber, &commands::EthereumRpcApi::handle_eth_block_number},
+    {method::k_eth_getLogs, &commands::EthereumRpcApi::handle_eth_get_logs},
 };
 
 asio::awaitable<void> RequestHandler::handle_request(const Request& request, Reply& reply) {

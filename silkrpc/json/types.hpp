@@ -45,7 +45,7 @@ void from_json(const nlohmann::json& json, Log& log);
 
 } // namespace silkworm
 
-namespace silkrpc::json::eth {
+namespace silkrpc::json {
 
 nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result);
 nlohmann::json make_json_error(uint32_t id, const std::string& error);
@@ -66,6 +66,6 @@ void from_json(const nlohmann::json& json, Filter& filter);
 
 std::ostream& operator<<(std::ostream& out, const Filter& filter);
 
-} // namespace silkrpc::json::eth
+} // namespace silkrpc::json
 
 #endif  // SILKRPC_JSON_ETH_H_

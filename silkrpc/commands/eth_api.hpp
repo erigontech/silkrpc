@@ -35,7 +35,7 @@
 
 namespace silkrpc::http { class RequestHandler; }
 
-namespace silkrpc::json {
+namespace silkrpc::commands {
 
 typedef std::vector<silkworm::Receipt> Receipts;
 
@@ -52,16 +52,16 @@ private:
     asio::awaitable<void> handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply);
 
-    Roaring get_topics_bitmap(ethdb::kv::TransactionDatabase& tx_db, eth::FilterTopics& topics, uint64_t start, uint64_t end);
-    Roaring get_addresses_bitmap(ethdb::kv::TransactionDatabase& tx_db, eth::FilterAddresses& addresses, uint64_t start, uint64_t end);
+    Roaring get_topics_bitmap(ethdb::kv::TransactionDatabase& tx_db, json::FilterTopics& topics, uint64_t start, uint64_t end);
+    Roaring get_addresses_bitmap(ethdb::kv::TransactionDatabase& tx_db, json::FilterAddresses& addresses, uint64_t start, uint64_t end);
     asio::awaitable<Receipts> get_receipts(ethdb::kv::TransactionDatabase& tx_db, uint64_t number, evmc::bytes32 hash);
-    std::vector<silkworm::Log> filter_logs(std::vector<silkworm::Log>& unfiltered, const eth::Filter& filter);
+    std::vector<silkworm::Log> filter_logs(std::vector<silkworm::Log>& unfiltered, const json::Filter& filter);
 
     std::unique_ptr<ethdb::kv::Database>& database_;
 
     friend class silkrpc::http::RequestHandler;
 };
 
-} // namespace silkrpc::json
+} // namespace silkrpc::commands
 
 #endif  // SILKRPC_JSON_ETH_API_H_

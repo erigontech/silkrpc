@@ -31,7 +31,7 @@
 
 #include <asio/awaitable.hpp>
 
-#include <silkrpc/json/eth_api.hpp>
+#include <silkrpc/commands/eth_api.hpp>
 #include <silkrpc/ethdb/kv/database.hpp>
 
 namespace silkrpc::http {
@@ -52,9 +52,9 @@ public:
 
 private:
     std::unique_ptr<ethdb::kv::Database>& database_;
-    json::EthereumRpcApi eth_rpc_api_;
+    commands::EthereumRpcApi eth_rpc_api_;
 
-    typedef asio::awaitable<void> (json::EthereumRpcApi::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
+    typedef asio::awaitable<void> (commands::EthereumRpcApi::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
     static std::map<std::string, HandleMethod> handlers_;
 };
 

@@ -52,7 +52,7 @@ void from_json(const nlohmann::json& json, Log& log) {
 
 } // namespace silkworm
 
-namespace silkrpc::json::eth {
+namespace silkrpc::json {
 
 nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result) {
     return {{"jsonrpc", "2.0"}, {"id", id}, {"result", result}};
@@ -128,4 +128,4 @@ std::ostream& operator<<(std::ostream& out, const Filter& filter) {
     return out;
 }
 
-} // namespace silkrpc::json::eth
+} // namespace silkrpc::json
