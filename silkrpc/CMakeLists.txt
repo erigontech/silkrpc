@@ -23,11 +23,9 @@ file(GLOB_RECURSE SILKRPC_SRC CONFIGURE_DEPENDS "*.cpp" "*.cc" "*.hpp" "*.c" "*.
 list(FILTER SILKRPC_SRC EXCLUDE REGEX "main\.cpp$|_test\.cpp$")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  add_compile_options(-std=c++20)
-  add_compile_options(-fcoroutines)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -fcoroutines")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  add_compile_options(-std=c++20)
-  add_compile_options(-fcoroutines-ts -stdlib=libc++)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -fcoroutines-ts -stdlib=libc++")
   add_link_options(-stdlib=libc++)
 endif()
 
