@@ -95,11 +95,11 @@ void from_json(const nlohmann::json& json, Filter& filter) {
         if (json.at("address").is_string()) {
             filter.addresses= {json.at("address").get<std::string>()};
         } else {
-            filter.addresses = json.at("address").get<std::vector<std::string>>();
+            filter.addresses = json.at("address").get<FilterAddresses>();
         }
     }
     if (json.count("topics") != 0) {
-        filter.topics = json.at("topics").get<std::vector<std::string>>();
+        filter.topics = json.at("topics").get<FilterTopics>();
     }
     if (json.count("blockHash") != 0) {
         filter.block_hash = json.at("blockHash").get<std::string>();
@@ -110,6 +110,20 @@ std::ostream& operator<<(std::ostream& out, const std::optional<std::vector<std:
     if (v.has_value()) {
         out << "[";
         for (auto i = v.value().begin(); i != v.value().end(); ++i) {
+            out << *i << " ";
+        }
+        out << "]";
+    } else {
+        out << "null";
+    }
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const std::optional<FilterTopics>& topics) {
+    if (topics.has_value()) {
+        auto subtopics = topics.value();
+        out << "[";
+        for (auto i = subtopics.begin(); i != subtopics.end(); ++i) {
             out << *i << " ";
         }
         out << "]";

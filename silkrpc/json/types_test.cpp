@@ -42,15 +42,15 @@ TEST_CASE("deserialize empty log", "[silkworm][from_json]") {
 namespace silkrpc::json {
 
 TEST_CASE("serialize empty filter", "[silkrpc::json::eth][to_json]") {
-    Filter f{{0}, {0}, {{"", ""}}, {{"", ""}}, {""}};
+    Filter f{{0}, {0}, {{"", ""}}, {{{"", ""}, {"", ""}}}, {""}};
     nlohmann::json j = f;
-    CHECK(j == R"({"address":["",""],"blockHash":"","fromBlock":0,"toBlock":0,"topics":["",""]})"_json);
+    CHECK(j == R"({"address":["",""],"blockHash":"","fromBlock":0,"toBlock":0,"topics":[["",""], ["",""]]})"_json);
 }
 
 TEST_CASE("serialize filter with fromBlock and toBlock", "[silkrpc::json::eth][to_json]") {
-    Filter f{{1000}, {2000}, {{"", ""}}, {{"", ""}}, {""}};
+    Filter f{{1000}, {2000}, {{"", ""}}, {{{"", ""}, {"", ""}}}, {""}};
     nlohmann::json j = f;
-    CHECK(j == R"({"address":["",""],"blockHash":"","fromBlock":1000,"toBlock":2000,"topics":["",""]})"_json);
+    CHECK(j == R"({"address":["",""],"blockHash":"","fromBlock":1000,"toBlock":2000,"topics":[["",""], ["",""]]})"_json);
 }
 
 TEST_CASE("deserialize null filter", "[silkrpc::json::eth][from_json]") {
@@ -61,7 +61,7 @@ TEST_CASE("deserialize null filter", "[silkrpc::json::eth][from_json]") {
 }
 
 TEST_CASE("deserialize empty filter", "[silkrpc::json::eth][from_json]") {
-    auto j1 = R"({"address":["",""],"blockHash":"","fromBlock":0,"toBlock":0,"topics":["",""]})"_json;
+    auto j1 = R"({"address":["",""],"blockHash":"","fromBlock":0,"toBlock":0,"topics":[["",""], ["",""]]})"_json;
     auto f1 = j1.get<Filter>();
     CHECK(f1.from_block == 0);
     CHECK(f1.to_block == 0);

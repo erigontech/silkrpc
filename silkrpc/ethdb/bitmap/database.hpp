@@ -14,31 +14,21 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_RAWDB_ACCESSORS_H_
-#define SILKRPC_CORE_RAWDB_ACCESSORS_H_
+#ifndef SILKRPC_ETHDB_BITMAP_DATABASE_H_
+#define SILKRPC_ETHDB_BITMAP_DATABASE_H_
 
 #include <silkrpc/config.hpp>
-
-#include <memory>
-#include <string>
 
 #include <asio/awaitable.hpp>
 
 #include <silkworm/core/silkworm/common/util.hpp>
+#include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/croaring/roaring.hh>
 
-namespace silkrpc::core::rawdb {
+namespace silkrpc::ethdb::bitmap {
 
-typedef std::function<bool(silkworm::Bytes&,silkworm::Bytes&)> Walker;
+asio::awaitable<Roaring> get(core::rawdb::DatabaseReader& db_reader, const std::string& table, silkworm::Bytes& key, uint32_t from_block, uint32_t to_block);
 
-class DatabaseReader {
-public:
-    virtual asio::awaitable<bool> has(const std::string& table, const silkworm::Bytes& key) = 0;
+} // silkrpc::ethdb::bitmap
 
-    virtual asio::awaitable<silkworm::Bytes> get(const std::string& table, const silkworm::Bytes& key) = 0;
-
-    virtual asio::awaitable<void> walk(const std::string& table, const silkworm::Bytes& start_key, uint32_t fixed_bits, Walker w) = 0;
-};
-
-} // namespace silkrpc::core::rawdb
-
-#endif  // SILKRPC_CORE_RAWDB_ACCESSORS_H_
+#endif  // SILKRPC_ETHDB_BITMAP_DATABASE_H_

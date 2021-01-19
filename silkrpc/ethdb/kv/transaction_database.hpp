@@ -37,6 +37,8 @@ public:
 
     asio::awaitable<silkworm::Bytes> get(const std::string& table, const silkworm::Bytes& key) override;
 
+    asio::awaitable<void> walk(const std::string& table, const silkworm::Bytes& start_key, uint32_t fixed_bits, core::rawdb::Walker w) override;
+
     void close();
 private:
     kv::Transaction& tx_;

@@ -27,6 +27,11 @@ asio::awaitable<silkworm::Bytes> TransactionDatabase::get(const std::string& tab
     co_return kv_pair.value;
 }
 
+asio::awaitable<void> TransactionDatabase::walk(const std::string& table, const silkworm::Bytes& start_key, uint32_t fixed_bits, core::rawdb::Walker w) {
+    // TODO: implement walk and call walker
+    co_return;
+}
+
 void TransactionDatabase::close() {}
 
 } // namespace silkrpc::ethdb::kv

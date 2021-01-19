@@ -51,7 +51,8 @@ nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result);
 nlohmann::json make_json_error(uint32_t id, const std::string& error);
 
 typedef std::vector<std::string> FilterAddresses;
-typedef std::vector<std::string> FilterTopics;
+typedef std::vector<std::string> FilterSubTopics;
+typedef std::vector<FilterSubTopics> FilterTopics;
 
 struct Filter {
     std::optional<uint64_t> from_block;
