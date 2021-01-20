@@ -35,6 +35,7 @@
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/ethdb/kv/async_close_cursor.hpp>
+#include <silkrpc/ethdb/kv/async_next.hpp>
 #include <silkrpc/ethdb/kv/async_open_cursor.hpp>
 #include <silkrpc/ethdb/kv/async_seek.hpp>
 #include <silkrpc/ethdb/kv/client_callback_reactor.hpp>
@@ -145,6 +146,55 @@ private:
 };
 
 template<typename Executor>
+class initiate_async_next {
+public:
+    typedef Executor executor_type;
+
+    explicit initiate_async_next(KvAsioAwaitable<Executor>* self, uint32_t cursor_id)
+    : self_(self), cursor_id_(cursor_id) {}
+
+    executor_type get_executor() const noexcept { return self_->get_executor(); }
+
+    template <typename WaitHandler>
+    void operator()(WaitHandler&& handler) {
+        ASIO_WAIT_HANDLER_CHECK(WaitHandler, handler) type_check;
+
+        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        typedef silkrpc::ethdb::kv::async_next<WaitHandler, Executor> op;
+        typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
+        wrapper_ = new op(handler2.value, self_->context_.get_executor());
+
+        auto next_message = remote::Cursor{};
+        next_message.set_op(remote::Op::NEXT);
+        next_message.set_cursor(cursor_id_);
+        self_->reactor_.write_start(&next_message, [this](bool ok) {
+            if (!ok) {
+                throw std::system_error{std::make_error_code(std::errc::io_error), "write failed in NEXT"};
+            }
+            self_->reactor_.read_start([this](bool ok, remote::Pair next_pair) {
+                if (!ok) {
+                    throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in NEXT"};
+                }
+
+                typedef silkrpc::ethdb::kv::async_next<WaitHandler, Executor> op;
+                auto next_op = static_cast<op*>(wrapper_);
+
+                // Make the io_context thread execute the operation completion
+                self_->context_.post([this, next_op, next_pair]() {
+                    next_op->complete(this, next_pair);
+                });
+            });
+        });
+    }
+
+private:
+    KvAsioAwaitable<Executor>* self_;
+    uint32_t cursor_id_;
+    const silkworm::Bytes next_key_bytes_;
+    void* wrapper_;
+};
+
+template<typename Executor>
 class initiate_async_close_cursor {
 public:
     typedef Executor executor_type;
@@ -208,6 +258,11 @@ struct KvAsioAwaitable {
     template<typename WaitHandler>
     auto async_seek(uint32_t cursor_id, const silkworm::Bytes& seek_key_bytes, WaitHandler&& handler) {
         return asio::async_initiate<WaitHandler, void(remote::Pair)>(initiate_async_seek{this, cursor_id, seek_key_bytes}, handler);
+    }
+
+    template<typename WaitHandler>
+    auto async_next(uint32_t cursor_id, WaitHandler&& handler) {
+        return asio::async_initiate<WaitHandler, void(remote::Pair)>(initiate_async_next{this, cursor_id}, handler);
     }
 
     template<typename WaitHandler>

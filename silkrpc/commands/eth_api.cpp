@@ -16,6 +16,7 @@
 
 #include "eth_api.hpp"
 
+#include <algorithm>
 #include <exception>
 #include <iostream>
 
@@ -136,16 +137,21 @@ asio::awaitable<Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::Database
         for (auto topic : subtopics) {
             auto topic_key = silkworm::from_hex(topic);
             auto bitmap = co_await ethdb::bitmap::get(db_reader, silkworm::db::table::kLogTopicIndex.name, topic_key, start, end);
-            // TODO: implement
+            subtopic_bitmap |= bitmap;
         }
+        result_bitmap &= subtopic_bitmap;
     }
     co_return result_bitmap;
 }
 
 asio::awaitable<Roaring> EthereumRpcApi::get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, json::FilterAddresses& addresses, uint64_t start, uint64_t end) {
-    Roaring r;
-    // TODO: implement
-    co_return r;
+    Roaring result_bitmap;
+    for (auto address : addresses) {
+        auto address_key = silkworm::from_hex(address);
+        auto bitmap = co_await ethdb::bitmap::get(db_reader, silkworm::db::table::kLogAddressIndex.name, address_key, start, end);
+        result_bitmap |= bitmap;
+    }
+    co_return result_bitmap;
 }
 
 asio::awaitable<Receipts> EthereumRpcApi::get_receipts(core::rawdb::DatabaseReader& db_reader, uint64_t number, evmc::bytes32 hash) {
@@ -153,9 +159,21 @@ asio::awaitable<Receipts> EthereumRpcApi::get_receipts(core::rawdb::DatabaseRead
     co_return Receipts{};
 }
 
-std::vector<silkworm::Log> EthereumRpcApi::filter_logs(std::vector<silkworm::Log>& unfiltered, const json::Filter& filter) {
+std::vector<silkworm::Log> EthereumRpcApi::filter_logs(std::vector<silkworm::Log>& logs, const json::Filter& filter) {
     std::vector<silkworm::Log> filtered_logs;
-    // TODO: implement
+
+    auto addresses = filter.addresses;
+    auto topics = filter.topics;
+    for (auto log : logs) {
+        std::string address_string{&log.address.bytes[0], &log.address.bytes[19]};
+        if (addresses.has_value() && std::find(addresses.value().begin(), addresses.value().end(), address_string) == addresses.value().end()) {
+            continue;
+        }
+        if (topics.has_value() && topics.value().size() > log.topics.size()) {
+            continue;
+        }
+        // TODO: implement
+    }
     return filtered_logs;
 }
 

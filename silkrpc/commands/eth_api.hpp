@@ -56,7 +56,7 @@ private:
     asio::awaitable<Roaring> get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, json::FilterTopics& topics, uint64_t start, uint64_t end);
     asio::awaitable<Roaring> get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, json::FilterAddresses& addresses, uint64_t start, uint64_t end);
     asio::awaitable<Receipts> get_receipts(core::rawdb::DatabaseReader& db_reader, uint64_t number, evmc::bytes32 hash);
-    std::vector<silkworm::Log> filter_logs(std::vector<silkworm::Log>& unfiltered, const json::Filter& filter);
+    std::vector<silkworm::Log> filter_logs(std::vector<silkworm::Log>& logs, const json::Filter& filter);
 
     std::unique_ptr<ethdb::kv::Database>& database_;
 
