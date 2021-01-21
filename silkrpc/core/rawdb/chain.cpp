@@ -18,10 +18,138 @@
 
 #include <boost/endian/conversion.hpp>
 
+#include <cbor-cpp/src/decoder.h>
+#include <cbor-cpp/src/input.h>
+
 #include <silkworm/core/silkworm/common/util.hpp>
 #include <silkworm/core/silkworm/rlp/decode.hpp>
 #include <silkworm/db/silkworm/db/tables.hpp>
 #include <silkworm/db/silkworm/db/util.hpp>
+
+namespace silkworm {
+
+class receipt_listener : public cbor::listener {
+public:
+    receipt_listener(std::vector<Receipt>& receipts) : receipts_(receipts) {}
+
+    void on_integer(int value) override {}
+
+    void on_bytes(unsigned char *data, int size) override {}
+
+    void on_string(std::string &str) override {}
+
+    void on_array(int size) override {
+        receipts_.resize(size);
+    }
+
+    void on_map(int size) override {}
+
+    void on_tag(unsigned int tag) override {}
+
+    void on_special(unsigned int code) override {}
+
+    void on_bool(bool) override {}
+
+    void on_null() override {}
+
+    void on_undefined() override {}
+
+    void on_error(const char *error) override {}
+
+    void on_extra_integer(unsigned long long value, int sign) override {}
+
+    void on_extra_tag(unsigned long long tag) override {}
+
+    void on_extra_special(unsigned long long tag) override {}
+private:
+    std::vector<Receipt>& receipts_;
+};
+
+void cbor_decode(const Bytes& b, std::vector<silkworm::Receipt>& receipts) {
+    cbor::input input{const_cast<unsigned char*>(b.data()), static_cast<int>(b.size())};
+    receipt_listener listener{receipts};
+    cbor::decoder decoder{input, listener};
+    decoder.run();
+
+    // TODO: implement decode logic in receipt_listener
+
+    /*if (v.empty()) {
+        encoder.write_null();
+    } else {
+        encoder.write_array(v.size());
+    }
+
+    for (const Receipt& r : v) {
+        encoder.write_array(3);
+
+        encoder.write_null();  // no PostState
+        encoder.write_int(r.success ? 1u : 0u);
+        encoder.write_int(static_cast<unsigned long long>(r.cumulative_gas_used));
+    }*/
+}
+
+class log_listener : public cbor::listener {
+public:
+    log_listener(std::vector<Log>& logs) : logs_(logs) {}
+
+    void on_integer(int value) override {}
+
+    void on_bytes(unsigned char *data, int size) override {}
+
+    void on_string(std::string &str) override {}
+
+    void on_array(int size) override {
+        logs_.resize(size);
+    }
+
+    void on_map(int size) override {}
+
+    void on_tag(unsigned int tag) override {}
+
+    void on_special(unsigned int code) override {}
+
+    void on_bool(bool) override {}
+
+    void on_null() override {}
+
+    void on_undefined() override {}
+
+    void on_error(const char *error) override {}
+
+    void on_extra_integer(unsigned long long value, int sign) override {}
+
+    void on_extra_tag(unsigned long long tag) override {}
+
+    void on_extra_special(unsigned long long tag) override {}
+private:
+    std::vector<Log>& logs_;
+};
+
+void cbor_decode(const Bytes& b, std::vector<silkworm::Log>& logs) {
+    cbor::input input{const_cast<unsigned char*>(b.data()), static_cast<int>(b.size())};
+    log_listener listener{logs};
+    cbor::decoder decoder{input, listener};
+    decoder.run();
+
+    // TODO: implement decode logic in receipt_listener
+
+    /*if (v.empty()) {
+        encoder.write_null();
+    } else {
+        encoder.write_array(v.size());
+    }
+
+    for (const Receipt& r : v) {
+        encoder.write_array(3);
+
+        encoder.write_null();  // no PostState
+        encoder.write_int(r.success ? 1u : 0u);
+        encoder.write_int(static_cast<unsigned long long>(r.cumulative_gas_used));
+    }*/
+}
+
+}  // namespace silkworm
+
 
 namespace silkrpc::core::rawdb {
 
@@ -75,7 +203,7 @@ asio::awaitable<silkworm::BlockHeader> read_header(DatabaseReader& reader, evmc:
 }
 
 asio::awaitable<silkworm::BlockBody> read_body(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
-    auto data = co_await read_body_rlp(reader, block_hash, block_number);
+    const auto data = co_await read_body_rlp(reader, block_hash, block_number);
     if (data.empty()) {
         co_return silkworm::BlockBody{};
     }
@@ -87,14 +215,62 @@ asio::awaitable<silkworm::BlockBody> read_body(DatabaseReader& reader, evmc::byt
 
 asio::awaitable<silkworm::Bytes> read_header_rlp(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
     const auto header_hash_key = silkworm::db::header_hash_key(block_number);
-    auto data = co_await reader.get(silkworm::db::table::kBlockHeaders.name, header_hash_key);
+    const auto data = co_await reader.get(silkworm::db::table::kBlockHeaders.name, header_hash_key);
     co_return data;
 }
 
 asio::awaitable<silkworm::Bytes> read_body_rlp(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
-    auto data = co_await reader.get(silkworm::db::table::kBlockBodies.name, block_key);
+    const auto data = co_await reader.get(silkworm::db::table::kBlockBodies.name, block_key);
     co_return data;
+}
+
+asio::awaitable<Addresses> read_senders(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
+    const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
+    const auto data = co_await reader.get(silkworm::db::table::kSenders.name, block_key);
+    Addresses senders{data.size() / silkworm::kHashLength};
+    for (size_t i{0}; i < senders.size(); i++) {
+        senders[i] = silkworm::to_address(&data[i * silkworm::kHashLength]);
+    }
+    co_return senders;
+}
+
+asio::awaitable<Receipts> read_raw_receipts(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
+    const auto block_key = silkworm::db::block_key(block_number);
+    const auto data = co_await reader.get(silkworm::db::table::kBlockReceipts.name, block_key);
+    if (data.empty()) {
+        co_return Receipts{};
+    }
+    Receipts receipts{};
+    silkworm::cbor_decode(data, receipts);
+
+    auto log_key = silkworm::db::log_key(block_number, 0);
+    Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
+        auto tx_id = boost::endian::load_big_u32(&k[sizeof(uint64_t)]);
+        silkworm::cbor_decode(v, receipts[tx_id].logs);
+        return true;
+    };
+    reader.walk(silkworm::db::table::kLogs.name, log_key, 8 * CHAR_BIT, walker);
+
+    co_return receipts;
+}
+
+asio::awaitable<Receipts> read_receipts(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
+    auto receipts = co_await read_raw_receipts(reader, block_hash, block_number);
+    auto body = co_await read_body(reader, block_hash, block_number);
+    auto senders = co_await read_senders(reader, block_hash, block_number);
+
+    auto transactions = body.transactions;
+
+    size_t log_index{0};
+    if (body.transactions.size() != receipts.size()) {
+        throw std::system_error{std::make_error_code(std::errc::value_too_large), "invalid receipt count in read_receipts"};
+    }
+    for (size_t i{0}; i < receipts.size(); i++) {
+        //receipts[i].
+    }
+
+    co_return receipts;
 }
 
 } // namespace silkrpc::core::rawdb

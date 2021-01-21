@@ -19,9 +19,12 @@
 #include <optional>
 
 #include <catch2/catch.hpp>
+#include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
 namespace silkworm {
+
+using namespace evmc::literals;
 
 TEST_CASE("serialize empty log", "[silkworm][to_json]") {
     Log l{{}, {}, {}};
@@ -34,6 +37,18 @@ TEST_CASE("deserialize empty log", "[silkworm][from_json]") {
     auto f1 = j1.get<Log>();
     CHECK(f1.address == evmc::address{});
     CHECK(f1.topics == std::vector<evmc::bytes32>{});
+    CHECK(f1.data == silkworm::Bytes{});
+}
+
+TEST_CASE("deserialize topics", "[silkworm][from_json]") {
+    auto j1 = R"({
+        "address":"0000000000000000000000000000000000000000",
+        "topics":["0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c"],
+        "data":[]
+    })"_json;
+    auto f1 = j1.get<Log>();
+    CHECK(f1.address == evmc::address{});
+    CHECK(f1.topics == std::vector<evmc::bytes32>{0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32});
     CHECK(f1.data == silkworm::Bytes{});
 }
 

@@ -17,15 +17,25 @@
 #ifndef SILKRPC_CORE_RAWDB_CHAIN_H_
 #define SILKRPC_CORE_RAWDB_CHAIN_H_
 
+#include <vector>
+
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 
 #include <silkworm/core/silkworm/types/block.hpp>
+#include <silkworm/core/silkworm/types/receipt.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 
 namespace silkrpc::core::rawdb {
+
+/*struct Receipt : silkworm::Receipt {
+    // TODO: additional fields missing in Silkworm
+};*/
+
+typedef std::vector<evmc::address> Addresses;
+typedef std::vector<silkworm::Receipt> Receipts;
 
 asio::awaitable<uint64_t> read_header_number(DatabaseReader& reader, evmc::bytes32 block_hash);
 
@@ -42,6 +52,12 @@ asio::awaitable<silkworm::BlockBody> read_body(DatabaseReader& reader, evmc::byt
 asio::awaitable<silkworm::Bytes> read_header_rlp(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number);
 
 asio::awaitable<silkworm::Bytes> read_body_rlp(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number);
+
+asio::awaitable<Addresses> read_senders(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number);
+
+asio::awaitable<Receipts> read_raw_receipts(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number);
+
+asio::awaitable<Receipts> read_receipts(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number);
 
 } // namespace silkrpc::core::rawdb
 

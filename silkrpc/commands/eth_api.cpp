@@ -165,14 +165,34 @@ std::vector<silkworm::Log> EthereumRpcApi::filter_logs(std::vector<silkworm::Log
     auto addresses = filter.addresses;
     auto topics = filter.topics;
     for (auto log : logs) {
-        std::string address_string{&log.address.bytes[0], &log.address.bytes[19]};
-        if (addresses.has_value() && std::find(addresses.value().begin(), addresses.value().end(), address_string) == addresses.value().end()) {
+        auto log_address{silkworm::to_hex(log.address)};
+        if (addresses.has_value() && std::find(addresses.value().begin(), addresses.value().end(), log_address) == addresses.value().end()) {
             continue;
         }
-        if (topics.has_value() && topics.value().size() > log.topics.size()) {
-            continue;
+        auto matches = true;
+        if (topics.has_value()) {
+            if (topics.value().size() > log.topics.size()) {
+                continue;
+            }
+            for (size_t i{0}; i < topics.value().size(); i++) {
+                auto log_topic{silkworm::to_hex(log.topics[i])};
+                auto subtopics = topics.value()[i];
+                auto matches_subtopics = subtopics.empty(); // empty rule set == wildcard
+                for (auto topic : subtopics) {
+                    if (log_topic == topic) {
+                        matches_subtopics = true;
+                        break;
+                    }
+                }
+                if (!matches_subtopics) {
+                    matches = false;
+                    break;
+                }
+            }
         }
-        // TODO: implement
+        if (matches) {
+            filtered_logs.push_back(log);
+        }
     }
     return filtered_logs;
 }
