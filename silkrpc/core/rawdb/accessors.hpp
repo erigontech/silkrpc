@@ -24,7 +24,7 @@
 
 #include <asio/awaitable.hpp>
 
-#include <silkworm/core/silkworm/common/util.hpp>
+#include <silkworm/common/util.hpp>
 
 namespace silkrpc::core::rawdb {
 

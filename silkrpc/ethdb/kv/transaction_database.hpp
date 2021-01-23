@@ -21,7 +21,7 @@
 
 #include <string>
 
-#include <silkworm/core/silkworm/common/util.hpp>
+#include <silkworm/common/util.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 
 namespace silkrpc::ethdb::kv {

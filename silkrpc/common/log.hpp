@@ -17,7 +17,7 @@
 #ifndef SILKRPC_COMMON_LOG_H_
 #define SILKRPC_COMMON_LOG_H_
 
-#include <silkworm/core/silkworm/common/log.hpp>
+#include <silkworm/common/log.hpp>
 
 namespace silkrpc {
 

@@ -24,7 +24,7 @@
 #include <asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 
-#include <silkworm/core/silkworm/types/block.hpp>
+#include <silkworm/types/block.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/core/types/receipt.hpp>
 

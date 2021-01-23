@@ -21,7 +21,7 @@
 
 #include <asio/awaitable.hpp>
 
-#include <silkworm/core/silkworm/common/util.hpp>
+#include <silkworm/common/util.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/croaring/roaring.hh>
 

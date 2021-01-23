@@ -25,7 +25,7 @@
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkworm/core/silkworm/common/util.hpp>
+#include <silkworm/common/util.hpp>
 #include <silkrpc/core/types/receipt.hpp>
 
 namespace evmc {

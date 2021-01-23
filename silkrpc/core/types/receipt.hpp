@@ -23,7 +23,7 @@
 
 #include <evmc/evmc.hpp>
 
-#include <silkworm/core/silkworm/types/bloom.hpp>
+#include <silkworm/types/bloom.hpp>
 
 namespace silkrpc::core {
 

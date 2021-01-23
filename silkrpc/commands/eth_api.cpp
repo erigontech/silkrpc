@@ -20,9 +20,9 @@
 #include <exception>
 #include <iostream>
 
-#include <silkworm/core/silkworm/common/util.hpp>
-#include <silkworm/core/silkworm/types/receipt.hpp>
-#include <silkworm/db/silkworm/db/tables.hpp>
+#include <silkworm/common/util.hpp>
+#include <silkworm/types/receipt.hpp>
+#include <silkworm/db/tables.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>

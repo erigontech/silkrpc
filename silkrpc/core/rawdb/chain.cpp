@@ -22,12 +22,12 @@
 #include <ethash/keccak.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkworm/core/silkworm/common/util.hpp>
-#include <silkworm/core/silkworm/execution/address.hpp>
-#include <silkworm/core/silkworm/rlp/decode.hpp>
-#include <silkworm/core/silkworm/rlp/encode.hpp>
+#include <silkworm/common/util.hpp>
 #include <silkworm/db/silkworm/db/tables.hpp>
 #include <silkworm/db/silkworm/db/util.hpp>
+#include <silkworm/execution/address.hpp>
+#include <silkworm/rlp/decode.hpp>
+#include <silkworm/rlp/encode.hpp>
 #include <silkrpc/core/types/log.hpp>
 #include <silkrpc/core/types/receipt.hpp>
 #include <silkrpc/json/types.hpp>

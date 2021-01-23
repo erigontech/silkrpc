@@ -26,7 +26,7 @@
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkworm/core/silkworm/types/receipt.hpp>
+#include <silkworm/types/receipt.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/core/types/log.hpp>
 #include <silkrpc/core/types/receipt.hpp>
