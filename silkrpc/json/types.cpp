@@ -36,7 +36,7 @@ void from_json(const nlohmann::json& json, bytes32& b32) {
 
 } // namespace evmc
 
-namespace silkworm {
+namespace silkrpc::core {
 
 void to_json(nlohmann::json& json, const Log& log) {
     json["address"] = log.address;
@@ -47,10 +47,25 @@ void to_json(nlohmann::json& json, const Log& log) {
 void from_json(const nlohmann::json& json, Log& log) {
     log.address = json.at("address").get<evmc::address>();
     log.topics = json.at("topics").get<std::vector<evmc::bytes32>>();
-    log.data = json.at("data").get<Bytes>();
+    log.data = json.at("data").get<silkworm::Bytes>();
 }
 
-} // namespace silkworm
+void to_json(nlohmann::json& json, const Receipt& receipt) {
+    json["success"] = receipt.success;
+    json["cumulative_gas_used"] = receipt.cumulative_gas_used;
+}
+
+void from_json(const nlohmann::json& json, Receipt& receipt) {
+    if (json.is_array()) {
+        receipt.success = json[1] == 1u;
+        receipt.cumulative_gas_used = json[2];
+    } else {
+        receipt.success = json.at("success").get<bool>();
+        receipt.cumulative_gas_used = json.at("cumulative_gas_used").get<uint64_t>();
+    }
+}
+
+} // namespace silkrpc::core
 
 namespace silkrpc::json {
 

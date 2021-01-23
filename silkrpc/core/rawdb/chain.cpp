@@ -16,140 +16,40 @@
 
 #include "chain.hpp"
 
-#include <boost/endian/conversion.hpp>
+#include <iterator>
 
-#include <cbor-cpp/src/decoder.h>
-#include <cbor-cpp/src/input.h>
+#include <boost/endian/conversion.hpp>
+#include <ethash/keccak.hpp>
+#include <nlohmann/json.hpp>
 
 #include <silkworm/core/silkworm/common/util.hpp>
+#include <silkworm/core/silkworm/execution/address.hpp>
 #include <silkworm/core/silkworm/rlp/decode.hpp>
+#include <silkworm/core/silkworm/rlp/encode.hpp>
 #include <silkworm/db/silkworm/db/tables.hpp>
 #include <silkworm/db/silkworm/db/util.hpp>
+#include <silkrpc/core/types/log.hpp>
+#include <silkrpc/core/types/receipt.hpp>
+#include <silkrpc/json/types.hpp>
 
-namespace silkworm {
+// TODO: move to db/types/log_cbor.*,receipt_cbor.*
+namespace silkrpc::core {
 
-class receipt_listener : public cbor::listener {
-public:
-    receipt_listener(std::vector<Receipt>& receipts) : receipts_(receipts) {}
-
-    void on_integer(int value) override {}
-
-    void on_bytes(unsigned char *data, int size) override {}
-
-    void on_string(std::string &str) override {}
-
-    void on_array(int size) override {
-        receipts_.resize(size);
+void cbor_decode(const silkworm::Bytes& bytes, std::vector<Log>& logs) {
+    if (bytes.size() > 0) {
+        auto json = nlohmann::json::from_cbor(bytes);
+        logs = json.get<std::vector<Log>>();
     }
-
-    void on_map(int size) override {}
-
-    void on_tag(unsigned int tag) override {}
-
-    void on_special(unsigned int code) override {}
-
-    void on_bool(bool) override {}
-
-    void on_null() override {}
-
-    void on_undefined() override {}
-
-    void on_error(const char *error) override {}
-
-    void on_extra_integer(unsigned long long value, int sign) override {}
-
-    void on_extra_tag(unsigned long long tag) override {}
-
-    void on_extra_special(unsigned long long tag) override {}
-private:
-    std::vector<Receipt>& receipts_;
-};
-
-void cbor_decode(const Bytes& b, std::vector<silkworm::Receipt>& receipts) {
-    cbor::input input{const_cast<unsigned char*>(b.data()), static_cast<int>(b.size())};
-    receipt_listener listener{receipts};
-    cbor::decoder decoder{input, listener};
-    decoder.run();
-
-    // TODO: implement decode logic in receipt_listener
-
-    /*if (v.empty()) {
-        encoder.write_null();
-    } else {
-        encoder.write_array(v.size());
-    }
-
-    for (const Receipt& r : v) {
-        encoder.write_array(3);
-
-        encoder.write_null();  // no PostState
-        encoder.write_int(r.success ? 1u : 0u);
-        encoder.write_int(static_cast<unsigned long long>(r.cumulative_gas_used));
-    }*/
 }
 
-class log_listener : public cbor::listener {
-public:
-    log_listener(std::vector<Log>& logs) : logs_(logs) {}
-
-    void on_integer(int value) override {}
-
-    void on_bytes(unsigned char *data, int size) override {}
-
-    void on_string(std::string &str) override {}
-
-    void on_array(int size) override {
-        logs_.resize(size);
+void cbor_decode(const silkworm::Bytes& bytes, std::vector<Receipt>& receipts) {
+    if (bytes.size() > 0) {
+        auto json = nlohmann::json::from_cbor(bytes);
+        receipts = json.get<std::vector<Receipt>>();
     }
-
-    void on_map(int size) override {}
-
-    void on_tag(unsigned int tag) override {}
-
-    void on_special(unsigned int code) override {}
-
-    void on_bool(bool) override {}
-
-    void on_null() override {}
-
-    void on_undefined() override {}
-
-    void on_error(const char *error) override {}
-
-    void on_extra_integer(unsigned long long value, int sign) override {}
-
-    void on_extra_tag(unsigned long long tag) override {}
-
-    void on_extra_special(unsigned long long tag) override {}
-private:
-    std::vector<Log>& logs_;
-};
-
-void cbor_decode(const Bytes& b, std::vector<silkworm::Log>& logs) {
-    cbor::input input{const_cast<unsigned char*>(b.data()), static_cast<int>(b.size())};
-    log_listener listener{logs};
-    cbor::decoder decoder{input, listener};
-    decoder.run();
-
-    // TODO: implement decode logic in receipt_listener
-
-    /*if (v.empty()) {
-        encoder.write_null();
-    } else {
-        encoder.write_array(v.size());
-    }
-
-    for (const Receipt& r : v) {
-        encoder.write_array(3);
-
-        encoder.write_null();  // no PostState
-        encoder.write_int(r.success ? 1u : 0u);
-        encoder.write_int(static_cast<unsigned long long>(r.cumulative_gas_used));
-    }*/
 }
 
-}  // namespace silkworm
-
+} // namespace silkrpc::core
 
 namespace silkrpc::core::rawdb {
 
@@ -242,12 +142,12 @@ asio::awaitable<Receipts> read_raw_receipts(DatabaseReader& reader, evmc::bytes3
         co_return Receipts{};
     }
     Receipts receipts{};
-    silkworm::cbor_decode(data, receipts);
+    cbor_decode(data, receipts);
 
     auto log_key = silkworm::db::log_key(block_number, 0);
     Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
         auto tx_id = boost::endian::load_big_u32(&k[sizeof(uint64_t)]);
-        silkworm::cbor_decode(v, receipts[tx_id].logs);
+        cbor_decode(v, receipts[tx_id].logs);
         return true;
     };
     reader.walk(silkworm::db::table::kLogs.name, log_key, 8 * CHAR_BIT, walker);
@@ -260,14 +160,45 @@ asio::awaitable<Receipts> read_receipts(DatabaseReader& reader, evmc::bytes32 bl
     auto body = co_await read_body(reader, block_hash, block_number);
     auto senders = co_await read_senders(reader, block_hash, block_number);
 
+    // Add derived fields to the receipts
     auto transactions = body.transactions;
-
-    size_t log_index{0};
     if (body.transactions.size() != receipts.size()) {
         throw std::system_error{std::make_error_code(std::errc::value_too_large), "invalid receipt count in read_receipts"};
     }
+    size_t log_index{0};
     for (size_t i{0}; i < receipts.size(); i++) {
-        //receipts[i].
+        // The tx hash can be calculated by the tx content itself
+        // TODO: move in dedicated function - START
+        silkworm::Bytes tx_rlp{};
+        silkworm::rlp::encode(tx_rlp, transactions[i]);
+        ethash::hash256 tx_hash{ethash::keccak256(tx_rlp.data(), tx_rlp.length())};
+        // TODO: move in dedicated function - END
+        receipts[i].tx_hash = silkworm::to_bytes32(silkworm::full_view(tx_hash.bytes));
+        receipts[i].tx_index = uint32_t(i);
+
+        receipts[i].block_hash = block_hash;
+        receipts[i].block_number = block_number;
+
+        // When tx receiver is not set, create a contract with address depending on tx sender and its nonce
+        if (!transactions[i].to.has_value()) {
+            receipts[i].contract_address = silkworm::create_address(senders[i], transactions[i].nonce);
+        }
+
+        // The gas used can be calculated by the previous receipt
+        if (i == 0) {
+            receipts[i].gas_used = receipts[i].cumulative_gas_used;
+        } else {
+            receipts[i].gas_used = receipts[i].cumulative_gas_used - receipts[i-1].cumulative_gas_used;;
+        }
+
+        // The derived fields of receipt are taken from block and transaction
+        for (auto log : receipts[i].logs) {
+            log.block_number = block_number;
+            log.block_hash = block_hash;
+            log.tx_hash = receipts[i].tx_hash;
+            log.tx_index = uint32_t(i);
+            log.index = log_index++;
+        }
     }
 
     co_return receipts;

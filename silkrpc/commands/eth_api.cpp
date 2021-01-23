@@ -54,7 +54,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
     auto filter = request["params"].get<json::Filter>();
     std::cout << "filter=" << filter << "\n" << std::flush;
 
-    std::vector<silkworm::Log> logs;
+    std::vector<Log> logs;
 
     auto tx = database_->begin();
     ethdb::kv::TransactionDatabase tx_database{*tx};
@@ -111,7 +111,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
             }
 
             auto receipts = co_await get_receipts(tx_database, uint64_t(block_to_match), block_hash);
-            std::vector<silkworm::Log> unfiltered_logs{receipts.size()};
+            std::vector<Log> unfiltered_logs{receipts.size()};
             for (auto receipt: receipts) {
                 unfiltered_logs.insert(unfiltered_logs.end(), receipt.logs.begin(), receipt.logs.end());
             }
@@ -155,12 +155,19 @@ asio::awaitable<Roaring> EthereumRpcApi::get_addresses_bitmap(core::rawdb::Datab
 }
 
 asio::awaitable<Receipts> EthereumRpcApi::get_receipts(core::rawdb::DatabaseReader& db_reader, uint64_t number, evmc::bytes32 hash) {
+    auto cached_receipts = co_await core::rawdb::read_receipts(db_reader, hash, number);
+    if (!cached_receipts.empty()) {
+        co_return cached_receipts;
+    }
+
+    // If not already present, retrieve receipts by executing transactions
+    auto block = co_await core::rawdb::read_block(db_reader, hash, number);
     // TODO: implement
     co_return Receipts{};
 }
 
-std::vector<silkworm::Log> EthereumRpcApi::filter_logs(std::vector<silkworm::Log>& logs, const json::Filter& filter) {
-    std::vector<silkworm::Log> filtered_logs;
+std::vector<Log> EthereumRpcApi::filter_logs(std::vector<Log>& logs, const json::Filter& filter) {
+    std::vector<Log> filtered_logs;
 
     auto addresses = filter.addresses;
     auto topics = filter.topics;

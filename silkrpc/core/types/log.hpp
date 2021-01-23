@@ -14,17 +14,34 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMON_CLOCK_H_
-#define SILKRPC_COMMON_CLOCK_H_
+#ifndef SILKRPC_CORE_TYPES_LOG_H_
+#define SILKRPC_CORE_TYPES_LOG_H_
 
-#include <chrono>
-#include <cstdint>
+#include <vector>
 
-namespace silkrpc::common::clock { // TODO: rename to clock_time
+#include <evmc/evmc.hpp>
 
-uint64_t now();
-uint64_t since(uint64_t start);
+#include <silkworm/common/base.hpp>
 
-} // namespace silkrpc::common::clock
+namespace silkrpc::core {
 
-#endif  // SILKRPC_COMMON_CLOCK_H_
+struct Log {
+    /* raw fields */
+    evmc::address address;
+    std::vector<evmc::bytes32> topics;
+    silkworm::Bytes data;
+
+    /* derived fields */
+    uint64_t block_number;
+    evmc::bytes32 tx_hash;
+    uint32_t tx_index;
+    evmc::bytes32 block_hash;
+    uint32_t index;
+    bool removed;
+};
+
+typedef std::vector<Log> Logs;
+
+} // silkrpc::core
+
+#endif  // SILKRPC_CORE_TYPES_LOG_H_

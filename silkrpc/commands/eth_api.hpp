@@ -28,6 +28,8 @@
 
 #include <silkworm/core/silkworm/types/receipt.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/core/types/log.hpp>
+#include <silkrpc/core/types/receipt.hpp>
 #include <silkrpc/croaring/roaring.hh>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/kv/database.hpp>
@@ -38,7 +40,7 @@ namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
-typedef std::vector<silkworm::Receipt> Receipts;
+using namespace silkrpc::core;
 
 class EthereumRpcApi {
 public:
@@ -56,7 +58,7 @@ private:
     asio::awaitable<Roaring> get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, json::FilterTopics& topics, uint64_t start, uint64_t end);
     asio::awaitable<Roaring> get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, json::FilterAddresses& addresses, uint64_t start, uint64_t end);
     asio::awaitable<Receipts> get_receipts(core::rawdb::DatabaseReader& db_reader, uint64_t number, evmc::bytes32 hash);
-    std::vector<silkworm::Log> filter_logs(std::vector<silkworm::Log>& logs, const json::Filter& filter);
+    std::vector<Log> filter_logs(std::vector<Log>& logs, const json::Filter& filter);
 
     std::unique_ptr<ethdb::kv::Database>& database_;
 

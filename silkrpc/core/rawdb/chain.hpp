@@ -25,17 +25,12 @@
 #include <evmc/evmc.hpp>
 
 #include <silkworm/core/silkworm/types/block.hpp>
-#include <silkworm/core/silkworm/types/receipt.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/core/types/receipt.hpp>
 
 namespace silkrpc::core::rawdb {
 
-/*struct Receipt : silkworm::Receipt {
-    // TODO: additional fields missing in Silkworm
-};*/
-
 typedef std::vector<evmc::address> Addresses;
-typedef std::vector<silkworm::Receipt> Receipts;
 
 asio::awaitable<uint64_t> read_header_number(DatabaseReader& reader, evmc::bytes32 block_hash);
 
