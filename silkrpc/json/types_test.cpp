@@ -22,17 +22,17 @@
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
-namespace silkrpc::core {
+namespace silkrpc {
 
 using namespace evmc::literals;
 
-TEST_CASE("serialize empty log", "[silkrpc::core][to_json]") {
+TEST_CASE("serialize empty log", "[silkrpc][to_json]") {
     Log l{{}, {}, {}};
     nlohmann::json j = l;
     CHECK(j == R"({"address":"0000000000000000000000000000000000000000","topics":[],"data":[]})"_json);
 }
 
-TEST_CASE("deserialize empty log", "[silkrpc::core][from_json]") {
+TEST_CASE("deserialize empty log", "[silkrpc][from_json]") {
     auto j1 = R"({"address":"0000000000000000000000000000000000000000","topics":[],"data":[]})"_json;
     auto f1 = j1.get<Log>();
     CHECK(f1.address == evmc::address{});
@@ -40,7 +40,7 @@ TEST_CASE("deserialize empty log", "[silkrpc::core][from_json]") {
     CHECK(f1.data == silkworm::Bytes{});
 }
 
-TEST_CASE("deserialize topics", "[silkrpc::core][from_json]") {
+TEST_CASE("deserialize topics", "[silkrpc][from_json]") {
     auto j1 = R"({
         "address":"0000000000000000000000000000000000000000",
         "topics":["0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c"],
@@ -52,7 +52,7 @@ TEST_CASE("deserialize topics", "[silkrpc::core][from_json]") {
     CHECK(f1.data == silkworm::Bytes{});
 }
 
-} // namespace silkrpc::core
+} // namespace silkrpc
 
 namespace silkrpc::json {
 

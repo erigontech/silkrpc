@@ -51,7 +51,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
 
 // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getLogs
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply) {
-    auto filter = request["params"].get<json::Filter>();
+    auto filter = request["params"].get<Filter>();
     std::cout << "filter=" << filter << "\n" << std::flush;
 
     std::vector<Log> logs;
@@ -130,7 +130,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
     co_return;
 }
 
-asio::awaitable<Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, json::FilterTopics& topics, uint64_t start, uint64_t end) {
+asio::awaitable<Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end) {
     Roaring result_bitmap;
     for (auto subtopics : topics) {
         Roaring subtopic_bitmap;
@@ -144,7 +144,7 @@ asio::awaitable<Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::Database
     co_return result_bitmap;
 }
 
-asio::awaitable<Roaring> EthereumRpcApi::get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, json::FilterAddresses& addresses, uint64_t start, uint64_t end) {
+asio::awaitable<Roaring> EthereumRpcApi::get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end) {
     Roaring result_bitmap;
     for (auto address : addresses) {
         auto address_key = silkworm::from_hex(address);
@@ -166,7 +166,7 @@ asio::awaitable<Receipts> EthereumRpcApi::get_receipts(core::rawdb::DatabaseRead
     co_return Receipts{};
 }
 
-std::vector<Log> EthereumRpcApi::filter_logs(std::vector<Log>& logs, const json::Filter& filter) {
+std::vector<Log> EthereumRpcApi::filter_logs(std::vector<Log>& logs, const Filter& filter) {
     std::vector<Log> filtered_logs;
 
     auto addresses = filter.addresses;

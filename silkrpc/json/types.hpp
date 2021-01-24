@@ -26,7 +26,9 @@
 #include <nlohmann/json.hpp>
 
 #include <silkworm/common/util.hpp>
-#include <silkrpc/core/types/receipt.hpp>
+#include <silkrpc/types/filter.hpp>
+#include <silkrpc/types/log.hpp>
+#include <silkrpc/types/receipt.hpp>
 
 namespace evmc {
 
@@ -38,7 +40,7 @@ void from_json(const nlohmann::json& json, bytes32& b32);
 
 } // namespace evmc
 
-namespace silkrpc::core {
+namespace silkrpc {
 
 void to_json(nlohmann::json& json, const Log& log);
 void from_json(const nlohmann::json& json, Log& log);
@@ -46,31 +48,17 @@ void from_json(const nlohmann::json& json, Log& log);
 void to_json(nlohmann::json& json, const Receipt& receipt);
 void from_json(const nlohmann::json& json, Receipt& receipt);
 
-} // namespace silkrpc::core
+void to_json(nlohmann::json& json, const Filter& filter);
+void from_json(const nlohmann::json& json, Filter& filter);
+
+std::ostream& operator<<(std::ostream& out, const Filter& filter);
+
+} // namespace silkrpc
 
 namespace silkrpc::json {
 
 nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result);
 nlohmann::json make_json_error(uint32_t id, const std::string& error);
-
-// TODO: START move to silkrpc/types/filter.hpp
-typedef std::vector<std::string> FilterAddresses;
-typedef std::vector<std::string> FilterSubTopics;
-typedef std::vector<FilterSubTopics> FilterTopics;
-
-struct Filter {
-    std::optional<uint64_t> from_block;
-    std::optional<uint64_t> to_block;
-    std::optional<FilterAddresses> addresses;
-    std::optional<FilterTopics> topics;
-    std::optional<std::string> block_hash;
-};
-// TODO: END move to silkrpc/types/filter.hpp
-
-void to_json(nlohmann::json& json, const Filter& filter);
-void from_json(const nlohmann::json& json, Filter& filter);
-
-std::ostream& operator<<(std::ostream& out, const Filter& filter);
 
 } // namespace silkrpc::json
 

@@ -14,34 +14,37 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_TYPES_LOG_H_
-#define SILKRPC_CORE_TYPES_LOG_H_
+#ifndef SILKRPC_TYPES_RECEIPT_H_
+#define SILKRPC_TYPES_RECEIPT_H_
+
+#include "log.hpp"
 
 #include <vector>
 
 #include <evmc/evmc.hpp>
 
-#include <silkworm/common/base.hpp>
+#include <silkworm/types/bloom.hpp>
 
-namespace silkrpc::core {
+namespace silkrpc {
 
-struct Log {
+struct Receipt {
     /* raw fields */
-    evmc::address address;
-    std::vector<evmc::bytes32> topics;
-    silkworm::Bytes data;
+    bool success{false};
+    uint64_t cumulative_gas_used{0};
+    silkworm::Bloom bloom;
+    Logs logs;
 
     /* derived fields */
-    uint64_t block_number;
     evmc::bytes32 tx_hash;
-    uint32_t tx_index;
+    evmc::address contract_address;
+    uint64_t gas_used;
     evmc::bytes32 block_hash;
-    uint32_t index;
-    bool removed;
+    uint64_t block_number;
+    uint32_t tx_index;
 };
 
-typedef std::vector<Log> Logs;
+typedef std::vector<Receipt> Receipts;
 
-} // silkrpc::core
+} // silkrpc
 
-#endif  // SILKRPC_CORE_TYPES_LOG_H_
+#endif  // SILKRPC_TYPES_RECEIPT_H_

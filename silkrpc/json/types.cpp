@@ -36,7 +36,7 @@ void from_json(const nlohmann::json& json, bytes32& b32) {
 
 } // namespace evmc
 
-namespace silkrpc::core {
+namespace silkrpc {
 
 void to_json(nlohmann::json& json, const Log& log) {
     json["address"] = log.address;
@@ -63,18 +63,6 @@ void from_json(const nlohmann::json& json, Receipt& receipt) {
         receipt.success = json.at("success").get<bool>();
         receipt.cumulative_gas_used = json.at("cumulative_gas_used").get<uint64_t>();
     }
-}
-
-} // namespace silkrpc::core
-
-namespace silkrpc::json {
-
-nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result) {
-    return {{"jsonrpc", "2.0"}, {"id", id}, {"result", result}};
-}
-
-nlohmann::json make_json_error(uint32_t id, const std::string& error) {
-    return {{"jsonrpc", "2.0"}, {"id", id}, {"error", error}};
 }
 
 void to_json(nlohmann::json& json, const Filter& filter) {
@@ -155,6 +143,18 @@ std::ostream& operator<<(std::ostream& out, const Filter& filter) {
     out << "topics: " << filter.topics << " ";
     out << "block_hash: " << filter.block_hash.value_or("null");
     return out;
+}
+
+} // namespace silkrpc
+
+namespace silkrpc::json {
+
+nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result) {
+    return {{"jsonrpc", "2.0"}, {"id", id}, {"result", result}};
+}
+
+nlohmann::json make_json_error(uint32_t id, const std::string& error) {
+    return {{"jsonrpc", "2.0"}, {"id", id}, {"error", error}};
 }
 
 } // namespace silkrpc::json

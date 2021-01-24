@@ -28,9 +28,9 @@
 #include <silkworm/execution/address.hpp>
 #include <silkworm/rlp/decode.hpp>
 #include <silkworm/rlp/encode.hpp>
-#include <silkrpc/core/types/log.hpp>
-#include <silkrpc/core/types/receipt.hpp>
 #include <silkrpc/json/types.hpp>
+#include <silkrpc/types/log.hpp>
+#include <silkrpc/types/receipt.hpp>
 
 // TODO: move to db/types/log_cbor.*,receipt_cbor.*
 namespace silkrpc::core {
