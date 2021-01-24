@@ -14,17 +14,16 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMON_CLOCK_H_
-#define SILKRPC_COMMON_CLOCK_H_
+#include "clock_time.hpp"
 
-#include <chrono>
-#include <cstdint>
+namespace silkrpc::clock_time {
 
-namespace silkrpc::common::clock { // TODO: rename to clock_time
+uint64_t now() {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
 
-uint64_t now();
-uint64_t since(uint64_t start);
+uint64_t since(uint64_t start) {
+    return now() - start;
+}
 
-} // namespace silkrpc::common::clock
-
-#endif  // SILKRPC_COMMON_CLOCK_H_
+} // namespace silkrpc::clock_time

@@ -30,12 +30,10 @@
 #include "reply.hpp"
 #include "request.hpp"
 
-#include <silkrpc/common/clock.hpp>
+#include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
 
 namespace silkrpc::http {
-
-namespace clock_time = common::clock;
 
 std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = {
     {method::k_eth_blockNumber, &commands::EthereumRpcApi::handle_eth_block_number},

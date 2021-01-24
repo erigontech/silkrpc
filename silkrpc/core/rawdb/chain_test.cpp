@@ -19,7 +19,6 @@
 #include <catch2/catch.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/common/clock.hpp>
 #include <silkrpc/json/types.hpp>
 
 namespace silkrpc::core {
