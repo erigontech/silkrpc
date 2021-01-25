@@ -16,6 +16,8 @@
 
 #include "types.hpp"
 
+#include <algorithm>
+
 namespace evmc {
 
 void to_json(nlohmann::json& json, const address& addr) {
@@ -89,10 +91,20 @@ void to_json(nlohmann::json& json, const Filter& filter) {
 
 void from_json(const nlohmann::json& json, Filter& filter) {
     if (json.count("fromBlock") != 0) {
-        filter.from_block = json.at("fromBlock").get<uint64_t>();
+        auto json_from_block = json.at("fromBlock");
+        if (json_from_block.is_string()) {
+            filter.from_block = std::stol(json_from_block.get<std::string>(), 0, 16);
+        } else {
+            filter.from_block = json_from_block.get<uint64_t>();
+        }
     }
     if (json.count("toBlock") != 0) {
-        filter.to_block = json.at("toBlock").get<uint64_t>();
+        auto json_to_block = json.at("toBlock");
+        if (json_to_block.is_string()) {
+            filter.to_block = std::stol(json_to_block.get<std::string>(), 0, 16);
+        } else {
+            filter.to_block = json_to_block.get<uint64_t>();
+        }
     }
     if (json.count("address") != 0) {
         if (json.at("address").is_string()) {
@@ -102,7 +114,16 @@ void from_json(const nlohmann::json& json, Filter& filter) {
         }
     }
     if (json.count("topics") != 0) {
-        filter.topics = json.at("topics").get<FilterTopics>();
+        auto topics = json.at("topics");
+        for (auto& topic_item : topics) {
+            if (topic_item.is_null()) {
+                topic_item = {""};
+            }
+            if (topic_item.is_string()) {
+                topic_item = {topic_item};
+            }
+        }
+        filter.topics = topics.get<FilterTopics>();
     }
     if (json.count("blockHash") != 0) {
         filter.block_hash = json.at("blockHash").get<std::string>();

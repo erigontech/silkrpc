@@ -17,6 +17,8 @@
 #include "types.hpp"
 
 #include <optional>
+#include <string>
+#include <vector>
 
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
@@ -56,30 +58,48 @@ TEST_CASE("deserialize topics", "[silkrpc][from_json]") {
 
 namespace silkrpc::json {
 
-TEST_CASE("serialize empty filter", "[silkrpc::json::eth][to_json]") {
+TEST_CASE("serialize empty filter", "[silkrpc::json][to_json]") {
     Filter f{{0}, {0}, {{"", ""}}, {{{"", ""}, {"", ""}}}, {""}};
     nlohmann::json j = f;
     CHECK(j == R"({"address":["",""],"blockHash":"","fromBlock":0,"toBlock":0,"topics":[["",""], ["",""]]})"_json);
 }
 
-TEST_CASE("serialize filter with fromBlock and toBlock", "[silkrpc::json::eth][to_json]") {
+TEST_CASE("serialize filter with fromBlock and toBlock", "[silkrpc::json][to_json]") {
     Filter f{{1000}, {2000}, {{"", ""}}, {{{"", ""}, {"", ""}}}, {""}};
     nlohmann::json j = f;
     CHECK(j == R"({"address":["",""],"blockHash":"","fromBlock":1000,"toBlock":2000,"topics":[["",""], ["",""]]})"_json);
 }
 
-TEST_CASE("deserialize null filter", "[silkrpc::json::eth][from_json]") {
+TEST_CASE("deserialize null filter", "[silkrpc::json][from_json]") {
     auto j1 = R"({})"_json;
     auto f1 = j1.get<Filter>();
     CHECK(f1.from_block == std::nullopt);
     CHECK(f1.to_block == std::nullopt);
 }
 
-TEST_CASE("deserialize empty filter", "[silkrpc::json::eth][from_json]") {
+TEST_CASE("deserialize empty filter", "[silkrpc::json][from_json]") {
     auto j1 = R"({"address":["",""],"blockHash":"","fromBlock":0,"toBlock":0,"topics":[["",""], ["",""]]})"_json;
     auto f1 = j1.get<Filter>();
     CHECK(f1.from_block == 0);
     CHECK(f1.to_block == 0);
+}
+
+TEST_CASE("deserialize filter with topic", "[silkrpc::json][from_json]") {
+    auto j = R"({
+        "address": "0x6090a6e47849629b7245dfa1ca21d94cd15878ef",
+        "fromBlock": "0x3d0000",
+        "toBlock": "0x3d2600",
+        "topics": [
+            null,
+            "0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c"
+        ]
+    })"_json;
+    auto f = j.get<Filter>();
+    CHECK(f.from_block == 3997696u);
+    CHECK(f.to_block == 4007424u);
+    CHECK(f.addresses == std::vector<std::string>{"0x6090a6e47849629b7245dfa1ca21d94cd15878ef"});
+    CHECK(f.topics == std::vector<std::vector<std::string>>{{""}, {"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c"}});
+    CHECK(f.block_hash == std::nullopt);
 }
 
 } // namespace silkrpc::json

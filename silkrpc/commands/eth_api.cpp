@@ -28,6 +28,7 @@
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/ethdb/bitmap/database.hpp>
 #include <silkrpc/json/types.hpp>
+#include <silkrpc/types/filter.hpp>
 
 namespace silkrpc::commands {
 
@@ -51,8 +52,15 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
 
 // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getLogs
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply) {
-    auto filter = request["params"].get<Filter>();
-    std::cout << "filter=" << filter << "\n" << std::flush;
+    auto params = request["params"];
+    if (params.size() != 1) {
+        auto error = "invalid eth_getLogs params: " + params.dump();
+        SILKRPC_ERROR << error << "\n";
+        reply = json::make_json_error(request["id"], error);
+        co_return;
+    }
+    auto filter = params[0].get<Filter>();
+    SILKRPC_INFO << "filter: " << filter << "\n" << std::flush;
 
     std::vector<Log> logs;
 
@@ -76,6 +84,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
 
         if (filter.topics.has_value()) {
             auto topics_bitmap = co_await get_topics_bitmap(tx_database, filter.topics.value(), start, end);
+            SILKRPC_INFO << "topics_bitmap: " << topics_bitmap.toString() << "\n" << std::flush;
             if (!topics_bitmap.isEmpty()) {
                 if (block_numbers.isEmpty()) {
                     block_numbers = topics_bitmap;
