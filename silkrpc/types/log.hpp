@@ -17,6 +17,7 @@
 #ifndef SILKRPC_TYPES_LOG_H_
 #define SILKRPC_TYPES_LOG_H_
 
+#include <iostream>
 #include <vector>
 
 #include <evmc/evmc.hpp>
@@ -41,6 +42,8 @@ struct Log {
 };
 
 typedef std::vector<Log> Logs;
+
+std::ostream& operator<<(std::ostream& out, const Log& log);
 
 } // silkrpc
 

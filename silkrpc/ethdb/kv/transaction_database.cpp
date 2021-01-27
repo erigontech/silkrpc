@@ -19,6 +19,9 @@
 #include <climits>
 #include <exception>
 
+#include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
+
 namespace silkrpc::ethdb::kv {
 
 asio::awaitable<bool> TransactionDatabase::has(const std::string& table_name, const silkworm::Bytes& key) {
@@ -31,21 +34,34 @@ asio::awaitable<silkworm::Bytes> TransactionDatabase::get(const std::string& tab
 }
 
 asio::awaitable<void> TransactionDatabase::walk(const std::string& table, const silkworm::Bytes& start_key, uint32_t fixed_bits, core::rawdb::Walker w) {
+    using namespace silkworm;
     const auto fixed_bytes = (fixed_bits + 7) / CHAR_BIT;
+    SILKRPC_INFO << "fixed_bits: " << fixed_bits << " fixed_bytes: " << fixed_bytes << "\n" << std::flush;
     const auto shift_bits = fixed_bits & 7;
     uint8_t mask{0xff};
     if (shift_bits != 0) {
         mask = 0xff << (CHAR_BIT - shift_bits);
     }
+    SILKRPC_INFO << "mask: " << mask << "\n" << std::flush;
 
     const auto cursor = tx_.cursor();
     const auto cursor_id = co_await cursor->open_cursor(table); // TODO: store cursor_id internally
+    SILKRPC_INFO << "cursor_id: " << cursor_id << "\n" << std::flush;
 
     try {
         auto kv_pair = co_await cursor->seek(cursor_id, start_key);
         auto k = kv_pair.key;
         auto v = kv_pair.value;
-        while(!k.empty() && k.size() >= fixed_bits && (fixed_bits == 0 || k.compare(0, fixed_bytes-1, start_key) == 0 && (k[fixed_bytes-1]&mask) == (start_key[fixed_bytes-1]&mask))) {
+        SILKRPC_INFO << "k: " << k << " v: " << v << "\n" << std::flush;
+        SILKRPC_INFO << "k.empty(): " << k.empty() << "\n" << std::flush;
+        SILKRPC_INFO << "k.size(): " << k.size() << "\n" << std::flush;
+        SILKRPC_INFO << "k.compare(0, fixed_bytes-1, start_key, 0, fixed_bytes-1): " << k.compare(0, fixed_bytes-1, start_key, 0, fixed_bytes-1) << "\n" << std::flush;
+        SILKRPC_INFO << "k[fixed_bytes-1]: " << k[fixed_bytes-1] << "\n" << std::flush;
+        while (
+            !k.empty() &&
+            k.size() >= fixed_bytes &&
+            (fixed_bits == 0 || k.compare(0, fixed_bytes-1, start_key, 0, fixed_bytes-1) == 0 && (k[fixed_bytes-1]&mask) == (start_key[fixed_bytes-1]&mask))
+        ) {
             const auto go_on = w(k, v);
             if (!go_on) {
                 break;

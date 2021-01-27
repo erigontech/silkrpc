@@ -47,9 +47,35 @@ void to_json(nlohmann::json& json, const Log& log) {
 }
 
 void from_json(const nlohmann::json& json, Log& log) {
-    log.address = json.at("address").get<evmc::address>();
-    log.topics = json.at("topics").get<std::vector<evmc::bytes32>>();
-    log.data = json.at("data").get<silkworm::Bytes>();
+    if (json.is_array()) {
+        if (json.size() < 3) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Log CBOR: missing entries"};
+        }
+        if (!json[0].is_binary()) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Log CBOR: binary expected in [0]"};
+        }
+        auto address_bytes = json[0].get_binary();
+        log.address = silkworm::to_address(silkworm::Bytes{address_bytes.begin(), address_bytes.end()});
+        if (!json[1].is_array()) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Log CBOR: array expected in [1]"};
+        }
+        std::vector<evmc::bytes32> topics{};
+        topics.reserve(json[1].size());
+        for (auto topic : json[1]) {
+            auto topic_bytes = topic.get_binary();
+            topics.push_back(silkworm::to_bytes32(silkworm::Bytes{topic_bytes.begin(), topic_bytes.end()}));
+        }
+        log.topics = topics;
+        if (!json[2].is_binary()) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Log CBOR: binary expected in [2]"};
+        }
+        auto data_bytes = json[2].get_binary();
+        log.data = silkworm::Bytes{data_bytes.begin(), data_bytes.end()};
+    } else {
+        log.address = json.at("address").get<evmc::address>();
+        log.topics = json.at("topics").get<std::vector<evmc::bytes32>>();
+        log.data = json.at("data").get<silkworm::Bytes>();
+    }
 }
 
 void to_json(nlohmann::json& json, const Receipt& receipt) {
@@ -59,7 +85,19 @@ void to_json(nlohmann::json& json, const Receipt& receipt) {
 
 void from_json(const nlohmann::json& json, Receipt& receipt) {
     if (json.is_array()) {
+        if (json.size() < 3) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Receipt CBOR: missing entries"};
+        }
+        if (!json[0].is_null()) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Receipt CBOR: null expected in [0]"};
+        }
+        if (!json[1].is_number()) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Receipt CBOR: number expected in [1]"};
+        }
         receipt.success = json[1] == 1u;
+        if (!json[2].is_number()) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Receipt CBOR: number expected in [2]"};
+        }
         receipt.cumulative_gas_used = json[2];
     } else {
         receipt.success = json.at("success").get<bool>();

@@ -52,6 +52,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
 
 // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getLogs
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply) {
+    using namespace silkworm;
     auto params = request["params"];
     if (params.size() != 1) {
         auto error = "invalid eth_getLogs params: " + params.dump();
@@ -76,7 +77,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
         } else {
             auto latest_block_number = co_await core::get_latest_block_number(tx_database);
             start = filter.from_block.value_or(latest_block_number);
-            end = filter.from_block.value_or(latest_block_number);
+            end = filter.to_block.value_or(latest_block_number);
         }
 
         Roaring block_numbers;
@@ -93,6 +94,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
                 }
             }
         }
+        SILKRPC_INFO << "block_numbers: " << block_numbers.toString() << "\n" << std::flush;
 
         if (filter.addresses.has_value()) {
             auto addresses_bitmap = co_await get_addresses_bitmap(tx_database, filter.addresses.value(), start, end); // [2] implement
@@ -104,29 +106,41 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
                 }
             }
         }
+        SILKRPC_INFO << "block_numbers: " << block_numbers.toString() << "\n" << std::flush;
+        SILKRPC_INFO << "block_numbers.cardinality(): " << block_numbers.cardinality() << "\n" << std::flush;
 
         if (block_numbers.cardinality() == 0) {
             reply = json::make_json_content(request["id"], logs);
             co_return;
         }
 
-        std::vector<uint32_t> ans{uint32_t(block_numbers.cardinality())};
-        block_numbers.toUint32Array(ans.data());
+        std::vector<uint32_t> block_number_vector{};
+        block_number_vector.reserve(uint32_t(block_numbers.cardinality()));
+        SILKRPC_INFO << "block_number_vector vector size: " << block_number_vector.size() << "\n" << std::flush;
+        block_numbers.toUint32Array(block_number_vector.data());
         for (auto block_to_match : block_numbers) {
+            SILKRPC_INFO << "block_to_match: " << block_to_match << "\n" << std::flush;
             auto block_hash = co_await core::rawdb::read_canonical_block_hash(tx_database, uint64_t(block_to_match));
+            SILKRPC_INFO << "block_hash: " << silkworm::to_hex(block_hash) << "\n" << std::flush;
             if (block_hash == evmc::bytes32{}) {
                 reply = json::make_json_content(request["id"], logs);
                 co_return;
             }
 
             auto receipts = co_await get_receipts(tx_database, uint64_t(block_to_match), block_hash);
-            std::vector<Log> unfiltered_logs{receipts.size()};
+            SILKRPC_INFO << "receipts.size(): " << receipts.size() << "\n" << std::flush;
+            std::vector<Log> unfiltered_logs{};
+            unfiltered_logs.reserve(receipts.size());
             for (auto receipt: receipts) {
+                SILKRPC_INFO << "receipt.logs.size(): " << receipt.logs.size() << "\n" << std::flush;
                 unfiltered_logs.insert(unfiltered_logs.end(), receipt.logs.begin(), receipt.logs.end());
             }
+            SILKRPC_INFO << "unfiltered_logs.size(): " << unfiltered_logs.size() << "\n" << std::flush;
             auto filtered_logs = filter_logs(unfiltered_logs, filter);
+            SILKRPC_INFO << "filtered_logs.size(): " << filtered_logs.size() << "\n" << std::flush;
             logs.insert(logs.end(), filtered_logs.begin(), filtered_logs.end());
         }
+        SILKRPC_INFO << "logs.size(): " << logs.size() << "\n" << std::flush;
 
         reply = json::make_json_content(request["id"], logs);
     } catch (const std::exception& e) {
@@ -140,26 +154,41 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
 }
 
 asio::awaitable<Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end) {
+    SILKRPC_INFO << "#topics: " << topics.size() << " start: " << start << " end: " << end << "\n" << std::flush;
     Roaring result_bitmap;
     for (auto subtopics : topics) {
+        SILKRPC_INFO << "#subtopics: " << subtopics.size() << "\n" << std::flush;
         Roaring subtopic_bitmap;
         for (auto topic : subtopics) {
             auto topic_key = silkworm::from_hex(topic);
+            SILKRPC_INFO << "topic: " << topic << "\n" << std::flush;
             auto bitmap = co_await ethdb::bitmap::get(db_reader, silkworm::db::table::kLogTopicIndex.name, topic_key, start, end);
+            SILKRPC_INFO << "bitmap: " << bitmap.toString() << "\n" << std::flush;
             subtopic_bitmap |= bitmap;
+            SILKRPC_INFO << "subtopic_bitmap: " << subtopic_bitmap.toString() << "\n" << std::flush;
         }
-        result_bitmap &= subtopic_bitmap;
+        if (result_bitmap.isEmpty()) {
+            result_bitmap = subtopic_bitmap;
+        } else {
+            result_bitmap &= subtopic_bitmap;
+        }
+        SILKRPC_INFO << "result_bitmap: " << result_bitmap.toString() << "\n" << std::flush;
     }
     co_return result_bitmap;
 }
 
 asio::awaitable<Roaring> EthereumRpcApi::get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end) {
+    using namespace silkworm;
+    SILKRPC_INFO << "#addresses: " << addresses.size() << " start: " << start << " end: " << end << "\n" << std::flush;
     Roaring result_bitmap;
     for (auto address : addresses) {
         auto address_key = silkworm::from_hex(address);
+        SILKRPC_INFO << "address: " << address << "\n" << std::flush;
         auto bitmap = co_await ethdb::bitmap::get(db_reader, silkworm::db::table::kLogAddressIndex.name, address_key, start, end);
+        SILKRPC_INFO << "bitmap: " << bitmap.toString() << "\n" << std::flush;
         result_bitmap |= bitmap;
     }
+    SILKRPC_INFO << "result_bitmap: " << result_bitmap.toString() << "\n" << std::flush;
     co_return result_bitmap;
 }
 
@@ -181,17 +210,21 @@ std::vector<Log> EthereumRpcApi::filter_logs(std::vector<Log>& logs, const Filte
     auto addresses = filter.addresses;
     auto topics = filter.topics;
     for (auto log : logs) {
-        auto log_address{silkworm::to_hex(log.address)};
+        SILKRPC_INFO << "log: " << log << "\n" << std::flush;
+        auto log_address{"0x" + silkworm::to_hex(log.address)};
         if (addresses.has_value() && std::find(addresses.value().begin(), addresses.value().end(), log_address) == addresses.value().end()) {
+            SILKRPC_INFO << "skipped log for address: " << log_address << "\n" << std::flush;
             continue;
         }
         auto matches = true;
         if (topics.has_value()) {
             if (topics.value().size() > log.topics.size()) {
+                SILKRPC_INFO << "#topics: " << topics.value().size() << " #log.topics: " << log.topics.size() << "\n" << std::flush;
                 continue;
             }
             for (size_t i{0}; i < topics.value().size(); i++) {
                 auto log_topic{silkworm::to_hex(log.topics[i])};
+                SILKRPC_INFO << "log_topic: " << log_topic << "\n" << std::flush;
                 auto subtopics = topics.value()[i];
                 auto matches_subtopics = subtopics.empty(); // empty rule set == wildcard
                 for (auto topic : subtopics) {
