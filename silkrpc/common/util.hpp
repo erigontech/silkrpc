@@ -19,7 +19,11 @@
 
 #include <iostream>
 #include <string>
+
+#include <evmc/evmc.hpp>
+
 #include <silkworm/common/base.hpp>
+#include <silkworm/common/util.hpp>
 
 namespace silkrpc::common {
     struct KeyValue {
@@ -41,5 +45,10 @@ inline Bytes bytes_of_string(const std::string& s) {
 }
 
 } // namespace silkworm
+
+inline std::ostream& operator<<(std::ostream& out, const evmc::bytes32& b32) {
+    out << silkworm::to_hex(b32);
+    return out;
+}
 
 #endif  // SILKRPC_COMMON_UTIL_H_

@@ -17,7 +17,6 @@
 #include "eth_api.hpp"
 
 #include <algorithm>
-#include <array>
 #include <exception>
 #include <iostream>
 
@@ -25,6 +24,7 @@
 #include <silkworm/types/receipt.hpp>
 #include <silkworm/db/tables.hpp>
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/ethdb/bitmap/database.hpp>
@@ -53,7 +53,6 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
 
 // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_getLogs
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply) {
-    using namespace silkworm;
     auto params = request["params"];
     if (params.size() != 1) {
         auto error = "invalid eth_getLogs params: " + params.dump();
@@ -161,7 +160,7 @@ asio::awaitable<Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::Database
         SILKRPC_INFO << "#subtopics: " << subtopics.size() << "\n" << std::flush;
         Roaring subtopic_bitmap;
         for (auto topic : subtopics) {
-            auto topic_key = silkworm::from_hex(topic);
+            silkworm::Bytes topic_key{std::begin(topic.bytes), std::end(topic.bytes)};
             SILKRPC_INFO << "topic: " << topic << "\n" << std::flush;
             auto bitmap = co_await ethdb::bitmap::get(db_reader, silkworm::db::table::kLogTopicIndex.name, topic_key, start, end);
             SILKRPC_INFO << "bitmap: " << bitmap.toString() << "\n" << std::flush;
@@ -224,15 +223,13 @@ std::vector<Log> EthereumRpcApi::filter_logs(std::vector<Log>& logs, const Filte
                 continue;
             }
             for (size_t i{0}; i < topics.value().size(); i++) {
-                auto log_topic{silkworm::to_hex(log.topics[i])};
-                SILKRPC_INFO << "log_topic: " << log_topic << "\n" << std::flush;
+                SILKRPC_INFO << "log.topics[i]: " << log.topics[i] << "\n" << std::flush;
                 auto subtopics = topics.value()[i];
                 auto matches_subtopics = subtopics.empty(); // empty rule set == wildcard
                 SILKRPC_INFO << "matches_subtopics: " << std::boolalpha << matches_subtopics << "\n" << std::flush;
-                SILKRPC_INFO << "log_topic: " << log_topic << "\n" << std::flush;
                 for (auto topic : subtopics) {
                     SILKRPC_INFO << "topic: " << topic << "\n" << std::flush;
-                    if (log_topic == topic) {
+                    if (log.topics[i] == topic) {
                         matches_subtopics = true;
                         break;
                     }

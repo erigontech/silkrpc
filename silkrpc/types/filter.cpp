@@ -18,27 +18,12 @@
 
 #include <silkworm/common/util.hpp>
 
-namespace silkrpc {
-
-std::ostream& operator<<(std::ostream& out, const std::optional<std::vector<std::string>>& v) {
-    if (v.has_value()) {
-        out << "[";
-        for (auto i = v.value().begin(); i != v.value().end(); ++i) {
-            out << *i << " ";
-        }
-        out << "]";
-    } else {
-        out << "null";
-    }
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, const std::optional<FilterAddresses>& addresses) {
+std::ostream& operator<<(std::ostream& out, const std::optional<silkrpc::FilterAddresses>& addresses) {
     if (addresses.has_value()) {
         auto address_vector = addresses.value();
         out << "[";
-        for (auto i = address_vector.begin(); i != address_vector.end(); ++i) {
-            out << "0x" << silkworm::to_hex((*i).bytes) << " ";
+        for (auto it = address_vector.begin(); it != address_vector.end(); it++) {
+            out << "0x" << silkworm::to_hex((*it).bytes) << " ";
         }
         out << "]";
     } else {
@@ -47,11 +32,20 @@ std::ostream& operator<<(std::ostream& out, const std::optional<FilterAddresses>
     return out;
 }
 
-std::ostream& operator<<(std::ostream& out, const std::optional<FilterTopics>& topics) {
+std::ostream& operator<<(std::ostream& out, const silkrpc::FilterSubTopics& subtopics) {
+    out << "[";
+    for (auto it = subtopics.begin(); it != subtopics.end(); it++) {
+        out << "0x" << silkworm::to_hex((*it).bytes) << " ";
+    }
+    out << "]";
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const std::optional<silkrpc::FilterTopics>& topics) {
     if (topics.has_value()) {
-        auto subtopics = topics.value();
+        auto topic_vector = topics.value();
         out << "[";
-        for (auto i = subtopics.begin(); i != subtopics.end(); ++i) {
+        for (auto i = topic_vector.begin(); i != topic_vector.end(); ++i) {
             out << *i << " ";
         }
         out << "]";
@@ -60,6 +54,8 @@ std::ostream& operator<<(std::ostream& out, const std::optional<FilterTopics>& t
     }
     return out;
 }
+
+namespace silkrpc {
 
 std::ostream& operator<<(std::ostream& out, const Filter& filter) {
     out << "from_block: " << filter.from_block.value_or(0) << " ";

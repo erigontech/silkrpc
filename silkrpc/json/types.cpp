@@ -46,6 +46,12 @@ void to_json(nlohmann::json& json, const Log& log) {
     json["address"] = log.address;
     json["topics"] = log.topics;
     json["data"] = log.data;
+    json["block_number"] = log.block_number;
+    json["block_hash"] = log.block_hash;
+    json["tx_hash"] = log.tx_hash;
+    json["tx_index"] = log.tx_index;
+    json["index"] = log.index;
+    json["removed"] = log.removed;
 }
 
 void from_json(const nlohmann::json& json, Log& log) {

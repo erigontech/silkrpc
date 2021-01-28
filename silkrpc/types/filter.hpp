@@ -27,7 +27,7 @@
 namespace silkrpc {
 
 typedef std::vector<evmc::address> FilterAddresses;
-typedef std::vector<std::string> FilterSubTopics;
+typedef std::vector<evmc::bytes32> FilterSubTopics;
 typedef std::vector<FilterSubTopics> FilterTopics;
 
 struct Filter {
@@ -38,12 +38,12 @@ struct Filter {
     std::optional<std::string> block_hash;
 };
 
-std::ostream& operator<<(std::ostream& out, const std::optional<FilterAddresses>& addresses);
-
-std::ostream& operator<<(std::ostream& out, const std::optional<FilterTopics>& topics);
-
 std::ostream& operator<<(std::ostream& out, const Filter& filter);
 
 } // silkrpc
+
+std::ostream& operator<<(std::ostream& out, const std::optional<silkrpc::FilterAddresses>& addresses);
+
+std::ostream& operator<<(std::ostream& out, const std::optional<silkrpc::FilterTopics>& topics);
 
 #endif  // SILKRPC_TYPES_FILTER_H_

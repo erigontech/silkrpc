@@ -31,7 +31,17 @@ using namespace evmc::literals;
 TEST_CASE("serialize empty log", "[silkrpc][to_json]") {
     Log l{{}, {}, {}};
     nlohmann::json j = l;
-    CHECK(j == R"({"address":"0000000000000000000000000000000000000000","topics":[],"data":[]})"_json);
+    CHECK(j == R"({
+        "address":"0000000000000000000000000000000000000000",
+        "topics":[],
+        "data":[],
+        "block_number":0,
+        "block_hash":"0000000000000000000000000000000000000000000000000000000000000000",
+        "tx_hash":"0000000000000000000000000000000000000000000000000000000000000000",
+        "tx_index":0,
+        "index":0,
+        "removed":false
+    })"_json);
 }
 
 TEST_CASE("deserialize empty log", "[silkrpc][from_json]") {
@@ -61,13 +71,13 @@ namespace silkrpc::json {
 TEST_CASE("serialize empty filter", "[silkrpc::json][to_json]") {
     Filter f{{0}, {0}, {{"", ""}}, {{{"", ""}, {"", ""}}}, {""}};
     nlohmann::json j = f;
-    CHECK(j == R"({"address":[],"blockHash":"","fromBlock":0,"toBlock":0,"topics":[["",""], ["",""]]})"_json);
+    CHECK(j == R"({"address":[],"blockHash":"","fromBlock":0,"toBlock":0,"topics":[[], []]})"_json);
 }
 
 TEST_CASE("serialize filter with fromBlock and toBlock", "[silkrpc::json][to_json]") {
     Filter f{{1000}, {2000}, {{"", ""}}, {{{"", ""}, {"", ""}}}, {""}};
     nlohmann::json j = f;
-    CHECK(j == R"({"address":[],"blockHash":"","fromBlock":1000,"toBlock":2000,"topics":[["",""], ["",""]]})"_json);
+    CHECK(j == R"({"address":[],"blockHash":"","fromBlock":1000,"toBlock":2000,"topics":[[], []]})"_json);
 }
 
 TEST_CASE("deserialize null filter", "[silkrpc::json][from_json]") {
@@ -98,7 +108,10 @@ TEST_CASE("deserialize filter with topic", "[silkrpc::json][from_json]") {
     CHECK(f.from_block == 3997696u);
     CHECK(f.to_block == 4007424u);
     CHECK(f.addresses == std::vector<evmc::address>{0x6090a6e47849629b7245dfa1ca21d94cd15878ef_address});
-    CHECK(f.topics == std::vector<std::vector<std::string>>{{""}, {"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c"}});
+    CHECK(f.topics == std::vector<std::vector<evmc::bytes32>>{
+        {0x0000000000000000000000000000000000000000000000000000000000000000_bytes32},
+        {0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32}
+    });
     CHECK(f.block_hash == std::nullopt);
 }
 
