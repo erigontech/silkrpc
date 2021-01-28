@@ -17,13 +17,16 @@
 #ifndef SILKRPC_TYPES_FILTER_H_
 #define SILKRPC_TYPES_FILTER_H_
 
+#include <iostream>
 #include <optional>
 #include <string>
 #include <vector>
 
+#include <evmc/evmc.hpp>
+
 namespace silkrpc {
 
-typedef std::vector<std::string> FilterAddresses;
+typedef std::vector<evmc::address> FilterAddresses;
 typedef std::vector<std::string> FilterSubTopics;
 typedef std::vector<FilterSubTopics> FilterTopics;
 
@@ -34,6 +37,12 @@ struct Filter {
     std::optional<FilterTopics> topics;
     std::optional<std::string> block_hash;
 };
+
+std::ostream& operator<<(std::ostream& out, const std::optional<FilterAddresses>& addresses);
+
+std::ostream& operator<<(std::ostream& out, const std::optional<FilterTopics>& topics);
+
+std::ostream& operator<<(std::ostream& out, const Filter& filter);
 
 } // silkrpc
 

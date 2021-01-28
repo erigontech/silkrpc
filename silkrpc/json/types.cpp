@@ -18,6 +18,8 @@
 
 #include <algorithm>
 
+#include <silkworm/common/util.hpp>
+
 namespace evmc {
 
 void to_json(nlohmann::json& json, const address& addr) {
@@ -146,7 +148,7 @@ void from_json(const nlohmann::json& json, Filter& filter) {
     }
     if (json.count("address") != 0) {
         if (json.at("address").is_string()) {
-            filter.addresses= {json.at("address").get<std::string>()};
+            filter.addresses= {json.at("address").get<evmc::address>()};
         } else {
             filter.addresses = json.at("address").get<FilterAddresses>();
         }
@@ -166,42 +168,6 @@ void from_json(const nlohmann::json& json, Filter& filter) {
     if (json.count("blockHash") != 0) {
         filter.block_hash = json.at("blockHash").get<std::string>();
     }
-}
-
-std::ostream& operator<<(std::ostream& out, const std::optional<std::vector<std::string>>& v) {
-    if (v.has_value()) {
-        out << "[";
-        for (auto i = v.value().begin(); i != v.value().end(); ++i) {
-            out << *i << " ";
-        }
-        out << "]";
-    } else {
-        out << "null";
-    }
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, const std::optional<FilterTopics>& topics) {
-    if (topics.has_value()) {
-        auto subtopics = topics.value();
-        out << "[";
-        for (auto i = subtopics.begin(); i != subtopics.end(); ++i) {
-            out << *i << " ";
-        }
-        out << "]";
-    } else {
-        out << "null";
-    }
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, const Filter& filter) {
-    out << "from_block: " << filter.from_block.value_or(0) << " ";
-    out << "to_block: " << filter.to_block.value_or(0) << " ";
-    out << "address: " << filter.addresses << " ";
-    out << "topics: " << filter.topics << " ";
-    out << "block_hash: " << filter.block_hash.value_or("null");
-    return out;
 }
 
 } // namespace silkrpc

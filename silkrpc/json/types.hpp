@@ -17,7 +17,6 @@
 #ifndef SILKRPC_JSON_ETH_H_
 #define SILKRPC_JSON_ETH_H_
 
-#include <iostream>
 #include <optional>
 #include <string>
 #include <vector>
@@ -25,7 +24,6 @@
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkworm/common/util.hpp>
 #include <silkrpc/types/filter.hpp>
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/receipt.hpp>
@@ -50,8 +48,6 @@ void from_json(const nlohmann::json& json, Receipt& receipt);
 
 void to_json(nlohmann::json& json, const Filter& filter);
 void from_json(const nlohmann::json& json, Filter& filter);
-
-std::ostream& operator<<(std::ostream& out, const Filter& filter);
 
 } // namespace silkrpc
 

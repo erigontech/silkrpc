@@ -17,6 +17,7 @@
 #include "eth_api.hpp"
 
 #include <algorithm>
+#include <array>
 #include <exception>
 #include <iostream>
 
@@ -178,12 +179,11 @@ asio::awaitable<Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::Database
 }
 
 asio::awaitable<Roaring> EthereumRpcApi::get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end) {
-    using namespace silkworm;
+    using namespace evmc;
     SILKRPC_INFO << "#addresses: " << addresses.size() << " start: " << start << " end: " << end << "\n" << std::flush;
     Roaring result_bitmap;
     for (auto address : addresses) {
-        auto address_key = silkworm::from_hex(address);
-        SILKRPC_INFO << "address: " << address << "\n" << std::flush;
+        silkworm::Bytes address_key{std::begin(address.bytes), std::end(address.bytes)};
         auto bitmap = co_await ethdb::bitmap::get(db_reader, silkworm::db::table::kLogAddressIndex.name, address_key, start, end);
         SILKRPC_INFO << "bitmap: " << bitmap.toString() << "\n" << std::flush;
         result_bitmap |= bitmap;
@@ -201,6 +201,7 @@ asio::awaitable<Receipts> EthereumRpcApi::get_receipts(core::rawdb::DatabaseRead
     // If not already present, retrieve receipts by executing transactions
     auto block = co_await core::rawdb::read_block(db_reader, hash, number);
     // TODO: implement
+    SILKRPC_WARN << "retrieve receipts by executing transactions NOT YET IMPLEMENTED\n" << std::flush;
     co_return Receipts{};
 }
 
@@ -209,11 +210,11 @@ std::vector<Log> EthereumRpcApi::filter_logs(std::vector<Log>& logs, const Filte
 
     auto addresses = filter.addresses;
     auto topics = filter.topics;
+    SILKRPC_INFO << "filter.addresses: " << filter.addresses << "\n" << std::flush;
     for (auto log : logs) {
         SILKRPC_INFO << "log: " << log << "\n" << std::flush;
-        auto log_address{"0x" + silkworm::to_hex(log.address)};
-        if (addresses.has_value() && std::find(addresses.value().begin(), addresses.value().end(), log_address) == addresses.value().end()) {
-            SILKRPC_INFO << "skipped log for address: " << log_address << "\n" << std::flush;
+        if (addresses.has_value() && std::find(addresses.value().begin(), addresses.value().end(), log.address) == addresses.value().end()) {
+            SILKRPC_INFO << "skipped log for address: 0x" << silkworm::to_hex(log.address) << "\n" << std::flush;
             continue;
         }
         auto matches = true;
@@ -227,7 +228,10 @@ std::vector<Log> EthereumRpcApi::filter_logs(std::vector<Log>& logs, const Filte
                 SILKRPC_INFO << "log_topic: " << log_topic << "\n" << std::flush;
                 auto subtopics = topics.value()[i];
                 auto matches_subtopics = subtopics.empty(); // empty rule set == wildcard
+                SILKRPC_INFO << "matches_subtopics: " << std::boolalpha << matches_subtopics << "\n" << std::flush;
+                SILKRPC_INFO << "log_topic: " << log_topic << "\n" << std::flush;
                 for (auto topic : subtopics) {
+                    SILKRPC_INFO << "topic: " << topic << "\n" << std::flush;
                     if (log_topic == topic) {
                         matches_subtopics = true;
                         break;
