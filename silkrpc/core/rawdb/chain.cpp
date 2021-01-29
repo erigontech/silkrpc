@@ -151,7 +151,7 @@ asio::awaitable<Receipts> read_raw_receipts(DatabaseReader& reader, evmc::bytes3
     auto log_key = silkworm::db::log_key(block_number, 0);
     Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
         auto tx_id = boost::endian::load_big_u32(&k[sizeof(uint64_t)]);
-        SILKRPC_INFO << "tx_id: " << tx_id << "\n" << std::flush;
+        //SILKRPC_INFO << "tx_id: " << tx_id << "\n" << std::flush;
         cbor_decode(v, receipts[tx_id].logs);
         return true;
     };
@@ -197,7 +197,7 @@ asio::awaitable<Receipts> read_receipts(DatabaseReader& reader, evmc::bytes32 bl
         }
 
         // The derived fields of receipt are taken from block and transaction
-        SILKRPC_INFO << "receipts[i].logs.size(): " << receipts[i].logs.size() << "\n" << std::flush;
+        //SILKRPC_INFO << "receipts[i].logs.size(): " << receipts[i].logs.size() << "\n" << std::flush;
         for (size_t j{0}; j < receipts[i].logs.size(); j++) {
             receipts[i].logs[j].block_number = block_number;
             receipts[i].logs[j].block_hash = block_hash;

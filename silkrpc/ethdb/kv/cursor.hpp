@@ -35,15 +35,17 @@ public:
     Cursor(const Cursor&) = delete;
     Cursor& operator=(const Cursor&) = delete;
 
+    virtual uint32_t cursor_id() const = 0;
+
     virtual asio::awaitable<common::KeyValue> seek(const std::string& table_name, const silkworm::Bytes& seek_key) = 0;
 
-    virtual asio::awaitable<uint32_t> open_cursor(const std::string& table_name) = 0;
+    virtual asio::awaitable<void> open_cursor(const std::string& table_name) = 0;
 
-    virtual asio::awaitable<silkrpc::common::KeyValue> seek(uint32_t cursor_id, const silkworm::Bytes& seek_key) = 0;
+    virtual asio::awaitable<silkrpc::common::KeyValue> seek(const silkworm::Bytes& seek_key) = 0;
 
-    virtual asio::awaitable<silkrpc::common::KeyValue> next(uint32_t cursor_id) = 0;
+    virtual asio::awaitable<silkrpc::common::KeyValue> next() = 0;
 
-    virtual asio::awaitable<void> close_cursor(uint32_t cursor_id) = 0;
+    virtual asio::awaitable<void> close_cursor() = 0;
 };
 
 } // namespace silkrpc::ethdb::kv

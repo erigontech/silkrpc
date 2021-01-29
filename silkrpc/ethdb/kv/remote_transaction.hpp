@@ -17,7 +17,9 @@
 #ifndef SILKRPC_KV_REMOTE_TRANSACTION_HPP
 #define SILKRPC_KV_REMOTE_TRANSACTION_HPP
 
+#include <map>
 #include <memory>
+#include <string>
 
 #include <silkrpc/config.hpp>
 
@@ -36,18 +38,34 @@ public:
     explicit RemoteTransaction(asio::io_context& context, std::shared_ptr<grpc::Channel> channel)
     : context_(context), reactor_{channel}, kv_awaitable_{context_, reactor_} {}
 
-    virtual std::unique_ptr<Cursor> cursor() override {
+    std::unique_ptr<Cursor> cursor() override {
         return std::make_unique<RemoteCursor>(kv_awaitable_);
     }
 
-    virtual void rollback() override {
-        // TODO: trace open cursors, close pending one here (requires cursorId in cursor and making this a coroutine)
+    asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) override {
+        auto cursor_it = cursors_.find(table);
+        if (cursor_it != cursors_.end()) {
+            co_return cursor_it->second;
+        }
+        auto cursor = std::make_shared<RemoteCursor>(kv_awaitable_);
+        co_await cursor->open_cursor(table);
+        cursors_[table] = cursor;
+        co_return cursor;
+    }
+
+    asio::awaitable<void> close() override {
+        for (const auto& [table, cursor] : cursors_) {
+            cursor->close_cursor();
+        }
+        cursors_.clear();
+        co_return;
     }
 
 private:
     asio::io_context& context_;
     ClientCallbackReactor reactor_;
     KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
+    std::map<std::string, std::shared_ptr<Cursor>> cursors_;
 };
 
 } // namespace silkrpc::ethdb::kv

@@ -23,7 +23,7 @@
 namespace evmc {
 
 void to_json(nlohmann::json& json, const address& addr) {
-    json = silkworm::to_hex(addr);
+    json = "0x" + silkworm::to_hex(addr);
 }
 
 void from_json(const nlohmann::json& json, address& addr) {
@@ -31,7 +31,7 @@ void from_json(const nlohmann::json& json, address& addr) {
 }
 
 void to_json(nlohmann::json& json, const bytes32& b32) {
-    json = silkworm::to_hex(b32);
+    json = "0x" + silkworm::to_hex(b32);
 }
 
 void from_json(const nlohmann::json& json, bytes32& b32) {
@@ -46,11 +46,11 @@ void to_json(nlohmann::json& json, const Log& log) {
     json["address"] = log.address;
     json["topics"] = log.topics;
     json["data"] = log.data;
-    json["block_number"] = log.block_number;
-    json["block_hash"] = log.block_hash;
-    json["tx_hash"] = log.tx_hash;
-    json["tx_index"] = log.tx_index;
-    json["index"] = log.index;
+    json["blockNumber"] = log.block_number;
+    json["blockHash"] = log.block_hash;
+    json["transactionHash"] = log.tx_hash;
+    json["transactionIndex"] = log.tx_index;
+    json["logIndex"] = log.index;
     json["removed"] = log.removed;
 }
 

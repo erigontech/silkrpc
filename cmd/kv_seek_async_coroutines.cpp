@@ -43,15 +43,17 @@ ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC cal
 using namespace silkworm;
 using namespace silkrpc::ethdb::kv;
 
-asio::awaitable<void> kv_seek(Cursor& kv_cursor, const std::string& table_name, const silkworm::Bytes& seek_key) {
+asio::awaitable<void> kv_seek(Database& kv_db, const std::string& table_name, const silkworm::Bytes& seek_key) {
+    const auto kv_transaction = kv_db.begin();
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
-    auto cursor_id = co_await kv_cursor.open_cursor(table_name);
+    const auto kv_cursor = co_await kv_transaction->cursor(table_name);
+    auto cursor_id = kv_cursor->cursor_id();
     std::cout << "KV Tx OPEN <- cursor: " << cursor_id << "\n" << std::flush;
     std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key << "\n" << std::flush;
-    auto kv_pair = co_await kv_cursor.seek(cursor_id, seek_key);
+    auto kv_pair = co_await kv_cursor->seek(seek_key);
     std::cout << "KV Tx SEEK <- key: " << kv_pair.key << " value: " << kv_pair.value << "\n" << std::flush;
     std::cout << "KV Tx CLOSE -> cursor: " << cursor_id << "\n" << std::flush;
-    co_await kv_cursor.close_cursor(cursor_id);
+    co_await kv_transaction->close();
     std::cout << "KV Tx CLOSE <- cursor: 0\n" << std::flush;
     co_return;
 }
@@ -97,9 +99,8 @@ int main(int argc, char* argv[]) {
     const auto channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
 
     RemoteDatabase kv_database{context, channel};
-    auto kv_cursor = kv_database.begin()->cursor();
 
-    asio::co_spawn(context, kv_seek(*kv_cursor, table_name, from_hex(seek_key)), [&](std::exception_ptr exptr) {
+    asio::co_spawn(context, kv_seek(kv_database, table_name, from_hex(seek_key)), [&](std::exception_ptr exptr) {
         context.stop();
     });
 

@@ -41,7 +41,9 @@ public:
 
     virtual std::unique_ptr<Cursor> cursor() = 0;
 
-    virtual void rollback() = 0;
+    virtual asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) = 0;
+
+    virtual asio::awaitable<void> close() = 0;
 };
 
 } // namespace silkrpc::ethdb::kv
