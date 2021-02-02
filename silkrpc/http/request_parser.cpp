@@ -23,6 +23,8 @@
 #include "request_parser.hpp"
 #include "request.hpp"
 
+#include <algorithm>
+
 namespace silkrpc::http {
 
 RequestParser::RequestParser() : state_(method_start) {
@@ -212,7 +214,15 @@ RequestParser::ResultType RequestParser::consume(Request& req, char input) {
                 return bad;
             }
         case content_start:
-            req.content_length = std::atoi(req.headers[4].value.c_str()); // TODO: switch to map for req.headers
+            if (req.content_length == 0) {
+                const auto it = std::find_if(req.headers.begin(), req.headers.end(), [&](const Header& h){
+                    return h.name == "Content-Length";
+                });
+                if (it == req.headers.end()) {
+                    return bad;
+                }
+                req.content_length = std::atoi((*it).value.c_str());
+            }
             req.content.push_back(input);
             if (req.content.length() < req.content_length) {
                 return indeterminate;

@@ -41,6 +41,7 @@ std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = 
 };
 
 asio::awaitable<void> RequestHandler::handle_request(const Request& request, Reply& reply) {
+    SILKRPC_DEBUG << "handle_request content: " << request.content << "\n" << std::flush;
     auto start = clock_time::now();
 
     try {

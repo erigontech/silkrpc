@@ -17,11 +17,21 @@
 #ifndef SILKRPC_COMMON_LOG_H_
 #define SILKRPC_COMMON_LOG_H_
 
+#include <absl/strings/string_view.h>
+
 #include <silkworm/common/log.hpp>
+
+namespace silkworm {
+
+bool AbslParseFlag(absl::string_view text, LogLevels* level, std::string* error);
+std::string AbslUnparseFlag(LogLevels level);
+
+} // namespace silkworm
 
 namespace silkrpc {
 
 using Logger = silkworm::Logger;
+using LogLevel = silkworm::LogLevels;
 
 // LogTrace, LogDebug, LogInfo, LogWarn, LogError, LogCritical, LogNone
 #define SILKRPC_TRACE SILKWORM_LOG(silkworm::LogTrace)

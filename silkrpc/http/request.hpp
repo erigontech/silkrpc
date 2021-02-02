@@ -37,7 +37,7 @@ struct Request {
     int http_version_major;
     int http_version_minor;
     std::vector<Header> headers;
-    uint32_t content_length;
+    uint32_t content_length{0};
     std::string content;
 };
 

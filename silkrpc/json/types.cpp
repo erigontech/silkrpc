@@ -74,11 +74,14 @@ void from_json(const nlohmann::json& json, Log& log) {
             topics.push_back(silkworm::to_bytes32(silkworm::Bytes{topic_bytes.begin(), topic_bytes.end()}));
         }
         log.topics = topics;
-        if (!json[2].is_binary()) {
-            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Log CBOR: binary expected in [2]"};
+        if (json[2].is_binary()) {
+            auto data_bytes = json[2].get_binary();
+            log.data = silkworm::Bytes{data_bytes.begin(), data_bytes.end()};
+        } else if (json[2].is_null()) {
+            log.data = silkworm::Bytes{};
+        } else {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Log CBOR: binary or null expected in [2]"};
         }
-        auto data_bytes = json[2].get_binary();
-        log.data = silkworm::Bytes{data_bytes.begin(), data_bytes.end()};
     } else {
         log.address = json.at("address").get<evmc::address>();
         log.topics = json.at("topics").get<std::vector<evmc::bytes32>>();

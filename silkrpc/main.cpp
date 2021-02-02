@@ -36,12 +36,14 @@
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/constants.hpp>
+#include <silkrpc/common/log.hpp>
 #include <silkrpc/http/server.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::common::kEmptyChainData, "chain data path as string");
 ABSL_FLAG(std::string, target, silkrpc::common::kEmptyTarget, "server location as string <address>:<port>");
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
+ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::LogInfo, "logging level");
 
 int main(int argc, char* argv[]) {
     const auto pid = boost::this_process::get_id();
@@ -77,6 +79,8 @@ int main(int argc, char* argv[]) {
             std::cerr << "Use --timeout flag to specify the timeout in msecs for Turbo-Geth KV gRPC I/F\n";
             return -1;
         }
+
+        silkrpc::Logger::default_logger().verbosity = absl::GetFlag(FLAGS_logLevel);
 
         asio::io_context context{1};
         asio::signal_set signals{context, SIGINT, SIGTERM};
