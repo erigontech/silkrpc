@@ -39,15 +39,21 @@
 namespace silkrpc::core {
 
 void cbor_decode(const silkworm::Bytes& bytes, std::vector<Log>& logs) {
-    if (bytes.size() > 0) {
-        auto json = nlohmann::json::from_cbor(bytes);
+    if (bytes.size() == 0) {
+        return;
+    }
+    auto json = nlohmann::json::from_cbor(bytes);
+    if (json.is_array()) {
         logs = json.get<std::vector<Log>>();
     }
 }
 
 void cbor_decode(const silkworm::Bytes& bytes, std::vector<Receipt>& receipts) {
-    if (bytes.size() > 0) {
-        auto json = nlohmann::json::from_cbor(bytes);
+    if (bytes.size() == 0) {
+        return;
+    }
+    auto json = nlohmann::json::from_cbor(bytes);
+    if (json.is_array()) {
         receipts = json.get<std::vector<Receipt>>();
     }
 }
@@ -99,6 +105,7 @@ asio::awaitable<silkworm::BlockHeader> read_header(DatabaseReader& reader, evmc:
     if (data.empty()) {
         co_return silkworm::BlockHeader{};
     }
+    SILKRPC_TRACE << "data: " << silkworm::to_hex(data) << "\n" << std::flush;
     silkworm::ByteView data_view{data};
     silkworm::BlockHeader header{};
     silkworm::rlp::decode(data_view, header);
@@ -117,8 +124,8 @@ asio::awaitable<silkworm::BlockBody> read_body(DatabaseReader& reader, evmc::byt
 }
 
 asio::awaitable<silkworm::Bytes> read_header_rlp(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
-    const auto header_hash_key = silkworm::db::header_hash_key(block_number);
-    const auto data = co_await reader.get(silkworm::db::table::kBlockHeaders.name, header_hash_key);
+    const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
+    const auto data = co_await reader.get(silkworm::db::table::kBlockHeaders.name, block_key);
     co_return data;
 }
 
@@ -147,12 +154,14 @@ asio::awaitable<Receipts> read_raw_receipts(DatabaseReader& reader, evmc::bytes3
     }
     Receipts receipts{};
     cbor_decode(data, receipts);
+    SILKRPC_TRACE << "#receipts: " << receipts.size() << "\n" << std::flush;
 
     auto log_key = silkworm::db::log_key(block_number, 0);
+    SILKRPC_TRACE << "log_key: " << silkworm::to_hex(log_key) << "\n" << std::flush;
     Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
         auto tx_id = boost::endian::load_big_u32(&k[sizeof(uint64_t)]);
-        //SILKRPC_INFO << "tx_id: " << tx_id << "\n" << std::flush;
         cbor_decode(v, receipts[tx_id].logs);
+        SILKRPC_TRACE << "receipts[" << tx_id << "].logs: " << receipts[tx_id].logs.size() << "\n" << std::flush;
         return true;
     };
     co_await reader.walk(silkworm::db::table::kLogs.name, log_key, 8 * CHAR_BIT, walker);

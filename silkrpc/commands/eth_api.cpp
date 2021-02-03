@@ -203,7 +203,7 @@ asio::awaitable<Receipts> EthereumRpcApi::get_receipts(core::rawdb::DatabaseRead
     }
 
     // If not already present, retrieve receipts by executing transactions
-    auto block = co_await core::rawdb::read_block(db_reader, hash, number);
+    //auto block = co_await core::rawdb::read_block(db_reader, hash, number);
     // TODO: implement
     SILKRPC_WARN << "retrieve receipts by executing transactions NOT YET IMPLEMENTED\n" << std::flush;
     co_return Receipts{};
