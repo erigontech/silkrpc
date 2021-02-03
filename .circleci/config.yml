@@ -60,7 +60,7 @@ jobs:
       BUILD_TYPE: Debug
       CLANG_COVERAGE: OFF
     machine:
-      - image: ubuntu-2104:202101-01
+      image: ubuntu-2104:202101-01
     steps:
       - run:
           name: "Install GCC 10"
@@ -79,7 +79,7 @@ jobs:
     environment:
       BUILD_TYPE: Debug
       CLANG_COVERAGE: ON
-    machine:
+    docker:
       - image: ethereum/cpp-build-env:14-clang-10
     steps:
       - run:
