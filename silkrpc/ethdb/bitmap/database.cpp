@@ -17,6 +17,7 @@
 #include "database.hpp"
 
 #include <climits>
+#include <memory>
 #include <vector>
 
 #include <boost/endian/conversion.hpp>
@@ -26,26 +27,48 @@
 
 namespace silkrpc::ethdb::bitmap {
 
+static Roaring fast_or(size_t n, const std::vector<std::unique_ptr<Roaring>>& inputs) {
+    const roaring_bitmap_t **x = (const roaring_bitmap_t **)malloc(n * sizeof(roaring_bitmap_t *));
+    if (x == NULL) {
+        throw std::runtime_error("failed memory alloc in fast_or");
+    }
+    for (size_t k = 0; k < n; ++k) {
+        x[k] = &inputs[k]->roaring;
+    }
+
+    roaring_bitmap_t *c_ans = roaring_bitmap_or_many(n, x);
+    if (c_ans == NULL) {
+        free(x);
+        throw std::runtime_error("failed memory alloc in fast_or");
+    }
+    Roaring ans(c_ans);
+    free(x);
+    return ans;
+}
+
 asio::awaitable<Roaring> get(core::rawdb::DatabaseReader& db_reader, const std::string& table, silkworm::Bytes& key, uint32_t from_block, uint32_t to_block) {
     using namespace silkworm;
-    std::vector<const Roaring*> chuncks;
+    std::vector<std::unique_ptr<Roaring>> chuncks;
 
     silkworm::Bytes from_key{key.begin(), key.end()};
     from_key.resize(key.size() + sizeof(uint32_t));
     boost::endian::store_big_u32(&from_key[key.size()], from_block);
-    //SILKRPC_INFO << "key: " << key << " from_key: " << from_key << "\n" << std::flush;
+    SILKRPC_DEBUG << "key: " << key << " from_key: " << from_key << "\n" << std::flush;
 
     Roaring chunck{};
     core::rawdb::Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
-        //SILKRPC_INFO << "k: " << k << " v: " << v << "\n" << std::flush;
-        chunck = std::move(Roaring::readSafe(reinterpret_cast<const char*>(v.data()), v.size()));
-        chuncks.push_back(&chunck);
+        SILKRPC_DEBUG << "k: " << k << " v: " << v << "\n" << std::flush;
+        auto chunck = std::make_unique<Roaring>(Roaring::readSafe(reinterpret_cast<const char*>(v.data()), v.size()));
+        SILKRPC_DEBUG << "chunck: " << chunck->toString() << "\n" << std::flush;
+        chuncks.push_back(std::move(chunck));
         auto block = boost::endian::load_big_u32(&k[k.size() - sizeof(uint32_t)]);
         return block < to_block;
     };
     co_await db_reader.walk(table, from_key, key.size() * CHAR_BIT, walker);
 
-    co_return Roaring::fastunion(chuncks.size(), chuncks.data());
+    auto result{fast_or(chuncks.size(), chuncks)};
+    SILKRPC_DEBUG << "result: " << result.toString() << "\n" << std::flush;
+    co_return result;
 }
 
 } // silkrpc::ethdb::bitmap
