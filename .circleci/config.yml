@@ -60,7 +60,7 @@ jobs:
       BUILD_TYPE: Debug
       CLANG_COVERAGE: OFF
     machine:
-      image: ubuntu-2104:202101-01
+      image: ubuntu-2004:202101-01
     steps:
       - run:
           name: "Install GCC 10"
