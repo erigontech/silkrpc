@@ -27,8 +27,10 @@
 #include <system_error>
 #include <vector>
 
+#include <asio/write.hpp>
 #include <asio/use_awaitable.hpp>
 
+#include <silkrpc/common/log.hpp>
 #include "connection_manager.hpp"
 #include "request_handler.hpp"
 
@@ -43,11 +45,14 @@ asio::awaitable<void> Connection::start() {
 
 void Connection::stop() {
     socket_.close();
+    SILKRPC_DEBUG << "Connection::stop socket " << &socket_ << " closed\n";
 }
 
 asio::awaitable<void> Connection::do_read() {
     try {
+        SILKRPC_DEBUG << "Connection::do_read going to read...\n" << std::flush;
         std::size_t bytes_read = co_await socket_.async_read_some(asio::buffer(buffer_), asio::use_awaitable);
+        SILKRPC_DEBUG << "Connection::do_read bytes_read: " << bytes_read << "\n";
         RequestParser::ResultType result;
         std::tie(result, std::ignore) = request_parser_.parse(
             request_, buffer_.data(), buffer_.data() + bytes_read
@@ -59,22 +64,29 @@ asio::awaitable<void> Connection::do_read() {
         } else if (result == RequestParser::bad) {
             reply_ = Reply::stock_reply(Reply::bad_request);
             co_await do_write();
-        } else {
-            co_await do_read();
         }
+
+        // Read next chunck (result == RequestParser::indeterminate) or next request
+        co_await do_read();
     } catch (const std::system_error& se) {
+        if (se.code() == asio::error::eof || se.code() == asio::error::connection_reset) {
+            connection_manager_.stop(shared_from_this());
+            co_return;
+        }
+        SILKRPC_ERROR << "Connection::do_read system_error: " << se.what() << "\n" << std::flush;
         if (se.code() != asio::error::operation_aborted) {
             connection_manager_.stop(shared_from_this());
         }
         std::rethrow_exception(std::make_exception_ptr(se));
     } catch (const std::exception& e) {
+        SILKRPC_ERROR << "Connection::do_read exception: " << e.what() << "\n" << std::flush;
         std::rethrow_exception(std::make_exception_ptr(e));
     }
 }
 
 asio::awaitable<void> Connection::do_write() {
     try {
-        co_await socket_.async_write_some(reply_.to_buffers(), asio::use_awaitable);
+        co_await asio::async_write(socket_, reply_.to_buffers(), asio::use_awaitable);
     } catch (const std::system_error& se) {
         if (se.code() != asio::error::operation_aborted) {
             connection_manager_.stop(shared_from_this());

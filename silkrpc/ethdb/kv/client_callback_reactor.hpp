@@ -34,7 +34,7 @@ public:
     }
 
     ~ClientCallbackReactor() {
-        //context_.TryCancel(); // TODO: check if needed and correct
+        context_.TryCancel();
     }
 
     void read_start(std::function<void(bool,remote::Pair)> read_completed) {

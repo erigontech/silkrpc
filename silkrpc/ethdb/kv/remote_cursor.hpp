@@ -53,7 +53,7 @@ public:
     asio::awaitable<void> open_cursor(const std::string& table_name) override {
         if (cursor_id_ == 0) {
             cursor_id_ = co_await kv_awaitable_.async_open_cursor(table_name, asio::use_awaitable);
-            //SILKRPC_INFO << "opened cursor: " << cursor_id_ << " for table: " << table_name << "\n" << std::flush;
+            SILKRPC_TRACE << "RemoteCursor::open_cursor cursor: " << cursor_id_ << " for table: " << table_name << "\n";
         }
         co_return;
     }
@@ -75,6 +75,7 @@ public:
     asio::awaitable<void> close_cursor() override {
         if (cursor_id_ != 0) {
             co_await kv_awaitable_.async_close_cursor(cursor_id_, asio::use_awaitable); // Can we shoot and forget?
+            SILKRPC_TRACE << "RemoteCursor::close_cursor cursor: " << cursor_id_ << "\n";
             cursor_id_ = 0;
         }
         co_return;

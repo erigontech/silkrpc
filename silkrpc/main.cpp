@@ -29,10 +29,7 @@
 #include <asio/co_spawn.hpp>
 #include <asio/io_context.hpp>
 #include <asio/signal_set.hpp>
-#include <boost/exception/info.hpp>
-#include <boost/exception/get_error_info.hpp>
 #include <boost/process/environment.hpp>
-#include <boost/stacktrace.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/constants.hpp>
@@ -49,34 +46,36 @@ int main(int argc, char* argv[]) {
     const auto pid = boost::this_process::get_id();
     const auto tid = std::this_thread::get_id();
 
+    using namespace silkrpc;
+
     try {
         absl::SetProgramUsageMessage("Seek Turbo-Geth/Silkworm Key-Value (KV) remote interface to database");
         absl::ParseCommandLine(argc, argv);
 
         auto chaindata{absl::GetFlag(FLAGS_chaindata)};
         if (!chaindata.empty() && !std::filesystem::exists(chaindata)) {
-            std::cerr << "Parameter chaindata is invalid: [" << chaindata << "]\n";
-            std::cerr << "Use --chaindata flag to specify the path of Turbo-Geth database\n";
+            SILKRPC_ERROR << "Parameter chaindata is invalid: [" << chaindata << "]\n";
+            SILKRPC_ERROR << "Use --chaindata flag to specify the path of Turbo-Geth database\n";
             return -1;
         }
 
         auto target{absl::GetFlag(FLAGS_target)};
         if (!target.empty() && target.find(":") == std::string::npos) {
-            std::cerr << "Parameter target is invalid: [" << target << "]\n";
-            std::cerr << "Use --target flag to specify the location of Turbo-Geth running instance\n";
+            SILKRPC_ERROR << "Parameter target is invalid: [" << target << "]\n";
+            SILKRPC_ERROR << "Use --target flag to specify the location of Turbo-Geth running instance\n";
             return -1;
         }
 
         if (chaindata.empty() && target.empty()) {
-            std::cerr << "Parameters chaindata and target cannot be both empty, specify one of them\n";
-            std::cerr << "Use --chaindata or --target flag to specify the path or the location of Turbo-Geth instance\n";
+            SILKRPC_ERROR << "Parameters chaindata and target cannot be both empty, specify one of them\n";
+            SILKRPC_ERROR << "Use --chaindata or --target flag to specify the path or the location of Turbo-Geth instance\n";
             return -1;
         }
 
         auto timeout{absl::GetFlag(FLAGS_timeout)};
         if (timeout < 0) {
-            std::cerr << "Parameter timeout is invalid: [" << timeout << "]\n";
-            std::cerr << "Use --timeout flag to specify the timeout in msecs for Turbo-Geth KV gRPC I/F\n";
+            SILKRPC_ERROR << "Parameter timeout is invalid: [" << timeout << "]\n";
+            SILKRPC_ERROR << "Use --timeout flag to specify the timeout in msecs for Turbo-Geth KV gRPC I/F\n";
             return -1;
         }
 
@@ -91,10 +90,11 @@ int main(int argc, char* argv[]) {
         std::unique_ptr<silkrpc::ethdb::kv::Database> database =
             std::make_unique<silkrpc::ethdb::kv::RemoteDatabase>(context, grpc_channel);
 
+        // TODO: support flag to specify local address:port binding (default is localhost:8545)
         silkrpc::http::Server http_server{context, "localhost", "51515", database};
 
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
-            std::cout << "\nSignal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
+            std::cout << "\n"; SILKRPC_INFO << "Signal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
             context.stop();
             http_server.stop();
         });
@@ -103,19 +103,14 @@ int main(int argc, char* argv[]) {
             if (eptr) std::rethrow_exception(eptr);
         });
 
-        std::cout << "Silkrpc running [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
+        SILKRPC_LOG << "Silkrpc running [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
 
         context.run();
     } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << "\n";
-        typedef boost::error_info<struct tag_stacktrace, boost::stacktrace::stacktrace> traced;
-        const boost::stacktrace::stacktrace* st = boost::get_error_info<traced>(e);
-        if (st) {
-            std::cerr << *st << '\n' << std::flush;
-        }
+        SILKRPC_CRIT << "Exception: " << e.what() << "\n";
     }
 
-    std::cout << "Silkrpc exiting [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
+    SILKRPC_LOG << "Silkrpc exiting [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
 
     return 0;
 }

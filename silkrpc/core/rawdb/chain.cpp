@@ -105,7 +105,7 @@ asio::awaitable<silkworm::BlockHeader> read_header(DatabaseReader& reader, evmc:
     if (data.empty()) {
         co_return silkworm::BlockHeader{};
     }
-    SILKRPC_TRACE << "data: " << silkworm::to_hex(data) << "\n" << std::flush;
+    SILKRPC_TRACE << "data: " << silkworm::to_hex(data) << "\n";
     silkworm::ByteView data_view{data};
     silkworm::BlockHeader header{};
     silkworm::rlp::decode(data_view, header);
@@ -150,18 +150,18 @@ asio::awaitable<Receipts> read_raw_receipts(DatabaseReader& reader, evmc::bytes3
     const auto block_key = silkworm::db::block_key(block_number);
     const auto data = co_await reader.get(silkworm::db::table::kBlockReceipts.name, block_key);
     if (data.empty()) {
-        co_return Receipts{};
+        co_return Receipts{}; // TODO: use std::null_opt with asio::awaitable<std::optional<Receipts>>?
     }
     Receipts receipts{};
     cbor_decode(data, receipts);
-    SILKRPC_TRACE << "#receipts: " << receipts.size() << "\n" << std::flush;
+    SILKRPC_TRACE << "#receipts: " << receipts.size() << "\n";
 
     auto log_key = silkworm::db::log_key(block_number, 0);
-    SILKRPC_TRACE << "log_key: " << silkworm::to_hex(log_key) << "\n" << std::flush;
+    SILKRPC_TRACE << "log_key: " << silkworm::to_hex(log_key) << "\n";
     Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
         auto tx_id = boost::endian::load_big_u32(&k[sizeof(uint64_t)]);
         cbor_decode(v, receipts[tx_id].logs);
-        SILKRPC_TRACE << "receipts[" << tx_id << "].logs: " << receipts[tx_id].logs.size() << "\n" << std::flush;
+        SILKRPC_TRACE << "receipts[" << tx_id << "].logs: " << receipts[tx_id].logs.size() << "\n";
         return true;
     };
     co_await reader.walk(silkworm::db::table::kLogs.name, log_key, 8 * CHAR_BIT, walker);
@@ -206,7 +206,6 @@ asio::awaitable<Receipts> read_receipts(DatabaseReader& reader, evmc::bytes32 bl
         }
 
         // The derived fields of receipt are taken from block and transaction
-        //SILKRPC_INFO << "receipts[i].logs.size(): " << receipts[i].logs.size() << "\n" << std::flush;
         for (size_t j{0}; j < receipts[i].logs.size(); j++) {
             receipts[i].logs[j].block_number = block_number;
             receipts[i].logs[j].block_hash = block_hash;

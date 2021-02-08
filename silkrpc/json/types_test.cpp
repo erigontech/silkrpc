@@ -35,7 +35,7 @@ TEST_CASE("serialize empty log", "[silkrpc][to_json]") {
         "address":"0x0000000000000000000000000000000000000000",
         "topics":[],
         "data":[],
-        "blockNumber":0,
+        "blockNumber":"0x0",
         "blockHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
         "transactionHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
         "transactionIndex":0,

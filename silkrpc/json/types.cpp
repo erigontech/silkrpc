@@ -18,7 +18,10 @@
 
 #include <algorithm>
 
+#include <boost/endian/conversion.hpp>
+
 #include <silkworm/common/util.hpp>
+#include <silkworm/db/silkworm/db/util.hpp>
 
 namespace evmc {
 
@@ -42,11 +45,38 @@ void from_json(const nlohmann::json& json, bytes32& b32) {
 
 namespace silkrpc {
 
+std::string to_shortest_hex(silkworm::ByteView bytes) {
+    static const char* kHexDigits{"0123456789abcdef"};
+
+    std::string out{};
+    out.reserve(2 * bytes.length());
+
+    for (size_t i{0}; i < bytes.length(); ++i) {
+        uint8_t x{bytes[i]};
+        char lo{kHexDigits[x & 0x0f]};
+        char hi{kHexDigits[x >> 4]};
+        if (hi != '0') {
+            out.push_back(hi);
+        }
+        if (hi != '0' || lo != '0' || i == bytes.length() - 1) {
+            out.push_back(lo);
+        }
+    }
+
+    return out;
+}
+
+std::string to_hex(uint64_t block_number) {
+    silkworm::Bytes block_number_bytes(8, '\0');
+    boost::endian::store_big_u64(&block_number_bytes[0], block_number);
+    return to_shortest_hex(block_number_bytes);
+}
+
 void to_json(nlohmann::json& json, const Log& log) {
     json["address"] = log.address;
     json["topics"] = log.topics;
     json["data"] = log.data;
-    json["blockNumber"] = log.block_number;
+    json["blockNumber"] = "0x" + to_hex(log.block_number);
     json["blockHash"] = log.block_hash;
     json["transactionHash"] = log.tx_hash;
     json["transactionIndex"] = log.tx_index;

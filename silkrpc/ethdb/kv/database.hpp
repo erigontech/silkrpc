@@ -26,6 +26,7 @@ namespace silkrpc::ethdb::kv {
 class Database {
 public:
     Database() = default;
+    virtual ~Database() = default;
 
     Database(const Database&) = delete;
     Database& operator=(const Database&) = delete;

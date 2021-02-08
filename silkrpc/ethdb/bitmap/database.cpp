@@ -53,13 +53,13 @@ asio::awaitable<Roaring> get(core::rawdb::DatabaseReader& db_reader, const std::
     silkworm::Bytes from_key{key.begin(), key.end()};
     from_key.resize(key.size() + sizeof(uint32_t));
     boost::endian::store_big_u32(&from_key[key.size()], from_block);
-    SILKRPC_DEBUG << "key: " << key << " from_key: " << from_key << "\n" << std::flush;
+    SILKRPC_DEBUG << "key: " << key << " from_key: " << from_key << "\n";
 
     Roaring chunck{};
     core::rawdb::Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
-        SILKRPC_DEBUG << "k: " << k << " v: " << v << "\n" << std::flush;
+        SILKRPC_DEBUG << "k: " << k << " v: " << v << "\n";
         auto chunck = std::make_unique<Roaring>(Roaring::readSafe(reinterpret_cast<const char*>(v.data()), v.size()));
-        SILKRPC_DEBUG << "chunck: " << chunck->toString() << "\n" << std::flush;
+        SILKRPC_DEBUG << "chunck: " << chunck->toString() << "\n";
         chuncks.push_back(std::move(chunck));
         auto block = boost::endian::load_big_u32(&k[k.size() - sizeof(uint32_t)]);
         return block < to_block;
@@ -67,7 +67,7 @@ asio::awaitable<Roaring> get(core::rawdb::DatabaseReader& db_reader, const std::
     co_await db_reader.walk(table, from_key, key.size() * CHAR_BIT, walker);
 
     auto result{fast_or(chuncks.size(), chuncks)};
-    SILKRPC_DEBUG << "result: " << result.toString() << "\n" << std::flush;
+    SILKRPC_DEBUG << "result: " << result.toString() << "\n";
     co_return result;
 }
 

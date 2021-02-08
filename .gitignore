@@ -1,4 +1,7 @@
-build
+build_gnu_debug
+build_gnu_release
+build_clang_debug
+build_clang_release
 .vscode
 .vs
 *.code-workspace

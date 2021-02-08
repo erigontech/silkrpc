@@ -26,6 +26,8 @@
 
 #include <asio/ip/tcp.hpp>
 
+#include <silkrpc/common/log.hpp>
+
 namespace silkrpc::http {
 
 Server::Server(asio::io_context& io_context, const std::string& address, const std::string& port, std::unique_ptr<ethdb::kv::Database>& database)
@@ -42,14 +44,20 @@ asio::awaitable<void> Server::start() {
     acceptor_.listen();
 
     while (acceptor_.is_open()) {
+        SILKRPC_DEBUG << "Server::start accepting...\n" << std::flush;
         auto socket = co_await acceptor_.async_accept(asio::use_awaitable);
+        //socket.set_option(asio::ip::tcp::socket::linger(true, 0));
+        socket.set_option(asio::ip::tcp::socket::keep_alive(true));
+        SILKRPC_TRACE << "Server::start new socket: " << &socket << "\n";
         if (!acceptor_.is_open()) {
+            SILKRPC_TRACE << "Server::start returning...\n";
             co_return;
         }
 
         auto new_connection = std::make_shared<Connection>(std::move(socket), connection_manager_, request_handler_);
         co_await connection_manager_.start(new_connection);
     }
+    SILKRPC_DEBUG << "Server::start exiting...\n" << std::flush;
 }
 
 void Server::stop() {
