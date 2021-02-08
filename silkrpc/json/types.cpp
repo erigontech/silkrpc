@@ -75,12 +75,12 @@ std::string to_hex(uint64_t block_number) {
 void to_json(nlohmann::json& json, const Log& log) {
     json["address"] = log.address;
     json["topics"] = log.topics;
-    json["data"] = log.data;
+    json["data"] = "0x" + silkworm::to_hex(log.data);
     json["blockNumber"] = "0x" + to_hex(log.block_number);
     json["blockHash"] = log.block_hash;
     json["transactionHash"] = log.tx_hash;
-    json["transactionIndex"] = log.tx_index;
-    json["logIndex"] = log.index;
+    json["transactionIndex"] = "0x" + to_hex(log.tx_index);
+    json["logIndex"] = "0x" + to_hex(log.index);
     json["removed"] = log.removed;
 }
 

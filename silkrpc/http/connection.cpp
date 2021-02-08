@@ -69,15 +69,18 @@ asio::awaitable<void> Connection::do_read() {
         // Read next chunck (result == RequestParser::indeterminate) or next request
         co_await do_read();
     } catch (const std::system_error& se) {
-        if (se.code() == asio::error::eof || se.code() == asio::error::connection_reset) {
+        if (se.code() == asio::error::eof || se.code() == asio::error::connection_reset || se.code() == asio::error::broken_pipe) {
             connection_manager_.stop(shared_from_this());
             co_return;
         }
-        SILKRPC_ERROR << "Connection::do_read system_error: " << se.what() << "\n" << std::flush;
-        if (se.code() != asio::error::operation_aborted) {
+        else if (se.code() != asio::error::operation_aborted) {
             connection_manager_.stop(shared_from_this());
+
+            SILKRPC_ERROR << "Connection::do_read system_error: " << se.what() << "\n" << std::flush;
+            std::rethrow_exception(std::make_exception_ptr(se));
+        } else {
+            SILKRPC_DEBUG << "Connection::do_read operation_aborted: " << se.what() << "\n" << std::flush;
         }
-        std::rethrow_exception(std::make_exception_ptr(se));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "Connection::do_read exception: " << e.what() << "\n" << std::flush;
         std::rethrow_exception(std::make_exception_ptr(e));
