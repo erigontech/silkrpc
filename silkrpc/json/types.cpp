@@ -30,7 +30,8 @@ void to_json(nlohmann::json& json, const address& addr) {
 }
 
 void from_json(const nlohmann::json& json, address& addr) {
-    addr = silkworm::to_address(silkworm::from_hex(json.get<std::string>()));
+    const auto address_bytes = silkworm::from_hex(json.get<std::string>());
+    addr = silkworm::to_address(address_bytes.value_or(silkworm::Bytes{}));
 }
 
 void to_json(nlohmann::json& json, const bytes32& b32) {
@@ -38,7 +39,8 @@ void to_json(nlohmann::json& json, const bytes32& b32) {
 }
 
 void from_json(const nlohmann::json& json, bytes32& b32) {
-    b32 = silkworm::to_bytes32(silkworm::from_hex(json.get<std::string>()));
+    const auto b32_bytes = silkworm::from_hex(json.get<std::string>());
+    b32 = silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
 }
 
 } // namespace evmc
@@ -187,7 +189,7 @@ void from_json(const nlohmann::json& json, Filter& filter) {
     }
     if (json.count("address") != 0) {
         if (json.at("address").is_string()) {
-            filter.addresses= {json.at("address").get<evmc::address>()};
+            filter.addresses = {json.at("address").get<evmc::address>()};
         } else {
             filter.addresses = json.at("address").get<FilterAddresses>();
         }
@@ -196,10 +198,10 @@ void from_json(const nlohmann::json& json, Filter& filter) {
         auto topics = json.at("topics");
         for (auto& topic_item : topics) {
             if (topic_item.is_null()) {
-                topic_item = {""};
+                topic_item = FilterSubTopics{evmc::bytes32{}};
             }
             if (topic_item.is_string()) {
-                topic_item = {topic_item};
+                topic_item = FilterSubTopics{evmc::bytes32{topic_item}};
             }
         }
         filter.topics = topics.get<FilterTopics>();

@@ -32,7 +32,7 @@ typedef std::function<bool(silkworm::Bytes&,silkworm::Bytes&)> Walker;
 
 class DatabaseReader {
 public:
-    virtual asio::awaitable<bool> has(const std::string& table, const silkworm::Bytes& key) = 0;
+    virtual asio::awaitable<bool> has(const std::string& table, const silkworm::Bytes& key) = 0; // Bytes => ByteView?
 
     virtual asio::awaitable<silkworm::Bytes> get(const std::string& table, const silkworm::Bytes& key) = 0;
 

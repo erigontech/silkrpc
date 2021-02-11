@@ -1,5 +1,6 @@
-build_gnu_debug
-build_gnu_release
+build
+build_gcc_debug
+build_gcc_release
 build_clang_debug
 build_clang_release
 .vscode

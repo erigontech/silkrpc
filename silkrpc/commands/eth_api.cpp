@@ -73,7 +73,14 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
     try {
         uint64_t start{}, end{};
         if (filter.block_hash.has_value()) {
-            auto block_hash = silkworm::to_bytes32(silkworm::from_hex(filter.block_hash.value()));
+            auto block_hash_bytes = silkworm::from_hex(filter.block_hash.value());
+            if (!block_hash_bytes.has_value()) {
+                auto error = "invalid eth_getLogs filter block_hash: " + filter.block_hash.value();
+                SILKRPC_ERROR << error << "\n";
+                reply = json::make_json_error(request["id"], error);
+                co_return;
+            }
+            auto block_hash = silkworm::to_bytes32(block_hash_bytes.value());
             auto block_number = co_await core::rawdb::read_header_number(tx_database, block_hash);
             start = end = block_number;
         } else {

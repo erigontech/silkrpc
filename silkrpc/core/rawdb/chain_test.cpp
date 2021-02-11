@@ -34,7 +34,7 @@ TEST_CASE("decode empty receipt list", "[silkrpc::core][cbor_decode]") {
 
 TEST_CASE("decode receipt list", "[silkrpc::core][cbor_decode]") {
     std::vector<Receipt> receipts{};
-    auto bytes = silkworm::from_hex("8283f6001a0032f05d83f6011a00beadd0");
+    auto bytes = silkworm::from_hex("8283f6001a0032f05d83f6011a00beadd0").value();
     cbor_decode(bytes, receipts);
     CHECK(receipts.size() == 2);
     CHECK(receipts[0].success == false);
@@ -55,7 +55,7 @@ TEST_CASE("encode log list", "[silkrpc::core][cbor_encode]") {
         silkworm::Log{
             0xea674fdde714fd979de3edf0f56aa9716b898ec8_address,
             {},
-            silkworm::from_hex("0x010043"),
+            silkworm::from_hex("0x010043").value(),
         }
     };
     auto bytes = silkworm::cbor_encode(logs);
@@ -65,7 +65,7 @@ TEST_CASE("encode log list", "[silkrpc::core][cbor_encode]") {
 TEST_CASE("decode log", "[silkrpc::core][cbor_decode]") {
     using namespace evmc;
     std::vector<Log> logs{};
-    auto bytes = silkworm::from_hex("818354ea674fdde714fd979de3edf0f56aa9716b898ec88043010043");
+    auto bytes = silkworm::from_hex("818354ea674fdde714fd979de3edf0f56aa9716b898ec88043010043").value();
     cbor_decode(bytes, logs);
     CHECK(logs.size() == 1);
     CHECK(logs[0].address == 0xea674fdde714fd979de3edf0f56aa9716b898ec8_address);
@@ -80,7 +80,7 @@ TEST_CASE("decode log list", "[silkrpc::core][cbor_decode]") {
         "81835456c0369e002852c2570ca0cc3442e26df98e01a2835820ddf252ad1be2c89b69c2b068fc37"
         "8daa952ba7f163c4a11628f55a4df523b3ef5820000000000000000000000000a2e1ffe3aa9cbcde"
         "1955b04d22e2cc092c3738785820000000000000000000000000520d849db6e4bf7e0c58a45fc513"
-        "a6d633baf77e5820000000000000000000000000000000000000000000084595161401484a000000");
+        "a6d633baf77e5820000000000000000000000000000000000000000000084595161401484a000000").value();
     cbor_decode(bytes, logs);
     CHECK(logs.size() == 1);
     CHECK(logs[0].address == 0x56c0369e002852c2570ca0cc3442e26df98e01a2_address);

@@ -25,14 +25,16 @@
 #include <evmc/evmc.hpp>
 
 #include <silkworm/types/block.hpp>
+#include <silkworm/types/transaction.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/types/receipt.hpp>
 
 namespace silkrpc::core::rawdb {
 
 typedef std::vector<evmc::address> Addresses;
+typedef std::vector<silkworm::Transaction> Transactions;
 
-asio::awaitable<uint64_t> read_header_number(DatabaseReader& reader, evmc::bytes32 block_hash);
+asio::awaitable<uint64_t> read_header_number(DatabaseReader& reader, evmc::bytes32 block_hash); // const evmc::bytes32&
 
 asio::awaitable<evmc::bytes32> read_canonical_block_hash(DatabaseReader& reader, uint64_t block_number);
 
@@ -53,6 +55,8 @@ asio::awaitable<Addresses> read_senders(DatabaseReader& reader, evmc::bytes32 bl
 asio::awaitable<Receipts> read_raw_receipts(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number);
 
 asio::awaitable<Receipts> read_receipts(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number);
+
+asio::awaitable<Transactions> read_transactions(DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count);
 
 } // namespace silkrpc::core::rawdb
 

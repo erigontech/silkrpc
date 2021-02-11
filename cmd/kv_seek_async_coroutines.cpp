@@ -16,7 +16,6 @@
 
 #include <silkrpc/config.hpp>
 
-#include <coroutine>
 #include <functional>
 #include <iomanip>
 #include <iostream>
@@ -73,11 +72,13 @@ int main(int argc, char* argv[]) {
     }
 
     auto seek_key{absl::GetFlag(FLAGS_seekkey)};
-    if (seek_key.empty() || false /*is not hex*/) {
+    const auto seek_key_bytes_optional = from_hex(seek_key);
+    if (seek_key.empty() || !seek_key_bytes_optional.has_value()) {
         std::cerr << "Parameter seek key is invalid: [" << seek_key << "]\n";
         std::cerr << "Use --seekkey flag to specify the seek key in Turbo-Geth database table\n";
         return -1;
     }
+    const auto seek_key_bytes = seek_key_bytes_optional.value();
 
     auto target{absl::GetFlag(FLAGS_target)};
     if (target.empty() || target.find(":") == std::string::npos) {
@@ -100,7 +101,7 @@ int main(int argc, char* argv[]) {
 
     RemoteDatabase kv_database{context, channel};
 
-    asio::co_spawn(context, kv_seek(kv_database, table_name, from_hex(seek_key)), [&](std::exception_ptr exptr) {
+    asio::co_spawn(context, kv_seek(kv_database, table_name, seek_key_bytes), [&](std::exception_ptr exptr) {
         context.stop();
     });
 

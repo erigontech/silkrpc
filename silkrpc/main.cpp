@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        silkrpc::Logger::default_logger().verbosity = absl::GetFlag(FLAGS_logLevel);
+        SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
 
         asio::io_context context{1};
         asio::signal_set signals{context, SIGINT, SIGTERM};

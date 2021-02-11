@@ -45,11 +45,13 @@ int main(int argc, char* argv[]) {
     }
 
     auto seek_key{absl::GetFlag(FLAGS_seekkey)};
-    if (seek_key.empty() || false /*is not hex*/) {
+    const auto seek_key_bytes_optional = from_hex(seek_key);
+    if (seek_key.empty() || !seek_key_bytes_optional.has_value()) {
         std::cerr << "Parameter seek key is invalid: [" << seek_key << "]\n";
         std::cerr << "Use --seekkey flag to specify the seek key in Turbo-Geth database table\n";
         return -1;
     }
+    const auto seek_key_bytes = seek_key_bytes_optional.value();
 
     auto target{absl::GetFlag(FLAGS_target)};
     if (target.empty() || target.find(":") == std::string::npos) {
@@ -85,8 +87,6 @@ int main(int argc, char* argv[]) {
     std::cout << "KV Tx OPEN <- cursor: " << cursor_id << "\n";
 
     // Seek given key in given table
-    const auto& seek_key_bytes = from_hex(seek_key);
-
     auto seek_message = remote::Cursor{};
     seek_message.set_op(remote::Op::SEEK);
     seek_message.set_cursor(cursor_id);

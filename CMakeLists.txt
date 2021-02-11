@@ -28,15 +28,10 @@ endif()
 
 include(silkworm/evmone/cmake/cable/HunterGate.cmake)
 HunterGate(
-  URL "https://github.com/cpp-pm/hunter/archive/v0.23.267.tar.gz"
-  SHA1 "9c5c7fa6e17c2ae15dd922184bc7c51235aaae70"
-  FILEPATH "${CMAKE_SOURCE_DIR}/silkworm/cmake/Hunter/config.cmake"
+  URL "https://github.com/cpp-pm/hunter/archive/v0.23.293.tar.gz"
+  SHA1 "e8e5470652db77149d9b38656db2a6c0b7642693"
+  FILEPATH "${CMAKE_SOURCE_DIR}/cmake/Hunter/config.cmake"
 )
-#HunterGate(
-#  URL "https://github.com/cpp-pm/hunter/archive/v0.23.293.tar.gz"
-#  SHA1 "e8e5470652db77149d9b38656db2a6c0b7642693"
-#  FILEPATH "${CMAKE_SOURCE_DIR}/silkworm/cmake/Hunter/config.cmake"
-#)
 
 project(silkrpc)
 

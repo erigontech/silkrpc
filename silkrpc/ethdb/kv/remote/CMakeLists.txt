@@ -45,6 +45,6 @@ add_custom_command(
 )
 
 add_custom_target(
-    generate_kv_grpc ALL
+    generate_kv_grpc
     DEPENDS "${KV_PROTO_SOURCES}" "${KV_PROTO_HEADERS}" "${KV_GRPC_SOURCES}" "${KV_GRPC_HEADERS}"
 )

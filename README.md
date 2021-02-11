@@ -24,9 +24,9 @@ git submodule update --init --recursive
 ```
 
 ## Linux & MacOS
-Building SilkRPC daemon requires:
-* C++20 compiler (GCC >= 10.2.0 or Clang >= 10.0.0)
-* [CMake](http://cmake.org)
+Building SilkRPC daemon requires
+* C++20 compiler: [GCC](https://www.gnu.org/software/gcc/) >= 10.2.0 or [Clang](https://clang.llvm.org/) >= 10.0.0)
+* [CMake](http://cmake.org) >= 3.18.4
 * [GMP](http://gmplib.org) (`sudo apt-get install libgmp3-dev` or `brew install gmp`)
 
 Once the prerequisites are installed, bootstrap cmake by running
@@ -37,14 +37,30 @@ cmake ..
 ```
 (You have to run `cmake ..` just the first time.)
 
+Generate the [gRPC](https://grpc.io/) Key-Value (KV) interface protocol bindings
+```
+cmake --build . --target generate_kv_grpc
+```
+
 Then run the build itself
 ```
-make -j
+cmake --build .
 ```
 
 Now you can run the unit tests
 ```
 cmd/unit_test
+```
+
+There are also convenience [Bash](https://www.gnu.org/software/bash/) scripts for a complete rebuild both in debug and release configurations using [GCC](https://www.gnu.org/software/gcc/) compiler:
+```
+./build_gcc_debug.sh
+./build_gcc_release.sh
+```
+and [Clang](https://clang.llvm.org/) compiler:
+```
+./build_clang_debug.sh
+./build_clang_release.sh
 ```
 
 ## Windows
