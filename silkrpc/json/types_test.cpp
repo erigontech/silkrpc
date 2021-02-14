@@ -28,6 +28,17 @@ namespace silkrpc {
 
 using namespace evmc::literals;
 
+TEST_CASE("serialize error", "[silkrpc][to_json]") {
+    Error err{{100}, {"generic error"}};
+    nlohmann::json j = err;
+    CHECK(j == R"({
+        "error":{
+            "code":100,
+            "message":"generic error"
+        }
+    })"_json);
+}
+
 TEST_CASE("serialize empty log", "[silkrpc][to_json]") {
     Log l{{}, {}, {}};
     nlohmann::json j = l;
@@ -36,6 +47,22 @@ TEST_CASE("serialize empty log", "[silkrpc][to_json]") {
         "topics":[],
         "data":"0x",
         "blockNumber":"0x0",
+        "blockHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionIndex":"0x0",
+        "logIndex":"0x0",
+        "removed":false
+    })"_json);
+}
+
+TEST_CASE("shortest hex for 4206337", "[silkrpc][to_json]") {
+    Log l{{}, {}, {}, 4206337};
+    nlohmann::json j = l;
+    CHECK(j == R"({
+        "address":"0x0000000000000000000000000000000000000000",
+        "topics":[],
+        "data":"0x",
+        "blockNumber":"0x402f01",
         "blockHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
         "transactionHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
         "transactionIndex":"0x0",

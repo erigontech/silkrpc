@@ -24,6 +24,7 @@
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
+#include <silkrpc/types/error.hpp>
 #include <silkrpc/types/filter.hpp>
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/receipt.hpp>
@@ -49,12 +50,14 @@ void from_json(const nlohmann::json& json, Receipt& receipt);
 void to_json(nlohmann::json& json, const Filter& filter);
 void from_json(const nlohmann::json& json, Filter& filter);
 
+void to_json(nlohmann::json& json, const Error& error);
+
 } // namespace silkrpc
 
 namespace silkrpc::json {
 
 nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result);
-nlohmann::json make_json_error(uint32_t id, const std::string& error);
+nlohmann::json make_json_error(uint32_t id, uint32_t code, const std::string& message);
 
 } // namespace silkrpc::json
 

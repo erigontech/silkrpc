@@ -23,6 +23,8 @@
 
 #include <silkrpc/config.hpp>
 
+#include <asio/use_awaitable.hpp>
+
 #include <silkrpc/ethdb/kv/awaitables.hpp>
 #include <silkrpc/ethdb/kv/cursor.hpp>
 #include <silkrpc/ethdb/kv/remote_cursor.hpp>
@@ -55,9 +57,10 @@ public:
 
     asio::awaitable<void> close() override {
         for (const auto& [table, cursor] : cursors_) {
-            cursor->close_cursor();
+            co_await cursor->close_cursor();
         }
         cursors_.clear();
+        co_await kv_awaitable_.async_close(asio::use_awaitable);
         co_return;
     }
 

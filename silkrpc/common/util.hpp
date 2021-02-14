@@ -46,6 +46,11 @@ inline Bytes bytes_of_string(const std::string& s) {
 
 } // namespace silkworm
 
+inline std::ostream& operator<<(std::ostream& out, const evmc::address& addr) {
+    out << silkworm::to_hex(addr);
+    return out;
+}
+
 inline std::ostream& operator<<(std::ostream& out, const evmc::bytes32& b32) {
     out << silkworm::to_hex(b32);
     return out;

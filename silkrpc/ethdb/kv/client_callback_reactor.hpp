@@ -33,8 +33,10 @@ public:
         StartCall();
     }
 
-    ~ClientCallbackReactor() {
-        context_.TryCancel();
+    void close_start(std::function<void(bool)> close_completed) {
+        close_completed_ = close_completed;
+        StartWritesDone();
+        //context_.TryCancel();
     }
 
     void read_start(std::function<void(bool,remote::Pair)> read_completed) {
@@ -54,12 +56,17 @@ public:
     void OnWriteDone(bool ok) override {
         write_completed_(ok);
     }
+
+    void OnDone(const ::grpc::Status& status) override {
+        close_completed_(status.ok());
+    }
 private:
     std::unique_ptr<remote::KV::Stub> stub_;
     grpc::ClientContext context_;
     remote::Pair pair_;
     std::function<void(bool,remote::Pair)> read_completed_;
     std::function<void(bool)> write_completed_;
+    std::function<void(bool)> close_completed_;
 };
 
 } // namespace silkrpc::ethdb::kv

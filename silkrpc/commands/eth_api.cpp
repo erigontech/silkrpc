@@ -43,10 +43,10 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
         reply = json::make_json_content(request["id"], block_height);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
-        reply = json::make_json_error(request["id"], e.what());
+        reply = json::make_json_error(request["id"], 100, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception\n";
-        reply = json::make_json_error(request["id"], "unexpected exception");
+        reply = json::make_json_error(request["id"], 100, "unexpected exception");
     }
 
     co_await tx->close(); // RAII not (yet) available with coroutines
@@ -57,9 +57,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
-        auto error = "invalid eth_getLogs params: " + params.dump();
-        SILKRPC_ERROR << error << "\n";
-        reply = json::make_json_error(request["id"], error);
+        auto error_msg = "invalid eth_getLogs params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = json::make_json_error(request["id"], 100, error_msg);
         co_return;
     }
     auto filter = params[0].get<Filter>();
@@ -75,9 +75,10 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
         if (filter.block_hash.has_value()) {
             auto block_hash_bytes = silkworm::from_hex(filter.block_hash.value());
             if (!block_hash_bytes.has_value()) {
-                auto error = "invalid eth_getLogs filter block_hash: " + filter.block_hash.value();
-                SILKRPC_ERROR << error << "\n";
-                reply = json::make_json_error(request["id"], error);
+                auto error_msg = "invalid eth_getLogs filter block_hash: " + filter.block_hash.value();
+                SILKRPC_ERROR << error_msg << "\n";
+                reply = json::make_json_error(request["id"], 100, error_msg);
+                co_await tx->close(); // RAII not (yet) available with coroutines
                 co_return;
             }
             auto block_hash = silkworm::to_bytes32(block_hash_bytes.value());
@@ -88,6 +89,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
             start = filter.from_block.value_or(latest_block_number);
             end = filter.to_block.value_or(latest_block_number);
         }
+        SILKRPC_DEBUG << "start block: " << start << " end block: " << end << "\n";
 
         Roaring block_numbers;
         block_numbers.addRange(start, end + 1);
@@ -96,11 +98,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
             auto topics_bitmap = co_await get_topics_bitmap(tx_database, filter.topics.value(), start, end);
             SILKRPC_TRACE << "topics_bitmap: " << topics_bitmap.toString() << "\n";
             if (!topics_bitmap.isEmpty()) {
-                if (block_numbers.isEmpty()) {
-                    block_numbers = topics_bitmap;
-                } else {
-                    block_numbers &= topics_bitmap;
-                }
+                block_numbers &= topics_bitmap;
             }
         }
         SILKRPC_DEBUG << "block_numbers: " << block_numbers.toString() << "\n";
@@ -108,11 +106,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
         if (filter.addresses.has_value()) {
             auto addresses_bitmap = co_await get_addresses_bitmap(tx_database, filter.addresses.value(), start, end);
             if (!addresses_bitmap.isEmpty()) {
-                if (block_numbers.isEmpty()) {
-                    block_numbers = addresses_bitmap;
-                } else {
-                    block_numbers &= addresses_bitmap;
-                }
+                block_numbers &= addresses_bitmap;
             }
         }
         SILKRPC_DEBUG << "block_numbers: " << block_numbers.toString() << "\n";
@@ -120,6 +114,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
 
         if (block_numbers.cardinality() == 0) {
             reply = json::make_json_content(request["id"], logs);
+            co_await tx->close(); // RAII not (yet) available with coroutines
             co_return;
         }
 
@@ -133,6 +128,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
             SILKRPC_DEBUG << "block_hash: " << silkworm::to_hex(block_hash) << "\n";
             if (block_hash == evmc::bytes32{}) {
                 reply = json::make_json_content(request["id"], logs);
+                co_await tx->close(); // RAII not (yet) available with coroutines
                 co_return;
             }
 
@@ -154,21 +150,21 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
         reply = json::make_json_content(request["id"], logs);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
-        reply = json::make_json_error(request["id"], e.what());
+        reply = json::make_json_error(request["id"], 100, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception\n";
-        reply = json::make_json_error(request["id"], "unexpected exception");
+        reply = json::make_json_error(request["id"], 100, "unexpected exception");
     }
 
-    co_await tx->close();// RAII not (yet) available with coroutines
+    co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
 }
 
 asio::awaitable<Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end) {
-    SILKRPC_TRACE << "#topics: " << topics.size() << " start: " << start << " end: " << end << "\n";
+    SILKRPC_DEBUG << "#topics: " << topics.size() << " start: " << start << " end: " << end << "\n";
     Roaring result_bitmap;
     for (auto subtopics : topics) {
-        SILKRPC_TRACE << "#subtopics: " << subtopics.size() << "\n";
+        SILKRPC_DEBUG << "#subtopics: " << subtopics.size() << "\n";
         Roaring subtopic_bitmap;
         for (auto topic : subtopics) {
             silkworm::Bytes topic_key{std::begin(topic.bytes), std::end(topic.bytes)};
@@ -185,7 +181,7 @@ asio::awaitable<Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::Database
                 result_bitmap &= subtopic_bitmap;
             }
         }
-        SILKRPC_TRACE << "result_bitmap: " << result_bitmap.toString() << "\n";
+        SILKRPC_DEBUG << "result_bitmap: " << result_bitmap.toString() << "\n";
     }
     co_return result_bitmap;
 }

@@ -126,6 +126,7 @@ asio::awaitable<silkworm::BlockBody> read_body(DatabaseReader& reader, evmc::byt
     try {
         silkworm::ByteView data_view{data};
         auto stored_body{silkworm::db::detail::decode_stored_block_body(data_view)};
+        SILKRPC_TRACE << "base_txn_id: " << stored_body.base_txn_id << " txn_count: " << stored_body.txn_count << "\n";
         auto transactions = co_await read_transactions(reader, stored_body.base_txn_id, stored_body.txn_count);
 
         silkworm::BlockBody body{transactions, stored_body.ommers};
@@ -234,6 +235,10 @@ asio::awaitable<Receipts> read_receipts(DatabaseReader& reader, evmc::bytes32 bl
 
 asio::awaitable<Transactions> read_transactions(DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count) {
     Transactions txns{};
+    if (txn_count == 0) {
+        co_return txns;
+    }
+
     txns.reserve(txn_count);
 
     silkworm::Bytes txn_id_key(8, '\0');
@@ -241,18 +246,23 @@ asio::awaitable<Transactions> read_transactions(DatabaseReader& reader, uint64_t
     SILKRPC_TRACE << "txn_id_key: " << silkworm::to_hex(txn_id_key) << "\n";
     size_t i{0};
     Walker walker = [&](const silkworm::Bytes&, const silkworm::Bytes& v) {
+        SILKRPC_TRACE << "v: " << silkworm::to_hex(v) << "\n";
         silkworm::ByteView value{v};
         silkworm::Transaction tx{};
-        const auto error = silkworm::rlp::decode<silkworm::Transaction>(value, tx);
+        const auto error = silkworm::rlp::decode(value, tx);
         if (error != silkworm::rlp::DecodingError::kOk) {
             SILKRPC_ERROR << "invalid RLP decoding for transaction index " << i << "\n";
             return false;
         }
+        ethash::hash256 tx_hash{ethash::keccak256(v.data(), v.length())};
+        SILKRPC_TRACE << "index: " << i << " tx_hash: " << silkworm::to_hex(tx_hash.bytes) << "\n";
         txns.emplace(txns.end(), std::move(tx));
         i++;
         return i < txn_count;
     };
     co_await reader.walk(silkworm::db::table::kEthTx.name, txn_id_key, 0, walker);
+
+    SILKRPC_TRACE << "#txns: " << txns.size() << "\n";
 
     co_return txns;
 }

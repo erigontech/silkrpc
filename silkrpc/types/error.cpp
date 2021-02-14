@@ -14,28 +14,14 @@
     limitations under the License.
 */
 
-#include "log.hpp"
+#include "error.hpp"
 
 #include <iomanip>
 
-#include <silkrpc/common/util.hpp>
-
 namespace silkrpc {
 
-std::ostream& operator<<(std::ostream& out, const Log& log) {
-    out << "#topics: " << log.topics.size();
-    out << " #data: " << log.data.size();
-    out << " block_number: " << uint32_t(log.block_number);
-    out << " tx_hash: " << log.tx_hash;
-    out << " tx_index: " << log.tx_index;
-    out << " block_hash: " << log.block_hash;
-    out << " index: " << log.index;
-    out << " removed: " << log.removed;
-    out << " address: ";
-    for (const auto& b : log.address.bytes) {
-        out << std::hex << std::setw(2) << std::setfill('0') << int(b);
-    }
-    out << std::dec;
+std::ostream& operator<<(std::ostream& out, const Error& error) {
+    out << " code: " << error.code << " message: " << error.message;
     return out;
 }
 

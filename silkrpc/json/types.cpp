@@ -47,20 +47,27 @@ void from_json(const nlohmann::json& json, bytes32& b32) {
 
 namespace silkrpc {
 
-std::string to_shortest_hex(silkworm::ByteView bytes) {
+std::string to_hex_no_leading_zeros(silkworm::ByteView bytes) {
     static const char* kHexDigits{"0123456789abcdef"};
 
     std::string out{};
     out.reserve(2 * bytes.length());
 
+    bool found_nonzero{false};
     for (size_t i{0}; i < bytes.length(); ++i) {
         uint8_t x{bytes[i]};
         char lo{kHexDigits[x & 0x0f]};
         char hi{kHexDigits[x >> 4]};
-        if (hi != '0') {
+        if (!found_nonzero && hi != '0') {
+            found_nonzero = true;
+        }
+        if (found_nonzero) {
             out.push_back(hi);
         }
-        if (hi != '0' || lo != '0' || i == bytes.length() - 1) {
+        if (!found_nonzero && lo != '0') {
+            found_nonzero = true;
+        }
+        if (found_nonzero || i == bytes.length() - 1) {
             out.push_back(lo);
         }
     }
@@ -71,7 +78,7 @@ std::string to_shortest_hex(silkworm::ByteView bytes) {
 std::string to_hex(uint64_t block_number) {
     silkworm::Bytes block_number_bytes(8, '\0');
     boost::endian::store_big_u64(&block_number_bytes[0], block_number);
-    return to_shortest_hex(block_number_bytes);
+    return to_hex_no_leading_zeros(block_number_bytes);
 }
 
 void to_json(nlohmann::json& json, const Log& log) {
@@ -211,6 +218,10 @@ void from_json(const nlohmann::json& json, Filter& filter) {
     }
 }
 
+void to_json(nlohmann::json& json, const Error& error) {
+    json["error"] = {{"code", error.code}, {"message", error.message}};
+}
+
 } // namespace silkrpc
 
 namespace silkrpc::json {
@@ -219,7 +230,8 @@ nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result) {
     return {{"jsonrpc", "2.0"}, {"id", id}, {"result", result}};
 }
 
-nlohmann::json make_json_error(uint32_t id, const std::string& error) {
+nlohmann::json make_json_error(uint32_t id, uint32_t code, const std::string& message) {
+    const Error error{code, message};
     return {{"jsonrpc", "2.0"}, {"id", id}, {"error", error}};
 }
 
