@@ -94,23 +94,30 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
         Roaring block_numbers;
         block_numbers.addRange(start, end + 1);
 
+        SILKRPC_DEBUG << "block_numbers.cardinality(): " << block_numbers.cardinality() << "\n";
+
         if (filter.topics.has_value()) {
             auto topics_bitmap = co_await get_topics_bitmap(tx_database, filter.topics.value(), start, end);
             SILKRPC_TRACE << "topics_bitmap: " << topics_bitmap.toString() << "\n";
-            if (!topics_bitmap.isEmpty()) {
+            if (topics_bitmap.isEmpty()) {
+                block_numbers = topics_bitmap;
+            } else {
                 block_numbers &= topics_bitmap;
             }
         }
-        SILKRPC_DEBUG << "block_numbers: " << block_numbers.toString() << "\n";
+        SILKRPC_DEBUG << "block_numbers.cardinality(): " << block_numbers.cardinality() << "\n";
+        SILKRPC_TRACE << "block_numbers: " << block_numbers.toString() << "\n";
 
         if (filter.addresses.has_value()) {
             auto addresses_bitmap = co_await get_addresses_bitmap(tx_database, filter.addresses.value(), start, end);
-            if (!addresses_bitmap.isEmpty()) {
+            if (addresses_bitmap.isEmpty()) {
+                block_numbers = addresses_bitmap;
+            } else {
                 block_numbers &= addresses_bitmap;
             }
         }
-        SILKRPC_DEBUG << "block_numbers: " << block_numbers.toString() << "\n";
         SILKRPC_DEBUG << "block_numbers.cardinality(): " << block_numbers.cardinality() << "\n";
+        SILKRPC_TRACE << "block_numbers: " << block_numbers.toString() << "\n";
 
         if (block_numbers.cardinality() == 0) {
             reply = json::make_json_content(request["id"], logs);

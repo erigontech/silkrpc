@@ -26,6 +26,7 @@
 #include <asio/use_awaitable.hpp>
 
 #include <silkworm/common/util.hpp>
+#include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/ethdb/kv/awaitables.hpp>
@@ -51,33 +52,41 @@ public:
     }
 
     asio::awaitable<void> open_cursor(const std::string& table_name) override {
+        const auto start_time = clock_time::now();
         if (cursor_id_ == 0) {
             cursor_id_ = co_await kv_awaitable_.async_open_cursor(table_name, asio::use_awaitable);
             SILKRPC_TRACE << "RemoteCursor::open_cursor cursor: " << cursor_id_ << " for table: " << table_name << "\n";
         }
+        SILKRPC_DEBUG << "RemoteCursor::open_cursor t=" << clock_time::since(start_time) << "\n";
         co_return;
     }
 
     asio::awaitable<silkrpc::common::KeyValue> seek(const silkworm::Bytes& seek_key) override {
+        const auto start_time = clock_time::now();
         auto seek_pair = co_await kv_awaitable_.async_seek(cursor_id_, seek_key, asio::use_awaitable);
         const auto k = silkworm::bytes_of_string(seek_pair.k());
         const auto v = silkworm::bytes_of_string(seek_pair.v());
+        SILKRPC_DEBUG << "RemoteCursor::seek t=" << clock_time::since(start_time) << "\n";
         co_return silkrpc::common::KeyValue{k, v};
     }
 
     asio::awaitable<silkrpc::common::KeyValue> next() override {
+        const auto start_time = clock_time::now();
         auto next_pair = co_await kv_awaitable_.async_next(cursor_id_, asio::use_awaitable);
         const auto k = silkworm::bytes_of_string(next_pair.k());
         const auto v = silkworm::bytes_of_string(next_pair.v());
+        SILKRPC_DEBUG << "RemoteCursor::next t=" << clock_time::since(start_time) << "\n";
         co_return silkrpc::common::KeyValue{k, v};
     }
 
     asio::awaitable<void> close_cursor() override {
+        const auto start_time = clock_time::now();
         if (cursor_id_ != 0) {
             co_await kv_awaitable_.async_close_cursor(cursor_id_, asio::use_awaitable); // Can we shoot and forget?
             SILKRPC_TRACE << "RemoteCursor::close_cursor cursor: " << cursor_id_ << "\n";
             cursor_id_ = 0;
         }
+        SILKRPC_DEBUG << "RemoteCursor::close_cursor t=" << clock_time::since(start_time) << "\n";
         co_return;
     }
 
