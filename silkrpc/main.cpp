@@ -40,7 +40,7 @@
 ABSL_FLAG(std::string, chaindata, silkrpc::common::kEmptyChainData, "chain data path as string");
 ABSL_FLAG(std::string, target, silkrpc::common::kEmptyTarget, "server location as string <address>:<port>");
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
-ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::LogInfo, "logging level");
+ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::LogNone, "logging level");
 
 int main(int argc, char* argv[]) {
     const auto pid = boost::this_process::get_id();

@@ -47,7 +47,7 @@ public:
     asio::awaitable<common::KeyValue> seek(const std::string& table_name, const silkworm::Bytes& seek_key) override {
         co_await open_cursor(table_name);
         auto kv_pair = co_await seek(seek_key);
-        co_await close_cursor(); // Can we shoot and forget?
+        co_await close_cursor();
         co_return kv_pair;
     }
 
