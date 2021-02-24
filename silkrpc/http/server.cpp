@@ -24,6 +24,7 @@
 
 #include <string>
 
+#include <asio/co_spawn.hpp>
 #include <asio/ip/tcp.hpp>
 
 #include <silkrpc/common/log.hpp>
@@ -46,7 +47,6 @@ asio::awaitable<void> Server::start() {
     while (acceptor_.is_open()) {
         SILKRPC_DEBUG << "Server::start accepting...\n" << std::flush;
         auto socket = co_await acceptor_.async_accept(asio::use_awaitable);
-        //socket.set_option(asio::ip::tcp::socket::linger(true, 0));
         socket.set_option(asio::ip::tcp::socket::keep_alive(true));
         SILKRPC_TRACE << "Server::start new socket: " << &socket << "\n";
         if (!acceptor_.is_open()) {
@@ -55,7 +55,9 @@ asio::awaitable<void> Server::start() {
         }
 
         auto new_connection = std::make_shared<Connection>(std::move(socket), connection_manager_, request_handler_);
-        co_await connection_manager_.start(new_connection);
+        asio::co_spawn(io_context_, connection_manager_.start(new_connection), [&](std::exception_ptr eptr) {
+            if (eptr) std::rethrow_exception(eptr);
+        });
     }
     SILKRPC_DEBUG << "Server::start exiting...\n" << std::flush;
 }
