@@ -152,9 +152,9 @@ asio::awaitable<silkworm::Bytes> read_body_rlp(DatabaseReader& reader, evmc::byt
 asio::awaitable<Addresses> read_senders(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
     const auto data = co_await reader.get(silkworm::db::table::kSenders.name, block_key);
-    Addresses senders{data.size() / silkworm::kHashLength};
+    Addresses senders{data.size() / silkworm::kAddressLength};
     for (size_t i{0}; i < senders.size(); i++) {
-        senders[i] = silkworm::to_address(&data[i * silkworm::kHashLength]);
+        senders[i] = silkworm::to_address(silkworm::ByteView{&data[i * silkworm::kAddressLength], silkworm::kAddressLength});
     }
     co_return senders;
 }
@@ -192,6 +192,9 @@ asio::awaitable<Receipts> read_receipts(DatabaseReader& reader, evmc::bytes32 bl
     auto transactions = body.transactions;
     if (body.transactions.size() != receipts.size()) {
         throw std::system_error{std::make_error_code(std::errc::value_too_large), "invalid receipt count in read_receipts"};
+    }
+    if (senders.size() != receipts.size()) {
+        throw std::system_error{std::make_error_code(std::errc::value_too_large), "invalid sender count in read_receipts"};
     }
     size_t log_index{0};
     for (size_t i{0}; i < receipts.size(); i++) {

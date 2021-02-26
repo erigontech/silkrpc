@@ -156,10 +156,10 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
 
         reply = json::make_json_content(request["id"], logs);
     } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = json::make_json_error(request["id"], 100, e.what());
     } catch (...) {
-        SILKRPC_ERROR << "unexpected exception\n";
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = json::make_json_error(request["id"], 100, "unexpected exception");
     }
 
