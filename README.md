@@ -35,7 +35,7 @@ mkdir build
 cd build
 cmake ..
 ```
-(You have to run `cmake ..` just the first time.)
+(BTW, you have to run `cmake ..` just the first time).
 
 Generate the [gRPC](https://grpc.io/) Key-Value (KV) interface protocol bindings
 ```
@@ -52,7 +52,7 @@ Now you can run the unit tests
 cmd/unit_test
 ```
 
-There are also convenience [Bash](https://www.gnu.org/software/bash/) scripts for a complete rebuild both in debug and release configurations using [GCC](https://www.gnu.org/software/gcc/) compiler:
+There are also convenience [bash](https://www.gnu.org/software/bash/) scripts for a complete rebuild both in debug and release configurations using [GCC](https://www.gnu.org/software/gcc/) compiler:
 ```
 ./build_gcc_debug.sh
 ./build_gcc_release.sh
@@ -62,6 +62,7 @@ and [Clang](https://clang.llvm.org/) compiler:
 ./build_clang_debug.sh
 ./build_clang_release.sh
 ```
+The resulting build folders are `build_[gcc, clang]_[debug, release]` according to your choice.
 
 ## Windows
 * Install [Visual Studio](https://www.visualstudio.com/downloads) 2019. Community edition is fine.
