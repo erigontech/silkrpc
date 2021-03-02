@@ -44,25 +44,9 @@ public:
         return std::make_unique<RemoteCursor>(kv_awaitable_);
     }
 
-    asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) override {
-        auto cursor_it = cursors_.find(table);
-        if (cursor_it != cursors_.end()) {
-            co_return cursor_it->second;
-        }
-        auto cursor = std::make_shared<RemoteCursor>(kv_awaitable_);
-        co_await cursor->open_cursor(table);
-        cursors_[table] = cursor;
-        co_return cursor;
-    }
+    asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) override;
 
-    asio::awaitable<void> close() override {
-        for (const auto& [table, cursor] : cursors_) {
-            co_await cursor->close_cursor();
-        }
-        cursors_.clear();
-        co_await kv_awaitable_.async_close(asio::use_awaitable);
-        co_return;
-    }
+    asio::awaitable<void> close() override;
 
 private:
     asio::io_context& context_;
