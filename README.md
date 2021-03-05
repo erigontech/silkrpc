@@ -25,7 +25,7 @@ git submodule update --init --recursive
 
 ## Linux & MacOS
 Building SilkRPC daemon requires
-* C++20 compiler: [GCC](https://www.gnu.org/software/gcc/) >= 10.2.0 or [Clang](https://clang.llvm.org/) >= 10.0.0)
+* C++20 compiler: [GCC](https://www.gnu.org/software/gcc/) >= 10.2.0 or [Clang](https://clang.llvm.org/) >= 10.0.0
 * [CMake](http://cmake.org) >= 3.18.4
 * [GMP](http://gmplib.org) (`sudo apt-get install libgmp3-dev` or `brew install gmp`)
 
