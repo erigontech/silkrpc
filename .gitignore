@@ -1,4 +1,10 @@
 build
+build_gcc_debug
+build_gcc_release
+build_clang_debug
+build_clang_release
 .vscode
 .vs
 *.code-workspace
+*.hrd
+*.stdout

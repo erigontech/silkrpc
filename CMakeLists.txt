@@ -21,14 +21,16 @@ if(NOT EXISTS ${CMAKE_SOURCE_DIR}/silkworm/.git)
   message(FATAL_ERROR "Git submodules not initialized, execute:\n  git submodule update --init --recursive")
 endif()
 
-#
-set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/silkworm/cmake/toolchain.cmake CACHE FILEPATH "" FORCE)
+# Use default toolchain file if not specified on the command line
+if(NOT CMAKE_TOOLCHAIN_FILE)
+  set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/silkworm/cmake/toolchain.cmake CACHE FILEPATH "" FORCE)
+endif()
 
 include(silkworm/evmone/cmake/cable/HunterGate.cmake)
 HunterGate(
-  URL "https://github.com/cpp-pm/hunter/archive/v0.23.267.tar.gz"
-  SHA1 "9c5c7fa6e17c2ae15dd922184bc7c51235aaae70"
-  FILEPATH "${CMAKE_SOURCE_DIR}/silkworm/cmake/Hunter/config.cmake"
+  URL "https://github.com/cpp-pm/hunter/archive/v0.23.293.tar.gz"
+  SHA1 "e8e5470652db77149d9b38656db2a6c0b7642693"
+  FILEPATH "${CMAKE_SOURCE_DIR}/cmake/Hunter/config.cmake"
 )
 
 project(silkrpc)
@@ -42,6 +44,6 @@ find_package(intx CONFIG REQUIRED)
 add_subdirectory(silkworm)
 
 # SilkRpc itself
-add_subdirectory(silkrpc/kv/remote)
+add_subdirectory(silkrpc/ethdb/kv/remote)
 add_subdirectory(silkrpc)
 add_subdirectory(cmd)

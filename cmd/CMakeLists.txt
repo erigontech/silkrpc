@@ -23,24 +23,32 @@ endif()
 find_package(gRPC CONFIG REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
 
-file(GLOB_RECURSE SILKRPC_SRC CONFIGURE_DEPENDS
-    "${CMAKE_SOURCE_DIR}/silkrpc/common/*.cpp"
-    "${CMAKE_SOURCE_DIR}/silkrpc/common/*.hpp"
-    "${CMAKE_SOURCE_DIR}/silkrpc/kv/remote/*.cc"
-    "${CMAKE_SOURCE_DIR}/silkrpc/kv/remote/*.h"
-)
+add_compile_options(-std=c++2a)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_options(-fcoroutines)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  add_compile_options(-stdlib=libc++)
+endif()
 
-add_executable(kv_seek_async_asio kv_seek_async_asio.cpp ${SILKRPC_SRC})
+add_executable(kv_seek_async_asio kv_seek_async_asio.cpp)
 target_include_directories(kv_seek_async_asio PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(kv_seek_async_asio absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm)
+target_link_libraries(kv_seek_async_asio absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
 
-add_executable(kv_seek_async kv_seek_async.cpp ${SILKRPC_SRC})
+add_executable(kv_seek_async_callback kv_seek_async_callback.cpp)
+target_include_directories(kv_seek_async_callback PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(kv_seek_async_callback absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
+
+add_executable(kv_seek_async_coroutines kv_seek_async_coroutines.cpp)
+target_include_directories(kv_seek_async_coroutines PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(kv_seek_async_coroutines absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
+
+add_executable(kv_seek_async kv_seek_async.cpp)
 target_include_directories(kv_seek_async PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(kv_seek_async absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm)
+target_link_libraries(kv_seek_async absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
 
-add_executable(kv_seek kv_seek.cpp ${SILKRPC_SRC})
+add_executable(kv_seek kv_seek.cpp)
 target_include_directories(kv_seek PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(kv_seek absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm)
+target_link_libraries(kv_seek absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
 
 # Unit tests
 enable_testing()
@@ -49,7 +57,7 @@ find_package(Catch2 CONFIG REQUIRED)
 
 file(GLOB_RECURSE SILKRPC_TESTS CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/silkrpc/*_test.cpp")
 add_executable(unit_test unit_test.cpp ${SILKRPC_TESTS})
-target_link_libraries(unit_test Catch2::Catch2)
+target_link_libraries(unit_test silkrpc Catch2::Catch2)
 
 include(CTest)
 include(Catch)

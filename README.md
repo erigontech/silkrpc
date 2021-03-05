@@ -24,9 +24,9 @@ git submodule update --init --recursive
 ```
 
 ## Linux & MacOS
-Building SilkRPC Daemon requires:
-* C++17 compiler (GCC or Clang)
-* [CMake](http://cmake.org)
+Building SilkRPC daemon requires
+* C++20 compiler: [GCC](https://www.gnu.org/software/gcc/) >= 10.2.0 or [Clang](https://clang.llvm.org/) >= 10.0.0
+* [CMake](http://cmake.org) >= 3.18.4
 * [GMP](http://gmplib.org) (`sudo apt-get install libgmp3-dev` or `brew install gmp`)
 
 Once the prerequisites are installed, bootstrap cmake by running
@@ -35,17 +35,34 @@ mkdir build
 cd build
 cmake ..
 ```
-(You have to run `cmake ..` just the first time.)
+(BTW, you have to run `cmake ..` just the first time).
+
+Generate the [gRPC](https://grpc.io/) Key-Value (KV) interface protocol bindings
+```
+cmake --build . --target generate_kv_grpc
+```
 
 Then run the build itself
 ```
-make -j
+cmake --build .
 ```
 
 Now you can run the unit tests
 ```
 cmd/unit_test
 ```
+
+There are also convenience [bash](https://www.gnu.org/software/bash/) scripts for a complete rebuild both in debug and release configurations using [GCC](https://www.gnu.org/software/gcc/) compiler:
+```
+./build_gcc_debug.sh
+./build_gcc_release.sh
+```
+and [Clang](https://clang.llvm.org/) compiler:
+```
+./build_clang_debug.sh
+./build_clang_release.sh
+```
+The resulting build folders are `build_[gcc, clang]_[debug, release]` according to your choice.
 
 ## Windows
 * Install [Visual Studio](https://www.visualstudio.com/downloads) 2019. Community edition is fine.
@@ -63,7 +80,7 @@ cmd/unit_test
 
 # Code style
 
-We use the standard C++17 programming language. We follow the [Google's C++ Style Guide](https://google.github.io/styleguide/cppguide.html) with the following differences:
+We use the standard C++20 programming language. We follow the [Google's C++ Style Guide](https://google.github.io/styleguide/cppguide.html) with the following differences:
 
 * `snake_case` for function names.
 * .cpp & .hpp file extensions are used for C++; .cc are used just for [gRPC](https://grpc.io/) generated C++; .c & .h are reserved for C.

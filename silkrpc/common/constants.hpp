@@ -1,5 +1,5 @@
 /*
-   Copyright 2020 The SilkRpc Authors
+   Copyright 2020 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,17 +14,20 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_KV_CONSTANTS_H_
-#define SILKRPC_KV_CONSTANTS_H_
+#ifndef SILKRPC_COMMON_H_
+#define SILKRPC_COMMON_H_
 
 #include <chrono>
 
-namespace silkrpc::kv {
+namespace silkrpc::common {
+
+constexpr const char* kEmptyChainData{""};
 
 constexpr const char* kDefaultTarget{"localhost:9090"};
+constexpr const char* kEmptyTarget{""};
 
 constexpr const std::chrono::milliseconds kDefaultTimeout{10000};
 
-}  // namespace silkrpc::kv
+}  // namespace silkrpc::common
 
-#endif  // SILKRPC_KV_CONSTANTS_H_
+#endif  // SILKRPC_COMMON_H_

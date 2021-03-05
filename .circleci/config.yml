@@ -15,7 +15,7 @@
 version: 2.1
 
 commands:
-  build:
+  checkout_with_submodules:
     steps:
       - checkout
       - run:
@@ -23,6 +23,9 @@ commands:
           command: |
             git submodule sync
             git submodule update --init --recursive
+
+  build:
+    steps:
       - run:
           name: "Install GMP"
           command: |
@@ -30,7 +33,7 @@ commands:
             sudo apt-get install -y libgmp3-dev
       - restore_cache:
           name: "Restore Hunter cache"
-          key: &hunter-cache-key hunter-{{ .Environment.CIRCLE_JOB }}-{{checksum "cmake/toolchain.cmake"}}-{{checksum "cmake/Hunter/packages.cmake"}}
+          key: &hunter-cache-key hunter-{{ .Environment.CIRCLE_JOB }}-{{checksum ".circleci/config.yml"}}-{{checksum "cmake/toolchain.cmake"}}-{{checksum "cmake/Hunter/packages.cmake"}}
       - run:
           name: "Cmake"
           working_directory: ~/build
@@ -52,21 +55,41 @@ commands:
         command: cmd/unit_test
 
 jobs:
-  linux-gcc-9:
+  linux-gcc-10:
     environment:
       BUILD_TYPE: Debug
-    docker:
-      - image: ethereum/cpp-build-env:15-gcc-9
+      CLANG_COVERAGE: OFF
+    machine:
+      image: ubuntu-2004:202101-01
     steps:
+      - run:
+          name: "Install GCC 10"
+          command: |
+            sudo apt update
+            sudo apt -y install gcc-10 g++-10
+            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 50
+            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 50
+            gcc --version
+            g++ --version
+      - checkout_with_submodules
       - build
       - test
 
   linux-clang-coverage:
     environment:
       BUILD_TYPE: Debug
+      CLANG_COVERAGE: ON
     docker:
       - image: ethereum/cpp-build-env:14-clang-10
     steps:
+      - run:
+          name: "Install LLVM C++ Standard Library" # for C++ standard headers clang does not have
+          command: |
+            sudo apt update
+            sudo apt -y install apt-utils
+            sudo apt -y install libc++abi-dev
+            sudo apt -y install libc++-dev
+      - checkout_with_submodules
       - build
       - run:
           name: "Unit Tests"
@@ -96,5 +119,5 @@ workflows:
   version: 2
   silkworm:
     jobs:
-      #- linux-gcc-9
-      - linux-clang-coverage
+      - linux-gcc-10
+      #- linux-clang-coverage

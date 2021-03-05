@@ -27,9 +27,9 @@
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/kv/remote/kv.grpc.pb.h>
+#include <silkrpc/ethdb/kv/remote/kv.grpc.pb.h>
 
-int kv_seek_async(std::string table_name, std::string target, std::string seek_key, uint32_t timeout) {
+int kv_seek_async(std::string table_name, std::string target, const silkworm::Bytes& seek_key_bytes, uint32_t timeout) {
     using namespace std::chrono;
     using namespace silkworm;
 
@@ -44,6 +44,7 @@ int kv_seek_async(std::string table_name, std::string target, std::string seek_k
     const auto stub = remote::KV::NewStub(channel);
 
     // Prepare RPC call context and stream
+    context.set_initial_metadata_corked(true); // Initial metadata coalasced with first write message
     context.set_deadline(std::chrono::system_clock::system_clock::now() + std::chrono::milliseconds{timeout});
     const auto reader_writer = stub->PrepareAsyncTx(&context, &queue);
 
@@ -53,12 +54,8 @@ int kv_seek_async(std::string table_name, std::string target, std::string seek_k
     const uint CLOSE_TAG = 3;
     const uint FINISH_TAG = 4;
 
-    // 1) StartCall + Next
+    // 1) StartCall (+ Next if initial metadata not coalesced)
     reader_writer->StartCall((void *)START_TAG);
-    bool has_event = queue.Next(&got_tag, &ok);
-    if (!has_event || got_tag != (void *)START_TAG) {
-        return -1;
-    }
 
     // 2) Open cursor
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n";
@@ -67,7 +64,7 @@ int kv_seek_async(std::string table_name, std::string target, std::string seek_k
     open_message.set_op(remote::Op::OPEN);
     open_message.set_bucketname(table_name);
     reader_writer->Write(open_message, (void *)OPEN_TAG);
-    has_event = queue.Next(&got_tag, &ok);
+    bool has_event = queue.Next(&got_tag, &ok);
     if (!has_event || got_tag != (void *)OPEN_TAG) {
         return -1;
     }
@@ -82,7 +79,6 @@ int kv_seek_async(std::string table_name, std::string target, std::string seek_k
     std::cout << "KV Tx OPEN <- cursor: " << cursor_id << "\n";
 
     // 3) Seek given key in given table
-    const auto& seek_key_bytes = from_hex(seek_key);
     std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key_bytes << "\n";
     // 3.1) Write + Next
     auto seek_message = remote::Cursor{};
@@ -111,7 +107,7 @@ int kv_seek_async(std::string table_name, std::string target, std::string seek_k
     auto close_message = remote::Cursor{};
     close_message.set_op(remote::Op::CLOSE);
     close_message.set_cursor(cursor_id);
-    reader_writer->Write(close_message, (void *)CLOSE_TAG);
+    reader_writer->WriteLast(close_message, grpc::WriteOptions(), (void *)CLOSE_TAG);
     has_event = queue.Next(&got_tag, &ok);
     if (!has_event || got_tag != (void *)CLOSE_TAG) {
         return -1;
@@ -133,14 +129,18 @@ int kv_seek_async(std::string table_name, std::string target, std::string seek_k
         std::cout << "KV Tx Status <- error_details: " << status.error_details() << "\n";
         return -1;
     }
+    has_event = queue.Next(&got_tag, &ok);
+    if (!has_event || got_tag != (void *)FINISH_TAG) {
+        return -1;
+    }
 
     return 0;
 }
 
 ABSL_FLAG(std::string, table, "", "database table name");
 ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
-ABSL_FLAG(std::string, target, silkrpc::kv::kDefaultTarget, "server location as string <address>:<port>");
-ABSL_FLAG(uint32_t, timeout, silkrpc::kv::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
+ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location as string <address>:<port>");
+ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 
 int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("Seek Turbo-Geth/Silkworm Key-Value (KV) remote interface to database");
@@ -157,11 +157,13 @@ int main(int argc, char* argv[]) {
     }
 
     auto seek_key{absl::GetFlag(FLAGS_seekkey)};
-    if (seek_key.empty() || false /*is not hex*/) {
+    const auto seek_key_bytes_optional = from_hex(seek_key);
+    if (seek_key.empty() || !seek_key_bytes_optional.has_value()) {
         std::cerr << "Parameter seek key is invalid: [" << seek_key << "]\n";
         std::cerr << "Use --seekkey flag to specify the seek key in Turbo-Geth database table\n";
         return -1;
     }
+    const auto seek_key_bytes = seek_key_bytes_optional.value();
 
     auto target{absl::GetFlag(FLAGS_target)};
     if (target.empty() || target.find(":") == std::string::npos) {
@@ -181,7 +183,7 @@ int main(int argc, char* argv[]) {
 
     int rv;
     service.post([&] () {
-        rv = kv_seek_async(table_name, target, seek_key, timeout);
+        rv = kv_seek_async(table_name, target, seek_key_bytes, timeout);
     });
 
     service.run();

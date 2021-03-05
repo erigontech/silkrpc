@@ -19,7 +19,18 @@
 
 #include <iostream>
 #include <string>
+
+#include <evmc/evmc.hpp>
+
 #include <silkworm/common/base.hpp>
+#include <silkworm/common/util.hpp>
+
+namespace silkrpc::common {
+    struct KeyValue {
+        silkworm::Bytes key;
+        silkworm::Bytes value;
+    };
+} // namespace silkrpc
 
 namespace silkworm {
 
@@ -29,6 +40,20 @@ inline ByteView byte_view_of_string(const std::string& s) {
     return {reinterpret_cast<const uint8_t*>(s.data()), s.length()};
 }
 
-}  // namespace silkworm
+inline Bytes bytes_of_string(const std::string& s) {
+    return Bytes(s.begin(), s.end());
+}
+
+} // namespace silkworm
+
+inline std::ostream& operator<<(std::ostream& out, const evmc::address& addr) {
+    out << silkworm::to_hex(addr);
+    return out;
+}
+
+inline std::ostream& operator<<(std::ostream& out, const evmc::bytes32& b32) {
+    out << silkworm::to_hex(b32);
+    return out;
+}
 
 #endif  // SILKRPC_COMMON_UTIL_H_

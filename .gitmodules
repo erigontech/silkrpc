@@ -1,3 +1,6 @@
 [submodule "silkworm"]
 	path = silkworm
 	url = git@github.com:torquem-ch/silkworm.git
+[submodule "silkrpc/croaring"]
+	path = silkrpc/croaring
+	url = git@github.com:lemire/CRoaringUnityBuild.git
