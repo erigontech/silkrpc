@@ -1,6 +1,6 @@
 # Performance Tests
 
-These are the instructions to setup the performance comparison tests between Silkrpc and Turbo-Geth (TG) RPCDaemon. Currently such performance testing is still **not** automated, so it is nt
+These are the instructions to setup the performance comparison tests between Silkrpc and Turbo-Geth (TG) RPCDaemon. Currently such performance testing is **not** automated, so it is necessary to manually checkout/build/execute the components.
 
 ## Software Versions
 
