@@ -20,21 +20,23 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef HTTP_ConnectionManager_HPP
-#define HTTP_ConnectionManager_HPP
+#ifndef SILKRPC_HTTP_CONNECTION_MANAGER_HPP_
+#define SILKRPC_HTTP_CONNECTION_MANAGER_HPP_
 
+#include <memory>
 #include <set>
 
-#include "connection.hpp"
+#include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
+
+#include "connection.hpp"
 
 namespace silkrpc::http {
 
 /// Manages open connections so that they may be cleanly stopped when the server
 /// needs to shut down.
-class ConnectionManager
-{
+class ConnectionManager {
 public:
     ConnectionManager(const ConnectionManager&) = delete;
     ConnectionManager& operator=(const ConnectionManager&) = delete;
@@ -58,4 +60,4 @@ private:
 
 } // namespace silkrpc::http
 
-#endif // HTTP_ConnectionManager_HPP
+#endif // SILKRPC_HTTP_CONNECTION_MANAGER_HPP_

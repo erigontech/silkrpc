@@ -143,7 +143,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
             SILKRPC_DEBUG << "receipts.size(): " << receipts.size() << "\n";
             std::vector<Log> unfiltered_logs{};
             unfiltered_logs.reserve(receipts.size());
-            for (auto receipt: receipts) {
+            for (auto receipt : receipts) {
                 SILKRPC_DEBUG << "receipt.logs.size(): " << receipt.logs.size() << "\n";
                 unfiltered_logs.insert(unfiltered_logs.end(), receipt.logs.begin(), receipt.logs.end());
             }
@@ -214,7 +214,7 @@ asio::awaitable<Receipts> EthereumRpcApi::get_receipts(core::rawdb::DatabaseRead
 
     // If not already present, retrieve receipts by executing transactions
     //auto block = co_await core::rawdb::read_block(db_reader, hash, number);
-    // TODO: implement
+    // TODO(canepat): implement
     SILKRPC_WARN << "retrieve receipts by executing transactions NOT YET IMPLEMENTED\n";
     co_return Receipts{};
 }

@@ -14,13 +14,13 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_JSON_ETH_API_H_
-#define SILKRPC_JSON_ETH_API_H_
-
-#include <silkrpc/config.hpp>
+#ifndef SILKRPC_COMMANDS_ETH_API_HPP_
+#define SILKRPC_COMMANDS_ETH_API_HPP_
 
 #include <memory>
 #include <vector>
+
+#include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
@@ -28,7 +28,7 @@
 
 #include <silkworm/types/receipt.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/croaring/roaring.hh>
+#include <silkrpc/croaring/roaring.hh> // NOLINT(build/include_order)
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/kv/database.hpp>
 #include <silkrpc/ethdb/kv/transaction.hpp>
@@ -65,4 +65,4 @@ private:
 
 } // namespace silkrpc::commands
 
-#endif  // SILKRPC_JSON_ETH_API_H_
+#endif  // SILKRPC_COMMANDS_ETH_API_HPP_

@@ -20,7 +20,7 @@
 
 namespace silkrpc::core {
 
-asio::awaitable<uint64_t> get_block_number(uint64_t number, core::rawdb::DatabaseReader& reader) {
+asio::awaitable<uint64_t> get_block_number(uint64_t number, const core::rawdb::DatabaseReader& reader) {
     auto block_number = number;
     if (number == kLatestBlockNumber || number == kPendingBlockNumber) {
         block_number = co_await get_latest_block_number(reader);
@@ -30,12 +30,12 @@ asio::awaitable<uint64_t> get_block_number(uint64_t number, core::rawdb::Databas
     co_return block_number;
 }
 
-asio::awaitable<uint64_t> get_current_block_number(core::rawdb::DatabaseReader& reader) {
+asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::DatabaseReader& reader) {
     const auto current_block_number = co_await stages::get_sync_stage_progress(reader, stages::kFinish);
     co_return current_block_number;
 }
 
-asio::awaitable<uint64_t> get_latest_block_number(core::rawdb::DatabaseReader& reader) {
+asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader) {
     const auto latest_block_number = co_await stages::get_sync_stage_progress(reader, stages::kExecution);
     co_return latest_block_number;
 }

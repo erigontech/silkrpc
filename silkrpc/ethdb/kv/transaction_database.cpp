@@ -28,7 +28,7 @@ asio::awaitable<bool> TransactionDatabase::has(const std::string& table_name, co
     co_return false;
 }
 
-asio::awaitable<silkworm::Bytes> TransactionDatabase::get(const std::string& table, const silkworm::Bytes& key) {
+asio::awaitable<silkworm::Bytes> TransactionDatabase::get(const std::string& table, const silkworm::Bytes& key) const {
     const auto cursor = co_await tx_.cursor(table);
     SILKRPC_TRACE << "TransactionDatabase::get cursor_id: " << cursor->cursor_id() << "\n";
     const auto kv_pair = co_await cursor->seek(key);

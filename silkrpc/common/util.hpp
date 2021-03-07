@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMON_UTIL_H_
-#define SILKRPC_COMMON_UTIL_H_
+#ifndef SILKRPC_COMMON_UTIL_HPP_
+#define SILKRPC_COMMON_UTIL_HPP_
 
 #include <iostream>
 #include <string>
@@ -26,11 +26,13 @@
 #include <silkworm/common/util.hpp>
 
 namespace silkrpc::common {
-    struct KeyValue {
-        silkworm::Bytes key;
-        silkworm::Bytes value;
-    };
-} // namespace silkrpc
+
+struct KeyValue {
+    silkworm::Bytes key;
+    silkworm::Bytes value;
+};
+
+} // namespace silkrpc::common
 
 namespace silkworm {
 
@@ -56,4 +58,4 @@ inline std::ostream& operator<<(std::ostream& out, const evmc::bytes32& b32) {
     return out;
 }
 
-#endif  // SILKRPC_COMMON_UTIL_H_
+#endif  // SILKRPC_COMMON_UTIL_HPP_

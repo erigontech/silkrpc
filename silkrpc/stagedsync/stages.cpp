@@ -25,17 +25,17 @@
 namespace silkrpc::stages {
 
 class Exception : public std::exception {
-public:
+ public:
     explicit Exception(const char* message) : message_{message} {};
     explicit Exception(const std::string& message) : message_{message} {};
     virtual ~Exception() noexcept {};
     const char* what() const noexcept override { return message_.c_str(); }
 
-protected:
+ protected:
     std::string message_;
 };
 
-asio::awaitable<uint64_t> get_sync_stage_progress(core::rawdb::DatabaseReader& db_reader, const Bytes& stage_key) {
+asio::awaitable<uint64_t> get_sync_stage_progress(const core::rawdb::DatabaseReader& db_reader, const Bytes& stage_key) {
     const auto value = co_await db_reader.get(silkworm::db::table::kSyncStageProgress.name, stage_key);
     if (value.length() == 0) {
         co_return 0;

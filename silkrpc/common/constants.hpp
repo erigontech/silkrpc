@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMON_H_
-#define SILKRPC_COMMON_H_
+#ifndef SILKRPC_COMMON_CONSTANTS_HPP_
+#define SILKRPC_COMMON_CONSTANTS_HPP_
 
 #include <chrono>
 
@@ -30,4 +30,4 @@ constexpr const std::chrono::milliseconds kDefaultTimeout{10000};
 
 }  // namespace silkrpc::common
 
-#endif  // SILKRPC_COMMON_H_
+#endif  // SILKRPC_COMMON_CONSTANTS_HPP_

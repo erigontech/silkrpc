@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_JSON_ETH_H_
-#define SILKRPC_JSON_ETH_H_
+#ifndef SILKRPC_JSON_TYPES_HPP_
+#define SILKRPC_JSON_TYPES_HPP_
 
 #include <optional>
 #include <string>
@@ -61,4 +61,4 @@ nlohmann::json make_json_error(uint32_t id, uint32_t code, const std::string& me
 
 } // namespace silkrpc::json
 
-#endif  // SILKRPC_JSON_ETH_H_
+#endif  // SILKRPC_JSON_TYPES_HPP_

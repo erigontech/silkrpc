@@ -39,4 +39,4 @@ std::ostream& operator<<(std::ostream& out, const Log& log) {
     return out;
 }
 
-} // silkrpc
+} // namespace silkrpc

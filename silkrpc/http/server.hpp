@@ -20,12 +20,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef HTTP_SERVER2_HPP
-#define HTTP_SERVER2_HPP
+#ifndef SILKRPC_HTTP_SERVER_HPP_
+#define SILKRPC_HTTP_SERVER_HPP_
+
+#include <memory>
+#include <string>
 
 #include <silkrpc/config.hpp>
-
-#include <string>
 
 #include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
@@ -38,8 +39,7 @@
 namespace silkrpc::http {
 
 /// The top-level class of the HTTP server.
-class Server
-{
+class Server {
 public:
     Server(const Server&) = delete;
     Server& operator=(const Server&) = delete;
@@ -67,4 +67,4 @@ private:
 
 } // namespace silkrpc::http
 
-#endif // HTTP_SERVER2_HPP
+#endif // SILKRPC_HTTP_SERVER_HPP_

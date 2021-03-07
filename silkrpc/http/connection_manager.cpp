@@ -22,6 +22,8 @@
 
 #include "connection_manager.hpp"
 
+#include <memory>
+
 namespace silkrpc::http {
 
 ConnectionManager::ConnectionManager() {
@@ -38,7 +40,7 @@ void ConnectionManager::stop(std::shared_ptr<Connection> c) {
 }
 
 void ConnectionManager::stop_all() {
-    for (auto c: connections_) {
+    for (auto c : connections_) {
         c->stop();
     }
     connections_.clear();

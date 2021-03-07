@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_BLOCKS_H_
-#define SILKRPC_CORE_BLOCKS_H_
+#ifndef SILKRPC_CORE_BLOCKS_HPP_
+#define SILKRPC_CORE_BLOCKS_HPP_
 
 #include <silkrpc/config.hpp>
 
@@ -29,12 +29,12 @@ constexpr uint64_t kEarliestBlockNumber{0ul};
 constexpr uint64_t kLatestBlockNumber{-1ul};
 constexpr uint64_t kPendingBlockNumber{-2ul};
 
-asio::awaitable<uint64_t> get_block_number(uint64_t number, core::rawdb::DatabaseReader& reader);
+asio::awaitable<uint64_t> get_block_number(uint64_t number, const core::rawdb::DatabaseReader& reader);
 
-asio::awaitable<uint64_t> get_current_block_number(core::rawdb::DatabaseReader& reader);
+asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::DatabaseReader& reader);
 
-asio::awaitable<uint64_t> get_latest_block_number(core::rawdb::DatabaseReader& reader);
+asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader);
 
 } // namespace silkrpc::core
 
-#endif  // SILKRPC_CORE_BLOCKS_H_
+#endif  // SILKRPC_CORE_BLOCKS_HPP_

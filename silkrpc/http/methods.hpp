@@ -20,8 +20,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef SILKRPC_HTTP_METHODS_H_
-#define SILKRPC_HTTP_METHODS_H_
+#ifndef SILKRPC_HTTP_METHODS_HPP_
+#define SILKRPC_HTTP_METHODS_HPP_
 
 #include <string>
 
@@ -32,6 +32,6 @@ namespace silkrpc::http::method {
 constexpr const char* k_eth_blockNumber{"eth_blockNumber"};
 constexpr const char* k_eth_getLogs{"eth_getLogs"};
 
-} // namespace silkrpc::http
+} // namespace silkrpc::http::method
 
-#endif // SILKRPC_HTTP_METHODS_H_
+#endif // SILKRPC_HTTP_METHODS_HPP_

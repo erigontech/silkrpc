@@ -14,14 +14,15 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_CORO_TASK_HPP
-#define SILKRPC_CORO_TASK_HPP
-
-#include <silkrpc/config.hpp>
+#ifndef SILKRPC_CORO_TASK_HPP_
+#define SILKRPC_CORO_TASK_HPP_
 
 #include <functional>
 #include <thread>
 #include <variant>
+#include <utility>
+
+#include <silkrpc/config.hpp>
 
 namespace silkrpc::coro {
 
@@ -88,8 +89,8 @@ struct task {
         coro.resume(); // return coro; // tail call optimization
     }
 
-private:
-    task(promise_type* p) noexcept : coro(std::coroutine_handle<promise_type>::from_promise(*p)) {}
+ private:
+    explicit task(promise_type* p) noexcept : coro(std::coroutine_handle<promise_type>::from_promise(*p)) {}
 
     std::coroutine_handle<promise_type> coro;
 };
@@ -145,12 +146,12 @@ struct task<void> {
         coro.resume();
     }
 
-private:
-    task(promise_type* p) : coro(std::coroutine_handle<promise_type>::from_promise(*p)) {}
+ private:
+    explicit task(promise_type* p) : coro(std::coroutine_handle<promise_type>::from_promise(*p)) {}
 
     std::coroutine_handle<promise_type> coro;
 };
 
 } // namespace silkrpc::coro
 
-#endif // SILKRPC_CORO_TASK_HPP
+#endif // SILKRPC_CORO_TASK_HPP_

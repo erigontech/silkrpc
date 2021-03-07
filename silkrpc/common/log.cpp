@@ -18,6 +18,8 @@
 
 #include <absl/strings/str_cat.h>
 
+#include <string>
+
 namespace silkworm {
 
 bool AbslParseFlag(absl::string_view text, LogLevels* level, std::string* error) {

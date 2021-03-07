@@ -14,10 +14,12 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMON_LOG_H_
-#define SILKRPC_COMMON_LOG_H_
+#ifndef SILKRPC_COMMON_LOG_HPP_
+#define SILKRPC_COMMON_LOG_HPP_
 
 #include <absl/strings/string_view.h>
+
+#include <string>
 
 #include <silkworm/common/log.hpp>
 
@@ -33,7 +35,7 @@ namespace silkrpc {
 using Logger = silkworm::detail::log_;
 using LogLevel = silkworm::LogLevels;
 
-#define LOG(level_) if ((level_) < silkworm::detail::log_verbosity_) {} else silkworm::detail::log_(level_)
+#define LOG(level_) if ((level_) < silkworm::detail::log_verbosity_) {} else silkworm::detail::log_(level_) // NOLINT
 
 // LogTrace, LogDebug, LogInfo, LogWarn, LogError, LogCritical, LogNone
 #define SILKRPC_TRACE LOG(silkworm::LogTrace)
@@ -48,4 +50,4 @@ using LogLevel = silkworm::LogLevels;
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_COMMON_LOG_H_
+#endif  // SILKRPC_COMMON_LOG_HPP_

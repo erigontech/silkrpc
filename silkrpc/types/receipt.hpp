@@ -14,16 +14,16 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_RECEIPT_H_
-#define SILKRPC_TYPES_RECEIPT_H_
-
-#include "log.hpp"
+#ifndef SILKRPC_TYPES_RECEIPT_HPP_
+#define SILKRPC_TYPES_RECEIPT_HPP_
 
 #include <vector>
 
 #include <evmc/evmc.hpp>
 
 #include <silkworm/types/bloom.hpp>
+
+#include "log.hpp"
 
 namespace silkrpc {
 
@@ -45,6 +45,6 @@ struct Receipt {
 
 typedef std::vector<Receipt> Receipts;
 
-} // silkrpc
+} // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_RECEIPT_H_
+#endif  // SILKRPC_TYPES_RECEIPT_HPP_
