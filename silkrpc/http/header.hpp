@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_HTTP_HEADER_H_
-#define SILKRPC_HTTP_HEADER_H_
+#ifndef SILKRPC_HTTP_HEADER_HPP_
+#define SILKRPC_HTTP_HEADER_HPP_
 
 #include <string>
 
@@ -28,4 +28,4 @@ struct Header {
 
 } // namespace silkrpc::http
 
-#endif // SILKRPC_HTTP_HEADER_H_
+#endif // SILKRPC_HTTP_HEADER_HPP_

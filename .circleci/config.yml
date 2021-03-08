@@ -24,6 +24,17 @@ commands:
             git submodule sync
             git submodule update --init --recursive
 
+  lint:
+    steps:
+      - run:
+          name: "Install CppLint"
+          command: |
+            sudo apt-get install -y python3-pip
+            sudo pip3 install cpplint
+      - run:
+          name: "Lint"
+          command: cpplint silkrpc/**/*.hpp silkrpc/**/*.cpp
+
   build:
     steps:
       - run:
@@ -49,10 +60,10 @@ commands:
 
   test:
     steps:
-    - run:
-        name: "Unit Tests"
-        working_directory: ~/build
-        command: cmd/unit_test
+      - run:
+          name: "Unit Tests"
+          working_directory: ~/build
+          command: cmd/unit_test
 
 jobs:
   linux-gcc-10:
@@ -72,6 +83,7 @@ jobs:
             gcc --version
             g++ --version
       - checkout_with_submodules
+      - lint
       - build
       - test
 

@@ -20,8 +20,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef SILKRPC_HTTP_REQUEST_H_
-#define SILKRPC_HTTP_REQUEST_H_
+#ifndef SILKRPC_HTTP_REQUEST_HPP_
+#define SILKRPC_HTTP_REQUEST_HPP_
 
 #include <string>
 #include <vector>
@@ -43,4 +43,4 @@ struct Request {
 
 } // namespace silkrpc::http
 
-#endif // SILKRPC_HTTP_REQUEST_H_
+#endif // SILKRPC_HTTP_REQUEST_HPP_

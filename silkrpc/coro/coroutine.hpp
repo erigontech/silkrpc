@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_CORO_COROUTINE_HPP
-#define SILKRPC_CORO_COROUTINE_HPP
+#ifndef SILKRPC_CORO_COROUTINE_HPP_
+#define SILKRPC_CORO_COROUTINE_HPP_
 
 #include <silkrpc/config.hpp>
 
@@ -28,4 +28,4 @@ namespace std {
 } // namespace std
 #endif // SILKRPC_HAS_EXPERIMENTAL_COROUTINES
 
-#endif // SILKRPC_CORO_COROUTINE_HPP
+#endif // SILKRPC_CORO_COROUTINE_HPP_

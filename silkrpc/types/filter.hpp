@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_FILTER_H_
-#define SILKRPC_TYPES_FILTER_H_
+#ifndef SILKRPC_TYPES_FILTER_HPP_
+#define SILKRPC_TYPES_FILTER_HPP_
 
 #include <iostream>
 #include <optional>
@@ -40,10 +40,10 @@ struct Filter {
 
 std::ostream& operator<<(std::ostream& out, const Filter& filter);
 
-} // silkrpc
+} // namespace silkrpc
 
 std::ostream& operator<<(std::ostream& out, const std::optional<silkrpc::FilterAddresses>& addresses);
 
 std::ostream& operator<<(std::ostream& out, const std::optional<silkrpc::FilterTopics>& topics);
 
-#endif  // SILKRPC_TYPES_FILTER_H_
+#endif  // SILKRPC_TYPES_FILTER_HPP_

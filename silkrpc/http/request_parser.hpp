@@ -20,8 +20,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef SILKRPC_HTTP_RequestParser_H_
-#define SILKRPC_HTTP_RequestParser_H_
+#ifndef SILKRPC_HTTP_REQUEST_PARSER_HPP_
+#define SILKRPC_HTTP_REQUEST_PARSER_HPP_
 
 #include <tuple>
 
@@ -30,8 +30,7 @@ namespace silkrpc::http {
 struct Request;
 
 /// Parser for incoming requests.
-class RequestParser
-{
+class RequestParser {
 public:
     /// Construct ready to parse the request method.
     RequestParser();
@@ -102,4 +101,4 @@ private:
 
 } // namespace silkrpc::http
 
-#endif // SILKRPC_HTTP_RequestParser_H_
+#endif // SILKRPC_HTTP_REQUEST_PARSER_HPP_

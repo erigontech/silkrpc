@@ -26,10 +26,10 @@
 
 namespace silkrpc {
 
-using namespace evmc::literals;
+using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
 TEST_CASE("serialize error", "[silkrpc][to_json]") {
-    Error err{{100}, {"generic error"}};
+    Error err{100, {"generic error"}};
     nlohmann::json j = err;
     CHECK(j == R"({
         "error":{

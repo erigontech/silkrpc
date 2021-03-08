@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_ERROR_H_
-#define SILKRPC_TYPES_ERROR_H_
+#ifndef SILKRPC_TYPES_ERROR_HPP_
+#define SILKRPC_TYPES_ERROR_HPP_
 
 #include <iostream>
 #include <string>
@@ -35,4 +35,4 @@ std::ostream& operator<<(std::ostream& out, const Error& error);
 
 } // silkrpc
 
-#endif  // SILKRPC_TYPES_ERROR_H_
+#endif  // SILKRPC_TYPES_ERROR_HPP_

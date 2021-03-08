@@ -20,13 +20,13 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef HTTP_CONNECTION_HPP
-#define HTTP_CONNECTION_HPP
-
-#include <silkrpc/config.hpp>
+#ifndef SILKRPC_HTTP_CONNECTION_HPP_
+#define SILKRPC_HTTP_CONNECTION_HPP_
 
 #include <array>
 #include <memory>
+
+#include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
 #include <asio/ip/tcp.hpp>
@@ -87,4 +87,4 @@ private:
 
 } // namespace silkrpc::http
 
-#endif // HTTP_CONNECTION_HPP
+#endif // SILKRPC_HTTP_CONNECTION_HPP_

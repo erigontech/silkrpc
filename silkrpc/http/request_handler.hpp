@@ -20,14 +20,14 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef HTTP_REQUEST_HANDLER_HPP
-#define HTTP_REQUEST_HANDLER_HPP
-
-#include <silkrpc/config.hpp>
+#ifndef SILKRPC_HTTP_REQUEST_HANDLER_HPP_
+#define SILKRPC_HTTP_REQUEST_HANDLER_HPP_
 
 #include <map>
 #include <memory>
 #include <string>
+
+#include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
 
@@ -60,4 +60,4 @@ private:
 
 } // namespace silkrpc::http
 
-#endif // HTTP_REQUEST_HANDLER_HPP
+#endif // SILKRPC_HTTP_REQUEST_HANDLER_HPP_

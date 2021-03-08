@@ -54,9 +54,7 @@ asio::awaitable<void> Connection::do_read() {
         std::size_t bytes_read = co_await socket_.async_read_some(asio::buffer(buffer_), asio::use_awaitable);
         SILKRPC_DEBUG << "Connection::do_read bytes_read: " << bytes_read << "\n";
         RequestParser::ResultType result;
-        std::tie(result, std::ignore) = request_parser_.parse(
-            request_, buffer_.data(), buffer_.data() + bytes_read
-        );
+        std::tie(result, std::ignore) = request_parser_.parse(request_, buffer_.data(), buffer_.data() + bytes_read);
 
         if (result == RequestParser::good) {
             co_await request_handler_.handle_request(request_, reply_);
@@ -72,8 +70,7 @@ asio::awaitable<void> Connection::do_read() {
         if (se.code() == asio::error::eof || se.code() == asio::error::connection_reset || se.code() == asio::error::broken_pipe) {
             connection_manager_.stop(shared_from_this());
             co_return;
-        }
-        else if (se.code() != asio::error::operation_aborted) {
+        } else if (se.code() != asio::error::operation_aborted) {
             connection_manager_.stop(shared_from_this());
 
             SILKRPC_ERROR << "Connection::do_read system_error: " << se.what() << "\n" << std::flush;

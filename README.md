@@ -28,6 +28,7 @@ Building SilkRPC daemon requires
 * C++20 compiler: [GCC](https://www.gnu.org/software/gcc/) >= 10.2.0 or [Clang](https://clang.llvm.org/) >= 10.0.0
 * [CMake](http://cmake.org) >= 3.18.4
 * [GMP](http://gmplib.org) (`sudo apt-get install libgmp3-dev` or `brew install gmp`)
+* [Cpplint] (https://github.com/cpplint/cpplint) (`pip3 install cpplint`)
 
 Once the prerequisites are installed, bootstrap cmake by running
 ```
@@ -50,6 +51,11 @@ cmake --build .
 Now you can run the unit tests
 ```
 cmd/unit_test
+```
+
+and check the code style running
+```
+./run_linter.sh
 ```
 
 There are also convenience [bash](https://www.gnu.org/software/bash/) scripts for a complete rebuild both in debug and release configurations using [GCC](https://www.gnu.org/software/gcc/) compiler:
@@ -87,6 +93,6 @@ We use the standard C++20 programming language. We follow the [Google's C++ Styl
 * `using namespace foo` is allowed inside .cpp files, but not inside headers.
 * Exceptions are allowed.
 * User-defined literals are allowed.
-* Maximum line length is 120, indentation is 4 spaces – see `.clang-format`.
+* Maximum line length is 170, indentation is 4 spaces – see `.clang-format`.
 
 
