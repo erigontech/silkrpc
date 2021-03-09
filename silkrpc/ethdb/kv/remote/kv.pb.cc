@@ -90,17 +90,16 @@ const char descriptor_table_protodef_kv_2eproto[] PROTOBUF_SECTION_VARIABLE(prot
   "\n\010kv.proto\022\006remote\"Z\n\006Cursor\022\026\n\002op\030\001 \001(\016"
   "2\n.remote.Op\022\022\n\nbucketName\030\002 \001(\t\022\016\n\006curs"
   "or\030\003 \001(\r\022\t\n\001k\030\004 \001(\014\022\t\n\001v\030\005 \001(\014\".\n\004Pair\022\t"
-  "\n\001k\030\001 \001(\014\022\t\n\001v\030\002 \001(\014\022\020\n\010cursorID\030\003 \001(\r*\215"
-  "\002\n\002Op\022\t\n\005FIRST\020\000\022\r\n\tFIRST_DUP\020\001\022\010\n\004SEEK\020"
-  "\002\022\r\n\tSEEK_BOTH\020\003\022\013\n\007CURRENT\020\004\022\020\n\014GET_MUL"
-  "TIPLE\020\005\022\010\n\004LAST\020\006\022\014\n\010LAST_DUP\020\007\022\010\n\004NEXT\020"
-  "\010\022\014\n\010NEXT_DUP\020\t\022\021\n\rNEXT_MULTIPLE\020\n\022\017\n\013NE"
-  "XT_NO_DUP\020\013\022\010\n\004PREV\020\014\022\014\n\010PREV_DUP\020\r\022\017\n\013P"
-  "REV_NO_DUP\020\016\022\016\n\nSEEK_EXACT\020\017\022\023\n\017SEEK_BOT"
-  "H_EXACT\020\020\022\010\n\004OPEN\020\036\022\t\n\005CLOSE\020\0372,\n\002KV\022&\n\002"
-  "Tx\022\016.remote.Cursor\032\014.remote.Pair(\0010\001B)\n\020"
-  "io.turbo-geth.dbB\002KVP\001Z\017./remote;remoteb"
-  "\006proto3"
+  "\n\001k\030\001 \001(\014\022\t\n\001v\030\002 \001(\014\022\020\n\010cursorID\030\003 \001(\r*\350"
+  "\001\n\002Op\022\t\n\005FIRST\020\000\022\r\n\tFIRST_DUP\020\001\022\010\n\004SEEK\020"
+  "\002\022\r\n\tSEEK_BOTH\020\003\022\013\n\007CURRENT\020\004\022\010\n\004LAST\020\006\022"
+  "\014\n\010LAST_DUP\020\007\022\010\n\004NEXT\020\010\022\014\n\010NEXT_DUP\020\t\022\017\n"
+  "\013NEXT_NO_DUP\020\013\022\010\n\004PREV\020\014\022\014\n\010PREV_DUP\020\r\022\017"
+  "\n\013PREV_NO_DUP\020\016\022\016\n\nSEEK_EXACT\020\017\022\023\n\017SEEK_"
+  "BOTH_EXACT\020\020\022\010\n\004OPEN\020\036\022\t\n\005CLOSE\020\0372,\n\002KV\022"
+  "&\n\002Tx\022\016.remote.Cursor\032\014.remote.Pair(\0010\001B"
+  ")\n\020io.turbo-geth.dbB\002KVP\001Z\017./remote;remo"
+  "teb\006proto3"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_kv_2eproto_deps[1] = {
 };
@@ -110,7 +109,7 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_kv_
 };
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_kv_2eproto_once;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_kv_2eproto = {
-  false, false, descriptor_table_protodef_kv_2eproto, "kv.proto", 527,
+  false, false, descriptor_table_protodef_kv_2eproto, "kv.proto", 490,
   &descriptor_table_kv_2eproto_once, descriptor_table_kv_2eproto_sccs, descriptor_table_kv_2eproto_deps, 2, 0,
   schemas, file_default_instances, TableStruct_kv_2eproto::offsets,
   file_level_metadata_kv_2eproto, 2, file_level_enum_descriptors_kv_2eproto, file_level_service_descriptors_kv_2eproto,
@@ -130,12 +129,10 @@ bool Op_IsValid(int value) {
     case 2:
     case 3:
     case 4:
-    case 5:
     case 6:
     case 7:
     case 8:
     case 9:
-    case 10:
     case 11:
     case 12:
     case 13:

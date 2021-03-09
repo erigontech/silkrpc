@@ -4,3 +4,6 @@
 [submodule "silkrpc/croaring"]
 	path = silkrpc/croaring
 	url = git@github.com:lemire/CRoaringUnityBuild.git
+[submodule "interfaces"]
+	path = interfaces
+	url = https://github.com/ledgerwatch/interfaces

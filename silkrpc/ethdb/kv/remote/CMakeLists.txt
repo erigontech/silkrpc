@@ -24,7 +24,8 @@ find_package(gRPC CONFIG REQUIRED)
 find_program(GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin REQUIRED)
 
 # gRPC proto file
-get_filename_component(KV_PROTO "kv.proto" ABSOLUTE)
+#get_filename_component(KV_PROTO "kv.proto" ABSOLUTE BASE_DIR "${CMAKE_SOURCE_DIR}/interfaces/remote")
+set(KV_PROTO "${CMAKE_SOURCE_DIR}/interfaces/remote/kv.proto")
 get_filename_component(KV_PROTO_PATH "${KV_PROTO}" PATH)
 
 # Generate sources
