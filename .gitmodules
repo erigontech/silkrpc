@@ -1,9 +1,9 @@
 [submodule "silkworm"]
 	path = silkworm
-	url = git@github.com:torquem-ch/silkworm.git
+	url = https://github.com/torquem-ch/silkworm
 [submodule "silkrpc/croaring"]
 	path = silkrpc/croaring
-	url = git@github.com:lemire/CRoaringUnityBuild.git
+	url = https://github.com/lemire/CRoaringUnityBuild
 [submodule "interfaces"]
 	path = interfaces
 	url = https://github.com/ledgerwatch/interfaces
