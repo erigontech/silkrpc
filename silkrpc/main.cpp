@@ -38,15 +38,17 @@
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::common::kEmptyChainData, "chain data path as string");
-ABSL_FLAG(std::string, target, silkrpc::common::kEmptyTarget, "server location as string <address>:<port>");
+ABSL_FLAG(std::string, local, silkrpc::common::kDefaultLocal, "HTTP JSON local binding as string <address>:<port>");
+ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "TG Core gRPC service location as string <address>:<port>");
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
-ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::LogNone, "logging level");
+ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::LogCritical, "logging level");
 
 int main(int argc, char* argv[]) {
     const auto pid = boost::this_process::get_id();
     const auto tid = std::this_thread::get_id();
 
     using namespace silkrpc;
+    using silkrpc::common::kAddressPortSeparator;
 
     try {
         absl::SetProgramUsageMessage("Seek Turbo-Geth/Silkworm Key-Value (KV) remote interface to database");
@@ -56,6 +58,13 @@ int main(int argc, char* argv[]) {
         if (!chaindata.empty() && !std::filesystem::exists(chaindata)) {
             SILKRPC_ERROR << "Parameter chaindata is invalid: [" << chaindata << "]\n";
             SILKRPC_ERROR << "Use --chaindata flag to specify the path of Turbo-Geth database\n";
+            return -1;
+        }
+
+        auto local{absl::GetFlag(FLAGS_local)};
+        if (!local.empty() && local.find(kAddressPortSeparator) == std::string::npos) {
+            SILKRPC_ERROR << "Parameter local is invalid: [" << local << "]\n";
+            SILKRPC_ERROR << "Use --local flag to specify the local binding for HTTP JSON server\n";
             return -1;
         }
 
@@ -90,11 +99,13 @@ int main(int argc, char* argv[]) {
         std::unique_ptr<silkrpc::ethdb::kv::Database> database =
             std::make_unique<silkrpc::ethdb::kv::RemoteDatabase>(context, grpc_channel);
 
-        // TODO: support flag to specify local address:port binding (default is localhost:8545)
-        silkrpc::http::Server http_server{context, "localhost", "51515", database};
+        const auto http_host = local.substr(0, local.find(kAddressPortSeparator));
+        const auto http_port = local.substr(local.find(kAddressPortSeparator) + 1, std::string::npos);
+        silkrpc::http::Server http_server{context, http_host, http_port, database};
 
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
-            std::cout << "\n"; SILKRPC_INFO << "Signal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
+            std::cout << "\n";
+            SILKRPC_INFO << "Signal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
             context.stop();
             http_server.stop();
         });
@@ -107,7 +118,9 @@ int main(int argc, char* argv[]) {
 
         context.run();
     } catch (const std::exception& e) {
-        SILKRPC_CRIT << "Exception: " << e.what() << "\n";
+        SILKRPC_CRIT << "Exception: " << e.what() << "\n" << std::flush;
+    } catch (...) {
+        SILKRPC_CRIT << "Unexpected exception\n" << std::flush;
     }
 
     SILKRPC_LOG << "Silkrpc exiting [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
