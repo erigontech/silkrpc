@@ -21,11 +21,11 @@
 
 namespace silkrpc::common {
 
+constexpr const char* kAddressPortSeparator{":"};
+
 constexpr const char* kEmptyChainData{""};
-
+constexpr const char* kDefaultLocal{"localhost:8545"};
 constexpr const char* kDefaultTarget{"localhost:9090"};
-constexpr const char* kEmptyTarget{""};
-
 constexpr const std::chrono::milliseconds kDefaultTimeout{10000};
 
 }  // namespace silkrpc::common
