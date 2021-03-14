@@ -25,12 +25,14 @@
 #include <exception>
 #include <utility>
 #include <system_error>
+#include <string_view>
 #include <vector>
 
 #include <asio/write.hpp>
 #include <asio/use_awaitable.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include "connection_manager.hpp"
 #include "request_handler.hpp"
 
@@ -53,6 +55,7 @@ asio::awaitable<void> Connection::do_read() {
         SILKRPC_DEBUG << "Connection::do_read going to read...\n" << std::flush;
         std::size_t bytes_read = co_await socket_.async_read_some(asio::buffer(buffer_), asio::use_awaitable);
         SILKRPC_DEBUG << "Connection::do_read bytes_read: " << bytes_read << "\n";
+        SILKRPC_TRACE << "Connection::do_read buffer: " << std::string_view{static_cast<const char*>(buffer_.data()), bytes_read} << "\n";
         RequestParser::ResultType result;
         std::tie(result, std::ignore) = request_parser_.parse(request_, buffer_.data(), buffer_.data() + bytes_read);
 
@@ -86,7 +89,9 @@ asio::awaitable<void> Connection::do_read() {
 
 asio::awaitable<void> Connection::do_write() {
     try {
-        co_await asio::async_write(socket_, reply_.to_buffers(), asio::use_awaitable);
+        SILKRPC_TRACE << "Connection::do_write reply: " << reply_.content << "\n" << std::flush;
+        const auto bytes_transferred = co_await asio::async_write(socket_, reply_.to_buffers(), asio::use_awaitable);
+        SILKRPC_TRACE << "Connection::do_write bytes_transferred: " << bytes_transferred << "\n" << std::flush;
     } catch (const std::system_error& se) {
         if (se.code() != asio::error::operation_aborted) {
             connection_manager_.stop(shared_from_this());

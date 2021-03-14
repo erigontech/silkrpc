@@ -48,7 +48,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
         if (request.content.empty()) {
             reply.content = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"content missing\"}";
             reply.status = Reply::no_content;
-            reply.headers.resize(2);
+            reply.headers.reserve(2);
             reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
             reply.headers.emplace_back(Header{"Content-Type", "application/json"});
             SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
@@ -59,7 +59,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
         if (!request_json.contains("method")) {
             reply.content = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"method missing\"}";
             reply.status = Reply::bad_request;
-            reply.headers.resize(2);
+            reply.headers.reserve(2);
             reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
             reply.headers.emplace_back(Header{"Content-Type", "application/json"});
             SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
@@ -70,7 +70,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
         if (RequestHandler::handlers_.find(method) == RequestHandler::handlers_.end()) {
             reply.content = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"method not implemented\"}";
             reply.status = Reply::not_implemented;
-            reply.headers.resize(2);
+            reply.headers.reserve(2);
             reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
             reply.headers.emplace_back(Header{"Content-Type", "application/json"});
             SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
@@ -92,7 +92,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
         reply.status = Reply::internal_server_error;
     }
 
-    reply.headers.resize(2);
+    reply.headers.reserve(2);
     reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
     reply.headers.emplace_back(Header{"Content-Type", "application/json"});
 

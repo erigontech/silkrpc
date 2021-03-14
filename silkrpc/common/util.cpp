@@ -28,4 +28,4 @@ std::ostream& operator<<(std::ostream& out, const ByteView& bytes) {
     return out;
 }
 
-}  // namespace silkworm
+} // namespace silkworm

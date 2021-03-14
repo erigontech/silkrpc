@@ -19,7 +19,9 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
+#include <asio/buffer.hpp>
 #include <evmc/evmc.hpp>
 
 #include <silkworm/common/base.hpp>
@@ -58,4 +60,16 @@ inline std::ostream& operator<<(std::ostream& out, const evmc::bytes32& b32) {
     return out;
 }
 
-#endif  // SILKRPC_COMMON_UTIL_HPP_
+inline std::ostream& operator<<(std::ostream& out, const asio::const_buffer& buffer) {
+    out << std::string{static_cast<const char*>(buffer.data()), buffer.size()};
+    return out;
+}
+
+inline std::ostream& operator<<(std::ostream& out, const std::vector<asio::const_buffer>& buffers) {
+    for (const auto buffer : buffers) {
+        out << buffer;
+    }
+    return out;
+}
+
+#endif // SILKRPC_COMMON_UTIL_HPP_
