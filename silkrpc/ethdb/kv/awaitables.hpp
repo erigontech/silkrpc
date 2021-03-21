@@ -40,6 +40,7 @@
 #include <silkrpc/ethdb/kv/async_open_cursor.hpp>
 #include <silkrpc/ethdb/kv/async_seek.hpp>
 #include <silkrpc/ethdb/kv/client_callback_reactor.hpp>
+#include <silkrpc/ethdb/kv/util.hpp>
 #include <silkrpc/ethdb/kv/remote/kv.grpc.pb.h>
 
 namespace silkrpc::ethdb::kv {
@@ -69,20 +70,21 @@ public:
         auto open_message = remote::Cursor{};
         open_message.set_op(remote::Op::OPEN);
         open_message.set_bucketname(table_name_);
-        self_->reactor_.write_start(&open_message, [this](bool ok) {
-            if (!ok) {
-                throw std::system_error{std::make_error_code(std::errc::io_error), "write failed in OPEN_CURSOR"};
+        self_->reactor_.write_start(&open_message, [this](const grpc::Status& status) {
+            if (!status.ok()) {
+                self_->context_.post([status]() { throw make_system_error(status, "write failed in OPEN_CURSOR"); });
+                return;
             }
-            self_->reactor_.read_start([this](bool ok, remote::Pair open_pair) {
+            self_->reactor_.read_start([this](const grpc::Status& status, remote::Pair open_pair) {
                 auto cursor_id = open_pair.cursorid();
 
                 typedef silkrpc::ethdb::kv::async_open_cursor<WaitHandler, Executor> op;
                 auto open_cursor_op = static_cast<op*>(wrapper_);
 
                 // Make the io_context thread execute the operation completion
-                self_->context_.post([this, ok, open_cursor_op, cursor_id]() {
-                    if (!ok) {
-                        throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in OPEN_CURSOR"};
+                self_->context_.post([this, status, open_cursor_op, cursor_id]() {
+                    if (!status.ok()) {
+                        throw make_system_error(status, "read failed in OPEN_CURSOR");
                     }
                     open_cursor_op->complete(this, cursor_id);
                 });
@@ -119,18 +121,19 @@ public:
         seek_message.set_op(remote::Op::SEEK);
         seek_message.set_cursor(cursor_id_);
         seek_message.set_k(seek_key_bytes_.c_str(), seek_key_bytes_.length());
-        self_->reactor_.write_start(&seek_message, [this](bool ok) {
-            if (!ok) {
-                throw std::system_error{std::make_error_code(std::errc::io_error), "write failed in SEEK"};
+        self_->reactor_.write_start(&seek_message, [this](const grpc::Status& status) {
+            if (!status.ok()) {
+                self_->context_.post([status]() { throw make_system_error(status, "write failed in SEEK"); });
+                return;
             }
-            self_->reactor_.read_start([this](bool ok, remote::Pair seek_pair) {
+            self_->reactor_.read_start([this](const grpc::Status& status, remote::Pair seek_pair) {
                 typedef silkrpc::ethdb::kv::async_seek<WaitHandler, Executor> op;
                 auto seek_op = static_cast<op*>(wrapper_);
 
                 // Make the io_context thread execute the operation completion
-                self_->context_.post([this, ok, seek_op, seek_pair]() {
-                    if (!ok) {
-                        throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in SEEK"};
+                self_->context_.post([this, status, seek_op, seek_pair]() {
+                    if (!status.ok()) {
+                        throw make_system_error(status, "read failed in SEEK");
                     }
                     seek_op->complete(this, seek_pair);
                 });
@@ -167,17 +170,18 @@ public:
         auto next_message = remote::Cursor{};
         next_message.set_op(remote::Op::NEXT);
         next_message.set_cursor(cursor_id_);
-        self_->reactor_.write_start(&next_message, [this](bool ok) {
-            if (!ok) {
-                throw std::system_error{std::make_error_code(std::errc::io_error), "write failed in NEXT"};
+        self_->reactor_.write_start(&next_message, [this](const grpc::Status& status) {
+            if (!status.ok()) {
+                self_->context_.post([status]() { throw make_system_error(status, "write failed in NEXT"); });
+                return;
             }
-            self_->reactor_.read_start([this](bool ok, remote::Pair next_pair) {
+            self_->reactor_.read_start([this](const grpc::Status& status, remote::Pair next_pair) {
                 typedef silkrpc::ethdb::kv::async_next<WaitHandler, Executor> op;
                 auto next_op = static_cast<op*>(wrapper_);
 
                 // Make the io_context thread execute the operation completion
-                self_->context_.post([this, ok, next_op, next_pair]() {
-                    if (!ok) {
+                self_->context_.post([this, status, next_op, next_pair]() {
+                    if (!status.ok()) {
                         throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in NEXT"};
                     }
                     next_op->complete(this, next_pair);
@@ -215,20 +219,21 @@ public:
         auto close_message = remote::Cursor{};
         close_message.set_op(remote::Op::CLOSE);
         close_message.set_cursor(cursor_id_);
-        self_->reactor_.write_start(&close_message, [this](bool ok) {
-            if (!ok) {
-                throw std::system_error{std::make_error_code(std::errc::io_error), "write failed in CLOSE_CURSOR"};
+        self_->reactor_.write_start(&close_message, [this](const grpc::Status& status) {
+            if (!status.ok()) {
+                self_->context_.post([status]() { throw make_system_error(status, "write failed in CLOSE_CURSOR"); });
+                return;
             }
-            self_->reactor_.read_start([this](bool ok, remote::Pair close_pair) {
+            self_->reactor_.read_start([this](const grpc::Status& status, remote::Pair close_pair) {
                 auto cursor_id = close_pair.cursorid();
 
                 typedef silkrpc::ethdb::kv::async_close_cursor<WaitHandler, Executor> op;
                 auto close_cursor_op = static_cast<op*>(wrapper_);
 
                 // Make the io_context thread execute the operation completion
-                self_->context_.post([this, ok, close_cursor_op, cursor_id]() {
-                    if (!ok) {
-                        throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in CLOSE_CURSOR"};
+                self_->context_.post([this, status, close_cursor_op, cursor_id]() {
+                    if (!status.ok()) {
+                        throw make_system_error(status, "read failed in CLOSE_CURSOR");
                     }
                     close_cursor_op->complete(this, cursor_id);
                 });
@@ -261,14 +266,14 @@ public:
         typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
-        self_->reactor_.close_start([this](bool ok) {
+        self_->reactor_.end_call([this](const grpc::Status& status) {
             typedef silkrpc::ethdb::kv::async_close<WaitHandler, Executor> op;
             auto close_op = static_cast<op*>(wrapper_);
 
             // Make the io_context thread execute the operation completion
-            self_->context_.post([this, ok, close_op]() {
-                if (!ok) {
-                    throw std::system_error{std::make_error_code(std::errc::io_error), "gRPC failed in CLOSE"};
+            self_->context_.post([this, status, close_op]() {
+                if (!status.ok()) {
+                    throw make_system_error(status, "RPC failed in CLOSE");
                 }
                 close_op->complete(this, 0);
             });
@@ -314,103 +319,6 @@ struct KvAsioAwaitable {
 
     asio::io_context& context_;
     ClientCallbackReactor& reactor_;
-};
-
-struct KvAwaitable {
-    KvAwaitable(asio::io_context& context, ClientCallbackReactor& reactor, uint32_t cursor_id = 0)
-    : context_(context), reactor_(reactor), cursor_id_(cursor_id) {}
-
-    bool await_ready() noexcept { return false; }
-
-protected:
-    asio::io_context& context_;
-    ClientCallbackReactor& reactor_;
-    uint32_t cursor_id_;
-};
-
-struct KvOpenCursorAwaitable : KvAwaitable {
-    KvOpenCursorAwaitable(asio::io_context& context, ClientCallbackReactor& reactor, const std::string& table_name)
-    : KvAwaitable{context, reactor}, table_name_(table_name) {}
-
-    auto await_suspend(std::coroutine_handle<void> handle) {
-        auto open_message = remote::Cursor{};
-        open_message.set_op(remote::Op::OPEN);
-        open_message.set_bucketname(table_name_);
-        reactor_.write_start(&open_message, [this, &handle](bool ok) {
-            if (!ok) {
-                throw std::system_error{std::make_error_code(std::errc::io_error), "write failed in OPEN cursor"};
-            }
-            reactor_.read_start([this, &handle](bool ok, remote::Pair open_pair) {
-                if (!ok) {
-                    throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in OPEN cursor"};
-                }
-                cursor_id_ = open_pair.cursorid();
-                asio::post(context_, [&handle]() { handle.resume(); });
-            });
-        });
-    }
-
-    auto await_resume() noexcept { return cursor_id_; }
-
-private:
-    const std::string& table_name_;
-};
-
-struct KvSeekAwaitable : KvAwaitable {
-    KvSeekAwaitable(asio::io_context& context, ClientCallbackReactor& reactor, uint32_t cursor_id, const silkworm::Bytes& seek_key_bytes)
-    : KvAwaitable{context, reactor, cursor_id}, seek_key_bytes_(std::move(seek_key_bytes)) {}
-
-    auto await_suspend(std::coroutine_handle<void> handle) {
-        auto seek_message = remote::Cursor{};
-        seek_message.set_op(remote::Op::SEEK);
-        seek_message.set_cursor(cursor_id_);
-        seek_message.set_k(seek_key_bytes_.c_str(), seek_key_bytes_.length());
-        reactor_.write_start(&seek_message, [this, &handle](bool ok) {
-            if (!ok) {
-                throw std::system_error{std::make_error_code(std::errc::io_error), "write failed in SEEK"};
-            }
-            reactor_.read_start([this, &handle](bool ok, remote::Pair seek_pair) {
-                if (!ok) {
-                    throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in SEEK"};
-                }
-                const auto& key_bytes = silkworm::byte_view_of_string(seek_pair.k());
-                const auto& value_bytes = silkworm::byte_view_of_string(seek_pair.v());
-                value_bytes_ = std::move(value_bytes);
-                asio::post(context_, [&handle]() { handle.resume(); });
-            });
-        });
-    }
-
-    auto await_resume() noexcept { return value_bytes_; }
-
-private:
-    const silkworm::Bytes seek_key_bytes_;
-    silkworm::ByteView value_bytes_;
-};
-
-struct KvCloseCursorAwaitable : KvAwaitable {
-    KvCloseCursorAwaitable(asio::io_context& context, ClientCallbackReactor& reactor, uint32_t cursor_id)
-    : KvAwaitable{context, reactor, cursor_id} {}
-
-    auto await_suspend(std::coroutine_handle<void> handle) {
-        auto close_message = remote::Cursor{};
-        close_message.set_op(remote::Op::CLOSE);
-        close_message.set_cursor(cursor_id_);
-        reactor_.write_start(&close_message, [this, &handle](bool ok) {
-            if (!ok) {
-                throw std::system_error{std::make_error_code(std::errc::io_error), "write failed in CLOSE cursor"};
-            }
-            reactor_.read_start([this, &handle](bool ok, remote::Pair close_pair) {
-                if (!ok) {
-                    throw std::system_error{std::make_error_code(std::errc::io_error), "read failed in CLOSE cursor"};
-                }
-                cursor_id_ = close_pair.cursorid();
-                asio::post(context_, [&handle]() { handle.resume(); });
-            });
-        });
-    }
-
-    auto await_resume() noexcept { return cursor_id_; }
 };
 
 } // namespace silkrpc::ethdb::kv

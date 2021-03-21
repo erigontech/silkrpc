@@ -22,51 +22,100 @@
 
 #include <grpcpp/grpcpp.h>
 
+#include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/remote/kv.grpc.pb.h>
 
 namespace silkrpc::ethdb::kv {
 
 class ClientCallbackReactor final : public grpc::experimental::ClientBidiReactor<remote::Cursor, remote::Pair> {
+    enum CallStatus { CALL_IDLE, READ_STARTED, WRITE_STARTED, CALL_ENDED };
+
 public:
     explicit ClientCallbackReactor(std::shared_ptr<grpc::Channel> channel) : stub_{remote::KV::NewStub(channel)} {
+        SILKRPC_TRACE << "ClientCallbackReactor::ctor " << this << " start\n";
+        status_ = CALL_IDLE;
         stub_->experimental_async()->Tx(&context_, this);
-        StartCall();
+        SILKRPC_TRACE << "ClientCallbackReactor::ctor " << this << " end\n";
     }
 
-    void close_start(std::function<void(bool)> close_completed) {
-        close_completed_ = close_completed;
+    void end_call(std::function<void(const grpc::Status&)> end_completed) {
+        SILKRPC_TRACE << "ClientCallbackReactor::end_call " << this << " start\n";
+        end_completed_ = end_completed;
+        status_ = CALL_ENDED;
         StartWritesDone();
-        //context_.TryCancel();
+        SILKRPC_TRACE << "ClientCallbackReactor::end_call " << this << " end\n";
     }
 
-    void read_start(std::function<void(bool,remote::Pair)> read_completed) {
+    void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) {
+        SILKRPC_TRACE << "ClientCallbackReactor::read_start " << this << " start\n";
         read_completed_ = read_completed;
+        status_ = READ_STARTED;
         StartRead(&pair_);
+        SILKRPC_TRACE << "ClientCallbackReactor::read_start " << this << " end\n";
     }
 
-    void write_start(remote::Cursor* cursor, std::function<void(bool)> write_completed) {
+    void write_start(remote::Cursor* cursor, std::function<void(const grpc::Status&)> write_completed) {
+        SILKRPC_TRACE << "ClientCallbackReactor::write_start " << this << " start\n";
         write_completed_ = write_completed;
+        bool not_started = status_ == CALL_IDLE;
+        status_ = WRITE_STARTED;
         StartWrite(cursor);
+        if (not_started) {
+            SILKRPC_TRACE << "ClientCallbackReactor::write_start StartCall start\n";
+            StartCall();
+            SILKRPC_TRACE << "ClientCallbackReactor::write_start StartCall end\n";
+        }
+        SILKRPC_TRACE << "ClientCallbackReactor::write_start " << this << " end\n";
     }
 
     void OnReadDone(bool ok) override {
-        read_completed_(ok, pair_);
+        SILKRPC_TRACE << "ClientCallbackReactor::OnReadDone " << this << " start ok: " << ok << "\n";
+        if (ok) {
+            read_completed_(grpc::Status{}, pair_);
+        }
+        SILKRPC_TRACE << "ClientCallbackReactor::OnReadDone " << this << " end\n";
     }
 
     void OnWriteDone(bool ok) override {
-        write_completed_(ok);
+        SILKRPC_TRACE << "ClientCallbackReactor::OnWriteDone " << this << " start ok: " << ok << "\n";
+        if (ok) {
+            write_completed_(grpc::Status{});
+        }
+        SILKRPC_TRACE << "ClientCallbackReactor::OnWriteDone " << this << " end\n";
     }
 
-    void OnDone(const ::grpc::Status& status) override {
-        close_completed_(status.ok());
+    void OnDone(const grpc::Status& status) override {
+        SILKRPC_TRACE << "ClientCallbackReactor::OnDone start " << this << " ok: " << status.ok() << "\n";
+        if (!status.ok()) {
+            SILKRPC_TRACE << "ClientCallbackReactor::OnDone error_code: " << status.error_code() << "\n";
+            SILKRPC_TRACE << "ClientCallbackReactor::OnDone error_message: " << status.error_message() << "\n";
+            SILKRPC_TRACE << "ClientCallbackReactor::OnDone error_details: " << status.error_details() << "\n";
+        }
+        SILKRPC_TRACE << "ClientCallbackReactor::OnDone status: " << status_ << "\n";
+        switch (status_) {
+            case WRITE_STARTED:
+                write_completed_(status);
+            break;
+            case READ_STARTED:
+                read_completed_(status, pair_);
+            break;
+            case CALL_ENDED:
+                end_completed_(status);
+            break;
+            default:
+            break;
+        }
+        SILKRPC_TRACE << "ClientCallbackReactor::OnDone " << this << " end\n";
     }
+
 private:
     std::unique_ptr<remote::KV::Stub> stub_;
     grpc::ClientContext context_;
     remote::Pair pair_;
-    std::function<void(bool,remote::Pair)> read_completed_;
-    std::function<void(bool)> write_completed_;
-    std::function<void(bool)> close_completed_;
+    CallStatus status_;
+    std::function<void(const grpc::Status&, remote::Pair)> read_completed_;
+    std::function<void(const grpc::Status&)> write_completed_;
+    std::function<void(const grpc::Status&)> end_completed_;
 };
 
 } // namespace silkrpc::ethdb::kv
