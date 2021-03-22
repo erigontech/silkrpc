@@ -31,6 +31,16 @@ ABSL_FLAG(std::string, table, "", "database table name");
 ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
 ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location as string <address>:<port>");
 
+std::ostream& operator<<(std::ostream& out, const grpc::Status& status) {
+    out << "ok=" << std::boolalpha << status.ok();
+    if (!status.ok()) {
+        out << " error_code=" << status.error_code()
+            << " error_message=" << status.error_message()
+            << " error_details=" << status.error_details();
+    }
+    return out;
+}
+
 int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("Seek Turbo-Geth/Silkworm Key-Value (KV) remote interface to database");
     absl::ParseCommandLine(argc, argv);
@@ -72,6 +82,7 @@ int main(int argc, char* argv[]) {
     auto success = reader_writer->Write(open_message);
     if (!success) {
         std::cerr << "KV stream closed sending OPEN operation req\n";
+        std::cout << "KV Tx STATUS: " << reader_writer->Finish() << "\n";
         return -1;
     }
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n";
@@ -79,6 +90,7 @@ int main(int argc, char* argv[]) {
     success = reader_writer->Read(&open_pair);
     if (!success) {
         std::cerr << "KV stream closed receiving OPEN operation rsp\n";
+        std::cout << "KV Tx STATUS: " << reader_writer->Finish() << "\n";
         return -1;
     }
     auto cursor_id = open_pair.cursorid();
@@ -92,6 +104,7 @@ int main(int argc, char* argv[]) {
     success = reader_writer->Write(seek_message);
     if (!success) {
         std::cerr << "KV stream closed sending SEEK operation req\n";
+        std::cout << "KV Tx STATUS: " << reader_writer->Finish() << "\n";
         return -1;
     }
     std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key_bytes << "\n";
@@ -99,6 +112,7 @@ int main(int argc, char* argv[]) {
     success = reader_writer->Read(&seek_pair);
     if (!success) {
         std::cerr << "KV stream closed receiving SEEK operation rsp\n";
+        std::cout << "KV Tx STATUS: " << reader_writer->Finish() << "\n";
         return -1;
     }
     const auto& key_bytes = silkworm::byte_view_of_string(seek_pair.k());
@@ -112,6 +126,7 @@ int main(int argc, char* argv[]) {
     success = reader_writer->Write(close_message);
     if (!success) {
         std::cerr << "KV stream closed sending CLOSE operation req\n";
+        std::cout << "KV Tx STATUS: " << reader_writer->Finish() << "\n";
         return -1;
     }
     std::cout << "KV Tx CLOSE -> cursor: " << cursor_id << "\n";
@@ -119,9 +134,14 @@ int main(int argc, char* argv[]) {
     success = reader_writer->Read(&close_pair);
     if (!success) {
         std::cerr << "KV stream closed receiving CLOSE operation rsp\n";
+        std::cout << "KV Tx STATUS: " << reader_writer->Finish() << "\n";
         return -1;
     }
     std::cout << "KV Tx CLOSE <- cursor: " << close_pair.cursorid() << "\n";
+
+    reader_writer->WritesDone();
+    grpc::Status status = reader_writer->Finish();
+    std::cout << "KV Tx STATUS: " << status << "\n";
 
     return 0;
 }
