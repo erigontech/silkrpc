@@ -36,26 +36,21 @@ asio::awaitable<silkworm::Bytes> TransactionDatabase::get(const std::string& tab
 }
 
 asio::awaitable<void> TransactionDatabase::walk(const std::string& table, const silkworm::Bytes& start_key, uint32_t fixed_bits, core::rawdb::Walker w) {
-    using namespace silkworm;
     const auto fixed_bytes = (fixed_bits + 7) / CHAR_BIT;
-    //SILKRPC_TRACE << "fixed_bits: " << fixed_bits << " fixed_bytes: " << fixed_bytes << "\n";
+    SILKRPC_TRACE << "fixed_bits: " << fixed_bits << " fixed_bytes: " << fixed_bytes << "\n";
     const auto shift_bits = fixed_bits & 7;
     uint8_t mask{0xff};
     if (shift_bits != 0) {
         mask = 0xff << (CHAR_BIT - shift_bits);
     }
-    //SILKRPC_TRACE << "mask: " << mask << "\n";
+    SILKRPC_TRACE << "mask: " << std::hex << std::setw(2) << std::setfill('0') << mask << std::dec << "\n";
 
     const auto cursor = co_await tx_.cursor(table);
     SILKRPC_TRACE << "TransactionDatabase::walk cursor_id: " << cursor->cursor_id() << "\n";
     auto kv_pair = co_await cursor->seek(start_key);
     auto k = kv_pair.key;
     auto v = kv_pair.value;
-    //SILKRPC_TRACE << "k: " << k << " v: " << v << "\n";
-    //SILKRPC_TRACE << "k.empty(): " << k.empty() << "\n";
-    //SILKRPC_TRACE << "k.size(): " << k.size() << "\n";
-    //SILKRPC_TRACE << "k.compare(0, fixed_bytes-1, start_key, 0, fixed_bytes-1): " << k.compare(0, fixed_bytes-1, start_key, 0, fixed_bytes-1) << "\n";
-    //SILKRPC_TRACE << "k[fixed_bytes-1]: " << k[fixed_bytes-1] << "\n";
+    SILKRPC_TRACE << "k: " << k << " v: " << v << "\n";
     while (
         !k.empty() &&
         k.size() >= fixed_bytes &&

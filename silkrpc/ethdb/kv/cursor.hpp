@@ -37,8 +37,6 @@ public:
 
     virtual uint32_t cursor_id() const = 0;
 
-    virtual asio::awaitable<common::KeyValue> seek(const std::string& table_name, const silkworm::Bytes& seek_key) = 0;
-
     virtual asio::awaitable<void> open_cursor(const std::string& table_name) = 0;
 
     virtual asio::awaitable<silkrpc::common::KeyValue> seek(const silkworm::Bytes& seek_key) = 0;

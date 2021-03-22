@@ -39,7 +39,6 @@ ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
 ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location as string <address>:<port>");
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 
-using namespace silkworm;
 using namespace silkrpc::ethdb::kv;
 
 asio::awaitable<void> kv_seek(Database& kv_db, const std::string& table_name, const silkworm::Bytes& seek_key) {
@@ -61,9 +60,6 @@ int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("Seek Turbo-Geth/Silkworm Key-Value (KV) remote interface to database");
     absl::ParseCommandLine(argc, argv);
 
-    using namespace std::chrono;
-    using namespace silkworm;
-
     auto table_name{absl::GetFlag(FLAGS_table)};
     if (table_name.empty()) {
         std::cerr << "Parameter table is invalid: [" << table_name << "]\n";
@@ -72,7 +68,7 @@ int main(int argc, char* argv[]) {
     }
 
     auto seek_key{absl::GetFlag(FLAGS_seekkey)};
-    const auto seek_key_bytes_optional = from_hex(seek_key);
+    const auto seek_key_bytes_optional = silkworm::from_hex(seek_key);
     if (seek_key.empty() || !seek_key_bytes_optional.has_value()) {
         std::cerr << "Parameter seek key is invalid: [" << seek_key << "]\n";
         std::cerr << "Use --seekkey flag to specify the seek key in Turbo-Geth database table\n";

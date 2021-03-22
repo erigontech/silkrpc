@@ -35,8 +35,6 @@ int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("Seek Turbo-Geth/Silkworm Key-Value (KV) remote interface to database");
     absl::ParseCommandLine(argc, argv);
 
-    using namespace silkworm;
-
     auto table_name{absl::GetFlag(FLAGS_table)};
     if (table_name.empty()) {
         std::cerr << "Parameter table is invalid: [" << table_name << "]\n";
@@ -45,7 +43,7 @@ int main(int argc, char* argv[]) {
     }
 
     auto seek_key{absl::GetFlag(FLAGS_seekkey)};
-    const auto seek_key_bytes_optional = from_hex(seek_key);
+    const auto seek_key_bytes_optional = silkworm::from_hex(seek_key);
     if (seek_key.empty() || !seek_key_bytes_optional.has_value()) {
         std::cerr << "Parameter seek key is invalid: [" << seek_key << "]\n";
         std::cerr << "Use --seekkey flag to specify the seek key in Turbo-Geth database table\n";
@@ -103,8 +101,8 @@ int main(int argc, char* argv[]) {
         std::cerr << "KV stream closed receiving SEEK operation rsp\n";
         return -1;
     }
-    const auto& key_bytes = byte_view_of_string(seek_pair.k());
-    const auto& value_bytes = byte_view_of_string(seek_pair.v());
+    const auto& key_bytes = silkworm::byte_view_of_string(seek_pair.k());
+    const auto& value_bytes = silkworm::byte_view_of_string(seek_pair.v());
     std::cout << "KV Tx SEEK <- key: " << key_bytes << " value: " << value_bytes << std::endl;
 
     // Close cursor

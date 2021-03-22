@@ -160,7 +160,6 @@ asio::awaitable<Addresses> read_senders(DatabaseReader& reader, evmc::bytes32 bl
 }
 
 asio::awaitable<Receipts> read_raw_receipts(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
-    using namespace silkworm;
     const auto block_key = silkworm::db::block_key(block_number);
     const auto data = co_await reader.get(silkworm::db::table::kBlockReceipts.name, block_key);
     if (data.empty()) {

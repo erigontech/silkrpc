@@ -33,8 +33,6 @@
 
 namespace silkrpc::ethdb::kv {
 
-using namespace silkworm;
-
 class RemoteTransaction : public Transaction {
 public:
     explicit RemoteTransaction(asio::io_context& context, std::shared_ptr<grpc::Channel> channel)

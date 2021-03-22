@@ -47,7 +47,6 @@ static Roaring fast_or(size_t n, const std::vector<std::unique_ptr<Roaring>>& in
 }
 
 asio::awaitable<Roaring> get(core::rawdb::DatabaseReader& db_reader, const std::string& table, silkworm::Bytes& key, uint32_t from_block, uint32_t to_block) {
-    using namespace silkworm;
     std::vector<std::unique_ptr<Roaring>> chuncks;
 
     silkworm::Bytes from_key{key.begin(), key.end()};

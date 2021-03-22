@@ -17,6 +17,7 @@
 #ifndef SILKRPC_COMMON_UTIL_HPP_
 #define SILKRPC_COMMON_UTIL_HPP_
 
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -38,8 +39,6 @@ struct KeyValue {
 
 namespace silkworm {
 
-std::ostream& operator<<(std::ostream& out, const ByteView& bytes);
-
 inline ByteView byte_view_of_string(const std::string& s) {
     return {reinterpret_cast<const uint8_t*>(s.data()), s.length()};
 }
@@ -49,6 +48,14 @@ inline Bytes bytes_of_string(const std::string& s) {
 }
 
 } // namespace silkworm
+
+inline std::ostream& operator<<(std::ostream& out, const silkworm::ByteView& bytes) {
+    for (const auto& b : bytes) {
+        out << std::hex << std::setw(2) << std::setfill('0') << int(b);
+    }
+    out << std::dec;
+    return out;
+}
 
 inline std::ostream& operator<<(std::ostream& out, const evmc::address& addr) {
     out << silkworm::to_hex(addr);
