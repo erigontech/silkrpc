@@ -20,7 +20,7 @@ git clone --recurse-submodules git@github.com:torquem-ch/silkrpc.git
 
 To update the submodules later on run 
 ```
-git submodule update --init --recursive
+git submodule update --remote
 ```
 
 ## Linux & MacOS
@@ -30,7 +30,7 @@ Building SilkRPC daemon requires
 * [GMP](http://gmplib.org) (`sudo apt-get install libgmp3-dev` or `brew install gmp`)
 * [Cpplint] (https://github.com/cpplint/cpplint) (`pip3 install cpplint`)
 
-Once the prerequisites are installed, bootstrap cmake by running
+Once the prerequisites are installed and assuming your [GCC](https://www.gnu.org/software/gcc/) compiler available as `gcc` and `g++` at the command line prompt is at least 10.2.0, bootstrap cmake by running
 ```
 mkdir build
 cd build
@@ -58,7 +58,7 @@ and check the code style running
 ./run_linter.sh
 ```
 
-There are also convenience [bash](https://www.gnu.org/software/bash/) scripts for a complete rebuild both in debug and release configurations using [GCC](https://www.gnu.org/software/gcc/) compiler:
+There are also convenience [bash](https://www.gnu.org/software/bash/) scripts for a complete rebuild both in debug and release configurations using [GCC](https://www.gnu.org/software/gcc/) compiler (these work even if you have multiple versions installed):
 ```
 ./build_gcc_debug.sh
 ./build_gcc_release.sh

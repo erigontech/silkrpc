@@ -32,10 +32,10 @@ std::string AbslUnparseFlag(LogLevels level);
 
 namespace silkrpc {
 
-using Logger = silkworm::detail::log_;
+using Logger = silkworm::log_;
 using LogLevel = silkworm::LogLevels;
 
-#define LOG(level_) if ((level_) < silkworm::detail::log_verbosity_) {} else silkworm::detail::log_(level_) // NOLINT
+#define LOG(level_) if ((level_) < silkworm::log_verbosity_) {} else silkworm::log_(level_) // NOLINT
 
 // LogTrace, LogDebug, LogInfo, LogWarn, LogError, LogCritical, LogNone
 #define SILKRPC_TRACE LOG(silkworm::LogTrace)
@@ -46,7 +46,7 @@ using LogLevel = silkworm::LogLevels;
 #define SILKRPC_CRIT  LOG(silkworm::LogCritical)
 #define SILKRPC_LOG   LOG(silkworm::LogNone)
 
-#define SILKRPC_LOG_VERBOSITY(level_) (silkworm::detail::log_verbosity_ = (level_))
+#define SILKRPC_LOG_VERBOSITY(level_) (silkworm::log_verbosity_ = (level_))
 
 } // namespace silkrpc
 

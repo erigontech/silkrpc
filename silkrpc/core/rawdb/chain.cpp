@@ -71,8 +71,8 @@ asio::awaitable<uint64_t> read_header_number(DatabaseReader& reader, evmc::bytes
 }
 
 asio::awaitable<evmc::bytes32> read_canonical_block_hash(DatabaseReader& reader, uint64_t block_number) {
-    const auto header_hash_key = silkworm::db::header_hash_key(block_number);
-    auto data = co_await reader.get(silkworm::db::table::kBlockHeaders.name, header_hash_key);
+    const auto block_key = silkworm::db::block_key(block_number);
+    auto data = co_await reader.get(silkworm::db::table::kCanonicalHashes.name, block_key);
     if (data.empty()) {
         co_return evmc::bytes32{};
     }
@@ -109,7 +109,7 @@ asio::awaitable<silkworm::BlockHeader> read_header(DatabaseReader& reader, evmc:
     silkworm::ByteView data_view{data};
     silkworm::BlockHeader header{};
     const auto error = silkworm::rlp::decode(data_view, header);
-    if (error != silkworm::rlp::DecodingError::kOk) {
+    if (error != silkworm::rlp::DecodingResult::kOk) {
         SILKRPC_ERROR << "invalid RLP decoding for block header #" << block_number << "\n";
         co_return silkworm::BlockHeader{};
     }
@@ -131,7 +131,7 @@ asio::awaitable<silkworm::BlockBody> read_body(DatabaseReader& reader, evmc::byt
 
         silkworm::BlockBody body{transactions, stored_body.ommers};
         co_return body;
-    } catch (silkworm::rlp::DecodingError error) {
+    } catch (silkworm::rlp::DecodingResult error) {
         SILKRPC_ERROR << "RLP decoding error for block body #" << block_number << " [" << static_cast<int>(error) << "]\n";
         co_return silkworm::BlockBody{};
     }
@@ -139,7 +139,7 @@ asio::awaitable<silkworm::BlockBody> read_body(DatabaseReader& reader, evmc::byt
 
 asio::awaitable<silkworm::Bytes> read_header_rlp(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
-    const auto data = co_await reader.get(silkworm::db::table::kBlockHeaders.name, block_key);
+    const auto data = co_await reader.get(silkworm::db::table::kHeaders.name, block_key);
     co_return data;
 }
 
@@ -252,7 +252,7 @@ asio::awaitable<Transactions> read_transactions(DatabaseReader& reader, uint64_t
         silkworm::ByteView value{v};
         silkworm::Transaction tx{};
         const auto error = silkworm::rlp::decode(value, tx);
-        if (error != silkworm::rlp::DecodingError::kOk) {
+        if (error != silkworm::rlp::DecodingResult::kOk) {
             SILKRPC_ERROR << "invalid RLP decoding for transaction index " << i << "\n";
             return false;
         }
