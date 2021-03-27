@@ -29,6 +29,7 @@
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
+#include <asio/io_context.hpp>
 #include <asio/ip/tcp.hpp>
 
 #include "reply.hpp"
@@ -47,8 +48,11 @@ public:
     Connection& operator=(const Connection&) = delete;
 
     /// Construct a connection with the given socket.
-    explicit Connection(asio::ip::tcp::socket socket,
-        ConnectionManager& manager, RequestHandler& handler);
+    explicit Connection(asio::io_context& io_context, ConnectionManager& manager, std::unique_ptr<ethdb::kv::Database>& database);
+
+    ~Connection();
+
+    asio::ip::tcp::socket& socket() { return socket_; };
 
     /// Start the first asynchronous operation for the connection.
     asio::awaitable<void> start();
@@ -70,7 +74,7 @@ private:
     ConnectionManager& connection_manager_;
 
     /// The handler used to process the incoming request.
-    RequestHandler& request_handler_;
+    RequestHandler request_handler_;
 
     /// Buffer for incoming data.
     std::array<char, 8192> buffer_;

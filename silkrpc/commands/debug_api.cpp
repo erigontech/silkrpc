@@ -30,7 +30,7 @@ namespace silkrpc::commands {
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_accountrange
 asio::awaitable<void> DebugRpcApi::handle_debug_account_range(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
+    auto tx = co_await database_->begin(io_context_);
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -50,7 +50,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_account_range(const nlohmann::js
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_getmodifiedaccountsbynumber
 asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_number(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
+    auto tx = co_await database_->begin(io_context_);
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -70,7 +70,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_number(
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_getmodifiedaccountsbyhash
 asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
+    auto tx = co_await database_->begin(io_context_);
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -90,7 +90,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_hash(co
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_storagerangeat
 asio::awaitable<void> DebugRpcApi::handle_debug_storage_range_at(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
+    auto tx = co_await database_->begin(io_context_);
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -110,7 +110,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_storage_range_at(const nlohmann:
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_tracetransaction
 asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
+    auto tx = co_await database_->begin(io_context_);
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -130,7 +130,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_tracecall
 asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
+    auto tx = co_await database_->begin(io_context_);
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};

@@ -43,8 +43,8 @@ ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging lev
 
 using namespace silkrpc;
 
-asio::awaitable<void> kv_seek(ethdb::Database& kv_db, const std::string& table_name, const silkworm::Bytes& seek_key) {
-    const auto kv_transaction = co_await kv_db.begin();
+asio::awaitable<void> kv_seek(asio::io_context& context, ethdb::Database& kv_db, const std::string& table_name, const silkworm::Bytes& seek_key) {
+    const auto kv_transaction = co_await kv_db.begin(context);
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
     const auto kv_cursor = co_await kv_transaction->cursor(table_name);
     auto cursor_id = kv_cursor->cursor_id();
@@ -104,7 +104,7 @@ int main(int argc, char* argv[]) {
 
         ethdb::kv::RemoteDatabase kv_database{context, channel, &queue};
 
-        asio::co_spawn(context, kv_seek(kv_database, table_name, seek_key_bytes), [&](std::exception_ptr exptr) {
+        asio::co_spawn(context, kv_seek(context, kv_database, table_name, seek_key_bytes), [&](std::exception_ptr exptr) {
             grpc_completion_poller.stop();
             context.stop();
         });

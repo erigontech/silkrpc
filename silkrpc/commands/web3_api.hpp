@@ -22,6 +22,7 @@
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
+#include <asio/io_context.hpp>
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/core/rawdb/accessors.hpp>
@@ -34,7 +35,8 @@ namespace silkrpc::commands {
 
 class Web3RpcApi {
 public:
-    explicit Web3RpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
+    explicit Web3RpcApi(asio::io_context& io_context, std::unique_ptr<ethdb::Database>& database) :
+        io_context_(io_context), database_(database) {}
     virtual ~Web3RpcApi() {}
 
     Web3RpcApi(const Web3RpcApi&) = delete;
@@ -45,6 +47,7 @@ protected:
     asio::awaitable<void> handle_web3_sha3(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
+    asio::io_context& io_context_;
     std::unique_ptr<ethdb::Database>& database_;
 
     friend class silkrpc::http::RequestHandler;

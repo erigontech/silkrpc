@@ -19,6 +19,8 @@
 
 #include <memory>
 
+#include <asio/io_context.hpp>
+
 #include <silkrpc/commands/debug_api.hpp>
 #include <silkrpc/commands/eth_api.hpp>
 #include <silkrpc/commands/net_api.hpp>
@@ -34,9 +36,14 @@ namespace silkrpc::commands {
 
 class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, TurboGethRpcApi, TraceRpcApi {
 public:
-    explicit RpcApi(std::unique_ptr<ethdb::Database>& database)
-    : EthereumRpcApi{database}, NetRpcApi{}, Web3RpcApi{database}, DebugRpcApi{database},
-        ParityRpcApi{database}, TurboGethRpcApi{database}, TraceRpcApi{database} {}
+    explicit RpcApi(asio::io_context& io_context, std::unique_ptr<ethdb::Database>& database) :
+        EthereumRpcApi{io_context, database},
+        NetRpcApi{io_context},
+        Web3RpcApi{io_context, database},
+        DebugRpcApi{io_context, database},
+        ParityRpcApi{io_context, database},
+        TurboGethRpcApi{io_context, database},
+        TraceRpcApi{io_context, database} {}
     virtual ~RpcApi() {}
 
     RpcApi(const RpcApi&) = delete;

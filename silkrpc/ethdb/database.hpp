@@ -22,6 +22,7 @@
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
+#include <asio/io_context.hpp>
 
 #include <silkrpc/ethdb/transaction.hpp>
 
@@ -35,7 +36,7 @@ public:
     Database(const Database&) = delete;
     Database& operator=(const Database&) = delete;
 
-    virtual asio::awaitable<std::unique_ptr<Transaction>> begin() = 0;
+    virtual asio::awaitable<std::unique_ptr<Transaction>> begin(asio::io_context& io_context) = 0;
 };
 
 } // namespace silkrpc::ethdb

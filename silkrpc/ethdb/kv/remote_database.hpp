@@ -30,8 +30,8 @@ namespace silkrpc::ethdb::kv {
 
 class RemoteDatabase: public Database {
 public:
-    RemoteDatabase(asio::io_context& context, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
-    : context_(context), channel_(channel), queue_(queue) {
+    RemoteDatabase(std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
+    : channel_(channel), queue_(queue) {
         SILKRPC_TRACE << "RemoteDatabase::ctor " << this << "\n";
     }
 
@@ -42,16 +42,15 @@ public:
     RemoteDatabase(const RemoteDatabase&) = delete;
     RemoteDatabase& operator=(const RemoteDatabase&) = delete;
 
-    virtual asio::awaitable<std::unique_ptr<Transaction>> begin() override {
+    virtual asio::awaitable<std::unique_ptr<Transaction>> begin(asio::io_context& io_context) override {
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " start\n";
-        auto txn = std::make_unique<RemoteTransaction>(context_, channel_, queue_);
+        auto txn = std::make_unique<RemoteTransaction>(io_context, channel_, queue_);
         co_await txn->open();
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " txn: " << txn.get() << " end\n";
         co_return txn;
     }
 
 private:
-    asio::io_context& context_;
     std::shared_ptr<::grpc::Channel> channel_;
     ::grpc::CompletionQueue* queue_;
 };

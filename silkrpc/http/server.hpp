@@ -34,7 +34,9 @@
 
 #include "connection.hpp"
 #include "connection_manager.hpp"
-#include "request_handler.hpp"
+#include "io_context_pool.hpp"
+//#include "request_handler.hpp"
+#include <silkrpc/ethdb/kv/database.hpp>
 
 namespace silkrpc::http {
 
@@ -45,15 +47,18 @@ public:
     Server& operator=(const Server&) = delete;
 
     /// Construct the server to listen on the specified TCP address and port.
-    explicit Server(asio::io_context& io_context, const std::string& address, const std::string& port, std::unique_ptr<ethdb::Database>& database);
+    explicit Server(io_context_pool& io_context_pool, const std::string& address, const std::string& port, std::unique_ptr<ethdb::kv::Database>& database);
 
-    asio::awaitable<void> start();
+    void start();
 
     void stop();
 
 private:
+    asio::awaitable<void> run();
+
     /// The io_context used to perform asynchronous operations.
-    asio::io_context& io_context_;
+    //asio::io_context& io_context_;
+    io_context_pool& io_context_pool_;
 
     /// Acceptor used to listen for incoming connections.
     asio::ip::tcp::acceptor acceptor_;
@@ -61,8 +66,10 @@ private:
     /// The connection manager which owns all live connections.
     ConnectionManager connection_manager_;
 
+    std::unique_ptr<ethdb::kv::Database>& database_;
+
     /// The handler for all incoming requests.
-    RequestHandler request_handler_;
+    //RequestHandler request_handler_;
 };
 
 } // namespace silkrpc::http

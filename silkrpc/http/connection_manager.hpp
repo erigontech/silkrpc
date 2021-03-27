@@ -42,7 +42,7 @@ public:
     ConnectionManager& operator=(const ConnectionManager&) = delete;
 
     /// Construct a connection manager.
-    ConnectionManager();
+    ConnectionManager() = default;
 
     /// Add the specified connection to the manager and start it.
     asio::awaitable<void> start(std::shared_ptr<Connection> c);

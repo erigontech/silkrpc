@@ -23,6 +23,7 @@
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
+#include <asio/io_context.hpp>
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
@@ -41,7 +42,8 @@ namespace silkrpc::commands {
 
 class EthereumRpcApi {
 public:
-    explicit EthereumRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
+    explicit EthereumRpcApi(asio::io_context& io_context, std::unique_ptr<ethdb::kv::Database>& database)
+    : io_context_(io_context), database_(database) {}
     virtual ~EthereumRpcApi() {}
 
     EthereumRpcApi(const EthereumRpcApi&) = delete;
@@ -94,8 +96,9 @@ protected:
     asio::awaitable<Receipts> get_receipts(core::rawdb::DatabaseReader& db_reader, uint64_t number, evmc::bytes32 hash);
     std::vector<Log> filter_logs(std::vector<Log>& logs, const Filter& filter);
 
-private:
-    std::unique_ptr<ethdb::Database>& database_;
+    asio::io_context& io_context_;
+
+    std::unique_ptr<ethdb::kv::Database>& database_;
 
     friend class silkrpc::http::RequestHandler;
 };

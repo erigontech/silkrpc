@@ -30,34 +30,44 @@
 #include <asio/ip/tcp.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/http/request_handler.hpp>
 
 namespace silkrpc::http {
 
-Server::Server(asio::io_context& io_context, const std::string& address, const std::string& port, std::unique_ptr<ethdb::Database>& database)
-: io_context_(io_context), acceptor_{io_context_}, request_handler_{database} {
+Server::Server(io_context_pool& io_context_pool, const std::string& address, const std::string& port, std::unique_ptr<ethdb::kv::Database>& database)
+: io_context_pool_(io_context_pool), acceptor_{io_context_pool_.get_io_context()}, database_(database) {
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-    asio::ip::tcp::resolver resolver{io_context_};
+    asio::ip::tcp::resolver resolver{acceptor_.get_executor()};
     asio::ip::tcp::endpoint endpoint = *resolver.resolve(address, port).begin();
     acceptor_.open(endpoint.protocol());
     acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));
     acceptor_.bind(endpoint);
 }
 
-asio::awaitable<void> Server::start() {
+void Server::start() {
+    asio::co_spawn(acceptor_.get_executor(), run(), [&](std::exception_ptr eptr) {
+        if (eptr) std::rethrow_exception(eptr);
+    });
+}
+
+asio::awaitable<void> Server::run() {
     acceptor_.listen();
 
     while (acceptor_.is_open()) {
         SILKRPC_DEBUG << "Server::start accepting...\n" << std::flush;
-        auto socket = co_await acceptor_.async_accept(asio::use_awaitable);
-        socket.set_option(asio::ip::tcp::socket::keep_alive(true));
-        SILKRPC_TRACE << "Server::start new socket: " << &socket << "\n";
+
+        auto& new_io_context = io_context_pool_.get_io_context();
+
+        auto new_connection = std::make_shared<Connection>(new_io_context, connection_manager_, database_);
+        co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);
+        new_connection->socket().set_option(asio::ip::tcp::socket::keep_alive(true));
+        SILKRPC_TRACE << "Server::start new socket: " << &new_connection->socket() << "\n";
         if (!acceptor_.is_open()) {
             SILKRPC_TRACE << "Server::start returning...\n";
             co_return;
         }
 
-        auto new_connection = std::make_shared<Connection>(std::move(socket), connection_manager_, request_handler_);
-        asio::co_spawn(io_context_, connection_manager_.start(new_connection), [&](std::exception_ptr eptr) {
+        asio::co_spawn(new_io_context, connection_manager_.start(new_connection), [&](std::exception_ptr eptr) {
             if (eptr) std::rethrow_exception(eptr);
         });
     }
@@ -66,7 +76,7 @@ asio::awaitable<void> Server::start() {
 
 void Server::stop() {
     // The server is stopped by cancelling all outstanding asynchronous operations.
-    acceptor_.close();
+    acceptor_.close(); // TODO: should not be necessary
     connection_manager_.stop_all();
 }
 
