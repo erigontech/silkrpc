@@ -36,6 +36,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/http/server.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
+#include <silkrpc/grpc/completion_poller.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::common::kEmptyChainData, "chain data path as string");
 ABSL_FLAG(std::string, local, silkrpc::common::kDefaultLocal, "HTTP JSON local binding as string <address>:<port>");
@@ -93,8 +94,11 @@ int main(int argc, char* argv[]) {
         asio::io_context context{1};
         asio::signal_set signals{context, SIGINT, SIGTERM};
 
+        ::grpc::CompletionQueue queue;
+        silkrpc::grpc::CompletionPoller grpc_completion_poller{queue, context};
+
         // TODO: handle also secure channel for remote
-        auto grpc_channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
+        auto grpc_channel = ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
         // TODO: handle also local (shared-memory) database
         std::unique_ptr<silkrpc::ethdb::kv::Database> database =
             std::make_unique<silkrpc::ethdb::kv::RemoteDatabase>(context, grpc_channel);
@@ -106,6 +110,7 @@ int main(int argc, char* argv[]) {
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
             std::cout << "\n";
             SILKRPC_INFO << "Signal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
+            grpc_completion_poller.stop();
             context.stop();
             http_server.stop();
         });
@@ -113,6 +118,8 @@ int main(int argc, char* argv[]) {
         asio::co_spawn(context, http_server.start(), [&](std::exception_ptr eptr) {
             if (eptr) std::rethrow_exception(eptr);
         });
+
+        grpc_completion_poller.start();
 
         SILKRPC_LOG << "Silkrpc running [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
 
