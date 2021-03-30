@@ -36,6 +36,8 @@ namespace silkrpc::commands {
 // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_blockNumber
 asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = database_->begin();
+    co_await tx->open();
+
     ethdb::kv::TransactionDatabase tx_database{*tx};
 
     try {
@@ -68,6 +70,8 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
     std::vector<Log> logs;
 
     auto tx = database_->begin();
+    co_await tx->open();
+
     ethdb::kv::TransactionDatabase tx_database{*tx};
 
     try {

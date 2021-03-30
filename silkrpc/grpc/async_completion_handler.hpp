@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_GRPC_ASYNCHRONOUS_OPERATION_HPP_
-#define SILKRPC_GRPC_ASYNCHRONOUS_OPERATION_HPP_
+#ifndef SILKRPC_GRPC_ASYNC_COMPLETION_HANDLER_HPP_
+#define SILKRPC_GRPC_ASYNC_COMPLETION_HANDLER_HPP_
 
 #include <atomic>
 #include <thread>
@@ -27,14 +27,17 @@
 
 namespace silkrpc::grpc {
 
-class AsynchronousOperation {
+class AsyncCompletionHandler {
 public:
-    AsynchronousOperation(const AsynchronousOperation&) = delete;
-    AsynchronousOperation& operator=(const AsynchronousOperation&) = delete;
+    static auto tag(AsyncCompletionHandler* handler) { return static_cast<void*>(handler); }
 
-    virtual void complete() = 0;
+    static auto detag(void* tag) { return static_cast<AsyncCompletionHandler*>(tag); }
+
+    virtual void completed(bool ok) = 0;
+
+    virtual void try_cancel() = 0;
 };
 
 } // namespace silkrpc::grpc
 
-#endif  // SILKRPC_GRPC_ASYNCHRONOUS_OPERATION_HPP_
+#endif  // SILKRPC_GRPC_ASYNC_COMPLETION_HANDLER_HPP_

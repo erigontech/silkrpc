@@ -32,6 +32,8 @@ public:
     CompletionPoller(::grpc::CompletionQueue& queue, asio::io_context& io_context)
     : queue_(queue), io_context_(io_context) {}
 
+    ~CompletionPoller() { stop(); }
+
     CompletionPoller(const CompletionPoller&) = delete;
     CompletionPoller& operator=(const CompletionPoller&) = delete;
 

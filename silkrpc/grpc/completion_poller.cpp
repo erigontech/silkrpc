@@ -18,7 +18,7 @@
 
 #include <chrono>
 
-#include "asynchronous_operation.hpp"
+#include "async_completion_handler.hpp"
 
 namespace silkrpc::grpc {
 
@@ -41,14 +41,14 @@ void CompletionPoller::run() {
     while (running) {
         void* got_tag;
         bool ok;
-        //gpr_inf_future(GPR_CLOCK_REALTIME)
-        const auto deadline = std::chrono::system_clock::now() + std::chrono::milliseconds(1);
+        //gpr_inf_future(   )
+        const auto deadline = std::chrono::system_clock::now() + std::chrono::microseconds(100);
         const auto next_status = queue_.AsyncNext(&got_tag, &ok, deadline);
-        SILKRPC_TRACE << "CompletionPoller::run next_status: " << next_status << "\n";
+        SILKRPC_TRACE << "CompletionPoller::run next_status: " << next_status << " got_tag: " << got_tag << " ok: " << ok << "\n";
         if (next_status == ::grpc::CompletionQueue::GOT_EVENT) {
-            auto operation = reinterpret_cast<AsynchronousOperation*>(got_tag);
+            auto operation = grpc::AsyncCompletionHandler::detag(got_tag);
             SILKRPC_DEBUG << "CompletionPoller::run operation: " << operation << "\n";
-            io_context_.post([&, operation]() { operation->complete(); });
+            io_context_.post([&, ok]() { operation->completed(ok); });
         } else if (next_status == ::grpc::CompletionQueue::SHUTDOWN) {
             running = false;
             SILKRPC_TRACE << "CompletionPoller::run shutdown\n";

@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_KV_ASYNC_CLOSE_HPP
-#define SILKRPC_KV_ASYNC_CLOSE_HPP
+#ifndef SILKRPC_KV_ASYNC_END_HPP
+#define SILKRPC_KV_ASYNC_END_HPP
 
 #include <asio/detail/config.hpp>
 #include <asio/detail/bind_handler.hpp>
@@ -29,18 +29,18 @@
 namespace silkrpc::ethdb::kv {
 
 template <typename Handler, typename IoExecutor>
-class async_close : public async_operation<void, uint32_t>
+class async_end : public async_operation<void, uint32_t>
 {
 public:
-    ASIO_DEFINE_HANDLER_PTR(async_close);
+    ASIO_DEFINE_HANDLER_PTR(async_end);
 
-    async_close(Handler& h, const IoExecutor& io_ex)
-    : async_operation(&async_close::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
+    async_end(Handler& h, const IoExecutor& io_ex)
+    : async_operation(&async_end::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
     {}
 
     static void do_complete(void* owner, async_operation* base, uint32_t cursor_id=0) {
         // Take ownership of the handler object.
-        async_close* h{static_cast<async_close*>(base)};
+        async_end* h{static_cast<async_end*>(base)};
         ptr p = {asio::detail::addressof(h->handler_), h, h};
 
         ASIO_HANDLER_COMPLETION((*h));
@@ -76,4 +76,4 @@ private:
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_KV_ASYNC_CLOSE_HPP
+#endif // SILKRPC_KV_ASYNC_END_HPP
