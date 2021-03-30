@@ -38,7 +38,7 @@ public:
     : async_operation(&async_open_cursor::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
     {}
 
-    static void do_complete(void* owner, async_operation* base, uint32_t cursor_id=0) {
+    static void do_complete(void* owner, async_operation* base, uint32_t cursor_id) {
         // Take ownership of the handler object.
         async_open_cursor* h{static_cast<async_open_cursor*>(base)};
         ptr p = {asio::detail::addressof(h->handler_), h, h};

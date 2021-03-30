@@ -46,7 +46,6 @@ using namespace silkrpc::ethdb::kv;
 
 asio::awaitable<void> kv_seek(Database& kv_db, const std::string& table_name, const silkworm::Bytes& seek_key) {
     const auto kv_transaction = kv_db.begin();
-    SILKRPC_TRACE << "kv_seek " << " kv_transaction: " << kv_transaction << " end\n";
     co_await kv_transaction->open();
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
     const auto kv_cursor = co_await kv_transaction->cursor(table_name);
@@ -116,9 +115,9 @@ int main(int argc, char* argv[]) {
 
         context.run();
     } catch (const std::exception& e) {
-        SILKRPC_CRIT << "Exception: " << e.what() << "\n" << std::flush;
+        std::cerr << "Exception: " << e.what() << "\n" << std::flush;
     } catch (...) {
-        SILKRPC_CRIT << "Unexpected exception\n" << std::flush;
+        std::cerr << "Unexpected exception\n" << std::flush;
     }
 
     return 0;
