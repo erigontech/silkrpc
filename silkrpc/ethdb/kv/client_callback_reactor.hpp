@@ -66,14 +66,14 @@ public:
         SILKRPC_TRACE << "ClientCallbackReactor::read_start " << this << " status: " << status_ << " start\n";
         read_completed_ = read_completed;
         status_ = READ_STARTED;
-        SILKRPC_TRACE << "ClientCallbackReactor::read_start " << this << " stream: " << stream_ << " BEFORE Read\n";
+        SILKRPC_TRACE << "ClientCallbackReactor::read_start " << this << " stream: " << stream_.get() << " BEFORE Read\n";
         stream_->Read(&pair_, grpc::AsyncCompletionHandler::tag(this));
         SILKRPC_TRACE << "ClientCallbackReactor::read_start " << this << " AFTER Read\n";
         SILKRPC_TRACE << "ClientCallbackReactor::read_start " << this << " status: " << status_ << " end\n";
     }
 
     void write_start(const ::remote::Cursor& cursor, std::function<void(const ::grpc::Status&)> write_completed) {
-        SILKRPC_TRACE << "ClientCallbackReactor::write_start " << this << " stream: " << stream_ << " status: " << status_ << " start\n";
+        SILKRPC_TRACE << "ClientCallbackReactor::write_start " << this << " stream: " << stream_.get() << " status: " << status_ << " start\n";
         write_completed_ = write_completed;
         status_ = WRITE_STARTED;
         stream_->Write(cursor, grpc::AsyncCompletionHandler::tag(this));

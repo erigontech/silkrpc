@@ -47,7 +47,7 @@ public:
     virtual std::unique_ptr<Transaction> begin() override {
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " start\n";
         auto txn = std::make_unique<RemoteTransaction>(context_, channel_, queue_);
-        SILKRPC_TRACE << "RemoteDatabase::begin " << this << " txn: " << txn << " end\n";
+        SILKRPC_TRACE << "RemoteDatabase::begin " << this << " txn: " << txn.get() << " end\n";
         return txn;
     }
 
