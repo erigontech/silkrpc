@@ -44,11 +44,12 @@ public:
     RemoteDatabase(const RemoteDatabase&) = delete;
     RemoteDatabase& operator=(const RemoteDatabase&) = delete;
 
-    virtual std::unique_ptr<Transaction> begin() override {
+    virtual asio::awaitable<std::unique_ptr<Transaction>> begin() override {
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " start\n";
         auto txn = std::make_unique<RemoteTransaction>(context_, channel_, queue_);
+        co_await txn->open();
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " txn: " << txn.get() << " end\n";
-        return txn;
+        co_return txn;
     }
 
 private:

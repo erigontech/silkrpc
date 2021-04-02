@@ -45,8 +45,7 @@ ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::LogCritical, "logging 
 using namespace silkrpc::ethdb::kv;
 
 asio::awaitable<void> kv_seek(Database& kv_db, const std::string& table_name, const silkworm::Bytes& seek_key) {
-    const auto kv_transaction = kv_db.begin();
-    co_await kv_transaction->open();
+    const auto kv_transaction = co_await kv_db.begin();
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
     const auto kv_cursor = co_await kv_transaction->cursor(table_name);
     auto cursor_id = kv_cursor->cursor_id();
