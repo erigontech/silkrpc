@@ -29,6 +29,7 @@ endif()
 add_library(silkrpc ${SILKRPC_SRC})
 target_include_directories(silkrpc PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(silkrpc
+    tcmalloc
     absl::flat_hash_map
     absl::flat_hash_set
     absl::btree
@@ -41,6 +42,7 @@ target_link_libraries(silkrpc
 add_executable(silkrpcdaemon main.cpp)
 target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(silkrpcdaemon
+    tcmalloc
     absl::btree
     absl::flags_parse
     absl::flat_hash_map
