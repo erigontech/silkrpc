@@ -32,13 +32,11 @@ class RemoteDatabase :public Database {
 public:
     RemoteDatabase(asio::io_context& context, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
     : context_(context), channel_(channel), queue_(queue) {
-        SILKRPC_TRACE << "RemoteDatabase::ctor " << this << " start\n";
-        SILKRPC_TRACE << "RemoteDatabase::ctor " << this << " end\n";
+        SILKRPC_TRACE << "RemoteDatabase::ctor " << this << "\n";
     }
 
     ~RemoteDatabase() {
-        SILKRPC_TRACE << "RemoteDatabase::dtor " << this << " start\n";
-        SILKRPC_TRACE << "RemoteDatabase::dtor " << this << " end\n";
+        SILKRPC_TRACE << "RemoteDatabase::dtor " << this << "\n";
     }
 
     RemoteDatabase(const RemoteDatabase&) = delete;

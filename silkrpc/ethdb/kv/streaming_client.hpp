@@ -42,8 +42,7 @@ public:
     }
 
     ~StreamingClient() {
-        SILKRPC_TRACE << "StreamingClient::dtor " << this << " status: " << status_ << " start\n";
-        SILKRPC_TRACE << "StreamingClient::dtor " << this << " end\n";
+        SILKRPC_TRACE << "StreamingClient::dtor " << this << " status: " << status_ << "\n";
     }
 
     void start_call(std::function<void(const ::grpc::Status&)> start_completed) {
