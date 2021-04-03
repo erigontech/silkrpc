@@ -19,6 +19,10 @@
 
 #include <memory>
 
+#include <silkrpc/config.hpp>
+
+#include <asio/awaitable.hpp>
+
 #include <silkrpc/ethdb/kv/transaction.hpp>
 
 namespace silkrpc::ethdb::kv {
@@ -31,7 +35,7 @@ public:
     Database(const Database&) = delete;
     Database& operator=(const Database&) = delete;
 
-    virtual std::unique_ptr<Transaction> begin() = 0;
+    virtual asio::awaitable<std::unique_ptr<Transaction>> begin() = 0;
 };
 
 } // namespace silkrpc::ethdb::kv

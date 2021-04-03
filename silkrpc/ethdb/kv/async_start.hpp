@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_KV_ASYNC_OPEN_CURSOR_HPP
-#define SILKRPC_KV_ASYNC_OPEN_CURSOR_HPP
+#ifndef SILKRPC_KV_ASYNC_START_HPP
+#define SILKRPC_KV_ASYNC_START_HPP
 
 #include <asio/detail/config.hpp>
 #include <asio/detail/bind_handler.hpp>
@@ -29,24 +29,24 @@
 namespace silkrpc::ethdb::kv {
 
 template <typename Handler, typename IoExecutor>
-class async_open_cursor : public async_operation<void, uint32_t>
+class async_start : public async_operation<void, uint32_t>
 {
 public:
-    ASIO_DEFINE_HANDLER_PTR(async_open_cursor);
+    ASIO_DEFINE_HANDLER_PTR(async_start);
 
-    async_open_cursor(Handler& h, const IoExecutor& io_ex)
-    : async_operation(&async_open_cursor::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
+    async_start(Handler& h, const IoExecutor& io_ex)
+    : async_operation(&async_start::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
     {}
 
-    static void do_complete(void* owner, async_operation* base, uint32_t cursor_id) {
+    static void do_complete(void* owner, async_operation* base, uint32_t cursor_id = 0) {
         // Take ownership of the handler object.
-        async_open_cursor* h{static_cast<async_open_cursor*>(base)};
+        async_start* h{static_cast<async_start*>(base)};
         ptr p = {asio::detail::addressof(h->handler_), h, h};
 
         ASIO_HANDLER_COMPLETION((*h));
 
         // Take ownership of the operation's outstanding work.
-        asio::detail::handler_work<Handler, IoExecutor> w(
+        asio::detail::handler_work<Handler, IoExecutor> work(
             ASIO_MOVE_CAST2(asio::detail::handler_work<Handler, IoExecutor>)(h->work_)
         );
 
@@ -64,7 +64,7 @@ public:
         if (owner) {
             asio::detail::fenced_block b(asio::detail::fenced_block::half);
             ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_));
-            w.complete(handler, handler.handler_);
+            work.complete(handler, handler.handler_);
             ASIO_HANDLER_INVOCATION_END;
         }
     }
@@ -76,4 +76,4 @@ private:
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_KV_ASYNC_OPEN_CURSOR_HPP
+#endif // SILKRPC_KV_ASYNC_START_HPP

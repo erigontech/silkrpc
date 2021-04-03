@@ -18,7 +18,7 @@
 
 namespace silkrpc::ethdb::kv {
 
-std::system_error make_system_error(const grpc::Status& status, const std::string& error_context) {
+std::system_error make_system_error(const ::grpc::Status& status, const std::string& error_context) {
     return std::system_error{
         std::make_error_code(std::errc{status.error_code()}), error_context + " - grpc " + status.error_message()};
 }

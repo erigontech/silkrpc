@@ -18,6 +18,11 @@
 
 namespace silkrpc::ethdb::kv {
 
+asio::awaitable<void> RemoteTransaction::open() {
+    co_await kv_awaitable_.async_start(asio::use_awaitable);
+    co_return;
+}
+
 asio::awaitable<std::shared_ptr<Cursor>> RemoteTransaction::cursor(const std::string& table) {
     auto cursor_it = cursors_.find(table);
     if (cursor_it != cursors_.end()) {
@@ -34,7 +39,7 @@ asio::awaitable<void> RemoteTransaction::close() {
         co_await cursor->close_cursor();
     }
     cursors_.clear();
-    co_await kv_awaitable_.async_close(asio::use_awaitable);
+    co_await kv_awaitable_.async_end(asio::use_awaitable);
     co_return;
 }
 

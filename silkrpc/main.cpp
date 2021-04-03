@@ -36,6 +36,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/http/server.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
+#include <silkrpc/grpc/completion_poller.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::common::kEmptyChainData, "chain data path as string");
 ABSL_FLAG(std::string, local, silkrpc::common::kDefaultLocal, "HTTP JSON local binding as string <address>:<port>");
@@ -50,10 +51,12 @@ int main(int argc, char* argv[]) {
     using namespace silkrpc;
     using silkrpc::common::kAddressPortSeparator;
 
-    try {
-        absl::SetProgramUsageMessage("Seek Turbo-Geth/Silkworm Key-Value (KV) remote interface to database");
-        absl::ParseCommandLine(argc, argv);
+    absl::SetProgramUsageMessage("Silkrpc - Silkworm ETH JSON Remote Procedure Call (RPC) daemon");
+    absl::ParseCommandLine(argc, argv);
 
+    SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
+
+    try {
         auto chaindata{absl::GetFlag(FLAGS_chaindata)};
         if (!chaindata.empty() && !std::filesystem::exists(chaindata)) {
             SILKRPC_ERROR << "Parameter chaindata is invalid: [" << chaindata << "]\n";
@@ -88,16 +91,17 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
-
         asio::io_context context{1};
         asio::signal_set signals{context, SIGINT, SIGTERM};
 
+        ::grpc::CompletionQueue queue;
+        silkrpc::grpc::CompletionPoller grpc_completion_poller{queue, context};
+
         // TODO: handle also secure channel for remote
-        auto grpc_channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
+        auto grpc_channel = ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
         // TODO: handle also local (shared-memory) database
         std::unique_ptr<silkrpc::ethdb::kv::Database> database =
-            std::make_unique<silkrpc::ethdb::kv::RemoteDatabase>(context, grpc_channel);
+            std::make_unique<silkrpc::ethdb::kv::RemoteDatabase>(context, grpc_channel, &queue);
 
         const auto http_host = local.substr(0, local.find(kAddressPortSeparator));
         const auto http_port = local.substr(local.find(kAddressPortSeparator) + 1, std::string::npos);
@@ -106,6 +110,7 @@ int main(int argc, char* argv[]) {
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
             std::cout << "\n";
             SILKRPC_INFO << "Signal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
+            grpc_completion_poller.stop();
             context.stop();
             http_server.stop();
         });
@@ -113,6 +118,8 @@ int main(int argc, char* argv[]) {
         asio::co_spawn(context, http_server.start(), [&](std::exception_ptr eptr) {
             if (eptr) std::rethrow_exception(eptr);
         });
+
+        grpc_completion_poller.start();
 
         SILKRPC_LOG << "Silkrpc running [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
 

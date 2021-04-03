@@ -25,18 +25,29 @@
 
 #include <asio/use_awaitable.hpp>
 
+#include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/awaitables.hpp>
 #include <silkrpc/ethdb/kv/cursor.hpp>
 #include <silkrpc/ethdb/kv/remote_cursor.hpp>
+#include <silkrpc/ethdb/kv/streaming_client.hpp>
 #include <silkrpc/ethdb/kv/transaction.hpp>
-#include <silkrpc/ethdb/kv/client_callback_reactor.hpp>
 
 namespace silkrpc::ethdb::kv {
 
 class RemoteTransaction : public Transaction {
 public:
-    explicit RemoteTransaction(asio::io_context& context, std::shared_ptr<grpc::Channel> channel)
-    : context_(context), reactor_{channel}, kv_awaitable_{context_, reactor_} {}
+    explicit RemoteTransaction(asio::io_context& context, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
+    : context_(context), client_{channel, queue}, kv_awaitable_{context_, client_} {
+        SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " start\n";
+        SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " end\n";
+    }
+
+    ~RemoteTransaction() {
+        SILKRPC_TRACE << "RemoteTransaction::dtor " << this << " start\n";
+        SILKRPC_TRACE << "RemoteTransaction::dtor " << this << " end\n";
+    }
+
+    asio::awaitable<void> open() override;
 
     std::unique_ptr<Cursor> cursor() override {
         return std::make_unique<RemoteCursor>(kv_awaitable_);
@@ -48,7 +59,7 @@ public:
 
 private:
     asio::io_context& context_;
-    ClientCallbackReactor reactor_;
+    StreamingClient client_;
     KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
     std::map<std::string, std::shared_ptr<Cursor>> cursors_;
 };
