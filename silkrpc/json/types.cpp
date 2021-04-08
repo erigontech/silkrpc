@@ -17,9 +17,11 @@
 #include "types.hpp"
 
 #include <algorithm>
+#include <cstring>
 
 #include <boost/endian/conversion.hpp>
 
+#include <silkrpc/common/util.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/db/silkworm/db/util.hpp>
 
@@ -44,6 +46,23 @@ void from_json(const nlohmann::json& json, bytes32& b32) {
 }
 
 } // namespace evmc
+
+namespace silkworm {
+
+void to_json(nlohmann::json& json, const std::vector<BlockHeader>& ommers) {
+    std::vector<evmc::bytes32> ommer_hashes;
+    ommer_hashes.reserve(ommers.size());
+    for (auto i{0}; i < ommers.size(); i++) {
+        ommer_hashes[i] = ommers[i].hash();
+    }
+    json = ommer_hashes;
+}
+
+void to_json(nlohmann::json& json, const std::vector<Transaction>& transactions) {
+    // TODO: serialize transactions
+}
+
+} // namespace silkworm
 
 namespace silkrpc {
 
@@ -75,21 +94,55 @@ std::string to_hex_no_leading_zeros(silkworm::ByteView bytes) {
     return out;
 }
 
-std::string to_hex(uint64_t block_number) {
-    silkworm::Bytes block_number_bytes(8, '\0');
-    boost::endian::store_big_u64(&block_number_bytes[0], block_number);
-    return to_hex_no_leading_zeros(block_number_bytes);
+std::string to_hex_no_leading_zeros(uint64_t number) {
+    silkworm::Bytes number_bytes(8, '\0');
+    boost::endian::store_big_u64(&number_bytes[0], number);
+    return to_hex_no_leading_zeros(number_bytes);
+}
+
+void to_json(nlohmann::json& json, const Block& b) {
+    json["number"] = "0x" + to_hex_no_leading_zeros(b.block.header.number);
+    json["hash"] = b.hash;
+    json["parentHash"] = b.block.header.parent_hash;
+    json["nonce"] = "0x" + silkworm::to_hex({b.block.header.nonce.data(), b.block.header.nonce.size()});
+    json["sha3Uncles"] = b.block.header.ommers_hash;
+    json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(b.block.header.logs_bloom));
+    json["transactionsRoot"] = b.block.header.transactions_root;
+    json["stateRoot"] = b.block.header.state_root;
+    json["receiptsRoot"] = b.block.header.receipts_root;
+    json["miner"] = b.block.header.beneficiary;
+    json["difficulty"] = "0x" + silkworm::to_hex(silkworm::rlp::big_endian(b.block.header.difficulty));
+    json["totalDifficulty"] = "0x" + silkworm::to_hex(silkworm::rlp::big_endian(b.total_difficulty));
+    json["extraData"] = "0x" + silkworm::to_hex(b.block.header.extra_data);
+    silkworm::Bytes block_rlp{};
+    silkworm::rlp::encode(block_rlp, b.block);
+    json["size"] = "0x" + to_hex_no_leading_zeros(block_rlp.length());
+    json["gasLimit"] = "0x" + to_hex_no_leading_zeros(b.block.header.gas_limit);
+    json["gasUsed"] = "0x" + to_hex_no_leading_zeros(b.block.header.gas_used);
+    json["timestamp"] = "0x" + to_hex_no_leading_zeros(b.block.header.timestamp);
+    if (b.full_tx) {
+        json["transactions"] = b.block.transactions;
+    } else {
+        std::vector<evmc::bytes32> transaction_hashes;
+        transaction_hashes.reserve(b.block.transactions.size());
+        for (auto i{0}; i < b.block.transactions.size(); i++) {
+            auto txn_hash{hash_of_transaction(b.block.transactions[i])};
+            std::memcpy(transaction_hashes[i].bytes, txn_hash.bytes, silkworm::kHashLength);
+        }
+        json["transactions"] = transaction_hashes;
+    }
+    json["uncles"] = b.block.ommers;
 }
 
 void to_json(nlohmann::json& json, const Log& log) {
     json["address"] = log.address;
     json["topics"] = log.topics;
     json["data"] = "0x" + silkworm::to_hex(log.data);
-    json["blockNumber"] = "0x" + to_hex(log.block_number);
+    json["blockNumber"] = "0x" + to_hex_no_leading_zeros(log.block_number);
     json["blockHash"] = log.block_hash;
     json["transactionHash"] = log.tx_hash;
-    json["transactionIndex"] = "0x" + to_hex(log.tx_index);
-    json["logIndex"] = "0x" + to_hex(log.index);
+    json["transactionIndex"] = "0x" + to_hex_no_leading_zeros(log.tx_index);
+    json["logIndex"] = "0x" + to_hex_no_leading_zeros(log.index);
     json["removed"] = log.removed;
 }
 

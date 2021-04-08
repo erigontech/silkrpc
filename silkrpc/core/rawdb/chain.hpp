@@ -23,6 +23,7 @@
 
 #include <asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
+#include <intx/intx.hpp>
 
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
@@ -37,6 +38,10 @@ typedef std::vector<silkworm::Transaction> Transactions;
 asio::awaitable<uint64_t> read_header_number(DatabaseReader& reader, evmc::bytes32 block_hash); // const evmc::bytes32&
 
 asio::awaitable<evmc::bytes32> read_canonical_block_hash(DatabaseReader& reader, uint64_t block_number);
+
+asio::awaitable<intx::uint256> read_total_difficulty(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number);
+
+asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(DatabaseReader& reader, evmc::bytes32 block_hash);
 
 asio::awaitable<silkworm::BlockWithHash> read_block_by_number(DatabaseReader& reader, uint64_t block_number);
 

@@ -23,10 +23,12 @@
 #include <vector>
 
 #include <asio/buffer.hpp>
+#include <ethash/keccak.hpp>
 #include <evmc/evmc.hpp>
 
 #include <silkworm/common/base.hpp>
 #include <silkworm/common/util.hpp>
+#include <silkworm/types/transaction.hpp>
 
 namespace silkrpc::common {
 
@@ -48,6 +50,16 @@ inline Bytes bytes_of_string(const std::string& s) {
 }
 
 } // namespace silkworm
+
+inline auto hash_of_transaction_rlp(const silkworm::Bytes& txn_rlp) {
+    return ethash::keccak256(txn_rlp.data(), txn_rlp.length());
+}
+
+inline auto hash_of_transaction(const silkworm::Transaction& txn) {
+    silkworm::Bytes txn_rlp{};
+    silkworm::rlp::encode(txn_rlp, txn);
+    return ethash::keccak256(txn_rlp.data(), txn_rlp.length());
+}
 
 inline std::ostream& operator<<(std::ostream& out, const silkworm::ByteView& bytes) {
     for (const auto& b : bytes) {

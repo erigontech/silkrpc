@@ -24,10 +24,13 @@
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
+#include <silkrpc/types/block.hpp>
 #include <silkrpc/types/error.hpp>
 #include <silkrpc/types/filter.hpp>
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/receipt.hpp>
+#include <silkworm/types/block.hpp>
+#include <silkworm/types/transaction.hpp>
 
 namespace evmc {
 
@@ -39,7 +42,17 @@ void from_json(const nlohmann::json& json, bytes32& b32);
 
 } // namespace evmc
 
+namespace silkworm {
+
+void to_json(nlohmann::json& json, const std::vector<BlockHeader>& ommers);
+
+void to_json(nlohmann::json& json, const std::vector<Transaction>& transactions);
+
+} // namespace silkworm
+
 namespace silkrpc {
+
+void to_json(nlohmann::json& json, const Block& b);
 
 void to_json(nlohmann::json& json, const Log& log);
 void from_json(const nlohmann::json& json, Log& log);

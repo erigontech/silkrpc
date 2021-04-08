@@ -20,6 +20,8 @@
 #include <exception>
 #include <iostream>
 
+#include <evmc/evmc.hpp>
+
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/receipt.hpp>
 #include <silkworm/db/tables.hpp>
@@ -29,11 +31,12 @@
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/ethdb/bitmap/database.hpp>
 #include <silkrpc/json/types.hpp>
+#include <silkrpc/types/block.hpp>
 #include <silkrpc/types/filter.hpp>
 
 namespace silkrpc::commands {
 
-// https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_blockNumber
+// https://eth.wiki/json-rpc/API#eth_blocknumber
 asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
@@ -42,6 +45,41 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
     try {
         const auto block_height = co_await core::get_current_block_number(tx_database);
         reply = json::make_json_content(request["id"], block_height);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+        reply = json::make_json_error(request["id"], 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception\n";
+        reply = json::make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
+// https://eth.wiki/json-rpc/API#eth_getblockbyhash
+asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 2) {
+        auto error_msg = "invalid eth_getLogs params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = json::make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    auto block_hash = params[0].get<evmc::bytes32>();
+    auto full_tx = params[1].get<bool>();
+    SILKRPC_DEBUG << "block_hash: " << block_hash << " full_tx: " << std::boolalpha << full_tx << "\n";
+
+    auto tx = co_await database_->begin();
+
+    ethdb::kv::TransactionDatabase tx_database{*tx};
+
+    try {
+        const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
+        const auto block_number = block_with_hash.block.header.number;
+        const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_hash, block_number);
+        const Block extended_block{block_with_hash, total_difficulty, full_tx};
+        reply = json::make_json_content(request["id"], extended_block);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = json::make_json_error(request["id"], 100, e.what());
