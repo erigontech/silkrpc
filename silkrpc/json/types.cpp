@@ -21,6 +21,7 @@
 
 #include <boost/endian/conversion.hpp>
 
+#include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/db/silkworm/db/util.hpp>
@@ -59,7 +60,7 @@ void to_json(nlohmann::json& json, const std::vector<BlockHeader>& ommers) {
 }
 
 void to_json(nlohmann::json& json, const std::vector<Transaction>& transactions) {
-    // TODO: serialize transactions
+    // TODO (silkrpc): serialize transactions
 }
 
 } // namespace silkworm
@@ -126,8 +127,10 @@ void to_json(nlohmann::json& json, const Block& b) {
         std::vector<evmc::bytes32> transaction_hashes;
         transaction_hashes.reserve(b.block.transactions.size());
         for (auto i{0}; i < b.block.transactions.size(); i++) {
-            auto txn_hash{hash_of_transaction(b.block.transactions[i])};
-            std::memcpy(transaction_hashes[i].bytes, txn_hash.bytes, silkworm::kHashLength);
+            auto ethash_hash{hash_of_transaction(b.block.transactions[i])};
+            auto bytes32_hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
+            transaction_hashes.emplace(transaction_hashes.end(), std::move(bytes32_hash));
+            SILKRPC_DEBUG << "transaction_hashes[" << i << "]: " << silkworm::to_hex(transaction_hashes[i].bytes) << "\n";
         }
         json["transactions"] = transaction_hashes;
     }

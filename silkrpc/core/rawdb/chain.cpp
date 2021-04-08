@@ -80,6 +80,7 @@ asio::awaitable<evmc::bytes32> read_canonical_block_hash(DatabaseReader& reader,
 }
 
 asio::awaitable<intx::uint256> read_total_difficulty(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
+    // TODO (silkrpc): implement
     co_return 42;
 }
 
@@ -243,6 +244,7 @@ asio::awaitable<Receipts> read_receipts(DatabaseReader& reader, evmc::bytes32 bl
 asio::awaitable<Transactions> read_transactions(DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count) {
     Transactions txns{};
     if (txn_count == 0) {
+        SILKRPC_DEBUG << "txn_count: 0 #txns: 0\n";
         co_return txns;
     }
 
@@ -250,7 +252,7 @@ asio::awaitable<Transactions> read_transactions(DatabaseReader& reader, uint64_t
 
     silkworm::Bytes txn_id_key(8, '\0');
     boost::endian::store_big_u64(&txn_id_key[0], base_txn_id); // tx_id_key.data()?
-    SILKRPC_TRACE << "txn_id_key: " << silkworm::to_hex(txn_id_key) << "\n";
+    SILKRPC_DEBUG << "txn_id_key: " << silkworm::to_hex(txn_id_key) << "\n";
     size_t i{0};
     Walker walker = [&](const silkworm::Bytes&, const silkworm::Bytes& v) {
         SILKRPC_TRACE << "v: " << silkworm::to_hex(v) << "\n";
@@ -268,7 +270,7 @@ asio::awaitable<Transactions> read_transactions(DatabaseReader& reader, uint64_t
     };
     co_await reader.walk(silkworm::db::table::kEthTx.name, txn_id_key, 0, walker);
 
-    SILKRPC_TRACE << "#txns: " << txns.size() << "\n";
+    SILKRPC_DEBUG << "#txns: " << txns.size() << "\n";
 
     co_return txns;
 }

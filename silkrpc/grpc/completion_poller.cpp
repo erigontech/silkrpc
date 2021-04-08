@@ -45,25 +45,12 @@ void CompletionPoller::run() {
         const auto got_event = queue_.Next(&got_tag, &ok);
         if (got_event) {
             auto operation = grpc::AsyncCompletionHandler::detag(got_tag);
-            SILKRPC_DEBUG << "CompletionPoller::run post operation: " << operation << "\n";
+            SILKRPC_TRACE << "CompletionPoller::run post operation: " << operation << "\n";
             io_context_.post([=]() { operation->completed(ok); });
         } else {
             running = false;
-            SILKRPC_TRACE << "CompletionPoller::run shutdown\n";
+            SILKRPC_DEBUG << "CompletionPoller::run shutdown\n";
         }
-        /*const auto deadline = std::chrono::system_clock::now() + std::chrono::microseconds(100);
-        const auto next_status = queue_.AsyncNext(&got_tag, &ok, deadline);
-        SILKRPC_TRACE << "CompletionPoller::run next_status: " << next_status << " got_tag: " << got_tag << " ok: " << ok << "\n";
-        if (next_status == ::grpc::CompletionQueue::GOT_EVENT) {
-            auto operation = grpc::AsyncCompletionHandler::detag(got_tag);
-            SILKRPC_DEBUG << "CompletionPoller::run operation: " << operation << "\n";
-            io_context_.post([=]() { operation->completed(ok); });
-        } else if (next_status == ::grpc::CompletionQueue::SHUTDOWN) {
-            running = false;
-            SILKRPC_TRACE << "CompletionPoller::run shutdown\n";
-        } else { // ::grpc::CompletionQueue::TIMEOUT
-            SILKRPC_TRACE << "CompletionPoller::run timeout\n";
-        }*/
     }
     SILKRPC_INFO << "CompletionPoller::run end\n";
 }
