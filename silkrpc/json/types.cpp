@@ -27,47 +27,6 @@
 #include <silkworm/common/util.hpp>
 #include <silkworm/db/silkworm/db/util.hpp>
 
-namespace evmc {
-
-void to_json(nlohmann::json& json, const address& addr) {
-    json = "0x" + silkworm::to_hex(addr);
-}
-
-void from_json(const nlohmann::json& json, address& addr) {
-    const auto address_bytes = silkworm::from_hex(json.get<std::string>());
-    addr = silkworm::to_address(address_bytes.value_or(silkworm::Bytes{}));
-}
-
-void to_json(nlohmann::json& json, const bytes32& b32) {
-    json = "0x" + silkworm::to_hex(b32);
-}
-
-void from_json(const nlohmann::json& json, bytes32& b32) {
-    const auto b32_bytes = silkworm::from_hex(json.get<std::string>());
-    b32 = silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
-}
-
-} // namespace evmc
-
-namespace silkworm {
-
-void to_json(nlohmann::json& json, const std::vector<BlockHeader>& ommers) {
-    std::vector<evmc::bytes32> ommer_hashes;
-    ommer_hashes.reserve(ommers.size());
-    for (auto i{0}; i < ommers.size(); i++) {
-        ommer_hashes[i] = ommers[i].hash();
-    }
-    json = ommer_hashes;
-}
-
-void to_json(nlohmann::json& json, const std::vector<Transaction>& transactions) {
-    // TODO(silkrpc): serialize transactions
-}
-
-} // namespace silkworm
-
-namespace silkrpc {
-
 std::string to_hex_no_leading_zeros(silkworm::ByteView bytes) {
     static const char* kHexDigits{"0123456789abcdef"};
 
@@ -102,19 +61,74 @@ std::string to_hex_no_leading_zeros(uint64_t number) {
     return to_hex_no_leading_zeros(number_bytes);
 }
 
+namespace evmc {
+
+void to_json(nlohmann::json& json, const address& addr) {
+    json = "0x" + silkworm::to_hex(addr);
+}
+
+void from_json(const nlohmann::json& json, address& addr) {
+    const auto address_bytes = silkworm::from_hex(json.get<std::string>());
+    addr = silkworm::to_address(address_bytes.value_or(silkworm::Bytes{}));
+}
+
+void to_json(nlohmann::json& json, const bytes32& b32) {
+    json = "0x" + silkworm::to_hex(b32);
+}
+
+void from_json(const nlohmann::json& json, bytes32& b32) {
+    const auto b32_bytes = silkworm::from_hex(json.get<std::string>());
+    b32 = silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
+}
+
+} // namespace evmc
+
+namespace silkworm {
+
+void to_json(nlohmann::json& json, const BlockHeader& ommer) {
+    json = ommer.hash();
+}
+
+void to_json(nlohmann::json& json, const Transaction& transaction) {
+    if (!transaction.from) {
+        (const_cast<Transaction&>(transaction)).recover_sender();
+    }
+    json["from"] = transaction.from.value();
+    json["gas"] = "0x" + to_hex_no_leading_zeros(transaction.gas_limit);
+    json["gasPrice"] = "0x" + to_hex_no_leading_zeros(silkworm::rlp::big_endian(transaction.gas_price));
+    auto ethash_hash{hash_of_transaction(transaction)};
+    json["hash"] = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
+    json["input"] = "0x" + silkworm::to_hex(transaction.data);
+    json["nonce"] = "0x" + to_hex_no_leading_zeros(transaction.nonce);
+    if (transaction.to) {
+        json["to"] =  transaction.to.value();
+    } else {
+        json["to"] =  "0x";
+    }
+    json["value"] =  "0x" + to_hex_no_leading_zeros(silkworm::rlp::big_endian(transaction.value));
+    json["v"] =  "0x" + to_hex_no_leading_zeros(silkworm::rlp::big_endian(transaction.v()));
+    json["r"] =  "0x" + to_hex_no_leading_zeros(silkworm::rlp::big_endian(transaction.r));
+    json["s"] =  "0x" + to_hex_no_leading_zeros(silkworm::rlp::big_endian(transaction.s));
+}
+
+} // namespace silkworm
+
+namespace silkrpc {
+
 void to_json(nlohmann::json& json, const Block& b) {
-    json["number"] = "0x" + to_hex_no_leading_zeros(b.block.header.number);
+    const auto block_number = "0x" + to_hex_no_leading_zeros(b.block.header.number);
+    json["number"] = block_number;
     json["hash"] = b.hash;
     json["parentHash"] = b.block.header.parent_hash;
-    json["nonce"] = "0x" + silkworm::to_hex({b.block.header.nonce.data(), b.block.header.nonce.size()});
+    json["nonce"] = "0x" + to_hex_no_leading_zeros({b.block.header.nonce.data(), b.block.header.nonce.size()});
     json["sha3Uncles"] = b.block.header.ommers_hash;
     json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(b.block.header.logs_bloom));
     json["transactionsRoot"] = b.block.header.transactions_root;
     json["stateRoot"] = b.block.header.state_root;
     json["receiptsRoot"] = b.block.header.receipts_root;
     json["miner"] = b.block.header.beneficiary;
-    json["difficulty"] = "0x" + silkworm::to_hex(silkworm::rlp::big_endian(b.block.header.difficulty));
-    json["totalDifficulty"] = "0x" + silkworm::to_hex(silkworm::rlp::big_endian(b.total_difficulty));
+    json["difficulty"] = "0x" + to_hex_no_leading_zeros(silkworm::rlp::big_endian(b.block.header.difficulty));
+    json["totalDifficulty"] = "0x" + to_hex_no_leading_zeros(silkworm::rlp::big_endian(b.total_difficulty));
     json["extraData"] = "0x" + silkworm::to_hex(b.block.header.extra_data);
     silkworm::Bytes block_rlp{};
     silkworm::rlp::encode(block_rlp, b.block);
@@ -124,6 +138,12 @@ void to_json(nlohmann::json& json, const Block& b) {
     json["timestamp"] = "0x" + to_hex_no_leading_zeros(b.block.header.timestamp);
     if (b.full_tx) {
         json["transactions"] = b.block.transactions;
+        for (auto i{0}; i < json["transactions"].size(); i++) {
+            auto& json_txn = json["transactions"][i];
+            json_txn["transactionIndex"] = "0x" + to_hex_no_leading_zeros(i);
+            json_txn["blockHash"] = b.hash;
+            json_txn["blockNumber"] = block_number;
+        }
     } else {
         std::vector<evmc::bytes32> transaction_hashes;
         transaction_hashes.reserve(b.block.transactions.size());

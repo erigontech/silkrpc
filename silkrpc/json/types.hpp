@@ -44,9 +44,9 @@ void from_json(const nlohmann::json& json, bytes32& b32);
 
 namespace silkworm {
 
-void to_json(nlohmann::json& json, const std::vector<BlockHeader>& ommers);
+void to_json(nlohmann::json& json, const BlockHeader& ommer);
 
-void to_json(nlohmann::json& json, const std::vector<Transaction>& transactions);
+void to_json(nlohmann::json& json, const Transaction& transaction);
 
 } // namespace silkworm
 
