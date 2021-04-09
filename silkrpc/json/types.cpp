@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <utility>
 
 #include <boost/endian/conversion.hpp>
 
@@ -60,7 +61,7 @@ void to_json(nlohmann::json& json, const std::vector<BlockHeader>& ommers) {
 }
 
 void to_json(nlohmann::json& json, const std::vector<Transaction>& transactions) {
-    // TODO (silkrpc): serialize transactions
+    // TODO(silkrpc): serialize transactions
 }
 
 } // namespace silkworm
