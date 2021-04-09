@@ -24,8 +24,9 @@
 #include <nlohmann/json.hpp>
 
 #include <silkworm/common/util.hpp>
-#include <silkworm/db/silkworm/db/tables.hpp>
-#include <silkworm/db/silkworm/db/util.hpp>
+#include <silkworm/db/access_layer.hpp>
+#include <silkworm/db/tables.hpp>
+#include <silkworm/db/util.hpp>
 #include <silkworm/execution/address.hpp>
 #include <silkworm/rlp/decode.hpp>
 #include <silkworm/rlp/encode.hpp>
@@ -80,8 +81,17 @@ asio::awaitable<evmc::bytes32> read_canonical_block_hash(DatabaseReader& reader,
 }
 
 asio::awaitable<intx::uint256> read_total_difficulty(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
-    // TODO (silkrpc): implement
-    co_return 42;
+    const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
+    silkworm::ByteView value{co_await reader.get(silkworm::db::table::kDifficulty.name, block_key)};
+    if (value.empty()) {
+        throw std::runtime_error{"empty total difficulty value in read_total_difficulty"};
+    }
+    intx::uint256 total_difficulty{0};
+    auto decoding_result{silkworm::rlp::decode(value, total_difficulty)};
+    if (decoding_result != silkworm::rlp::DecodingResult::kOk) {
+        throw std::runtime_error{"cannot RLP-decode total difficulty value in read_total_difficulty"};
+    }
+    co_return total_difficulty;
 }
 
 asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(DatabaseReader& reader, evmc::bytes32 block_hash) {
