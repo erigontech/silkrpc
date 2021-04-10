@@ -21,16 +21,17 @@
 #include <iomanip>
 
 #include <boost/endian/conversion.hpp>
-#include <ethash/keccak.hpp>
 #include <nlohmann/json.hpp>
 
 #include <silkworm/common/util.hpp>
-#include <silkworm/db/silkworm/db/tables.hpp>
-#include <silkworm/db/silkworm/db/util.hpp>
+#include <silkworm/db/access_layer.hpp>
+#include <silkworm/db/tables.hpp>
+#include <silkworm/db/util.hpp>
 #include <silkworm/execution/address.hpp>
 #include <silkworm/rlp/decode.hpp>
 #include <silkworm/rlp/encode.hpp>
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/receipt.hpp>
@@ -65,7 +66,7 @@ namespace silkrpc::core::rawdb {
 asio::awaitable<uint64_t> read_header_number(DatabaseReader& reader, evmc::bytes32 block_hash) {
     silkworm::ByteView value{co_await reader.get(silkworm::db::table::kHeaderNumbers.name, block_hash.bytes)};
     if (value.empty()) {
-        co_return 0;
+        throw std::runtime_error{"empty block number value in read_header_number"};
     }
     co_return boost::endian::load_big_u64(value.data());
 }
@@ -74,9 +75,28 @@ asio::awaitable<evmc::bytes32> read_canonical_block_hash(DatabaseReader& reader,
     const auto block_key = silkworm::db::block_key(block_number);
     auto data = co_await reader.get(silkworm::db::table::kCanonicalHashes.name, block_key);
     if (data.empty()) {
-        co_return evmc::bytes32{};
+        throw std::runtime_error{"empty block hash value in read_header_number"};
     }
     co_return silkworm::to_bytes32(data);
+}
+
+asio::awaitable<intx::uint256> read_total_difficulty(DatabaseReader& reader, evmc::bytes32 block_hash, uint64_t block_number) {
+    const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
+    silkworm::ByteView value{co_await reader.get(silkworm::db::table::kDifficulty.name, block_key)};
+    if (value.empty()) {
+        throw std::runtime_error{"empty total difficulty value in read_total_difficulty"};
+    }
+    intx::uint256 total_difficulty{0};
+    auto decoding_result{silkworm::rlp::decode(value, total_difficulty)};
+    if (decoding_result != silkworm::rlp::DecodingResult::kOk) {
+        throw std::runtime_error{"cannot RLP-decode total difficulty value in read_total_difficulty"};
+    }
+    co_return total_difficulty;
+}
+
+asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(DatabaseReader& reader, evmc::bytes32 block_hash) {
+    const auto block_number = co_await read_header_number(reader, block_hash);
+    co_return co_await read_block(reader, block_hash, block_number);
 }
 
 asio::awaitable<silkworm::BlockWithHash> read_block_by_number(DatabaseReader& reader, uint64_t block_number) {
@@ -190,19 +210,15 @@ asio::awaitable<Receipts> read_receipts(DatabaseReader& reader, evmc::bytes32 bl
     // Add derived fields to the receipts
     auto transactions = body.transactions;
     if (body.transactions.size() != receipts.size()) {
-        throw std::system_error{std::make_error_code(std::errc::value_too_large), "invalid receipt count in read_receipts"};
+        throw std::runtime_error{"invalid receipt count in read_receipts"};
     }
     if (senders.size() != receipts.size()) {
-        throw std::system_error{std::make_error_code(std::errc::value_too_large), "invalid sender count in read_receipts"};
+        throw std::runtime_error{"invalid sender count in read_receipts"};
     }
     size_t log_index{0};
     for (size_t i{0}; i < receipts.size(); i++) {
         // The tx hash can be calculated by the tx content itself
-        // TODO: move in dedicated function - START
-        silkworm::Bytes tx_rlp{};
-        silkworm::rlp::encode(tx_rlp, transactions[i]);
-        ethash::hash256 tx_hash{ethash::keccak256(tx_rlp.data(), tx_rlp.length())};
-        // TODO: move in dedicated function - END
+        auto tx_hash{hash_of_transaction(transactions[i])};
         receipts[i].tx_hash = silkworm::to_bytes32(silkworm::full_view(tx_hash.bytes));
         receipts[i].tx_index = uint32_t(i);
 
@@ -238,6 +254,7 @@ asio::awaitable<Receipts> read_receipts(DatabaseReader& reader, evmc::bytes32 bl
 asio::awaitable<Transactions> read_transactions(DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count) {
     Transactions txns{};
     if (txn_count == 0) {
+        SILKRPC_DEBUG << "txn_count: 0 #txns: 0\n";
         co_return txns;
     }
 
@@ -245,7 +262,7 @@ asio::awaitable<Transactions> read_transactions(DatabaseReader& reader, uint64_t
 
     silkworm::Bytes txn_id_key(8, '\0');
     boost::endian::store_big_u64(&txn_id_key[0], base_txn_id); // tx_id_key.data()?
-    SILKRPC_TRACE << "txn_id_key: " << silkworm::to_hex(txn_id_key) << "\n";
+    SILKRPC_DEBUG << "txn_id_key: " << silkworm::to_hex(txn_id_key) << "\n";
     size_t i{0};
     Walker walker = [&](const silkworm::Bytes&, const silkworm::Bytes& v) {
         SILKRPC_TRACE << "v: " << silkworm::to_hex(v) << "\n";
@@ -256,15 +273,14 @@ asio::awaitable<Transactions> read_transactions(DatabaseReader& reader, uint64_t
             SILKRPC_ERROR << "invalid RLP decoding for transaction index " << i << "\n";
             return false;
         }
-        ethash::hash256 tx_hash{ethash::keccak256(v.data(), v.length())};
-        SILKRPC_TRACE << "index: " << i << " tx_hash: " << silkworm::to_hex(tx_hash.bytes) << "\n";
+        SILKRPC_TRACE << "index: " << i << " tx_hash: " << silkworm::to_hex(hash_of_transaction_rlp(v).bytes) << "\n";
         txns.emplace(txns.end(), std::move(tx));
         i++;
         return i < txn_count;
     };
     co_await reader.walk(silkworm::db::table::kEthTx.name, txn_id_key, 0, walker);
 
-    SILKRPC_TRACE << "#txns: " << txns.size() << "\n";
+    SILKRPC_DEBUG << "#txns: " << txns.size() << "\n";
 
     co_return txns;
 }
