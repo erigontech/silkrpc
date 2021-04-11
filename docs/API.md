@@ -18,7 +18,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_gasPrice                            | -            | not yet implemented                        |
 |                                         |              |                                            |
 | eth_getBlockByHash                      | Yes          | not yet tested for performance             |
-| eth_getBlockByNumber                    | -            | not yet implemented                        |
+| eth_getBlockByNumber                    | Yes          | not yet tested for performance             |
 | eth_getBlockTransactionCountByHash      | -            | not yet implemented                        |
 | eth_getBlockTransactionCountByNumber    | -            | not yet implemented                        |
 | eth_getUncleByBlockHashAndIndex         | -            | not yet implemented                        |
