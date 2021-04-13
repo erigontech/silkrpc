@@ -42,14 +42,13 @@ namespace silkrpc::commands {
 
 class EthereumRpcApi {
 public:
+    explicit EthereumRpcApi(std::unique_ptr<ethdb::kv::Database>& database) : database_(database) {}
+    virtual ~EthereumRpcApi() {}
+
     EthereumRpcApi(const EthereumRpcApi&) = delete;
     EthereumRpcApi& operator=(const EthereumRpcApi&) = delete;
 
-    explicit EthereumRpcApi(std::unique_ptr<ethdb::kv::Database>& database) : database_(database) {}
-
-    virtual ~EthereumRpcApi() {}
-
-private:
+protected:
     asio::awaitable<void> handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_block_by_hash(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_block_by_number(const nlohmann::json& request, nlohmann::json& reply);
@@ -60,6 +59,7 @@ private:
     asio::awaitable<Receipts> get_receipts(core::rawdb::DatabaseReader& db_reader, uint64_t number, evmc::bytes32 hash);
     std::vector<Log> filter_logs(std::vector<Log>& logs, const Filter& filter);
 
+private:
     std::unique_ptr<ethdb::kv::Database>& database_;
 
     friend class silkrpc::http::RequestHandler;

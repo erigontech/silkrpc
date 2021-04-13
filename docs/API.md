@@ -4,8 +4,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 
 | Command                                 | Availability | Notes                                      |
 | :-------------------------------------- | :----------: | -----------------------------------------: |
-| web3_clientVersion                      | -            | not yet implemented                        |
-| web3_sha3                               | -            | not yet implemented                        |
+| web3_clientVersion                      | Yes          | missing TG gitCommit and Go version        |
+| web3_sha3                               | Yes          |                                            |
 |                                         |              |                                            |
 | net_listening                           | -            | not yet implemented                        |
 | net_peerCount                           | -            | not yet implemented                        |
