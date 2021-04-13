@@ -65,13 +65,12 @@ void from_json(const nlohmann::json& json, Filter& filter);
 
 void to_json(nlohmann::json& json, const Error& error);
 
-} // namespace silkrpc
-
-namespace silkrpc::json {
+std::string to_hex_no_leading_zeros(uint64_t number);
+std::string to_hex_no_leading_zeros(silkworm::ByteView bytes);
 
 nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result);
 nlohmann::json make_json_error(uint32_t id, uint32_t code, const std::string& message);
 
-} // namespace silkrpc::json
+} // namespace silkrpc
 
 #endif  // SILKRPC_JSON_TYPES_HPP_

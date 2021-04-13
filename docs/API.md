@@ -7,9 +7,9 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | web3_clientVersion                      | Yes          | missing TG gitCommit and Go version        |
 | web3_sha3                               | Yes          |                                            |
 |                                         |              |                                            |
-| net_listening                           | -            | not yet implemented                        |
-| net_peerCount                           | -            | not yet implemented                        |
-| net_version                             | -            | not yet implemented                        |
+| net_listening                           | Yes          | hard-coded                                 |
+| net_peerCount                           | Yes          | hard-coded (needs p2pSentry integration)   |
+| net_version                             | Yes          | hard-coded                                 |
 |                                         |              |                                            |
 | eth_blockNumber                         | Yes          |                                            |
 | eth_chainID                             | -            | not yet implemented                        |

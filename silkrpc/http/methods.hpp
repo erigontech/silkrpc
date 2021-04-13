@@ -34,6 +34,10 @@ constexpr const char* k_eth_getBlockByHash{"eth_getBlockByHash"};
 constexpr const char* k_eth_getBlockByNumber{"eth_getBlockByNumber"};
 constexpr const char* k_eth_getLogs{"eth_getLogs"};
 
+constexpr const char* k_net_listening{"net_listening"};
+constexpr const char* k_net_peerCount{"net_peerCount"};
+constexpr const char* k_net_version{"net_version"};
+
 constexpr const char* k_web3_clientVersion{"web3_clientVersion"};
 constexpr const char* k_web3_sha3{"web3_sha3"};
 

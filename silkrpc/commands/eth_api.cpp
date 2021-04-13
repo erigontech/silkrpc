@@ -44,13 +44,13 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
     try {
         ethdb::kv::TransactionDatabase tx_database{*tx};
         const auto block_height = co_await core::get_current_block_number(tx_database);
-        reply = json::make_json_content(request["id"], block_height);
+        reply = make_json_content(request["id"], block_height);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
-        reply = json::make_json_error(request["id"], 100, e.what());
+        reply = make_json_error(request["id"], 100, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception\n";
-        reply = json::make_json_error(request["id"], 100, "unexpected exception");
+        reply = make_json_error(request["id"], 100, "unexpected exception");
     }
 
     co_await tx->close(); // RAII not (yet) available with coroutines
@@ -63,7 +63,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_hash(const nlohman
     if (params.size() != 2) {
         auto error_msg = "invalid eth_getLogs params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
-        reply = json::make_json_error(request["id"], 100, error_msg);
+        reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
     auto block_hash = params[0].get<evmc::bytes32>();
@@ -80,13 +80,13 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_hash(const nlohman
         const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_hash, block_number);
         const Block extended_block{block_with_hash, total_difficulty, full_tx};
 
-        reply = json::make_json_content(request["id"], extended_block);
+        reply = make_json_content(request["id"], extended_block);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
-        reply = json::make_json_error(request["id"], 100, e.what());
+        reply = make_json_error(request["id"], 100, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception\n";
-        reply = json::make_json_error(request["id"], 100, "unexpected exception");
+        reply = make_json_error(request["id"], 100, "unexpected exception");
     }
 
     co_await tx->close(); // RAII not (yet) available with coroutines
@@ -99,7 +99,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_number(const nlohm
     if (params.size() != 2) {
         auto error_msg = "invalid eth_getLogs params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
-        reply = json::make_json_error(request["id"], 100, error_msg);
+        reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
     const auto block_number_or_name = params[0].get<std::string>();
@@ -126,13 +126,13 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_number(const nlohm
         const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_with_hash.hash, block_number);
         const Block extended_block{block_with_hash, total_difficulty, full_tx};
 
-        reply = json::make_json_content(request["id"], extended_block);
+        reply = make_json_content(request["id"], extended_block);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
-        reply = json::make_json_error(request["id"], 100, e.what());
+        reply = make_json_error(request["id"], 100, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception\n";
-        reply = json::make_json_error(request["id"], 100, "unexpected exception");
+        reply = make_json_error(request["id"], 100, "unexpected exception");
     }
 
     co_await tx->close(); // RAII not (yet) available with coroutines
@@ -145,7 +145,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
     if (params.size() != 1) {
         auto error_msg = "invalid eth_getLogs params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
-        reply = json::make_json_error(request["id"], 100, error_msg);
+        reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
     auto filter = params[0].get<Filter>();
@@ -164,7 +164,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
             if (!block_hash_bytes.has_value()) {
                 auto error_msg = "invalid eth_getLogs filter block_hash: " + filter.block_hash.value();
                 SILKRPC_ERROR << error_msg << "\n";
-                reply = json::make_json_error(request["id"], 100, error_msg);
+                reply = make_json_error(request["id"], 100, error_msg);
                 co_await tx->close(); // RAII not (yet) available with coroutines
                 co_return;
             }
@@ -207,7 +207,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
         SILKRPC_TRACE << "block_numbers: " << block_numbers.toString() << "\n";
 
         if (block_numbers.cardinality() == 0) {
-            reply = json::make_json_content(request["id"], logs);
+            reply = make_json_content(request["id"], logs);
             co_await tx->close(); // RAII not (yet) available with coroutines
             co_return;
         }
@@ -221,7 +221,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
             auto block_hash = co_await core::rawdb::read_canonical_block_hash(tx_database, uint64_t(block_to_match));
             SILKRPC_DEBUG << "block_hash: " << silkworm::to_hex(block_hash) << "\n";
             if (block_hash == evmc::bytes32{}) {
-                reply = json::make_json_content(request["id"], logs);
+                reply = make_json_content(request["id"], logs);
                 co_await tx->close(); // RAII not (yet) available with coroutines
                 co_return;
             }
@@ -241,13 +241,13 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
         }
         SILKRPC_INFO << "logs.size(): " << logs.size() << "\n";
 
-        reply = json::make_json_content(request["id"], logs);
+        reply = make_json_content(request["id"], logs);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = json::make_json_error(request["id"], 100, e.what());
+        reply = make_json_error(request["id"], 100, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        reply = json::make_json_error(request["id"], 100, "unexpected exception");
+        reply = make_json_error(request["id"], 100, "unexpected exception");
     }
 
     co_await tx->close(); // RAII not (yet) available with coroutines

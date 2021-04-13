@@ -28,7 +28,7 @@
 namespace silkrpc::commands {
 
 asio::awaitable<void> Web3RpcApi::handle_web3_client_version(const nlohmann::json& request, nlohmann::json& reply) {
-    reply = json::make_json_content(request["id"], common::kEthereumNodeName);
+    reply = make_json_content(request["id"], common::kEthereumNodeName);
     co_return;
 }
 
@@ -37,7 +37,7 @@ asio::awaitable<void> Web3RpcApi::handle_web3_sha3(const nlohmann::json& request
     if (params.size() != 1) {
         auto error_msg = "invalid web3_sha3 params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
-        reply = json::make_json_error(request["id"], 100, error_msg);
+        reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
     const auto input_string = params[0].get<std::string>();
@@ -45,12 +45,12 @@ asio::awaitable<void> Web3RpcApi::handle_web3_sha3(const nlohmann::json& request
     if (!optional_input_bytes) {
         auto error_msg = "invalid input: " + input_string;
         SILKRPC_ERROR << error_msg << "\n";
-        reply = json::make_json_error(request["id"], 100, error_msg);
+        reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
     auto eth_hash = hash_of(optional_input_bytes.value());
     const auto output = "0x" + silkworm::to_hex({eth_hash.bytes, silkworm::kHashLength});
-    reply = json::make_json_content(request["id"], output);
+    reply = make_json_content(request["id"], output);
     co_return;
 }
 
