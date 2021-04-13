@@ -51,8 +51,8 @@ inline Bytes bytes_of_string(const std::string& s) {
 
 } // namespace silkworm
 
-inline auto hash_of_transaction_rlp(const silkworm::Bytes& txn_rlp) {
-    return ethash::keccak256(txn_rlp.data(), txn_rlp.length());
+inline auto hash_of(const silkworm::ByteView& bytes) {
+    return ethash::keccak256(bytes.data(), bytes.length());
 }
 
 inline auto hash_of_transaction(const silkworm::Transaction& txn) {

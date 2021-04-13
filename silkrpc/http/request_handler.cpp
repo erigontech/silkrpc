@@ -36,10 +36,12 @@
 namespace silkrpc::http {
 
 std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = {
-    {method::k_eth_blockNumber, &commands::EthereumRpcApi::handle_eth_block_number},
-    {method::k_eth_getBlockByHash, &commands::EthereumRpcApi::handle_eth_get_block_by_hash},
-    {method::k_eth_getBlockByNumber, &commands::EthereumRpcApi::handle_eth_get_block_by_number},
-    {method::k_eth_getLogs, &commands::EthereumRpcApi::handle_eth_get_logs},
+    {method::k_eth_blockNumber, &commands::RpcApi::handle_eth_block_number},
+    {method::k_eth_getBlockByHash, &commands::RpcApi::handle_eth_get_block_by_hash},
+    {method::k_eth_getBlockByNumber, &commands::RpcApi::handle_eth_get_block_by_number},
+    {method::k_eth_getLogs, &commands::RpcApi::handle_eth_get_logs},
+    {method::k_web3_clientVersion, &commands::RpcApi::handle_web3_client_version},
+    {method::k_web3_sha3, &commands::RpcApi::handle_web3_sha3},
 };
 
 asio::awaitable<void> RequestHandler::handle_request(const Request& request, Reply& reply) {
@@ -81,7 +83,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
 
         nlohmann::json reply_json;
         auto handle_method = RequestHandler::handlers_[method];
-        co_await (&eth_rpc_api_->*handle_method)(request_json, reply_json);
+        co_await (&rpc_api_->*handle_method)(request_json, reply_json);
 
         reply.content = reply_json.dump();
         reply.status = Reply::ok;

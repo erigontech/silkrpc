@@ -31,7 +31,7 @@
 
 #include <asio/awaitable.hpp>
 
-#include <silkrpc/commands/eth_api.hpp>
+#include <silkrpc/commands/rpc_api.hpp>
 #include <silkrpc/ethdb/kv/database.hpp>
 
 namespace silkrpc::http {
@@ -44,17 +44,17 @@ public:
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
-    explicit RequestHandler(std::unique_ptr<ethdb::kv::Database>& database) : database_(database), eth_rpc_api_{database} {}
-
+    explicit RequestHandler(std::unique_ptr<ethdb::kv::Database>& database)
+    : database_(database), rpc_api_{database} {}
     virtual ~RequestHandler() {}
 
     asio::awaitable<void> handle_request(const Request& request, Reply& reply);
 
 private:
     std::unique_ptr<ethdb::kv::Database>& database_;
-    commands::EthereumRpcApi eth_rpc_api_;
+    commands::RpcApi rpc_api_;
 
-    typedef asio::awaitable<void> (commands::EthereumRpcApi::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
+    typedef asio::awaitable<void> (commands::RpcApi::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
     static std::map<std::string, HandleMethod> handlers_;
 };
 

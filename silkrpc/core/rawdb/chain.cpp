@@ -273,7 +273,7 @@ asio::awaitable<Transactions> read_transactions(DatabaseReader& reader, uint64_t
             SILKRPC_ERROR << "invalid RLP decoding for transaction index " << i << "\n";
             return false;
         }
-        SILKRPC_TRACE << "index: " << i << " tx_hash: " << silkworm::to_hex(hash_of_transaction_rlp(v).bytes) << "\n";
+        SILKRPC_TRACE << "index: " << i << " tx_hash: " << silkworm::to_hex(hash_of(v).bytes) << "\n";
         txns.emplace(txns.end(), std::move(tx));
         i++;
         return i < txn_count;
