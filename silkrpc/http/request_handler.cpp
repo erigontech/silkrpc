@@ -40,6 +40,9 @@ std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = 
     {method::k_eth_getBlockByHash, &commands::RpcApi::handle_eth_get_block_by_hash},
     {method::k_eth_getBlockByNumber, &commands::RpcApi::handle_eth_get_block_by_number},
     {method::k_eth_getLogs, &commands::RpcApi::handle_eth_get_logs},
+    {method::k_net_listening, &commands::RpcApi::handle_net_listening},
+    {method::k_net_peerCount, &commands::RpcApi::handle_net_peer_count},
+    {method::k_net_version, &commands::RpcApi::handle_net_version},
     {method::k_web3_clientVersion, &commands::RpcApi::handle_web3_client_version},
     {method::k_web3_sha3, &commands::RpcApi::handle_web3_sha3},
 };

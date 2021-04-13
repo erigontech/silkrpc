@@ -14,32 +14,39 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMANDS_RPC_API_HPP_
-#define SILKRPC_COMMANDS_RPC_API_HPP_
+#ifndef SILKRPC_COMMANDS_NET_API_HPP_
+#define SILKRPC_COMMANDS_NET_API_HPP_
 
 #include <memory>
+#include <vector>
 
-#include <silkrpc/commands/eth_api.hpp>
-#include <silkrpc/commands/net_api.hpp>
-#include <silkrpc/commands/web3_api.hpp>
-#include <silkrpc/ethdb/kv/database.hpp>
+#include <silkrpc/config.hpp> // NOLINT(build/include_order)
+
+#include <asio/awaitable.hpp>
+#include <nlohmann/json.hpp>
+
+#include <silkrpc/json/types.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
-class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi {
+class NetRpcApi {
 public:
-    explicit RpcApi(std::unique_ptr<ethdb::kv::Database>& database)
-    : EthereumRpcApi{database}, NetRpcApi{}, Web3RpcApi{database} {}
-    virtual ~RpcApi() {}
+    NetRpcApi() = default;
+    virtual ~NetRpcApi() = default;
 
-    RpcApi(const RpcApi&) = delete;
-    RpcApi& operator=(const RpcApi&) = delete;
+    NetRpcApi(const NetRpcApi&) = delete;
+    NetRpcApi& operator=(const NetRpcApi&) = delete;
+
+protected:
+    asio::awaitable<void> handle_net_listening(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_net_peer_count(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_net_version(const nlohmann::json& request, nlohmann::json& reply);
 
     friend class silkrpc::http::RequestHandler;
 };
 
 } // namespace silkrpc::commands
 
-#endif  // SILKRPC_COMMANDS_RPC_API_HPP_
+#endif  // SILKRPC_COMMANDS_NET_API_HPP_
