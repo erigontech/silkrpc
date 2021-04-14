@@ -134,7 +134,7 @@ class initiate_async_seek {
 public:
     typedef Executor executor_type;
 
-    explicit initiate_async_seek(KvAsioAwaitable<Executor>* self, uint32_t cursor_id, const silkworm::Bytes& seek_key_bytes)
+    explicit initiate_async_seek(KvAsioAwaitable<Executor>* self, uint32_t cursor_id, const silkworm::ByteView& seek_key_bytes)
     : self_(self), cursor_id_(cursor_id), seek_key_bytes_(std::move(seek_key_bytes)) {}
 
     executor_type get_executor() const noexcept { return self_->get_executor(); }
@@ -151,7 +151,7 @@ public:
         auto seek_message = remote::Cursor{};
         seek_message.set_op(remote::Op::SEEK);
         seek_message.set_cursor(cursor_id_);
-        seek_message.set_k(seek_key_bytes_.c_str(), seek_key_bytes_.length());
+        seek_message.set_k(seek_key_bytes_.data(), seek_key_bytes_.length());
         self_->client_.write_start(seek_message, [this](const ::grpc::Status& status) {
             if (!status.ok()) {
                 throw make_system_error(status, "write failed in SEEK");
@@ -171,7 +171,7 @@ public:
 private:
     KvAsioAwaitable<Executor>* self_;
     uint32_t cursor_id_;
-    const silkworm::Bytes seek_key_bytes_;
+    const silkworm::ByteView seek_key_bytes_;
     void* wrapper_;
 };
 
@@ -318,7 +318,7 @@ struct KvAsioAwaitable {
     }
 
     template<typename WaitHandler>
-    auto async_seek(uint32_t cursor_id, const silkworm::Bytes& seek_key_bytes, WaitHandler&& handler) {
+    auto async_seek(uint32_t cursor_id, const silkworm::ByteView& seek_key_bytes, WaitHandler&& handler) {
         return asio::async_initiate<WaitHandler, void(remote::Pair)>(initiate_async_seek{this, cursor_id, seek_key_bytes}, handler);
     }
 

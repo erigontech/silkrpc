@@ -24,18 +24,14 @@
 
 namespace silkrpc::ethdb::kv {
 
-asio::awaitable<bool> TransactionDatabase::has(const std::string& table_name, const silkworm::Bytes& key) {
-    co_return false;
-}
-
-asio::awaitable<silkworm::Bytes> TransactionDatabase::get(const std::string& table, const silkworm::Bytes& key) const {
+asio::awaitable<silkworm::Bytes> TransactionDatabase::get(const std::string& table, const silkworm::ByteView& key) const {
     const auto cursor = co_await tx_.cursor(table);
     SILKRPC_TRACE << "TransactionDatabase::get cursor_id: " << cursor->cursor_id() << "\n";
     const auto kv_pair = co_await cursor->seek(key);
     co_return kv_pair.value;
 }
 
-asio::awaitable<void> TransactionDatabase::walk(const std::string& table, const silkworm::Bytes& start_key, uint32_t fixed_bits, core::rawdb::Walker w) {
+asio::awaitable<void> TransactionDatabase::walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, core::rawdb::Walker w) const {
     const auto fixed_bytes = (fixed_bits + 7) / CHAR_BIT;
     SILKRPC_TRACE << "fixed_bits: " << fixed_bits << " fixed_bytes: " << fixed_bytes << "\n";
     const auto shift_bits = fixed_bits & 7;

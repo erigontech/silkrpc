@@ -29,7 +29,7 @@ asio::awaitable<void> RemoteCursor::open_cursor(const std::string& table_name) {
     co_return;
 }
 
-asio::awaitable<silkrpc::common::KeyValue> RemoteCursor::seek(const silkworm::Bytes& seek_key) {
+asio::awaitable<silkrpc::common::KeyValue> RemoteCursor::seek(const silkworm::ByteView& seek_key) {
     const auto start_time = clock_time::now();
     SILKRPC_TRACE << "RemoteCursor::seek cursor: " << cursor_id_ << " seek_key: " << seek_key << "\n";
     auto seek_pair = co_await kv_awaitable_.async_seek(cursor_id_, seek_key, asio::use_awaitable);

@@ -46,7 +46,7 @@ public:
 
     asio::awaitable<void> open_cursor(const std::string& table_name) override;
 
-    asio::awaitable<silkrpc::common::KeyValue> seek(const silkworm::Bytes& seek_key) override;
+    asio::awaitable<silkrpc::common::KeyValue> seek(const silkworm::ByteView& seek_key) override;
 
     asio::awaitable<silkrpc::common::KeyValue> next() override;
 

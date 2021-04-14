@@ -37,6 +37,7 @@ namespace silkrpc::http {
 
 std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = {
     {method::k_eth_blockNumber, &commands::RpcApi::handle_eth_block_number},
+    {method::k_eth_chainId, &commands::RpcApi::handle_eth_chain_id},
     {method::k_eth_getBlockByHash, &commands::RpcApi::handle_eth_get_block_by_hash},
     {method::k_eth_getBlockByNumber, &commands::RpcApi::handle_eth_get_block_by_number},
     {method::k_eth_getLogs, &commands::RpcApi::handle_eth_get_logs},

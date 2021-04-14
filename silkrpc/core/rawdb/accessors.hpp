@@ -28,15 +28,13 @@
 
 namespace silkrpc::core::rawdb {
 
-typedef std::function<bool(silkworm::Bytes&,silkworm::Bytes&)> Walker;
+using Walker = std::function<bool(silkworm::Bytes&,silkworm::Bytes&)>;
 
 class DatabaseReader {
 public:
-    virtual asio::awaitable<bool> has(const std::string& table, const silkworm::Bytes& key) = 0; // Bytes => ByteView?
+    virtual asio::awaitable<silkworm::Bytes> get(const std::string& table, const silkworm::ByteView& key) const = 0;
 
-    virtual asio::awaitable<silkworm::Bytes> get(const std::string& table, const silkworm::Bytes& key) const = 0; // Bytes => ByteView?
-
-    virtual asio::awaitable<void> walk(const std::string& table, const silkworm::Bytes& start_key, uint32_t fixed_bits, Walker w) = 0;
+    virtual asio::awaitable<void> walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, Walker w) const = 0;
 };
 
 } // namespace silkrpc::core::rawdb
