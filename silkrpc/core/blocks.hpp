@@ -33,6 +33,8 @@ asio::awaitable<uint64_t> get_block_number(uint64_t number, const core::rawdb::D
 
 asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::DatabaseReader& reader);
 
+asio::awaitable<uint64_t> get_highest_block_number(const core::rawdb::DatabaseReader& reader);
+
 asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader);
 
 } // namespace silkrpc::core

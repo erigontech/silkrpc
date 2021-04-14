@@ -35,6 +35,11 @@ asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::DatabaseRe
     co_return current_block_number;
 }
 
+asio::awaitable<uint64_t> get_highest_block_number(const core::rawdb::DatabaseReader& reader) {
+    const auto current_block_number = co_await stages::get_sync_stage_progress(reader, stages::kHeaders);
+    co_return current_block_number;
+}
+
 asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader) {
     const auto latest_block_number = co_await stages::get_sync_stage_progress(reader, stages::kExecution);
     co_return latest_block_number;

@@ -51,6 +51,8 @@ public:
 protected:
     asio::awaitable<void> handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_chain_id(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_protocol_version(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_syncing(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_block_by_hash(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_block_by_number(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply);
