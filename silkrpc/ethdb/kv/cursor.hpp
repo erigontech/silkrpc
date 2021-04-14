@@ -39,7 +39,7 @@ public:
 
     virtual asio::awaitable<void> open_cursor(const std::string& table_name) = 0;
 
-    virtual asio::awaitable<silkrpc::common::KeyValue> seek(const silkworm::Bytes& seek_key) = 0;
+    virtual asio::awaitable<silkrpc::common::KeyValue> seek(const silkworm::ByteView& seek_key) = 0;
 
     virtual asio::awaitable<silkrpc::common::KeyValue> next() = 0;
 

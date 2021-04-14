@@ -44,7 +44,27 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
     try {
         ethdb::kv::TransactionDatabase tx_database{*tx};
         const auto block_height = co_await core::get_current_block_number(tx_database);
-        reply = make_json_content(request["id"], block_height);
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(block_height));
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+        reply = make_json_error(request["id"], 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
+// https://eth.wiki/json-rpc/API#eth_chainId
+asio::awaitable<void> EthereumRpcApi::handle_eth_chain_id(const nlohmann::json& request, nlohmann::json& reply) {
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::kv::TransactionDatabase tx_database{*tx};
+        const auto chain_id = co_await core::rawdb::read_chain_config(tx_database);
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(chain_id));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());

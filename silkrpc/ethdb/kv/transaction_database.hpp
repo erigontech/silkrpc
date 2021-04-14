@@ -33,11 +33,9 @@ public:
     TransactionDatabase(const TransactionDatabase&) = delete;
     TransactionDatabase& operator=(const TransactionDatabase&) = delete;
 
-    asio::awaitable<bool> has(const std::string& table, const silkworm::Bytes& key) override;
+    asio::awaitable<silkworm::Bytes> get(const std::string& table, const silkworm::ByteView& key) const override;
 
-    asio::awaitable<silkworm::Bytes> get(const std::string& table, const silkworm::Bytes& key) const override;
-
-    asio::awaitable<void> walk(const std::string& table, const silkworm::Bytes& start_key, uint32_t fixed_bits, core::rawdb::Walker w) override;
+    asio::awaitable<void> walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, core::rawdb::Walker w) const override;
 
     void close();
 private:
