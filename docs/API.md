@@ -13,8 +13,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 |                                         |              |                                            |
 | eth_blockNumber                         | Yes          |                                            |
 | eth_chainId                             | Yes          |                                            |
-| eth_protocolVersion                     | -            | not yet implemented                        |
-| eth_syncing                             | -            | not yet implemented                        |
+| eth_protocolVersion                     | Yes          |                                            |
+| eth_syncing                             | Yes          |                                            |
 | eth_gasPrice                            | -            | not yet implemented                        |
 |                                         |              |                                            |
 | eth_getBlockByHash                      | Yes          | not yet tested for performance             |

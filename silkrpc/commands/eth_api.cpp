@@ -26,6 +26,7 @@
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/receipt.hpp>
 #include <silkworm/db/tables.hpp>
+#include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/core/blocks.hpp>
@@ -65,6 +66,40 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_chain_id(const nlohmann::json& 
         ethdb::kv::TransactionDatabase tx_database{*tx};
         const auto chain_id = co_await core::rawdb::read_chain_config(tx_database);
         reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(chain_id));
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+        reply = make_json_error(request["id"], 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
+// https://eth.wiki/json-rpc/API#eth_protocolVersion
+asio::awaitable<void> EthereumRpcApi::handle_eth_protocol_version(const nlohmann::json& request, nlohmann::json& reply) {
+    reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(common::kETH66));
+    co_return;
+}
+
+// https://eth.wiki/json-rpc/API#eth_syncing
+asio::awaitable<void> EthereumRpcApi::handle_eth_syncing(const nlohmann::json& request, nlohmann::json& reply) {
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::kv::TransactionDatabase tx_database{*tx};
+        const auto current_block_height = co_await core::get_current_block_number(tx_database);
+        const auto highest_block_height = co_await core::get_highest_block_number(tx_database);
+        if (current_block_height >= highest_block_height) {
+            reply = make_json_content(request["id"], false);
+        } else {
+            reply = make_json_content(request["id"], {
+                {"currentBlock", "0x" + to_hex_no_leading_zeros(current_block_height)},
+                {"highestBlock", "0x" + to_hex_no_leading_zeros(highest_block_height)},
+            });
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
