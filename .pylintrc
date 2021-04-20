@@ -1,8 +1,7 @@
 [MASTER]
 
 # Python code to execute, usually for sys.path manipulation
-init-hook=
-    sys.path.append(os.getcwd());
+init-hook= sys.path.append(os.getcwd());
 
 
 [MESSAGES CONTROL]
@@ -11,7 +10,7 @@ init-hook=
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
-disable=too-many-ancestors,duplicate-code,not-callable,too-few-public-methods
+disable=too-many-ancestors,duplicate-code,not-callable,too-few-public-methods,W0603
 
 
 [DESIGN]
