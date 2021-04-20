@@ -10,7 +10,7 @@ init-hook= sys.path.append(os.getcwd());
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
-disable=too-many-ancestors,duplicate-code,not-callable,too-few-public-methods,W0603
+disable=too-many-ancestors,duplicate-code,not-callable,too-few-public-methods
 
 
 [DESIGN]
