@@ -107,6 +107,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | tg_getLogsByHash                        | -            | not yet implemented                        |
 | tg_forks                                | -            | not yet implemented                        |
 | tg_issuance                             | -            | not yet implemented                        |
+|                                         |              |                                            |
+| parity_getBlockReceipts                 | -            | not yet implemented                        |
 
 This table is constantly updated. Please visit again.
 
