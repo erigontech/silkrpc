@@ -141,7 +141,9 @@ class PerfTest:
         test_report_filename = "./getLogs_"+str(qps_value)+"qps_"+str(time_value)+"s_"+name+"_perf.hrd"
         file = open(test_report_filename)
         try:
-            latency_values = file.readlines()[2].split(',')
+            line = file.readlines()[2]
+            newline = line.replace('\n', ' ');
+            latency_values = newline.split(',')
             min_latency = latency_values[6].split(']')[1]
             mean = latency_values[7]
             fifty = latency_values[8]
@@ -200,7 +202,7 @@ class TestReport:
     def write_test_report(self, daemon, test_number, qps_value, time_value, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency):
         """ Writes on CVS the latency data for one completed test
         """
-        self.writer.writerow([daemon, str(test_number), qps_value, time_value, str(min_latency), str(mean), str(fifty), str(ninty), str(nintyfive), str(nintynine), str(max_latency)])
+        self.writer.writerow([daemon, str(test_number), qps_value, time_value, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency])
         self.csv_file.flush()
 
 
