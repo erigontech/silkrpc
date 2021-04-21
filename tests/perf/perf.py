@@ -72,10 +72,10 @@ class PerfTest:
         self.silk_daemon = 0
         self.stop_rpc_daemon()
         self.stop_silk_daemon()
-        self.copies_pattern_file()
+        self.copy_pattern_file()
 
-    def copies_pattern_file(self):
-        """ copies the vegeta pattern file into /tmp and untar zip file
+    def copy_pattern_file(self):
+        """ copy the vegeta pattern file into /tmp and untar zip file
         """
         cmd = "/bin/cp -f " + self.config_class.pattern_tar_file + " /tmp"
         os.system(cmd)
