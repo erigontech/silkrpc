@@ -24,6 +24,7 @@
 #include <asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
+#include <nlohmann/json.hpp>
 
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
@@ -37,7 +38,9 @@ typedef std::vector<silkworm::Transaction> Transactions;
 
 asio::awaitable<uint64_t> read_header_number(const DatabaseReader& reader, const evmc::bytes32& block_hash);
 
-asio::awaitable<uint64_t> read_chain_config(const DatabaseReader& reader);
+asio::awaitable<nlohmann::json> read_chain_config(const DatabaseReader& reader);
+
+asio::awaitable<uint64_t> read_chain_id(const DatabaseReader& reader);
 
 asio::awaitable<evmc::bytes32> read_canonical_block_hash(const DatabaseReader& reader, uint64_t block_number);
 

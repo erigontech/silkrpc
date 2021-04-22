@@ -20,12 +20,14 @@
 
 namespace silkrpc::core {
 
-asio::awaitable<uint64_t> get_block_number(uint64_t number, const core::rawdb::DatabaseReader& reader) {
-    auto block_number = number;
-    if (number == kLatestBlockNumber || number == kPendingBlockNumber) {
+asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader) {
+    uint64_t block_number;
+    if (block_id == kEarliestBlockId) {
+        block_number = kEarliestBlockNumber;
+    } else if (block_id == kLatestBlockId || block_id == kPendingBlockId) {
         block_number = co_await get_latest_block_number(reader);
-    } else if (number == kEarliestBlockNumber) {
-        block_number = 0;
+    } else {
+        block_number = std::stol(block_id, 0, 16);
     }
     co_return block_number;
 }

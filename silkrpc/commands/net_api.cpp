@@ -20,16 +20,19 @@
 
 namespace silkrpc::commands {
 
+// https://eth.wiki/json-rpc/API#net_listening
 asio::awaitable<void> NetRpcApi::handle_net_listening(const nlohmann::json& request, nlohmann::json& reply) {
     reply = make_json_content(request["id"], true);
     co_return;
 }
 
+// https://eth.wiki/json-rpc/API#net_peercount
 asio::awaitable<void> NetRpcApi::handle_net_peer_count(const nlohmann::json& request, nlohmann::json& reply) {
     reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(25));
     co_return;
 }
 
+// https://eth.wiki/json-rpc/API#net_version
 asio::awaitable<void> NetRpcApi::handle_net_version(const nlohmann::json& request, nlohmann::json& reply) {
     reply = make_json_content(request["id"], 5);
     co_return;
