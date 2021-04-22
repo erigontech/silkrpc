@@ -16,6 +16,8 @@
 
 #include "remote_cursor.hpp"
 
+#include <silkrpc/common/clock_time.hpp>
+
 namespace silkrpc::ethdb::kv {
 
 asio::awaitable<void> RemoteCursor::open_cursor(const std::string& table_name) {
