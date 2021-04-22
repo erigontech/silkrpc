@@ -34,6 +34,7 @@ constexpr const char* k_eth_chainId{"eth_chainId"};
 constexpr const char* k_eth_protocolVersion{"eth_protocolVersion"};
 constexpr const char* k_eth_syncing{"eth_syncing"};
 constexpr const char* k_eth_getBlockByHash{"eth_getBlockByHash"};
+constexpr const char* k_eth_getBlockTransactionCountByHash{"eth_getBlockTransactionCountByHash"};
 constexpr const char* k_eth_getBlockByNumber{"eth_getBlockByNumber"};
 constexpr const char* k_eth_getLogs{"eth_getLogs"};
 
