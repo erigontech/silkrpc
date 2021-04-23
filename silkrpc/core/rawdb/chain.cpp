@@ -125,14 +125,8 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const DatabaseRead
 
 asio::awaitable<silkworm::BlockWithHash> read_block(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     auto header = co_await read_header(reader, block_hash, block_number);
-    if (header == silkworm::BlockHeader{}) {
-        throw std::runtime_error{"empty block header in read_block"};
-    }
     SILKRPC_INFO << "header: number=" << header.number << "\n";
     auto body = co_await read_body(reader, block_hash, block_number);
-    if (body == silkworm::BlockBody{}) {
-        throw std::runtime_error{"empty block body in read_block"};
-    }
     SILKRPC_INFO << "body: #txn=" << body.transactions.size() << " #ommers=" << body.ommers.size() << "\n";
     silkworm::BlockWithHash block{silkworm::Block{body.transactions, body.ommers, header}, block_hash};
     co_return block;
@@ -170,7 +164,7 @@ asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& reader, con
         co_return body;
     } catch (silkworm::rlp::DecodingResult error) {
         SILKRPC_ERROR << "RLP decoding error for block body #" << block_number << " [" << static_cast<int>(error) << "]\n";
-        co_return silkworm::BlockBody{};
+        throw std::runtime_error{"RLP decoding error for block body [" + std::to_string(static_cast<int>(error)) + "]"};
     }
 }
 
