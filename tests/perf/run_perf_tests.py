@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """ This script is responsible using vegeta to make a list of performance tests (configured via command line) and saves its result on csv file
 """
 
@@ -55,8 +57,16 @@ class Config:
             self.repetitions = int(argv[5])
             self.test_sequence = argv[6]
         else:
-            print("usage: "+argv[0]+ " <vegetaPatternTarFile> [daemonOnCore - or 0-1 or 0-2 ...]")
-            print("               [turboGethAddress i.e localhost:porta or 1.1.1.1:porta] [gethHomeDir i.e ../../../turbo-geth/] [test repetitions i.e 10] [test seq i.e 200:30,400:10]")
+            print("Usage: " + argv[0] + " vegetaPatternTarFile [daemonOnCore] [turboGethAddress] [turboGethHomeDir] [testRepetitions] [testSequence]")
+            print("")
+            print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
+            print("")
+            print("vegetaPatternTarFile     path to the request file for Vegeta attack")
+            print("daemonOnCore             logical cpu list in taskset format (e.g. - or 0-1 or 0-2 or 0,2...)              [default: " + DEFAULT_DAEMON_ON_CORE +"]")
+            print("turboGethAddress         address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: " + DEFAULT_TG_ADDRESS + "]")
+            print("turboGethHomeDir         path to TG home folder (e.g. ../../../turbo-geth/)                               [default: " + DEFAULT_GETH_HOME_DIR + "]")
+            print("testRepetitions          number of repetitions for each element in test sequence (e.g. 10)                [default: " + str(DEFAULT_REPETITIONS) + "]")
+            print("testSequence             list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10) [default: " + DEFAULT_TEST_SEQUENCE + "]")
             sys.exit(-1)
 
 
@@ -221,9 +231,6 @@ class TestReport:
 #
 # main
 #
-# usage: ptrhon perf.py <vegetaPatternTarFile> [daemonOnCore - or 0-1 or 0-2 ...]
-#                       [turboGethAddress i.e localhost:porta or 1.1.1.1:porta] [gethHomeDir i.e ../../../turbo-geth/] [test repetitions i.e 10] [test seq i.e 200:30,400:10]
-#
 def main(argv):
     """ Executes tests on selected user configuration
     """
@@ -269,7 +276,7 @@ def main(argv):
 
 
 #
-# main
+# module as main
 #
 if __name__ == "__main__":
     main(sys.argv)
