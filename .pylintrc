@@ -1,0 +1,25 @@
+[MASTER]
+
+# Python code to execute, usually for sys.path manipulation
+init-hook= sys.path.append(os.getcwd());
+
+
+[MESSAGES CONTROL]
+
+# Disable the message, report, category or checker with the given id(s). You
+# can either give multiple identifier separated by comma (,) or put this option
+# multiple time (only on the command line, not in the configuration file where
+# it should appear only once).
+disable=too-many-ancestors,duplicate-code,not-callable,too-few-public-methods
+
+
+[DESIGN]
+
+# Maximum number of arguments for function / method
+max-args=15
+
+
+[FORMAT]
+
+# Maximum number of characters on a single line.
+max-line-length=200
