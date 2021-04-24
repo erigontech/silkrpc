@@ -20,7 +20,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getBlockByHash                      | Yes          | not yet tested for performance             |
 | eth_getBlockByNumber                    | Yes          | not yet tested for performance             |
 | eth_getBlockTransactionCountByHash      | -            | not yet implemented                        |
-| eth_getBlockTransactionCountByNumber    | -            | not yet implemented                        |
+| eth_getBlockTransactionCountByNumber    | Yes          |                                            |
 | eth_getUncleByBlockHashAndIndex         | -            | not yet implemented                        |
 | eth_getUncleByBlockNumberAndIndex       | -            | not yet implemented                        |
 | eth_getUncleCountByBlockHash            | -            | not yet implemented                        |
@@ -36,7 +36,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getCode                             | -            | not yet implemented                        |
 | eth_getTransactionCount                 | -            | not yet implemented                        |
 | eth_getStorageAt                        | -            | not yet implemented                        |
-| eth_call                                | -            | not yet implemented                        |
+| eth_call                                | -            | work in progress                           |
 |                                         |              |                                            |
 | eth_newFilter                           | -            | not yet implemented                        |
 | eth_newBlockFilter                      | -            | not yet implemented                        |

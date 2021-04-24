@@ -30,11 +30,13 @@
 namespace silkrpc::http::method {
 
 constexpr const char* k_eth_blockNumber{"eth_blockNumber"};
+constexpr const char* k_eth_call{"eth_call"};
 constexpr const char* k_eth_chainId{"eth_chainId"};
 constexpr const char* k_eth_protocolVersion{"eth_protocolVersion"};
 constexpr const char* k_eth_syncing{"eth_syncing"};
 constexpr const char* k_eth_getBlockByHash{"eth_getBlockByHash"};
 constexpr const char* k_eth_getBlockByNumber{"eth_getBlockByNumber"};
+constexpr const char* k_eth_getBlockTransactionCountByNumber{"eth_getBlockTransactionCountByNumber"};
 constexpr const char* k_eth_getLogs{"eth_getLogs"};
 
 constexpr const char* k_net_listening{"net_listening"};

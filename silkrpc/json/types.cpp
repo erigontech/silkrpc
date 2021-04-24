@@ -162,6 +162,41 @@ void to_json(nlohmann::json& json, const Block& b) {
     json["uncles"] = b.block.ommers;
 }
 
+void from_json(const nlohmann::json& json, Call& call) {
+    if (json.count("from") != 0) {
+        call.from = json.at("from").get<evmc::address>();
+    }
+    call.from = json.at("to").get<evmc::address>();
+    if (json.count("gas") != 0) {
+        auto json_gas = json.at("gas");
+        if (json_gas.is_string()) {
+            call.gas = std::stol(json_gas.get<std::string>(), 0, 16);
+        } else {
+            call.gas = json_gas.get<uint64_t>();
+        }
+    }
+    if (json.count("gasPrice") != 0) {
+        auto json_gas_price = json.at("gasPrice");
+        if (json_gas_price.is_string()) {
+            call.gas_price = std::stol(json_gas_price.get<std::string>(), 0, 16);
+        } else {
+            call.gas_price = json_gas_price.get<uint64_t>();
+        }
+    }
+    if (json.count("value") != 0) {
+        auto json_value = json.at("value");
+        if (json_value.is_string()) {
+            call.value = std::stol(json_value.get<std::string>(), 0, 16);
+        } else {
+            call.value = json_value.get<uint64_t>();
+        }
+    }
+    if (json.count("data") != 0) {
+        const auto json_data = json.at("data").get<std::string>();
+        call.data = silkworm::from_hex(json_data);
+    }
+}
+
 void to_json(nlohmann::json& json, const Log& log) {
     json["address"] = log.address;
     json["topics"] = log.topics;

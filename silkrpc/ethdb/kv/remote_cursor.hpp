@@ -26,7 +26,6 @@
 #include <asio/use_awaitable.hpp>
 
 #include <silkworm/common/util.hpp>
-#include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/ethdb/kv/awaitables.hpp>

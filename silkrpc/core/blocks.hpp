@@ -17,6 +17,8 @@
 #ifndef SILKRPC_CORE_BLOCKS_HPP_
 #define SILKRPC_CORE_BLOCKS_HPP_
 
+#include <string>
+
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
@@ -25,11 +27,13 @@
 
 namespace silkrpc::core {
 
-constexpr uint64_t kEarliestBlockNumber{0ul};
-constexpr uint64_t kLatestBlockNumber{-1ul};
-constexpr uint64_t kPendingBlockNumber{-2ul};
+constexpr const char* kEarliestBlockId{"earliest"};
+constexpr const char* kLatestBlockId{"latest"};
+constexpr const char* kPendingBlockId{"pending"};
 
-asio::awaitable<uint64_t> get_block_number(uint64_t number, const core::rawdb::DatabaseReader& reader);
+constexpr uint64_t kEarliestBlockNumber{0ul};
+
+asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader);
 
 asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::DatabaseReader& reader);
 

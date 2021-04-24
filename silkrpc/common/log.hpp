@@ -25,26 +25,26 @@
 
 namespace silkworm {
 
-bool AbslParseFlag(absl::string_view text, LogLevels* level, std::string* error);
-std::string AbslUnparseFlag(LogLevels level);
+bool AbslParseFlag(absl::string_view text, LogLevel* level, std::string* error);
+std::string AbslUnparseFlag(LogLevel level);
 
 } // namespace silkworm
 
 namespace silkrpc {
 
 using Logger = silkworm::log_;
-using LogLevel = silkworm::LogLevels;
+using LogLevel = silkworm::LogLevel;
 
 #define LOG(level_) if ((level_) < silkworm::log_verbosity_) {} else silkworm::log_(level_) // NOLINT
 
 // LogTrace, LogDebug, LogInfo, LogWarn, LogError, LogCritical, LogNone
-#define SILKRPC_TRACE LOG(silkworm::LogTrace)
-#define SILKRPC_DEBUG LOG(silkworm::LogDebug)
-#define SILKRPC_INFO  LOG(silkworm::LogInfo)
-#define SILKRPC_WARN  LOG(silkworm::LogWarn)
-#define SILKRPC_ERROR LOG(silkworm::LogError)
-#define SILKRPC_CRIT  LOG(silkworm::LogCritical)
-#define SILKRPC_LOG   LOG(silkworm::LogNone)
+#define SILKRPC_TRACE LOG(LogLevel::Trace)
+#define SILKRPC_DEBUG LOG(LogLevel::Debug)
+#define SILKRPC_INFO  LOG(LogLevel::Info)
+#define SILKRPC_WARN  LOG(LogLevel::Warn)
+#define SILKRPC_ERROR LOG(LogLevel::Error)
+#define SILKRPC_CRIT  LOG(LogLevel::Critical)
+#define SILKRPC_LOG   LOG(LogLevel::None)
 
 #define SILKRPC_LOG_VERBOSITY(level_) (silkworm::log_verbosity_ = (level_))
 
