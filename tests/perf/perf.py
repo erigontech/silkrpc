@@ -54,7 +54,7 @@ class Config:
             self.geth_homedir = argv[4]
             self.repetitions = int(argv[5])
             self.test_sequence = argv[6]
-        elif len(argv) != 2:
+        else:
             print("usage: "+argv[0]+ " <vegetaPatternTarFile> [daemonOnCore - or 0-1 or 0-2 ...]")
             print("               [turboGethAddress i.e localhost:porta or 1.1.1.1:porta] [gethHomeDir i.e ../../../turbo-geth/] [test repetitions i.e 10] [test seq i.e 200:30,400:10]")
             sys.exit(-1)
