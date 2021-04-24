@@ -19,6 +19,8 @@
 
 #include <iostream>
 #include <optional>
+#include <string>
+#include <vector>
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
@@ -31,8 +33,6 @@ namespace silkrpc {
 
 class RemoteBuffer : public silkworm::StateBuffer {
 public:
-    explicit RemoteBuffer() {}
-
     std::optional<silkworm::Account> read_account(const evmc::address& address) const noexcept override;
 
     silkworm::Bytes read_code(const evmc::bytes32& code_hash) const noexcept override;
@@ -66,23 +66,20 @@ public:
     void update_account(
         const evmc::address& address,
         std::optional<silkworm::Account> initial,
-        std::optional<silkworm::Account> current
-    ) override {}
+        std::optional<silkworm::Account> current) override {}
 
     void update_account_code(
         const evmc::address& address,
         uint64_t incarnation,
         const evmc::bytes32& code_hash,
-        silkworm::ByteView code
-    ) override {}
+        silkworm::ByteView code) override {}
 
     void update_storage(
         const evmc::address& address,
         uint64_t incarnation,
         const evmc::bytes32& location,
         const evmc::bytes32& initial,
-        const evmc::bytes32& current
-    ) override {}
+        const evmc::bytes32& current) override {}
 
     void unwind_state_changes(uint64_t block_number) override {}
 
