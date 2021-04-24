@@ -13,6 +13,7 @@ def run_shell_command(command: str) -> int:
         sys.exit(process.returncode)
     response = json.loads(process.stdout)
     if "error" in response:
+        print ("execute KO:", command_and_args)
         sys.exit(1)
     else:
        print ("execute OK:", command_and_args)
