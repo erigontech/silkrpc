@@ -22,48 +22,48 @@
 
 namespace silkworm {
 
-bool AbslParseFlag(absl::string_view text, LogLevels* level, std::string* error) {
+bool AbslParseFlag(absl::string_view text, LogLevel* level, std::string* error) {
     if (text == "n") {
-        *level = LogLevels::LogNone;
+        *level = LogLevel::None;
         return true;
     }
     if (text == "c") {
-        *level = LogLevels::LogCritical;
+        *level = LogLevel::Critical;
         return true;
     }
     if (text == "e") {
-        *level = LogLevels::LogError;
+        *level = LogLevel::Error;
         return true;
     }
     if (text == "w") {
-        *level = LogLevels::LogWarn;
+        *level = LogLevel::Warn;
         return true;
     }
     if (text == "i") {
-        *level = LogLevels::LogInfo;
+        *level = LogLevel::Info;
         return true;
     }
     if (text == "d") {
-        *level = LogLevels::LogDebug;
+        *level = LogLevel::Debug;
         return true;
     }
     if (text == "t") {
-        *level = LogLevels::LogTrace;
+        *level = LogLevel::Trace;
         return true;
     }
-    *error = "unknown value for silkrpc::LogLevel";
+    *error = "unknown value for LogLevel";
     return false;
 }
 
-std::string AbslUnparseFlag(LogLevels level) {
+std::string AbslUnparseFlag(LogLevel level) {
     switch (level) {
-        case LogLevels::LogNone: return "n";
-        case LogLevels::LogCritical: return "c";
-        case LogLevels::LogError: return "e";
-        case LogLevels::LogWarn: return "w";
-        case LogLevels::LogInfo: return "i";
-        case LogLevels::LogDebug: return "d";
-        case LogLevels::LogTrace: return "t";
+        case LogLevel::None: return "n";
+        case LogLevel::Critical: return "c";
+        case LogLevel::Error: return "e";
+        case LogLevel::Warn: return "w";
+        case LogLevel::Info: return "i";
+        case LogLevel::Debug: return "d";
+        case LogLevel::Trace: return "t";
         default: return absl::StrCat(level);
     }
 }
