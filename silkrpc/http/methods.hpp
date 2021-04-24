@@ -30,6 +30,7 @@
 namespace silkrpc::http::method {
 
 constexpr const char* k_eth_blockNumber{"eth_blockNumber"};
+constexpr const char* k_eth_call{"eth_call"};
 constexpr const char* k_eth_chainId{"eth_chainId"};
 constexpr const char* k_eth_protocolVersion{"eth_protocolVersion"};
 constexpr const char* k_eth_syncing{"eth_syncing"};

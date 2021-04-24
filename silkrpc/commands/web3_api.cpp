@@ -27,11 +27,13 @@
 
 namespace silkrpc::commands {
 
+// https://eth.wiki/json-rpc/API#web3_clientversion
 asio::awaitable<void> Web3RpcApi::handle_web3_client_version(const nlohmann::json& request, nlohmann::json& reply) {
     reply = make_json_content(request["id"], common::kEthereumNodeName);
     co_return;
 }
 
+// https://eth.wiki/json-rpc/API#web3_sha3
 asio::awaitable<void> Web3RpcApi::handle_web3_sha3(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {

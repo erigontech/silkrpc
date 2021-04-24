@@ -21,7 +21,6 @@
 #include <iomanip>
 
 #include <boost/endian/conversion.hpp>
-#include <nlohmann/json.hpp>
 
 #include <silkworm/common/util.hpp>
 #include <silkworm/db/access_layer.hpp>
@@ -73,7 +72,7 @@ asio::awaitable<uint64_t> read_header_number(const DatabaseReader& reader, const
     co_return boost::endian::load_big_u64(value.data());
 }
 
-asio::awaitable<uint64_t> read_chain_config(const DatabaseReader& reader) {
+asio::awaitable<nlohmann::json> read_chain_config(const DatabaseReader& reader) {
     const auto genesis_block_hash{co_await read_canonical_block_hash(reader, kEarliestBlockNumber)};
     SILKRPC_DEBUG << "genesis_block_hash: " << genesis_block_hash << "\n";
     const silkworm::ByteView genesis_block_hash_bytes{genesis_block_hash.bytes, silkworm::kHashLength};
@@ -84,7 +83,12 @@ asio::awaitable<uint64_t> read_chain_config(const DatabaseReader& reader) {
     SILKRPC_DEBUG << "chain config data: " << data.c_str() << "\n";
     const auto json_config = nlohmann::json::parse(data.c_str());
     SILKRPC_DEBUG << "chain config data: " << json_config.dump() << "\n";
-    co_return json_config["chainId"].get<uint64_t>();
+    co_return json_config;
+}
+
+asio::awaitable<uint64_t> read_chain_id(const DatabaseReader& reader) {
+    const auto chain_config = co_await read_chain_config(reader);
+    co_return chain_config["chainId"].get<uint64_t>();
 }
 
 asio::awaitable<evmc::bytes32> read_canonical_block_hash(const DatabaseReader& reader, uint64_t block_number) {

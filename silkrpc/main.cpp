@@ -42,7 +42,7 @@ ABSL_FLAG(std::string, chaindata, silkrpc::common::kEmptyChainData, "chain data 
 ABSL_FLAG(std::string, local, silkrpc::common::kDefaultLocal, "HTTP JSON local binding as string <address>:<port>");
 ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "TG Core gRPC service location as string <address>:<port>");
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
-ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::LogCritical, "logging level");
+ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
 
 int main(int argc, char* argv[]) {
     const auto pid = boost::this_process::get_id();
