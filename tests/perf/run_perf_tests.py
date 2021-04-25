@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-
-""" This script is responsible using vegeta to make a list of performance tests (configured via command line) and saves its result on csv file
+""" This script uses Vegeta to execute a list of performance tests (configured via command line) and saves its result in CSV file
 """
+
+# pylint: disable=consider-using-with
 
 import os
 import csv
