@@ -29,7 +29,8 @@ Building SilkRPC daemon requires
 * [CMake](http://cmake.org) >= 3.18.4
 * [GMP](http://gmplib.org) (`sudo apt-get install libgmp3-dev` or `brew install gmp`)
 * [gperftools](https://github.com/gperftools/gperftools) (`sudo apt-get install google-perftools libgoogle-perftools-dev`)
-* [Cpplint] (https://github.com/cpplint/cpplint) (`pip3 install cpplint`)
+* [Cpplint](https://github.com/cpplint/cpplint) (`pip3 install cpplint`)
+* [Pylint](https://github.com/PyCQA/pylint) (`pip3 install pylint`)
 
 Once the prerequisites are installed and assuming your [GCC](https://www.gnu.org/software/gcc/) compiler available as `gcc` and `g++` at the command line prompt is at least 10.2.0, bootstrap cmake by running
 ```
