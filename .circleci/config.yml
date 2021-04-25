@@ -27,13 +27,17 @@ commands:
   lint:
     steps:
       - run:
-          name: "Install CppLint"
+          name: "Install Linters"
           command: |
             sudo apt-get install -y python3-pip
             sudo pip3 install cpplint
+            sudo pip3 install pylint
       - run:
-          name: "Lint"
+          name: "Run CppLint"
           command: cpplint silkrpc/**/*.hpp silkrpc/**/*.cpp
+      - run:
+          name: "Run PyLint"
+          command: pylint tests/
 
   build:
     steps:
