@@ -50,11 +50,13 @@ jobs:
       #     go build -trimpath -o bin/integration.exe ./cmd/integration
       #     go build -trimpath -o bin/headers.ext ./cmd/headers
       - name: Install Linters
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get install -y python3-pip
           sudo pip3 install cpplint
           sudo pip3 install pylint
       - name: Lint
+        if: matrix.os == 'ubuntu-latest'
         run: |
           cpplint silkrpc/**/*.hpp silkrpc/**/*.cpp
           pylint tests/
