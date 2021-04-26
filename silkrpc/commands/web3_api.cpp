@@ -30,6 +30,7 @@ namespace silkrpc::commands {
 // https://eth.wiki/json-rpc/API#web3_clientversion
 asio::awaitable<void> Web3RpcApi::handle_web3_client_version(const nlohmann::json& request, nlohmann::json& reply) {
     reply = make_json_content(request["id"], common::kEthereumNodeName);
+    // TODO(canepat): use ClientVersion RPC exposed by ETHBACKEND gRPC service
     co_return;
 }
 

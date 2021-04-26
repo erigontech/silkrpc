@@ -19,8 +19,12 @@
 
 #include <memory>
 
+#include <silkrpc/commands/debug_api.hpp>
 #include <silkrpc/commands/eth_api.hpp>
 #include <silkrpc/commands/net_api.hpp>
+#include <silkrpc/commands/parity_api.hpp>
+#include <silkrpc/commands/tg_api.hpp>
+#include <silkrpc/commands/trace_api.hpp>
 #include <silkrpc/commands/web3_api.hpp>
 #include <silkrpc/ethdb/kv/database.hpp>
 
@@ -28,10 +32,11 @@ namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
-class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi {
+class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, TurboGethRpcApi, TraceRpcApi {
 public:
     explicit RpcApi(std::unique_ptr<ethdb::kv::Database>& database)
-    : EthereumRpcApi{database}, NetRpcApi{}, Web3RpcApi{database} {}
+    : EthereumRpcApi{database}, NetRpcApi{}, Web3RpcApi{database}, DebugRpcApi{database},
+        ParityRpcApi{database}, TurboGethRpcApi{database}, TraceRpcApi{database} {}
     virtual ~RpcApi() {}
 
     RpcApi(const RpcApi&) = delete;

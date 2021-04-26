@@ -29,23 +29,79 @@
 
 namespace silkrpc::http::method {
 
-constexpr const char* k_eth_blockNumber{"eth_blockNumber"};
-constexpr const char* k_eth_call{"eth_call"};
-constexpr const char* k_eth_chainId{"eth_chainId"};
-constexpr const char* k_eth_protocolVersion{"eth_protocolVersion"};
-constexpr const char* k_eth_syncing{"eth_syncing"};
-constexpr const char* k_eth_getBlockByHash{"eth_getBlockByHash"};
-constexpr const char* k_eth_getBlockTransactionCountByHash{"eth_getBlockTransactionCountByHash"};
-constexpr const char* k_eth_getBlockByNumber{"eth_getBlockByNumber"};
-constexpr const char* k_eth_getBlockTransactionCountByNumber{"eth_getBlockTransactionCountByNumber"};
-constexpr const char* k_eth_getLogs{"eth_getLogs"};
+constexpr const char* k_web3_clientVersion{"web3_clientVersion"};
+constexpr const char* k_web3_sha3{"web3_sha3"};
 
 constexpr const char* k_net_listening{"net_listening"};
 constexpr const char* k_net_peerCount{"net_peerCount"};
 constexpr const char* k_net_version{"net_version"};
 
-constexpr const char* k_web3_clientVersion{"web3_clientVersion"};
-constexpr const char* k_web3_sha3{"web3_sha3"};
+constexpr const char* k_eth_blockNumber{"eth_blockNumber"};
+constexpr const char* k_eth_chainId{"eth_chainId"};
+constexpr const char* k_eth_protocolVersion{"eth_protocolVersion"};
+constexpr const char* k_eth_syncing{"eth_syncing"};
+constexpr const char* k_eth_gasPrice{"eth_gasPrice"};
+constexpr const char* k_eth_getUncleByBlockHashAndIndex{"eth_getUncleByBlockHashAndIndex"};
+constexpr const char* k_eth_getUncleByBlockNumberAndIndex{"eth_getUncleByBlockNumberAndIndex"};
+constexpr const char* k_eth_getUncleCountByBlockHash{"eth_getUncleCountByBlockHash"};
+constexpr const char* k_eth_getUncleCountByBlockNumber{"eth_getUncleCountByBlockNumber"};
+constexpr const char* k_eth_getTransactionByHash{"eth_getTransactionByHash"};
+constexpr const char* k_eth_getTransactionByBlockHashAndIndex{"eth_getTransactionByBlockHashAndIndex"};
+constexpr const char* k_eth_getTransactionByBlockNumberAndIndex{"eth_getTransactionByBlockNumberAndIndex"};
+constexpr const char* k_eth_getTransactionReceipt{"eth_getTransactionReceipt"};
+constexpr const char* k_eth_estimateGas{"eth_estimateGas"};
+constexpr const char* k_eth_getBalance{"eth_getBalance"};
+constexpr const char* k_eth_getCode{"eth_getCode"};
+constexpr const char* k_eth_getTransactionCount{"eth_getTransactionCount"};
+constexpr const char* k_eth_getStorageAt{"eth_getStorageAt"};
+constexpr const char* k_eth_call{"eth_call"};
+constexpr const char* k_eth_newFilter{"eth_newFilter"};
+constexpr const char* k_eth_newBlockFilter{"eth_newBlockFilter"};
+constexpr const char* k_eth_newPendingTransactionFilter{"eth_newPendingTransactionFilter"};
+constexpr const char* k_eth_getFilterChanges{"eth_getFilterChanges"};
+constexpr const char* k_eth_uninstallFilter{"eth_uninstallFilter"};
+constexpr const char* k_eth_getLogs{"eth_getLogs"};
+constexpr const char* k_eth_sendRawTransaction{"eth_sendRawTransaction"};
+constexpr const char* k_eth_sendTransaction{"eth_sendTransaction"};
+constexpr const char* k_eth_signTransaction{"eth_signTransaction"};
+constexpr const char* k_eth_getProof{"eth_getProof"};
+constexpr const char* k_eth_mining{"eth_mining"};
+constexpr const char* k_eth_coinbase{"eth_coinbase"};
+constexpr const char* k_eth_hashrate{"eth_hashrate"};
+constexpr const char* k_eth_submitHashrate{"eth_submitHashrate"};
+constexpr const char* k_eth_getWork{"eth_getWork"};
+constexpr const char* k_eth_submitWork{"eth_submitWork"};
+constexpr const char* k_eth_subscribe{"eth_subscribe"};
+constexpr const char* k_eth_unsubscribe{"eth_unsubscribe"};
+constexpr const char* k_eth_getBlockByHash{"eth_getBlockByHash"};
+constexpr const char* k_eth_getBlockTransactionCountByHash{"eth_getBlockTransactionCountByHash"};
+constexpr const char* k_eth_getBlockByNumber{"eth_getBlockByNumber"};
+constexpr const char* k_eth_getBlockTransactionCountByNumber{"eth_getBlockTransactionCountByNumber"};
+
+constexpr const char* k_debug_accountRange{"debug_accountRange"};
+constexpr const char* k_debug_getModifiedAccountsByNumber{"debug_getModifiedAccountsByNumber"};
+constexpr const char* k_debug_getModifiedAccountsByHash{"debug_getModifiedAccountsByHash"};
+constexpr const char* k_debug_storageRangeAt{"debug_storageRangeAt"};
+constexpr const char* k_debug_traceTransaction{"debug_traceTransaction"};
+constexpr const char* k_debug_traceCall{"debug_traceCall"};
+
+constexpr const char* k_trace_call{"trace_call"};
+constexpr const char* k_trace_callMany{"trace_callMany"};
+constexpr const char* k_trace_rawTransaction{"trace_rawTransaction"};
+constexpr const char* k_trace_replayBlockTransactions{"trace_replayBlockTransactions"};
+constexpr const char* k_trace_replayTransaction{"trace_replayTransaction"};
+constexpr const char* k_trace_block{"trace_block"};
+constexpr const char* k_trace_filter{"trace_filter"};
+constexpr const char* k_trace_get{"trace_get"};
+constexpr const char* k_trace_transaction{"trace_transaction"};
+
+constexpr const char* k_tg_getHeaderByHash{"tg_getHeaderByHash"};
+constexpr const char* k_tg_getHeaderByNumber{"tg_getHeaderByNumber"};
+constexpr const char* k_tg_getLogsByHash{"tg_getLogsByHash"};
+constexpr const char* k_tg_forks{"tg_forks"};
+constexpr const char* k_tg_issuance{"tg_issuance"};
+
+constexpr const char* k_parity_getBlockReceipts{"parity_getBlockReceipts"};
 
 } // namespace silkrpc::http::method
 
