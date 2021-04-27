@@ -27,10 +27,10 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/awaitables.hpp>
-#include <silkrpc/ethdb/kv/cursor.hpp>
+#include <silkrpc/ethdb/cursor.hpp>
 #include <silkrpc/ethdb/kv/remote_cursor.hpp>
 #include <silkrpc/ethdb/kv/streaming_client.hpp>
-#include <silkrpc/ethdb/kv/transaction.hpp>
+#include <silkrpc/ethdb/transaction.hpp>
 
 namespace silkrpc::ethdb::kv {
 

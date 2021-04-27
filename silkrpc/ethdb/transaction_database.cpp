@@ -22,7 +22,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 
-namespace silkrpc::ethdb::kv {
+namespace silkrpc::ethdb {
 
 asio::awaitable<silkworm::Bytes> TransactionDatabase::get(const std::string& table, const silkworm::ByteView& key) const {
     const auto cursor = co_await tx_.cursor(table);
@@ -66,4 +66,4 @@ asio::awaitable<void> TransactionDatabase::walk(const std::string& table, const 
 
 void TransactionDatabase::close() {}
 
-} // namespace silkrpc::ethdb::kv
+} // namespace silkrpc::ethdb

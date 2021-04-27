@@ -32,7 +32,6 @@
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/ethdb/kv/cursor.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 #include <silkrpc/grpc/completion_poller.hpp>
 
@@ -42,9 +41,9 @@ ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
 
-using namespace silkrpc::ethdb::kv;
+using namespace silkrpc;
 
-asio::awaitable<void> kv_seek(Database& kv_db, const std::string& table_name, const silkworm::Bytes& seek_key) {
+asio::awaitable<void> kv_seek(ethdb::Database& kv_db, const std::string& table_name, const silkworm::Bytes& seek_key) {
     const auto kv_transaction = co_await kv_db.begin();
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
     const auto kv_cursor = co_await kv_transaction->cursor(table_name);
@@ -103,7 +102,7 @@ int main(int argc, char* argv[]) {
         ::grpc::CompletionQueue queue;
         silkrpc::grpc::CompletionPoller grpc_completion_poller{queue, context};
 
-        RemoteDatabase kv_database{context, channel, &queue};
+        ethdb::kv::RemoteDatabase kv_database{context, channel, &queue};
 
         asio::co_spawn(context, kv_seek(kv_database, table_name, seek_key_bytes), [&](std::exception_ptr exptr) {
             grpc_completion_poller.stop();

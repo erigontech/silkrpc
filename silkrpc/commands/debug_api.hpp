@@ -26,7 +26,7 @@
 
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/json/types.hpp>
-#include <silkrpc/ethdb/kv/database.hpp>
+#include <silkrpc/ethdb/database.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
@@ -34,7 +34,7 @@ namespace silkrpc::commands {
 
 class DebugRpcApi {
 public:
-    explicit DebugRpcApi(std::unique_ptr<ethdb::kv::Database>& database) : database_(database) {}
+    explicit DebugRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
     virtual ~DebugRpcApi() {}
 
     DebugRpcApi(const DebugRpcApi&) = delete;
@@ -49,7 +49,7 @@ protected:
     asio::awaitable<void> handle_debug_trace_call(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
-    std::unique_ptr<ethdb::kv::Database>& database_;
+    std::unique_ptr<ethdb::Database>& database_;
 
     friend class silkrpc::http::RequestHandler;
 };

@@ -30,8 +30,8 @@
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/croaring/roaring.hh> // NOLINT(build/include_order)
 #include <silkrpc/json/types.hpp>
-#include <silkrpc/ethdb/kv/database.hpp>
-#include <silkrpc/ethdb/kv/transaction.hpp>
+#include <silkrpc/ethdb/database.hpp>
+#include <silkrpc/ethdb/transaction.hpp>
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/receipt.hpp>
 
@@ -41,7 +41,7 @@ namespace silkrpc::commands {
 
 class EthereumRpcApi {
 public:
-    explicit EthereumRpcApi(std::unique_ptr<ethdb::kv::Database>& database) : database_(database) {}
+    explicit EthereumRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
     virtual ~EthereumRpcApi() {}
 
     EthereumRpcApi(const EthereumRpcApi&) = delete;
@@ -95,7 +95,7 @@ protected:
     std::vector<Log> filter_logs(std::vector<Log>& logs, const Filter& filter);
 
 private:
-    std::unique_ptr<ethdb::kv::Database>& database_;
+    std::unique_ptr<ethdb::Database>& database_;
 
     friend class silkrpc::http::RequestHandler;
 };
