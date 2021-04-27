@@ -25,6 +25,9 @@
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
+#include <absl/flags/usage_config.h>
+#include <absl/strings/match.h>
+#include <absl/strings/string_view.h>
 #include <asio/awaitable.hpp>
 #include <asio/co_spawn.hpp>
 #include <asio/io_context.hpp>
@@ -51,7 +54,14 @@ int main(int argc, char* argv[]) {
     using namespace silkrpc;
     using silkrpc::common::kAddressPortSeparator;
 
-    absl::SetProgramUsageMessage("Silkrpc - Silkworm ETH JSON Remote Procedure Call (RPC) daemon");
+    absl::FlagsUsageConfig config;
+    config.contains_helpshort_flags = [](absl::string_view) { return false; };
+    config.contains_help_flags = [](absl::string_view filename) { return absl::EndsWith(filename, "main.cpp"); };
+    config.contains_helppackage_flags = [](absl::string_view) { return false; };
+    config.normalize_filename = [](absl::string_view f) { return std::string{f.substr(f.rfind("/") + 1)}; };
+    config.version_string = []() { return "silkrpcdaemon 0.0.3\n"; };
+    absl::SetFlagsUsageConfig(config);
+    absl::SetProgramUsageMessage("C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon");
     absl::ParseCommandLine(argc, argv);
 
     SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
@@ -121,7 +131,7 @@ int main(int argc, char* argv[]) {
 
         grpc_completion_poller.start();
 
-        SILKRPC_LOG << "Silkrpc running [pid=" << pid << ", main thread: " << tid << "]\n" << std::flush;
+        SILKRPC_LOG << "Silkrpc running at " + local + " [pid=" << pid << ", main thread: " << tid << "]\n";
 
         context.run();
     } catch (const std::exception& e) {

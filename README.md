@@ -96,3 +96,36 @@ We use the standard C++20 programming language. We follow the [Google's C++ Styl
 * Exceptions are allowed.
 * User-defined literals are allowed.
 * Maximum line length is 170, indentation is 4 spaces – see `.clang-format`.
+
+# Activation
+
+From the build folder (`build_[gcc, clang]_[debug, release]` according to your choice) you typically activate Silkrpc using:
+
+```
+$ silkrpc/silkrpcdaemon --target <tg_core_host_address>:9090
+```
+
+where `<tg_core_host_address>` is the hostname or IP address of the TG Core to connect to.
+
+You can check all command-line parameters supported by Silkrpc using:
+
+```
+$ silkrpc/silkrpcdaemon --help
+silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
+
+  Flags from main.cpp:
+    --chaindata (chain data path as string); default: "";
+    --local (HTTP JSON local binding as string <address>:<port>);
+      default: "localhost:8545";
+    --logLevel (logging level); default: c;
+    --target (TG Core gRPC service location as string <address>:<port>);
+      default: "localhost:9090";
+    --timeout (gRPC call timeout as 32-bit integer); default: 10000;
+```
+
+You can also check the Silkrpc executable version by:
+
+```
+$ silkrpc/silkrpcdaemon --version
+silkrpcdaemon 0.0.3
+```
