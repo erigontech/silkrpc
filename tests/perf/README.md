@@ -1,50 +1,39 @@
 # Performance Tests
-
-These are the instructions to setup the performance comparison tests between Silkrpc and Turbo-Geth (TG) RPCDaemon. Currently such performance testing is **not** automated, so it is necessary to manually checkout/build/execute the components.
+These are the instructions to execute the performance comparison tests between Silkrpc and Turbo-Geth (TG) RPCDaemon.
 
 ## Software Versions
-
 In order to reproduce the environment used in last performance testing session, pick the following source code versions:
 
 * TG RPCDaemon commit: [3388c1f](https://github.com/ledgerwatch/turbo-geth/commit/3388c1f1af6c65808830e5839a0c6d5d78f018fa)
 * Silkrpc commit: [072dbc0](https://github.com/torquem-ch/silkrpc/commit/072dbc0314f383fbe236fc0c26e34187fe2191ca)
 
 ## Build
-
 Follow the instructions for building:
 
 * TG RPCDaemon [build](https://github.com/)
 * Silkrpc [build](https://github.com/torquem-ch/silkrpc/tree/eth_get_logs#linux--macos)
 
-## Activation
+## 1. Automated Setup
+These are the instructions to execute *automatically* the performance comparison tests.
 
-The command lines to activate such components for performance testing are listed below (you can also experiment allocating a different number of cores or removing `taskset`).
+### 1.1 Activation
+The command lines to activate such TG Core for performance testing are
 
-### _TG Core_
+#### _TG Core_
 From Turbo-Geth project directory:
 ```
 build/bin/tg --goerli --private.api.addr=localhost:9090
 ```
+#### _TG RPCDaemon_
+Automatically activated by the performance test script.
+#### _Silkrpc_
+Automatically activated by the performance test script.
 
-### _TG RPCDaemon_
-From Turbo-Geth project directory:
-```
-taskset -c 1 build/bin/rpcdaemon --private.api.addr=localhost:9090 --http.api=eth,debug,net,web3
-```
-RPCDaemon will be running on port 8545
-
-### _Silkrpc_
-From Silkrpc project directory:
-```
-taskset -c 0-1 build_gcc_release/silkrpc/silkrpcdaemon --target localhost:9090
-```
-Silkrpc will be running on port 51515
-
-## Test Workload
+### 1.2 Test Workload
 
 Currently the performance workload targets just the [eth_getLogs](https://eth.wiki/json-rpc/API#eth_getlogs) Ethereum API. The test workloads are executed using requests files of [Vegeta](https://github.com/tsenart/vegeta/), a HTTP load testing tool.
 
-### _Workload Generation_
+#### _Workload Generation_
 
 Execute Turbo-Geth [bench8 tool](https://github.com/ledgerwatch/turbo-geth/blob/3388c1f1af6c65808830e5839a0c6d5d78f018fa/cmd/rpctest/rpctest/bench8.go) against both Turbo-Geth RPCDaemon and Silkrpc using the following command line:
 
@@ -58,7 +47,74 @@ Vegeta request files are written to `/tmp/turbo_geth_stress_test`:
 * vegeta_geth_debug_getModifiedAccountsByNumber.txt, vegeta_geth_eth_getLogs.txt
 * vegeta_turbo_geth_debug_getModifiedAccountsByNumber.txt, vegeta_turbo_geth_eth_getLogs.txt
 
-### _Workload Activation_
+#### _Workload Activation_
+
+From Silkrpc project directory check the performance test runner usage:
+```
+$ tests/perf/run_perf_tests.py
+Usage: ./run_perf_tests.py vegetaPatternTarFile [daemonOnCore] [turboGethAddress] [turboGethHomeDir] [testRepetitions] [testSequence]
+
+Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta
+
+vegetaPatternTarFile     path to the request file for Vegeta attack
+daemonOnCore             logical cpu list in taskset format (e.g. - or 0-1 or 0-2 or 0,2...)              [default: -]
+turboGethAddress         address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: localhost:9090]
+turboGethHomeDir         path to TG home folder (e.g. ../../../turbo-geth/)                               [default: ../../../turbo-geth/]
+testRepetitions          number of repetitions for each element in test sequence (e.g. 10)                [default: 10]
+testSequence             list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10) [default: 50:30,200:30,200:60,400:30]
+```
+Results are written in a CSV file `/tmp/<date_time>_perf.csv`.
+
+So for example:
+```
+tests/perf/run_perf_tests.py tests/perf/vegeta/turbo_geth_stress_test_001.tar 0-1 localhost:9090 ../../../turbo-geth/ 3 200:30
+```
+
+## 2. Manual Setup
+
+These are the instructions to execute *manually* the performance comparison tests.
+
+### 2.1 Activation
+
+The command lines to activate such components for performance testing are listed below (you can also experiment allocating a different number of cores or removing `taskset`).
+
+#### _TG Core_
+From Turbo-Geth project directory:
+```
+build/bin/tg --goerli --private.api.addr=localhost:9090
+```
+#### _TG RPCDaemon_
+From Turbo-Geth project directory:
+```
+taskset -c 0-1 build/bin/rpcdaemon --private.api.addr=localhost:9090 --http.api=eth,debug,net,web3
+```
+RPCDaemon will be running on port 8545
+#### _Silkrpc_
+From Silkrpc project directory:
+```
+taskset -c 0-1 build_gcc_release/silkrpc/silkrpcdaemon --target localhost:9090
+```
+Silkrpc will be running on port 51515
+
+### 2.2 Test Workload
+
+Currently the performance workload targets just the [eth_getLogs](https://eth.wiki/json-rpc/API#eth_getlogs) Ethereum API. The test workloads are executed using requests files of [Vegeta](https://github.com/tsenart/vegeta/), a HTTP load testing tool.
+
+#### _Workload Generation_
+
+Execute Turbo-Geth [bench8 tool](https://github.com/ledgerwatch/turbo-geth/blob/3388c1f1af6c65808830e5839a0c6d5d78f018fa/cmd/rpctest/rpctest/bench8.go) against both Turbo-Geth RPCDaemon and Silkrpc using the following command line:
+
+```
+build/bin/rpctest bench8 --tgUrl http://localhost:8545 --gethUrl http://localhost:51515 --needCompare --block 200000
+```
+
+Vegeta request files are written to `/tmp/turbo_geth_stress_test`:
+* results_geth_debug_getModifiedAccountsByNumber.csv, results_geth_eth_getLogs.csv
+* results_turbo_geth_debug_getModifiedAccountsByNumber.csv, results_turbo_geth_eth_getLogs.csv
+* vegeta_geth_debug_getModifiedAccountsByNumber.txt, vegeta_geth_eth_getLogs.txt
+* vegeta_turbo_geth_debug_getModifiedAccountsByNumber.txt, vegeta_turbo_geth_eth_getLogs.txt
+
+#### _Workload Activation_
 
 From Silkrpc project directory execute the Vegeta attack using the scripts in [tests/perf](https://github.com/torquem-ch/silkrpc/tree/072dbc0314f383fbe236fc0c26e34187fe2191ca/tests/perf):
 ```

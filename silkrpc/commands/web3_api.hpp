@@ -18,7 +18,6 @@
 #define SILKRPC_COMMANDS_WEB3_API_HPP_
 
 #include <memory>
-#include <vector>
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 

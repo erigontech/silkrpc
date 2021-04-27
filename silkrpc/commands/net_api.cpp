@@ -23,18 +23,21 @@ namespace silkrpc::commands {
 // https://eth.wiki/json-rpc/API#net_listening
 asio::awaitable<void> NetRpcApi::handle_net_listening(const nlohmann::json& request, nlohmann::json& reply) {
     reply = make_json_content(request["id"], true);
+    // TODO(canepat): needs p2pSentry integration in TG Core (accumulate listening from multiple sentries)
     co_return;
 }
 
 // https://eth.wiki/json-rpc/API#net_peercount
 asio::awaitable<void> NetRpcApi::handle_net_peer_count(const nlohmann::json& request, nlohmann::json& reply) {
     reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(25));
+    // TODO(canepat): needs p2pSentry integration in TG Core (accumulate peer counts from multiple sentries)
     co_return;
 }
 
 // https://eth.wiki/json-rpc/API#net_version
 asio::awaitable<void> NetRpcApi::handle_net_version(const nlohmann::json& request, nlohmann::json& reply) {
     reply = make_json_content(request["id"], 5);
+    // TODO(canepat): use NetVersion RPC by exposed ETHBACKEND gRPC service
     co_return;
 }
 
