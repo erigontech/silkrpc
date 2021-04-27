@@ -81,8 +81,13 @@ class PerfTest:
         self.config = config
         self.rpc_daemon = 0
         self.silk_daemon = 0
-        self.stop_rpc_daemon()
         self.stop_silk_daemon()
+        self.stop_rpc_daemon()
+        print("\nSetup temporary daemon to verify configuration is OK")
+        self.start_silk_daemon()
+        self.stop_silk_daemon()
+        self.start_rpc_daemon()
+        self.stop_rpc_daemon()
         self.copy_pattern_file()
 
     def copy_pattern_file(self):
@@ -104,8 +109,15 @@ class PerfTest:
             cmd = "taskset -c " + self.config.daemon_on_core + " " + \
                    self.config.geth_homedir + "build/bin/rpcdaemon --private.api.addr="+self.config.tg_addr+" --http.api=eth,debug,net,web3 &"
         print("RpcDaemon starting ...: ", cmd)
-        os.system(cmd)
+        status = os.system(cmd)
+        if int(status) != 0:
+            print("Start rpc daemon failed: Test Aborted!")
+            sys.exit(-1)
         os.system("sleep 1")
+        pid = os.popen("ps aux | grep 'rpcdaemon' | grep -v 'grep' | awk '{print $2}'").read()
+        if pid == "":
+            print("Start rpc daemon failed: Test Aborted!")
+            sys.exit(-1)
 
     def stop_rpc_daemon(self):
         """ Stops the RPC daemon server
@@ -125,8 +137,15 @@ class PerfTest:
             cmd = "taskset -c " + self.config.daemon_on_core + \
               " ../../build_gcc_release/silkrpc/silkrpcdaemon --target "+self.config.tg_addr+" --local localhost:51515 --logLevel c &"
         print("SilkDaemon starting ...: ", cmd)
-        os.system(cmd)
+        status = os.system(cmd)
+        if int(status) != 0:
+            print("Start silkrpc daemon failed: Test Aborted!")
+            sys.exit(-1)
         os.system("sleep 1")
+        pid = os.popen("ps aux | grep 'silkrpc' | grep -v 'grep' | awk '{print $2}'").read()
+        if pid == "":
+            print("Start silkrpc daemon failed: Test Aborted!")
+            sys.exit(-1)
 
     def stop_silk_daemon(self):
         """ Stops SILKRPC daemon
@@ -141,7 +160,8 @@ class PerfTest:
         """ Executes the tests using qps and time variable
         """
         script_name = "./vegeta_attack_getLogs_"+name+".sh" +" "+str(qps_value) + " " + str(time_value)
-        print(test_number+" "+name+": executes test qps:", str(qps_value) + " time:"+str(time_value))
+        print(test_number+" "+name+": executes test qps:", str(qps_value) + " time:"+str(time_value)+" -> ", end="")
+        sys.stdout.flush()
         os.system(script_name)
         self.get_result(test_number, name, qps_value, time_value)
 
@@ -159,7 +179,8 @@ class PerfTest:
             max_latency = latency_values[12]
             newline = file_raws[5].replace('\n', ' ')
             ratio = newline.split(' ')[34]
-            threads = os.popen("ps -efL | grep tg | wc -l").read().replace('\n', ' ')
+            print(" [ Ratio="+ratio+", MaxLatency="+max_latency+"]")
+            threads = os.popen("ps -efL | grep tg | grep bin | wc -l").read().replace('\n', ' ')
         finally:
             file.close()
 
@@ -182,7 +203,7 @@ class TestReport:
     def open(self):
         """ Writes on CVS file the header
         """
-        csv_filename = datetime.today().strftime('%Y-%m-%d-%H:%M:%S')+"_perf.csv"
+        csv_filename = "/tmp/" + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')+"_perf.csv"
         self.csv_file = open(csv_filename, 'w', newline='')
         self.writer = csv.writer(self.csv_file)
 
@@ -194,6 +215,12 @@ class TestReport:
         command = "gcc --version"
         gcc_vers = os.popen(command).read().split(',')
 
+        command = "go version"
+        go_vers = os.popen(command).read().replace('\n', '')
+
+        command = "uname -r"
+        kern_vers = os.popen(command).read().replace('\n', "").replace('\'', '')
+
         command = "cat /proc/cpuinfo | grep 'model name' | uniq"
         model = os.popen(command).readline().replace('\n', ' ').split(':')
         command = "cat /proc/cpuinfo | grep 'bogomips' | uniq"
@@ -202,18 +229,19 @@ class TestReport:
 
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "PC", model[1]])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Bogomips", bogomips])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Kernel", kern_vers])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "DaemonRunOnCore", self.config.daemon_on_core])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "TG address", self.config.tg_addr])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "VegetaFile", self.config.vegeta_pattern_tar_file])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "VegetaChecksum", checksum[0]])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "GccVers", gcc_vers[0]])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "GoVers", go_vers])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "SilkVersion", "master"])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "RpcDaemon", "master"])
         self.writer.writerow([])
         self.writer.writerow([])
         self.writer.writerow(["Daemon", "TestNo", "TG-Threads", "Qps", "Time", "Min", "Mean", "50", "90", "95", "99", "Max", "Ratio"])
         self.csv_file.flush()
-
 
     def write_test_report(self, daemon, test_number, threads, qps_value, time_value, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency, ratio):
         """ Writes on CVS the latency data for one completed test
@@ -252,7 +280,7 @@ def main(argv):
         for test_rep in range(0, config.repetitions):
             qps = test.split(':')[0]
             time = test.split(':')[1]
-            perf_test.execute(str(test_number)+"."+str(test_rep+1), "silkrpc", qps, time)
+            perf_test.execute("["+str(test_number)+"."+str(test_rep+1)+"] ", "silkrpc", qps, time)
             os.system("sleep 1")
         test_number = test_number + 1
         print("")
@@ -267,13 +295,14 @@ def main(argv):
         for test_rep in range(0, config.repetitions):
             qps = test.split(':')[0]
             time = test.split(':')[1]
-            perf_test.execute(str(test_number)+"."+str(test_rep+1), "rpcdaemon", qps, time)
+            perf_test.execute("["+str(test_number)+"."+str(test_rep+1)+"] ", "rpcdaemon", qps, time)
             os.system("sleep 1")
         test_number = test_number + 1
         print("")
 
     perf_test.stop_rpc_daemon()
     test_report.close()
+    print("Test Terminated successfully.")
 
 
 #
