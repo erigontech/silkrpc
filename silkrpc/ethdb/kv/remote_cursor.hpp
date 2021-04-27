@@ -29,7 +29,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/ethdb/kv/awaitables.hpp>
-#include <silkrpc/ethdb/kv/cursor.hpp>
+#include <silkrpc/ethdb/cursor.hpp>
 
 namespace silkrpc::ethdb::kv {
 
@@ -45,9 +45,9 @@ public:
 
     asio::awaitable<void> open_cursor(const std::string& table_name) override;
 
-    asio::awaitable<silkrpc::common::KeyValue> seek(const silkworm::ByteView& seek_key) override;
+    asio::awaitable<KeyValue> seek(const silkworm::ByteView& seek_key) override;
 
-    asio::awaitable<silkrpc::common::KeyValue> next() override;
+    asio::awaitable<KeyValue> next() override;
 
     asio::awaitable<void> close_cursor() override;
 

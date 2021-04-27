@@ -23,7 +23,7 @@
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/ethdb/kv/transaction_database.hpp>
+#include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/json/types.hpp>
 
 namespace silkrpc::commands {
@@ -33,7 +33,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_account_range(const nlohmann::js
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_error(request["id"], 500, "not yet implemented");
     } catch (const std::exception& e) {
@@ -53,7 +53,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_number(
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_error(request["id"], 500, "not yet implemented");
     } catch (const std::exception& e) {
@@ -73,7 +73,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_hash(co
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_error(request["id"], 500, "not yet implemented");
     } catch (const std::exception& e) {
@@ -93,7 +93,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_storage_range_at(const nlohmann:
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_error(request["id"], 500, "not yet implemented");
     } catch (const std::exception& e) {
@@ -113,7 +113,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_error(request["id"], 500, "not yet implemented");
     } catch (const std::exception& e) {
@@ -133,7 +133,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json&
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_error(request["id"], 500, "not yet implemented");
     } catch (const std::exception& e) {

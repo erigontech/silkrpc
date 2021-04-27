@@ -14,30 +14,23 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_KV_DATABASE_H_
-#define SILKRPC_KV_DATABASE_H_
+#ifndef SILKRPC_ETHDB_BITMAP_HPP_
+#define SILKRPC_ETHDB_BITMAP_HPP_
 
-#include <memory>
+#include <string>
 
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
 
-#include <silkrpc/ethdb/kv/transaction.hpp>
+#include <silkworm/common/util.hpp>
+#include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/croaring/roaring.hh>
 
-namespace silkrpc::ethdb::kv {
+namespace silkrpc::ethdb::bitmap {
 
-class Database {
-public:
-    Database() = default;
-    virtual ~Database() = default;
+asio::awaitable<Roaring> get(core::rawdb::DatabaseReader& db_reader, const std::string& table, silkworm::Bytes& key, uint32_t from_block, uint32_t to_block);
 
-    Database(const Database&) = delete;
-    Database& operator=(const Database&) = delete;
+} // silkrpc::ethdb::bitmap
 
-    virtual asio::awaitable<std::unique_ptr<Transaction>> begin() = 0;
-};
-
-} // namespace silkrpc::ethdb::kv
-
-#endif  // SILKRPC_KV_DATABASE_H_
+#endif  // SILKRPC_ETHDB_BITMAP_HPP_

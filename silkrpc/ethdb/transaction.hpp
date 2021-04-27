@@ -14,38 +14,40 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_KV_CURSOR_H_
-#define SILKRPC_KV_CURSOR_H_
-
-#include <silkrpc/config.hpp>
+#ifndef SILKRPC_ETHDB_TRANSACTION_HPP_
+#define SILKRPC_ETHDB_TRANSACTION_HPP_
 
 #include <memory>
+#include <string>
+
+#include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/ethdb/cursor.hpp>
 
-namespace silkrpc::ethdb::kv {
+namespace silkrpc::ethdb {
 
-class Cursor {
+class Transaction {
 public:
-    Cursor() = default;
+    Transaction() = default;
 
-    Cursor(const Cursor&) = delete;
-    Cursor& operator=(const Cursor&) = delete;
+    Transaction(const Transaction&) = delete;
+    Transaction& operator=(const Transaction&) = delete;
 
-    virtual uint32_t cursor_id() const = 0;
+    virtual ~Transaction() = default;
 
-    virtual asio::awaitable<void> open_cursor(const std::string& table_name) = 0;
+    virtual asio::awaitable<void> open() = 0;
 
-    virtual asio::awaitable<silkrpc::common::KeyValue> seek(const silkworm::ByteView& seek_key) = 0;
+    virtual std::unique_ptr<Cursor> cursor() = 0;
 
-    virtual asio::awaitable<silkrpc::common::KeyValue> next() = 0;
+    virtual asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) = 0;
 
-    virtual asio::awaitable<void> close_cursor() = 0;
+    virtual asio::awaitable<void> close() = 0;
 };
 
-} // namespace silkrpc::ethdb::kv
+} // namespace silkrpc::ethdb
 
-#endif  // SILKRPC_KV_CURSOR_H_
+#endif  // SILKRPC_ETHDB_TRANSACTION_HPP_

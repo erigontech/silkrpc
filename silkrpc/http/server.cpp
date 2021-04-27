@@ -33,7 +33,7 @@
 
 namespace silkrpc::http {
 
-Server::Server(asio::io_context& io_context, const std::string& address, const std::string& port, std::unique_ptr<ethdb::kv::Database>& database)
+Server::Server(asio::io_context& io_context, const std::string& address, const std::string& port, std::unique_ptr<ethdb::Database>& database)
 : io_context_(io_context), acceptor_{io_context_}, request_handler_{database} {
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
     asio::ip::tcp::resolver resolver{io_context_};

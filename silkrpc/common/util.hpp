@@ -30,14 +30,14 @@
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/transaction.hpp>
 
-namespace silkrpc::common {
+namespace silkrpc {
 
 struct KeyValue {
     silkworm::Bytes key;
     silkworm::Bytes value;
 };
 
-} // namespace silkrpc::common
+} // namespace silkrpc
 
 namespace silkworm {
 

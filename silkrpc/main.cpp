@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     config.contains_help_flags = [](absl::string_view filename) { return absl::EndsWith(filename, "main.cpp"); };
     config.contains_helppackage_flags = [](absl::string_view) { return false; };
     config.normalize_filename = [](absl::string_view f) { return std::string{f.substr(f.rfind("/") + 1)}; };
-    config.version_string = []() { return "silkrpcdaemon 0.0.3\n"; };
+    config.version_string = []() { return "silkrpcdaemon 0.0.4-rc\n"; };
     absl::SetFlagsUsageConfig(config);
     absl::SetProgramUsageMessage("C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon");
     absl::ParseCommandLine(argc, argv);
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
         // TODO: handle also secure channel for remote
         auto grpc_channel = ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
         // TODO: handle also local (shared-memory) database
-        std::unique_ptr<silkrpc::ethdb::kv::Database> database =
+        std::unique_ptr<silkrpc::ethdb::Database> database =
             std::make_unique<silkrpc::ethdb::kv::RemoteDatabase>(context, grpc_channel, &queue);
 
         const auto http_host = local.substr(0, local.find(kAddressPortSeparator));

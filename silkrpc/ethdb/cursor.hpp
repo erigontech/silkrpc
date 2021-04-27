@@ -14,21 +14,39 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_BITMAP_DATABASE_H_
-#define SILKRPC_ETHDB_BITMAP_DATABASE_H_
+#ifndef SILKRPC_ETHDB_CURSOR_HPP_
+#define SILKRPC_ETHDB_CURSOR_HPP_
 
 #include <silkrpc/config.hpp>
+
+#include <memory>
+#include <string>
 
 #include <asio/awaitable.hpp>
 
 #include <silkworm/common/util.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/croaring/roaring.hh>
+#include <silkrpc/common/util.hpp>
 
-namespace silkrpc::ethdb::bitmap {
+namespace silkrpc::ethdb {
 
-asio::awaitable<Roaring> get(core::rawdb::DatabaseReader& db_reader, const std::string& table, silkworm::Bytes& key, uint32_t from_block, uint32_t to_block);
+class Cursor {
+public:
+    Cursor() = default;
 
-} // silkrpc::ethdb::bitmap
+    Cursor(const Cursor&) = delete;
+    Cursor& operator=(const Cursor&) = delete;
 
-#endif  // SILKRPC_ETHDB_BITMAP_DATABASE_H_
+    virtual uint32_t cursor_id() const = 0;
+
+    virtual asio::awaitable<void> open_cursor(const std::string& table_name) = 0;
+
+    virtual asio::awaitable<KeyValue> seek(const silkworm::ByteView& seek_key) = 0;
+
+    virtual asio::awaitable<KeyValue> next() = 0;
+
+    virtual asio::awaitable<void> close_cursor() = 0;
+};
+
+} // namespace silkrpc::ethdb
+
+#endif  // SILKRPC_ETHDB_CURSOR_HPP_
