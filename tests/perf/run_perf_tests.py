@@ -296,7 +296,7 @@ def main(argv):
             qps = test.split(':')[0]
             time = test.split(':')[1]
             test_name = "[{:d}.{:2d}] "
-            test_name_formatted = test_name.format(test_number, test_rep+1) 
+            test_name_formatted = test_name.format(test_number, test_rep+1)
             perf_test.execute(test_name_formatted, "silkrpc", qps, time)
             os.system("sleep 1")
         test_number = test_number + 1
@@ -313,7 +313,7 @@ def main(argv):
             qps = test.split(':')[0]
             time = test.split(':')[1]
             test_name = "[{:d}.{:2d}] "
-            test_name_formatted = test_name.format(test_number, test_rep+1) 
+            test_name_formatted = test_name.format(test_number, test_rep+1)
             perf_test.execute(test_name_formatted, "rpcdameon", qps, time)
             os.system("sleep 1")
         test_number = test_number + 1
