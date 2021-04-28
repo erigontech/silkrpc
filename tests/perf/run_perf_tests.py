@@ -94,10 +94,22 @@ class PerfTest:
         """ copy the vegeta pattern file into /tmp and untar zip file
         """
         cmd = "/bin/cp -f " + self.config.vegeta_pattern_tar_file + " /tmp"
-        os.system(cmd)
-        print("Extracting vegeta patten ...")
-        cmd = "cd /tmp; tar xvf " + self.config.vegeta_pattern_tar_file + " > /dev/null"
-        os.system(cmd)
+        print("Copy vegeta pattern: ", cmd)
+        status = os.system(cmd)
+        if int(status) != 0:
+            print("Copy failed. Test Aborted!")
+            sys.exit(-1)
+
+        file_path = self.config.vegeta_pattern_tar_file
+        tokenize_path = file_path.split('/')
+        n_subdir = len(tokenize_path)
+        file_name = tokenize_path[n_subdir-1]
+        cmd = "cd /tmp; tar xvf " + file_name + " > /dev/null"
+        print("Extracting vegeta pattern: ", cmd)
+        status = os.system(cmd)
+        if int(status) != 0:
+            print("untar failed. Test Aborted!")
+            sys.exit(-1)
 
     def start_rpc_daemon(self):
         """ Starts RPC daemon server
@@ -113,7 +125,7 @@ class PerfTest:
         if int(status) != 0:
             print("Start rpc daemon failed: Test Aborted!")
             sys.exit(-1)
-        os.system("sleep 1")
+        os.system("sleep 2")
         pid = os.popen("ps aux | grep 'rpcdaemon' | grep -v 'grep' | awk '{print $2}'").read()
         if pid == "":
             print("Start rpc daemon failed: Test Aborted!")
@@ -141,7 +153,7 @@ class PerfTest:
         if int(status) != 0:
             print("Start silkrpc daemon failed: Test Aborted!")
             sys.exit(-1)
-        os.system("sleep 1")
+        os.system("sleep 2")
         pid = os.popen("ps aux | grep 'silkrpc' | grep -v 'grep' | awk '{print $2}'").read()
         if pid == "":
             print("Start silkrpc daemon failed: Test Aborted!")
@@ -151,7 +163,7 @@ class PerfTest:
         """ Stops SILKRPC daemon
         """
         self.silk_daemon = 0
-        os.system("kill $(ps aux | grep 'silk' | grep -v 'grep' | awk '{print $2}') 2> /dev/null")
+        os.system("kill $(ps aux | grep 'silk' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
         print("SilkDaemon stopped")
         os.system("sleep 1")
 
@@ -162,7 +174,10 @@ class PerfTest:
         script_name = "./vegeta_attack_getLogs_"+name+".sh" +" "+str(qps_value) + " " + str(time_value)
         print(test_number+" "+name+": executes test qps:", str(qps_value) + " time:"+str(time_value)+" -> ", end="")
         sys.stdout.flush()
-        os.system(script_name)
+        status = os.system(script_name)
+        if int(status) != 0:
+            print("vegeta script fails: Test Aborted!")
+            sys.exit(-1)
         self.get_result(test_number, name, qps_value, time_value)
 
 
@@ -237,7 +252,7 @@ class TestReport:
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "GccVers", gcc_vers[0]])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "GoVers", go_vers])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "SilkVersion", "master"])
-        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "RpcDaemon", "master"])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "RpcDaemon/TG", "master"])
         self.writer.writerow([])
         self.writer.writerow([])
         self.writer.writerow(["Daemon", "TestNo", "TG-Threads", "Qps", "Time", "Min", "Mean", "50", "90", "95", "99", "Max", "Ratio"])
@@ -280,7 +295,9 @@ def main(argv):
         for test_rep in range(0, config.repetitions):
             qps = test.split(':')[0]
             time = test.split(':')[1]
-            perf_test.execute("["+str(test_number)+"."+str(test_rep+1)+"] ", "silkrpc", qps, time)
+            test_name = "[{:d}.{:2d}] "
+            test_name_formatted = test_name.format(test_number, test_rep+1) 
+            perf_test.execute(test_name_formatted, "silkrpc", qps, time)
             os.system("sleep 1")
         test_number = test_number + 1
         print("")
@@ -295,7 +312,9 @@ def main(argv):
         for test_rep in range(0, config.repetitions):
             qps = test.split(':')[0]
             time = test.split(':')[1]
-            perf_test.execute("["+str(test_number)+"."+str(test_rep+1)+"] ", "rpcdaemon", qps, time)
+            test_name = "[{:d}.{:2d}] "
+            test_name_formatted = test_name.format(test_number, test_rep+1) 
+            perf_test.execute(test_name_formatted, "rpcdameon", qps, time)
             os.system("sleep 1")
         test_number = test_number + 1
         print("")
