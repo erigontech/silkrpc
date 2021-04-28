@@ -127,5 +127,5 @@ You can also check the Silkrpc executable version by:
 
 ```
 $ silkrpc/silkrpcdaemon --version
-silkrpcdaemon 0.0.3
+silkrpcdaemon 0.0.4-rc
 ```

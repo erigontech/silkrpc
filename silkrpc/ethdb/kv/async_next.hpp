@@ -25,7 +25,7 @@
 #include <asio/detail/memory.hpp>
 
 #include <silkrpc/ethdb/kv/async_operation.hpp>
-#include <silkrpc/ethdb/kv/remote/kv.grpc.pb.h>
+#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 namespace silkrpc::ethdb::kv {
 

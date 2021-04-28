@@ -20,11 +20,25 @@ find_package(intx CONFIG REQUIRED)
 find_package(Protobuf CONFIG REQUIRED)
 
 file(GLOB_RECURSE SILKRPC_SRC CONFIGURE_DEPENDS "*.cpp" "*.cc" "*.hpp" "*.c" "*.h")
-list(FILTER SILKRPC_SRC EXCLUDE REGEX "main\.cpp$|_test\.cpp$")
+list(FILTER SILKRPC_SRC EXCLUDE REGEX "main\.cpp$|_test\.cpp$|\.pb\.cc|\.pb\.h")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -fcoroutines")
 endif()
+
+set(SILKRPC_GENERATED_IFC_PATH "${CMAKE_SOURCE_DIR}/silkrpc/interfaces")
+add_library(silkinterfaces
+    ${SILKRPC_GENERATED_IFC_PATH}/remote/ethbackend.grpc.pb.cc
+    ${SILKRPC_GENERATED_IFC_PATH}/remote/ethbackend.pb.cc
+    ${SILKRPC_GENERATED_IFC_PATH}/remote/kv.grpc.pb.cc
+    ${SILKRPC_GENERATED_IFC_PATH}/remote/kv.pb.cc
+    ${SILKRPC_GENERATED_IFC_PATH}/types/types.grpc.pb.cc
+    ${SILKRPC_GENERATED_IFC_PATH}/types/types.pb.cc)
+target_include_directories(silkinterfaces PUBLIC ${CMAKE_SOURCE_DIR}/silkrpc/interfaces)
+target_link_libraries(silkinterfaces
+    tcmalloc
+    gRPC::grpc++
+    protobuf::libprotobuf)
 
 add_library(silkrpc ${SILKRPC_SRC})
 target_include_directories(silkrpc PUBLIC ${CMAKE_SOURCE_DIR})
@@ -36,6 +50,7 @@ target_link_libraries(silkrpc
     intx::intx
     gRPC::grpc++
     protobuf::libprotobuf
+    silkinterfaces
     silkworm_core
     silkworm_db)
 
@@ -51,5 +66,6 @@ target_link_libraries(silkrpcdaemon
     intx::intx
     protobuf::libprotobuf
     silkrpc
+    silkinterfaces
     silkworm_core
     silkworm_db)
