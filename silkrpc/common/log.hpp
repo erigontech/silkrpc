@@ -48,6 +48,8 @@ using LogLevel = silkworm::LogLevel;
 
 #define SILKRPC_LOG_VERBOSITY(level_) (silkworm::log_verbosity_ = (level_))
 
+#define SILKRPC_LOG_THREAD(log_thread_) (silkworm::log_thread_enabled_ = (log_thread_))
+
 } // namespace silkrpc
 
 #endif  // SILKRPC_COMMON_LOG_HPP_
