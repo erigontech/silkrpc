@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_KV_REMOTE_RemoteDatabase_H_
-#define SILKRPC_KV_REMOTE_RemoteDatabase_H_
+#ifndef SILKRPC_ETHDB_KV_REMOTE_DATABASE_HPP_
+#define SILKRPC_ETHDB_KV_REMOTE_DATABASE_HPP_
 
 #include <memory>
 
@@ -23,12 +23,12 @@
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/ethdb/kv/database.hpp>
+#include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/kv/remote_transaction.hpp>
 
 namespace silkrpc::ethdb::kv {
 
-class RemoteDatabase :public Database {
+class RemoteDatabase: public Database {
 public:
     RemoteDatabase(asio::io_context& context, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
     : context_(context), channel_(channel), queue_(queue) {
@@ -58,4 +58,4 @@ private:
 
 } // namespace silkrpc::ethdb::kv
 
-#endif  // SILKRPC_KV_REMOTE_RemoteDatabase_H_
+#endif  // SILKRPC_ETHDB_KV_REMOTE_DATABASE_HPP_

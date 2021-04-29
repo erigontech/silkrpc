@@ -33,8 +33,8 @@
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/executor.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
-#include <silkrpc/ethdb/bitmap/database.hpp>
-#include <silkrpc/ethdb/kv/transaction_database.hpp>
+#include <silkrpc/ethdb/bitmap.hpp>
+#include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/types/block.hpp>
 #include <silkrpc/types/call.hpp>
@@ -47,7 +47,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
         const auto block_height = co_await core::get_current_block_number(tx_database);
         reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(block_height));
     } catch (const std::exception& e) {
@@ -67,7 +67,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_chain_id(const nlohmann::json& 
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(chain_id));
     } catch (const std::exception& e) {
@@ -93,7 +93,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_syncing(const nlohmann::json& r
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
         const auto current_block_height = co_await core::get_current_block_number(tx_database);
         const auto highest_block_height = co_await core::get_highest_block_number(tx_database);
         if (current_block_height >= highest_block_height) {
@@ -121,7 +121,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_gas_price(const nlohmann::json&
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -152,7 +152,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_hash(const nlohman
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
         const auto block_number = block_with_hash.block.header.number;
@@ -188,7 +188,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_number(const nlohm
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
         const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
@@ -223,7 +223,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
         const auto tx_count = block_with_hash.block.transactions.size();
@@ -256,7 +256,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
         const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
@@ -279,7 +279,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_ind
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -299,7 +299,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_number_and_i
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -319,7 +319,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_hash(c
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -339,7 +339,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_number
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -359,7 +359,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const n
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -379,7 +379,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_hash_a
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -399,7 +399,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_number
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -419,7 +419,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const n
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -439,7 +439,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::js
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -459,7 +459,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohmann::jso
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -479,7 +479,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann::json& 
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -499,7 +499,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(const nlo
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -519,7 +519,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_storage_at(const nlohmann::
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -550,7 +550,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -580,7 +580,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_new_filter(const nlohmann::json
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -600,7 +600,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_new_block_filter(const nlohmann
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -620,7 +620,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_new_pending_transaction_filter(
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -640,7 +640,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_changes(const nlohma
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -660,7 +660,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_uninstall_filter(const nlohmann
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -692,7 +692,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         uint64_t start{}, end{};
         if (filter.block_hash.has_value()) {
@@ -795,7 +795,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -815,7 +815,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_transaction(const nlohmann
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -835,7 +835,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_sign_transaction(const nlohmann
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -855,7 +855,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_proof(const nlohmann::json&
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -875,7 +875,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_mining(const nlohmann::json& re
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -895,7 +895,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_coinbase(const nlohmann::json& 
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -915,7 +915,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_hashrate(const nlohmann::json& 
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -935,7 +935,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_submit_hashrate(const nlohmann:
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -955,7 +955,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_work(const nlohmann::json& 
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -975,7 +975,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_submit_work(const nlohmann::jso
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -995,7 +995,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_subscribe(const nlohmann::json&
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
@@ -1015,7 +1015,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_unsubscribe(const nlohmann::jso
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase tx_database{*tx};
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {

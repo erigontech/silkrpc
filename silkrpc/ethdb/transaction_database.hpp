@@ -14,21 +14,20 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_TRANSACTIONDATABASE_H_
-#define SILKRPC_ETHDB_TRANSACTIONDATABASE_H_
-
-#include "transaction.hpp"
+#ifndef SILKRPC_ETHDB_TRANSACTION_DATABASE_HPP_
+#define SILKRPC_ETHDB_TRANSACTION_DATABASE_HPP_
 
 #include <string>
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/ethdb/transaction.hpp>
 
-namespace silkrpc::ethdb::kv {
+namespace silkrpc::ethdb {
 
 class TransactionDatabase : public core::rawdb::DatabaseReader {
 public:
-    TransactionDatabase(kv::Transaction& tx) : tx_(tx) {}
+    explicit TransactionDatabase(Transaction& tx) : tx_(tx) {}
 
     TransactionDatabase(const TransactionDatabase&) = delete;
     TransactionDatabase& operator=(const TransactionDatabase&) = delete;
@@ -39,9 +38,9 @@ public:
 
     void close();
 private:
-    kv::Transaction& tx_;
+    Transaction& tx_;
 };
 
-} // namespace silkrpc::ethdb::kv
+} // namespace silkrpc::ethdb
 
-#endif  // SILKRPC_ETHDB_TRANSACTIONDATABASE_H_
+#endif  // SILKRPC_ETHDB_TRANSACTION_DATABASE_HPP_

@@ -24,7 +24,7 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/async_completion_handler.hpp>
-#include <silkrpc/ethdb/kv/remote/kv.grpc.pb.h>
+#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 namespace silkrpc::ethdb::kv {
 

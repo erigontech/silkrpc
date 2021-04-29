@@ -14,10 +14,11 @@
     limitations under the License.
 */
 
-#include "database.hpp"
+#include "bitmap.hpp"
 
 #include <climits>
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include <boost/endian/conversion.hpp>
@@ -70,4 +71,4 @@ asio::awaitable<Roaring> get(core::rawdb::DatabaseReader& db_reader, const std::
     co_return result;
 }
 
-} // silkrpc::ethdb::bitmap
+} // namespace silkrpc::ethdb::bitmap
