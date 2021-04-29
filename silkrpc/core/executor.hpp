@@ -20,6 +20,7 @@
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
+#include <asio/io_context.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/state/buffer.hpp>
@@ -40,7 +41,7 @@ struct ExecutionResult {
 class Executor {
 public:
     explicit Executor(const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config)
-    : db_reader_(db_reader), config_(config), buffer_{} {}
+    : db_reader_(db_reader), config_(config), buffer_{io_context_, db_reader} {}
     virtual ~Executor() {}
 
     Executor(const Executor&) = delete;
@@ -49,6 +50,7 @@ public:
     asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, uint64_t gas);
 
 private:
+    asio::io_context io_context_; // TODO(canepat): context pool shall be passed in Executor ctor to RemoteBuffer ctor
     const core::rawdb::DatabaseReader& db_reader_;
     const silkworm::ChainConfig& config_;
     RemoteBuffer buffer_;
