@@ -65,6 +65,7 @@ int main(int argc, char* argv[]) {
     absl::ParseCommandLine(argc, argv);
 
     SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
+    SILKRPC_LOG_THREAD(true);
 
     try {
         auto chaindata{absl::GetFlag(FLAGS_chaindata)};

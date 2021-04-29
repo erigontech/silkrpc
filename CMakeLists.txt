@@ -44,6 +44,6 @@ find_package(intx CONFIG REQUIRED)
 add_subdirectory(silkworm)
 
 # SilkRpc itself
-add_subdirectory(silkrpc/ethdb/kv/remote)
+add_subdirectory(silkrpc/interfaces)
 add_subdirectory(silkrpc)
 add_subdirectory(cmd)

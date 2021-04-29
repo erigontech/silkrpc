@@ -23,25 +23,27 @@ find_program(PROTOBUF_PROTOC protoc REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
 find_program(GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin REQUIRED)
 
-# gRPC proto file
-set(KV_PROTO "${CMAKE_SOURCE_DIR}/interfaces/remote/kv.proto")
-get_filename_component(KV_PROTO_PATH "${KV_PROTO}" PATH)
+# gRPC proto files
+set(IF_PROTO_PATH "${CMAKE_SOURCE_DIR}/interfaces")
 
 # Generate sources
-set(KV_PROTO_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/kv.pb.cc")
-set(KV_PROTO_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/kv.pb.h")
-set(KV_GRPC_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/kv.grpc.pb.cc")
-set(KV_GRPC_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/kv.grpc.pb.h")
+set(KV_PROTO_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/remote/kv.pb.cc")
+set(KV_PROTO_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/remote/kv.pb.h")
+set(KV_GRPC_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/remote/kv.grpc.pb.cc")
+set(KV_GRPC_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/remote/kv.grpc.pb.h")
+set(TYPES_PROTO_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/types/types.pb.cc")
+set(TYPES_PROTO_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/types/types.pb.h")
 
 add_custom_command(
     OUTPUT "${KV_PROTO_SOURCES}" "${KV_PROTO_HEADERS}" "${KV_GRPC_SOURCES}" "${KV_GRPC_HEADERS}"
     COMMAND ${PROTOBUF_PROTOC}
     ARGS --grpc_out "${CMAKE_CURRENT_SOURCE_DIR}"
       --cpp_out "${CMAKE_CURRENT_SOURCE_DIR}"
-      -I "${KV_PROTO_PATH}"
+      --proto_path "${IF_PROTO_PATH}"
       --plugin=protoc-gen-grpc="${GRPC_CPP_PLUGIN_EXECUTABLE}"
-      "${KV_PROTO}"
-    DEPENDS "${KV_PROTO}"
+      "${IF_PROTO_PATH}/**/ethbackend.proto"
+      "${IF_PROTO_PATH}/**/kv.proto"
+      "${IF_PROTO_PATH}/**/types.proto"
 )
 
 add_custom_target(

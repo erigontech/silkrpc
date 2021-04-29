@@ -27,7 +27,7 @@
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/ethdb/kv/remote/kv.grpc.pb.h>
+#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 int kv_seek_async(std::string table_name, std::string target, const silkworm::Bytes& seek_key_bytes, uint32_t timeout) {
     // Create KV stub using insecure channel to target
