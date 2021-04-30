@@ -22,6 +22,22 @@ VEGETA_REPORT = "vegeta_report.hrd"
 VEGETA_PATTERN_SILKRPC = "/tmp/turbo_geth_stress_test/vegeta_geth_eth_getLogs.txt"
 VEGETA_PATTERN_RPCDAEMON = "/tmp/turbo_geth_stress_test/vegeta_turbo_geth_eth_getLogs.txt"
 
+def usage(argv):
+    """ Print script usage
+    """
+    print("Usage: " + argv[0] + " -h -p vegetaPatternTarFile -c daemonOnCore  -t turboGethAddress -g turboGethHomeDir -s silkrpcBuildDir -r testRepetitions - t testSequence")
+    print("")
+    print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
+    print("")
+    print("-h                      print this help")
+    print("-p vegetaPatternTarFile path to the request file for Vegeta attack")
+    print("-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
+    print("-t turboGethAddress     address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: " + DEFAULT_TG_ADDRESS + "]")
+    print("-g turboGethHomeDir     path to TG home folder (e.g. ../../../turbo-geth/)                               [default: " + DEFAULT_GETH_BUILD_DIR + "]")
+    print("-s silkrpcBuildDir      path to build home folder (e.g. ../../build_gcc_release/)                        [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
+    print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                [default: " + str(DEFAULT_REPETITIONS) + "]")
+    print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10) [default: " + DEFAULT_TEST_SEQUENCE + "]")
+
 class Config:
     """ This class manage configuration params
     """
@@ -41,12 +57,12 @@ class Config:
         except getopt.GetoptError as err:
             # print help information and exit:
             print(err)
-            self.usage(argv)
+            usage(argv)
             sys.exit(-1)
 
         for option, optarg in opts:
             if option in ("-h", "--help"):
-                self.usage(argv)
+                usage(argv)
                 sys.exit(-1)
             elif option == "-p":
                 self.vegeta_pattern_tar_file = optarg
@@ -63,25 +79,8 @@ class Config:
             elif option == "-t":
                 self.test_sequence = optarg
             else:
-                self.usage(argv)
+                usage(argv)
                 sys.exit(-1)
-
-    def usage(self, argv):
-        """ Print script usage
-        """
-        print("Usage: " + argv[0] + " -h -p vegetaPatternTarFile -c daemonOnCore  -t turboGethAddress -g turboGethHomeDir -s silkrpcBuildDir -r testRepetitions - t testSequence")
-        print("")
-        print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
-        print("")
-        print("-h                      print this help")
-        print("-p vegetaPatternTarFile path to the request file for Vegeta attack")
-        print("-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
-        print("-t turboGethAddress     address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: " + DEFAULT_TG_ADDRESS + "]")
-        print("-g turboGethHomeDir     path to TG home folder (e.g. ../../../turbo-geth/)                               [default: " + DEFAULT_GETH_BUILD_DIR + "]")
-        print("-s silkrpcBuildDir      path to build home folder (e.g. ../../build_gcc_release/)                        [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
-        print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                [default: " + str(DEFAULT_REPETITIONS) + "]")
-        print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10) [default: " + DEFAULT_TEST_SEQUENCE + "]")
-
 
 class PerfTest:
     """ This class manage performance test
