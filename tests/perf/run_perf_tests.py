@@ -7,14 +7,15 @@
 import os
 import csv
 import sys
+import getopt
 from datetime import datetime
 
 DEFAULT_TEST_SEQUENCE = "50:30,200:30,200:60,400:30"
 DEFAULT_REPETITIONS = 10
-DEFAULT_VEGETA_PATTERN_TAR_FILE = ""
+DEFAULT_VEGETA_PATTERN_TAR_FILE = "turbo_geth_stress_test_001.tar"
 DEFAULT_DAEMON_VEGETA_ON_CORE = "-:-"
 DEFAULT_TG_ADDRESS = "localhost:9090"
-DEFAULT_GETH_BUILD_DIR = "../../../turbo-geth/build"
+DEFAULT_GETH_BUILD_DIR = "../../../turbo-geth/build/"
 DEFAULT_SILKRPC_BUILD_DIR = "../../build_gcc_release/"
 
 VEGETA_REPORT = "vegeta_report.hrd"
@@ -35,54 +36,51 @@ class Config:
         self.repetitions = DEFAULT_REPETITIONS
         self.test_sequence = DEFAULT_TEST_SEQUENCE
 
-        if len(argv) == 2:
-            self.vegeta_pattern_tar_file = argv[1]
-        elif len(argv) == 3:
-            self.vegeta_pattern_tar_file = argv[1]
-            self.daemon_vegeta_on_core = argv[2]
-        elif len(argv) == 4:
-            self.vegeta_pattern_tar_file = argv[1]
-            self.daemon_vegeta_on_core = argv[2]
-            self.tg_addr = argv[3]
-        elif len(argv) == 5:
-            self.vegeta_pattern_tar_file = argv[1]
-            self.daemon_vegeta_on_core = argv[2]
-            self.tg_addr = argv[3]
-            self.geth_builddir = argv[4]
-        elif len(argv) == 6:
-            self.vegeta_pattern_tar_file = argv[1]
-            self.daemon_vegeta_on_core = argv[2]
-            self.tg_addr = argv[3]
-            self.geth_builddir = argv[4]
-            self.silkrpc_build_dir = argv[5]
-        elif len(argv) == 7:
-            self.vegeta_pattern_tar_file = argv[1]
-            self.daemon_vegeta_on_core = argv[2]
-            self.tg_addr = argv[3]
-            self.geth_builddir = argv[4]
-            self.silkrpc_build_dir = argv[5]
-            self.repetitions = int(argv[6])
-        elif len(argv) == 8:
-            self.vegeta_pattern_tar_file = argv[1]
-            self.daemon_vegeta_on_core = argv[2]
-            self.tg_addr = argv[3]
-            self.geth_builddir = argv[4]
-            self.silkrpc_build_dir = argv[5]
-            self.repetitions = int(argv[6])
-            self.test_sequence = argv[7]
-        else:
-            print("Usage: " + argv[0] + " vegetaPatternTarFile [daemonOnCore] [turboGethAddress] [turboGethHomeDir] [silkrpcBuildDir] [testRepetitions] [testSequence]")
-            print("")
-            print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
-            print("")
-            print("vegetaPatternTarFile     path to the request file for Vegeta attack")
-            print("daemonVegetaOnCore       cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
-            print("turboGethAddress         address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: " + DEFAULT_TG_ADDRESS + "]")
-            print("turboGethHomeDir         path to TG home folder (e.g. ../../../turbo-geth/)                               [default: " + DEFAULT_GETH_BUILD_DIR + "]")
-            print("silkrpcBuildDir          path to build home folder (e.g. ../../build_gcc_release/)                        [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
-            print("testRepetitions          number of repetitions for each element in test sequence (e.g. 10)                [default: " + str(DEFAULT_REPETITIONS) + "]")
-            print("testSequence             list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10) [default: " + DEFAULT_TEST_SEQUENCE + "]")
+        try:
+            opts, _ = getopt.getopt(argv[1:], "vp:c:a:g:s:r:t:")
+        except getopt.GetoptError as err:
+            # print help information and exit:
+            print(err)
+            self.usage(argv)
             sys.exit(-1)
+
+        for option, optarg in opts:
+            if option in ("-h", "--help"):
+                self.usage(argv)
+                sys.exit(-1)
+            elif option == "-p":
+                self.vegeta_pattern_tar_file = optarg
+            elif option == "-c":
+                self.daemon_vegeta_on_core = optarg
+            elif option == "-a":
+                self.tg_addr = optarg
+            elif option == "-g":
+                self.geth_builddir = optarg
+            elif option == "-s":
+                self.silkrpc_build_dir = optarg
+            elif option == "-r":
+                self.repetitions = int(optarg)
+            elif option == "-t":
+                self.test_sequence = optarg
+            else:
+                self.usage(argv)
+                sys.exit(-1)
+
+    def usage(self, argv):
+        """ Print script usage
+        """
+        print("Usage: " + argv[0] + " -h -p vegetaPatternTarFile -c daemonOnCore  -t turboGethAddress -g turboGethHomeDir -s silkrpcBuildDir -r testRepetitions - t testSequence")
+        print("")
+        print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
+        print("")
+        print("-h                      print this help")
+        print("-p vegetaPatternTarFile path to the request file for Vegeta attack")
+        print("-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
+        print("-t turboGethAddress     address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: " + DEFAULT_TG_ADDRESS + "]")
+        print("-g turboGethHomeDir     path to TG home folder (e.g. ../../../turbo-geth/)                               [default: " + DEFAULT_GETH_BUILD_DIR + "]")
+        print("-s silkrpcBuildDir      path to build home folder (e.g. ../../build_gcc_release/)                        [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
+        print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                [default: " + str(DEFAULT_REPETITIONS) + "]")
+        print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10) [default: " + DEFAULT_TEST_SEQUENCE + "]")
 
 
 class PerfTest:
