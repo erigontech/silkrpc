@@ -30,7 +30,6 @@
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
-#include <asio/io_context.hpp>
 
 #include <silkrpc/commands/rpc_api.hpp>
 #include <silkrpc/ethdb/database.hpp>
@@ -45,15 +44,13 @@ public:
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
-    explicit RequestHandler(asio::io_context& io_context, std::unique_ptr<ethdb::kv::Database>& database)
-    : database_(database), rpc_api_{io_context, database} {}
+    explicit RequestHandler(std::unique_ptr<ethdb::Database>& database) : rpc_api_{database} {}
 
     virtual ~RequestHandler() {}
 
     asio::awaitable<void> handle_request(const Request& request, Reply& reply);
 
 private:
-    std::unique_ptr<ethdb::Database>& database_;
     commands::RpcApi rpc_api_;
 
     typedef asio::awaitable<void> (commands::RpcApi::*HandleMethod)(const nlohmann::json&, nlohmann::json&);

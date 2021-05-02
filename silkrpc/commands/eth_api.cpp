@@ -44,7 +44,7 @@ namespace silkrpc::commands {
 
 // https://eth.wiki/json-rpc/API#eth_blocknumber
 asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -64,7 +64,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
 
 // https://eth.wiki/json-rpc/API#eth_chainid
 asio::awaitable<void> EthereumRpcApi::handle_eth_chain_id(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -90,7 +90,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_protocol_version(const nlohmann
 
 // https://eth.wiki/json-rpc/API#eth_syncing
 asio::awaitable<void> EthereumRpcApi::handle_eth_syncing(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -118,7 +118,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_syncing(const nlohmann::json& r
 
 // https://eth.wiki/json-rpc/API#eth_gasprice
 asio::awaitable<void> EthereumRpcApi::handle_eth_gas_price(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -149,7 +149,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_hash(const nlohman
     auto full_tx = params[1].get<bool>();
     SILKRPC_DEBUG << "block_hash: " << block_hash << " full_tx: " << std::boolalpha << full_tx << "\n";
 
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -185,7 +185,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_number(const nlohm
     auto full_tx = params[1].get<bool>();
     SILKRPC_DEBUG << "block_id: " << block_id << " full_tx: " << std::boolalpha << full_tx << "\n";
 
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -220,7 +220,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_
     auto block_hash = params[0].get<evmc::bytes32>();
     SILKRPC_DEBUG << "block_hash: " << block_hash << "\n";
 
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -253,7 +253,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_
     const auto block_id = params[0].get<std::string>();
     SILKRPC_DEBUG << "block_id: " << block_id << "\n";
 
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -276,7 +276,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_
 
 // https://eth.wiki/json-rpc/API#eth_getunclebyblockhashandindex
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -296,7 +296,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_ind
 
 // https://eth.wiki/json-rpc/API#eth_getunclebyblocknumberandindex
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -316,7 +316,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_number_and_i
 
 // https://eth.wiki/json-rpc/API#eth_getunclecountbyblockhash
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_hash(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -336,7 +336,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_hash(c
 
 // https://eth.wiki/json-rpc/API#eth_getunclecountbyblocknumber
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_number(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -356,7 +356,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_number
 
 // https://eth.wiki/json-rpc/API#eth_gettransactionbyhash
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -376,7 +376,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const n
 
 // https://eth.wiki/json-rpc/API#eth_gettransactionbyblockhashandindex
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -396,7 +396,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_hash_a
 
 // https://eth.wiki/json-rpc/API#eth_gettransactionbyblocknumberandindex
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -416,7 +416,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_number
 
 // https://eth.wiki/json-rpc/API#eth_gettransactionreceipt
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -436,7 +436,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const n
 
 // https://eth.wiki/json-rpc/API#eth_estimategas
 asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -456,7 +456,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::js
 
 // https://eth.wiki/json-rpc/API#eth_getbalance
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -476,7 +476,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohmann::jso
 
 // https://eth.wiki/json-rpc/API#eth_getcode
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -496,7 +496,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann::json& 
 
 // https://eth.wiki/json-rpc/API#eth_gettransactioncount
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -516,7 +516,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(const nlo
 
 // https://eth.wiki/json-rpc/API#eth_getstorageat
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_storage_at(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -547,7 +547,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
     const auto block_id = params[1].get<std::string>();
     SILKRPC_DEBUG << "call: " << call << " block_id: " << block_id << "\n";
 
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -577,7 +577,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
 
 // https://eth.wiki/json-rpc/API#eth_newfilter
 asio::awaitable<void> EthereumRpcApi::handle_eth_new_filter(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -597,7 +597,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_new_filter(const nlohmann::json
 
 // https://eth.wiki/json-rpc/API#eth_newblockfilter
 asio::awaitable<void> EthereumRpcApi::handle_eth_new_block_filter(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -617,7 +617,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_new_block_filter(const nlohmann
 
 // https://eth.wiki/json-rpc/API#eth_newpendingtransactionfilter
 asio::awaitable<void> EthereumRpcApi::handle_eth_new_pending_transaction_filter(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -637,7 +637,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_new_pending_transaction_filter(
 
 // https://eth.wiki/json-rpc/API#eth_getfilterchanges
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_changes(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -657,7 +657,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_changes(const nlohma
 
 // https://eth.wiki/json-rpc/API#eth_uninstallfilter
 asio::awaitable<void> EthereumRpcApi::handle_eth_uninstall_filter(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -689,7 +689,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
 
     std::vector<Log> logs;
 
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -792,7 +792,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
 
 // https://eth.wiki/json-rpc/API#eth_sendrawtransaction
 asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -812,7 +812,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
 
 // https://eth.wiki/json-rpc/API#eth_sendtransaction
 asio::awaitable<void> EthereumRpcApi::handle_eth_send_transaction(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -832,7 +832,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_transaction(const nlohmann
 
 // https://eth.wiki/json-rpc/API#eth_signtransaction
 asio::awaitable<void> EthereumRpcApi::handle_eth_sign_transaction(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -852,7 +852,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_sign_transaction(const nlohmann
 
 // https://eth.wiki/json-rpc/API#eth_getproof
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_proof(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -872,7 +872,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_proof(const nlohmann::json&
 
 // https://eth.wiki/json-rpc/API#eth_mining
 asio::awaitable<void> EthereumRpcApi::handle_eth_mining(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -892,7 +892,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_mining(const nlohmann::json& re
 
 // https://eth.wiki/json-rpc/API#eth_coinbase
 asio::awaitable<void> EthereumRpcApi::handle_eth_coinbase(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -912,7 +912,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_coinbase(const nlohmann::json& 
 
 // https://eth.wiki/json-rpc/API#eth_hashrate
 asio::awaitable<void> EthereumRpcApi::handle_eth_hashrate(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -932,7 +932,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_hashrate(const nlohmann::json& 
 
 // https://eth.wiki/json-rpc/API#eth_submithashrate
 asio::awaitable<void> EthereumRpcApi::handle_eth_submit_hashrate(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -952,7 +952,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_submit_hashrate(const nlohmann:
 
 // https://eth.wiki/json-rpc/API#eth_getwork
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_work(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -972,7 +972,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_work(const nlohmann::json& 
 
 // https://eth.wiki/json-rpc/API#eth_submitwork
 asio::awaitable<void> EthereumRpcApi::handle_eth_submit_work(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -992,7 +992,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_submit_work(const nlohmann::jso
 
 // https://eth.wiki/json-rpc/API#eth_subscribe
 asio::awaitable<void> EthereumRpcApi::handle_eth_subscribe(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
@@ -1012,7 +1012,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_subscribe(const nlohmann::json&
 
 // https://eth.wiki/json-rpc/API#eth_unsubscribe
 asio::awaitable<void> EthereumRpcApi::handle_eth_unsubscribe(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};

@@ -23,20 +23,15 @@
 #ifndef SILKRPC_HTTP_SERVER_HPP_
 #define SILKRPC_HTTP_SERVER_HPP_
 
-#include <memory>
 #include <string>
 
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
-#include <asio/io_context.hpp>
-#include <asio/use_awaitable.hpp>
+#include <asio/ip/tcp.hpp>
 
-#include "connection.hpp"
-#include "connection_manager.hpp"
-#include "io_context_pool.hpp"
-//#include "request_handler.hpp"
-#include <silkrpc/ethdb/kv/database.hpp>
+#include <silkrpc/context_pool.hpp>
+#include <silkrpc/http/connection_manager.hpp>
 
 namespace silkrpc::http {
 
@@ -46,8 +41,8 @@ public:
     Server(const Server&) = delete;
     Server& operator=(const Server&) = delete;
 
-    /// Construct the server to listen on the specified TCP address and port.
-    explicit Server(io_context_pool& io_context_pool, const std::string& address, const std::string& port, std::unique_ptr<ethdb::kv::Database>& database);
+    // Construct the server to listen on the specified TCP address and port
+    explicit Server(const std::string& address, const std::string& port, ContextPool& context_pool);
 
     void start();
 
@@ -56,20 +51,14 @@ public:
 private:
     asio::awaitable<void> run();
 
-    /// The io_context used to perform asynchronous operations.
-    //asio::io_context& io_context_;
-    io_context_pool& io_context_pool_;
+    // The context pool used to perform asynchronous operations
+    ContextPool& context_pool_;
 
-    /// Acceptor used to listen for incoming connections.
+    // The acceptor used to listen for incoming TCP connections
     asio::ip::tcp::acceptor acceptor_;
 
-    /// The connection manager which owns all live connections.
+    /// The connection manager which owns all live connections
     ConnectionManager connection_manager_;
-
-    std::unique_ptr<ethdb::kv::Database>& database_;
-
-    /// The handler for all incoming requests.
-    //RequestHandler request_handler_;
 };
 
 } // namespace silkrpc::http

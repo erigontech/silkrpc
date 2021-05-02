@@ -14,11 +14,14 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_GRPC_COMPLETION_POLLER_HPP_
-#define SILKRPC_GRPC_COMPLETION_POLLER_HPP_
+#ifndef SILKRPC_GRPC_COMPLETION_RUNNER_HPP_
+#define SILKRPC_GRPC_COMPLETION_RUNNER_HPP_
 
-#include <atomic>
+#include <functional>
+#include <memory>
+#include <stdexcept>
 #include <thread>
+#include <vector>
 
 #include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
@@ -27,15 +30,15 @@
 
 namespace silkrpc::grpc {
 
-class CompletionPoller {
+class CompletionRunner {
 public:
-    CompletionPoller(::grpc::CompletionQueue& queue, asio::io_context& io_context)
+    CompletionRunner(::grpc::CompletionQueue& queue, asio::io_context& io_context)
     : queue_(queue), io_context_(io_context) {}
 
-    ~CompletionPoller() { stop(); }
+    ~CompletionRunner() { stop(); }
 
-    CompletionPoller(const CompletionPoller&) = delete;
-    CompletionPoller& operator=(const CompletionPoller&) = delete;
+    CompletionRunner(const CompletionRunner&) = delete;
+    CompletionRunner& operator=(const CompletionRunner&) = delete;
 
     void start();
 
@@ -51,4 +54,4 @@ private:
 
 } // namespace silkrpc::grpc
 
-#endif  // SILKRPC_GRPC_COMPLETION_POLLER_HPP_
+#endif  // SILKRPC_GRPC_COMPLETION_RUNNER_HPP_

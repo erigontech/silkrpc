@@ -27,15 +27,14 @@
 #include <utility>
 
 #include <asio/co_spawn.hpp>
-#include <asio/ip/tcp.hpp>
+#include <asio/use_awaitable.hpp>
 
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/http/request_handler.hpp>
 
 namespace silkrpc::http {
 
-Server::Server(io_context_pool& io_context_pool, const std::string& address, const std::string& port, std::unique_ptr<ethdb::kv::Database>& database)
-: io_context_pool_(io_context_pool), acceptor_{io_context_pool_.get_io_context()}, database_(database) {
+Server::Server(const std::string& address, const std::string& port, ContextPool& context_pool)
+: context_pool_(context_pool), acceptor_{context_pool.get_io_context()} {
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
     asio::ip::tcp::resolver resolver{acceptor_.get_executor()};
     asio::ip::tcp::endpoint endpoint = *resolver.resolve(address, port).begin();
@@ -56,9 +55,12 @@ asio::awaitable<void> Server::run() {
     while (acceptor_.is_open()) {
         SILKRPC_DEBUG << "Server::start accepting...\n" << std::flush;
 
-        auto& new_io_context = io_context_pool_.get_io_context();
+        // Get the next context to use chosen round-robin, then get both io_context *and* database from it
+        auto& context = context_pool_.get_context();
+        auto& io_context = context.io_context;
+        auto& database = context.database;
 
-        auto new_connection = std::make_shared<Connection>(new_io_context, connection_manager_, database_);
+        auto new_connection = std::make_shared<Connection>(*io_context, connection_manager_, database);
         co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);
         new_connection->socket().set_option(asio::ip::tcp::socket::keep_alive(true));
         SILKRPC_TRACE << "Server::start new socket: " << &new_connection->socket() << "\n";
@@ -67,7 +69,7 @@ asio::awaitable<void> Server::run() {
             co_return;
         }
 
-        asio::co_spawn(new_io_context, connection_manager_.start(new_connection), [&](std::exception_ptr eptr) {
+        asio::co_spawn(*io_context, connection_manager_.start(new_connection), [&](std::exception_ptr eptr) {
             if (eptr) std::rethrow_exception(eptr);
         });
     }
@@ -76,7 +78,7 @@ asio::awaitable<void> Server::run() {
 
 void Server::stop() {
     // The server is stopped by cancelling all outstanding asynchronous operations.
-    acceptor_.close(); // TODO: should not be necessary
+    acceptor_.close(); // TODO(canepat): should not be necessary
     connection_manager_.stop_all();
 }
 

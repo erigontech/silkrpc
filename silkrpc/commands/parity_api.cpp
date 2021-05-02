@@ -30,7 +30,7 @@ namespace silkrpc::commands {
 
 // https://eth.wiki/json-rpc/API#parity_getblockreceipts
 asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin(io_context_);
+    auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};

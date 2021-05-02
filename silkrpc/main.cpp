@@ -19,7 +19,6 @@
 #include <exception>
 #include <filesystem>
 #include <iostream>
-#include <memory>
 #include <thread>
 
 #include <absl/flags/flag.h>
@@ -30,22 +29,20 @@
 #include <absl/strings/string_view.h>
 #include <asio/awaitable.hpp>
 #include <asio/co_spawn.hpp>
-//#include <asio/io_context.hpp>
 #include <asio/signal_set.hpp>
 #include <boost/process/environment.hpp>
 #include <grpcpp/grpcpp.h>
 
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/http/io_context_pool.hpp>
 #include <silkrpc/http/server.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
-#include <silkrpc/grpc/completion_poller.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::common::kEmptyChainData, "chain data path as string");
 ABSL_FLAG(std::string, local, silkrpc::common::kDefaultLocal, "HTTP JSON local binding as string <address>:<port>");
 ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "TG Core gRPC service location as string <address>:<port>");
-ABSL_FLAG(uint32_t, numSchedulers, std::thread::hardware_concurrency(), "number of threads running I/O scheduler as 32-bit integer");
+ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency(), "number of running I/O contexts as 32-bit integer");
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
 
@@ -104,44 +101,37 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        auto numSchedulers{absl::GetFlag(FLAGS_numSchedulers)};
-        if (numSchedulers < 0) {
-            SILKRPC_ERROR << "Parameter numSchedulers is invalid: [" << numSchedulers << "]\n";
-            SILKRPC_ERROR << "Use --numSchedulers flag to specify the number of threads running I/O schedulers\n";
+        auto numContexts{absl::GetFlag(FLAGS_numContexts)};
+        if (numContexts < 0) {
+            SILKRPC_ERROR << "Parameter numContexts is invalid: [" << numContexts << "]\n";
+            SILKRPC_ERROR << "Use --numContexts flag to specify the number of threads running I/O contexts\n";
             return -1;
         }
 
-        //asio::io_context context{static_cast<int>(std::thread::hardware_concurrency())/*1*/};
-        silkrpc::http::io_context_pool io_context_pool{numSchedulers};
-        asio::signal_set signals{io_context_pool.get_io_context(), SIGINT, SIGTERM};
-
-        ::grpc::CompletionQueue queue;
-        silkrpc::grpc::CompletionPoller grpc_completion_poller{queue, context};
-
-        // TODO: handle also secure channel for remote
-        auto grpc_channel = ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
-        // TODO: handle also local (shared-memory) database
-        std::unique_ptr<silkrpc::ethdb::kv::Database> database =
-            std::make_unique<silkrpc::ethdb::kv::RemoteDatabase>(grpc_channel, &queue);
+        // TODO(canepat): handle also secure channel for remote
+        silkrpc::ChannelFactory create_channel = [&]() {
+            return ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
+        };
+        // TODO(canepat): handle also local (shared-memory) database
+        silkrpc::ContextPool context_pool{numContexts, create_channel};
 
         const auto http_host = local.substr(0, local.find(kAddressPortSeparator));
         const auto http_port = local.substr(local.find(kAddressPortSeparator) + 1, std::string::npos);
-        silkrpc::http::Server http_server{io_context_pool, http_host, http_port, database};
+        silkrpc::http::Server http_server{http_host, http_port, context_pool};
 
+        asio::signal_set signals{context_pool.get_io_context(), SIGINT, SIGTERM};
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
             std::cout << "\n";
             SILKRPC_INFO << "Signal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
-            grpc_completion_poller.stop();
             http_server.stop();
-            io_context_pool.stop();
+            context_pool.stop();
         });
 
-        grpc_completion_poller.start();
         http_server.start();
 
         SILKRPC_LOG << "Silkrpc running at " + local + " [pid=" << pid << ", main thread: " << tid << "]\n";
 
-        io_context_pool.run();
+        context_pool.run();
     } catch (const std::exception& e) {
         SILKRPC_CRIT << "Exception: " << e.what() << "\n" << std::flush;
     } catch (...) {

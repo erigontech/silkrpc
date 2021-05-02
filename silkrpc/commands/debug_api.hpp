@@ -35,8 +35,7 @@ namespace silkrpc::commands {
 
 class DebugRpcApi {
 public:
-    explicit DebugRpcApi(asio::io_context& io_context, std::unique_ptr<ethdb::Database>& database) :
-        io_context_(io_context), database_(database) {}
+    explicit DebugRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
     virtual ~DebugRpcApi() {}
 
     DebugRpcApi(const DebugRpcApi&) = delete;
@@ -51,7 +50,6 @@ protected:
     asio::awaitable<void> handle_debug_trace_call(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
-    asio::io_context& io_context_;
     std::unique_ptr<ethdb::Database>& database_;
 
     friend class silkrpc::http::RequestHandler;

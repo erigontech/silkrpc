@@ -22,7 +22,6 @@
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
-#include <asio/io_context.hpp>
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/core/rawdb/accessors.hpp>
@@ -35,8 +34,7 @@ namespace silkrpc::commands {
 
 class ParityRpcApi {
 public:
-    explicit ParityRpcApi(asio::io_context& io_context, std::unique_ptr<ethdb::Database>& database) :
-        io_context_(io_context), database_(database) {}
+    explicit ParityRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
     virtual ~ParityRpcApi() {}
 
     ParityRpcApi(const ParityRpcApi&) = delete;
@@ -46,7 +44,6 @@ protected:
     asio::awaitable<void> handle_parity_get_block_receipts(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
-    asio::io_context& io_context_;
     std::unique_ptr<ethdb::Database>& database_;
 
     friend class silkrpc::http::RequestHandler;

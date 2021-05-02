@@ -33,14 +33,14 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/ethdb/kv/database.hpp>
+#include <silkrpc/ethdb/database.hpp>
 #include "connection_manager.hpp"
 #include "request_handler.hpp"
 
 namespace silkrpc::http {
 
-Connection::Connection(asio::io_context& io_context, ConnectionManager& manager, std::unique_ptr<ethdb::kv::Database>& database)
-: socket_{io_context}, connection_manager_(manager), request_handler_{io_context, database} {
+Connection::Connection(asio::io_context& io_context, ConnectionManager& manager, std::unique_ptr<ethdb::Database>& database)
+: socket_{io_context}, connection_manager_(manager), request_handler_{database} {
     SILKRPC_DEBUG << "Connection::Connection socket " << &socket_ << " created\n";
 }
 

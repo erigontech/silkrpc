@@ -48,11 +48,11 @@ public:
     Connection& operator=(const Connection&) = delete;
 
     /// Construct a connection with the given socket.
-    explicit Connection(asio::io_context& io_context, ConnectionManager& manager, std::unique_ptr<ethdb::kv::Database>& database);
+    explicit Connection(asio::io_context& io_context, ConnectionManager& manager, std::unique_ptr<ethdb::Database>& database);
 
     ~Connection();
 
-    asio::ip::tcp::socket& socket() { return socket_; };
+    asio::ip::tcp::socket& socket() { return socket_; }
 
     /// Start the first asynchronous operation for the connection.
     asio::awaitable<void> start();

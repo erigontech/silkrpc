@@ -23,7 +23,6 @@
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
-#include <asio/io_context.hpp>
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/json/types.hpp>
@@ -34,7 +33,7 @@ namespace silkrpc::commands {
 
 class NetRpcApi {
 public:
-    NetRpcApi(asio::io_context& io_context) : io_context_(io_context) {}
+    NetRpcApi() = default;
     virtual ~NetRpcApi() = default;
 
     NetRpcApi(const NetRpcApi&) = delete;
@@ -46,8 +45,6 @@ protected:
     asio::awaitable<void> handle_net_version(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
-    asio::io_context& io_context_;
-
     friend class silkrpc::http::RequestHandler;
 };
 
