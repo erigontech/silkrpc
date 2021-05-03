@@ -45,16 +45,12 @@ Connection::Connection(asio::io_context& io_context, ConnectionManager& manager,
 }
 
 Connection::~Connection() {
+    socket_.close();
     SILKRPC_DEBUG << "Connection::~Connection socket " << &socket_ << " deleted\n";
 }
 
 asio::awaitable<void> Connection::start() {
     co_await do_read();
-}
-
-void Connection::stop() {
-    socket_.close();
-    SILKRPC_DEBUG << "Connection::stop socket " << &socket_ << " closed\n";
 }
 
 asio::awaitable<void> Connection::do_read() {
@@ -77,18 +73,20 @@ asio::awaitable<void> Connection::do_read() {
         // Read next chunck (result == RequestParser::indeterminate) or next request
         co_await do_read();
     } catch (const std::system_error& se) {
+        connection_manager_.stop(shared_from_this());
+
         if (se.code() == asio::error::eof || se.code() == asio::error::connection_reset || se.code() == asio::error::broken_pipe) {
-            connection_manager_.stop(shared_from_this());
+            SILKRPC_DEBUG << "Connection::do_read close from client with code: " << se.code() << "\n" << std::flush;
             co_return;
         } else if (se.code() != asio::error::operation_aborted) {
-            connection_manager_.stop(shared_from_this());
-
             SILKRPC_ERROR << "Connection::do_read system_error: " << se.what() << "\n" << std::flush;
             std::rethrow_exception(std::make_exception_ptr(se));
         } else {
             SILKRPC_DEBUG << "Connection::do_read operation_aborted: " << se.what() << "\n" << std::flush;
         }
     } catch (const std::exception& e) {
+        connection_manager_.stop(shared_from_this());
+
         SILKRPC_ERROR << "Connection::do_read exception: " << e.what() << "\n" << std::flush;
         std::rethrow_exception(std::make_exception_ptr(e));
     }
@@ -96,7 +94,7 @@ asio::awaitable<void> Connection::do_read() {
 
 asio::awaitable<void> Connection::do_write() {
     try {
-        SILKRPC_TRACE << "Connection::do_write reply: " << reply_.content << "\n" << std::flush;
+        SILKRPC_DEBUG << "Connection::do_write reply: " << reply_.content << "\n" << std::flush;
         const auto bytes_transferred = co_await asio::async_write(socket_, reply_.to_buffers(), asio::use_awaitable);
         SILKRPC_TRACE << "Connection::do_write bytes_transferred: " << bytes_transferred << "\n" << std::flush;
     } catch (const std::system_error& se) {

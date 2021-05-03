@@ -62,13 +62,14 @@ asio::awaitable<void> Server::run() {
 
         auto new_connection = std::make_shared<Connection>(*io_context, connection_manager_, database);
         co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);
-        new_connection->socket().set_option(asio::ip::tcp::socket::keep_alive(true));
-        SILKRPC_TRACE << "Server::start new socket: " << &new_connection->socket() << "\n";
         if (!acceptor_.is_open()) {
             SILKRPC_TRACE << "Server::start returning...\n";
             co_return;
         }
 
+        new_connection->socket().set_option(asio::ip::tcp::socket::keep_alive(true));
+
+        SILKRPC_TRACE << "Server::start starting connection for socket: " << &new_connection->socket() << "\n";
         asio::co_spawn(*io_context, connection_manager_.start(new_connection), [&](std::exception_ptr eptr) {
             if (eptr) std::rethrow_exception(eptr);
         });

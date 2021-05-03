@@ -33,6 +33,7 @@ namespace silkrpc {
 
 struct Context {
     std::shared_ptr<asio::io_context> io_context;
+    std::unique_ptr<::grpc::CompletionQueue> grpc_queue;
     std::unique_ptr<grpc::CompletionRunner> grpc_runner;
     std::unique_ptr<ethdb::Database> database;
 };

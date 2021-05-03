@@ -32,10 +32,10 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) :
     for (std::size_t i{0}; i < pool_size; ++i) {
         auto io_context = std::make_shared<asio::io_context>();
         auto grpc_channel = create_channel();
-        auto grpc_queue = std::make_shared<::grpc::CompletionQueue>();
+        auto grpc_queue = std::make_unique<::grpc::CompletionQueue>();
         auto grpc_runner = std::make_unique<grpc::CompletionRunner>(*grpc_queue, *io_context);
         auto database = std::make_unique<ethdb::kv::RemoteDatabase>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
-        contexts_.push_back({io_context, std::move(grpc_runner), std::move(database)});
+        contexts_.push_back({io_context, std::move(grpc_queue), std::move(grpc_runner), std::move(database)});
         work_.push_back(asio::require(io_context->get_executor(), asio::execution::outstanding_work.tracked));
     }
 }

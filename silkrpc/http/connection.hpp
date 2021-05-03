@@ -57,9 +57,6 @@ public:
     /// Start the first asynchronous operation for the connection.
     asio::awaitable<void> start();
 
-    /// Stop all asynchronous operations associated with the connection.
-    void stop();
-
 private:
     /// Perform an asynchronous read operation.
     asio::awaitable<void> do_read();

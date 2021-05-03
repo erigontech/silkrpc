@@ -33,13 +33,9 @@ asio::awaitable<void> ConnectionManager::start(std::shared_ptr<Connection> c) {
 
 void ConnectionManager::stop(std::shared_ptr<Connection> c) {
     connections_.erase(c);
-    c->stop();
 }
 
 void ConnectionManager::stop_all() {
-    for (auto c : connections_) {
-        c->stop();
-    }
     connections_.clear();
 }
 

@@ -31,7 +31,7 @@ namespace silkrpc::ethdb::kv {
 
 class RemoteDatabase: public Database {
 public:
-    RemoteDatabase(asio::io_context& io_context, std::shared_ptr<::grpc::Channel>& channel, ::grpc::CompletionQueue* queue)
+    RemoteDatabase(asio::io_context& io_context, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
     : io_context_(io_context), channel_(channel), queue_(queue) {
         SILKRPC_TRACE << "RemoteDatabase::ctor " << this << "\n";
     }
@@ -53,7 +53,7 @@ public:
 
 private:
     asio::io_context& io_context_;
-    std::shared_ptr<::grpc::Channel>& channel_;
+    std::shared_ptr<::grpc::Channel> channel_;
     ::grpc::CompletionQueue* queue_;
 };
 
