@@ -284,8 +284,8 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_ind
         co_return;
     }
     auto block_hash = params[0].get<evmc::bytes32>();
-    auto index = params[1].get<uint32_t>();
-    SILKRPC_DEBUG << "block_hash: " << block_hash << " index: " << index << "\n";
+    auto index_string = params[1].get<std::string>(); 
+    SILKRPC_DEBUG << "block_hash: " << block_hash << " index: " << index_string << "\n";
 
     auto tx = co_await database_->begin();
 
@@ -296,22 +296,22 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_ind
 
         const auto ommers = block_with_hash.block.ommers;
 
+        
+        auto index = std::stoul(index_string, 0, 16);
         if (index >= ommers.size()) {
-           const auto error_msg = "Requested uncle not found " + index;
-           SILKRPC_ERROR << error_msg << "\n";
-           reply = make_json_error(request["id"], 100, error_msg);
+           const auto error_msg = "Requested uncle not found " + index_string;
+           SILKRPC_DEBUG << error_msg << "\n";
+           reply = make_json_content(request["id"], nullptr);
            co_return;
         }
         const auto block_number = block_with_hash.block.header.number;
         const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_hash, block_number);
         auto uncle = ommers[index];
 
-        const silkworm::BlockBody block_body{};
-        const evmc::bytes32 hash {};
-        silkworm::BlockWithHash block_hash{{block_body, uncle}, hash};
-        const Block new_block{block_hash, total_difficulty};
+        silkworm::BlockWithHash block_uncle_hash{{{}, uncle}, uncle.hash()};
+        const Block new_uncle_block{block_uncle_hash, total_difficulty};
 
-        reply = make_json_content(request["id"], new_block);
+        reply = make_json_content(request["id"], new_uncle_block);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
