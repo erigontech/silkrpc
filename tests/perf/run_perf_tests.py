@@ -12,7 +12,7 @@ from datetime import datetime
 
 DEFAULT_TEST_SEQUENCE = "50:30,200:30,200:60,400:30"
 DEFAULT_REPETITIONS = 10
-DEFAULT_VEGETA_PATTERN_TAR_FILE = "turbo_geth_stress_test_001.tar"
+DEFAULT_VEGETA_PATTERN_TAR_FILE = "./vegeta/turbo_geth_stress_test_001.tar"
 DEFAULT_DAEMON_VEGETA_ON_CORE = "-:-"
 DEFAULT_TG_ADDRESS = "localhost:9090"
 DEFAULT_GETH_BUILD_DIR = "../../../turbo-geth/build/"
@@ -34,7 +34,7 @@ def usage(argv):
     print("-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
     print("-t turboGethAddress     address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: " + DEFAULT_TG_ADDRESS + "]")
     print("-g turboGethHomeDir     path to TG home folder (e.g. ../../../turbo-geth/)                               [default: " + DEFAULT_GETH_BUILD_DIR + "]")
-    print("-s silkrpcBuildDir      path to build home folder (e.g. ../../build_gcc_release/)                        [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
+    print("-s silkrpcBuildDir      path to Silkrpc build folder (e.g. ../../build_gcc_release/)                     [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
     print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                [default: " + str(DEFAULT_REPETITIONS) + "]")
     print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10) [default: " + DEFAULT_TEST_SEQUENCE + "]")
 
@@ -60,27 +60,31 @@ class Config:
             usage(argv)
             sys.exit(-1)
 
-        for option, optarg in opts:
-            if option in ("-h", "--help"):
-                usage(argv)
-                sys.exit(-1)
-            elif option == "-p":
-                self.vegeta_pattern_tar_file = optarg
-            elif option == "-c":
-                self.daemon_vegeta_on_core = optarg
-            elif option == "-a":
-                self.tg_addr = optarg
-            elif option == "-g":
-                self.geth_builddir = optarg
-            elif option == "-s":
-                self.silkrpc_build_dir = optarg
-            elif option == "-r":
-                self.repetitions = int(optarg)
-            elif option == "-t":
-                self.test_sequence = optarg
-            else:
-                usage(argv)
-                sys.exit(-1)
+        try:
+            for option, optarg in opts:
+                if option in ("-h", "--help"):
+                    usage(argv)
+                    sys.exit(-1)
+                elif option == "-p":
+                    self.vegeta_pattern_tar_file = optarg
+                elif option == "-c":
+                    self.daemon_vegeta_on_core = optarg
+                elif option == "-a":
+                    self.tg_addr = optarg
+                elif option == "-g":
+                    self.geth_builddir = optarg
+                elif option == "-s":
+                    self.silkrpc_build_dir = optarg
+                elif option == "-r":
+                    self.repetitions = int(optarg)
+                elif option == "-t":
+                    self.test_sequence = optarg
+                else:
+                    usage(argv)
+                    sys.exit(-1)
+        except:
+            usage(argv)
+            sys.exit(-1)
 
 class PerfTest:
     """ This class manage performance test
