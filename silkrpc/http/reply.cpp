@@ -81,6 +81,7 @@ namespace misc_strings {
 
 const char name_value_separator[] = { ':', ' ' };
 const char crlf[] = { '\r', '\n' };
+const char lf[] = { '\n' };
 
 } // namespace misc_strings
 

@@ -42,7 +42,7 @@
 ABSL_FLAG(std::string, chaindata, silkrpc::common::kEmptyChainData, "chain data path as string");
 ABSL_FLAG(std::string, local, silkrpc::common::kDefaultLocal, "HTTP JSON local binding as string <address>:<port>");
 ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "TG Core gRPC service location as string <address>:<port>");
-ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency(), "number of running I/O contexts as 32-bit integer");
+ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "number of running I/O contexts as 32-bit integer");
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
 
@@ -108,6 +108,12 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
+        if (chaindata.empty()) {
+            SILKRPC_LOG << "Silkrpc launched with target " + target + " using " << numContexts << " contexts\n";
+        } else {
+            SILKRPC_LOG << "Silkrpc launched with chaindata " + chaindata + " using " << numContexts << " contexts\n";
+        }
+
         // TODO(canepat): handle also secure channel for remote
         silkrpc::ChannelFactory create_channel = [&]() {
             return ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
@@ -123,8 +129,8 @@ int main(int argc, char* argv[]) {
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
             std::cout << "\n";
             SILKRPC_INFO << "Signal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
-            http_server.stop();
             context_pool.stop();
+            http_server.stop();
         });
 
         http_server.start();
