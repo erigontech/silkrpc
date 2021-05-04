@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <iostream>
 #include <list>
 #include <memory>
 #include <vector>
@@ -37,6 +38,8 @@ struct Context {
     std::unique_ptr<grpc::CompletionRunner> grpc_runner;
     std::unique_ptr<ethdb::Database> database;
 };
+
+std::ostream& operator<<(std::ostream& out, const Context& c);
 
 using ChannelFactory = std::function<std::shared_ptr<::grpc::Channel>()>;
 

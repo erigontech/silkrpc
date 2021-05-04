@@ -125,7 +125,9 @@ int main(int argc, char* argv[]) {
         const auto http_port = local.substr(local.find(kAddressPortSeparator) + 1, std::string::npos);
         silkrpc::http::Server http_server{http_host, http_port, context_pool};
 
-        asio::signal_set signals{context_pool.get_io_context(), SIGINT, SIGTERM};
+        auto& io_context = context_pool.get_io_context();
+        asio::signal_set signals{io_context, SIGINT, SIGTERM};
+        SILKRPC_DEBUG << "Signals registered on io_context " << &io_context << "\n" << std::flush;
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
             std::cout << "\n";
             SILKRPC_INFO << "Signal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;

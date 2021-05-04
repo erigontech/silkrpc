@@ -20,17 +20,9 @@
 
 namespace silkrpc::grpc {
 
-void CompletionRunner::start() {
-    SILKRPC_INFO << "CompletionRunner::start starting...\n";
-    thread_ = std::thread{&CompletionRunner::run, this};
-}
-
 void CompletionRunner::stop() {
     SILKRPC_INFO << "CompletionRunner::stop shutting down...\n";
     queue_.Shutdown();
-    if (thread_.joinable()) {
-        thread_.join();
-    }
 }
 
 void CompletionRunner::run() {

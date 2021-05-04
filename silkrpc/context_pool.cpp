@@ -24,6 +24,14 @@
 
 namespace silkrpc {
 
+std::ostream& operator<<(std::ostream& out, const Context& c) {
+    out << "io_context: " << c.io_context
+        << " grpc_queue: " << c.grpc_queue
+        << " grpc_runner: " << c.grpc_runner
+        << " database: " << c.database;
+    return out;
+}
+
 ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) : next_index_{0} {
     if (pool_size == 0) {
         throw std::logic_error("ContextPool::ContextPool pool_size is 0");
@@ -33,16 +41,12 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) :
     // Create all the io_contexts and give them work to do so that their event loop will not exit until they are explicitly stopped.
     for (std::size_t i{0}; i < pool_size; ++i) {
         auto io_context = std::make_shared<asio::io_context>();
-        SILKRPC_DEBUG << "ContextPool::ContextPool io_context[" << i << "]: " << io_context << "\n";
         auto grpc_channel = create_channel();
-        SILKRPC_DEBUG << "ContextPool::ContextPool grpc_channel[" << i << "]: " << grpc_channel << "\n";
         auto grpc_queue = std::make_unique<::grpc::CompletionQueue>();
-        SILKRPC_DEBUG << "ContextPool::ContextPool grpc_queue[" << i << "]: " << grpc_queue << "\n";
         auto grpc_runner = std::make_unique<grpc::CompletionRunner>(*grpc_queue, *io_context);
-        SILKRPC_DEBUG << "ContextPool::ContextPool grpc_runner[" << i << "]: " << grpc_runner << "\n";
         auto database = std::make_unique<ethdb::kv::RemoteDatabase>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
-        SILKRPC_DEBUG << "ContextPool::ContextPool database[" << i << "]: " << database << "\n";
         contexts_.push_back({io_context, std::move(grpc_queue), std::move(grpc_runner), std::move(database)});
+        SILKRPC_DEBUG << "ContextPool::ContextPool context[" << i << "] " << contexts_[i] << "\n";
         work_.push_back(asio::require(io_context->get_executor(), asio::execution::outstanding_work.tracked));
     }
 }
@@ -52,11 +56,10 @@ void ContextPool::run() {
     asio::detail::thread_group workers{};
     for (std::size_t i{0}; i < contexts_.size(); ++i) {
         auto& context = contexts_[i];
-        context.grpc_runner->start(); // TODO(canepat): move here thread start
-        SILKRPC_DEBUG << "ContextPool::run grpc_runner[" << i << "] started: " << context.grpc_runner << "\n";
-        auto& io_context = context.io_context;
-        workers.create_thread([&]() { io_context->run(); });
-        SILKRPC_DEBUG << "ContextPool::run io_context[" << i << "] started: " << context.io_context << "\n";
+        workers.create_thread([&]() { context.grpc_runner->run(); });
+        SILKRPC_DEBUG << "ContextPool::run context[" << i << "].grpc_runner started: " << context.grpc_runner << "\n";
+        workers.create_thread([&]() { context.io_context->run(); });
+        SILKRPC_DEBUG << "ContextPool::run context[" << i << "].io_context started: " << context.io_context << "\n";
     }
 
     // Wait for all threads in the pool to exit
@@ -71,10 +74,10 @@ void ContextPool::stop() {
 
     for (std::size_t i{0}; i < contexts_.size(); ++i) {
         auto& context = contexts_[i];
-        context.grpc_runner->stop(); // TODO(canepat): move here thread stop
-        SILKRPC_DEBUG << "ContextPool::stop grpc_runner[" << i << "] stopped: " << context.grpc_runner << "\n";
+        context.grpc_runner->stop();
+        SILKRPC_DEBUG << "ContextPool::stop context[" << i << "].grpc_runner stopped: " << context.grpc_runner << "\n";
         context.io_context->stop();
-        SILKRPC_DEBUG << "ContextPool::stop io_context[" << i << "] stopped: " << context.io_context << "\n";
+        SILKRPC_DEBUG << "ContextPool::stop context[" << i << "].io_context stopped: " << context.io_context << "\n";
     }
     SILKRPC_DEBUG << "ContextPool::stop completed\n";
 }

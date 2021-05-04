@@ -54,12 +54,12 @@ asio::awaitable<void> Server::run() {
 
     try {
         while (acceptor_.is_open()) {
-            SILKRPC_DEBUG << "Server::start accepting...\n" << std::flush;
-
             // Get the next context to use chosen round-robin, then get both io_context *and* database from it
             auto& context = context_pool_.get_context();
             auto& io_context = context.io_context;
             auto& database = context.database;
+
+            SILKRPC_DEBUG << "Server::start accepting using io_context " << io_context << "...\n" << std::flush;
 
             auto new_connection = std::make_shared<Connection>(*io_context, connection_manager_, database);
             co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);

@@ -20,7 +20,6 @@
 #include <functional>
 #include <memory>
 #include <stdexcept>
-#include <thread>
 #include <vector>
 
 #include <asio/io_context.hpp>
@@ -40,16 +39,13 @@ public:
     CompletionRunner(const CompletionRunner&) = delete;
     CompletionRunner& operator=(const CompletionRunner&) = delete;
 
-    void start();
+    void run();
 
     void stop();
 
 private:
-    void run();
-
     ::grpc::CompletionQueue& queue_;
     asio::io_context& io_context_;
-    std::thread thread_;
 };
 
 } // namespace silkrpc::grpc
