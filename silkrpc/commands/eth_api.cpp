@@ -284,7 +284,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_ind
         co_return;
     }
     auto block_hash = params[0].get<evmc::bytes32>();
-    auto index_string = params[1].get<std::string>(); 
+    auto index_string = params[1].get<std::string>();
     SILKRPC_DEBUG << "block_hash: " << block_hash << " index: " << index_string << "\n";
 
     auto tx = co_await database_->begin();
@@ -296,7 +296,6 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_ind
 
         const auto ommers = block_with_hash.block.ommers;
 
-        
         auto index = std::stoul(index_string, 0, 16);
         if (index >= ommers.size()) {
            const auto error_msg = "Requested uncle not found " + index_string;
