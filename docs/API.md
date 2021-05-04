@@ -21,9 +21,9 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getBlockByNumber                    | Yes          | not yet tested for performance             |
 | eth_getBlockTransactionCountByHash      | Yes          |                                            |
 | eth_getBlockTransactionCountByNumber    | Yes          |                                            |
-| eth_getUncleByBlockHashAndIndex         | Yes          | not yet implemented                        |
+| eth_getUncleByBlockHashAndIndex         | Yes          |                                            |
 | eth_getUncleByBlockNumberAndIndex       | -            | not yet implemented                        |
-| eth_getUncleCountByBlockHash            | Yes          | not yet implemented                        |
+| eth_getUncleCountByBlockHash            | Yes          |                                            |
 | eth_getUncleCountByBlockNumber          | -            | not yet implemented                        |
 |                                         |              |                                            |
 | eth_getTransactionByHash                | -            | not yet implemented                        |
