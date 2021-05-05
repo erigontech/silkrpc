@@ -35,6 +35,8 @@ run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" -
 run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["0x41b57c", true],"id":25388}' localhost:51515''')
 run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockTransactionCountByNumber","params":["0x41b57c"],"id":1}' localhost:51515''')
 run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockTransactionCountByHash","params":["0x814672e6913a3879217169c6ba461114fa032d9510a56a409d3aab19f668e299"],"id":1}' localhost:51515''')
+run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getUncleCountByBlockHash","params":["0x814672e6913a3879217169c6ba461114fa032d9510a56a409d3aab19f668e299"],"id":1}' localhost:51515''')
+run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getUncleByBlockHashAndIndex","params":["0x814672e6913a3879217169c6ba461114fa032d9510a56a409d3aab19f668e299","0x0"],"id":1}' localhost:51515''')
 
 run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getUncleByBlockNumberAndIndex","params":["0x41b57c", "0x0"],"id":1}' localhost:51515''')
 
