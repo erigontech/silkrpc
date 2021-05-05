@@ -54,13 +54,7 @@ class Config:
 
         try:
             opts, _ = getopt.getopt(argv[1:], "vp:c:a:g:s:r:t:")
-        except getopt.GetoptError as err:
-            # print help information and exit:
-            print(err)
-            usage(argv)
-            sys.exit(-1)
 
-        try:
             for option, optarg in opts:
                 if option in ("-h", "--help"):
                     usage(argv)
@@ -82,9 +76,12 @@ class Config:
                 else:
                     usage(argv)
                     sys.exit(-1)
-        except:
+        except getopt.GetoptError as err:
+            # print help information and exit:
+            print(err)
             usage(argv)
             sys.exit(-1)
+
 
 class PerfTest:
     """ This class manage performance test
