@@ -276,12 +276,41 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_
 
 // https://eth.wiki/json-rpc/API#eth_getunclebyblockhashandindex
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 2) {
+        auto error_msg = "invalid eth_getUncleByBlockHashAndIndex params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    auto block_hash = params[0].get<evmc::bytes32>();
+    auto index_string = params[1].get<std::string>();
+    SILKRPC_DEBUG << "block_hash: " << block_hash << " index: " << index_string << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
+
+        const auto ommers = block_with_hash.block.ommers;
+
+        auto index = std::stoul(index_string, 0, 16);
+        if (index >= ommers.size()) {
+           const auto error_msg = "Requested uncle not found " + index_string;
+           SILKRPC_DEBUG << error_msg << "\n";
+           reply = make_json_content(request["id"], nullptr);
+           co_return;
+        }
+        const auto block_number = block_with_hash.block.header.number;
+        const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_hash, block_number);
+        auto uncle = ommers[index];
+
+        silkworm::BlockWithHash block_uncle_hash{{{}, uncle}, uncle.hash()};
+        const Block new_uncle_block{block_uncle_hash, total_difficulty};
+
+        reply = make_json_content(request["id"], new_uncle_block);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -296,12 +325,38 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_ind
 
 // https://eth.wiki/json-rpc/API#eth_getunclebyblocknumberandindex
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 2) {
+        auto error_msg = "invalid eth_getUncleByBlockNumberAndIndex params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto block_id = params[0].get<std::string>();
+    const auto index = params[1].get<std::string>();
+    SILKRPC_DEBUG << "block_id: " << block_id << " index: " << index << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
+        const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
+        const auto ommers = block_with_hash.block.ommers;
+
+        auto idx = std::stoul(index, 0, 16);
+        if (idx >= ommers.size()) {
+            reply = make_json_content(request["id"], nullptr);
+            co_return;
+        }
+        const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_with_hash.hash, block_number);
+        auto uncle = ommers[idx];
+
+        silkworm::BlockWithHash uncle_block_with_hash{{{}, uncle}, uncle.hash()};
+        const Block uncle_block_with_hash_and_td{uncle_block_with_hash, total_difficulty};
+
+        reply = make_json_content(request["id"], uncle_block_with_hash_and_td);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -316,12 +371,24 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_number_and_i
 
 // https://eth.wiki/json-rpc/API#eth_getunclecountbyblockhash
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_hash(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 1) {
+        auto error_msg = "invalid eth_getUncleCountByBlockHash params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    auto block_hash = params[0].get<evmc::bytes32>();
+    SILKRPC_DEBUG << "block_hash: " << block_hash << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
+
+        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(block_with_hash.block.ommers.size()));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());

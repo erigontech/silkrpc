@@ -7,15 +7,36 @@
 import os
 import csv
 import sys
+import getopt
 from datetime import datetime
 
 DEFAULT_TEST_SEQUENCE = "50:30,200:30,200:60,400:30"
 DEFAULT_REPETITIONS = 10
-DEFAULT_VEGETA_PATTERN_TAR_FILE = ""
-DEFAULT_DAEMON_ON_CORE = "-"
-DEFAULT_GETH_HOME_DIR = "../../../turbo-geth/"
+DEFAULT_VEGETA_PATTERN_TAR_FILE = "./vegeta/turbo_geth_stress_test_001.tar"
+DEFAULT_DAEMON_VEGETA_ON_CORE = "-:-"
 DEFAULT_TG_ADDRESS = "localhost:9090"
+DEFAULT_GETH_BUILD_DIR = "../../../turbo-geth/build/"
+DEFAULT_SILKRPC_BUILD_DIR = "../../build_gcc_release/"
 
+VEGETA_REPORT = "vegeta_report.hrd"
+VEGETA_PATTERN_SILKRPC = "/tmp/turbo_geth_stress_test/vegeta_geth_eth_getLogs.txt"
+VEGETA_PATTERN_RPCDAEMON = "/tmp/turbo_geth_stress_test/vegeta_turbo_geth_eth_getLogs.txt"
+
+def usage(argv):
+    """ Print script usage
+    """
+    print("Usage: " + argv[0] + " -h -p vegetaPatternTarFile -c daemonOnCore  -t turboGethAddress -g turboGethHomeDir -s silkrpcBuildDir -r testRepetitions - t testSequence")
+    print("")
+    print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
+    print("")
+    print("-h                      print this help")
+    print("-p vegetaPatternTarFile path to the request file for Vegeta attack")
+    print("-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
+    print("-t turboGethAddress     address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: " + DEFAULT_TG_ADDRESS + "]")
+    print("-g turboGethHomeDir     path to TG home folder (e.g. ../../../turbo-geth/)                               [default: " + DEFAULT_GETH_BUILD_DIR + "]")
+    print("-s silkrpcBuildDir      path to Silkrpc build folder (e.g. ../../build_gcc_release/)                     [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
+    print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                [default: " + str(DEFAULT_REPETITIONS) + "]")
+    print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10) [default: " + DEFAULT_TEST_SEQUENCE + "]")
 
 class Config:
     """ This class manage configuration params
@@ -23,51 +44,42 @@ class Config:
     def __init__(self, argv):
         """ Processes the command line contained in argv
         """
-        self.test_sequence = DEFAULT_TEST_SEQUENCE
-        self.repetitions = DEFAULT_REPETITIONS
         self.vegeta_pattern_tar_file = DEFAULT_VEGETA_PATTERN_TAR_FILE
-        self.geth_homedir = DEFAULT_GETH_HOME_DIR
-        self.daemon_on_core = DEFAULT_DAEMON_ON_CORE
+        self.daemon_vegeta_on_core = DEFAULT_DAEMON_VEGETA_ON_CORE
         self.tg_addr = DEFAULT_TG_ADDRESS
+        self.geth_builddir = DEFAULT_GETH_BUILD_DIR
+        self.silkrpc_build_dir = DEFAULT_SILKRPC_BUILD_DIR
+        self.repetitions = DEFAULT_REPETITIONS
+        self.test_sequence = DEFAULT_TEST_SEQUENCE
 
-        if len(argv) == 2:
-            self.vegeta_pattern_tar_file = argv[1]
-        elif len(argv) == 3:
-            self.vegeta_pattern_tar_file = argv[1]
-            self.daemon_on_core = argv[2]
-        elif len(argv) == 4:
-            self.vegeta_pattern_tar_file = argv[1]
-            self.daemon_on_core = argv[2]
-            self.tg_addr = argv[3]
-        elif len(argv) == 5:
-            self.vegeta_pattern_tar_file = argv[1]
-            self.daemon_on_core = argv[2]
-            self.tg_addr = argv[3]
-            self.geth_homedir = argv[4]
-        elif len(argv) == 6:
-            self.vegeta_pattern_tar_file = argv[1]
-            self.daemon_on_core = argv[2]
-            self.tg_addr = argv[3]
-            self.geth_homedir = argv[4]
-            self.repetitions = int(argv[5])
-        elif len(argv) == 7:
-            self.vegeta_pattern_tar_file = argv[1]
-            self.daemon_on_core = argv[2]
-            self.tg_addr = argv[3]
-            self.geth_homedir = argv[4]
-            self.repetitions = int(argv[5])
-            self.test_sequence = argv[6]
-        else:
-            print("Usage: " + argv[0] + " vegetaPatternTarFile [daemonOnCore] [turboGethAddress] [turboGethHomeDir] [testRepetitions] [testSequence]")
-            print("")
-            print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
-            print("")
-            print("vegetaPatternTarFile     path to the request file for Vegeta attack")
-            print("daemonOnCore             logical cpu list in taskset format (e.g. - or 0-1 or 0-2 or 0,2...)              [default: " + DEFAULT_DAEMON_ON_CORE +"]")
-            print("turboGethAddress         address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: " + DEFAULT_TG_ADDRESS + "]")
-            print("turboGethHomeDir         path to TG home folder (e.g. ../../../turbo-geth/)                               [default: " + DEFAULT_GETH_HOME_DIR + "]")
-            print("testRepetitions          number of repetitions for each element in test sequence (e.g. 10)                [default: " + str(DEFAULT_REPETITIONS) + "]")
-            print("testSequence             list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10) [default: " + DEFAULT_TEST_SEQUENCE + "]")
+        try:
+            opts, _ = getopt.getopt(argv[1:], "vp:c:a:g:s:r:t:")
+
+            for option, optarg in opts:
+                if option in ("-h", "--help"):
+                    usage(argv)
+                    sys.exit(-1)
+                elif option == "-p":
+                    self.vegeta_pattern_tar_file = optarg
+                elif option == "-c":
+                    self.daemon_vegeta_on_core = optarg
+                elif option == "-a":
+                    self.tg_addr = optarg
+                elif option == "-g":
+                    self.geth_builddir = optarg
+                elif option == "-s":
+                    self.silkrpc_build_dir = optarg
+                elif option == "-r":
+                    self.repetitions = int(optarg)
+                elif option == "-t":
+                    self.test_sequence = optarg
+                else:
+                    usage(argv)
+                    sys.exit(-1)
+        except getopt.GetoptError as err:
+            # print help information and exit:
+            print(err)
+            usage(argv)
             sys.exit(-1)
 
 
@@ -94,26 +106,39 @@ class PerfTest:
         """ copy the vegeta pattern file into /tmp and untar zip file
         """
         cmd = "/bin/cp -f " + self.config.vegeta_pattern_tar_file + " /tmp"
-        os.system(cmd)
-        print("Extracting vegeta patten ...")
-        cmd = "cd /tmp; tar xvf " + self.config.vegeta_pattern_tar_file + " > /dev/null"
-        os.system(cmd)
+        print("Copy vegeta pattern: ", cmd)
+        status = os.system(cmd)
+        if int(status) != 0:
+            print("Copy failed. Test Aborted!")
+            sys.exit(-1)
+
+        file_path = self.config.vegeta_pattern_tar_file
+        tokenize_path = file_path.split('/')
+        n_subdir = len(tokenize_path)
+        file_name = tokenize_path[n_subdir-1]
+        cmd = "cd /tmp; tar xvf " + file_name + " > /dev/null"
+        print("Extracting vegeta pattern: ", cmd)
+        status = os.system(cmd)
+        if int(status) != 0:
+            print("untar failed. Test Aborted!")
+            sys.exit(-1)
 
     def start_rpc_daemon(self):
         """ Starts RPC daemon server
         """
         self.rpc_daemon = 1
-        if self.config.daemon_on_core == "-":
-            cmd = self.config.geth_homedir + "build/bin/rpcdaemon --private.api.addr="+self.config.tg_addr+" --http.api=eth,debug,net,web3 &"
+        on_core = self.config.daemon_vegeta_on_core.split(':')
+        if on_core[0] == "-":
+            cmd = self.config.geth_builddir + "bin/rpcdaemon --private.api.addr="+self.config.tg_addr+" --http.api=eth,debug,net,web3 &"
         else:
-            cmd = "taskset -c " + self.config.daemon_on_core + " " + \
-                   self.config.geth_homedir + "build/bin/rpcdaemon --private.api.addr="+self.config.tg_addr+" --http.api=eth,debug,net,web3 &"
+            cmd = "taskset -c " + on_core[0] + " " + \
+                   self.config.geth_builddir + "bin/rpcdaemon --private.api.addr="+self.config.tg_addr+" --http.api=eth,debug,net,web3 &"
         print("RpcDaemon starting ...: ", cmd)
         status = os.system(cmd)
         if int(status) != 0:
             print("Start rpc daemon failed: Test Aborted!")
             sys.exit(-1)
-        os.system("sleep 1")
+        os.system("sleep 2")
         pid = os.popen("ps aux | grep 'rpcdaemon' | grep -v 'grep' | awk '{print $2}'").read()
         if pid == "":
             print("Start rpc daemon failed: Test Aborted!")
@@ -131,17 +156,18 @@ class PerfTest:
         """ Starts SILKRPC daemon
         """
         self.rpc_daemon = 1
-        if self.config.daemon_on_core == "-":
-            cmd = "../../build_gcc_release/silkrpc/silkrpcdaemon --target "+self.config.tg_addr+" --local localhost:51515 --logLevel c &"
+        on_core = self.config.daemon_vegeta_on_core.split(':')
+        if on_core[0] == "-":
+            cmd = self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target "+self.config.tg_addr+" --local localhost:51515 --logLevel c &"
         else:
-            cmd = "taskset -c " + self.config.daemon_on_core + \
-              " ../../build_gcc_release/silkrpc/silkrpcdaemon --target "+self.config.tg_addr+" --local localhost:51515 --logLevel c &"
+            cmd = "taskset -c " + on_core[0] + \
+                  " " + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target "+self.config.tg_addr+" --local localhost:51515 --logLevel c &"
         print("SilkDaemon starting ...: ", cmd)
         status = os.system(cmd)
         if int(status) != 0:
             print("Start silkrpc daemon failed: Test Aborted!")
             sys.exit(-1)
-        os.system("sleep 1")
+        os.system("sleep 2")
         pid = os.popen("ps aux | grep 'silkrpc' | grep -v 'grep' | awk '{print $2}'").read()
         if pid == "":
             print("Start silkrpc daemon failed: Test Aborted!")
@@ -151,7 +177,7 @@ class PerfTest:
         """ Stops SILKRPC daemon
         """
         self.silk_daemon = 0
-        os.system("kill $(ps aux | grep 'silk' | grep -v 'grep' | awk '{print $2}') 2> /dev/null")
+        os.system("kill $(ps aux | grep 'silk' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
         print("SilkDaemon stopped")
         os.system("sleep 1")
 
@@ -159,17 +185,34 @@ class PerfTest:
     def execute(self, test_number, name, qps_value, time_value):
         """ Executes the tests using qps and time variable
         """
-        script_name = "./vegeta_attack_getLogs_"+name+".sh" +" "+str(qps_value) + " " + str(time_value)
+        if name == "silkrpc":
+            pattern = VEGETA_PATTERN_SILKRPC
+        else:
+            pattern = VEGETA_PATTERN_RPCDAEMON
+        on_core = self.config.daemon_vegeta_on_core.split(':')
+        if on_core[1] == "-":
+            cmd = "cat " + pattern + " | " \
+                  "vegeta attack -keepalive -rate="+qps_value+" -format=json -duration="+time_value+"s -timeout=300s | " \
+                  "vegeta report -type=text > " + VEGETA_REPORT
+        else:
+            cmd = "taskset -c " + on_core[1] + " cat " + pattern + " | " \
+                  "taskset -c " + on_core[1] + " vegeta attack -keepalive -rate="+qps_value+" -format=json -duration="+time_value+"s -timeout=300s | " \
+                  "taskset -c " + on_core[1] + " vegeta report -type=text > " + VEGETA_REPORT
+        #print("\n" + cmd)
         print(test_number+" "+name+": executes test qps:", str(qps_value) + " time:"+str(time_value)+" -> ", end="")
         sys.stdout.flush()
-        os.system(script_name)
+        status = os.system(cmd)
+        if int(status) != 0:
+            print("vegeta test fails: Test Aborted!")
+            sys.exit(-1)
+
         self.get_result(test_number, name, qps_value, time_value)
 
 
     def get_result(self, test_number, daemon_name, qps_value, time_value):
         """ Processes the report file generated by vegeta and reads latency data
         """
-        test_report_filename = "./getLogs_"+str(qps_value)+"qps_"+str(time_value)+"s_"+daemon_name+"_perf.hrd"
+        test_report_filename = VEGETA_REPORT
         file = open(test_report_filename)
         try:
             file_raws = file.readlines()
@@ -230,14 +273,14 @@ class TestReport:
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "PC", model[1]])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Bogomips", bogomips])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Kernel", kern_vers])
-        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "DaemonRunOnCore", self.config.daemon_on_core])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "DaemonVegetaRunOnCore", self.config.daemon_vegeta_on_core])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "TG address", self.config.tg_addr])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "VegetaFile", self.config.vegeta_pattern_tar_file])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "VegetaChecksum", checksum[0]])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "GccVers", gcc_vers[0]])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "GoVers", go_vers])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "SilkVersion", "master"])
-        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "RpcDaemon", "master"])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "RpcDaemon/TG", "master"])
         self.writer.writerow([])
         self.writer.writerow([])
         self.writer.writerow(["Daemon", "TestNo", "TG-Threads", "Qps", "Time", "Min", "Mean", "50", "90", "95", "99", "Max", "Ratio"])
@@ -280,7 +323,9 @@ def main(argv):
         for test_rep in range(0, config.repetitions):
             qps = test.split(':')[0]
             time = test.split(':')[1]
-            perf_test.execute("["+str(test_number)+"."+str(test_rep+1)+"] ", "silkrpc", qps, time)
+            test_name = "[{:d}.{:2d}] "
+            test_name_formatted = test_name.format(test_number, test_rep+1)
+            perf_test.execute(test_name_formatted, "silkrpc", qps, time)
             os.system("sleep 1")
         test_number = test_number + 1
         print("")
@@ -295,7 +340,9 @@ def main(argv):
         for test_rep in range(0, config.repetitions):
             qps = test.split(':')[0]
             time = test.split(':')[1]
-            perf_test.execute("["+str(test_number)+"."+str(test_rep+1)+"] ", "rpcdaemon", qps, time)
+            test_name = "[{:d}.{:2d}] "
+            test_name_formatted = test_name.format(test_number, test_rep+1)
+            perf_test.execute(test_name_formatted, "rpcdameon", qps, time)
             os.system("sleep 1")
         test_number = test_number + 1
         print("")
