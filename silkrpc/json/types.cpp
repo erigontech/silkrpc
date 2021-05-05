@@ -134,6 +134,7 @@ void to_json(nlohmann::json& json, const Block& b) {
     json["difficulty"] = "0x" + silkrpc::to_hex_no_leading_zeros(silkworm::rlp::big_endian(b.block.header.difficulty));
     json["totalDifficulty"] = "0x" + silkrpc::to_hex_no_leading_zeros(silkworm::rlp::big_endian(b.total_difficulty));
     json["extraData"] = "0x" + silkworm::to_hex(b.block.header.extra_data);
+    json["mixHash"]= b.block.header.mix_hash;
     silkworm::Bytes block_rlp{};
     silkworm::rlp::encode(block_rlp, b.block);
     json["size"] = "0x" + silkrpc::to_hex_no_leading_zeros(block_rlp.length());
