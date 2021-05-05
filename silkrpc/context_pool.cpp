@@ -74,10 +74,10 @@ void ContextPool::stop() {
 
     for (std::size_t i{0}; i < contexts_.size(); ++i) {
         auto& context = contexts_[i];
-        context.grpc_runner->stop();
-        SILKRPC_DEBUG << "ContextPool::stop context[" << i << "].grpc_runner stopped: " << context.grpc_runner << "\n";
         context.io_context->stop();
         SILKRPC_DEBUG << "ContextPool::stop context[" << i << "].io_context stopped: " << context.io_context << "\n";
+        context.grpc_runner->stop();
+        SILKRPC_DEBUG << "ContextPool::stop context[" << i << "].grpc_runner stopped: " << context.grpc_runner << "\n";
     }
     SILKRPC_DEBUG << "ContextPool::stop completed\n";
 }

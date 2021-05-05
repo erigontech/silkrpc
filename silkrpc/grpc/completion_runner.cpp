@@ -23,6 +23,7 @@ namespace silkrpc::grpc {
 void CompletionRunner::stop() {
     SILKRPC_INFO << "CompletionRunner::stop shutting down...\n";
     queue_.Shutdown();
+    SILKRPC_INFO << "CompletionRunner::stop shutdown\n";
 }
 
 void CompletionRunner::run() {
