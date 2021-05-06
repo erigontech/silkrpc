@@ -28,7 +28,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 |                                         |              |                                            |
 | eth_getTransactionByHash                | -            | not yet implemented                        |
 | eth_getTransactionByBlockHashAndIndex   | -            | not yet implemented                        |
-| eth_getTransactionByBlockNumberAndIndex | -            | not yet implemented                        |
+| eth_getTransactionByBlockNumberAndIndex | Yes          |                                            |
 | eth_getTransactionReceipt               | -            | not yet implemented                        |
 |                                         |              |                                            |
 | eth_estimateGas                         | -            | not yet implemented                        |

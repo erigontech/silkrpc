@@ -40,5 +40,7 @@ run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" -
 
 run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getUncleByBlockNumberAndIndex","params":["0x41b57c", "0x0"],"id":1}' localhost:51515''')
 run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getUncleCountByBlockNumber","params":["0x41b57c"],"id":1}' localhost:51515''')
+run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getTransactionByBlockNumberAndIndex", "params":["0x41b57c", "0x0"],"id":1}' localhost:51515''')
+
 
 run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getLogs","params":[{"fromBlock": "0x3d0900", "toBlock": "0x3d0964", "address": "0x2a89f54a9f8e727a7be754fd055bb8ea93d0557d"}],"id":3}' localhost:51515''')
