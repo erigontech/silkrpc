@@ -41,6 +41,7 @@ def usage(argv):
     print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10) [default: " + DEFAULT_TEST_SEQUENCE + "]")
 
 class Config:
+    # pylint: disable=too-many-instance-attributes
     """ This class manage configuration params
     """
     def __init__(self, argv):
