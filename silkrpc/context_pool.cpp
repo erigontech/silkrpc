@@ -25,10 +25,10 @@
 namespace silkrpc {
 
 std::ostream& operator<<(std::ostream& out, const Context& c) {
-    out << "io_context: " << c.io_context
-        << " grpc_queue: " << c.grpc_queue
-        << " grpc_runner: " << c.grpc_runner
-        << " database: " << c.database;
+    out << "io_context: " << &*c.io_context
+        << " grpc_queue: " << &*c.grpc_queue
+        << " grpc_runner: " << &*c.grpc_runner
+        << " database: " << &*c.database;
     return out;
 }
 
@@ -57,9 +57,9 @@ void ContextPool::run() {
     for (std::size_t i{0}; i < contexts_.size(); ++i) {
         auto& context = contexts_[i];
         workers.create_thread([&]() { context.grpc_runner->run(); });
-        SILKRPC_DEBUG << "ContextPool::run context[" << i << "].grpc_runner started: " << context.grpc_runner << "\n";
+        SILKRPC_DEBUG << "ContextPool::run context[" << i << "].grpc_runner started: " << &*context.grpc_runner << "\n";
         workers.create_thread([&]() { context.io_context->run(); });
-        SILKRPC_DEBUG << "ContextPool::run context[" << i << "].io_context started: " << context.io_context << "\n";
+        SILKRPC_DEBUG << "ContextPool::run context[" << i << "].io_context started: " << &*context.io_context << "\n";
     }
 
     // Wait for all threads in the pool to exit
@@ -75,9 +75,9 @@ void ContextPool::stop() {
     for (std::size_t i{0}; i < contexts_.size(); ++i) {
         auto& context = contexts_[i];
         context.io_context->stop();
-        SILKRPC_DEBUG << "ContextPool::stop context[" << i << "].io_context stopped: " << context.io_context << "\n";
+        SILKRPC_DEBUG << "ContextPool::stop context[" << i << "].io_context stopped: " << &*context.io_context << "\n";
         context.grpc_runner->stop();
-        SILKRPC_DEBUG << "ContextPool::stop context[" << i << "].grpc_runner stopped: " << context.grpc_runner << "\n";
+        SILKRPC_DEBUG << "ContextPool::stop context[" << i << "].grpc_runner stopped: " << &*context.grpc_runner << "\n";
     }
     SILKRPC_DEBUG << "ContextPool::stop completed\n";
 }

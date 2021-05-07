@@ -24,6 +24,7 @@
 #define SILKRPC_HTTP_CONNECTION_MANAGER_HPP_
 
 #include <memory>
+#include <mutex>
 #include <set>
 
 #include <silkrpc/config.hpp>
@@ -41,21 +42,24 @@ public:
     ConnectionManager(const ConnectionManager&) = delete;
     ConnectionManager& operator=(const ConnectionManager&) = delete;
 
-    /// Construct a connection manager.
+    // Construct a connection manager.
     ConnectionManager() = default;
 
-    /// Add the specified connection to the manager and start it.
+    // Add the specified connection to the manager and start it
     asio::awaitable<void> start(std::shared_ptr<Connection> c);
 
-    /// Stop the specified connection.
+    // Stop the specified connection
     void stop(std::shared_ptr<Connection> c);
 
-    /// Stop all connections.
+    // Stop all connections
     void stop_all();
 
 private:
-    /// The managed connections.
+    // The managed connections
     std::set<std::shared_ptr<Connection>> connections_;
+
+    // The mutual exclusion for thread-safe access to managed connections
+    std::mutex connections_mutex_;
 };
 
 } // namespace silkrpc::http

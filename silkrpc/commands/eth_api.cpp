@@ -307,10 +307,10 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_ind
         const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_hash, block_number);
         auto uncle = ommers[index];
 
-        silkworm::BlockWithHash block_uncle_hash{{{}, uncle}, uncle.hash()};
-        const Block new_uncle_block{block_uncle_hash, total_difficulty};
+        silkworm::BlockWithHash uncle_block_with_hash{{{}, uncle}, uncle.hash()};
+        const Block uncle_block_with_hash_and_td{uncle_block_with_hash, total_difficulty};
 
-        reply = make_json_content(request["id"], new_uncle_block);
+        reply = make_json_content(request["id"], uncle_block_with_hash_and_td);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -387,8 +387,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_hash(c
         ethdb::TransactionDatabase tx_database{*tx};
 
         const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
+        const auto ommers = block_with_hash.block.ommers;
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(block_with_hash.block.ommers.size()));
+        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(ommers.size()));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -417,6 +418,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_number
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
         const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
         const auto ommers = block_with_hash.block.ommers;

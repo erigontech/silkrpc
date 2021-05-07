@@ -27,6 +27,7 @@
 #include <utility>
 
 #include <asio/co_spawn.hpp>
+#include <asio/dispatch.hpp>
 #include <asio/use_awaitable.hpp>
 
 #include <silkrpc/common/log.hpp>
@@ -71,8 +72,12 @@ asio::awaitable<void> Server::run() {
             new_connection->socket().set_option(asio::ip::tcp::socket::keep_alive(true));
 
             SILKRPC_TRACE << "Server::start starting connection for socket: " << &new_connection->socket() << "\n";
-            asio::co_spawn(*io_context, connection_manager_.start(new_connection), [&](std::exception_ptr eptr) {
-                if (eptr) std::rethrow_exception(eptr);
+
+            // https://github.com/chriskohlhoff/asio/issues/552
+            asio::dispatch(*io_context, [=]() mutable {
+                asio::co_spawn(*io_context, connection_manager_.start(new_connection), [&](std::exception_ptr eptr) {
+                    if (eptr) std::rethrow_exception(eptr);
+                });
             });
         }
     } catch (const std::system_error& se) {

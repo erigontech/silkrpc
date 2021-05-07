@@ -8,6 +8,7 @@ import os
 import csv
 import sys
 import getopt
+import multiprocessing
 from datetime import datetime
 
 DEFAULT_TEST_SEQUENCE = "50:30,200:30,200:60,400:30"
@@ -17,6 +18,7 @@ DEFAULT_DAEMON_VEGETA_ON_CORE = "-:-"
 DEFAULT_TG_ADDRESS = "localhost:9090"
 DEFAULT_GETH_BUILD_DIR = "../../../turbo-geth/build/"
 DEFAULT_SILKRPC_BUILD_DIR = "../../build_gcc_release/"
+DEFAULT_SILKRPC_NUM_CONTEXTS = multiprocessing.cpu_count() / 2
 
 VEGETA_REPORT = "vegeta_report.hrd"
 VEGETA_PATTERN_SILKRPC = "/tmp/turbo_geth_stress_test/vegeta_geth_eth_getLogs.txt"
@@ -32,7 +34,7 @@ def usage(argv):
     print("-h                      print this help")
     print("-p vegetaPatternTarFile path to the request file for Vegeta attack")
     print("-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
-    print("-t turboGethAddress     address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: " + DEFAULT_TG_ADDRESS + "]")
+    print("-a turboGethAddress     address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: " + DEFAULT_TG_ADDRESS + "]")
     print("-g turboGethHomeDir     path to TG home folder (e.g. ../../../turbo-geth/)                               [default: " + DEFAULT_GETH_BUILD_DIR + "]")
     print("-s silkrpcBuildDir      path to Silkrpc build folder (e.g. ../../build_gcc_release/)                     [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
     print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                [default: " + str(DEFAULT_REPETITIONS) + "]")
@@ -49,11 +51,12 @@ class Config:
         self.tg_addr = DEFAULT_TG_ADDRESS
         self.geth_builddir = DEFAULT_GETH_BUILD_DIR
         self.silkrpc_build_dir = DEFAULT_SILKRPC_BUILD_DIR
+        self.silkrpc_num_contexts = DEFAULT_SILKRPC_NUM_CONTEXTS
         self.repetitions = DEFAULT_REPETITIONS
         self.test_sequence = DEFAULT_TEST_SEQUENCE
 
         try:
-            opts, _ = getopt.getopt(argv[1:], "vp:c:a:g:s:r:t:")
+            opts, _ = getopt.getopt(argv[1:], "vp:c:a:g:s:r:t:n:")
 
             for option, optarg in opts:
                 if option in ("-h", "--help"):
@@ -73,6 +76,8 @@ class Config:
                     self.repetitions = int(optarg)
                 elif option == "-t":
                     self.test_sequence = optarg
+                elif option == "-n":
+                    self.silkrpc_num_contexts = optarg
                 else:
                     usage(argv)
                     sys.exit(-1)
@@ -158,10 +163,11 @@ class PerfTest:
         self.rpc_daemon = 1
         on_core = self.config.daemon_vegeta_on_core.split(':')
         if on_core[0] == "-":
-            cmd = self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target "+self.config.tg_addr+" --local localhost:51515 --logLevel c &"
+            cmd = self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.tg_addr + " --local localhost:51515 --logLevel c &"
         else:
-            cmd = "taskset -c " + on_core[0] + \
-                  " " + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target "+self.config.tg_addr+" --local localhost:51515 --logLevel c &"
+            cmd = "taskset -c " + on_core[0] + " "\
+                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.tg_addr + " --local localhost:51515 --logLevel c --numContexts "\
+                    + str(self.config.silkrpc_num_contexts) + " &"
         print("SilkDaemon starting ...: ", cmd)
         status = os.system(cmd)
         if int(status) != 0:
