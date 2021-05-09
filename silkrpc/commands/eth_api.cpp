@@ -496,7 +496,8 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_hash_a
     }
 
     co_await tx->close(); // RAII not (yet) available with coroutines
-    co_return;}
+    co_return;
+}
 
 // https://eth.wiki/json-rpc/API#eth_gettransactionbyblocknumberandindex
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply) {
