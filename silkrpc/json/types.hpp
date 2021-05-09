@@ -29,6 +29,7 @@
 #include <silkrpc/types/error.hpp>
 #include <silkrpc/types/filter.hpp>
 #include <silkrpc/types/log.hpp>
+#include <silkrpc/types/transaction.hpp>
 #include <silkrpc/types/receipt.hpp>
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
@@ -54,6 +55,8 @@ void to_json(nlohmann::json& json, const Transaction& transaction);
 namespace silkrpc {
 
 void to_json(nlohmann::json& json, const Block& b);
+
+void to_json(nlohmann::json& json, const Transaction& transaction);
 
 void from_json(const nlohmann::json& json, Call& call);
 
