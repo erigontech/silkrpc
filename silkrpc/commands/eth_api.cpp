@@ -483,7 +483,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_hash_a
            reply = make_json_content(request["id"], nullptr);
            co_return;
         }
-        
+
         silkrpc::Transaction new_transaction{{transactions[index]}, {block_with_hash.hash}, {block_with_hash.block.header.number}, {index}};
 
         reply = make_json_content(request["id"],  new_transaction);
