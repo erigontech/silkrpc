@@ -18,7 +18,7 @@ DEFAULT_DAEMON_VEGETA_ON_CORE = "-:-"
 DEFAULT_TG_ADDRESS = "localhost:9090"
 DEFAULT_GETH_BUILD_DIR = "../../../turbo-geth/build/"
 DEFAULT_SILKRPC_BUILD_DIR = "../../build_gcc_release/"
-DEFAULT_SILKRPC_NUM_CONTEXTS = multiprocessing.cpu_count() / 2
+DEFAULT_SILKRPC_NUM_CONTEXTS = int(multiprocessing.cpu_count() / 2)
 
 VEGETA_REPORT = "vegeta_report.hrd"
 VEGETA_PATTERN_SILKRPC = "/tmp/turbo_geth_stress_test/vegeta_geth_eth_getLogs.txt"
@@ -32,13 +32,14 @@ def usage(argv):
     print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
     print("")
     print("-h                      print this help")
-    print("-p vegetaPatternTarFile path to the request file for Vegeta attack")
+    print("-p vegetaPatternTarFile path to the request file for Vegeta attack                                             [default: " + DEFAULT_VEGETA_PATTERN_TAR_FILE +"]")
     print("-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
-    print("-a turboGethAddress     address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: " + DEFAULT_TG_ADDRESS + "]")
-    print("-g turboGethHomeDir     path to TG home folder (e.g. ../../../turbo-geth/)                               [default: " + DEFAULT_GETH_BUILD_DIR + "]")
-    print("-s silkrpcBuildDir      path to Silkrpc build folder (e.g. ../../build_gcc_release/)                     [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
-    print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                [default: " + str(DEFAULT_REPETITIONS) + "]")
-    print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10) [default: " + DEFAULT_TEST_SEQUENCE + "]")
+    print("-a turboGethAddress     address of TG Core component as <address>:<port> (e.g. localhost:9090)                 [default: " + DEFAULT_TG_ADDRESS + "]")
+    print("-g turboGethHomeDir     path to TG home folder (e.g. ../../../turbo-geth/)                                     [default: " + DEFAULT_GETH_BUILD_DIR + "]")
+    print("-s silkrpcBuildDir      path to Silkrpc build folder (e.g. ../../build_gcc_release/)                           [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
+    print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                      [default: " + str(DEFAULT_REPETITIONS) + "]")
+    print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10)       [default: " + DEFAULT_TEST_SEQUENCE + "]")
+    print("-n numContexts          number of Silkrpc execution contexts (i.e. 1+1 asio+grpc threads)                      [default: " + str(DEFAULT_SILKRPC_NUM_CONTEXTS) + "]")
 
 class Config:
     # pylint: disable=too-many-instance-attributes
