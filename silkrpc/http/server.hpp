@@ -31,7 +31,6 @@
 #include <asio/ip/tcp.hpp>
 
 #include <silkrpc/context_pool.hpp>
-#include <silkrpc/http/connection_manager.hpp>
 
 namespace silkrpc::http {
 
@@ -56,9 +55,6 @@ private:
 
     // The acceptor used to listen for incoming TCP connections
     asio::ip::tcp::acceptor acceptor_;
-
-    /// The connection manager which owns all live connections
-    ConnectionManager connection_manager_;
 };
 
 } // namespace silkrpc::http

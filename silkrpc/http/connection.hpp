@@ -48,7 +48,7 @@ public:
     Connection& operator=(const Connection&) = delete;
 
     /// Construct a connection with the given socket.
-    explicit Connection(asio::io_context& io_context, ConnectionManager& manager, std::unique_ptr<ethdb::Database>& database);
+    explicit Connection(asio::io_context& io_context, std::unique_ptr<ethdb::Database>& database);
 
     ~Connection();
 
@@ -66,9 +66,6 @@ private:
 
     /// Socket for the connection.
     asio::ip::tcp::socket socket_;
-
-    /// The manager for this connection.
-    ConnectionManager& connection_manager_;
 
     /// The handler used to process the incoming request.
     RequestHandler request_handler_;

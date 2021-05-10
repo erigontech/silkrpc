@@ -34,13 +34,12 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/ethdb/database.hpp>
-#include "connection_manager.hpp"
 #include "request_handler.hpp"
 
 namespace silkrpc::http {
 
-Connection::Connection(asio::io_context& io_context, ConnectionManager& manager, std::unique_ptr<ethdb::Database>& database)
-: socket_{io_context}, connection_manager_(manager), request_handler_{database} {
+Connection::Connection(asio::io_context& io_context, std::unique_ptr<ethdb::Database>& database)
+: socket_{io_context}, request_handler_{database} {
     SILKRPC_DEBUG << "Connection::Connection socket " << &socket_ << " created\n";
 }
 
@@ -73,11 +72,8 @@ asio::awaitable<void> Connection::do_read() {
         // Read next chunck (result == RequestParser::indeterminate) or next request
         co_await do_read();
     } catch (const std::system_error& se) {
-        connection_manager_.stop(shared_from_this());
-
         if (se.code() == asio::error::eof || se.code() == asio::error::connection_reset || se.code() == asio::error::broken_pipe) {
             SILKRPC_DEBUG << "Connection::do_read close from client with code: " << se.code() << "\n" << std::flush;
-            co_return;
         } else if (se.code() != asio::error::operation_aborted) {
             SILKRPC_ERROR << "Connection::do_read system_error: " << se.what() << "\n" << std::flush;
             std::rethrow_exception(std::make_exception_ptr(se));
@@ -85,8 +81,6 @@ asio::awaitable<void> Connection::do_read() {
             SILKRPC_DEBUG << "Connection::do_read operation_aborted: " << se.what() << "\n" << std::flush;
         }
     } catch (const std::exception& e) {
-        connection_manager_.stop(shared_from_this());
-
         SILKRPC_ERROR << "Connection::do_read exception: " << e.what() << "\n" << std::flush;
         std::rethrow_exception(std::make_exception_ptr(e));
     }
@@ -98,9 +92,6 @@ asio::awaitable<void> Connection::do_write() {
         const auto bytes_transferred = co_await asio::async_write(socket_, reply_.to_buffers(), asio::use_awaitable);
         SILKRPC_TRACE << "Connection::do_write bytes_transferred: " << bytes_transferred << "\n" << std::flush;
     } catch (const std::system_error& se) {
-        if (se.code() != asio::error::operation_aborted) {
-            connection_manager_.stop(shared_from_this());
-        }
         std::rethrow_exception(std::make_exception_ptr(se));
     } catch (const std::exception& e) {
         std::rethrow_exception(std::make_exception_ptr(e));
