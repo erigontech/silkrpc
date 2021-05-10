@@ -163,6 +163,15 @@ void to_json(nlohmann::json& json, const Block& b) {
     json["uncles"] = b.block.ommers;
 }
 
+void to_json(nlohmann::json& json, const Transaction& transaction) {
+    to_json(json, silkworm::Transaction(transaction));
+
+    const auto block_number = "0x" + silkrpc::to_hex_no_leading_zeros(transaction.block_number);
+    json["blockHash"] = transaction.block_hash;
+    json["blockNumber"] = block_number;
+    json["transactionIndex"] = "0x" + silkrpc::to_hex_no_leading_zeros(transaction.transaction_index);
+}
+
 void from_json(const nlohmann::json& json, Call& call) {
     if (json.count("from") != 0) {
         call.from = json.at("from").get<evmc::address>();

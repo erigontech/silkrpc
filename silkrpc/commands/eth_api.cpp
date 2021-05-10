@@ -39,6 +39,7 @@
 #include <silkrpc/types/block.hpp>
 #include <silkrpc/types/call.hpp>
 #include <silkrpc/types/filter.hpp>
+#include <silkrpc/types/transaction.hpp>
 
 namespace silkrpc::commands {
 
@@ -458,12 +459,36 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const n
 
 // https://eth.wiki/json-rpc/API#eth_gettransactionbyblockhashandindex
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 2) {
+        auto error_msg = "invalid eth_getTransactionByBlockHashAndIndex params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    auto block_hash = params[0].get<evmc::bytes32>();
+    auto index_string = params[1].get<std::string>();
+    SILKRPC_DEBUG << "block_hash: " << block_hash << " index: " << index_string << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+        const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        const auto transactions = block_with_hash.block.transactions;
+
+        auto index = std::stoul(index_string, 0, 16);
+        if (index >= transactions.size()) {
+           const auto error_msg = "Requested transaction not found " + index_string;
+           SILKRPC_DEBUG << error_msg << "\n";
+           reply = make_json_content(request["id"], nullptr);
+           co_return;
+        }
+
+        silkrpc::Transaction new_transaction{{transactions[index]}, {block_with_hash.hash}, {block_with_hash.block.header.number}, {index}};
+
+        reply = make_json_content(request["id"],  new_transaction);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
