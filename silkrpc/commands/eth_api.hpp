@@ -94,7 +94,6 @@ protected:
     asio::awaitable<Receipts> get_receipts(core::rawdb::DatabaseReader& db_reader, uint64_t number, evmc::bytes32 hash);
     std::vector<Log> filter_logs(std::vector<Log>& logs, const Filter& filter);
 
-private:
     std::unique_ptr<ethdb::Database>& database_;
 
     friend class silkrpc::http::RequestHandler;

@@ -44,6 +44,7 @@ protected:
     asio::awaitable<void> handle_net_peer_count(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_net_version(const nlohmann::json& request, nlohmann::json& reply);
 
+private:
     friend class silkrpc::http::RequestHandler;
 };
 

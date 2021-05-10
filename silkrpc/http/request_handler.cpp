@@ -146,7 +146,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
         auto handle_method = RequestHandler::handlers_[method];
         co_await (&rpc_api_->*handle_method)(request_json, reply_json);
 
-        reply.content = reply_json.dump();
+        reply.content = reply_json.dump() + "\n";
         reply.status = Reply::ok;
     } catch (const std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";

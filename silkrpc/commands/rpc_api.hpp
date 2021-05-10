@@ -34,8 +34,8 @@ namespace silkrpc::commands {
 
 class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, TurboGethRpcApi, TraceRpcApi {
 public:
-    explicit RpcApi(std::unique_ptr<ethdb::Database>& database)
-    : EthereumRpcApi{database}, NetRpcApi{}, Web3RpcApi{database}, DebugRpcApi{database},
+    explicit RpcApi(std::unique_ptr<ethdb::Database>& database) :
+        EthereumRpcApi{database}, NetRpcApi{}, Web3RpcApi{database}, DebugRpcApi{database},
         ParityRpcApi{database}, TurboGethRpcApi{database}, TraceRpcApi{database} {}
     virtual ~RpcApi() {}
 

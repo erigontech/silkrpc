@@ -14,45 +14,35 @@
     limitations under the License.
 */
 
-#include "completion_poller.hpp"
-
-//#include <chrono>
+#include "completion_runner.hpp"
 
 #include "async_completion_handler.hpp"
 
 namespace silkrpc::grpc {
 
-void CompletionPoller::start() {
-    SILKRPC_INFO << "CompletionPoller::start starting...\n";
-    thread_ = std::thread{&CompletionPoller::run, this};
-}
-
-void CompletionPoller::stop() {
-    SILKRPC_INFO << "CompletionPoller::stop shutting down...\n";
+void CompletionRunner::stop() {
+    SILKRPC_INFO << "CompletionRunner::stop shutting down...\n";
     queue_.Shutdown();
-    if (thread_.joinable()) {
-        thread_.join();
-    }
+    SILKRPC_INFO << "CompletionRunner::stop shutdown\n";
 }
 
-void CompletionPoller::run() {
-    SILKRPC_INFO << "CompletionPoller::run start\n";
+void CompletionRunner::run() {
+    SILKRPC_INFO << "CompletionRunner::run start\n";
     bool running = true;
     while (running) {
         void* got_tag;
         bool ok;
-        //gpr_inf_future(   )
         const auto got_event = queue_.Next(&got_tag, &ok);
         if (got_event) {
             auto operation = grpc::AsyncCompletionHandler::detag(got_tag);
-            SILKRPC_TRACE << "CompletionPoller::run post operation: " << operation << "\n";
+            SILKRPC_TRACE << "CompletionRunner::run post operation: " << operation << "\n";
             io_context_.post([=]() { operation->completed(ok); });
         } else {
             running = false;
-            SILKRPC_DEBUG << "CompletionPoller::run shutdown\n";
+            SILKRPC_DEBUG << "CompletionRunner::run shutdown\n";
         }
     }
-    SILKRPC_INFO << "CompletionPoller::run end\n";
+    SILKRPC_INFO << "CompletionRunner::run end\n";
 }
 
 } // namespace silkrpc::grpc

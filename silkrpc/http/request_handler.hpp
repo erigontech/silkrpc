@@ -44,14 +44,13 @@ public:
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
-    explicit RequestHandler(std::unique_ptr<ethdb::Database>& database)
-    : database_(database), rpc_api_{database} {}
+    explicit RequestHandler(std::unique_ptr<ethdb::Database>& database) : rpc_api_{database} {}
+
     virtual ~RequestHandler() {}
 
     asio::awaitable<void> handle_request(const Request& request, Reply& reply);
 
 private:
-    std::unique_ptr<ethdb::Database>& database_;
     commands::RpcApi rpc_api_;
 
     typedef asio::awaitable<void> (commands::RpcApi::*HandleMethod)(const nlohmann::json&, nlohmann::json&);

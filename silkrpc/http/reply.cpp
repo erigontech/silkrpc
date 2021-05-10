@@ -81,6 +81,7 @@ namespace misc_strings {
 
 const char name_value_separator[] = { ':', ' ' };
 const char crlf[] = { '\r', '\n' };
+const char lf[] = { '\n' };
 
 } // namespace misc_strings
 
@@ -96,7 +97,7 @@ std::vector<asio::const_buffer> Reply::to_buffers() {
     }
     buffers.push_back(asio::buffer(misc_strings::crlf));
     buffers.push_back(asio::buffer(content));
-    SILKRPC_DEBUG << "Reply::to_buffers buffers: " << buffers << "\n";
+    SILKRPC_TRACE << "Reply::to_buffers buffers: " << buffers << "\n";
     return buffers;
 }
 

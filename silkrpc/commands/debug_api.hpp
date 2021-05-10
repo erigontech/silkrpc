@@ -22,6 +22,7 @@
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
+#include <asio/io_context.hpp>
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/core/rawdb/accessors.hpp>
