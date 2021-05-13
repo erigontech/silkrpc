@@ -11,7 +11,7 @@ import getopt
 import multiprocessing
 from datetime import datetime
 
-DEFAULT_TEST_SEQUENCE = "50:30,200:30,200:60,400:30"
+DEFAULT_TEST_SEQUENCE = "50:30,200:30,200:60,400:30,600:60"
 DEFAULT_REPETITIONS = 10
 DEFAULT_VEGETA_PATTERN_TAR_FILE = "./vegeta/turbo_geth_stress_test_001.tar"
 DEFAULT_DAEMON_VEGETA_ON_CORE = "-:-"
@@ -19,6 +19,8 @@ DEFAULT_TG_ADDRESS = "localhost:9090"
 DEFAULT_GETH_BUILD_DIR = "../../../turbo-geth/build/"
 DEFAULT_SILKRPC_BUILD_DIR = "../../build_gcc_release/"
 DEFAULT_SILKRPC_NUM_CONTEXTS = int(multiprocessing.cpu_count() / 2)
+DEFAULT_RPCDAEMON_ADDRESS = "localhost"
+DEFAULT_TEST_MODE = 3
 
 VEGETA_REPORT = "vegeta_report.hrd"
 VEGETA_PATTERN_SILKRPC = "/tmp/turbo_geth_stress_test/vegeta_geth_eth_getLogs.txt"
@@ -32,6 +34,7 @@ def usage(argv):
     print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
     print("")
     print("-h                      print this help")
+    print("-d rpcDaemonAddress     address of daemon eg (10.1.1.20)                                                       [default: " + DEFAULT_RPCDAEMON_ADDRESS +"]")
     print("-p vegetaPatternTarFile path to the request file for Vegeta attack                                             [default: " + DEFAULT_VEGETA_PATTERN_TAR_FILE +"]")
     print("-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
     print("-a turboGethAddress     address of TG Core component as <address>:<port> (e.g. localhost:9090)                 [default: " + DEFAULT_TG_ADDRESS + "]")
@@ -40,6 +43,8 @@ def usage(argv):
     print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                      [default: " + str(DEFAULT_REPETITIONS) + "]")
     print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10)       [default: " + DEFAULT_TEST_SEQUENCE + "]")
     print("-n numContexts          number of Silkrpc execution contexts (i.e. 1+1 asio+grpc threads)                      [default: " + str(DEFAULT_SILKRPC_NUM_CONTEXTS) + "]")
+    print("-m mode                 tests type silkrpc(1), rpcdaemon(2) and both (3) (i.e. 3)                              [default: " + str(DEFAULT_TEST_MODE) + "]")
+
 
 class Config:
     # pylint: disable=too-many-instance-attributes
@@ -56,29 +61,61 @@ class Config:
         self.silkrpc_num_contexts = DEFAULT_SILKRPC_NUM_CONTEXTS
         self.repetitions = DEFAULT_REPETITIONS
         self.test_sequence = DEFAULT_TEST_SEQUENCE
+        self.rpc_daemon_address = DEFAULT_RPCDAEMON_ADDRESS
+        self.test_mode = DEFAULT_TEST_MODE
 
         try:
-            opts, _ = getopt.getopt(argv[1:], "vp:c:a:g:s:r:t:n:")
+            local_config = 0
+            opts, _ = getopt.getopt(argv[1:], "hm:d:p:c:a:g:s:r:t:n:")
 
             for option, optarg in opts:
                 if option in ("-h", "--help"):
                     usage(argv)
                     sys.exit(-1)
+                elif option == "-m":
+                    self.test_mode = optarg
+                elif option == "-d":
+                    if local_config == 1:
+                        print ("ERROR: incompatible option -d with -a -g -s -n")
+                        usage(argv)
+                        sys.exit(-1)
+                    local_config = 2
+                    self.rpc_daemon_address = optarg
                 elif option == "-p":
                     self.vegeta_pattern_tar_file = optarg
                 elif option == "-c":
                     self.daemon_vegeta_on_core = optarg
                 elif option == "-a":
+                    if local_config == 2:
+                        print ("ERROR: incompatible option -d with -a -g -s -n")
+                        usage(argv)
+                        sys.exit(-1)
+                    local_config = 1
                     self.tg_addr = optarg
                 elif option == "-g":
+                    if local_config == 2:
+                        print ("ERROR: incompatible option -d with -a -g -s -n")
+                        usage(argv)
+                        sys.exit(-1)
+                    local_config = 1
                     self.geth_builddir = optarg
                 elif option == "-s":
+                    if local_config == 2:
+                        print ("ERROR: incompatible option -d with -a -g -s -n")
+                        usage(argv)
+                        sys.exit(-1)
+                    local_config = 1
                     self.silkrpc_build_dir = optarg
                 elif option == "-r":
                     self.repetitions = int(optarg)
                 elif option == "-t":
                     self.test_sequence = optarg
                 elif option == "-n":
+                    if local_config == 2:
+                        print ("ERROR: incompatible option -d with -a -g -s -n")
+                        usage(argv)
+                        sys.exit(-1)
+                    local_config = 1
                     self.silkrpc_num_contexts = optarg
                 else:
                     usage(argv)
@@ -129,10 +166,18 @@ class PerfTest:
         if int(status) != 0:
             print("untar failed. Test Aborted!")
             sys.exit(-1)
+        # if address is provided substitute the address and port of daemon in the vegeta file
+        if  self.config.rpc_daemon_address != "localhost":
+            cmd = "sed -i 's/localhost/" + self.config.rpc_daemon_address + "/g' " + VEGETA_PATTERN_SILKRPC
+            os.system(cmd)
+            cmd = "sed -i 's/localhost/" + self.config.rpc_daemon_address + "/g' " + VEGETA_PATTERN_RPCDAEMON
+            os.system(cmd)
 
     def start_rpc_daemon(self):
         """ Starts RPC daemon server
         """
+        if self.config.rpc_daemon_address != "localhost":
+            return
         self.rpc_daemon = 1
         on_core = self.config.daemon_vegeta_on_core.split(':')
         if on_core[0] == "-":
@@ -154,6 +199,8 @@ class PerfTest:
     def stop_rpc_daemon(self):
         """ Stops the RPC daemon server
         """
+        if self.config.rpc_daemon_address != "localhost":
+            return
         self.rpc_daemon = 0
         os.system("kill -9 $(ps aux | grep 'rpcdaemon' | grep -v 'grep' | awk '{print $2}') 2> /dev/null ")
         print("RpcDaemon stopped")
@@ -162,6 +209,8 @@ class PerfTest:
     def start_silk_daemon(self):
         """ Starts SILKRPC daemon
         """
+        if self.config.rpc_daemon_address != "localhost":
+            return
         self.rpc_daemon = 1
         on_core = self.config.daemon_vegeta_on_core.split(':')
         if on_core[0] == "-":
@@ -184,6 +233,8 @@ class PerfTest:
     def stop_silk_daemon(self):
         """ Stops SILKRPC daemon
         """
+        if self.config.rpc_daemon_address != "localhost":
+            return
         self.silk_daemon = 0
         os.system("kill $(ps aux | grep 'silk' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
         print("SilkDaemon stopped")
@@ -230,14 +281,19 @@ class PerfTest:
             max_latency = latency_values[12]
             newline = file_raws[5].replace('\n', ' ')
             ratio = newline.split(' ')[34]
-            print(" [ Ratio="+ratio+", MaxLatency="+max_latency+"]")
+            if len(file_raws) > 8:
+                error = file_raws[8]
+                print(" [ Ratio="+ratio+", MaxLatency="+max_latency+ " Error: " + error +"]")
+            else:
+                error = ""
+                print(" [ Ratio="+ratio+", MaxLatency="+max_latency+"]")
             threads = os.popen("ps -efL | grep tg | grep bin | wc -l").read().replace('\n', ' ')
         finally:
             file.close()
 
         self.test_report.write_test_report(daemon_name, test_number, threads, qps_value, time_value, min_latency, latency_values[7], latency_values[8], \
-                                           latency_values[9], latency_values[10], latency_values[11], max_latency, ratio)
-        os.system("/bin/rm " + test_report_filename)
+                                           latency_values[9], latency_values[10], latency_values[11], max_latency, ratio, error)
+        #os.system("/bin/rm " + test_report_filename)
 
 
 class TestReport:
@@ -291,13 +347,13 @@ class TestReport:
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "RpcDaemon/TG", "master"])
         self.writer.writerow([])
         self.writer.writerow([])
-        self.writer.writerow(["Daemon", "TestNo", "TG-Threads", "Qps", "Time", "Min", "Mean", "50", "90", "95", "99", "Max", "Ratio"])
+        self.writer.writerow(["Daemon", "TestNo", "TG-Threads", "Qps", "Time", "Min", "Mean", "50", "90", "95", "99", "Max", "Ratio", "Error"])
         self.csv_file.flush()
 
-    def write_test_report(self, daemon, test_number, threads, qps_value, time_value, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency, ratio):
+    def write_test_report(self, daemon, test_number, threads, qps_value, time_value, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency, ratio, error):
         """ Writes on CVS the latency data for one completed test
         """
-        self.writer.writerow([daemon, str(test_number), threads, qps_value, time_value, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency, ratio])
+        self.writer.writerow([daemon, str(test_number), threads, qps_value, time_value, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency, ratio, error])
         self.csv_file.flush()
 
 
@@ -323,39 +379,43 @@ def main(argv):
     print("\nTest using repetition: "+ str(config.repetitions) + " on sequence: " +  str(config.test_sequence) + " for pattern: " + str(config.vegeta_pattern_tar_file))
     test_report.open()
 
-    perf_test.start_silk_daemon()
-
     current_sequence = str(config.test_sequence).split(',')
-    test_number = 1
-    for test in current_sequence:
-        for test_rep in range(0, config.repetitions):
-            qps = test.split(':')[0]
-            time = test.split(':')[1]
-            test_name = "[{:d}.{:2d}] "
-            test_name_formatted = test_name.format(test_number, test_rep+1)
-            perf_test.execute(test_name_formatted, "silkrpc", qps, time)
-            os.system("sleep 1")
-        test_number = test_number + 1
-        print("")
 
-    perf_test.stop_silk_daemon()
-    print("")
+    if (config.test_mode == "1" or config.test_mode == "3"):
+        perf_test.start_silk_daemon()
+        test_number = 1
+        for test in current_sequence:
+            for test_rep in range(0, config.repetitions):
+                qps = test.split(':')[0]
+                time = test.split(':')[1]
+                test_name = "[{:d}.{:2d}] "
+                test_name_formatted = test_name.format(test_number, test_rep+1)
+                perf_test.execute(test_name_formatted, "silkrpc", qps, time)
+                os.system("sleep 1")
+            test_number = test_number + 1
+            print("")
 
-    perf_test.start_rpc_daemon()
+        perf_test.stop_silk_daemon()
+        if config.test_mode == "3":
+            print("--------------------------------------------------------------------------------------------\n")
 
-    test_number = 1
-    for test in current_sequence:
-        for test_rep in range(0, config.repetitions):
-            qps = test.split(':')[0]
-            time = test.split(':')[1]
-            test_name = "[{:d}.{:2d}] "
-            test_name_formatted = test_name.format(test_number, test_rep+1)
-            perf_test.execute(test_name_formatted, "rpcdameon", qps, time)
-            os.system("sleep 1")
-        test_number = test_number + 1
-        print("")
+    if (config.test_mode == "2" or config.test_mode == "3"):
+        perf_test.start_rpc_daemon()
 
-    perf_test.stop_rpc_daemon()
+        test_number = 1
+        for test in current_sequence:
+            for test_rep in range(0, config.repetitions):
+                qps = test.split(':')[0]
+                time = test.split(':')[1]
+                test_name = "[{:d}.{:2d}] "
+                test_name_formatted = test_name.format(test_number, test_rep+1)
+                perf_test.execute(test_name_formatted, "rpcdameon", qps, time)
+                os.system("sleep 1")
+            test_number = test_number + 1
+            print("")
+
+        perf_test.stop_rpc_daemon()
+
     test_report.close()
     print("Test Terminated successfully.")
 
