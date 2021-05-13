@@ -25,9 +25,9 @@
 
 #include <tuple>
 
-namespace silkrpc::http {
+#include "request.hpp"
 
-struct Request;
+namespace silkrpc::http {
 
 /// Parser for incoming requests.
 class RequestParser {

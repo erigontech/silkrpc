@@ -40,6 +40,10 @@ namespace silkrpc::http {
 
 Connection::Connection(asio::io_context& io_context, std::unique_ptr<ethdb::Database>& database)
 : socket_{io_context}, request_handler_{database} {
+    request_.content.reserve(1024);
+    request_.headers.reserve(8);
+    request_.method.reserve(64);
+    request_.uri.reserve(64);
     SILKRPC_DEBUG << "Connection::Connection socket " << &socket_ << " created\n";
 }
 
