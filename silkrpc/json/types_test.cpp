@@ -32,10 +32,8 @@ TEST_CASE("serialize error", "[silkrpc][to_json]") {
     Error err{100, {"generic error"}};
     nlohmann::json j = err;
     CHECK(j == R"({
-        "error":{
-            "code":100,
-            "message":"generic error"
-        }
+        "code":100,
+        "message":"generic error"
     })"_json);
 }
 

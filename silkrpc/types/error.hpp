@@ -27,7 +27,7 @@
 namespace silkrpc {
 
 struct Error {
-    uint32_t code{0};
+    int32_t code{0};
     std::string message;
 };
 

@@ -474,11 +474,11 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_hash_a
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
 
+        const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
         const auto transactions = block_with_hash.block.transactions;
 
-        auto index = std::stoul(index_string, 0, 16);
+        const auto index = std::stoul(index_string, 0, 16);
         if (index >= transactions.size()) {
            const auto error_msg = "Requested transaction not found " + index_string;
            SILKRPC_DEBUG << error_msg << "\n";
@@ -486,7 +486,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_hash_a
            co_return;
         }
 
-        silkrpc::Transaction new_transaction{{transactions[index]}, {block_with_hash.hash}, {block_with_hash.block.header.number}, {index}};
+        silkrpc::Transaction new_transaction{{transactions[index]}, {block_with_hash.hash}, block_with_hash.block.header.number, index};
 
         reply = make_json_content(request["id"],  new_transaction);
     } catch (const std::exception& e) {
