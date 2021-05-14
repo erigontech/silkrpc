@@ -30,7 +30,7 @@
 namespace silkrpc::ethdb::kv {
 
 template <typename Handler, typename IoExecutor>
-class async_next : public async_operation<void, remote::Pair>
+class async_next : public async_operation<void, asio::error_code, remote::Pair>
 {
 public:
     ASIO_DEFINE_HANDLER_PTR(async_next);
@@ -39,7 +39,7 @@ public:
     : async_operation(&async_next::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
     {}
 
-    static void do_complete(void* owner, async_operation* base, remote::Pair next_pair={}) {
+    static void do_complete(void* owner, async_operation* base, asio::error_code error={}, remote::Pair next_pair={}) {
         // Take ownership of the handler object.
         async_next* h{static_cast<async_next*>(base)};
         ptr p = {asio::detail::addressof(h->handler_), h, h};
@@ -57,14 +57,14 @@ public:
         // with the handler. Consequently, a local copy of the handler is required
         // to ensure that any owning sub-object remains valid until after we have
         // deallocated the memory here.
-        asio::detail::binder1<Handler, remote::Pair> handler{h->handler_, next_pair};
+        asio::detail::binder2<Handler, asio::error_code, remote::Pair> handler{h->handler_, error, next_pair};
         p.h = asio::detail::addressof(handler.handler_);
         p.reset();
 
         // Make the upcall if required.
         if (owner) {
             asio::detail::fenced_block b(asio::detail::fenced_block::half);
-            ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_));
+            ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_, handler.arg2_));
             w.complete(handler, handler.handler_);
             ASIO_HANDLER_INVOCATION_END;
         }

@@ -29,7 +29,7 @@
 namespace silkrpc::ethdb::kv {
 
 template <typename Handler, typename IoExecutor>
-class async_start : public async_operation<void, uint32_t>
+class async_start : public async_operation<void, asio::error_code>
 {
 public:
     ASIO_DEFINE_HANDLER_PTR(async_start);
@@ -38,7 +38,7 @@ public:
     : async_operation(&async_start::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
     {}
 
-    static void do_complete(void* owner, async_operation* base, uint32_t cursor_id = 0) {
+    static void do_complete(void* owner, async_operation* base, asio::error_code error={}) {
         // Take ownership of the handler object.
         async_start* h{static_cast<async_start*>(base)};
         ptr p = {asio::detail::addressof(h->handler_), h, h};
@@ -56,7 +56,7 @@ public:
         // with the handler. Consequently, a local copy of the handler is required
         // to ensure that any owning sub-object remains valid until after we have
         // deallocated the memory here.
-        asio::detail::binder1<Handler, uint32_t> handler{h->handler_, cursor_id};
+        asio::detail::binder1<Handler, asio::error_code> handler{h->handler_, error};
         p.h = asio::detail::addressof(handler.handler_);
         p.reset();
 
