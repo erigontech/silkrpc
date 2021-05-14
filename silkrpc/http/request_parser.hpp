@@ -46,15 +46,15 @@ public:
     /// required. The InputIterator return value indicates how much of the input
     /// has been consumed.
     template <typename InputIterator>
-    std::tuple<ResultType, InputIterator> parse(Request& req, InputIterator begin, InputIterator end) {
+    ResultType parse(Request& req, InputIterator begin, InputIterator end) {
         while (begin != end) {
             ResultType result = consume(req, *begin++);
             if (result == good || result == bad) {
-                return std::make_tuple(result, begin);
+                return result;
             }
         }
 
-        return std::make_tuple(indeterminate, begin);
+        return indeterminate;
     }
 
 private:
