@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_RAWDB_ACCESSORS_H_
-#define SILKRPC_CORE_RAWDB_ACCESSORS_H_
+#ifndef SILKRPC_CORE_RAWDB_ACCESSORS_HPP_
+#define SILKRPC_CORE_RAWDB_ACCESSORS_HPP_
 
 #include <silkrpc/config.hpp>
 
@@ -28,7 +28,7 @@
 
 namespace silkrpc::core::rawdb {
 
-using Walker = std::function<bool(silkworm::Bytes&,silkworm::Bytes&)>;
+using Walker = std::function<bool(silkworm::Bytes&, silkworm::Bytes&)>;
 
 class DatabaseReader {
 public:
@@ -39,4 +39,4 @@ public:
 
 } // namespace silkrpc::core::rawdb
 
-#endif  // SILKRPC_CORE_RAWDB_ACCESSORS_H_
+#endif  // SILKRPC_CORE_RAWDB_ACCESSORS_HPP_

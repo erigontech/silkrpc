@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_RAWDB_CHAIN_H_
-#define SILKRPC_CORE_RAWDB_CHAIN_H_
+#ifndef SILKRPC_CORE_RAWDB_CHAIN_HPP_
+#define SILKRPC_CORE_RAWDB_CHAIN_HPP_
 
 #include <vector>
 
@@ -70,4 +70,4 @@ asio::awaitable<Transactions> read_transactions(const DatabaseReader& reader, ui
 
 } // namespace silkrpc::core::rawdb
 
-#endif  // SILKRPC_CORE_RAWDB_CHAIN_H_
+#endif  // SILKRPC_CORE_RAWDB_CHAIN_HPP_

@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_KV_AWAITABLES_HPP
-#define SILKRPC_KV_AWAITABLES_HPP
+#ifndef SILKRPC_ETHDB_KV_AWAITABLES_HPP_
+#define SILKRPC_ETHDB_KV_AWAITABLES_HPP_
 
 #include <silkrpc/config.hpp>
 
@@ -23,6 +23,7 @@
 #include <string>
 #include <system_error>
 #include <thread>
+#include <utility>
 
 #include <asio/async_result.hpp>
 #include <asio/detail/non_const_lvalue.hpp>
@@ -255,7 +256,6 @@ public:
                 } else {
                     close_cursor_op->complete(this, KVError::rpc_close_cursor_read_stream_failed, 0);
                 }
-                
             });
         });
     }
@@ -342,4 +342,4 @@ struct KvAsioAwaitable {
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_KV_AWAITABLES_HPP
+#endif // SILKRPC_ETHDB_KV_AWAITABLES_HPP_

@@ -14,10 +14,11 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_KV_VERSION_HPP
-#define SILKRPC_KV_VERSION_HPP
+#ifndef SILKRPC_ETHDB_KV_VERSION_HPP_
+#define SILKRPC_ETHDB_KV_VERSION_HPP_
 
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -68,4 +69,4 @@ ProtocolVersionCheck check_protocol_version(const std::shared_ptr<::grpc::Channe
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_KV_VERSION_HPP
+#endif // SILKRPC_ETHDB_KV_VERSION_HPP_

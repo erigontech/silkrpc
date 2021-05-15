@@ -19,6 +19,7 @@
 #include <iterator>
 #include <iostream>
 #include <iomanip>
+#include <utility>
 
 #include <boost/endian/conversion.hpp>
 
@@ -36,7 +37,7 @@
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/receipt.hpp>
 
-// TODO: move to db/types/log_cbor.*,receipt_cbor.*
+// TODO(canepat): move to db/types/log_cbor.*,receipt_cbor.*
 namespace silkrpc::core {
 
 void cbor_decode(const silkworm::Bytes& bytes, std::vector<Log>& logs) {
@@ -198,7 +199,7 @@ asio::awaitable<Receipts> read_raw_receipts(const DatabaseReader& reader, const 
     const auto block_key = silkworm::db::block_key(block_number);
     const auto data = co_await reader.get(silkworm::db::table::kBlockReceipts.name, block_key);
     if (data.empty()) {
-        co_return Receipts{}; // TODO: use std::null_opt with asio::awaitable<std::optional<Receipts>>?
+        co_return Receipts{}; // TODO(canepat): use std::null_opt with asio::awaitable<std::optional<Receipts>>?
     }
     Receipts receipts{};
     cbor_decode(data, receipts);
