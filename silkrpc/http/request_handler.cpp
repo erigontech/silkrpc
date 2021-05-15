@@ -23,7 +23,6 @@
 #include "request_handler.hpp"
 
 #include <iostream>
-#include <sstream>
 
 #include "methods.hpp"
 #include "mime_types.hpp"

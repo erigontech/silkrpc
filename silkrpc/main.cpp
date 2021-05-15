@@ -38,6 +38,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/http/server.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
+#include <silkrpc/ethdb/kv/version.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::common::kEmptyChainData, "chain data path as string");
 ABSL_FLAG(std::string, local, silkrpc::common::kDefaultLocal, "HTTP JSON local binding as string <address>:<port>");
@@ -45,6 +46,8 @@ ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "TG Core gRPC se
 ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "number of running I/O contexts as 32-bit integer");
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
+
+constexpr auto KV_SERVICE_API_VERSION = silkrpc::ethdb::kv::ProtocolVersion{1, 1, 0};
 
 int main(int argc, char* argv[]) {
     const auto pid = boost::this_process::get_id();
@@ -109,15 +112,22 @@ int main(int argc, char* argv[]) {
         }
 
         if (chaindata.empty()) {
-            SILKRPC_LOG << "Silkrpc launched with target " + target + " using " << numContexts << " contexts\n";
+            SILKRPC_LOG << "Silkrpc launched with target " << target << " using " << numContexts << " contexts\n";
         } else {
-            SILKRPC_LOG << "Silkrpc launched with chaindata " + chaindata + " using " << numContexts << " contexts\n";
+            SILKRPC_LOG << "Silkrpc launched with chaindata " << chaindata << " using " << numContexts << " contexts\n";
         }
 
         // TODO(canepat): handle also secure channel for remote
         silkrpc::ChannelFactory create_channel = [&]() {
             return ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
         };
+
+        // Check KV protocol version compatibility
+        const auto version_check = silkrpc::ethdb::kv::check_protocol_version(create_channel(), KV_SERVICE_API_VERSION);
+        if (!version_check.compatible) {
+            throw std::runtime_error{version_check.result};
+        }
+
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{numContexts, create_channel};
 
@@ -137,7 +147,7 @@ int main(int argc, char* argv[]) {
 
         http_server.start();
 
-        SILKRPC_LOG << "Silkrpc running at " + local + " [pid=" << pid << ", main thread: " << tid << "]\n";
+        SILKRPC_LOG << "Silkrpc running at " << local << " [pid=" << pid << ", main thread: " << tid << "]\n";
 
         context_pool.run();
     } catch (const std::exception& e) {
