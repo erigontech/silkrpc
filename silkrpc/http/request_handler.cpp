@@ -23,7 +23,6 @@
 #include "request_handler.hpp"
 
 #include <iostream>
-#include <sstream>
 
 #include "methods.hpp"
 #include "mime_types.hpp"
@@ -109,9 +108,10 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
     SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
     auto start = clock_time::now();
 
+    auto request_id{0};
     try {
         if (request.content.empty()) {
-            reply.content = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"content missing\"}";
+            reply.content = "";
             reply.status = Reply::no_content;
             reply.headers.reserve(2);
             reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
@@ -120,9 +120,10 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
             co_return;
         }
 
-        auto request_json = nlohmann::json::parse(request.content);
+        const auto request_json = nlohmann::json::parse(request.content);
+        request_id = request_json["id"].get<uint32_t>();
         if (!request_json.contains("method")) {
-            reply.content = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"method missing\"}";
+            reply.content = make_json_error(request_id, -32600, "method missing").dump() + "\n";
             reply.status = Reply::bad_request;
             reply.headers.reserve(2);
             reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
@@ -133,7 +134,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
 
         auto method = request_json["method"].get<std::string>();
         if (RequestHandler::handlers_.find(method) == RequestHandler::handlers_.end()) {
-            reply.content = "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"method not implemented\"}";
+            reply.content = make_json_error(request_id, -32601, "method not existent or not implemented").dump() + "\n";
             reply.status = Reply::not_implemented;
             reply.headers.reserve(2);
             reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
@@ -149,11 +150,12 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
         reply.content = reply_json.dump() + "\n";
         reply.status = Reply::ok;
     } catch (const std::exception& e) {
-        std::cerr << "Exception: " << e.what() << "\n";
-
-        std::stringstream rc_stream;
-        rc_stream << "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":\"" << e.what() << "\"}";
-        reply.content = rc_stream.str();
+        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+        reply.content = make_json_error(request_id, 100, e.what()).dump() + "\n";
+        reply.status = Reply::internal_server_error;
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception\n";
+        reply.content = make_json_error(request_id, 100, "unexpected exception").dump() + "\n";
         reply.status = Reply::internal_server_error;
     }
 

@@ -75,7 +75,7 @@ std::string to_hex_no_leading_zeros(uint64_t number);
 std::string to_hex_no_leading_zeros(silkworm::ByteView bytes);
 
 nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result);
-nlohmann::json make_json_error(uint32_t id, uint32_t code, const std::string& message);
+nlohmann::json make_json_error(uint32_t id, int32_t code, const std::string& message);
 
 } // namespace silkrpc
 
