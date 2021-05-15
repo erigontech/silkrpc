@@ -293,7 +293,7 @@ class PerfTest:
 
         self.test_report.write_test_report(daemon_name, test_number, threads, qps_value, time_value, min_latency, latency_values[7], latency_values[8], \
                                            latency_values[9], latency_values[10], latency_values[11], max_latency, ratio, error)
-        #os.system("/bin/rm " + test_report_filename)
+        os.system("/bin/rm " + test_report_filename)
 
 
 class TestReport:
