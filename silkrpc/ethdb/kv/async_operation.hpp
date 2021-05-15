@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_KV_ASYNC_OPERATION_HPP
-#define SILKRPC_KV_ASYNC_OPERATION_HPP
+#ifndef SILKRPC_ETHDB_KV_ASYNC_OPERATION_HPP_
+#define SILKRPC_ETHDB_KV_ASYNC_OPERATION_HPP_
 
 #include <asio/detail/handler_tracking.hpp>
 
@@ -23,8 +23,7 @@ namespace silkrpc::ethdb::kv {
 
 // Base class for gRPC async operations using Asio completion tokens.
 template<typename R, typename... Args>
-class async_operation ASIO_INHERIT_TRACKED_HANDLER
-{
+class async_operation ASIO_INHERIT_TRACKED_HANDLER {
 public:
     typedef async_operation operation_type;
 
@@ -50,4 +49,4 @@ private:
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_KV_ASYNC_OPERATION_HPP
+#endif // SILKRPC_ETHDB_KV_ASYNC_OPERATION_HPP_

@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_KV_ERROR_HPP
-#define SILKRPC_KV_ERROR_HPP
+#ifndef SILKRPC_ETHDB_KV_ERROR_HPP_
+#define SILKRPC_ETHDB_KV_ERROR_HPP_
 
 #include <system_error>
 
@@ -42,4 +42,4 @@ struct is_error_code_enum<KVError> : true_type {};
 
 std::error_code make_error_code(KVError errc);
 
-#endif // SILKRPC_KV_ERROR_HPP
+#endif // SILKRPC_ETHDB_KV_ERROR_HPP_

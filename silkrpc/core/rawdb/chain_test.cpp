@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "chain.cpp"
+#include "chain.cpp" // NOLINT(build/include)
 
 #include <catch2/catch.hpp>
 #include <evmc/evmc.h>
@@ -50,7 +50,7 @@ TEST_CASE("decode empty log list", "[silkrpc::core][cbor_decode]") {
 }
 
 TEST_CASE("encode log list", "[silkrpc::core][cbor_encode]") {
-    using namespace evmc;
+    using namespace evmc; // NOLINT(build/namespaces)
     std::vector<silkworm::Log> logs{
         silkworm::Log{
             0xea674fdde714fd979de3edf0f56aa9716b898ec8_address,
@@ -63,7 +63,7 @@ TEST_CASE("encode log list", "[silkrpc::core][cbor_encode]") {
 }
 
 TEST_CASE("decode log", "[silkrpc::core][cbor_decode]") {
-    using namespace evmc;
+    using namespace evmc; // NOLINT(build/namespaces)
     std::vector<Log> logs{};
     auto bytes = silkworm::from_hex("818354ea674fdde714fd979de3edf0f56aa9716b898ec88043010043").value();
     cbor_decode(bytes, logs);
@@ -74,7 +74,7 @@ TEST_CASE("decode log", "[silkrpc::core][cbor_decode]") {
 }
 
 TEST_CASE("decode log list", "[silkrpc::core][cbor_decode]") {
-    using namespace evmc;
+    using namespace evmc; // NOLINT(build/namespaces)
     std::vector<Log> logs{};
     auto bytes = silkworm::from_hex(
         "81835456c0369e002852c2570ca0cc3442e26df98e01a2835820ddf252ad1be2c89b69c2b068fc37"
