@@ -16,6 +16,7 @@
 
 #include <silkrpc/config.hpp>
 
+#include <chrono>
 #include <exception>
 #include <filesystem>
 #include <iostream>
@@ -123,10 +124,15 @@ int main(int argc, char* argv[]) {
         };
 
         // Check KV protocol version compatibility
-        const auto version_check = silkrpc::ethdb::kv::check_protocol_version(create_channel(), KV_SERVICE_API_VERSION);
-        if (!version_check.compatible) {
-            throw std::runtime_error{version_check.result};
+        using namespace std::chrono_literals;
+        silkrpc::ethdb::kv::ProtocolVersionCheck version_check;
+        while (!(version_check = silkrpc::ethdb::kv::check_protocol_version(create_channel(), KV_SERVICE_API_VERSION))) {
+            std::this_thread::sleep_for(1000ms);
         }
+        if (!version_check.value().compatible) {
+            throw std::runtime_error{version_check.value().result};
+        }
+        SILKRPC_LOG << version_check.value().result << "\n";
 
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{numContexts, create_channel};
