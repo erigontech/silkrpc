@@ -40,6 +40,10 @@ namespace silkrpc::http {
 
 Connection::Connection(asio::io_context& io_context, std::unique_ptr<ethdb::Database>& database)
 : socket_{io_context}, request_handler_{database} {
+    request_.content.reserve(1024);
+    request_.headers.reserve(8);
+    request_.method.reserve(64);
+    request_.uri.reserve(64);
     SILKRPC_DEBUG << "Connection::Connection socket " << &socket_ << " created\n";
 }
 
@@ -58,8 +62,7 @@ asio::awaitable<void> Connection::do_read() {
         std::size_t bytes_read = co_await socket_.async_read_some(asio::buffer(buffer_), asio::use_awaitable);
         SILKRPC_DEBUG << "Connection::do_read bytes_read: " << bytes_read << "\n";
         SILKRPC_TRACE << "Connection::do_read buffer: " << std::string_view{static_cast<const char*>(buffer_.data()), bytes_read} << "\n";
-        RequestParser::ResultType result;
-        std::tie(result, std::ignore) = request_parser_.parse(request_, buffer_.data(), buffer_.data() + bytes_read);
+        RequestParser::ResultType result = request_parser_.parse(request_, buffer_.data(), buffer_.data() + bytes_read);
 
         if (result == RequestParser::good) {
             co_await request_handler_.handle_request(request_, reply_);

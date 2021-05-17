@@ -21,7 +21,6 @@
 //
 
 #include "request_parser.hpp"
-#include "request.hpp"
 
 #include <algorithm>
 
@@ -234,15 +233,15 @@ RequestParser::ResultType RequestParser::consume(Request& req, char input) {
     }
 }
 
-bool RequestParser::is_char(int c) {
+inline bool RequestParser::is_char(int c) {
     return c >= 0 && c <= 127;
 }
 
-bool RequestParser::is_ctl(int c) {
+inline bool RequestParser::is_ctl(int c) {
     return (c >= 0 && c <= 31) || (c == 127);
 }
 
-bool RequestParser::is_tspecial(int c) {
+inline bool RequestParser::is_tspecial(int c) {
     switch (c) {
         case '(': case ')': case '<': case '>': case '@':
         case ',': case ';': case ':': case '\\': case '"':
@@ -254,7 +253,7 @@ bool RequestParser::is_tspecial(int c) {
     }
 }
 
-bool RequestParser::is_digit(int c) {
+inline bool RequestParser::is_digit(int c) {
     return c >= '0' && c <= '9';
 }
 
