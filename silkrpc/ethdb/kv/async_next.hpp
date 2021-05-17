@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_KV_ASYNC_NEXT_HPP
-#define SILKRPC_KV_ASYNC_NEXT_HPP
+#ifndef SILKRPC_ETHDB_KV_ASYNC_NEXT_HPP_
+#define SILKRPC_ETHDB_KV_ASYNC_NEXT_HPP_
 
 #include <asio/detail/config.hpp>
 #include <asio/detail/bind_handler.hpp>
@@ -30,8 +30,7 @@
 namespace silkrpc::ethdb::kv {
 
 template <typename Handler, typename IoExecutor>
-class async_next : public async_operation<void, asio::error_code, remote::Pair>
-{
+class async_next : public async_operation<void, asio::error_code, remote::Pair> {
 public:
     ASIO_DEFINE_HANDLER_PTR(async_next);
 
@@ -39,7 +38,7 @@ public:
     : async_operation(&async_next::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
     {}
 
-    static void do_complete(void* owner, async_operation* base, asio::error_code error={}, remote::Pair next_pair={}) {
+    static void do_complete(void* owner, async_operation* base, asio::error_code error = {}, remote::Pair next_pair = {}) {
         // Take ownership of the handler object.
         async_next* h{static_cast<async_next*>(base)};
         ptr p = {asio::detail::addressof(h->handler_), h, h};
@@ -48,8 +47,7 @@ public:
 
         // Take ownership of the operation's outstanding work.
         asio::detail::handler_work<Handler, IoExecutor> w(
-            ASIO_MOVE_CAST2(asio::detail::handler_work<Handler, IoExecutor>)(h->work_)
-        );
+            ASIO_MOVE_CAST2(asio::detail::handler_work<Handler, IoExecutor>)(h->work_));
 
         // Make a copy of the handler so that the memory can be deallocated before
         // the upcall is made. Even if we're not about to make an upcall, a
@@ -77,4 +75,4 @@ private:
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_KV_ASYNC_NEXT_HPP
+#endif // SILKRPC_ETHDB_KV_ASYNC_NEXT_HPP_

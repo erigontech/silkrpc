@@ -14,12 +14,13 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_KV_REMOTE_CURSOR_H_
-#define SILKRPC_KV_REMOTE_CURSOR_H_
+#ifndef SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_
+#define SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_
 
 #include <silkrpc/config.hpp>
 
 #include <memory>
+#include <string>
 
 #include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
@@ -35,7 +36,7 @@ namespace silkrpc::ethdb::kv {
 
 class RemoteCursor : public Cursor {
 public:
-    RemoteCursor(KvAsioAwaitable<asio::io_context::executor_type>& kv_awaitable)
+    explicit RemoteCursor(KvAsioAwaitable<asio::io_context::executor_type>& kv_awaitable)
     : kv_awaitable_(kv_awaitable), cursor_id_{0} {}
 
     RemoteCursor(const RemoteCursor&) = delete;
@@ -58,4 +59,4 @@ private:
 
 } // namespace silkrpc::ethdb::kv
 
-#endif  // SILKRPC_KV_REMOTE_CURSOR_H_
+#endif  // SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_

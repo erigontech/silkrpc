@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_KV_STREAMING_CLIENT_HPP_
-#define SILKRPC_KV_STREAMING_CLIENT_HPP_
+#ifndef SILKRPC_ETHDB_KV_STREAMING_CLIENT_HPP_
+#define SILKRPC_ETHDB_KV_STREAMING_CLIENT_HPP_
 
 #include <functional>
 #include <memory>
@@ -138,4 +138,4 @@ private:
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_KV_STREAMING_CLIENT_HPP_
+#endif // SILKRPC_ETHDB_KV_STREAMING_CLIENT_HPP_

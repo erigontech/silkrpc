@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_KV_UTIL_HPP_
-#define SILKRPC_KV_UTIL_HPP_
+#ifndef SILKRPC_ETHDB_KV_UTIL_HPP_
+#define SILKRPC_ETHDB_KV_UTIL_HPP_
 
 #include <string>
 #include <system_error>
@@ -28,4 +28,4 @@ std::system_error make_system_error(const ::grpc::Status& status, const std::str
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_KV_UTIL_HPP_
+#endif // SILKRPC_ETHDB_KV_UTIL_HPP_
