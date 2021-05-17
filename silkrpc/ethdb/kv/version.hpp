@@ -14,10 +14,12 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_KV_VERSION_HPP
-#define SILKRPC_KV_VERSION_HPP
+#ifndef SILKRPC_ETHDB_KV_VERSION_HPP_
+#define SILKRPC_ETHDB_KV_VERSION_HPP_
 
 #include <iostream>
+#include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -39,10 +41,12 @@ std::ostream& operator<<(std::ostream& out, const ProtocolVersion& v) {
     return out;
 }
 
-struct ProtocolVersionCheck {
-    bool compatible{false};
+struct ProtocolVersionResult {
+    bool compatible;
     std::string result;
 };
+
+using ProtocolVersionCheck = std::optional<ProtocolVersionResult>;
 
 ProtocolVersionCheck check_protocol_version(const std::shared_ptr<::grpc::Channel>& channel, const ProtocolVersion& client_version) {
     const auto stub = remote::KV::NewStub(channel);
@@ -51,21 +55,21 @@ ProtocolVersionCheck check_protocol_version(const std::shared_ptr<::grpc::Channe
     ::types::VersionReply version_reply;
     const auto status = stub->Version(&context, google::protobuf::Empty{}, &version_reply);
     if (!status.ok()) {
-        return ProtocolVersionCheck{false, "cannot get server version: " + status.error_message()};
+        return std::nullopt;
     }
     ProtocolVersion server_version{version_reply.major(), version_reply.minor(), version_reply.patch()};
 
     std::stringstream vv_stream;
     vv_stream << "client: " << client_version << " server: " << server_version;
     if (client_version.major != server_version.major) {
-        return ProtocolVersionCheck{false, "incompatible KV interface versions: " + vv_stream.str()};
+        return ProtocolVersionResult{false, "KV incompatible interface versions: " + vv_stream.str()};
     } else if (client_version.minor != server_version.minor) {
-        return ProtocolVersionCheck{false, "incompatible KV interface versions: " + vv_stream.str()};
+        return ProtocolVersionResult{false, "KV incompatible interface versions: " + vv_stream.str()};
     } else {
-        return ProtocolVersionCheck{true, "compatible KV interface versions: " + vv_stream.str()};
+        return ProtocolVersionResult{true, "KV compatible interface versions: " + vv_stream.str()};
     }
 }
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_KV_VERSION_HPP
+#endif // SILKRPC_ETHDB_KV_VERSION_HPP_

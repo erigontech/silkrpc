@@ -16,6 +16,8 @@
 
 #include "error.hpp"
 
+#include <string>
+
 namespace {
 
 struct KVErrorCategory : std::error_category {
