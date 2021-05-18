@@ -25,10 +25,10 @@
 #include <asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
+#include <roaring.hh>
 
 #include <silkworm/types/receipt.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/croaring/roaring.hh> // NOLINT(build/include_order)
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/transaction.hpp>
@@ -89,8 +89,8 @@ protected:
     asio::awaitable<void> handle_eth_submit_work(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_subscribe(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_unsubscribe(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<Roaring> get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end);
-    asio::awaitable<Roaring> get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end);
+    asio::awaitable<roaring::Roaring> get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end);
+    asio::awaitable<roaring::Roaring> get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end);
     asio::awaitable<Receipts> get_receipts(core::rawdb::DatabaseReader& db_reader, uint64_t number, evmc::bytes32 hash);
     std::vector<Log> filter_logs(std::vector<Log>& logs, const Filter& filter);
 

@@ -26,7 +26,7 @@
 namespace silkrpc {
 
 asio::awaitable<std::optional<silkworm::Account>> StateReader::read_account(const evmc::address& address, uint64_t block_number) const {
-    OptionalBytes encoded{co_await read_historical_account(address, block_number)};
+    std::optional<silkworm::Bytes> encoded{co_await read_historical_account(address, block_number)};
     if (!encoded) {
         encoded = co_await db_reader_.get_one(silkworm::db::table::kPlainState.name, silkworm::full_view(address));
     }
