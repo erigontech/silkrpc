@@ -28,7 +28,6 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/awaitables.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
-#include <silkrpc/ethdb/kv/remote_cursor.hpp>
 #include <silkrpc/ethdb/kv/streaming_client.hpp>
 #include <silkrpc/ethdb/transaction.hpp>
 
@@ -49,19 +48,19 @@ public:
 
     asio::awaitable<void> open() override;
 
-    std::unique_ptr<Cursor> cursor() override {
-        return std::make_unique<RemoteCursor>(kv_awaitable_);
-    }
-
     asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) override;
+
+    asio::awaitable<std::shared_ptr<CursorDupSort>> cursor_dup_sort(const std::string& table) override;
 
     asio::awaitable<void> close() override;
 
 private:
+    asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table);
+
     asio::io_context& context_;
     StreamingClient client_;
     KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
-    std::map<std::string, std::shared_ptr<Cursor>> cursors_;
+    std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
 };
 
 } // namespace silkrpc::ethdb::kv

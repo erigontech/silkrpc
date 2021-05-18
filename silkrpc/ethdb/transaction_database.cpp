@@ -24,11 +24,25 @@
 
 namespace silkrpc::ethdb {
 
-asio::awaitable<silkworm::Bytes> TransactionDatabase::get(const std::string& table, const silkworm::ByteView& key) const {
+asio::awaitable<KeyValue> TransactionDatabase::get(const std::string& table, const silkworm::ByteView& key) const {
     const auto cursor = co_await tx_.cursor(table);
     SILKRPC_TRACE << "TransactionDatabase::get cursor_id: " << cursor->cursor_id() << "\n";
     const auto kv_pair = co_await cursor->seek(key);
+    co_return kv_pair;
+}
+
+asio::awaitable<silkworm::Bytes> TransactionDatabase::get_one(const std::string& table, const silkworm::ByteView& key) const {
+    const auto cursor = co_await tx_.cursor(table);
+    SILKRPC_TRACE << "TransactionDatabase::get_one cursor_id: " << cursor->cursor_id() << "\n";
+    const auto kv_pair = co_await cursor->seek_exact(key);
     co_return kv_pair.value;
+}
+
+asio::awaitable<silkworm::Bytes> TransactionDatabase::get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const {
+    const auto cursor = co_await tx_.cursor_dup_sort(table);
+    SILKRPC_TRACE << "TransactionDatabase::get_both_range cursor_id: " << cursor->cursor_id() << "\n";
+    const auto value = co_await cursor->seek_both(key, subkey);
+    co_return value;
 }
 
 asio::awaitable<void> TransactionDatabase::walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, core::rawdb::Walker w) const {

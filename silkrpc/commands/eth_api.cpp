@@ -33,6 +33,7 @@
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/executor.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
+#include <silkrpc/core/state_reader.hpp>
 #include <silkrpc/ethdb/bitmap.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/json/types.hpp>
@@ -605,10 +606,27 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohmann::jso
 
 // https://eth.wiki/json-rpc/API#eth_getcode
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 2) {
+        auto error_msg = "invalid eth_getCode params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto address = params[0].get<evmc::address>();
+    const auto block_id = params[1].get<std::string>();
+    SILKRPC_DEBUG << "address: " << silkworm::to_hex(address) << " block_id: " << block_id << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+        StateReader state_reader{tx_database};
+
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
+        //OptionalAccount account{co_await state_reader.read_account(address, block_number)};
+        /*if (!account) {
+        }*/
 
         reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {

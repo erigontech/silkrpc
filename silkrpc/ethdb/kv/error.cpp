@@ -39,6 +39,10 @@ std::string KVErrorCategory::message(int ev) const {
             return "write stream failed in cursor SEEK";
         case KVError::rpc_seek_read_stream_failed:
             return "read stream failed in cursor SEEK";
+        case KVError::rpc_seek_both_write_stream_failed:
+            return "write stream failed in cursor SEEK_BOTH";
+        case KVError::rpc_seek_both_read_stream_failed:
+            return "read stream failed in cursor SEEK_BOTH";
         case KVError::rpc_next_write_stream_failed:
             return "write stream failed in cursor NEXT";
         case KVError::rpc_next_read_stream_failed:
