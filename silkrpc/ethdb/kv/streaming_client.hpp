@@ -88,9 +88,9 @@ public:
         }
         SILKRPC_TRACE << "StreamingClient::completed result: " << result_.ok() << "\n";
         if (!result_.ok()) {
-            SILKRPC_TRACE << "StreamingClient::completed error_code: " << result_.error_code() << "\n";
-            SILKRPC_TRACE << "StreamingClient::completed error_message: " << result_.error_message() << "\n";
-            SILKRPC_TRACE << "StreamingClient::completed error_details: " << result_.error_details() << "\n";
+            SILKRPC_ERROR << "StreamingClient::completed error_code: " << result_.error_code() << "\n";
+            SILKRPC_ERROR << "StreamingClient::completed error_message: " << result_.error_message() << "\n";
+            SILKRPC_ERROR << "StreamingClient::completed error_details: " << result_.error_details() << "\n";
         }
         switch (status_) {
             case CALL_STARTED:
@@ -105,7 +105,12 @@ public:
             break;
             case DONE_STARTED:
                 status_ = CALL_ENDED;
-                stream_->Finish(&result_, grpc::AsyncCompletionHandler::tag(this));
+                if (!finishing_) {
+                   finishing_ = true;
+                   stream_->Finish(&result_, grpc::AsyncCompletionHandler::tag(this));
+                } else {
+                   end_completed_(result_);
+                }
             break;
             case CALL_ENDED:
                 end_completed_(result_);
