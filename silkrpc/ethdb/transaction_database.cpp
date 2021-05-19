@@ -38,10 +38,16 @@ asio::awaitable<silkworm::Bytes> TransactionDatabase::get_one(const std::string&
     co_return kv_pair.value;
 }
 
-asio::awaitable<silkworm::Bytes> TransactionDatabase::get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const {
+asio::awaitable<std::optional<silkworm::ByteView>> TransactionDatabase::get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const {
     const auto cursor = co_await tx_.cursor_dup_sort(table);
     SILKRPC_TRACE << "TransactionDatabase::get_both_range cursor_id: " << cursor->cursor_id() << "\n";
-    const auto value = co_await cursor->seek_both(key, subkey);
+
+    silkworm::ByteView value{co_await cursor->seek_both(key, subkey)};
+    if (!silkworm::has_prefix(value, subkey)) {
+        co_return std::nullopt;
+    }
+
+    value.remove_prefix(subkey.length());
     co_return value;
 }
 
