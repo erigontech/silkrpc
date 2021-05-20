@@ -116,6 +116,11 @@ class Config:
                         usage(argv)
                         sys.exit(-1)
                     local_config = 1
+                    on_core = self.daemon_vegeta_on_core.split(':')
+                    if on_core[0] == "-":
+                        print ("ERROR: incompatible option -n with default core configuration ")
+                        usage(argv)
+                        sys.exit(-1)
                     self.silkrpc_num_contexts = optarg
                 else:
                     usage(argv)
@@ -204,7 +209,7 @@ class PerfTest:
         self.rpc_daemon = 0
         os.system("kill -9 $(ps aux | grep 'rpcdaemon' | grep -v 'grep' | awk '{print $2}') 2> /dev/null ")
         print("RpcDaemon stopped")
-        os.system("sleep 1")
+        os.system("sleep 3")
 
     def start_silk_daemon(self):
         """ Starts SILKRPC daemon
@@ -238,7 +243,7 @@ class PerfTest:
         self.silk_daemon = 0
         os.system("kill $(ps aux | grep 'silk' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
         print("SilkDaemon stopped")
-        os.system("sleep 1")
+        os.system("sleep 3")
 
 
     def execute(self, test_number, name, qps_value, time_value):

@@ -25,4 +25,4 @@ max-args=15
 max-line-length=200
 
 max-branches=20
-max-statements=70
+max-statements=75
