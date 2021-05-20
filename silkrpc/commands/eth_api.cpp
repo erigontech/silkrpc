@@ -583,12 +583,27 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::js
 
 // https://eth.wiki/json-rpc/API#eth_getbalance
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 2) {
+        auto error_msg = "invalid eth_getBalance params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto address = params[0].get<evmc::address>();
+    const auto block_id = params[1].get<std::string>();
+    SILKRPC_DEBUG << "address: " << silkworm::to_hex(address) << " block_id: " << block_id << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+        StateReader state_reader{tx_database};
 
-        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
+        std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
+
+        reply = make_json_content(request["id"], "0x" + (account ? intx::to_string(account->balance) : "0"));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());

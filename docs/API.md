@@ -32,8 +32,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getTransactionReceipt               | -            | not yet implemented                        |
 |                                         |              |                                            |
 | eth_estimateGas                         | -            | not yet implemented                        |
-| eth_getBalance                          | -            | not yet implemented                        |
-| eth_getCode                             | -            | not yet implemented                        |
+| eth_getBalance                          | Yes          |                                            |
+| eth_getCode                             | Yes          |                                            |
 | eth_getTransactionCount                 | -            | not yet implemented                        |
 | eth_getStorageAt                        | -            | not yet implemented                        |
 | eth_call                                | -            | work in progress                           |
