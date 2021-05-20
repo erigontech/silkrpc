@@ -23,6 +23,8 @@
 #include <silkworm/db/util.hpp>
 #include <silkworm/types/account.hpp>
 
+#include <silkrpc/common/log.hpp>
+
 namespace silkrpc {
 
 asio::awaitable<std::optional<silkworm::Account>> StateReader::read_account(const evmc::address& address, uint64_t block_number) const {
@@ -65,6 +67,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_code(const evm
 
 asio::awaitable<std::optional<silkworm::ByteView>> StateReader::read_historical_account(const evmc::address& address, uint64_t block_number) const {
     const auto account_history_key{silkworm::db::account_history_key(address, block_number)};
+    SILKRPC_DEBUG << "StateReader::read_historical_account account_history_key: " << account_history_key << "\n";
     const auto kv_pair{co_await db_reader_.get(silkworm::db::table::kAccountHistory.name, account_history_key)};
 
     if (!silkworm::has_prefix(kv_pair.key, silkworm::full_view(address))) {
@@ -72,6 +75,7 @@ asio::awaitable<std::optional<silkworm::ByteView>> StateReader::read_historical_
     }
 
     const auto bitmap{silkworm::db::bitmap::read(kv_pair.value)};
+    SILKRPC_DEBUG << "StateReader::read_historical_account bitmap: " << bitmap.toString() << "\n";
 
     const auto change_block{silkworm::db::bitmap::seek(bitmap, block_number)};
     if (!change_block) {
@@ -79,8 +83,11 @@ asio::awaitable<std::optional<silkworm::ByteView>> StateReader::read_historical_
     }
 
     const auto block_key{silkworm::db::block_key(*change_block)};
+    SILKRPC_DEBUG << "StateReader::read_historical_account block_key: " << block_key << "\n";
     const auto address_subkey{silkworm::full_view(address)};
+    SILKRPC_DEBUG << "StateReader::read_historical_account address_subkey: " << address_subkey << "\n";
     const auto value{co_await db_reader_.get_both_range(silkworm::db::table::kPlainAccountChangeSet.name, block_key, address_subkey)};
+    SILKRPC_DEBUG << "StateReader::read_historical_account value: " << (value ? *value : silkworm::ByteView{}) << "\n";
 
     co_return value;
 }

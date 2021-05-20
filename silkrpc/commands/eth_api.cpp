@@ -621,10 +621,10 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann::json& 
         StateReader state_reader{tx_database};
 
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
-        std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number)};
+        std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
 
         if (account) {
-            std::optional<silkworm::Bytes> code{co_await state_reader.read_code(address, account->incarnation, account->code_hash, block_number)};
+            auto code{co_await state_reader.read_code(address, account->incarnation, account->code_hash, block_number + 1)};
             reply = make_json_content(request["id"], code ? ("0x" + silkworm::to_hex(*code)) : "0x");
         } else {
             reply = make_json_content(request["id"], "0x");
