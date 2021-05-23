@@ -50,6 +50,10 @@ add_executable(kv_seek kv_seek.cpp)
 target_include_directories(kv_seek PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(kv_seek absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
 
+add_executable(kv_seek_both kv_seek_both.cpp)
+target_include_directories(kv_seek_both PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(kv_seek_both absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
+
 # Unit tests
 enable_testing()
 

@@ -22,14 +22,14 @@
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
+#include <roaring.hh>
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/croaring/roaring.hh>
 
 namespace silkrpc::ethdb::bitmap {
 
-asio::awaitable<Roaring> get(core::rawdb::DatabaseReader& db_reader, const std::string& table, silkworm::Bytes& key, uint32_t from_block, uint32_t to_block);
+asio::awaitable<roaring::Roaring> get(core::rawdb::DatabaseReader& db_reader, const std::string& table, silkworm::Bytes& key, uint32_t from_block, uint32_t to_block);
 
 } // silkrpc::ethdb::bitmap
 

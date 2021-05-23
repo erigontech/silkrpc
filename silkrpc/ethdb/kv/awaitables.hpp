@@ -134,8 +134,8 @@ class initiate_async_seek {
 public:
     typedef Executor executor_type;
 
-    explicit initiate_async_seek(KvAsioAwaitable<Executor>* self, uint32_t cursor_id, const silkworm::ByteView& seek_key_bytes)
-    : self_(self), cursor_id_(cursor_id), seek_key_bytes_(std::move(seek_key_bytes)) {}
+    explicit initiate_async_seek(KvAsioAwaitable<Executor>* self, uint32_t cursor_id, const silkworm::ByteView& key, bool exact)
+    : self_(self), cursor_id_(cursor_id), key_(std::move(key)), exact_(exact) {}
 
     executor_type get_executor() const noexcept { return self_->get_executor(); }
 
@@ -147,9 +147,9 @@ public:
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
         auto seek_message = remote::Cursor{};
-        seek_message.set_op(remote::Op::SEEK);
+        seek_message.set_op(exact_ ? remote::Op::SEEK_EXACT : remote::Op::SEEK);
         seek_message.set_cursor(cursor_id_);
-        seek_message.set_k(seek_key_bytes_.data(), seek_key_bytes_.length());
+        seek_message.set_k(key_.data(), key_.length());
         self_->client_.write_start(seek_message, [this](const ::grpc::Status& status) {
             if (!status.ok()) {
                 auto seek_op = static_cast<op*>(wrapper_);
@@ -171,7 +171,57 @@ public:
 private:
     KvAsioAwaitable<Executor>* self_;
     uint32_t cursor_id_;
-    const silkworm::ByteView seek_key_bytes_;
+    const silkworm::ByteView key_;
+    bool exact_;
+    void* wrapper_;
+};
+
+template<typename Executor>
+class initiate_async_seek_both {
+public:
+    typedef Executor executor_type;
+
+    explicit initiate_async_seek_both(KvAsioAwaitable<Executor>* self, uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value, bool exact)
+    : self_(self), cursor_id_(cursor_id), key_(std::move(key)), value_(std::move(value)), exact_(exact) {}
+
+    executor_type get_executor() const noexcept { return self_->get_executor(); }
+
+    template <typename WaitHandler>
+    void operator()(WaitHandler&& handler) {
+        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        typedef silkrpc::ethdb::kv::async_seek<WaitHandler, Executor> op;
+        typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
+        wrapper_ = new op(handler2.value, self_->context_.get_executor());
+
+        auto seek_message = remote::Cursor{};
+        seek_message.set_op(exact_ ? remote::Op::SEEK_BOTH_EXACT : remote::Op::SEEK_BOTH);
+        seek_message.set_cursor(cursor_id_);
+        seek_message.set_k(key_.data(), key_.length());
+        seek_message.set_v(value_.data(), value_.length());
+        self_->client_.write_start(seek_message, [this](const ::grpc::Status& status) {
+            if (!status.ok()) {
+                auto seek_op = static_cast<op*>(wrapper_);
+                seek_op->complete(this, KVError::rpc_seek_both_write_stream_failed, {});
+                return;
+            }
+            self_->client_.read_start([this](const ::grpc::Status& status, remote::Pair seek_pair) {
+                typedef silkrpc::ethdb::kv::async_seek<WaitHandler, Executor> op;
+                auto seek_op = static_cast<op*>(wrapper_);
+                if (status.ok()) {
+                    seek_op->complete(this, {}, seek_pair);
+                } else {
+                    seek_op->complete(this, KVError::rpc_seek_both_read_stream_failed, {});
+                }
+            });
+        });
+    }
+
+private:
+    KvAsioAwaitable<Executor>* self_;
+    uint32_t cursor_id_;
+    const silkworm::ByteView key_;
+    const silkworm::ByteView value_;
+    bool exact_;
     void* wrapper_;
 };
 
@@ -317,8 +367,23 @@ struct KvAsioAwaitable {
     }
 
     template<typename WaitHandler>
-    auto async_seek(uint32_t cursor_id, const silkworm::ByteView& seek_key_bytes, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::Pair)>(initiate_async_seek{this, cursor_id, seek_key_bytes}, handler);
+    auto async_seek(uint32_t cursor_id, const silkworm::ByteView& key, WaitHandler&& handler) {
+        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::Pair)>(initiate_async_seek{this, cursor_id, key, false}, handler);
+    }
+
+    template<typename WaitHandler>
+    auto async_seek_exact(uint32_t cursor_id, const silkworm::ByteView& key, WaitHandler&& handler) {
+        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::Pair)>(initiate_async_seek{this, cursor_id, key, true}, handler);
+    }
+
+    template<typename WaitHandler>
+    auto async_seek_both(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value, WaitHandler&& handler) {
+        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::Pair)>(initiate_async_seek_both{this, cursor_id, key, value, false}, handler);
+    }
+
+    template<typename WaitHandler>
+    auto async_seek_both_exact(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value, WaitHandler&& handler) {
+        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::Pair)>(initiate_async_seek_both{this, cursor_id, key, value, true}, handler);
     }
 
     template<typename WaitHandler>

@@ -34,7 +34,7 @@
 
 namespace silkrpc::ethdb::kv {
 
-class RemoteCursor : public Cursor {
+class RemoteCursor : public CursorDupSort {
 public:
     explicit RemoteCursor(KvAsioAwaitable<asio::io_context::executor_type>& kv_awaitable)
     : kv_awaitable_(kv_awaitable), cursor_id_{0} {}
@@ -48,9 +48,15 @@ public:
 
     asio::awaitable<KeyValue> seek(const silkworm::ByteView& seek_key) override;
 
+    asio::awaitable<KeyValue> seek_exact(const silkworm::ByteView& key) override;
+
     asio::awaitable<KeyValue> next() override;
 
     asio::awaitable<void> close_cursor() override;
+
+    asio::awaitable<silkworm::Bytes> seek_both(const silkworm::ByteView& key, const silkworm::ByteView& value) override;
+
+    asio::awaitable<KeyValue> seek_both_exact(const silkworm::ByteView& key, const silkworm::ByteView& value) override;
 
 private:
     KvAsioAwaitable<asio::io_context::executor_type>& kv_awaitable_;

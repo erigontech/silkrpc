@@ -17,6 +17,7 @@
 #ifndef SILKRPC_ETHDB_TRANSACTION_DATABASE_HPP_
 #define SILKRPC_ETHDB_TRANSACTION_DATABASE_HPP_
 
+#include <optional>
 #include <string>
 
 #include <silkworm/common/util.hpp>
@@ -32,7 +33,11 @@ public:
     TransactionDatabase(const TransactionDatabase&) = delete;
     TransactionDatabase& operator=(const TransactionDatabase&) = delete;
 
-    asio::awaitable<silkworm::Bytes> get(const std::string& table, const silkworm::ByteView& key) const override;
+    asio::awaitable<KeyValue> get(const std::string& table, const silkworm::ByteView& key) const override;
+
+    asio::awaitable<silkworm::Bytes> get_one(const std::string& table, const silkworm::ByteView& key) const override;
+
+    asio::awaitable<std::optional<silkworm::ByteView>> get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const override;
 
     asio::awaitable<void> walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, core::rawdb::Walker w) const override;
 

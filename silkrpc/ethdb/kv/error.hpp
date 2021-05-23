@@ -26,6 +26,8 @@ enum class KVError {
     rpc_open_cursor_read_stream_failed,
     rpc_seek_write_stream_failed,
     rpc_seek_read_stream_failed,
+    rpc_seek_both_write_stream_failed,
+    rpc_seek_both_read_stream_failed,
     rpc_next_write_stream_failed,
     rpc_next_read_stream_failed,
     rpc_close_cursor_write_stream_failed,

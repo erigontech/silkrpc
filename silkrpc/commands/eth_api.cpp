@@ -33,6 +33,7 @@
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/executor.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
+#include <silkrpc/core/state_reader.hpp>
 #include <silkrpc/ethdb/bitmap.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/json/types.hpp>
@@ -124,7 +125,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_gas_price(const nlohmann::json&
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -229,7 +230,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_
         const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
         const auto tx_count = block_with_hash.block.transactions.size();
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(tx_count));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(tx_count));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -299,19 +300,18 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_ind
 
         auto index = std::stoul(index_string, 0, 16);
         if (index >= ommers.size()) {
-           const auto error_msg = "Requested uncle not found " + index_string;
-           SILKRPC_DEBUG << error_msg << "\n";
-           reply = make_json_content(request["id"], nullptr);
-           co_return;
+            SILKRPC_WARN << "Requested uncle not found " << index_string << "\n";
+            reply = make_json_content(request["id"], nullptr);
+        } else {
+            const auto block_number = block_with_hash.block.header.number;
+            const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_hash, block_number);
+            auto uncle = ommers[index];
+
+            silkworm::BlockWithHash uncle_block_with_hash{{{}, uncle}, uncle.hash()};
+            const Block uncle_block_with_hash_and_td{uncle_block_with_hash, total_difficulty};
+
+            reply = make_json_content(request["id"], uncle_block_with_hash_and_td);
         }
-        const auto block_number = block_with_hash.block.header.number;
-        const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_hash, block_number);
-        auto uncle = ommers[index];
-
-        silkworm::BlockWithHash uncle_block_with_hash{{{}, uncle}, uncle.hash()};
-        const Block uncle_block_with_hash_and_td{uncle_block_with_hash, total_difficulty};
-
-        reply = make_json_content(request["id"], uncle_block_with_hash_and_td);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -348,16 +348,17 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_number_and_i
 
         auto idx = std::stoul(index, 0, 16);
         if (idx >= ommers.size()) {
+            SILKRPC_WARN << "Requested uncle not found " << index << "\n";
             reply = make_json_content(request["id"], nullptr);
-            co_return;
+        } else {
+            const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_with_hash.hash, block_number);
+            auto uncle = ommers[idx];
+
+            silkworm::BlockWithHash uncle_block_with_hash{{{}, uncle}, uncle.hash()};
+            const Block uncle_block_with_hash_and_td{uncle_block_with_hash, total_difficulty};
+
+            reply = make_json_content(request["id"], uncle_block_with_hash_and_td);
         }
-        const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_with_hash.hash, block_number);
-        auto uncle = ommers[idx];
-
-        silkworm::BlockWithHash uncle_block_with_hash{{{}, uncle}, uncle.hash()};
-        const Block uncle_block_with_hash_and_td{uncle_block_with_hash, total_difficulty};
-
-        reply = make_json_content(request["id"], uncle_block_with_hash_and_td);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -390,7 +391,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_hash(c
         const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
         const auto ommers = block_with_hash.block.ommers;
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(ommers.size()));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(ommers.size()));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -424,7 +425,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_number
         const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
         const auto ommers = block_with_hash.block.ommers;
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(ommers.size()));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(ommers.size()));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -444,7 +445,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const n
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -480,15 +481,13 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_hash_a
 
         const auto index = std::stoul(index_string, 0, 16);
         if (index >= transactions.size()) {
-           const auto error_msg = "Requested transaction not found " + index_string;
-           SILKRPC_DEBUG << error_msg << "\n";
+           SILKRPC_WARN << "Transaction not found for index: " << index_string << "\n";
            reply = make_json_content(request["id"], nullptr);
-           co_return;
+        } else {
+            silkrpc::Transaction new_transaction{{transactions[index]}, {block_with_hash.hash}, block_with_hash.block.header.number, index};
+
+            reply = make_json_content(request["id"],  new_transaction);
         }
-
-        silkrpc::Transaction new_transaction{{transactions[index]}, {block_with_hash.hash}, block_with_hash.block.header.number, index};
-
-        reply = make_json_content(request["id"],  new_transaction);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -525,12 +524,11 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_number
 
         auto idx = std::stoul(index, 0, 16);
         if (idx >= transactions.size()) {
-            auto error_msg = "invalid eth_getTransactionByBlockNumberAndIndex index: " + index;
-            SILKRPC_ERROR << error_msg << "\n";
-            reply = make_json_error(request["id"], 100, error_msg);
-            co_return;
+            SILKRPC_WARN << "Transaction not found for index: " << index << "\n";
+            reply = make_json_content(request["id"], nullptr);
+        } else {
+            reply = make_json_content(request["id"], transactions[idx]);
         }
-        reply = make_json_content(request["id"], transactions[idx]);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -550,7 +548,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const n
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -570,7 +568,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::js
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -585,12 +583,27 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::js
 
 // https://eth.wiki/json-rpc/API#eth_getbalance
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 2) {
+        auto error_msg = "invalid eth_getBalance params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto address = params[0].get<evmc::address>();
+    const auto block_id = params[1].get<std::string>();
+    SILKRPC_DEBUG << "address: " << silkworm::to_hex(address) << " block_id: " << block_id << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+        StateReader state_reader{tx_database};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
+        std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
+
+        reply = make_json_content(request["id"], "0x" + (account ? intx::to_string(account->balance) : "0"));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -605,12 +618,32 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohmann::jso
 
 // https://eth.wiki/json-rpc/API#eth_getcode
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 2) {
+        auto error_msg = "invalid eth_getCode params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto address = params[0].get<evmc::address>();
+    const auto block_id = params[1].get<std::string>();
+    SILKRPC_DEBUG << "address: " << silkworm::to_hex(address) << " block_id: " << block_id << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+        StateReader state_reader{tx_database};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
+        std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
+
+        if (account) {
+            auto code{co_await state_reader.read_code(address, account->incarnation, account->code_hash, block_number + 1)};
+            reply = make_json_content(request["id"], code ? ("0x" + silkworm::to_hex(*code)) : "0x");
+        } else {
+            reply = make_json_content(request["id"], "0x");
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -630,7 +663,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(const nlo
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -650,7 +683,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_storage_at(const nlohmann::
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -711,7 +744,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_new_filter(const nlohmann::json
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -731,7 +764,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_new_block_filter(const nlohmann
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -751,7 +784,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_new_pending_transaction_filter(
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -771,7 +804,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_changes(const nlohma
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -791,7 +824,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_uninstall_filter(const nlohmann
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -843,7 +876,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
         }
         SILKRPC_DEBUG << "start block: " << start << " end block: " << end << "\n";
 
-        Roaring block_numbers;
+        roaring::Roaring block_numbers;
         block_numbers.addRange(start, end + 1);
 
         SILKRPC_DEBUG << "block_numbers.cardinality(): " << block_numbers.cardinality() << "\n";
@@ -926,7 +959,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -946,7 +979,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_transaction(const nlohmann
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -966,7 +999,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_sign_transaction(const nlohmann
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -986,7 +1019,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_proof(const nlohmann::json&
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -1006,7 +1039,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_mining(const nlohmann::json& re
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -1026,7 +1059,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_coinbase(const nlohmann::json& 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -1046,7 +1079,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_hashrate(const nlohmann::json& 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -1066,7 +1099,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_submit_hashrate(const nlohmann:
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -1086,7 +1119,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_work(const nlohmann::json& 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -1106,7 +1139,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_submit_work(const nlohmann::jso
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -1126,7 +1159,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_subscribe(const nlohmann::json&
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -1146,7 +1179,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_unsubscribe(const nlohmann::jso
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"],  "0x" + to_hex_no_leading_zeros(0));
+        reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -1159,12 +1192,12 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_unsubscribe(const nlohmann::jso
     co_return;
 }
 
-asio::awaitable<Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end) {
+asio::awaitable<roaring::Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end) {
     SILKRPC_DEBUG << "#topics: " << topics.size() << " start: " << start << " end: " << end << "\n";
-    Roaring result_bitmap;
+    roaring::Roaring result_bitmap;
     for (auto subtopics : topics) {
         SILKRPC_DEBUG << "#subtopics: " << subtopics.size() << "\n";
-        Roaring subtopic_bitmap;
+        roaring::Roaring subtopic_bitmap;
         for (auto topic : subtopics) {
             silkworm::Bytes topic_key{std::begin(topic.bytes), std::end(topic.bytes)};
             SILKRPC_TRACE << "topic: " << topic << " topic_key: " << silkworm::to_hex(topic) <<"\n";
@@ -1185,9 +1218,9 @@ asio::awaitable<Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::Database
     co_return result_bitmap;
 }
 
-asio::awaitable<Roaring> EthereumRpcApi::get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end) {
+asio::awaitable<roaring::Roaring> EthereumRpcApi::get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end) {
     SILKRPC_TRACE << "#addresses: " << addresses.size() << " start: " << start << " end: " << end << "\n";
-    Roaring result_bitmap;
+    roaring::Roaring result_bitmap;
     for (auto address : addresses) {
         silkworm::Bytes address_key{std::begin(address.bytes), std::end(address.bytes)};
         auto bitmap = co_await ethdb::bitmap::get(db_reader, silkworm::db::table::kLogAddressIndex.name, address_key, start, end);

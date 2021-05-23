@@ -95,7 +95,7 @@ We use the standard C++20 programming language. We follow the [Google's C++ Styl
 * `using namespace foo` is allowed inside .cpp files, but not inside headers.
 * Exceptions are allowed.
 * User-defined literals are allowed.
-* Maximum line length is 170, indentation is 4 spaces – see `.clang-format`.
+* Maximum line length is 190, indentation is 4 spaces – see `.clang-format`.
 
 # Activation
 
