@@ -34,7 +34,7 @@ struct Forks {
     const evmc::bytes32& genesis_hash;
     std::vector<uint64_t> block_numbers;
 
-    Forks(const ChainConfig& chain_config) : genesis_hash(chain_config.genesis_hash) {
+    explicit Forks(const ChainConfig& chain_config) : genesis_hash(chain_config.genesis_hash) {
         block_numbers = {
             chain_config.config["istanbulBlock"],
             chain_config.config["berlinBlock"],

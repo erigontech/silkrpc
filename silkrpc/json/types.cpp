@@ -277,7 +277,7 @@ void from_json(const nlohmann::json& json, Log& log) {
 
 void to_json(nlohmann::json& json, const Receipt& receipt) {
     json["blockHash"] = receipt.block_hash;
-    json["blockNumber"] = receipt.block_number;
+    json["blockNumber"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.block_number);
     json["transactionHash"] = receipt.tx_hash;
     json["from"] = receipt.from.value_or(evmc::address{});
     json["to"] = receipt.to.value_or(evmc::address{});
@@ -288,7 +288,7 @@ void to_json(nlohmann::json& json, const Receipt& receipt) {
     json["cumulative_gas_used"] = receipt.cumulative_gas_used;
     json["contractAddress"] = receipt.contract_address;
     json["logs"] = receipt.logs;
-    json["logsBloom"] = receipt.bloom;
+    json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(receipt.bloom));
     json["success"] = receipt.success;
 }
 

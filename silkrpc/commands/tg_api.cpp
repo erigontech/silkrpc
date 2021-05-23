@@ -17,6 +17,7 @@
 #include "tg_api.hpp"
 
 #include <string>
+#include <vector>
 
 #include <intx/intx.hpp>
 #include <silkworm/common/util.hpp>
