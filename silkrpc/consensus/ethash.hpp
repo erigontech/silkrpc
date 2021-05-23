@@ -14,32 +14,29 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_TRANSACTION_HPP_
-#define SILKRPC_TYPES_TRANSACTION_HPP_
+#ifndef SILKRPC_CONSENSUS_ETHASH_HPP_
+#define SILKRPC_CONSENSUS_ETHASH_HPP_
 
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include <intx/intx.hpp>
+#include <silkworm/types/block.hpp>
 
-#include <silkworm/common/base.hpp>
-#include <silkworm/types/transaction.hpp>
+#include <silkrpc/types/chain_config.hpp>
 
-namespace silkrpc {
+namespace silkrpc::ethash {
 
-enum class TransactionType {
-    legacy = 0,
-    access_list = 1,
-    dynamic_fee = 2
+struct BlockReward {
+    intx::uint256 miner_reward;
+    std::vector<intx::uint256> ommer_rewards;
 };
 
-struct Transaction : public silkworm::Transaction {
-    evmc::bytes32 block_hash;
-    uint64_t block_number{0};
-    uint64_t transaction_index{0};
-};
+BlockReward compute_reward(const ChainConfig& config, const silkworm::Block& block);
 
-std::ostream& operator<<(std::ostream& out, const Transaction& t);
+std::ostream& operator<<(std::ostream& out, const BlockReward& reward);
 
-} // namespace silkrpc
+} // namespace silkrpc::ethash
 
-#endif  // SILKRPC_TYPES_TRANSACTION_HPP_
+#endif  // SILKRPC_CONSENSUS_ETHASH_HPP_

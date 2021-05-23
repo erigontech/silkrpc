@@ -26,8 +26,10 @@
 
 #include <silkrpc/types/block.hpp>
 #include <silkrpc/types/call.hpp>
+#include <silkrpc/types/chain_config.hpp>
 #include <silkrpc/types/error.hpp>
 #include <silkrpc/types/filter.hpp>
+#include <silkrpc/types/issuance.hpp>
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/transaction.hpp>
 #include <silkrpc/types/receipt.hpp>
@@ -68,6 +70,10 @@ void from_json(const nlohmann::json& json, Receipt& receipt);
 
 void to_json(nlohmann::json& json, const Filter& filter);
 void from_json(const nlohmann::json& json, Filter& filter);
+
+void to_json(nlohmann::json& json, const Forks& forks);
+
+void to_json(nlohmann::json& json, const Issuance& issuance);
 
 void to_json(nlohmann::json& json, const Error& error);
 

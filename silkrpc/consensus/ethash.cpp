@@ -14,19 +14,25 @@
     limitations under the License.
 */
 
-#include "transaction.hpp"
+#include "ethash.hpp"
 
-#include <iomanip>
+namespace silkrpc::ethash {
 
-#include <silkrpc/common/util.hpp>
+BlockReward compute_reward(const ChainConfig& config, const silkworm::Block& block) {
+    return BlockReward{};
+}
 
-namespace silkrpc {
-
-std::ostream& operator<<(std::ostream& out, const Transaction& t) {
-    out << " block_hash: " << t.block_hash;
-    out << " block_number: " << t.block_number;
-    out << " transaction_index: " << t.transaction_index;
+std::ostream& operator<<(std::ostream& out, const BlockReward& reward) {
+    out << "miner_reward: " << intx::to_string(reward.miner_reward) << " "
+        << "ommer_rewards: [";
+    for (auto i{0}; i < reward.ommer_rewards.size(); i++) {
+        out << intx::to_string(reward.ommer_rewards[i]);
+        if (i != reward.ommer_rewards.size() - 1) {
+            out << " ";
+        }
+    }
+    out << "]";
     return out;
 }
 
-} // namespace silkrpc
+} // namespace silkrpc::ethash

@@ -14,32 +14,23 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_TRANSACTION_HPP_
-#define SILKRPC_TYPES_TRANSACTION_HPP_
+#ifndef SILKRPC_TYPES_ISSUANCE_HPP_
+#define SILKRPC_TYPES_ISSUANCE_HPP_
 
 #include <iostream>
-
-#include <intx/intx.hpp>
-
-#include <silkworm/common/base.hpp>
-#include <silkworm/types/transaction.hpp>
+#include <optional>
+#include <string>
 
 namespace silkrpc {
 
-enum class TransactionType {
-    legacy = 0,
-    access_list = 1,
-    dynamic_fee = 2
+struct Issuance {
+    std::optional<std::string> block_reward;
+    std::optional<std::string> ommer_reward;
+    std::optional<std::string> issuance;
 };
 
-struct Transaction : public silkworm::Transaction {
-    evmc::bytes32 block_hash;
-    uint64_t block_number{0};
-    uint64_t transaction_index{0};
-};
-
-std::ostream& operator<<(std::ostream& out, const Transaction& t);
+std::ostream& operator<<(std::ostream& out, const Issuance& issuance);
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_TRANSACTION_HPP_
+#endif  // SILKRPC_TYPES_ISSUANCE_HPP_

@@ -16,10 +16,10 @@ def run_shell_command(command: str, expected_response: str) -> int:
     response = json.loads(process.stdout)
 
     if expected_response["result"] is not None and response != expected_response:
-        print("KO: ", command_and_args, " Unexpected result: ", response["result"])
+        print("KO: unexpected result for command: {0}\nexpected: {1}\nreceived: {2}".format(command, expected_response, response))
         sys.exit(1)
     if "error" in response:
-        print("KO: ", command_and_args, " Error: ", response["error"])
+        print("KO: error {0} for command: {1}".format(response["error"], command))
         sys.exit(1)
 
 def run_tests(json_filename):

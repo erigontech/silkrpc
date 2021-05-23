@@ -102,13 +102,13 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | shh_getFilterChanges                    | No           | deprecated                                 |
 | shh_getMessages                         | No           | deprecated                                 |
 |                                         |              |                                            |
-| tg_getHeaderByHash                      | -            | not yet implemented                        |
-| tg_getHeaderByNumber                    | -            | not yet implemented                        |
-| tg_getLogsByHash                        | -            | not yet implemented                        |
-| tg_forks                                | -            | not yet implemented                        |
-| tg_issuance                             | -            | not yet implemented                        |
+| tg_getHeaderByHash                      | Yes          |                                            |
+| tg_getHeaderByNumber                    | Yes          |                                            |
+| tg_getLogsByHash                        | Yes          |                                            |
+| tg_forks                                | Yes          |                                            |
+| tg_issuance                             | Yes          |                                            |
 |                                         |              |                                            |
-| parity_getBlockReceipts                 | -            | not yet implemented                        |
+| parity_getBlockReceipts                 | Yes          |                                            |
 
 This table is constantly updated. Please visit again.
 

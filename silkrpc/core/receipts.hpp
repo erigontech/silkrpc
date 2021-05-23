@@ -14,32 +14,21 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_TRANSACTION_HPP_
-#define SILKRPC_TYPES_TRANSACTION_HPP_
+#ifndef SILKRPC_CORE_RECEIPTS_HPP_
+#define SILKRPC_CORE_RECEIPTS_HPP_
 
-#include <iostream>
+#include <silkrpc/config.hpp>
 
-#include <intx/intx.hpp>
+#include <asio/awaitable.hpp>
+#include <evmc/evmc.hpp>
 
-#include <silkworm/common/base.hpp>
-#include <silkworm/types/transaction.hpp>
+#include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/types/receipt.hpp>
 
-namespace silkrpc {
+namespace silkrpc::core {
 
-enum class TransactionType {
-    legacy = 0,
-    access_list = 1,
-    dynamic_fee = 2
-};
+asio::awaitable<Receipts> get_receipts(const rawdb::DatabaseReader& db_reader, evmc::bytes32 hash, uint64_t number);
 
-struct Transaction : public silkworm::Transaction {
-    evmc::bytes32 block_hash;
-    uint64_t block_number{0};
-    uint64_t transaction_index{0};
-};
+} // namespace silkrpc::core
 
-std::ostream& operator<<(std::ostream& out, const Transaction& t);
-
-} // namespace silkrpc
-
-#endif  // SILKRPC_TYPES_TRANSACTION_HPP_
+#endif  // SILKRPC_CORE_RECEIPTS_HPP_
