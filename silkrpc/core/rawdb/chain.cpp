@@ -45,6 +45,7 @@ void cbor_decode(const silkworm::Bytes& bytes, std::vector<Log>& logs) {
         return;
     }
     auto json = nlohmann::json::from_cbor(bytes);
+    SILKRPC_TRACE << "cbor_decode<std::vector<Log>> json: " << json.dump() << "\n";
     if (json.is_array()) {
         logs = json.get<std::vector<Log>>();
     }
@@ -55,6 +56,7 @@ void cbor_decode(const silkworm::Bytes& bytes, std::vector<Receipt>& receipts) {
         return;
     }
     auto json = nlohmann::json::from_cbor(bytes);
+    SILKRPC_TRACE << "cbor_decode<std::vector<Receipt>> json: " << json.dump() << "\n";
     if (json.is_array()) {
         receipts = json.get<std::vector<Receipt>>();
     }
@@ -216,19 +218,20 @@ asio::awaitable<Receipts> read_raw_receipts(const DatabaseReader& reader, const 
     const auto block_key = silkworm::db::block_key(block_number);
     const auto kv_pair = co_await reader.get(silkworm::db::table::kBlockReceipts.name, block_key);
     const auto data = kv_pair.value;
+    SILKRPC_TRACE << "data: " << silkworm::to_hex(data) << "\n";
     if (data.empty()) {
         co_return Receipts{}; // TODO(canepat): use std::null_opt with asio::awaitable<std::optional<Receipts>>?
     }
     Receipts receipts{};
     cbor_decode(data, receipts);
-    SILKRPC_TRACE << "#receipts: " << receipts.size() << "\n";
+    SILKRPC_DEBUG << "#receipts: " << receipts.size() << "\n";
 
     auto log_key = silkworm::db::log_key(block_number, 0);
-    SILKRPC_TRACE << "log_key: " << silkworm::to_hex(log_key) << "\n";
+    SILKRPC_DEBUG << "log_key: " << silkworm::to_hex(log_key) << "\n";
     Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
         auto tx_id = boost::endian::load_big_u32(&k[sizeof(uint64_t)]);
         cbor_decode(v, receipts[tx_id].logs);
-        SILKRPC_TRACE << "#receipts[" << tx_id << "].logs: " << receipts[tx_id].logs.size() << "\n";
+        SILKRPC_DEBUG << "#receipts[" << tx_id << "].logs: " << receipts[tx_id].logs.size() << "\n";
         return true;
     };
     co_await reader.walk(silkworm::db::table::kLogs.name, log_key, 8 * CHAR_BIT, walker);

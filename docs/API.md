@@ -25,6 +25,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getUncleByBlockNumberAndIndex       | Yes          |                                            |
 | eth_getUncleCountByBlockHash            | Yes          |                                            |
 | eth_getUncleCountByBlockNumber          | Yes          |                                            |
+| eth_getBlockReceipts                    | Yes          | same as parity_getBlockReceipts            |
 |                                         |              |                                            |
 | eth_getTransactionByHash                | -            | not yet implemented                        |
 | eth_getTransactionByBlockHashAndIndex   | Yes          |                                            |
@@ -108,7 +109,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | tg_forks                                | Yes          |                                            |
 | tg_issuance                             | Yes          |                                            |
 |                                         |              |                                            |
-| parity_getBlockReceipts                 | Yes          |                                            |
+| parity_getBlockReceipts                 | Yes          | same as eth_getBlockReceipts               |
 
 This table is constantly updated. Please visit again.
 

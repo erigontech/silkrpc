@@ -279,20 +279,24 @@ void to_json(nlohmann::json& json, const Receipt& receipt) {
     json["blockHash"] = receipt.block_hash;
     json["blockNumber"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.block_number);
     json["transactionHash"] = receipt.tx_hash;
+    json["transactionIndex"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.tx_index);
     json["from"] = receipt.from.value_or(evmc::address{});
     json["to"] = receipt.to.value_or(evmc::address{});
-    if (receipt.type) {
-        json["type"] = receipt.type.value();
+    json["type"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.type ? receipt.type.value() : 0);
+    json["gasUsed"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.gas_used);
+    json["cumulativeGasUsed"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.cumulative_gas_used);
+    if (receipt.contract_address) {
+        json["contractAddress"] = receipt.contract_address;
+    } else {
+        json["contractAddress"] = nlohmann::json{};
     }
-    json["gasUsed"] = receipt.gas_used;
-    json["cumulative_gas_used"] = receipt.cumulative_gas_used;
-    json["contractAddress"] = receipt.contract_address;
     json["logs"] = receipt.logs;
     json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(receipt.bloom));
-    json["success"] = receipt.success;
+    json["status"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.success ? 1 : 0);
 }
 
 void from_json(const nlohmann::json& json, Receipt& receipt) {
+    SILKRPC_TRACE << "from_json<Receipt> json: " << json.dump() << "\n";
     if (json.is_array()) {
         if (json.size() < 3) {
             throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Receipt CBOR: missing entries"};

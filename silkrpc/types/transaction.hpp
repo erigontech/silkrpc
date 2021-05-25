@@ -26,12 +26,6 @@
 
 namespace silkrpc {
 
-enum class TransactionType {
-    legacy = 0,
-    access_list = 1,
-    dynamic_fee = 2
-};
-
 struct Transaction : public silkworm::Transaction {
     evmc::bytes32 block_hash;
     uint64_t block_number{0};

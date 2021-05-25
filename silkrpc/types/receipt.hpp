@@ -46,7 +46,7 @@ struct Receipt {
     uint32_t tx_index;
     std::optional<evmc::address> from;
     std::optional<evmc::address> to;
-    std::optional<uint8_t> type{std::nullopt};
+    std::optional<uint8_t> type{std::nullopt};  // EIP-2718
 };
 
 typedef std::vector<Receipt> Receipts;
