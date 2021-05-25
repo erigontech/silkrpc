@@ -33,6 +33,7 @@
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/executor.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
+#include <silkrpc/core/receipts.hpp>
 #include <silkrpc/core/state_reader.hpp>
 #include <silkrpc/ethdb/bitmap.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
@@ -924,7 +925,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
                 co_return;
             }
 
-            auto receipts = co_await get_receipts(tx_database, uint64_t(block_to_match), block_hash);
+            auto receipts = co_await core::get_receipts(tx_database, block_hash, uint64_t(block_to_match));
             SILKRPC_DEBUG << "receipts.size(): " << receipts.size() << "\n";
             std::vector<Log> unfiltered_logs{};
             unfiltered_logs.reserve(receipts.size());
@@ -1229,19 +1230,6 @@ asio::awaitable<roaring::Roaring> EthereumRpcApi::get_addresses_bitmap(core::raw
     }
     SILKRPC_TRACE << "result_bitmap: " << result_bitmap.toString() << "\n";
     co_return result_bitmap;
-}
-
-asio::awaitable<Receipts> EthereumRpcApi::get_receipts(core::rawdb::DatabaseReader& db_reader, uint64_t number, evmc::bytes32 hash) {
-    auto cached_receipts = co_await core::rawdb::read_receipts(db_reader, hash, number);
-    if (!cached_receipts.empty()) {
-        co_return cached_receipts;
-    }
-
-    // If not already present, retrieve receipts by executing transactions
-    //auto block = co_await core::rawdb::read_block(db_reader, hash, number);
-    // TODO(canepat): implement
-    SILKRPC_WARN << "retrieve receipts by executing transactions NOT YET IMPLEMENTED\n";
-    co_return Receipts{};
 }
 
 std::vector<Log> EthereumRpcApi::filter_logs(std::vector<Log>& logs, const Filter& filter) {

@@ -45,6 +45,7 @@ void cbor_decode(const silkworm::Bytes& bytes, std::vector<Log>& logs) {
         return;
     }
     auto json = nlohmann::json::from_cbor(bytes);
+    SILKRPC_TRACE << "cbor_decode<std::vector<Log>> json: " << json.dump() << "\n";
     if (json.is_array()) {
         logs = json.get<std::vector<Log>>();
     }
@@ -55,6 +56,7 @@ void cbor_decode(const silkworm::Bytes& bytes, std::vector<Receipt>& receipts) {
         return;
     }
     auto json = nlohmann::json::from_cbor(bytes);
+    SILKRPC_TRACE << "cbor_decode<std::vector<Receipt>> json: " << json.dump() << "\n";
     if (json.is_array()) {
         receipts = json.get<std::vector<Receipt>>();
     }
@@ -74,7 +76,7 @@ asio::awaitable<uint64_t> read_header_number(const DatabaseReader& reader, const
     co_return boost::endian::load_big_u64(value.data());
 }
 
-asio::awaitable<nlohmann::json> read_chain_config(const DatabaseReader& reader) {
+asio::awaitable<ChainConfig> read_chain_config(const DatabaseReader& reader) {
     const auto genesis_block_hash{co_await read_canonical_block_hash(reader, kEarliestBlockNumber)};
     SILKRPC_DEBUG << "genesis_block_hash: " << genesis_block_hash << "\n";
     const silkworm::ByteView genesis_block_hash_bytes{genesis_block_hash.bytes, silkworm::kHashLength};
@@ -85,13 +87,13 @@ asio::awaitable<nlohmann::json> read_chain_config(const DatabaseReader& reader) 
     }
     SILKRPC_DEBUG << "chain config data: " << data.c_str() << "\n";
     const auto json_config = nlohmann::json::parse(data.c_str());
-    SILKRPC_DEBUG << "chain config data: " << json_config.dump() << "\n";
-    co_return json_config;
+    SILKRPC_DEBUG << "chain config JSON: " << json_config.dump() << "\n";
+    co_return ChainConfig{genesis_block_hash, json_config};
 }
 
 asio::awaitable<uint64_t> read_chain_id(const DatabaseReader& reader) {
-    const auto chain_config = co_await read_chain_config(reader);
-    co_return chain_config["chainId"].get<uint64_t>();
+    const auto chain_info = co_await read_chain_config(reader);
+    co_return chain_info.config["chainId"].get<uint64_t>();
 }
 
 asio::awaitable<evmc::bytes32> read_canonical_block_hash(const DatabaseReader& reader, uint64_t block_number) {
@@ -128,7 +130,7 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const DatabaseReader
 }
 
 asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const DatabaseReader& reader, uint64_t block_number) {
-    auto block_hash = co_await read_canonical_block_hash(reader, block_number);
+    const auto block_hash = co_await read_canonical_block_hash(reader, block_number);
     co_return co_await read_block(reader, block_hash, block_number);
 }
 
@@ -139,6 +141,16 @@ asio::awaitable<silkworm::BlockWithHash> read_block(const DatabaseReader& reader
     SILKRPC_INFO << "body: #txn=" << body.transactions.size() << " #ommers=" << body.ommers.size() << "\n";
     silkworm::BlockWithHash block{silkworm::Block{body.transactions, body.ommers, header}, block_hash};
     co_return block;
+}
+
+asio::awaitable<silkworm::BlockHeader> read_header_by_hash(const DatabaseReader& reader, const evmc::bytes32& block_hash) {
+    const auto block_number = co_await read_header_number(reader, block_hash);
+    co_return co_await read_header(reader, block_hash, block_number);
+}
+
+asio::awaitable<silkworm::BlockHeader> read_header_by_number(const DatabaseReader& reader, uint64_t block_number) {
+    const auto block_hash = co_await read_canonical_block_hash(reader, block_number);
+    co_return co_await read_header(reader, block_hash, block_number);
 }
 
 asio::awaitable<silkworm::BlockHeader> read_header(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
@@ -206,19 +218,20 @@ asio::awaitable<Receipts> read_raw_receipts(const DatabaseReader& reader, const 
     const auto block_key = silkworm::db::block_key(block_number);
     const auto kv_pair = co_await reader.get(silkworm::db::table::kBlockReceipts.name, block_key);
     const auto data = kv_pair.value;
+    SILKRPC_TRACE << "data: " << silkworm::to_hex(data) << "\n";
     if (data.empty()) {
         co_return Receipts{}; // TODO(canepat): use std::null_opt with asio::awaitable<std::optional<Receipts>>?
     }
     Receipts receipts{};
     cbor_decode(data, receipts);
-    SILKRPC_TRACE << "#receipts: " << receipts.size() << "\n";
+    SILKRPC_DEBUG << "#receipts: " << receipts.size() << "\n";
 
     auto log_key = silkworm::db::log_key(block_number, 0);
-    SILKRPC_TRACE << "log_key: " << silkworm::to_hex(log_key) << "\n";
+    SILKRPC_DEBUG << "log_key: " << silkworm::to_hex(log_key) << "\n";
     Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
         auto tx_id = boost::endian::load_big_u32(&k[sizeof(uint64_t)]);
         cbor_decode(v, receipts[tx_id].logs);
-        SILKRPC_TRACE << "#receipts[" << tx_id << "].logs: " << receipts[tx_id].logs.size() << "\n";
+        SILKRPC_DEBUG << "#receipts[" << tx_id << "].logs: " << receipts[tx_id].logs.size() << "\n";
         return true;
     };
     co_await reader.walk(silkworm::db::table::kLogs.name, log_key, 8 * CHAR_BIT, walker);

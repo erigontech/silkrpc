@@ -16,6 +16,7 @@
 
 #include "blocks.hpp"
 
+#include <silkrpc/common/log.hpp>
 #include <silkrpc/stagedsync/stages.hpp>
 
 namespace silkrpc::core {
@@ -29,6 +30,7 @@ asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const co
     } else {
         block_number = std::stol(block_id, 0, 16);
     }
+    SILKRPC_DEBUG << "get_block_number block_number: " << block_number << "\n";
     co_return block_number;
 }
 
