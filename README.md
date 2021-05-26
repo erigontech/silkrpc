@@ -32,20 +32,51 @@ Building SilkRPC daemon requires
 * [Cpplint](https://github.com/cpplint/cpplint) (`pip3 install cpplint`)
 * [Pylint](https://github.com/PyCQA/pylint) (`pip3 install pylint`)
 
-Once the prerequisites are installed and assuming your [GCC](https://www.gnu.org/software/gcc/) compiler available as `gcc` and `g++` at the command line prompt is at least 10.2.0, bootstrap cmake by running
+Please make your [GCC](https://www.gnu.org/software/gcc/) or [Clang](https://clang.llvm.org/) compiler available as `gcc` and `g++` or `clang` and `clang++` at the command line prompt.
+
+Once the prerequisites are installed, there are convenience [bash](https://www.gnu.org/software/bash/) scripts for complete rebuild and incremental build both in debug and release configurations:
+
+- [GCC](https://www.gnu.org/software/gcc/) compiler
 ```
-mkdir build
-cd build
+# Complete rebuild
+./rebuild_gcc_debug.sh
+./rebuild_gcc_release.sh
+```
+
+```
+# Incremental build
+./build_gcc_debug.sh
+./build_gcc_release.sh
+```
+
+- [Clang](https://clang.llvm.org/) compiler
+```
+# Complete rebuild
+./rebuild_clang_debug.sh
+./rebuild_clang_release.sh
+```
+
+```
+# Incremental build
+./build_clang_debug.sh
+./build_clang_release.sh
+```
+The resulting build folders are `build_[gcc, clang]_[debug, release]` according to your choice.
+
+You can also perform the build step-by-step manually, just bootstrap cmake by running
+```
+mkdir build_gcc_release
+cd build_gcc_release
 cmake ..
 ```
-(BTW, you have to run `cmake ..` just the first time).
+(you have to run `cmake ..` just the first time).
 
 Generate the [gRPC](https://grpc.io/) Key-Value (KV) interface protocol bindings
 ```
 cmake --build . --target generate_kv_grpc
 ```
 
-Then run the build itself
+then run the build itself
 ```
 cmake --build .
 ```
@@ -60,17 +91,10 @@ and check the code style running
 ./run_linter.sh
 ```
 
-There are also convenience [bash](https://www.gnu.org/software/bash/) scripts for a complete rebuild both in debug and release configurations using [GCC](https://www.gnu.org/software/gcc/) compiler (these work even if you have multiple versions installed):
+You can clean the build using
 ```
-./build_gcc_debug.sh
-./build_gcc_release.sh
+cmake --build . --target clean
 ```
-and [Clang](https://clang.llvm.org/) compiler:
-```
-./build_clang_debug.sh
-./build_clang_release.sh
-```
-The resulting build folders are `build_[gcc, clang]_[debug, release]` according to your choice.
 
 ## Windows
 * Install [Visual Studio](https://www.visualstudio.com/downloads) 2019. Community edition is fine.

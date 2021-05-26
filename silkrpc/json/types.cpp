@@ -63,6 +63,14 @@ std::string to_hex_no_leading_zeros(uint64_t number) {
     return to_hex_no_leading_zeros(number_bytes);
 }
 
+std::string to_quantity(silkworm::ByteView bytes) {
+    return "0x" + to_hex_no_leading_zeros(bytes);
+}
+
+std::string to_quantity(uint64_t number) {
+    return "0x" + to_hex_no_leading_zeros(number);
+}
+
 } // namespace silkrpc
 
 namespace evmc {
@@ -90,22 +98,22 @@ void from_json(const nlohmann::json& json, bytes32& b32) {
 namespace silkworm {
 
 void to_json(nlohmann::json& json, const BlockHeader& header) {
-    const auto block_number = "0x" + silkrpc::to_hex_no_leading_zeros(header.number);
+    const auto block_number = silkrpc::to_quantity(header.number);
     json["number"] = block_number;
     json["parentHash"] = header.parent_hash;
-    json["nonce"] = "0x" + silkrpc::to_hex_no_leading_zeros({header.nonce.data(), header.nonce.size()});
+    json["nonce"] = silkrpc::to_quantity({header.nonce.data(), header.nonce.size()});
     json["sha3Uncles"] = header.ommers_hash;
     json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(header.logs_bloom));
     json["transactionsRoot"] = header.transactions_root;
     json["stateRoot"] = header.state_root;
     json["receiptsRoot"] = header.receipts_root;
     json["miner"] = header.beneficiary;
-    json["difficulty"] = "0x" + silkrpc::to_hex_no_leading_zeros(silkworm::rlp::big_endian(header.difficulty));
+    json["difficulty"] = silkrpc::to_quantity(silkworm::rlp::big_endian(header.difficulty));
     json["extraData"] = "0x" + silkworm::to_hex(header.extra_data);
     json["mixHash"]= header.mix_hash;
-    json["gasLimit"] = "0x" + silkrpc::to_hex_no_leading_zeros(header.gas_limit);
-    json["gasUsed"] = "0x" + silkrpc::to_hex_no_leading_zeros(header.gas_used);
-    json["timestamp"] = "0x" + silkrpc::to_hex_no_leading_zeros(header.timestamp);
+    json["gasLimit"] = silkrpc::to_quantity(header.gas_limit);
+    json["gasUsed"] = silkrpc::to_quantity(header.gas_used);
+    json["timestamp"] = silkrpc::to_quantity(header.timestamp);
 }
 
 void to_json(nlohmann::json& json, const Transaction& transaction) {
@@ -113,21 +121,21 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
         (const_cast<Transaction&>(transaction)).recover_sender();
     }
     json["from"] = transaction.from.value();
-    json["gas"] = "0x" + silkrpc::to_hex_no_leading_zeros(transaction.gas_limit);
-    json["gasPrice"] = "0x" + silkrpc::to_hex_no_leading_zeros(silkworm::rlp::big_endian(transaction.gas_price));
+    json["gas"] = silkrpc::to_quantity(transaction.gas_limit);
+    json["gasPrice"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.gas_price));
     auto ethash_hash{hash_of_transaction(transaction)};
     json["hash"] = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
     json["input"] = "0x" + silkworm::to_hex(transaction.data);
-    json["nonce"] = "0x" + silkrpc::to_hex_no_leading_zeros(transaction.nonce);
+    json["nonce"] = silkrpc::to_quantity(transaction.nonce);
     if (transaction.to) {
         json["to"] =  transaction.to.value();
     } else {
         json["to"] =  "0x";
     }
-    json["value"] =  "0x" + silkrpc::to_hex_no_leading_zeros(silkworm::rlp::big_endian(transaction.value));
-    json["v"] =  "0x" + silkrpc::to_hex_no_leading_zeros(silkworm::rlp::big_endian(transaction.v()));
-    json["r"] =  "0x" + silkrpc::to_hex_no_leading_zeros(silkworm::rlp::big_endian(transaction.r));
-    json["s"] =  "0x" + silkrpc::to_hex_no_leading_zeros(silkworm::rlp::big_endian(transaction.s));
+    json["value"] =  silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.value));
+    json["v"] =  silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.v()));
+    json["r"] =  silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.r));
+    json["s"] =  silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.s));
 }
 
 } // namespace silkworm
@@ -135,32 +143,32 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
 namespace silkrpc {
 
 void to_json(nlohmann::json& json, const Block& b) {
-    const auto block_number = "0x" + silkrpc::to_hex_no_leading_zeros(b.block.header.number);
+    const auto block_number = silkrpc::to_quantity(b.block.header.number);
     json["number"] = block_number;
     json["hash"] = b.hash;
     json["parentHash"] = b.block.header.parent_hash;
-    json["nonce"] = "0x" + silkrpc::to_hex_no_leading_zeros({b.block.header.nonce.data(), b.block.header.nonce.size()});
+    json["nonce"] = silkrpc::to_quantity({b.block.header.nonce.data(), b.block.header.nonce.size()});
     json["sha3Uncles"] = b.block.header.ommers_hash;
     json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(b.block.header.logs_bloom));
     json["transactionsRoot"] = b.block.header.transactions_root;
     json["stateRoot"] = b.block.header.state_root;
     json["receiptsRoot"] = b.block.header.receipts_root;
     json["miner"] = b.block.header.beneficiary;
-    json["difficulty"] = "0x" + silkrpc::to_hex_no_leading_zeros(silkworm::rlp::big_endian(b.block.header.difficulty));
-    json["totalDifficulty"] = "0x" + silkrpc::to_hex_no_leading_zeros(silkworm::rlp::big_endian(b.total_difficulty));
+    json["difficulty"] = silkrpc::to_quantity(silkworm::rlp::big_endian(b.block.header.difficulty));
+    json["totalDifficulty"] = silkrpc::to_quantity(silkworm::rlp::big_endian(b.total_difficulty));
     json["extraData"] = "0x" + silkworm::to_hex(b.block.header.extra_data);
     json["mixHash"]= b.block.header.mix_hash;
     silkworm::Bytes block_rlp{};
     silkworm::rlp::encode(block_rlp, b.block);
-    json["size"] = "0x" + silkrpc::to_hex_no_leading_zeros(block_rlp.length());
-    json["gasLimit"] = "0x" + silkrpc::to_hex_no_leading_zeros(b.block.header.gas_limit);
-    json["gasUsed"] = "0x" + silkrpc::to_hex_no_leading_zeros(b.block.header.gas_used);
-    json["timestamp"] = "0x" + silkrpc::to_hex_no_leading_zeros(b.block.header.timestamp);
+    json["size"] = silkrpc::to_quantity(block_rlp.length());
+    json["gasLimit"] = silkrpc::to_quantity(b.block.header.gas_limit);
+    json["gasUsed"] = silkrpc::to_quantity(b.block.header.gas_used);
+    json["timestamp"] = silkrpc::to_quantity(b.block.header.timestamp);
     if (b.full_tx) {
         json["transactions"] = b.block.transactions;
         for (auto i{0}; i < json["transactions"].size(); i++) {
             auto& json_txn = json["transactions"][i];
-            json_txn["transactionIndex"] = "0x" + silkrpc::to_hex_no_leading_zeros(i);
+            json_txn["transactionIndex"] = silkrpc::to_quantity(i);
             json_txn["blockHash"] = b.hash;
             json_txn["blockNumber"] = block_number;
         }
@@ -187,10 +195,10 @@ void to_json(nlohmann::json& json, const Block& b) {
 void to_json(nlohmann::json& json, const Transaction& transaction) {
     to_json(json, silkworm::Transaction(transaction));
 
-    const auto block_number = "0x" + silkrpc::to_hex_no_leading_zeros(transaction.block_number);
+    const auto block_number = silkrpc::to_quantity(transaction.block_number);
     json["blockHash"] = transaction.block_hash;
     json["blockNumber"] = block_number;
-    json["transactionIndex"] = "0x" + silkrpc::to_hex_no_leading_zeros(transaction.transaction_index);
+    json["transactionIndex"] = silkrpc::to_quantity(transaction.transaction_index);
 }
 
 void from_json(const nlohmann::json& json, Call& call) {
@@ -232,11 +240,11 @@ void to_json(nlohmann::json& json, const Log& log) {
     json["address"] = log.address;
     json["topics"] = log.topics;
     json["data"] = "0x" + silkworm::to_hex(log.data);
-    json["blockNumber"] = "0x" + silkrpc::to_hex_no_leading_zeros(log.block_number);
+    json["blockNumber"] = silkrpc::to_quantity(log.block_number);
     json["blockHash"] = log.block_hash;
     json["transactionHash"] = log.tx_hash;
-    json["transactionIndex"] = "0x" + silkrpc::to_hex_no_leading_zeros(log.tx_index);
-    json["logIndex"] = "0x" + silkrpc::to_hex_no_leading_zeros(log.index);
+    json["transactionIndex"] = silkrpc::to_quantity(log.tx_index);
+    json["logIndex"] = silkrpc::to_quantity(log.index);
     json["removed"] = log.removed;
 }
 
@@ -277,14 +285,14 @@ void from_json(const nlohmann::json& json, Log& log) {
 
 void to_json(nlohmann::json& json, const Receipt& receipt) {
     json["blockHash"] = receipt.block_hash;
-    json["blockNumber"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.block_number);
+    json["blockNumber"] = silkrpc::to_quantity(receipt.block_number);
     json["transactionHash"] = receipt.tx_hash;
-    json["transactionIndex"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.tx_index);
+    json["transactionIndex"] = silkrpc::to_quantity(receipt.tx_index);
     json["from"] = receipt.from.value_or(evmc::address{});
     json["to"] = receipt.to.value_or(evmc::address{});
-    json["type"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.type ? receipt.type.value() : 0);
-    json["gasUsed"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.gas_used);
-    json["cumulativeGasUsed"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.cumulative_gas_used);
+    json["type"] = silkrpc::to_quantity(receipt.type ? receipt.type.value() : 0);
+    json["gasUsed"] = silkrpc::to_quantity(receipt.gas_used);
+    json["cumulativeGasUsed"] = silkrpc::to_quantity(receipt.cumulative_gas_used);
     if (receipt.contract_address) {
         json["contractAddress"] = receipt.contract_address;
     } else {
@@ -292,7 +300,7 @@ void to_json(nlohmann::json& json, const Receipt& receipt) {
     }
     json["logs"] = receipt.logs;
     json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(receipt.bloom));
-    json["status"] = "0x" + silkrpc::to_hex_no_leading_zeros(receipt.success ? 1 : 0);
+    json["status"] = silkrpc::to_quantity(receipt.success ? 1 : 0);
 }
 
 void from_json(const nlohmann::json& json, Receipt& receipt) {
