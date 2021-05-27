@@ -722,10 +722,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_storage_at(const nlohmann::
         if (account) {
            auto storage{co_await state_reader.read_storage(address, account->incarnation, location, block_number + 1)};
            reply = make_json_content(request["id"], "0x" + silkworm::to_hex(storage));
-        }
-        else 
+        } else {
            reply = make_json_content(request["id"], "0x");
-
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
