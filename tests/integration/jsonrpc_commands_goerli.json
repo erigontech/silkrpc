@@ -9,7 +9,7 @@
         "response":{
             "jsonrpc":"2.0",
             "id":1,
-            "result":"TurboGeth/v2021.05.3-alpha-3121264f/linux/go1.16.4"
+            "result":"TurboGeth/v2021.05.3-alpha/Linux"
         }
     },
     {
