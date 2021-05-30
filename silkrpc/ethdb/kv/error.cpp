@@ -52,6 +52,7 @@ std::string KVErrorCategory::message(int ev) const {
         case KVError::rpc_close_cursor_read_stream_failed:
             return "read stream failed in cursor CLOSE";
         case KVError::rpc_end_stream_failed:
+        default:
             return "end stream failed";
     }
 }
