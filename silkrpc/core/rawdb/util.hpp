@@ -23,7 +23,7 @@
 
 namespace silkrpc {
 
-silkworm::Bytes generate_composity_storage_key(const evmc::address& address, uint64_t incarnation, const uint8_t (&hash)[silkworm::kHashLength]);
+silkworm::Bytes composite_storage_key(const evmc::address& address, uint64_t incarnation, const uint8_t (&hash)[silkworm::kHashLength]);
 }
 
 #endif // SILKRPC_CORE_RAWDB_UTIL_HPP_
