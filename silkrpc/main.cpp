@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     config.contains_help_flags = [](absl::string_view filename) { return absl::EndsWith(filename, "main.cpp"); };
     config.contains_helppackage_flags = [](absl::string_view) { return false; };
     config.normalize_filename = [](absl::string_view f) { return std::string{f.substr(f.rfind("/") + 1)}; };
-    config.version_string = []() { return "silkrpcdaemon 0.0.5-rc\n"; };
+    config.version_string = []() { return "silkrpcdaemon 0.0.6-rc\n"; };
     absl::SetFlagsUsageConfig(config);
     absl::SetProgramUsageMessage("C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon");
     absl::ParseCommandLine(argc, argv);

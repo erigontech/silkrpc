@@ -17,11 +17,14 @@
 #ifndef SILKRPC_TYPES_RECEIPT_HPP_
 #define SILKRPC_TYPES_RECEIPT_HPP_
 
+#include <optional>
 #include <vector>
 
 #include <evmc/evmc.hpp>
 
 #include <silkworm/types/bloom.hpp>
+
+#include <silkrpc/types/transaction.hpp>
 
 #include "log.hpp"
 
@@ -41,6 +44,9 @@ struct Receipt {
     evmc::bytes32 block_hash;
     uint64_t block_number;
     uint32_t tx_index;
+    std::optional<evmc::address> from;
+    std::optional<evmc::address> to;
+    std::optional<uint8_t> type{std::nullopt};  // EIP-2718
 };
 
 typedef std::vector<Receipt> Receipts;

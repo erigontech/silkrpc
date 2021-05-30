@@ -29,7 +29,7 @@ asio::awaitable<void> NetRpcApi::handle_net_listening(const nlohmann::json& requ
 
 // https://eth.wiki/json-rpc/API#net_peercount
 asio::awaitable<void> NetRpcApi::handle_net_peer_count(const nlohmann::json& request, nlohmann::json& reply) {
-    reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(25));
+    reply = make_json_content(request["id"], to_quantity(25));
     // TODO(canepat): needs p2pSentry integration in TG Core (accumulate peer counts from multiple sentries)
     co_return;
 }

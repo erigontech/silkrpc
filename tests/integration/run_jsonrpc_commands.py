@@ -17,7 +17,6 @@ def run_shell_command(command: str, expected_response: str, exit_on_fail) -> int
         sys.exit(process.returncode)
     process.stdout = process.stdout.strip('\n')
     response = json.loads(process.stdout)
-
     if "error" in response:
         print("--> KO: error {0} for command: {1}".format(response["error"], command))
         if exit_on_fail:
@@ -26,7 +25,6 @@ def run_shell_command(command: str, expected_response: str, exit_on_fail) -> int
         print("--> KO: unexpected result for command: {0}\nexpected: {1}\nreceived: {2}".format(command, expected_response, response))
         if exit_on_fail:
             sys.exit(1)
-
 def run_tests(json_filename, verbose, silk, exit_on_fail, req_test):
     """ Run integration tests. """
     with open(json_filename) as json_file:

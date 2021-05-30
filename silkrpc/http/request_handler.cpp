@@ -81,6 +81,7 @@ std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = 
     {method::k_eth_submitWork, &commands::RpcApi::handle_eth_submit_work},
     {method::k_eth_subscribe, &commands::RpcApi::handle_eth_subscribe},
     {method::k_eth_unsubscribe, &commands::RpcApi::handle_eth_unsubscribe},
+    {method::k_eth_getBlockReceipts, &commands::RpcApi::handle_parity_get_block_receipts},
     {method::k_debug_accountRange, &commands::RpcApi::handle_debug_account_range},
     {method::k_debug_getModifiedAccountsByNumber, &commands::RpcApi::handle_debug_get_modified_accounts_by_number},
     {method::k_debug_getModifiedAccountsByHash, &commands::RpcApi::handle_debug_get_modified_accounts_by_hash},
