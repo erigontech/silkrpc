@@ -680,7 +680,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(const nlo
         std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
 
         if (account) {
-            reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(account->nonce));
+            reply = make_json_content(request["id"], to_quantity(account->nonce));
         } else {
             reply = make_json_content(request["id"], "0x");
         }
