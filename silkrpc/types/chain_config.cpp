@@ -14,18 +14,15 @@
     limitations under the License.
 */
 
-#include "transaction.hpp"
-
-#include <iomanip>
+#include "chain_config.hpp"
 
 #include <silkrpc/common/util.hpp>
 
 namespace silkrpc {
 
-std::ostream& operator<<(std::ostream& out, const Transaction& t) {
-    out << " block_hash: " << t.block_hash;
-    out << " block_number: " << t.block_number;
-    out << " transaction_index: " << t.transaction_index;
+std::ostream& operator<<(std::ostream& out, const ChainConfig& chain_config) {
+    out << "genesis: " << chain_config.genesis_hash << " "
+        << "config: " << chain_config.config.dump();
     return out;
 }
 

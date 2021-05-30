@@ -14,18 +14,16 @@
     limitations under the License.
 */
 
-#include "transaction.hpp"
-
-#include <iomanip>
+#include "issuance.hpp"
 
 #include <silkrpc/common/util.hpp>
 
 namespace silkrpc {
 
-std::ostream& operator<<(std::ostream& out, const Transaction& t) {
-    out << " block_hash: " << t.block_hash;
-    out << " block_number: " << t.block_number;
-    out << " transaction_index: " << t.transaction_index;
+std::ostream& operator<<(std::ostream& out, const Issuance& issuance) {
+    out << "block_reward: " << issuance.block_reward.value_or("null") << " "
+        << "ommer_reward: " << issuance.ommer_reward.value_or("null") << " "
+        << "issuance: " << issuance.issuance.value_or("null") << " ";
     return out;
 }
 
