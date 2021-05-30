@@ -28,11 +28,6 @@
 
 namespace silkrpc {
 
-void ulla(void)
-{
-
-}
-
 silkworm::Bytes generate_composity_storage_key(const evmc::address& address, uint64_t incarnation, const uint8_t (&hash)[silkworm::kHashLength]) {
     silkworm::Bytes res(silkworm::db::kStoragePrefixLength + silkworm::kHashLength, '\0');
     std::memcpy(&res[0], address.bytes, silkworm::kAddressLength);
@@ -41,4 +36,4 @@ silkworm::Bytes generate_composity_storage_key(const evmc::address& address, uin
     return res;
 }
 
-}
+} // namespace silkrpc

@@ -72,7 +72,7 @@ asio::awaitable<evmc::bytes32> StateReader::read_storage(const evmc::address& ad
 asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_code(const evmc::address& address, uint64_t incarnation,
     const evmc::bytes32& code_hash, uint64_t block_number) const {
     if (code_hash == silkworm::kEmptyHash) {
-        co_return std::nullopt; 
+        co_return std::nullopt;
     }
     auto code{co_await db_reader_.get_one(silkworm::db::table::kCode.name, silkworm::full_view(code_hash))};
     co_return code;
