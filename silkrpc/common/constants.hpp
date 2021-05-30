@@ -32,7 +32,7 @@ constexpr const char* kOsName{
 #elif __APPLE__ || __MACH__
     "Mac OSX"
 #elif __linux__
-    "Linux"
+    "linux/go1.16.4"
 #elif __FreeBSD__
     "FreeBSD"
 #elif __unix || __unix__
@@ -50,7 +50,7 @@ constexpr const char* kDefaultTarget{"localhost:9090"};
 constexpr const std::chrono::milliseconds kDefaultTimeout{10000};
 
 constexpr const char* kNodeName{"TurboGeth"};
-constexpr const char* kVersion{"2021.03.2-alpha"};
+constexpr const char* kVersion{"2021.05.3-alpha-3121264f"};
 const std::string kEthereumNodeName = boost::str(boost::format("%1%/v%2%/%3%") % kNodeName % kVersion % kOsName); // NOLINT
 
 constexpr uint64_t kETH66{66};
