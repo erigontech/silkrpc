@@ -19,13 +19,11 @@ def run_shell_command(command: str, expected_response: str, exit_on_fail) -> int
     response = json.loads(process.stdout)
 
     if "error" in response:
-        print("--> KO: ", command_and_args, " Error: ", response["error"], "\n")
+        print("--> KO: error {0} for command: {1}".format(response["error"], command))
         if exit_on_fail:
             sys.exit(1)
     elif expected_response["result"] is not None and response != expected_response:
-        print("--> KO: Unexpected Result", command_and_args)
-        print("Response: ", response)
-        print("ExpRsp: ", expected_response, "\n")
+        print("--> KO: unexpected result for command: {0}\nexpected: {1}\nreceived: {2}".format(command, expected_response, response))
         if exit_on_fail:
             sys.exit(1)
 
