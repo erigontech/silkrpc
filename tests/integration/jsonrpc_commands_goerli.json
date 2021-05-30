@@ -9,7 +9,7 @@
         "response":{
             "jsonrpc":"2.0",
             "id":1,
-            "result":"TurboGeth/v2021.03.2-alpha/Linux"
+            "result":"TurboGeth/v2021.05.3-alpha-3121264f/linux/go1.16.4"
         }
     },
     {
@@ -401,6 +401,8 @@
             "jsonrpc":"2.0",
             "id":1,
             "result":{
+                "blockHash":"0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8",
+                "blockNumber":"0x41b57c",
                 "from":"0x100dd6c27454cb1dadd1391214a344c6208a8c80",
                 "gas":"0x186a0",
                 "gasPrice":"0x2883354c00",
@@ -410,6 +412,7 @@
                 "r":"0xd8238149c5315b58168dfc9ca03fd6d5140ac36dfde2a45184563c32dc5be464",
                 "s":"0x3c4fdade6c7779075c6335497fafefe1f1ffc3806f817f2b1062c780fd54ccff",
                 "to":"0x63dc5749fa134ff3b752813388a7215460a8ab01",
+                "transactionIndex":"0x0",
                 "v":"0x1c",
                 "value":"0x"
             }
@@ -454,6 +457,58 @@
             "id":1,
             "jsonrpc":"2.0",
             "result":"0x363d3d373d3d3d363d73cf3a0563d5a31ea838e8a2f27825cb8d0658b3925af43d82803e903d91602b57fd5bf3"
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_getStorageAt",
+            "params":["0xf08a226b67a8a9f99ccfcf51c50867bc18a54f53", "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc", "0x4A14A3"],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "result":"0x00000000000000000000000060e32d4a74ecab8e86d4649735022ab3449af14e"
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_getStorageAt",
+            "params":["0xf08a226b67a8a9f99ccfcf51c50867bc18a54f53", "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc", "0x450A8D"],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "result":"0x0000000000000000000000004146cb398469e64214cf3d139a1c793fc57d2d7f"
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_getStorageAt",
+            "params":["0x8cED5ad0d8dA4Ec211C17355Ed3DBFEC4Cf0E5b9", "0x0", "0x450A8D"],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "result":"0x0000000000000000000000000000000000000000000000000000000000000000"
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_getTransactionCount",
+            "params":["0xD5d2f5729D4581dfacEBedF46C7014DeFda43585", "0x499fca"],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "result":"0x1"
         }
     },
     {
