@@ -40,7 +40,7 @@ public:
 
     virtual asio::awaitable<silkworm::Bytes> get_one(const std::string& table, const silkworm::ByteView& key) const = 0;
 
-    virtual asio::awaitable<std::optional<silkworm::ByteView>> get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const = 0;
+    virtual asio::awaitable<std::optional<silkworm::Bytes>> get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const = 0;
 
     virtual asio::awaitable<void> walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, Walker w) const = 0;
 };

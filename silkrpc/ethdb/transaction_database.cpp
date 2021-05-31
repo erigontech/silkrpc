@@ -38,17 +38,17 @@ asio::awaitable<silkworm::Bytes> TransactionDatabase::get_one(const std::string&
     co_return kv_pair.value;
 }
 
-asio::awaitable<std::optional<silkworm::ByteView>> TransactionDatabase::get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const {
+asio::awaitable<std::optional<silkworm::Bytes>> TransactionDatabase::get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const {
     const auto cursor = co_await tx_.cursor_dup_sort(table);
     SILKRPC_TRACE << "TransactionDatabase::get_both_range cursor_id: " << cursor->cursor_id() << "\n";
-
-    silkworm::ByteView value{co_await cursor->seek_both(key, subkey)};
-    if (!silkworm::has_prefix(value, subkey)) {
+    const auto value{co_await cursor->seek_both(key, subkey)};
+    SILKRPC_DEBUG << "TransactionDatabase::get_both_range value return Value: " << value << " subkey: " << subkey << "\n";
+    if (value.substr(0, subkey.size()) != subkey) {
+        SILKRPC_DEBUG << "TransactionDatabase::get_both_range1 value: " << value << " subkey: " << subkey << "\n";
         co_return std::nullopt;
     }
 
-    value.remove_prefix(subkey.length());
-    co_return value;
+    co_return value.substr(subkey.length());
 }
 
 asio::awaitable<void> TransactionDatabase::walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, core::rawdb::Walker w) const {

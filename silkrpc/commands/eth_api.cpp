@@ -528,7 +528,8 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_number
             SILKRPC_WARN << "Transaction not found for index: " << index << "\n";
             reply = make_json_content(request["id"], nullptr);
         } else {
-            reply = make_json_content(request["id"], transactions[idx]);
+            silkrpc::Transaction new_transaction{{transactions[idx]}, {block_with_number.hash}, block_with_number.block.header.number, idx};
+            reply = make_json_content(request["id"], new_transaction);
         }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
@@ -659,12 +660,30 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann::json& 
 
 // https://eth.wiki/json-rpc/API#eth_gettransactioncount
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 2) {
+        auto error_msg = "invalid eth_getTransactionCount params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto address = params[0].get<evmc::address>();
+    const auto block_id = params[1].get<std::string>();
+    SILKRPC_DEBUG << "address: " << silkworm::to_hex(address) << " block_id: " << block_id << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+        StateReader state_reader{tx_database};
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
+        std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
 
-        reply = make_json_content(request["id"], to_quantity(0));
+        if (account) {
+            reply = make_json_content(request["id"], to_quantity(account->nonce));
+        } else {
+            reply = make_json_content(request["id"], "0x");
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -679,12 +698,32 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(const nlo
 
 // https://eth.wiki/json-rpc/API#eth_getstorageat
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_storage_at(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 3) {
+        auto error_msg = "invalid eth_getStorageAt params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto address = params[0].get<evmc::address>();
+    auto location = params[1].get<evmc::bytes32>();
+    const auto block_id = params[2].get<std::string>();
+    SILKRPC_DEBUG << "address: " << silkworm::to_hex(address) << " block_id: " << block_id << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+        StateReader state_reader{tx_database};
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
+        std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
 
-        reply = make_json_content(request["id"], to_quantity(0));
+        if (account) {
+           auto storage{co_await state_reader.read_storage(address, account->incarnation, location, block_number + 1)};
+           reply = make_json_content(request["id"], "0x" + silkworm::to_hex(storage));
+        } else {
+           reply = make_json_content(request["id"], "0x");
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
