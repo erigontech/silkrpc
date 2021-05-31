@@ -30,11 +30,12 @@
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/types/log.hpp>
+#include <silkrpc/types/receipt.hpp>
 
 namespace silkrpc::commands {
 
 silkworm::Bloom bloom_from_logs(const Logs& logs) {
-    SILKRPC_TRACE << "handle_parity_get_block_receipts #logs: " << logs.size() << "\n";
+    SILKRPC_TRACE << "bloom_from_logs #logs: " << logs.size() << "\n";
     silkworm::Bloom bloom{};
     for (auto const& log : logs) {
         silkworm::m3_2048(bloom, silkworm::full_view(log.address));
@@ -42,7 +43,7 @@ silkworm::Bloom bloom_from_logs(const Logs& logs) {
             silkworm::m3_2048(bloom, silkworm::full_view(topic));
         }
     }
-    SILKRPC_TRACE << "handle_parity_get_block_receipts bloom: " << silkworm::to_hex(silkworm::full_view(bloom)) << "\n";
+    SILKRPC_TRACE << "bloom_from_logs bloom: " << silkworm::to_hex(silkworm::full_view(bloom)) << "\n";
     return bloom;
 }
 
@@ -56,7 +57,7 @@ asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohm
         co_return;
     }
     const auto block_id = params[0].get<std::string>();
-    SILKRPC_DEBUG << "handle_parity_get_block_receipts block_id: " << block_id << "\n";
+    SILKRPC_DEBUG << "block_id: " << block_id << "\n";
 
     auto tx = co_await database_->begin();
 
@@ -67,7 +68,7 @@ asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohm
         const auto block_hash{co_await core::rawdb::read_canonical_block_hash(tx_database, block_number)};
         const auto block_with_hash{co_await core::rawdb::read_block(tx_database, block_hash, block_number)};
         auto receipts{co_await core::get_receipts(tx_database, block_hash, block_number)};
-        SILKRPC_TRACE << "handle_parity_get_block_receipts #receipts: " << receipts.size() << "\n";
+        SILKRPC_INFO << "#receipts: " << receipts.size() << "\n";
 
         for (auto& receipt : receipts) {
             auto tx = block_with_hash.block.transactions[receipt.tx_index];
@@ -79,11 +80,14 @@ asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohm
         }
 
         reply = make_json_content(request["id"], receipts);
+    } catch (const std::invalid_argument& iv) {
+        SILKRPC_DEBUG << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_content(request["id"], {});
     } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
     } catch (...) {
-        SILKRPC_ERROR << "unexpected exception\n";
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
 

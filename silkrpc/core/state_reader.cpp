@@ -59,6 +59,7 @@ asio::awaitable<evmc::bytes32> StateReader::read_storage(const evmc::address& ad
         auto composite_key{silkrpc::composite_storage_key(address, incarnation, location_hash.bytes)};
         SILKRPC_DEBUG << "StateReader::read_storage composite_key: " << composite_key << "\n";
         value = co_await db_reader_.get_one(silkworm::db::table::kPlainState.name, composite_key);
+        SILKRPC_DEBUG << "StateReader::read_storage value: " << (value ? *value : silkworm::Bytes{}) << "\n";
     }
     if (!value) {
         co_return evmc::bytes32{};

@@ -71,7 +71,7 @@ asio::awaitable<uint64_t> read_header_number(const DatabaseReader& reader, const
     const auto kv_pair{co_await reader.get(silkworm::db::table::kHeaderNumbers.name, block_hash_bytes)};
     const auto value = kv_pair.value;
     if (value.empty()) {
-        throw std::runtime_error{"empty block number value in read_header_number"};
+        throw std::invalid_argument{"empty block number value in read_header_number"};
     }
     co_return boost::endian::load_big_u64(value.data());
 }
@@ -83,7 +83,7 @@ asio::awaitable<ChainConfig> read_chain_config(const DatabaseReader& reader) {
     const auto kv_pair{co_await reader.get(silkworm::db::table::kConfig.name, genesis_block_hash_bytes)};
     const auto data = kv_pair.value;
     if (data.empty()) {
-        throw std::runtime_error{"empty chain config data in read_chain_config"};
+        throw std::invalid_argument{"empty chain config data in read_chain_config"};
     }
     SILKRPC_DEBUG << "chain config data: " << data.c_str() << "\n";
     const auto json_config = nlohmann::json::parse(data.c_str());
@@ -99,14 +99,13 @@ asio::awaitable<uint64_t> read_chain_id(const DatabaseReader& reader) {
 asio::awaitable<evmc::bytes32> read_canonical_block_hash(const DatabaseReader& reader, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number);
     SILKRPC_TRACE << "block_key: " << silkworm::to_hex(block_key) << "\n";
-    const auto kv_pair{co_await reader.get(silkworm::db::table::kCanonicalHashes.name, block_key)};
-    const auto data = kv_pair.value;
-    SILKRPC_TRACE << "data: " << silkworm::to_hex(data) << "\n";
-    if (data.empty()) {
-        throw std::runtime_error{"empty block hash value in read_canonical_block_hash"};
+    const auto value{co_await reader.get_one(silkworm::db::table::kCanonicalHashes.name, block_key)};
+    if (value.empty()) {
+        throw std::invalid_argument{"empty block hash value in read_canonical_block_hash"};
     }
-    SILKRPC_DEBUG << "canonical block hash: " << silkworm::to_bytes32(data) << "\n";
-    co_return silkworm::to_bytes32(data);
+    const auto canonical_block_hash{silkworm::to_bytes32(value)};
+    SILKRPC_DEBUG << "canonical block hash: " << canonical_block_hash << "\n";
+    co_return canonical_block_hash;
 }
 
 asio::awaitable<intx::uint256> read_total_difficulty(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
@@ -114,7 +113,7 @@ asio::awaitable<intx::uint256> read_total_difficulty(const DatabaseReader& reade
     const auto kv_pair{co_await reader.get(silkworm::db::table::kDifficulty.name, block_key)};
     silkworm::ByteView value{kv_pair.value};
     if (value.empty()) {
-        throw std::runtime_error{"empty total difficulty value in read_total_difficulty"};
+        throw std::invalid_argument{"empty total difficulty value in read_total_difficulty"};
     }
     intx::uint256 total_difficulty{0};
     auto decoding_result{silkworm::rlp::decode(value, total_difficulty)};
