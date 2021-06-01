@@ -42,7 +42,6 @@
 #include <silkrpc/ethdb/kv/async_start.hpp>
 #include <silkrpc/ethdb/kv/error.hpp>
 #include <silkrpc/ethdb/kv/streaming_client.hpp>
-#include <silkrpc/ethdb/kv/util.hpp>
 #include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 namespace silkrpc::ethdb::kv {
