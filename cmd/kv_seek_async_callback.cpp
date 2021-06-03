@@ -44,7 +44,7 @@ public:
         StartCall();
     }
 
-    void read_start(std::function<void(bool,remote::Pair)> read_completed) {
+    void read_start(std::function<void(bool, remote::Pair)> read_completed) {
         read_completed_ = read_completed;
         StartRead(&pair_);
     }
@@ -61,11 +61,12 @@ public:
     void OnWriteDone(bool ok) override {
         write_completed_(ok);
     }
+
 private:
     remote::KV::Stub& stub_;
     grpc::ClientContext context_;
     remote::Pair pair_;
-    std::function<void(bool,remote::Pair)> read_completed_;
+    std::function<void(bool, remote::Pair)> read_completed_;
     std::function<void(bool)> write_completed_;
 };
 

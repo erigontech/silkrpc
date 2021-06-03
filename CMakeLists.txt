@@ -46,3 +46,4 @@ add_subdirectory(silkworm)
 # Silkrpc itself
 add_subdirectory(silkrpc)
 add_subdirectory(cmd)
+add_subdirectory(examples)

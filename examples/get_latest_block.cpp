@@ -17,6 +17,7 @@
 #include <silkrpc/config.hpp>
 
 #include <functional>
+#include <future>
 #include <iomanip>
 #include <iostream>
 #include <utility>
@@ -25,6 +26,11 @@
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
 #include <asio/co_spawn.hpp>
+#include <asio/io_context.hpp>
+#include <asio/detached.hpp>
+#include <asio/thread_pool.hpp>
+#include <asio/use_awaitable.hpp>
+#include <asio/use_future.hpp>
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
@@ -32,29 +38,35 @@
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/core/blocks.hpp>
+#include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 
-ABSL_FLAG(std::string, table, "", "database table name");
-ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
 ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location as string <address>:<port>");
-ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
 
 using silkrpc::LogLevel;
 
-asio::awaitable<void> kv_seek(silkrpc::ethdb::Database& kv_db, const std::string& table_name, const silkworm::Bytes& seek_key) {
-    const auto kv_transaction = co_await kv_db.begin();
-    std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
-    const auto kv_cursor = co_await kv_transaction->cursor(table_name);
-    auto cursor_id = kv_cursor->cursor_id();
-    std::cout << "KV Tx OPEN <- cursor: " << cursor_id << "\n" << std::flush;
-    std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key << "\n" << std::flush;
-    auto kv_pair = co_await kv_cursor->seek(seek_key);
-    std::cout << "KV Tx SEEK <- key: " << kv_pair.key << " value: " << kv_pair.value << "\n" << std::flush;
-    std::cout << "KV Tx CLOSE -> cursor: " << cursor_id << "\n" << std::flush;
-    co_await kv_transaction->close();
-    std::cout << "KV Tx CLOSE <- cursor: 0\n" << std::flush;
-    co_return;
+asio::awaitable<std::optional<uint64_t>> latest_block(silkrpc::ethdb::Database& db) {
+    std::optional<uint64_t> block_height;
+
+    const auto db_transaction = co_await db.begin();
+    try {
+        silkrpc::ethdb::TransactionDatabase tx_db_reader{*db_transaction};
+        block_height = co_await silkrpc::core::get_latest_block_number(tx_db_reader);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception\n";
+    }
+    co_await db_transaction->close();
+
+    co_return block_height;
+}
+
+std::optional<uint64_t> get_latest_block(asio::io_context& io_context, silkrpc::ethdb::Database& db) {
+    auto result = asio::co_spawn(io_context, latest_block(db), asio::use_future);
+    return result.get();
 }
 
 int main(int argc, char* argv[]) {
@@ -64,33 +76,10 @@ int main(int argc, char* argv[]) {
     SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
 
     try {
-        auto table_name{absl::GetFlag(FLAGS_table)};
-        if (table_name.empty()) {
-            std::cerr << "Parameter table is invalid: [" << table_name << "]\n";
-            std::cerr << "Use --table flag to specify the name of Turbo-Geth database table\n";
-            return -1;
-        }
-
-        auto seek_key{absl::GetFlag(FLAGS_seekkey)};
-        const auto seek_key_bytes_optional = silkworm::from_hex(seek_key);
-        if (seek_key.empty() || !seek_key_bytes_optional.has_value()) {
-            std::cerr << "Parameter seek key is invalid: [" << seek_key << "]\n";
-            std::cerr << "Use --seekkey flag to specify the seek key in Turbo-Geth database table\n";
-            return -1;
-        }
-        const auto seek_key_bytes = seek_key_bytes_optional.value();
-
         auto target{absl::GetFlag(FLAGS_target)};
         if (target.empty() || target.find(":") == std::string::npos) {
             std::cerr << "Parameter target is invalid: [" << target << "]\n";
             std::cerr << "Use --target flag to specify the location of Turbo-Geth running instance\n";
-            return -1;
-        }
-
-        auto timeout{absl::GetFlag(FLAGS_timeout)};
-        if (timeout < 0) {
-            std::cerr << "Parameter timeout is invalid: [" << timeout << "]\n";
-            std::cerr << "Use --timeout flag to specify the timeout in msecs for Turbo-Geth KV gRPC calls\n";
             return -1;
         }
 
@@ -103,12 +92,15 @@ int main(int argc, char* argv[]) {
         auto& context = context_pool.get_context();
         auto& io_context = context.io_context;
         auto& database = context.database;
+        auto context_pool_thread = std::thread([&]() { context_pool.run(); });
 
-        asio::co_spawn(*io_context, kv_seek(*database, table_name, seek_key_bytes), [&](std::exception_ptr exptr) {
-            context_pool.stop();
-        });
+        const auto latest_block_number = get_latest_block(*io_context, *database);
+        if (latest_block_number) {
+            std::cout << "latest_block_number: " << latest_block_number.value() << "\n" << std::flush;
+        }
 
-        context_pool.run();
+        context_pool.stop();
+        context_pool_thread.join();
     } catch (const std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n" << std::flush;
     } catch (...) {
