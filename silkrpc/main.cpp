@@ -48,7 +48,7 @@ ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "numbe
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
 
-constexpr auto KV_SERVICE_API_VERSION = silkrpc::ethdb::kv::ProtocolVersion{1, 2, 0};
+constexpr auto KV_SERVICE_API_VERSION = silkrpc::ethdb::kv::ProtocolVersion{2, 0, 0};
 
 int main(int argc, char* argv[]) {
     const auto pid = boost::this_process::get_id();
