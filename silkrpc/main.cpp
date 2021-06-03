@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
     const auto pid = boost::this_process::get_id();
     const auto tid = std::this_thread::get_id();
 
-    using namespace silkrpc;
+    using silkrpc::LogLevel;
     using silkrpc::common::kAddressPortSeparator;
 
     absl::FlagsUsageConfig config;
@@ -124,7 +124,7 @@ int main(int argc, char* argv[]) {
         };
 
         // Check KV protocol version compatibility
-        using namespace std::chrono_literals;
+        using std::chrono_literals::operator""ms;
         silkrpc::ethdb::kv::ProtocolVersionCheck version_check;
         while (!(version_check = silkrpc::ethdb::kv::check_protocol_version(create_channel(), KV_SERVICE_API_VERSION))) {
             std::this_thread::sleep_for(1000ms);

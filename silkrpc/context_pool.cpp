@@ -18,6 +18,7 @@
 
 #include <stdexcept>
 #include <thread>
+#include <utility>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
