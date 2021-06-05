@@ -25,10 +25,10 @@
 #include <asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
-#include <roaring.hh>
 
 #include <silkworm/types/receipt.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/croaring/roaring.hh>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/transaction.hpp>

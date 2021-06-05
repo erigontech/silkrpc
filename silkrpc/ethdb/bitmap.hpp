@@ -22,10 +22,10 @@
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
-#include <roaring.hh>
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/croaring/roaring.hh>
 
 namespace silkrpc::ethdb::bitmap {
 
