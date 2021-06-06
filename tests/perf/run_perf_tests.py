@@ -13,14 +13,14 @@ from datetime import datetime
 
 DEFAULT_TEST_SEQUENCE = "50:30,200:30,200:60,400:30,600:60"
 DEFAULT_REPETITIONS = 10
-DEFAULT_VEGETA_PATTERN_TAR_FILE = "./vegeta/turbo_geth_stress_test_001.tar"
+DEFAULT_VEGETA_PATTERN_TAR_FILE = "./vegeta/erigon_stress_test_001.tar"
 DEFAULT_DAEMON_VEGETA_ON_CORE = "-:-"
-DEFAULT_TG_ADDRESS = "localhost:9090"
-DEFAULT_GETH_BUILD_DIR = "../../../turbo-geth/build/"
+DEFAULT_ERIGON_ADDRESS = "localhost:9090"
+DEFAULT_ERIGON_BUILD_DIR = "../../../erigon/build/"
 DEFAULT_SILKRPC_BUILD_DIR = "../../build_gcc_release/"
 DEFAULT_SILKRPC_NUM_CONTEXTS = int(multiprocessing.cpu_count() / 2)
 DEFAULT_RPCDAEMON_ADDRESS = "localhost"
-DEFAULT_TEST_MODE = 3
+DEFAULT_TEST_MODE = "3"
 
 VEGETA_REPORT = "vegeta_report.hrd"
 VEGETA_PATTERN_SILKRPC = "/tmp/turbo_geth_stress_test/vegeta_geth_eth_getLogs.txt"
@@ -29,7 +29,7 @@ VEGETA_PATTERN_RPCDAEMON = "/tmp/turbo_geth_stress_test/vegeta_turbo_geth_eth_ge
 def usage(argv):
     """ Print script usage
     """
-    print("Usage: " + argv[0] + " -h -p vegetaPatternTarFile -c daemonOnCore  -t turboGethAddress -g turboGethHomeDir -s silkrpcBuildDir -r testRepetitions - t testSequence")
+    print("Usage: " + argv[0] + " -h -p vegetaPatternTarFile -c daemonOnCore  -t turboErigonAddress -g turboErigonHomeDir -s silkrpcBuildDir -r testRepetitions - t testSequence")
     print("")
     print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
     print("")
@@ -37,8 +37,8 @@ def usage(argv):
     print("-d rpcDaemonAddress     address of daemon eg (10.1.1.20)                                                       [default: " + DEFAULT_RPCDAEMON_ADDRESS +"]")
     print("-p vegetaPatternTarFile path to the request file for Vegeta attack                                             [default: " + DEFAULT_VEGETA_PATTERN_TAR_FILE +"]")
     print("-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
-    print("-a turboGethAddress     address of TG Core component as <address>:<port> (e.g. localhost:9090)                 [default: " + DEFAULT_TG_ADDRESS + "]")
-    print("-g turboGethHomeDir     path to TG home folder (e.g. ../../../turbo-geth/)                                     [default: " + DEFAULT_GETH_BUILD_DIR + "]")
+    print("-a erigonAddress        address of ERIGON Core component as <address>:<port> (e.g. localhost:9090)             [default: " + DEFAULT_ERIGON_ADDRESS + "]")
+    print("-g erigonHomeDir        path to ERIGON home folder (e.g. ../../../erigon/)                                     [default: " + DEFAULT_ERIGON_BUILD_DIR + "]")
     print("-s silkrpcBuildDir      path to Silkrpc build folder (e.g. ../../build_gcc_release/)                           [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
     print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                      [default: " + str(DEFAULT_REPETITIONS) + "]")
     print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10)       [default: " + DEFAULT_TEST_SEQUENCE + "]")
@@ -55,8 +55,8 @@ class Config:
         """
         self.vegeta_pattern_tar_file = DEFAULT_VEGETA_PATTERN_TAR_FILE
         self.daemon_vegeta_on_core = DEFAULT_DAEMON_VEGETA_ON_CORE
-        self.tg_addr = DEFAULT_TG_ADDRESS
-        self.geth_builddir = DEFAULT_GETH_BUILD_DIR
+        self.erigon_addr = DEFAULT_ERIGON_ADDRESS
+        self.erigon_builddir = DEFAULT_ERIGON_BUILD_DIR
         self.silkrpc_build_dir = DEFAULT_SILKRPC_BUILD_DIR
         self.silkrpc_num_contexts = DEFAULT_SILKRPC_NUM_CONTEXTS
         self.repetitions = DEFAULT_REPETITIONS
@@ -91,14 +91,14 @@ class Config:
                         usage(argv)
                         sys.exit(-1)
                     local_config = 1
-                    self.tg_addr = optarg
+                    self.erigon_addr = optarg
                 elif option == "-g":
                     if local_config == 2:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
                         usage(argv)
                         sys.exit(-1)
                     local_config = 1
-                    self.geth_builddir = optarg
+                    self.erigon_builddir = optarg
                 elif option == "-s":
                     if local_config == 2:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
@@ -183,13 +183,15 @@ class PerfTest:
         """
         if self.config.rpc_daemon_address != "localhost":
             return
+        if self.config.test_mode == "1":
+            return
         self.rpc_daemon = 1
         on_core = self.config.daemon_vegeta_on_core.split(':')
         if on_core[0] == "-":
-            cmd = self.config.geth_builddir + "bin/rpcdaemon --private.api.addr="+self.config.tg_addr+" --http.api=eth,debug,net,web3 &"
+            cmd = self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3 &"
         else:
             cmd = "taskset -c " + on_core[0] + " " + \
-                   self.config.geth_builddir + "bin/rpcdaemon --private.api.addr="+self.config.tg_addr+" --http.api=eth,debug,net,web3 &"
+                   self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3 &"
         print("RpcDaemon starting ...: ", cmd)
         status = os.system(cmd)
         if int(status) != 0:
@@ -206,6 +208,8 @@ class PerfTest:
         """
         if self.config.rpc_daemon_address != "localhost":
             return
+        if self.config.test_mode == "1":
+            return
         self.rpc_daemon = 0
         os.system("kill -9 $(ps aux | grep 'rpcdaemon' | grep -v 'grep' | awk '{print $2}') 2> /dev/null ")
         print("RpcDaemon stopped")
@@ -216,13 +220,15 @@ class PerfTest:
         """
         if self.config.rpc_daemon_address != "localhost":
             return
+        if self.config.test_mode == "2":
+            return
         self.rpc_daemon = 1
         on_core = self.config.daemon_vegeta_on_core.split(':')
         if on_core[0] == "-":
-            cmd = self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.tg_addr + " --local localhost:51515 --logLevel c &"
+            cmd = self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c &"
         else:
             cmd = "taskset -c " + on_core[0] + " "\
-                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.tg_addr + " --local localhost:51515 --logLevel c --numContexts "\
+                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c --numContexts "\
                     + str(self.config.silkrpc_num_contexts) + " &"
         print("SilkDaemon starting ...: ", cmd)
         status = os.system(cmd)
@@ -239,6 +245,8 @@ class PerfTest:
         """ Stops SILKRPC daemon
         """
         if self.config.rpc_daemon_address != "localhost":
+            return
+        if self.config.test_mode == "2":
             return
         self.silk_daemon = 0
         os.system("kill $(ps aux | grep 'silk' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
@@ -292,7 +300,7 @@ class PerfTest:
             else:
                 error = ""
                 print(" [ Ratio="+ratio+", MaxLatency="+max_latency+"]")
-            threads = os.popen("ps -efL | grep tg | grep bin | wc -l").read().replace('\n', ' ')
+            threads = os.popen("ps -efL | grep erigon | grep bin | wc -l").read().replace('\n', ' ')
         finally:
             file.close()
 
@@ -343,7 +351,7 @@ class TestReport:
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Bogomips", bogomips])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Kernel", kern_vers])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "DaemonVegetaRunOnCore", self.config.daemon_vegeta_on_core])
-        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "TG address", self.config.tg_addr])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "TG address", self.config.erigon_addr])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "VegetaFile", self.config.vegeta_pattern_tar_file])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "VegetaChecksum", checksum[0]])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "GccVers", gcc_vers[0]])

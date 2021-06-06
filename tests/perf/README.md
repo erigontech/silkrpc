@@ -1,5 +1,13 @@
 # Performance Tests
-These are the instructions to execute the performance comparison tests between Silkrpc and Turbo-Geth (TG) RPCDaemon.
+These are the instructions to execute the performance comparison tests between Silkrpc and Erigon RPCDaemon.
+
+# Configuration
+# to increase core dump size 
+ulimit -c 3000000
+# to increase max file descriptors
+ulimit -n 64000
+# to increase port list (sudo su) 
+echo 10000 61000 > /proc/sys/net/ipv4/ip_local_port_range
 
 ## Software Versions
 In order to reproduce the environment used in last performance testing session, pick the following source code versions:
@@ -10,7 +18,7 @@ In order to reproduce the environment used in last performance testing session, 
 ## Build
 Follow the instructions for building:
 
-* TG RPCDaemon [build](https://github.com/)
+* Erigon RPCDaemon [build](https://github.com/)
 * Silkrpc [build](https://github.com/torquem-ch/silkrpc/tree/eth_get_logs#linux--macos)
 
 ## 1. Automated Setup
@@ -20,9 +28,9 @@ These are the instructions to execute *automatically* the performance comparison
 The command lines to activate such TG Core for performance testing are
 
 #### _TG Core_
-From Turbo-Geth project directory:
+From Erigon project directory:
 ```
-build/bin/tg --goerli --private.api.addr=localhost:9090
+build/bin/erigon --goerli --private.api.addr=localhost:9090
 ```
 #### _TG RPCDaemon_
 Automatically activated by the performance test script.
@@ -52,22 +60,27 @@ Vegeta request files are written to `/tmp/turbo_geth_stress_test`:
 From Silkrpc project directory check the performance test runner usage:
 ```
 $ tests/perf/run_perf_tests.py
-Usage: ./run_perf_tests.py vegetaPatternTarFile [daemonOnCore] [turboGethAddress] [turboGethHomeDir] [testRepetitions] [testSequence]
+Usage: ./run_perf_tests.py -h -p vegetaPatternTarFile -c daemonOnCore  -t turboErigonAddress -g turboErigonHomeDir -s silkrpcBuildDir -r testRepetitions - t testSequence
 
 Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta
 
-vegetaPatternTarFile     path to the request file for Vegeta attack
-daemonOnCore             logical cpu list in taskset format (e.g. - or 0-1 or 0-2 or 0,2...)              [default: -]
-turboGethAddress         address of TG Core component as <address>:<port> (e.g. localhost:9090)           [default: localhost:9090]
-turboGethHomeDir         path to TG home folder (e.g. ../../../turbo-geth/)                               [default: ../../../turbo-geth/]
-testRepetitions          number of repetitions for each element in test sequence (e.g. 10)                [default: 10]
-testSequence             list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10) [default: 50:30,200:30,200:60,400:30]
+-h                      print this help
+-d rpcDaemonAddress     address of daemon eg (10.1.1.20)                                                       [default: localhost]
+-p vegetaPatternTarFile path to the request file for Vegeta attack                                             [default: ./vegeta/erigon_stress_test_001.tar]
+-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: -:-]
+-a erigonAddress        address of ERIGON Core component as <address>:<port> (e.g. localhost:9090)             [default: localhost:9090]
+-g erigonHomeDir        path to ERIGON home folder (e.g. ../../../erigon/)                                     [default: ../../../erigon/build/]
+-s silkrpcBuildDir      path to Silkrpc build folder (e.g. ../../build_gcc_release/)                           [default: ../../build_gcc_release/]
+-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                      [default: 10]
+-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10)       [default: 50:30,200:30,200:60,400:30,600:60]
+-n numContexts          number of Silkrpc execution contexts (i.e. 1+1 asio+grpc threads)                      [default: 6]
+-m mode                 tests type silkrpc(1), rpcdaemon(2) and both (3) (i.e. 3)                              [default: 3]
 ```
 Results are written in a CSV file `/tmp/<date_time>_perf.csv`.
 
 So for example:
 ```
-tests/perf/run_perf_tests.py tests/perf/vegeta/turbo_geth_stress_test_001.tar 0-1 localhost:9090 ../../../turbo-geth/ 3 200:30
+tests/perf/run_perf_tests.py 
 ```
 
 ## 2. Manual Setup
@@ -78,13 +91,13 @@ These are the instructions to execute *manually* the performance comparison test
 
 The command lines to activate such components for performance testing are listed below (you can also experiment allocating a different number of cores or removing `taskset`).
 
-#### _TG Core_
+#### _Erigon Core_
 From Turbo-Geth project directory:
 ```
-build/bin/tg --goerli --private.api.addr=localhost:9090
+build/bin/erigon --goerli --private.api.addr=localhost:9090
 ```
 #### _TG RPCDaemon_
-From Turbo-Geth project directory:
+From Erigon project directory:
 ```
 taskset -c 0-1 build/bin/rpcdaemon --private.api.addr=localhost:9090 --http.api=eth,debug,net,web3
 ```
