@@ -56,7 +56,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getProof                            | -            | not yet implemented                        |
 |                                         |              |                                            |
 | eth_mining                              | -            | not yet implemented                        |
-| eth_coinbase                            | -            | not yet implemented                        |
+| eth_coinbase                            | Yes          |                                            |
 | eth_hashrate                            | -            | not yet implemented                        |
 | eth_submitHashrate                      | -            | not yet implemented                        |
 | eth_getWork                             | -            | not yet implemented                        |

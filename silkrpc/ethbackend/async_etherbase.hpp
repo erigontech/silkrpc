@@ -14,33 +14,30 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_KV_ASYNC_SEEK_HPP_
-#define SILKRPC_ETHDB_KV_ASYNC_SEEK_HPP_
+#ifndef SILKRPC_ETHBACKEND_ASYNC_ETHERBASE_HPP_
+#define SILKRPC_ETHBACKEND_ASYNC_ETHERBASE_HPP_
 
 #include <asio/detail/config.hpp>
 #include <asio/detail/bind_handler.hpp>
-#include <asio/detail/fenced_block.hpp>
-#include <asio/detail/handler_alloc_helpers.hpp>
-#include <asio/detail/handler_work.hpp>
 #include <asio/detail/memory.hpp>
 
 #include <silkrpc/grpc/async_operation.hpp>
-#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
+#include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 
-namespace silkrpc::ethdb::kv {
+namespace silkrpc::ethbackend {
 
 template <typename Handler, typename IoExecutor>
-class async_seek : public async_operation<void, asio::error_code, remote::Pair> {
+class async_etherbase : public async_operation<void, asio::error_code, remote::EtherbaseReply> {
 public:
-    ASIO_DEFINE_HANDLER_PTR(async_seek);
+    ASIO_DEFINE_HANDLER_PTR(async_etherbase);
 
-    async_seek(Handler& h, const IoExecutor& io_ex)
-    : async_operation(&async_seek::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
+    async_etherbase(Handler& h, const IoExecutor& io_ex)
+    : async_operation(&async_etherbase::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
     {}
 
-    static void do_complete(void* owner, async_operation* base, asio::error_code error = {}, remote::Pair seek_pair = {}) {
+    static void do_complete(void* owner, async_operation* base, asio::error_code error = {}, remote::EtherbaseReply reply = {}) {
         // Take ownership of the handler object.
-        async_seek* h{static_cast<async_seek*>(base)};
+        async_etherbase* h{static_cast<async_etherbase*>(base)};
         ptr p = {asio::detail::addressof(h->handler_), h, h};
 
         ASIO_HANDLER_COMPLETION((*h));
@@ -55,7 +52,7 @@ public:
         // with the handler. Consequently, a local copy of the handler is required
         // to ensure that any owning sub-object remains valid until after we have
         // deallocated the memory here.
-        asio::detail::binder2<Handler, asio::error_code, remote::Pair> handler{h->handler_, error, seek_pair};
+        asio::detail::binder2<Handler, asio::error_code, remote::EtherbaseReply> handler{h->handler_, error, reply};
         p.h = asio::detail::addressof(handler.handler_);
         p.reset();
 
@@ -73,6 +70,6 @@ private:
     asio::detail::handler_work<Handler, IoExecutor> work_;
 };
 
-} // namespace silkrpc::ethdb::kv
+} // namespace silkrpc::ethbackend
 
-#endif // SILKRPC_ETHDB_KV_ASYNC_SEEK_HPP_
+#endif // SILKRPC_ETHBACKEND_ASYNC_ETHERBASE_HPP_

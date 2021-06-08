@@ -1098,12 +1098,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_mining(const nlohmann::json& re
 
 // https://eth.wiki/json-rpc/API#eth_coinbase
 asio::awaitable<void> EthereumRpcApi::handle_eth_coinbase(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
-
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
-
-        reply = make_json_content(request["id"], to_quantity(0));
+        const auto coinbase_address = co_await backend_->etherbase();
+        reply = make_json_content(request["id"], coinbase_address);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -1112,7 +1109,6 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_coinbase(const nlohmann::json& 
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
 
-    co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
 }
 
