@@ -18,6 +18,7 @@
 
 #include <stdexcept>
 #include <thread>
+#include <utility>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
@@ -28,7 +29,8 @@ std::ostream& operator<<(std::ostream& out, const Context& c) {
     out << "io_context: " << &*c.io_context
         << " grpc_queue: " << &*c.grpc_queue
         << " grpc_runner: " << &*c.grpc_runner
-        << " database: " << &*c.database;
+        << " database: " << &*c.database
+        << " backend: " << &*c.backend;
     return out;
 }
 
@@ -45,7 +47,8 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) :
         auto grpc_queue = std::make_unique<::grpc::CompletionQueue>();
         auto grpc_runner = std::make_unique<grpc::CompletionRunner>(*grpc_queue, *io_context);
         auto database = std::make_unique<ethdb::kv::RemoteDatabase>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
-        contexts_.push_back({io_context, std::move(grpc_queue), std::move(grpc_runner), std::move(database)});
+        auto backend = std::make_unique<ethbackend::BackEnd>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
+        contexts_.push_back({io_context, std::move(grpc_queue), std::move(grpc_runner), std::move(database), std::move(backend)});
         SILKRPC_DEBUG << "ContextPool::ContextPool context[" << i << "] " << contexts_[i] << "\n";
         work_.push_back(asio::require(io_context->get_executor(), asio::execution::outstanding_work.tracked));
     }

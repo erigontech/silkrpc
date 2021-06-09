@@ -25,11 +25,12 @@
 #include <asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
-#include <roaring.hh>
 
 #include <silkworm/types/receipt.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/croaring/roaring.hh>
 #include <silkrpc/json/types.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/transaction.hpp>
 #include <silkrpc/types/log.hpp>
@@ -41,7 +42,8 @@ namespace silkrpc::commands {
 
 class EthereumRpcApi {
 public:
-    explicit EthereumRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
+    explicit EthereumRpcApi(std::unique_ptr<ethdb::Database>& database, std::unique_ptr<ethbackend::BackEnd>& backend)
+    : database_(database), backend_(backend) {}
     virtual ~EthereumRpcApi() {}
 
     EthereumRpcApi(const EthereumRpcApi&) = delete;
@@ -95,6 +97,7 @@ protected:
     std::vector<Log> filter_logs(std::vector<Log>& logs, const Filter& filter);
 
     std::unique_ptr<ethdb::Database>& database_;
+    std::unique_ptr<ethbackend::BackEnd>& backend_;
 
     friend class silkrpc::http::RequestHandler;
 };

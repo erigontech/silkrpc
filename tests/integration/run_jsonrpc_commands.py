@@ -17,14 +17,15 @@ def run_shell_command(command: str, expected_response: str, exit_on_fail) -> int
         sys.exit(process.returncode)
     process.stdout = process.stdout.strip('\n')
     response = json.loads(process.stdout)
-    if "error" in response:
-        print("--> KO: error {0} for command: {1}".format(response["error"], command))
-        if exit_on_fail:
-            sys.exit(1)
-    elif expected_response["result"] is not None and response != expected_response:
+    if "result" in expected_response and expected_response["result"] is not None and response != expected_response:
         print("--> KO: unexpected result for command: {0}\nexpected: {1}\nreceived: {2}".format(command, expected_response, response))
         if exit_on_fail:
             sys.exit(1)
+    elif "error" in expected_response and expected_response["error"] is not None and response != expected_response:
+        print("--> KO: unexpected error for command: {0}\nexpected: {1}\nreceived: {2}".format(command, expected_response, response))
+        if exit_on_fail:
+            sys.exit(1)
+
 def run_tests(json_filename, verbose, silk, exit_on_fail, req_test):
     """ Run integration tests. """
     with open(json_filename) as json_file:
@@ -38,15 +39,16 @@ def run_tests(json_filename, verbose, silk, exit_on_fail, req_test):
                 response = json_rpc["response"]
                 if silk:
                     run_shell_command(
-                         '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
-                         request + '''\' localhost:51515''',
-                         response, exit_on_fail)
+                        '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
+                        request + '''\' localhost:51515''',
+                        response, exit_on_fail)
                 else:
                     run_shell_command(
-                         '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
-                         request + '''\' localhost:8545''',
-                         response, exit_on_fail)
+                        '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
+                        request + '''\' localhost:8545''',
+                        response, exit_on_fail)
             test_number = test_number + 1
+
 #
 # usage
 #

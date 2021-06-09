@@ -43,7 +43,7 @@ find_package(intx CONFIG REQUIRED)
 
 add_subdirectory(silkworm)
 
-# SilkRpc itself
-add_subdirectory(silkrpc/interfaces)
+# Silkrpc itself
 add_subdirectory(silkrpc)
 add_subdirectory(cmd)
+add_subdirectory(examples)
