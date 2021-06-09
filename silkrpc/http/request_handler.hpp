@@ -32,6 +32,7 @@
 #include <asio/awaitable.hpp>
 
 #include <silkrpc/commands/rpc_api.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 
 namespace silkrpc::http {
@@ -44,7 +45,8 @@ public:
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
-    explicit RequestHandler(std::unique_ptr<ethdb::Database>& database) : rpc_api_{database} {}
+    explicit RequestHandler(std::unique_ptr<ethdb::Database>& database, std::unique_ptr<ethbackend::BackEnd>& backend)
+    : rpc_api_{database, backend} {}
 
     virtual ~RequestHandler() {}
 

@@ -54,6 +54,18 @@ add_executable(kv_seek_both kv_seek_both.cpp)
 target_include_directories(kv_seek_both PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(kv_seek_both absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
 
+add_executable(ethbackend ethbackend.cpp)
+target_include_directories(ethbackend PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(ethbackend absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
+
+add_executable(ethbackend_async ethbackend_async.cpp)
+target_include_directories(ethbackend_async PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(ethbackend_async absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
+
+add_executable(ethbackend_coroutines ethbackend_coroutines.cpp)
+target_include_directories(ethbackend_coroutines PRIVATE ${CMAKE_SOURCE_DIR})
+target_link_libraries(ethbackend_coroutines absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_db silkrpc)
+
 # Unit tests
 enable_testing()
 

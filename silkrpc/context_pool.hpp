@@ -27,6 +27,7 @@
 #include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
+#include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/grpc/completion_runner.hpp>
 
@@ -37,6 +38,7 @@ struct Context {
     std::unique_ptr<::grpc::CompletionQueue> grpc_queue;
     std::unique_ptr<grpc::CompletionRunner> grpc_runner;
     std::unique_ptr<ethdb::Database> database;
+    std::unique_ptr<ethbackend::BackEnd> backend;
 };
 
 std::ostream& operator<<(std::ostream& out, const Context& c);

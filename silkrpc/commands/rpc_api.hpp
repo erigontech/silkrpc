@@ -26,6 +26,7 @@
 #include <silkrpc/commands/tg_api.hpp>
 #include <silkrpc/commands/trace_api.hpp>
 #include <silkrpc/commands/web3_api.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
@@ -34,8 +35,8 @@ namespace silkrpc::commands {
 
 class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, TurboGethRpcApi, TraceRpcApi {
 public:
-    explicit RpcApi(std::unique_ptr<ethdb::Database>& database) :
-        EthereumRpcApi{database}, NetRpcApi{}, Web3RpcApi{database}, DebugRpcApi{database},
+    explicit RpcApi(std::unique_ptr<ethdb::Database>& database, std::unique_ptr<ethbackend::BackEnd>& backend) :
+        EthereumRpcApi{database, backend}, NetRpcApi{}, Web3RpcApi{database}, DebugRpcApi{database},
         ParityRpcApi{database}, TurboGethRpcApi{database}, TraceRpcApi{database} {}
     virtual ~RpcApi() {}
 
