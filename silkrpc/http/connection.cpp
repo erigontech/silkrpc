@@ -38,8 +38,8 @@
 
 namespace silkrpc::http {
 
-Connection::Connection(asio::io_context& io_context, std::unique_ptr<ethdb::Database>& database)
-: socket_{io_context}, request_handler_{database} {
+Connection::Connection(asio::io_context& io_context, std::unique_ptr<ethdb::Database>& database, std::unique_ptr<ethbackend::BackEnd>& backend)
+: socket_{io_context}, request_handler_{database, backend} {
     request_.content.reserve(1024);
     request_.headers.reserve(8);
     request_.method.reserve(64);
