@@ -447,12 +447,32 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_number
 
 // https://eth.wiki/json-rpc/API#eth_gettransactionbyhash
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 1) {
+        auto error_msg = "invalid eth_getTransactionByHash params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    auto transaction_hash = params[0].get<evmc::bytes32>();
+    SILKRPC_DEBUG << "transaction_hash: " << transaction_hash << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-
-        reply = make_json_content(request["id"], to_quantity(0));
+        const auto optional_transaction = co_await core::rawdb::read_transaction_by_hash(tx_database, transaction_hash);
+        if (!optional_transaction) {
+            // TODO(sixtysixter)
+            // Maybe no finalized transaction, try to retrieve it from the pool
+            SILKRPC_DEBUG << "Retrieving not finalized transactions from pool not implemented yet\n";
+            reply = make_json_content(request["id"], nullptr);
+        } else {
+            reply = make_json_content(request["id"], *optional_transaction);
+        }
+    } catch (const std::invalid_argument& iv) {
+        SILKRPC_DEBUG << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_content(request["id"], {});
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
