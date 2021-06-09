@@ -12,8 +12,8 @@ echo 10000 61000 > /proc/sys/net/ipv4/ip_local_port_range
 ## Software Versions
 In order to reproduce the environment used in last performance testing session, pick the following source code versions:
 
-* Erigon RPCDaemon commit: (https://github.com/ledgerwatch/erigon/commit/29fa1aa35aee589c3a27b6976a04ee53b6c1c354)
-* Silkrpc commit: https://github.com/torquem-ch/silkrpc/commit/54bef99171b2336a1b2451cd29be6a79629d61b9)
+* Erigon RPCDaemon commit: https://github.com/ledgerwatch/erigon/commit/29fa1aa35aee589c3a27b6976a04ee53b6c1c354
+* Silkrpc commit: https://github.com/torquem-ch/silkrpc/commit/54bef99171b2336a1b2451cd29be6a79629d61b9
 
 ## Build
 Follow the instructions for building:
@@ -49,7 +49,7 @@ Execute Erigon [bench8 tool](https://github.com/ledgerwatch/erigon/blob/3388c1f1
 build/bin/rpctest bench8 --erigonUrl http://localhost:8545 --gethUrl http://localhost:51515 --needCompare --block 200000
 ```
 
-Vegeta request files are written to `/tmp/turbo_geth_stress_test`:
+Vegeta request files are written to `/tmp/erigon_stress_test`:
 * results_geth_debug_getModifiedAccountsByNumber.csv, results_geth_eth_getLogs.csv
 * results_turbo_geth_debug_getModifiedAccountsByNumber.csv, results_turbo_geth_eth_getLogs.csv
 * vegeta_geth_debug_getModifiedAccountsByNumber.txt, vegeta_geth_eth_getLogs.txt
@@ -121,7 +121,7 @@ Execute Erigon [bench8 tool](https://github.com/ledgerwatch/erigon/blob/3388c1f1
 build/bin/rpctest bench8 --erigonUrl http://localhost:8545 --gethUrl http://localhost:51515 --needCompare --block 200000
 ```
 
-Vegeta request files are written to `/tmp/turbo_geth_stress_test`:
+Vegeta request files are written to `/tmp/erigon_stress_test`:
 * results_geth_debug_getModifiedAccountsByNumber.csv, results_geth_eth_getLogs.csv
 * results_turbo_geth_debug_getModifiedAccountsByNumber.csv, results_turbo_geth_eth_getLogs.csv
 * vegeta_geth_debug_getModifiedAccountsByNumber.txt, vegeta_geth_eth_getLogs.txt
