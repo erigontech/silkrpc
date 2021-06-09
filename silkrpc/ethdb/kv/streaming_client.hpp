@@ -121,12 +121,6 @@ public:
         SILKRPC_TRACE << "StreamingClient::completed " << this << " status: " << status_ << " end\n";
     }
 
-    void try_cancel() override {
-        SILKRPC_TRACE << "StreamingClient::try_cancel " << this << " status: " << status_ << " start\n";
-        context_.TryCancel();
-        SILKRPC_TRACE << "StreamingClient::try_cancel " << this << " status: " << status_ << " end\n";
-    }
-
 private:
     std::unique_ptr<remote::KV::Stub> stub_;
     ::grpc::ClientContext context_;
