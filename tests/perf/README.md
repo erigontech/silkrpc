@@ -12,8 +12,8 @@ echo 10000 61000 > /proc/sys/net/ipv4/ip_local_port_range
 ## Software Versions
 In order to reproduce the environment used in last performance testing session, pick the following source code versions:
 
-* Erigon RPCDaemon commit: [3388c1f](https://github.com/ledgerwatch/turbo-geth/commit/3388c1f1af6c65808830e5839a0c6d5d78f018fa)
-* Silkrpc commit: [072dbc0](https://github.com/torquem-ch/silkrpc/commit/072dbc0314f383fbe236fc0c26e34187fe2191ca)
+* Erigon RPCDaemon commit: (https://github.com/ledgerwatch/erigon/commit/29fa1aa35aee589c3a27b6976a04ee53b6c1c354)
+* Silkrpc commit: https://github.com/torquem-ch/silkrpc/commit/54bef99171b2336a1b2451cd29be6a79629d61b9)
 
 ## Build
 Follow the instructions for building:
@@ -43,10 +43,10 @@ Currently the performance workload targets just the [eth_getLogs](https://eth.wi
 
 #### _Workload Generation_
 
-Execute Turbo-Geth [bench8 tool](https://github.com/ledgerwatch/turbo-geth/blob/3388c1f1af6c65808830e5839a0c6d5d78f018fa/cmd/rpctest/rpctest/bench8.go) against both Turbo-Geth RPCDaemon and Silkrpc using the following command line:
+Execute Turbo-Geth [bench8 tool](https://github.com/ledgerwatch/erigon/blob/3388c1f1af6c65808830e5839a0c6d5d78f018fa/cmd/rpctest/rpctest/bench8.go) against both Turbo-Geth RPCDaemon and Silkrpc using the following command line:
 
 ```
-build/bin/rpctest bench8 --tgUrl http://localhost:8545 --gethUrl http://localhost:51515 --needCompare --block 200000
+build/bin/rpctest bench8 --erigonUrl http://localhost:8545 --gethUrl http://localhost:51515 --needCompare --block 200000
 ```
 
 Vegeta request files are written to `/tmp/turbo_geth_stress_test`:
@@ -115,10 +115,10 @@ Currently the performance workload targets just the [eth_getLogs](https://eth.wi
 
 #### _Workload Generation_
 
-Execute Turbo-Geth [bench8 tool](https://github.com/ledgerwatch/turbo-geth/blob/3388c1f1af6c65808830e5839a0c6d5d78f018fa/cmd/rpctest/rpctest/bench8.go) against both Turbo-Geth RPCDaemon and Silkrpc using the following command line:
+Execute Erigon [bench8 tool](https://github.com/ledgerwatch/erigon/blob/3388c1f1af6c65808830e5839a0c6d5d78f018fa/cmd/rpctest/rpctest/bench8.go) against both Turbo-Geth RPCDaemon and Silkrpc using the following command line:
 
 ```
-build/bin/rpctest bench8 --tgUrl http://localhost:8545 --gethUrl http://localhost:51515 --needCompare --block 200000
+build/bin/rpctest bench8 --erigonUrl http://localhost:8545 --gethUrl http://localhost:51515 --needCompare --block 200000
 ```
 
 Vegeta request files are written to `/tmp/turbo_geth_stress_test`:
