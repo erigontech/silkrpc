@@ -29,7 +29,7 @@ VEGETA_PATTERN_RPCDAEMON = "/tmp/turbo_geth_stress_test/vegeta_turbo_geth_eth_ge
 def usage(argv):
     """ Print script usage
     """
-    print("Usage: " + argv[0] + " -h -p vegetaPatternTarFile -c daemonOnCore  -t turboErigonAddress -g turboErigonHomeDir -s silkrpcBuildDir -r testRepetitions - t testSequence")
+    print("Usage: " + argv[0] + " -h -p vegetaPatternTarFile -c daemonOnCore  -t erigonAddress -g erigonBuildDir -s silkrpcBuildDir -r testRepetitions - t testSequence")
     print("")
     print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
     print("")
@@ -38,7 +38,7 @@ def usage(argv):
     print("-p vegetaPatternTarFile path to the request file for Vegeta attack                                             [default: " + DEFAULT_VEGETA_PATTERN_TAR_FILE +"]")
     print("-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
     print("-a erigonAddress        address of ERIGON Core component as <address>:<port> (e.g. localhost:9090)             [default: " + DEFAULT_ERIGON_ADDRESS + "]")
-    print("-g erigonHomeDir        path to ERIGON home folder (e.g. ../../../erigon/)                                     [default: " + DEFAULT_ERIGON_BUILD_DIR + "]")
+    print("-g erigonBuildDir       path to ERIGON build folder (e.g. ../../../erigon/build)                               [default: " + DEFAULT_ERIGON_BUILD_DIR + "]")
     print("-s silkrpcBuildDir      path to Silkrpc build folder (e.g. ../../build_gcc_release/)                           [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
     print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                      [default: " + str(DEFAULT_REPETITIONS) + "]")
     print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10)       [default: " + DEFAULT_TEST_SEQUENCE + "]")
