@@ -43,7 +43,7 @@ Currently the performance workload targets just the [eth_getLogs](https://eth.wi
 
 #### _Workload Generation_
 
-Execute Turbo-Geth [bench8 tool](https://github.com/ledgerwatch/erigon/blob/3388c1f1af6c65808830e5839a0c6d5d78f018fa/cmd/rpctest/rpctest/bench8.go) against both Turbo-Geth RPCDaemon and Silkrpc using the following command line:
+Execute Erigon [bench8 tool](https://github.com/ledgerwatch/erigon/blob/3388c1f1af6c65808830e5839a0c6d5d78f018fa/cmd/rpctest/rpctest/bench8.go) against both Erigon RPCDaemon and Silkrpc using the following command line:
 
 ```
 build/bin/rpctest bench8 --erigonUrl http://localhost:8545 --gethUrl http://localhost:51515 --needCompare --block 200000
@@ -92,7 +92,7 @@ These are the instructions to execute *manually* the performance comparison test
 The command lines to activate such components for performance testing are listed below (you can also experiment allocating a different number of cores or removing `taskset`).
 
 #### _Erigon Core_
-From Turbo-Geth project directory:
+From Erigon project directory:
 ```
 build/bin/erigon --goerli --private.api.addr=localhost:9090
 ```
@@ -115,7 +115,7 @@ Currently the performance workload targets just the [eth_getLogs](https://eth.wi
 
 #### _Workload Generation_
 
-Execute Erigon [bench8 tool](https://github.com/ledgerwatch/erigon/blob/3388c1f1af6c65808830e5839a0c6d5d78f018fa/cmd/rpctest/rpctest/bench8.go) against both Turbo-Geth RPCDaemon and Silkrpc using the following command line:
+Execute Erigon [bench8 tool](https://github.com/ledgerwatch/erigon/blob/3388c1f1af6c65808830e5839a0c6d5d78f018fa/cmd/rpctest/rpctest/bench8.go) against both Erigon RPCDaemon and Silkrpc using the following command line:
 
 ```
 build/bin/rpctest bench8 --erigonUrl http://localhost:8545 --gethUrl http://localhost:51515 --needCompare --block 200000
