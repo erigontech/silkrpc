@@ -27,6 +27,7 @@
 #include <nlohmann/json.hpp>
 
 #include <silkworm/types/receipt.hpp>
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/croaring/roaring.hh>
 #include <silkrpc/json/types.hpp>
@@ -42,8 +43,7 @@ namespace silkrpc::commands {
 
 class EthereumRpcApi {
 public:
-    explicit EthereumRpcApi(std::unique_ptr<ethdb::Database>& database, std::unique_ptr<ethbackend::BackEnd>& backend)
-    : database_(database), backend_(backend) {}
+    explicit EthereumRpcApi(Context& context) : context_(context), database_(context.database), backend_(context.backend) {}
     virtual ~EthereumRpcApi() {}
 
     EthereumRpcApi(const EthereumRpcApi&) = delete;
@@ -96,6 +96,7 @@ protected:
     asio::awaitable<Receipts> get_receipts(core::rawdb::DatabaseReader& db_reader, uint64_t number, evmc::bytes32 hash);
     std::vector<Log> filter_logs(std::vector<Log>& logs, const Filter& filter);
 
+    Context& context_;
     std::unique_ptr<ethdb::Database>& database_;
     std::unique_ptr<ethbackend::BackEnd>& backend_;
 

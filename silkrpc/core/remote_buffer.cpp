@@ -22,11 +22,12 @@
 #include <asio/use_future.hpp>
 
 #include <silkrpc/core/blocks.hpp>
+#include <silkrpc/core/rawdb/chain.hpp>
 
 namespace silkrpc {
 
 asio::awaitable<std::optional<silkworm::Account>> AsyncRemoteBuffer::read_account(const evmc::address& address) const noexcept {
-    co_return std::nullopt;
+    co_return co_await state_reader_.read_account(address, block_number_);
 }
 
 asio::awaitable<silkworm::Bytes> AsyncRemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
@@ -34,7 +35,7 @@ asio::awaitable<silkworm::Bytes> AsyncRemoteBuffer::read_code(const evmc::bytes3
 }
 
 asio::awaitable<evmc::bytes32> AsyncRemoteBuffer::read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept {
-    co_return evmc::bytes32{};
+    co_return co_await state_reader_.read_storage(address, incarnation, location, block_number_);
 }
 
 asio::awaitable<uint64_t> AsyncRemoteBuffer::previous_incarnation(const evmc::address& address) const noexcept {
@@ -42,15 +43,15 @@ asio::awaitable<uint64_t> AsyncRemoteBuffer::previous_incarnation(const evmc::ad
 }
 
 asio::awaitable<std::optional<silkworm::BlockHeader>> AsyncRemoteBuffer::read_header(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
-    co_return std::nullopt;
+    co_return co_await core::rawdb::read_header(db_reader_, block_hash, block_number);
 }
 
 asio::awaitable<std::optional<silkworm::BlockBody>> AsyncRemoteBuffer::read_body(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
-    co_return std::nullopt;
+    co_return co_await core::rawdb::read_body(db_reader_, block_hash, block_number);
 }
 
 asio::awaitable<std::optional<intx::uint256>> AsyncRemoteBuffer::total_difficulty(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
-    co_return std::nullopt;
+    co_return co_await core::rawdb::read_total_difficulty(db_reader_, block_hash, block_number);
 }
 
 asio::awaitable<evmc::bytes32> AsyncRemoteBuffer::state_root_hash() const {
@@ -58,11 +59,13 @@ asio::awaitable<evmc::bytes32> AsyncRemoteBuffer::state_root_hash() const {
 }
 
 asio::awaitable<uint64_t> AsyncRemoteBuffer::current_canonical_block() const {
+    // This method should not be called by EVM::execute
     co_return 0;
 }
 
 asio::awaitable<std::optional<evmc::bytes32>> AsyncRemoteBuffer::canonical_hash(uint64_t block_number) const {
-    co_return std::nullopt;
+    // This method should not be called by EVM::execute
+    co_return co_await core::rawdb::read_canonical_block_hash(db_reader_, block_number);
 }
 
 std::optional<silkworm::Account> RemoteBuffer::read_account(const evmc::address& address) const noexcept {
