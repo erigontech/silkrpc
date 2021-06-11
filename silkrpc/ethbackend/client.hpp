@@ -18,5 +18,6 @@
 #define SILKRPC_ETHBACKEND_CLIENT_HPP_
 
 #include <silkrpc/ethbackend/etherbase_client.hpp>
+#include <silkrpc/ethbackend/protocolVersion_client.hpp>
 
 #endif // SILKRPC_ETHBACKEND_CLIENT_HPP_
