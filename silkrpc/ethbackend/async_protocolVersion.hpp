@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_ETHBACKEND_ASYNC_PROTOCOL_VERSION_HPP_
-#define SILKRPC_ETHBACKEND_ASYNC_PROTOCOL_VERSION_HPP_
+#ifndef SILKRPC_ETHBACKEND_ASYNC_PROTOCOLVERSION_HPP_
+#define SILKRPC_ETHBACKEND_ASYNC_PROTOCOLVERSION_HPP_
 
 #include <asio/detail/config.hpp>
 #include <asio/detail/bind_handler.hpp>
@@ -72,4 +72,4 @@ private:
 
 } // namespace silkrpc::ethbackend
 
-#endif // SILKRPC_ETHBACKEND_ASYNC_PROTOCOL_VERSION_HPP_
+#endif // SILKRPC_ETHBACKEND_ASYNC_PROTOCOLVERSION_HPP_

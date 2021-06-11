@@ -38,8 +38,8 @@ namespace silkrpc::ethbackend {
 class BackEnd final {
 public:
     explicit BackEnd(asio::io_context& context, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
-    : context_(context), 
-      eb_client_{channel, queue}, eb_awaitable_{context_, eb_client_}, 
+    : context_(context),
+      eb_client_{channel, queue}, eb_awaitable_{context_, eb_client_},
       pv_client_{channel, queue}, pv_awaitable_{context_, pv_client_} {
         SILKRPC_TRACE << "BackEnd::ctor " << this << "\n";
     }
