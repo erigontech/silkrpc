@@ -21,11 +21,12 @@
 #include <utility>
 
 #include <boost/endian/conversion.hpp>
+#include <intx/intx.hpp>
+#include <silkworm/common/util.hpp>
+#include <silkworm/db/silkworm/db/util.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/db/silkworm/db/util.hpp>
 
 namespace silkrpc {
 
@@ -94,6 +95,16 @@ void from_json(const nlohmann::json& json, bytes32& b32) {
 }
 
 } // namespace evmc
+
+namespace intx {
+
+void from_json(const nlohmann::json& json, uint256& ui256) {
+    const auto b32_bytes = silkworm::from_hex(json.get<std::string>());
+    const auto b32 = silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
+    ui256 = intx::be::load<intx::uint256>(b32.bytes);
+}
+
+} // namespace intx
 
 namespace silkworm {
 
@@ -215,20 +226,10 @@ void from_json(const nlohmann::json& json, Call& call) {
         }
     }
     if (json.count("gasPrice") != 0) {
-        auto json_gas_price = json.at("gasPrice");
-        if (json_gas_price.is_string()) {
-            call.gas_price = std::stol(json_gas_price.get<std::string>(), 0, 16);
-        } else {
-            call.gas_price = json_gas_price.get<uint64_t>();
-        }
+        call.gas_price = json.at("gasPrice").get<intx::uint256>();
     }
     if (json.count("value") != 0) {
-        auto json_value = json.at("value");
-        if (json_value.is_string()) {
-            call.value = std::stol(json_value.get<std::string>(), 0, 16);
-        } else {
-            call.value = json_value.get<uint64_t>();
-        }
+        call.value = json.at("value").get<intx::uint256>();
     }
     if (json.count("data") != 0) {
         const auto json_data = json.at("data").get<std::string>();

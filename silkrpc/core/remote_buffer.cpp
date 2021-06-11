@@ -69,7 +69,8 @@ asio::awaitable<std::optional<evmc::bytes32>> AsyncRemoteBuffer::canonical_hash(
 }
 
 std::optional<silkworm::Account> RemoteBuffer::read_account(const evmc::address& address) const noexcept {
-    return std::nullopt;
+    std::future<std::optional<silkworm::Account>> result{asio::co_spawn(io_context_, async_buffer_.read_account(address), asio::use_future)};
+    return result.get();
 }
 
 silkworm::Bytes RemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
@@ -78,7 +79,8 @@ silkworm::Bytes RemoteBuffer::read_code(const evmc::bytes32& code_hash) const no
 }
 
 evmc::bytes32 RemoteBuffer::read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept {
-    return evmc::bytes32{};
+    std::future<evmc::bytes32> result{asio::co_spawn(io_context_, async_buffer_.read_storage(address, incarnation, location), asio::use_future)};
+    return result.get();
 }
 
 uint64_t RemoteBuffer::previous_incarnation(const evmc::address& address) const noexcept {

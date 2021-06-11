@@ -59,7 +59,7 @@ asio::awaitable<void> TransactionDatabase::walk(const std::string& table, const 
     if (shift_bits != 0) {
         mask = 0xff << (CHAR_BIT - shift_bits);
     }
-    SILKRPC_TRACE << "mask: " << std::hex << std::setw(2) << std::setfill('0') << mask << std::dec << "\n";
+    SILKRPC_TRACE << "mask: " << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(mask) << std::dec << "\n";
 
     const auto cursor = co_await tx_.cursor(table);
     SILKRPC_TRACE << "TransactionDatabase::walk cursor_id: " << cursor->cursor_id() << "\n";

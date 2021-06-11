@@ -16,6 +16,8 @@
 
 #include "executor.hpp"
 
+#include <utility>
+
 #include <asio/compose.hpp>
 #include <asio/post.hpp>
 #include <asio/use_awaitable.hpp>
@@ -46,8 +48,7 @@ asio::awaitable<ExecutionResult> Executor::call(const silkworm::Block& block, co
                 });
             });
         },
-        asio::use_awaitable
-    );
+        asio::use_awaitable);
 
     SILKRPC_DEBUG << "Executor::call exec_result: " << exec_result.error_code << " end\n";
 

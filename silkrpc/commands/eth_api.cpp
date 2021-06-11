@@ -786,7 +786,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
 
         Executor executor{context_, tx_database, *chain_config_ptr, block_number};
         const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
-        silkworm::Transaction txn{}; // TODO(canepat): fill the transaction with call params
+        silkworm::Transaction txn{call.to_transaction()};
         uint64_t gas{call.gas.value_or(0)};
         const auto execution_result = co_await executor.call(block_with_hash.block, txn, gas);
 
