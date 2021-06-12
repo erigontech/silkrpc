@@ -36,7 +36,7 @@
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/ethbackend/client.hpp>
 #include <silkrpc/ethbackend/async_etherbase.hpp>
-#include <silkrpc/ethbackend/async_protocolVersion.hpp>
+#include <silkrpc/ethbackend/async_protocol_version.hpp>
 #include <silkrpc/ethbackend/error.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 
