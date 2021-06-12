@@ -19,7 +19,6 @@
 #include <string>
 
 #include <silkworm/common/util.hpp>
-#include <silkworm/types/bloom.cpp> // NOLINT(build/include) m3_2048 not exported
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
@@ -33,19 +32,6 @@
 #include <silkrpc/types/receipt.hpp>
 
 namespace silkrpc::commands {
-
-silkworm::Bloom bloom_from_logs(const Logs& logs) {
-    SILKRPC_TRACE << "bloom_from_logs #logs: " << logs.size() << "\n";
-    silkworm::Bloom bloom{};
-    for (auto const& log : logs) {
-        silkworm::m3_2048(bloom, silkworm::full_view(log.address));
-        for (const auto& topic : log.topics) {
-            silkworm::m3_2048(bloom, silkworm::full_view(topic));
-        }
-    }
-    SILKRPC_TRACE << "bloom_from_logs bloom: " << silkworm::to_hex(silkworm::full_view(bloom)) << "\n";
-    return bloom;
-}
 
 // https://eth.wiki/json-rpc/API#parity_getblockreceipts
 asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohmann::json& request, nlohmann::json& reply) {
@@ -69,15 +55,6 @@ asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohm
         const auto block_with_hash{co_await core::rawdb::read_block(tx_database, block_hash, block_number)};
         auto receipts{co_await core::get_receipts(tx_database, block_hash, block_number)};
         SILKRPC_INFO << "#receipts: " << receipts.size() << "\n";
-
-        for (auto& receipt : receipts) {
-            auto tx = block_with_hash.block.transactions[receipt.tx_index];
-            tx.recover_sender();
-            receipt.from = tx.from;
-            receipt.to = tx.to;
-            receipt.type = tx.type;
-            receipt.bloom = bloom_from_logs(receipt.logs);
-        }
 
         reply = make_json_content(request["id"], receipts);
     } catch (const std::invalid_argument& iv) {

@@ -23,9 +23,41 @@
 namespace silkrpc {
 
 std::ostream& operator<<(std::ostream& out, const Transaction& t) {
+    out << " #access_list: " << t.access_list.size();
     out << " block_hash: " << t.block_hash;
     out << " block_number: " << t.block_number;
+    if (t.chain_id) {
+        out << " chain_id: " << silkworm::to_hex(silkworm::rlp::big_endian(*t.chain_id));
+    } else {
+        out << " chain_id: null";
+    }
+    out << " data: " << silkworm::to_hex(t.data);
+    if (t.from) {
+        out << " from: " << silkworm::to_hex(*t.from);
+    } else {
+        out << " from: null";
+    }
+    out << " nonce: " << t.nonce;
+    out << " gas_price: " << silkworm::to_hex(silkworm::rlp::big_endian(t.gas_price));
+    out << " gas_limit: " << t.gas_limit;
+    out << " odd_y_parity: " << t.odd_y_parity;
+
+    out << " r: " << silkworm::to_hex(silkworm::rlp::big_endian(t.r));
+    out << " s: " << silkworm::to_hex(silkworm::rlp::big_endian(t.s));
+
+    if (t.to) {
+        out << " to: " << silkworm::to_hex(*t.to);
+    } else {
+        out << " to: null";
+    }
     out << " transaction_index: " << t.transaction_index;
+    if (t.type) {
+        out << " type: 0x" << std::hex << *t.type; // TODO(sixtysister) to_hex for uint8_t?
+    } else {
+        out << " type: null";
+    }
+    out << " value: " << silkworm::to_hex(silkworm::rlp::big_endian(t.value));
+
     return out;
 }
 

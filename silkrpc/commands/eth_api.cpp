@@ -468,6 +468,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const n
             SILKRPC_DEBUG << "Retrieving not finalized transactions from pool not implemented yet\n";
             reply = make_json_content(request["id"], nullptr);
         } else {
+            SILKRPC_DEBUG << "Get transaction: " << *optional_transaction << "\n";
             reply = make_json_content(request["id"], *optional_transaction);
         }
     } catch (const std::invalid_argument& iv) {
@@ -571,12 +572,46 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_number
 
 // https://eth.wiki/json-rpc/API#eth_gettransactionreceipt
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 1) {
+        auto error_msg = "invalid eth_getTransactionByHash params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    auto transaction_hash = params[0].get<evmc::bytes32>();
+    SILKRPC_DEBUG << "transaction_hash: " << transaction_hash << "\n";
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+        reply = make_json_content(request["id"], nullptr);
+        const auto block_with_hash = co_await core::rawdb::read_block_by_transaction_hash(tx_database, transaction_hash);
+        auto receipts = co_await core::get_receipts(tx_database, block_with_hash.hash, block_with_hash.block.header.number);
 
-        reply = make_json_content(request["id"], to_quantity(0));
+        auto transactions = block_with_hash.block.transactions;
+        if (receipts.size() != transactions.size()) {
+            throw std::invalid_argument{"Unexpected size for receipts in handle_eth_get_transaction_receipt"};
+        }
+        const silkworm::ByteView tx_hash{transaction_hash.bytes, silkworm::kHashLength};
+        size_t tx_index = -1;
+        for (size_t idx{0}; idx < transactions.size(); idx++) {
+            auto ethash_hash{hash_of_transaction(transactions[idx])};
+            silkworm::ByteView hash_view{ethash_hash.bytes, silkworm::kHashLength};
+            SILKRPC_TRACE << "tx " << idx << ") hash: " << silkworm::to_bytes32(hash_view) << "\n";
+            if (tx_hash == hash_view) {
+                tx_index = idx;
+                break;
+            }
+        }
+
+        if (tx_index == -1) {
+            throw std::invalid_argument{"Unexpected transaction index in handle_eth_get_transaction_receipt"};
+        }
+        reply = make_json_content(request["id"], receipts[tx_index]);
+    } catch (const std::invalid_argument& iv) {
+        SILKRPC_DEBUG << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_content(request["id"], {});
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
