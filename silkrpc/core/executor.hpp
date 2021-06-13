@@ -17,6 +17,8 @@
 #ifndef SILKRPC_CORE_EXECUTOR_HPP_
 #define SILKRPC_CORE_EXECUTOR_HPP_
 
+#include <string>
+
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
@@ -41,6 +43,8 @@ struct ExecutionResult {
 
 class Executor {
 public:
+    static std::string get_error_message(int64_t error_code);
+
     explicit Executor(const Context& context, const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config, uint64_t block_number)
     : context_(context), db_reader_(db_reader), config_(config), buffer_{*context.io_context, db_reader, block_number}, thread_pool_{10} {}
     virtual ~Executor() {}

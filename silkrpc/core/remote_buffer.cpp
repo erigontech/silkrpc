@@ -20,7 +20,9 @@
 
 #include <asio/co_spawn.hpp>
 #include <asio/use_future.hpp>
+#include <silkworm/common/util.hpp>
 
+#include <silkrpc/common/log.hpp>
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 
@@ -31,7 +33,8 @@ asio::awaitable<std::optional<silkworm::Account>> AsyncRemoteBuffer::read_accoun
 }
 
 asio::awaitable<silkworm::Bytes> AsyncRemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
-    co_return silkworm::Bytes{};
+    const auto optional_code{co_await state_reader_.read_code(code_hash)};
+    co_return optional_code ? *optional_code : silkworm::Bytes{};
 }
 
 asio::awaitable<evmc::bytes32> AsyncRemoteBuffer::read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept {
@@ -69,37 +72,51 @@ asio::awaitable<std::optional<evmc::bytes32>> AsyncRemoteBuffer::canonical_hash(
 }
 
 std::optional<silkworm::Account> RemoteBuffer::read_account(const evmc::address& address) const noexcept {
+    SILKRPC_DEBUG << "RemoteBuffer::read_account address=" << address << " start\n";
     std::future<std::optional<silkworm::Account>> result{asio::co_spawn(io_context_, async_buffer_.read_account(address), asio::use_future)};
-    return result.get();
+    const auto optional_account{result.get()};
+    SILKRPC_DEBUG << "RemoteBuffer::read_account account.nonce=" << (optional_account ? optional_account->nonce : 0) << " end\n";
+    return optional_account;
 }
 
 silkworm::Bytes RemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
+    SILKRPC_DEBUG << "RemoteBuffer::read_code code_hash=" << code_hash << " start\n";
     std::future<silkworm::Bytes> result{asio::co_spawn(io_context_, async_buffer_.read_code(code_hash), asio::use_future)};
-    return result.get();
+    const auto code{result.get()};
+    SILKRPC_DEBUG << "RemoteBuffer::read_code code=" << silkworm::to_hex(code) << " end\n";
+    return code;
 }
 
 evmc::bytes32 RemoteBuffer::read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept {
+    SILKRPC_DEBUG << "RemoteBuffer::read_storage address=" << address << " incarnation=" << incarnation << " location=" << location << " start\n";
     std::future<evmc::bytes32> result{asio::co_spawn(io_context_, async_buffer_.read_storage(address, incarnation, location), asio::use_future)};
-    return result.get();
+    const auto storage_value{result.get()};
+    SILKRPC_DEBUG << "RemoteBuffer::read_storage storage_value=" << storage_value << " end\n";
+    return storage_value;
 }
 
 uint64_t RemoteBuffer::previous_incarnation(const evmc::address& address) const noexcept {
+    SILKRPC_DEBUG << "RemoteBuffer::previous_incarnation address=" << address << "\n";
     return 0;
 }
 
 std::optional<silkworm::BlockHeader> RemoteBuffer::read_header(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
+    SILKRPC_DEBUG << "RemoteBuffer::read_header block_number=" << block_number << " block_hash=" << block_hash << "\n";
     return std::nullopt;
 }
 
 std::optional<silkworm::BlockBody> RemoteBuffer::read_body(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
+    SILKRPC_DEBUG << "RemoteBuffer::read_body block_number=" << block_number << " block_hash=" << block_hash << "\n";
     return std::nullopt;
 }
 
 std::optional<intx::uint256> RemoteBuffer::total_difficulty(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
+    SILKRPC_DEBUG << "RemoteBuffer::total_difficulty block_number=" << block_number << " block_hash=" << block_hash << "\n";
     return std::nullopt;
 }
 
 evmc::bytes32 RemoteBuffer::state_root_hash() const {
+    SILKRPC_DEBUG << "RemoteBuffer::state_root_hash\n";
     return evmc::bytes32{};
 }
 
@@ -108,6 +125,7 @@ uint64_t RemoteBuffer::current_canonical_block() const {
 }
 
 std::optional<evmc::bytes32> RemoteBuffer::canonical_hash(uint64_t block_number) const {
+    SILKRPC_DEBUG << "RemoteBuffer::canonical_hash block_number=" << block_number << "\n";
     return std::nullopt;
 }
 

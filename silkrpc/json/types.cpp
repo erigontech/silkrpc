@@ -99,7 +99,7 @@ void from_json(const nlohmann::json& json, bytes32& b32) {
 namespace intx {
 
 void from_json(const nlohmann::json& json, uint256& ui256) {
-    const auto b32_bytes = silkworm::from_hex(json.get<std::string>());
+    const auto b32_bytes = silkworm::from_hex(json.get<std::string>()); // TODO(canepat): from_quantity to handle missing trailing 0s
     const auto b32 = silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
     ui256 = intx::be::load<intx::uint256>(b32.bytes);
 }
@@ -216,7 +216,7 @@ void from_json(const nlohmann::json& json, Call& call) {
     if (json.count("from") != 0) {
         call.from = json.at("from").get<evmc::address>();
     }
-    call.from = json.at("to").get<evmc::address>();
+    call.to = json.at("to").get<evmc::address>();
     if (json.count("gas") != 0) {
         auto json_gas = json.at("gas");
         if (json_gas.is_string()) {
