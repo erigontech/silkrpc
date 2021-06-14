@@ -72,4 +72,4 @@ private:
 
 } // namespace silkrpc::ethbackend
 
-#endif // SILKRPC_ETHBACKEND_ASYNC_PROTOCOL_VERSION_HPP_
+#endif // SILKRPC_ETHBACKEND_ASYNC_NET_VERSION_HPP_
