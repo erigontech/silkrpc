@@ -59,12 +59,10 @@ asio::awaitable<void> Server::run() {
             // Get the next context to use chosen round-robin, then get both io_context *and* database from it
             auto& context = context_pool_.get_context();
             auto& io_context = context.io_context;
-            auto& database = context.database;
-            auto& backend = context.backend;
 
             SILKRPC_DEBUG << "Server::start accepting using io_context " << io_context << "...\n" << std::flush;
 
-            auto new_connection = std::make_shared<Connection>(*io_context, database, backend);
+            auto new_connection = std::make_shared<Connection>(context);
             co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);
             if (!acceptor_.is_open()) {
                 SILKRPC_TRACE << "Server::start returning...\n";

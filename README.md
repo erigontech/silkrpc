@@ -1,6 +1,6 @@
 # SilkRPC Daemon
 
-C++ implementation of the daemon component exposing the [Ethereum JSON RPC protocol](https://eth.wiki/json-rpc/API) within the [Turbo-Geth](https://github.com/ledgerwatch/turbo-geth) architecture.
+C++ implementation of the daemon component exposing the [Ethereum JSON RPC protocol](https://eth.wiki/json-rpc/API) within the [Erigon](https://github.com/ledgerwatch/erigon) architecture.
 
 [![CircleCI](https://circleci.com/gh/torquem-ch/silkrpc.svg?style=shield)](https://circleci.com/gh/torquem-ch/silkrpc)
 [![Codecov master](https://img.shields.io/codecov/c/github/torquem-ch/silkrpc/master.svg?style=shield&logo=codecov&logoColor=white)](https://codecov.io/gh/torquem-ch/silkrpc)
@@ -126,10 +126,10 @@ We use the standard C++20 programming language. We follow the [Google's C++ Styl
 From the build folder (`build_[gcc, clang]_[debug, release]` according to your choice) you typically activate Silkrpc using:
 
 ```
-$ silkrpc/silkrpcdaemon --target <tg_core_host_address>:9090
+$ silkrpc/silkrpcdaemon --target <erigon_core_host_address>:9090
 ```
 
-where `<tg_core_host_address>` is the hostname or IP address of the TG Core to connect to.
+where `<erigon_core_host_address>` is the hostname or IP address of the Erigon Core to connect to.
 
 You can check all command-line parameters supported by Silkrpc using:
 
@@ -142,7 +142,7 @@ silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
     --local (HTTP JSON local binding as string <address>:<port>);
       default: "localhost:8545";
     --logLevel (logging level); default: c;
-    --target (TG Core gRPC service location as string <address>:<port>);
+    --target (Erigon Core gRPC service location as string <address>:<port>);
       default: "localhost:9090";
     --timeout (gRPC call timeout as 32-bit integer); default: 10000;
 ```

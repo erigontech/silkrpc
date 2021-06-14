@@ -100,7 +100,7 @@ public:
                 write_completed_(result_);
             break;
             case READ_STARTED:
-                SILKRPC_TRACE << "StreamingClient::completed pair_.cursorid(): " << pair_.cursorid() << "\n";
+                SILKRPC_TRACE << "StreamingClient::completed pair cursorid: " << pair_.cursorid() << "\n";
                 read_completed_(result_, pair_);
             break;
             case DONE_STARTED:

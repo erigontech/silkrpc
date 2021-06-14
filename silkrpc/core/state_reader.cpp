@@ -70,8 +70,7 @@ asio::awaitable<evmc::bytes32> StateReader::read_storage(const evmc::address& ad
     co_return storage_value;
 }
 
-asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_code(const evmc::address& address, uint64_t incarnation,
-    const evmc::bytes32& code_hash, uint64_t block_number) const {
+asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_code(const evmc::bytes32& code_hash) const {
     if (code_hash == silkworm::kEmptyHash) {
         co_return std::nullopt;
     }

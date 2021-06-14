@@ -29,10 +29,9 @@
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
-#include <asio/io_context.hpp>
 #include <asio/ip/tcp.hpp>
 
-#include <silkrpc/ethbackend/backend.hpp>
+#include <silkrpc/context_pool.hpp>
 #include "reply.hpp"
 #include "request.hpp"
 #include "request_handler.hpp"
@@ -48,8 +47,8 @@ public:
     Connection(const Connection&) = delete;
     Connection& operator=(const Connection&) = delete;
 
-    /// Construct a connection with the given socket.
-    explicit Connection(asio::io_context& io_context, std::unique_ptr<ethdb::Database>& database, std::unique_ptr<ethbackend::BackEnd>& backend);
+    /// Construct a connection running within the given execution context.
+    explicit Connection(Context& context);
 
     ~Connection();
 

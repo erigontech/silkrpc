@@ -22,11 +22,11 @@
 #include <string>
 
 #include <evmc/evmc.hpp>
-
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/receipt.hpp>
 #include <silkworm/db/tables.hpp>
+
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
@@ -677,7 +677,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann::json& 
         std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
 
         if (account) {
-            auto code{co_await state_reader.read_code(address, account->incarnation, account->code_hash, block_number + 1)};
+            auto code{co_await state_reader.read_code(account->code_hash)};
             reply = make_json_content(request["id"], code ? ("0x" + silkworm::to_hex(*code)) : "0x");
         } else {
             reply = make_json_content(request["id"], "0x");
@@ -792,15 +792,19 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
 
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
-        Executor executor{tx_database, *chain_config_ptr};
-
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
-        const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
-        silkworm::Transaction txn{}; // TODO(canepat): fill the transaction with call params
-        uint64_t gas{call.gas.value_or(0)};
-        const auto execution_result = co_await executor.call(block_with_hash.block, txn, gas);
 
-        reply = make_json_content(request["id"], "0x" + silkworm::to_hex(execution_result.data));
+        Executor executor{context_, tx_database, *chain_config_ptr, block_number};
+        const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
+        silkworm::Transaction txn{call.to_transaction()};
+        const auto execution_result = co_await executor.call(block_with_hash.block, txn, txn.gas_limit);
+
+        if (execution_result.error_code == evmc_status_code::EVMC_SUCCESS) {
+            reply = make_json_content(request["id"], "0x" + silkworm::to_hex(execution_result.data));
+        } else {
+            const auto error_message = Executor::get_error_message(execution_result.error_code);
+            reply = make_json_error(request["id"], -32000, error_message);
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());

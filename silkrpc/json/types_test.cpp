@@ -22,6 +22,7 @@
 
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
+#include <intx/intx.hpp>
 #include <nlohmann/json.hpp>
 
 namespace silkrpc {
@@ -138,6 +139,40 @@ TEST_CASE("deserialize filter with topic", "[silkrpc::json][from_json]") {
         {0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32}
     });
     CHECK(f.block_hash == std::nullopt);
+}
+
+TEST_CASE("deserialize null call", "[silkrpc::json][from_json]") {
+    auto j1 = R"({})"_json;
+    CHECK_THROWS(j1.get<Call>());
+}
+
+TEST_CASE("deserialize minimal call", "[silkrpc::json][from_json]") {
+    auto j1 = R"({
+        "to": "0x0715a7794a1dc8e42615f059dd6e406a6594651a"
+    })"_json;
+    auto c1 = j1.get<Call>();
+    CHECK(c1.from == std::nullopt);
+    CHECK(c1.to == evmc::address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address});
+    CHECK(c1.gas == std::nullopt);
+    CHECK(c1.gas_price == std::nullopt);
+    CHECK(c1.value == std::nullopt);
+    CHECK(c1.data == std::nullopt);
+}
+
+TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
+    auto j1 = R"({
+        "from": "0x52c24586c31cff0485a6208bb63859290fba5bce",
+        "to": "0x0715a7794a1dc8e42615f059dd6e406a6594651a",
+        "gas": "0xF4240",
+        "gasPrice": "0x10C388C00",
+        "data": "0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000"
+    })"_json;
+    auto c1 = j1.get<Call>();
+    CHECK(c1.from == 0x52c24586c31cff0485a6208bb63859290fba5bce_address);
+    CHECK(c1.to == 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address);
+    CHECK(c1.gas == intx::uint256{1000000});
+    CHECK(c1.gas_price == intx::uint256{4499999744});
+    CHECK(c1.data == silkworm::from_hex("0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000"));
 }
 
 } // namespace silkrpc::json
