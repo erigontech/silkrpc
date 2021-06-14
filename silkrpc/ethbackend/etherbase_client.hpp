@@ -29,9 +29,10 @@
 
 namespace silkrpc::ethbackend {
 
-using AsyncResponseReaderPtr = std::unique_ptr<::grpc::ClientAsyncResponseReader<::remote::EtherbaseReply>>;
 
 class EtherbaseClient final : public grpc::AsyncCompletionHandler {
+    using AsyncResponseReaderPtr = std::unique_ptr<::grpc::ClientAsyncResponseReader<::remote::EtherbaseReply>>;
+
     enum CallStatus { CALL_IDLE, CALL_STARTED, CALL_ENDED };
 
 public:
