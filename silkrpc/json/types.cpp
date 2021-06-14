@@ -99,9 +99,7 @@ void from_json(const nlohmann::json& json, bytes32& b32) {
 namespace intx {
 
 void from_json(const nlohmann::json& json, uint256& ui256) {
-    const auto b32_bytes = silkworm::from_hex(json.get<std::string>()); // TODO(canepat): from_quantity to handle missing trailing 0s
-    const auto b32 = silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
-    ui256 = intx::be::load<intx::uint256>(b32.bytes);
+    ui256 = intx::from_string<intx::uint256>(json.get<std::string>());
 }
 
 } // namespace intx
@@ -143,10 +141,10 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
     } else {
         json["to"] =  "0x";
     }
-    json["value"] =  silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.value));
-    json["v"] =  silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.v()));
-    json["r"] =  silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.r));
-    json["s"] =  silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.s));
+    json["value"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.value));
+    json["v"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.v()));
+    json["r"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.r));
+    json["s"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.s));
 }
 
 } // namespace silkworm
