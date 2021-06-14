@@ -40,7 +40,8 @@ public:
     explicit BackEnd(asio::io_context& context, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
     : context_(context),
       eb_client_{channel, queue}, eb_awaitable_{context_, eb_client_},
-      pv_client_{channel, queue}, pv_awaitable_{context_, pv_client_} {
+      pv_client_{channel, queue}, pv_awaitable_{context_, pv_client_},
+      nv_client_{channel, queue}, nv_awaitable_{context_, nv_client_} {
         SILKRPC_TRACE << "BackEnd::ctor " << this << "\n";
     }
 
@@ -65,6 +66,14 @@ public:
         co_return pv;
     }
 
+    asio::awaitable<uint64_t> get_net_version() {
+        const auto start_time = clock_time::now();
+        const auto reply = co_await nv_awaitable_.async_call(asio::use_awaitable);
+        const auto nv = reply.id();
+        SILKRPC_DEBUG << "BackEnd::net_version version=" << nv << " t=" << clock_time::since(start_time) << "\n";
+        co_return nv;
+    }
+
 private:
     evmc::address address_from_H160(const types::H160& h160) {
         uint64_t hi_hi = h160.hi().hi();
@@ -80,8 +89,10 @@ private:
     asio::io_context& context_;
     EtherbaseClient eb_client_;
     ProtocolVersionClient pv_client_;
+    NetVersionClient nv_client_;
     EtherbaseAsioAwaitable<asio::io_context::executor_type> eb_awaitable_;
     ProtocolVersionAsioAwaitable<asio::io_context::executor_type> pv_awaitable_;
+    NetVersionAsioAwaitable<asio::io_context::executor_type> nv_awaitable_;
 };
 
 } // namespace silkrpc::ethbackend

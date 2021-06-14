@@ -25,7 +25,10 @@
 #include <asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/json/types.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
+
 
 namespace silkrpc::http { class RequestHandler; }
 
@@ -33,11 +36,12 @@ namespace silkrpc::commands {
 
 class NetRpcApi {
 public:
-    NetRpcApi() = default;
+    explicit NetRpcApi(std::unique_ptr<ethbackend::BackEnd>& backend) : backend_(backend) {}
     virtual ~NetRpcApi() = default;
 
     NetRpcApi(const NetRpcApi&) = delete;
     NetRpcApi& operator=(const NetRpcApi&) = delete;
+
 
 protected:
     asio::awaitable<void> handle_net_listening(const nlohmann::json& request, nlohmann::json& reply);
@@ -46,6 +50,8 @@ protected:
 
 private:
     friend class silkrpc::http::RequestHandler;
+
+    std::unique_ptr<ethbackend::BackEnd>& backend_;
 };
 
 } // namespace silkrpc::commands

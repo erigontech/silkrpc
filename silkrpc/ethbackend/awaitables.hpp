@@ -37,6 +37,7 @@
 #include <silkrpc/ethbackend/client.hpp>
 #include <silkrpc/ethbackend/async_etherbase.hpp>
 #include <silkrpc/ethbackend/async_protocol_version.hpp>
+#include <silkrpc/ethbackend/async_net_version.hpp>
 #include <silkrpc/ethbackend/error.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 
@@ -47,6 +48,9 @@ struct EtherbaseAsioAwaitable;
 
 template<typename Executor>
 struct ProtocolVersionAsioAwaitable;
+
+template<typename Executor>
+struct NetVersionAsioAwaitable;
 
 template<typename Executor>
 class initiate_async_etherbase {
@@ -145,6 +149,56 @@ struct ProtocolVersionAsioAwaitable {
     asio::io_context& context_;
     ProtocolVersionClient& client_;
 };
+
+template<typename Executor>
+class initiate_async_net_version {
+public:
+    typedef Executor executor_type;
+
+    explicit initiate_async_net_version(NetVersionAsioAwaitable<Executor>* self)
+    : self_(self) {}
+
+    executor_type get_executor() const noexcept { return self_->get_executor(); }
+
+    template <typename WaitHandler>
+    void operator()(WaitHandler&& handler) {
+        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        using OP = silkrpc::ethbackend::async_netVersion<WaitHandler, Executor>;
+        typename OP::ptr p = {asio::detail::addressof(handler2.value), OP::ptr::allocate(handler2.value), 0};
+        wrapper_ = new OP(handler2.value, self_->context_.get_executor());
+
+        self_->client_.net_version_call([this](const ::grpc::Status& status, const ::remote::NetVersionReply& reply) {
+            using OP = silkrpc::ethbackend::async_netVersion<WaitHandler, Executor>;
+            auto net_version_op = static_cast<OP*>(wrapper_);
+            if (status.ok()) {
+                net_version_op->complete(this, {}, reply);
+            } else {
+                net_version_op->complete(this, make_error_code(status.error_code(), status.error_message()), {});
+            }
+        });
+    }
+
+private:
+    NetVersionAsioAwaitable<Executor>* self_;
+    void* wrapper_;
+};
+
+template<typename Executor>
+struct NetVersionAsioAwaitable {
+    typedef Executor executor_type;
+
+    explicit NetVersionAsioAwaitable(asio::io_context& context, NetVersionClient& client)
+    : context_(context), client_(client) {}
+
+    template<typename WaitHandler>
+    auto async_call(WaitHandler&& handler) {
+        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::NetVersionReply)>(initiate_async_net_version{this}, handler);
+    }
+
+    asio::io_context& context_;
+    NetVersionClient& client_;
+};
+
 
 } // namespace silkrpc::ethbackend
 
