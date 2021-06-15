@@ -20,6 +20,7 @@
 #include <silkrpc/config.hpp>
 
 #include <functional>
+#include <memory>
 #include <string>
 #include <system_error>
 #include <thread>
@@ -28,16 +29,13 @@
 #include <asio/async_result.hpp>
 #include <asio/detail/non_const_lvalue.hpp>
 #include <asio/error.hpp>
-#include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/ethbackend/client.hpp>
 #include <silkrpc/ethbackend/error.hpp>
 #include <silkrpc/grpc/async_operation.hpp>
-#include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 
 namespace silkrpc::ethbackend {
 
@@ -52,14 +50,14 @@ public:
     explicit initiate_unary_async(unary_awaitable<Executor, UnaryClient, Reply>* self)
     : self_(self) {}
 
-    executor_type get_executor() const noexcept { return self_->get_executor(); }
+    executor_type get_executor() const noexcept { return self_->executor_; }
 
     template <typename WaitHandler>
     void operator()(WaitHandler&& handler) {
         asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         using OP = AsyncReplyOperation<WaitHandler, Executor, Reply>;
         typename OP::ptr p = {asio::detail::addressof(handler2.value), OP::ptr::allocate(handler2.value), 0};
-        wrapper_ = new OP(handler2.value, self_->context_.get_executor());
+        wrapper_ = new OP(handler2.value, self_->executor_);
 
         self_->client_.async_call([this](const ::grpc::Status& status, const Reply& reply) {
             using OP = AsyncReplyOperation<WaitHandler, Executor, Reply>;
@@ -81,23 +79,17 @@ template<typename Executor, typename UnaryClient, typename Reply>
 struct unary_awaitable {
     typedef Executor executor_type;
 
-    explicit unary_awaitable(asio::io_context& context, UnaryClient& client)
-    : context_(context), client_(client) {}
+    explicit unary_awaitable(const Executor& executor, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
+    : executor_(executor), client_{channel, queue} {}
 
     template<typename WaitHandler>
     auto async_call(WaitHandler&& handler) {
         return asio::async_initiate<WaitHandler, void(asio::error_code, Reply)>(initiate_unary_async<Executor, UnaryClient, Reply, async_reply_operation>{this}, handler);
     }
 
-    asio::io_context& context_;
-    UnaryClient& client_;
+    const Executor& executor_;
+    UnaryClient client_;
 };
-
-template<typename Executor>
-using EtherbaseAsioAwaitable = unary_awaitable<Executor, EtherbaseClient, ::remote::EtherbaseReply>;
-
-template<typename Executor>
-using ProtocolVersionAsioAwaitable = unary_awaitable<Executor, ProtocolVersionClient, ::remote::ProtocolVersionReply>;
 
 } // namespace silkrpc::ethbackend
 
