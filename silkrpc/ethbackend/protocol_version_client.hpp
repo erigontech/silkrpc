@@ -45,15 +45,15 @@ public:
         SILKRPC_TRACE << "ProtocolVersionClient::dtor " << this << " state: " << magic_enum::enum_name(state_) << "\n";
     }
 
-    void protocol_version_call(std::function<void(const ::grpc::Status&, const ::remote::ProtocolVersionReply&)> completed) {
-        SILKRPC_TRACE << "ProtocolVersionClient::protocol_version_call " << this << " state: " << magic_enum::enum_name(state_) << " start\n";
+    void async_call(std::function<void(const ::grpc::Status&, const ::remote::ProtocolVersionReply&)> completed) {
+        SILKRPC_TRACE << "ProtocolVersionClient::async_call " << this << " state: " << magic_enum::enum_name(state_) << " start\n";
         completed_ = completed;
         ::grpc::ClientContext context;
         client_ = stub_->PrepareAsyncProtocolVersion(&context, ::remote::ProtocolVersionRequest{}, queue_);
         state_ = CALL_STARTED;
         client_->StartCall();
         client_->Finish(&reply_, &result_, grpc::AsyncCompletionHandler::tag(this));
-        SILKRPC_TRACE << "ProtocolVersionClient::protocol_version_call " << this << " state: " << magic_enum::enum_name(state_) << " end\n";
+        SILKRPC_TRACE << "ProtocolVersionClient::async_call " << this << " state: " << magic_enum::enum_name(state_) << " end\n";
     }
 
     void completed(bool ok) override {

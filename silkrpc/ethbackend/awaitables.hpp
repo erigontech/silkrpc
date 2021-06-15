@@ -42,18 +42,15 @@
 
 namespace silkrpc::ethbackend {
 
-template<typename Executor>
-struct EtherbaseAsioAwaitable;
+template<typename Executor, typename UnaryClient, typename Reply>
+struct unary_awaitable;
 
-template<typename Executor>
-struct ProtocolVersionAsioAwaitable;
-
-template<typename Executor>
-class initiate_async_etherbase {
+template<typename Executor, typename UnaryClient, typename Reply, template<class, class, class> typename AsyncReplyOperation>
+class initiate_unary_async {
 public:
     typedef Executor executor_type;
 
-    explicit initiate_async_etherbase(EtherbaseAsioAwaitable<Executor>* self)
+    explicit initiate_unary_async(unary_awaitable<Executor, UnaryClient, Reply>* self)
     : self_(self) {}
 
     executor_type get_executor() const noexcept { return self_->get_executor(); }
@@ -61,90 +58,47 @@ public:
     template <typename WaitHandler>
     void operator()(WaitHandler&& handler) {
         asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
-        using OP = silkrpc::ethbackend::async_etherbase<WaitHandler, Executor>;
+        using OP = AsyncReplyOperation<WaitHandler, Executor, Reply>;
         typename OP::ptr p = {asio::detail::addressof(handler2.value), OP::ptr::allocate(handler2.value), 0};
         wrapper_ = new OP(handler2.value, self_->context_.get_executor());
 
-        self_->client_.finish_call([this](const ::grpc::Status& status, const ::remote::EtherbaseReply& reply) {
-            using OP = silkrpc::ethbackend::async_etherbase<WaitHandler, Executor>;
-            auto etherbase_op = static_cast<OP*>(wrapper_);
+        self_->client_.async_call([this](const ::grpc::Status& status, const Reply& reply) {
+            using OP = AsyncReplyOperation<WaitHandler, Executor, Reply>;
+            auto async_reply_op = static_cast<OP*>(wrapper_);
             if (status.ok()) {
-                etherbase_op->complete(this, {}, reply);
+                async_reply_op->complete(this, {}, reply);
             } else {
-                etherbase_op->complete(this, make_error_code(status.error_code(), status.error_message()), {});
+                async_reply_op->complete(this, make_error_code(status.error_code(), status.error_message()), {});
             }
         });
     }
 
 private:
-    EtherbaseAsioAwaitable<Executor>* self_;
+    unary_awaitable<Executor, UnaryClient, Reply>* self_;
     void* wrapper_;
 };
 
-template<typename Executor>
-struct EtherbaseAsioAwaitable {
+template<typename Executor, typename UnaryClient, typename Reply>
+struct unary_awaitable {
     typedef Executor executor_type;
 
-    explicit EtherbaseAsioAwaitable(asio::io_context& context, EtherbaseClient& client)
+    explicit unary_awaitable(asio::io_context& context, UnaryClient& client)
     : context_(context), client_(client) {}
 
     template<typename WaitHandler>
     auto async_call(WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::EtherbaseReply)>(initiate_async_etherbase{this}, handler);
+        return asio::async_initiate<WaitHandler, void(asio::error_code, Reply)>(initiate_unary_async<Executor, UnaryClient, Reply, async_reply_operation>{this}, handler);
     }
 
     asio::io_context& context_;
-    EtherbaseClient& client_;
+    UnaryClient& client_;
 };
 
 template<typename Executor>
-class initiate_async_protocol_version {
-public:
-    typedef Executor executor_type;
-
-    explicit initiate_async_protocol_version(ProtocolVersionAsioAwaitable<Executor>* self)
-    : self_(self) {}
-
-    executor_type get_executor() const noexcept { return self_->get_executor(); }
-
-    template <typename WaitHandler>
-    void operator()(WaitHandler&& handler) {
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
-        using OP = silkrpc::ethbackend::async_protocolVersion<WaitHandler, Executor>;
-        typename OP::ptr p = {asio::detail::addressof(handler2.value), OP::ptr::allocate(handler2.value), 0};
-        wrapper_ = new OP(handler2.value, self_->context_.get_executor());
-
-        self_->client_.protocol_version_call([this](const ::grpc::Status& status, const ::remote::ProtocolVersionReply& reply) {
-            using OP = silkrpc::ethbackend::async_protocolVersion<WaitHandler, Executor>;
-            auto protocol_version_op = static_cast<OP*>(wrapper_);
-            if (status.ok()) {
-                protocol_version_op->complete(this, {}, reply);
-            } else {
-                protocol_version_op->complete(this, make_error_code(status.error_code(), status.error_message()), {});
-            }
-        });
-    }
-
-private:
-    ProtocolVersionAsioAwaitable<Executor>* self_;
-    void* wrapper_;
-};
+using EtherbaseAsioAwaitable = unary_awaitable<Executor, EtherbaseClient, ::remote::EtherbaseReply>;
 
 template<typename Executor>
-struct ProtocolVersionAsioAwaitable {
-    typedef Executor executor_type;
-
-    explicit ProtocolVersionAsioAwaitable(asio::io_context& context, ProtocolVersionClient& client)
-    : context_(context), client_(client) {}
-
-    template<typename WaitHandler>
-    auto async_call(WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::ProtocolVersionReply)>(initiate_async_protocol_version{this}, handler);
-    }
-
-    asio::io_context& context_;
-    ProtocolVersionClient& client_;
-};
+using ProtocolVersionAsioAwaitable = unary_awaitable<Executor, ProtocolVersionClient, ::remote::ProtocolVersionReply>;
 
 } // namespace silkrpc::ethbackend
 
