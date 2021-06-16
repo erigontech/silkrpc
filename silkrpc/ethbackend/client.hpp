@@ -21,11 +21,12 @@
 #include <memory>
 
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/impl/codegen/async_unary_call.h>
+#include <grpcpp/impl/codegen/stub_options.h>
 #include <silkworm/common/magic_enum.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/async_completion_handler.hpp>
-#include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 
 namespace silkrpc::ethbackend {
 
@@ -87,22 +88,6 @@ private:
     CallStatus state_{CALL_IDLE};
     std::function<void(const ::grpc::Status&, const Reply&)> completed_;
 };
-
-using EtherbaseClient = AsyncUnaryClient<
-    ::remote::ETHBACKEND::Stub,
-    ::remote::ETHBACKEND::NewStub,
-    ::remote::EtherbaseRequest,
-    ::remote::EtherbaseReply,
-    &::remote::ETHBACKEND::Stub::PrepareAsyncEtherbase
->;
-
-using ProtocolVersionClient = AsyncUnaryClient<
-    ::remote::ETHBACKEND::Stub,
-    ::remote::ETHBACKEND::NewStub,
-    ::remote::ProtocolVersionRequest,
-    ::remote::ProtocolVersionReply,
-    &::remote::ETHBACKEND::Stub::PrepareAsyncProtocolVersion
->;
 
 } // namespace silkrpc::ethbackend
 

@@ -36,6 +36,22 @@
 
 namespace silkrpc::ethbackend {
 
+using EtherbaseClient = AsyncUnaryClient<
+    ::remote::ETHBACKEND::Stub,
+    ::remote::ETHBACKEND::NewStub,
+    ::remote::EtherbaseRequest,
+    ::remote::EtherbaseReply,
+    &::remote::ETHBACKEND::Stub::PrepareAsyncEtherbase
+>;
+
+using ProtocolVersionClient = AsyncUnaryClient<
+    ::remote::ETHBACKEND::Stub,
+    ::remote::ETHBACKEND::NewStub,
+    ::remote::ProtocolVersionRequest,
+    ::remote::ProtocolVersionReply,
+    &::remote::ETHBACKEND::Stub::PrepareAsyncProtocolVersion
+>;
+
 using EtherbaseAwaitable = unary_awaitable<asio::io_context::executor_type, EtherbaseClient, ::remote::EtherbaseReply>;
 using ProtocolVersionAwaitable = unary_awaitable<asio::io_context::executor_type, ProtocolVersionClient, ::remote::ProtocolVersionReply>;
 
