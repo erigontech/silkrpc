@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_GRPC_CLIENT_HPP_
-#define SILKRPC_GRPC_CLIENT_HPP_
+#ifndef SILKRPC_GRPC_ASYNC_UNARY_CLIENT_HPP_
+#define SILKRPC_GRPC_ASYNC_UNARY_CLIENT_HPP_
 
 #include <functional>
 #include <memory>
@@ -91,4 +91,4 @@ private:
 
 } // namespace silkrpc
 
-#endif // SILKRPC_GRPC_CLIENT_HPP_
+#endif // SILKRPC_GRPC_ASYNC_UNARY_CLIENT_HPP_
