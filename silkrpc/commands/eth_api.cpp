@@ -478,7 +478,6 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const n
             SILKRPC_DEBUG << "Retrieving not finalized transactions from pool not implemented yet\n";
             reply = make_json_content(request["id"], nullptr);
         } else {
-            SILKRPC_DEBUG << "Get transaction: " << *optional_transaction << "\n";
             reply = make_json_content(request["id"], *optional_transaction);
         }
     } catch (const std::invalid_argument& iv) {
