@@ -52,13 +52,24 @@ using ProtocolVersionClient = AsyncUnaryClient<
     &::remote::ETHBACKEND::Stub::PrepareAsyncProtocolVersion
 >;
 
+using NetVersionClient = AsyncUnaryClient<
+    ::remote::ETHBACKEND::Stub,
+    ::remote::ETHBACKEND::NewStub,
+    ::remote::NetVersionRequest,
+    ::remote::NetVersionReply,
+    &::remote::ETHBACKEND::Stub::PrepareAsyncNetVersion
+>;
+
 using EtherbaseAwaitable = unary_awaitable<asio::io_context::executor_type, EtherbaseClient, ::remote::EtherbaseReply>;
 using ProtocolVersionAwaitable = unary_awaitable<asio::io_context::executor_type, ProtocolVersionClient, ::remote::ProtocolVersionReply>;
+using NetVersionAwaitable = unary_awaitable<asio::io_context::executor_type, NetVersionClient, ::remote::NetVersionReply>;
 
 class BackEnd final {
 public:
     explicit BackEnd(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : eb_awaitable_{context.get_executor(), channel, queue}, pv_awaitable_{context.get_executor(), channel, queue} {
+    : eb_awaitable_{context.get_executor(), channel, queue}, 
+      pv_awaitable_{context.get_executor(), channel, queue},
+      nv_awaitable_{context.get_executor(), channel, queue} {
         SILKRPC_TRACE << "BackEnd::ctor " << this << "\n";
     }
 
@@ -83,6 +94,15 @@ public:
         co_return pv;
     }
 
+    asio::awaitable<uint64_t> get_net_version() {
+        const auto start_time = clock_time::now();
+        const auto reply = co_await nv_awaitable_.async_call(asio::use_awaitable);
+        const auto nv = reply.id();
+        SILKRPC_DEBUG << "BackEnd::net_version version=" << nv << " t=" << clock_time::since(start_time) << "\n";
+        co_return nv;
+    }
+
+
 private:
     evmc::address address_from_H160(const types::H160& h160) {
         uint64_t hi_hi = h160.hi().hi();
@@ -97,6 +117,7 @@ private:
 
     EtherbaseAwaitable eb_awaitable_;
     ProtocolVersionAwaitable pv_awaitable_;
+    NetVersionAwaitable nv_awaitable_;
 };
 
 } // namespace silkrpc::ethbackend
