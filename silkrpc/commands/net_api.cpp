@@ -51,4 +51,3 @@ asio::awaitable<void> NetRpcApi::handle_net_version(const nlohmann::json& reques
 }
 
 } // namespace silkrpc::commands
-                    

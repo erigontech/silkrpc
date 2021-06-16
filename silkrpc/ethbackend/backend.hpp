@@ -18,6 +18,7 @@
 #define SILKRPC_ETHBACKEND_BACKEND_HPP_
 
 #include <memory>
+#include <string>
 
 #include <silkrpc/config.hpp>
 
@@ -77,7 +78,7 @@ using ClientVersionAwaitable = unary_awaitable<asio::io_context::executor_type, 
 class BackEnd final {
 public:
     explicit BackEnd(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : eb_awaitable_{context.get_executor(), channel, queue}, 
+    : eb_awaitable_{context.get_executor(), channel, queue},
       pv_awaitable_{context.get_executor(), channel, queue},
       nv_awaitable_{context.get_executor(), channel, queue},
       cv_awaitable_{context.get_executor(), channel, queue} {
