@@ -120,7 +120,7 @@ int main(int argc, char* argv[]) {
 
         // TODO(canepat): handle also secure channel for remote
         silkrpc::ChannelFactory create_channel = [&]() {
-            return ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
+            return grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
         };
 
         // Check KV protocol version compatibility

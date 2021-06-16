@@ -22,11 +22,12 @@
 
 #include <boost/endian/conversion.hpp>
 #include <boost/format.hpp>
+#include <intx/intx.hpp>
+#include <silkworm/common/util.hpp>
+#include <silkworm/db/silkworm/db/util.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/db/silkworm/db/util.hpp>
 
 namespace silkrpc {
 
@@ -96,6 +97,14 @@ void from_json(const nlohmann::json& json, bytes32& b32) {
 
 } // namespace evmc
 
+namespace intx {
+
+void from_json(const nlohmann::json& json, uint256& ui256) {
+    ui256 = intx::from_string<intx::uint256>(json.get<std::string>());
+}
+
+} // namespace intx
+
 namespace silkworm {
 
 void to_json(nlohmann::json& json, const BlockHeader& header) {
@@ -133,10 +142,10 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
     } else {
         json["to"] =  "0x";
     }
-    json["value"] =  silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.value));
-    json["v"] =  silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.v()));
-    json["r"] =  silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.r));
-    json["s"] =  silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.s));
+    json["value"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.value));
+    json["v"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.v()));
+    json["r"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.r));
+    json["s"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.s));
 }
 
 } // namespace silkworm
@@ -206,7 +215,7 @@ void from_json(const nlohmann::json& json, Call& call) {
     if (json.count("from") != 0) {
         call.from = json.at("from").get<evmc::address>();
     }
-    call.from = json.at("to").get<evmc::address>();
+    call.to = json.at("to").get<evmc::address>();
     if (json.count("gas") != 0) {
         auto json_gas = json.at("gas");
         if (json_gas.is_string()) {
@@ -216,20 +225,10 @@ void from_json(const nlohmann::json& json, Call& call) {
         }
     }
     if (json.count("gasPrice") != 0) {
-        auto json_gas_price = json.at("gasPrice");
-        if (json_gas_price.is_string()) {
-            call.gas_price = std::stol(json_gas_price.get<std::string>(), 0, 16);
-        } else {
-            call.gas_price = json_gas_price.get<uint64_t>();
-        }
+        call.gas_price = json.at("gasPrice").get<intx::uint256>();
     }
     if (json.count("value") != 0) {
-        auto json_value = json.at("value");
-        if (json_value.is_string()) {
-            call.value = std::stol(json_value.get<std::string>(), 0, 16);
-        } else {
-            call.value = json_value.get<uint64_t>();
-        }
+        call.value = json.at("value").get<intx::uint256>();
     }
     if (json.count("data") != 0) {
         const auto json_data = json.at("data").get<std::string>();

@@ -66,7 +66,7 @@ public:
         typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
-        self_->client_.start_call([this](const ::grpc::Status& status) {
+        self_->client_.start_call([this](const grpc::Status& status) {
             typedef silkrpc::ethdb::kv::async_start<WaitHandler, Executor> op;
             auto start_op = static_cast<op*>(wrapper_);
             if (status.ok()) {
@@ -102,13 +102,13 @@ public:
         auto open_message = remote::Cursor{};
         open_message.set_op(remote::Op::OPEN);
         open_message.set_bucketname(table_name_);
-        self_->client_.write_start(open_message, [this](const ::grpc::Status& status) {
+        self_->client_.write_start(open_message, [this](const grpc::Status& status) {
             if (!status.ok()) {
                 auto open_cursor_op = static_cast<op*>(wrapper_);
                 open_cursor_op->complete(this, KVError::rpc_open_cursor_write_stream_failed, 0);
                 return;
             }
-            self_->client_.read_start([this](const ::grpc::Status& status, remote::Pair open_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, remote::Pair open_pair) {
                 auto cursor_id = open_pair.cursorid();
 
                 typedef silkrpc::ethdb::kv::async_open_cursor<WaitHandler, Executor> op;
@@ -149,13 +149,13 @@ public:
         seek_message.set_op(exact_ ? remote::Op::SEEK_EXACT : remote::Op::SEEK);
         seek_message.set_cursor(cursor_id_);
         seek_message.set_k(key_.data(), key_.length());
-        self_->client_.write_start(seek_message, [this](const ::grpc::Status& status) {
+        self_->client_.write_start(seek_message, [this](const grpc::Status& status) {
             if (!status.ok()) {
                 auto seek_op = static_cast<op*>(wrapper_);
                 seek_op->complete(this, KVError::rpc_seek_write_stream_failed, {});
                 return;
             }
-            self_->client_.read_start([this](const ::grpc::Status& status, remote::Pair seek_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, remote::Pair seek_pair) {
                 typedef silkrpc::ethdb::kv::async_seek<WaitHandler, Executor> op;
                 auto seek_op = static_cast<op*>(wrapper_);
                 if (status.ok()) {
@@ -197,13 +197,13 @@ public:
         seek_message.set_cursor(cursor_id_);
         seek_message.set_k(key_.data(), key_.length());
         seek_message.set_v(value_.data(), value_.length());
-        self_->client_.write_start(seek_message, [this](const ::grpc::Status& status) {
+        self_->client_.write_start(seek_message, [this](const grpc::Status& status) {
             if (!status.ok()) {
                 auto seek_op = static_cast<op*>(wrapper_);
                 seek_op->complete(this, KVError::rpc_seek_both_write_stream_failed, {});
                 return;
             }
-            self_->client_.read_start([this](const ::grpc::Status& status, remote::Pair seek_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, remote::Pair seek_pair) {
                 typedef silkrpc::ethdb::kv::async_seek<WaitHandler, Executor> op;
                 auto seek_op = static_cast<op*>(wrapper_);
                 if (status.ok()) {
@@ -244,13 +244,13 @@ public:
         auto next_message = remote::Cursor{};
         next_message.set_op(remote::Op::NEXT);
         next_message.set_cursor(cursor_id_);
-        self_->client_.write_start(next_message, [this](const ::grpc::Status& status) {
+        self_->client_.write_start(next_message, [this](const grpc::Status& status) {
             if (!status.ok()) {
                 auto next_op = static_cast<op*>(wrapper_);
                 next_op->complete(this, KVError::rpc_next_write_stream_failed, {});
                 return;
             }
-            self_->client_.read_start([this](const ::grpc::Status& status, remote::Pair next_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, remote::Pair next_pair) {
                 typedef silkrpc::ethdb::kv::async_next<WaitHandler, Executor> op;
                 auto next_op = static_cast<op*>(wrapper_);
                 if (status.ok()) {
@@ -289,13 +289,13 @@ public:
         auto close_message = remote::Cursor{};
         close_message.set_op(remote::Op::CLOSE);
         close_message.set_cursor(cursor_id_);
-        self_->client_.write_start(close_message, [this](const ::grpc::Status& status) {
+        self_->client_.write_start(close_message, [this](const grpc::Status& status) {
             if (!status.ok()) {
                 auto close_cursor_op = static_cast<op*>(wrapper_);
                 close_cursor_op->complete(this, KVError::rpc_close_cursor_write_stream_failed, 0);
                 return;
             }
-            self_->client_.read_start([this](const ::grpc::Status& status, remote::Pair close_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, remote::Pair close_pair) {
                 auto cursor_id = close_pair.cursorid();
 
                 typedef silkrpc::ethdb::kv::async_close_cursor<WaitHandler, Executor> op;
@@ -332,7 +332,7 @@ public:
         typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
-        self_->client_.end_call([this](const ::grpc::Status& status) {
+        self_->client_.end_call([this](const grpc::Status& status) {
             typedef silkrpc::ethdb::kv::async_end<WaitHandler, Executor> op;
             auto end_op = static_cast<op*>(wrapper_);
             if (status.ok()) {

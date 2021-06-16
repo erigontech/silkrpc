@@ -35,7 +35,7 @@ namespace silkrpc::ethdb::kv {
 
 class RemoteTransaction : public Transaction {
 public:
-    explicit RemoteTransaction(asio::io_context& context, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
+    explicit RemoteTransaction(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
     : context_(context), client_{channel, queue}, kv_awaitable_{context_, client_} {
         SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " start\n";
         SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " end\n";

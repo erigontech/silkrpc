@@ -78,16 +78,16 @@ asio::awaitable<uint64_t> read_header_number(const DatabaseReader& reader, const
 
 asio::awaitable<ChainConfig> read_chain_config(const DatabaseReader& reader) {
     const auto genesis_block_hash{co_await read_canonical_block_hash(reader, kEarliestBlockNumber)};
-    SILKRPC_DEBUG << "genesis_block_hash: " << genesis_block_hash << "\n";
+    SILKRPC_DEBUG << "rawdb::read_chain_config genesis_block_hash: " << genesis_block_hash << "\n";
     const silkworm::ByteView genesis_block_hash_bytes{genesis_block_hash.bytes, silkworm::kHashLength};
     const auto kv_pair{co_await reader.get(silkworm::db::table::kConfig.name, genesis_block_hash_bytes)};
     const auto data = kv_pair.value;
     if (data.empty()) {
         throw std::invalid_argument{"empty chain config data in read_chain_config"};
     }
-    SILKRPC_DEBUG << "chain config data: " << data.c_str() << "\n";
+    SILKRPC_DEBUG << "rawdb::read_chain_config chain config data: " << data.c_str() << "\n";
     const auto json_config = nlohmann::json::parse(data.c_str());
-    SILKRPC_DEBUG << "chain config JSON: " << json_config.dump() << "\n";
+    SILKRPC_TRACE << "rawdb::read_chain_config chain config JSON: " << json_config.dump() << "\n";
     co_return ChainConfig{genesis_block_hash, json_config};
 }
 
@@ -98,13 +98,13 @@ asio::awaitable<uint64_t> read_chain_id(const DatabaseReader& reader) {
 
 asio::awaitable<evmc::bytes32> read_canonical_block_hash(const DatabaseReader& reader, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number);
-    SILKRPC_TRACE << "block_key: " << silkworm::to_hex(block_key) << "\n";
+    SILKRPC_TRACE << "rawdb::read_canonical_block_hash block_key: " << silkworm::to_hex(block_key) << "\n";
     const auto value{co_await reader.get_one(silkworm::db::table::kCanonicalHashes.name, block_key)};
     if (value.empty()) {
         throw std::invalid_argument{"empty block hash value in read_canonical_block_hash"};
     }
     const auto canonical_block_hash{silkworm::to_bytes32(value)};
-    SILKRPC_DEBUG << "canonical block hash: " << canonical_block_hash << "\n";
+    SILKRPC_DEBUG << "rawdb::read_canonical_block_hash canonical block hash: " << canonical_block_hash << "\n";
     co_return canonical_block_hash;
 }
 
@@ -223,7 +223,7 @@ asio::awaitable<std::optional<silkrpc::Transaction>> read_transaction_by_hash(co
         co_return std::nullopt;
     }
     auto block_number = std::stoul(silkworm::to_hex(bytes), 0, 16);
-    SILKRPC_TRACE << "Block number " << block_number << " for transaction hash " << transaction_hash << "\n";
+    SILKRPC_TRACE << "block number " << block_number << " for transaction hash " << transaction_hash << "\n";
     const auto block_with_hash = co_await core::rawdb::read_block_by_number(reader, block_number);
     const auto transactions = block_with_hash.block.transactions;
 

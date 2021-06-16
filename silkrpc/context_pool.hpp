@@ -35,15 +35,15 @@ namespace silkrpc {
 
 struct Context {
     std::shared_ptr<asio::io_context> io_context;
-    std::unique_ptr<::grpc::CompletionQueue> grpc_queue;
-    std::unique_ptr<grpc::CompletionRunner> grpc_runner;
+    std::unique_ptr<grpc::CompletionQueue> grpc_queue;
+    std::unique_ptr<CompletionRunner> grpc_runner;
     std::unique_ptr<ethdb::Database> database;
     std::unique_ptr<ethbackend::BackEnd> backend;
 };
 
 std::ostream& operator<<(std::ostream& out, const Context& c);
 
-using ChannelFactory = std::function<std::shared_ptr<::grpc::Channel>()>;
+using ChannelFactory = std::function<std::shared_ptr<grpc::Channel>()>;
 
 class ContextPool {
 public:
@@ -63,7 +63,7 @@ public:
 private:
     // The pool of contexts
     std::vector<Context> contexts_;
-    std::vector<::grpc::CompletionQueue> queues_;
+    std::vector<grpc::CompletionQueue> queues_;
 
     // The work-tracking executors that keep the io_contexts running
     std::list<asio::execution::any_executor<>> work_;

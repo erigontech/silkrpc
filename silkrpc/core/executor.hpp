@@ -17,16 +17,19 @@
 #ifndef SILKRPC_CORE_EXECUTOR_HPP_
 #define SILKRPC_CORE_EXECUTOR_HPP_
 
+#include <string>
+
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
-#include <asio/io_context.hpp>
+#include <asio/thread_pool.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/state/buffer.hpp>
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/core/remote_buffer.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 
@@ -40,8 +43,10 @@ struct ExecutionResult {
 
 class Executor {
 public:
-    explicit Executor(const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config)
-    : db_reader_(db_reader), config_(config), buffer_{io_context_, db_reader} {}
+    static std::string get_error_message(int64_t error_code);
+
+    explicit Executor(const Context& context, const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config, uint64_t block_number)
+    : context_(context), db_reader_(db_reader), config_(config), buffer_{*context.io_context, db_reader, block_number}, thread_pool_{10} {}
     virtual ~Executor() {}
 
     Executor(const Executor&) = delete;
@@ -50,10 +55,11 @@ public:
     asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, uint64_t gas);
 
 private:
-    asio::io_context io_context_; // TODO(canepat): context pool shall be passed in Executor ctor to RemoteBuffer ctor
+    const Context& context_;
     const core::rawdb::DatabaseReader& db_reader_;
     const silkworm::ChainConfig& config_;
     RemoteBuffer buffer_;
+    asio::thread_pool thread_pool_;
 };
 
 } // namespace silkrpc

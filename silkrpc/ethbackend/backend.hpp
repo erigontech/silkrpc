@@ -29,16 +29,36 @@
 
 #include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/ethbackend/awaitables.hpp>
-#include <silkrpc/ethbackend/client.hpp>
+#include <silkrpc/grpc/awaitables.hpp>
+#include <silkrpc/grpc/async_unary_client.hpp>
+#include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
 
 namespace silkrpc::ethbackend {
 
+using EtherbaseClient = AsyncUnaryClient<
+    ::remote::ETHBACKEND::Stub,
+    ::remote::ETHBACKEND::NewStub,
+    ::remote::EtherbaseRequest,
+    ::remote::EtherbaseReply,
+    &::remote::ETHBACKEND::Stub::PrepareAsyncEtherbase
+>;
+
+using ProtocolVersionClient = AsyncUnaryClient<
+    ::remote::ETHBACKEND::Stub,
+    ::remote::ETHBACKEND::NewStub,
+    ::remote::ProtocolVersionRequest,
+    ::remote::ProtocolVersionReply,
+    &::remote::ETHBACKEND::Stub::PrepareAsyncProtocolVersion
+>;
+
+using EtherbaseAwaitable = unary_awaitable<asio::io_context::executor_type, EtherbaseClient, ::remote::EtherbaseReply>;
+using ProtocolVersionAwaitable = unary_awaitable<asio::io_context::executor_type, ProtocolVersionClient, ::remote::ProtocolVersionReply>;
+
 class BackEnd final {
 public:
-    explicit BackEnd(asio::io_context& context, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
-    : context_(context), eb_client_{channel, queue}, eb_awaitable_{context_, eb_client_} {
+    explicit BackEnd(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
+    : eb_awaitable_{context.get_executor(), channel, queue}, pv_awaitable_{context.get_executor(), channel, queue} {
         SILKRPC_TRACE << "BackEnd::ctor " << this << "\n";
     }
 
@@ -55,6 +75,14 @@ public:
         co_return evmc_address;
     }
 
+    asio::awaitable<uint64_t> get_protocol_version() {
+        const auto start_time = clock_time::now();
+        const auto reply = co_await pv_awaitable_.async_call(asio::use_awaitable);
+        const auto pv = reply.id();
+        SILKRPC_DEBUG << "BackEnd::protocol_version version=" << pv << " t=" << clock_time::since(start_time) << "\n";
+        co_return pv;
+    }
+
 private:
     evmc::address address_from_H160(const types::H160& h160) {
         uint64_t hi_hi = h160.hi().hi();
@@ -67,9 +95,8 @@ private:
         return address;
     }
 
-    asio::io_context& context_;
-    EtherbaseClient eb_client_;
-    EtherbaseAsioAwaitable<asio::io_context::executor_type> eb_awaitable_;
+    EtherbaseAwaitable eb_awaitable_;
+    ProtocolVersionAwaitable pv_awaitable_;
 };
 
 } // namespace silkrpc::ethbackend

@@ -14,9 +14,12 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_ETHBACKEND_CLIENT_HPP_
-#define SILKRPC_ETHBACKEND_CLIENT_HPP_
+#ifndef SILKRPC_GRPC_ERROR_HPP_
+#define SILKRPC_GRPC_ERROR_HPP_
 
-#include <silkrpc/ethbackend/etherbase_client.hpp>
+#include <system_error>
+#include <string>
 
-#endif // SILKRPC_ETHBACKEND_CLIENT_HPP_
+std::error_code make_error_code(int errc, std::string&& errmsg);
+
+#endif // SILKRPC_GRPC_ERROR_HPP_

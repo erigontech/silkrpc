@@ -43,8 +43,7 @@ public:
     asio::awaitable<evmc::bytes32> read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location_hash,
         uint64_t block_number) const;
 
-    asio::awaitable<std::optional<silkworm::Bytes>> read_code(const evmc::address& address,
-        uint64_t incarnation, const evmc::bytes32& code_hash, uint64_t block_number) const;
+    asio::awaitable<std::optional<silkworm::Bytes>> read_code(const evmc::bytes32& code_hash) const;
 
     asio::awaitable<std::optional<silkworm::Bytes>> read_historical_account(const evmc::address& address, uint64_t block_number) const;
 
