@@ -30,7 +30,7 @@
 #include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/awaitables.hpp>
-#include <silkrpc/grpc/client.hpp>
+#include <silkrpc/grpc/async_unary_client.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
 
