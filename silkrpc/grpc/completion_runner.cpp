@@ -18,7 +18,7 @@
 
 #include "async_completion_handler.hpp"
 
-namespace silkrpc::grpc {
+namespace silkrpc {
 
 void CompletionRunner::stop() {
     SILKRPC_INFO << "CompletionRunner::stop shutting down...\n";
@@ -34,7 +34,7 @@ void CompletionRunner::run() {
         bool ok;
         const auto got_event = queue_.Next(&got_tag, &ok);
         if (got_event) {
-            auto operation = grpc::AsyncCompletionHandler::detag(got_tag);
+            auto operation = AsyncCompletionHandler::detag(got_tag);
             SILKRPC_TRACE << "CompletionRunner::run post operation: " << operation << "\n";
             io_context_.post([=]() { operation->completed(ok); });
         } else {
@@ -45,4 +45,4 @@ void CompletionRunner::run() {
     SILKRPC_INFO << "CompletionRunner::run end\n";
 }
 
-} // namespace silkrpc::grpc
+} // namespace silkrpc

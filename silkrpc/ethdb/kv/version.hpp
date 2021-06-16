@@ -48,10 +48,10 @@ struct ProtocolVersionResult {
 
 using ProtocolVersionCheck = std::optional<ProtocolVersionResult>;
 
-ProtocolVersionCheck check_protocol_version(const std::shared_ptr<::grpc::Channel>& channel, const ProtocolVersion& client_version) {
+ProtocolVersionCheck check_protocol_version(const std::shared_ptr<grpc::Channel>& channel, const ProtocolVersion& client_version) {
     const auto stub = remote::KV::NewStub(channel);
 
-    ::grpc::ClientContext context;
+    grpc::ClientContext context;
     ::types::VersionReply version_reply;
     const auto status = stub->Version(&context, google::protobuf::Empty{}, &version_reply);
     if (!status.ok()) {

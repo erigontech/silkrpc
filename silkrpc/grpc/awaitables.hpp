@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_ETHBACKEND_AWAITABLES_HPP_
-#define SILKRPC_ETHBACKEND_AWAITABLES_HPP_
+#ifndef SILKRPC_GRPC_AWAITABLES_HPP_
+#define SILKRPC_GRPC_AWAITABLES_HPP_
 
 #include <silkrpc/config.hpp>
 
@@ -34,10 +34,10 @@
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/ethbackend/error.hpp>
+#include <silkrpc/grpc/error.hpp>
 #include <silkrpc/grpc/async_operation.hpp>
 
-namespace silkrpc::ethbackend {
+namespace silkrpc {
 
 template<typename Executor, typename UnaryClient, typename Reply>
 struct unary_awaitable;
@@ -59,7 +59,7 @@ public:
         typename OP::ptr p = {asio::detail::addressof(handler2.value), OP::ptr::allocate(handler2.value), 0};
         wrapper_ = new OP(handler2.value, self_->executor_);
 
-        self_->client_.async_call([this](const ::grpc::Status& status, const Reply& reply) {
+        self_->client_.async_call([this](const grpc::Status& status, const Reply& reply) {
             using OP = AsyncReplyOperation<WaitHandler, Executor, Reply>;
             auto async_reply_op = static_cast<OP*>(wrapper_);
             if (status.ok()) {
@@ -79,7 +79,7 @@ template<typename Executor, typename UnaryClient, typename Reply>
 struct unary_awaitable {
     typedef Executor executor_type;
 
-    explicit unary_awaitable(const Executor& executor, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
+    explicit unary_awaitable(const Executor& executor, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
     : executor_(executor), client_{channel, queue} {}
 
     template<typename WaitHandler>
@@ -91,6 +91,6 @@ struct unary_awaitable {
     UnaryClient client_;
 };
 
-} // namespace silkrpc::ethbackend
+} // namespace silkrpc
 
-#endif // SILKRPC_ETHBACKEND_AWAITABLES_HPP_
+#endif // SILKRPC_GRPC_AWAITABLES_HPP_

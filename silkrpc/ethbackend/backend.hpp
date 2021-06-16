@@ -29,8 +29,8 @@
 
 #include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/ethbackend/awaitables.hpp>
-#include <silkrpc/ethbackend/client.hpp>
+#include <silkrpc/grpc/awaitables.hpp>
+#include <silkrpc/grpc/client.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
 
@@ -57,7 +57,7 @@ using ProtocolVersionAwaitable = unary_awaitable<asio::io_context::executor_type
 
 class BackEnd final {
 public:
-    explicit BackEnd(asio::io_context& context, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
+    explicit BackEnd(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
     : eb_awaitable_{context.get_executor(), channel, queue}, pv_awaitable_{context.get_executor(), channel, queue} {
         SILKRPC_TRACE << "BackEnd::ctor " << this << "\n";
     }

@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_ETHBACKEND_CLIENT_HPP_
-#define SILKRPC_ETHBACKEND_CLIENT_HPP_
+#ifndef SILKRPC_GRPC_CLIENT_HPP_
+#define SILKRPC_GRPC_CLIENT_HPP_
 
 #include <functional>
 #include <memory>
@@ -28,23 +28,23 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/async_completion_handler.hpp>
 
-namespace silkrpc::ethbackend {
+namespace silkrpc {
 
 template<
     typename Stub,
-    std::unique_ptr<Stub>(*NewStub)(const std::shared_ptr<::grpc::ChannelInterface>&, const ::grpc::StubOptions&),
+    std::unique_ptr<Stub>(*NewStub)(const std::shared_ptr<grpc::ChannelInterface>&, const grpc::StubOptions&),
     typename Request,
     typename Reply,
-    std::unique_ptr<::grpc::ClientAsyncResponseReader<Reply>>(Stub::*PrepareAsync)(::grpc::ClientContext*, const Request&, ::grpc::CompletionQueue*)
+    std::unique_ptr<grpc::ClientAsyncResponseReader<Reply>>(Stub::*PrepareAsync)(grpc::ClientContext*, const Request&, grpc::CompletionQueue*)
 >
-class AsyncUnaryClient final : public grpc::AsyncCompletionHandler {
-    using AsyncResponseReaderPtr = std::unique_ptr<::grpc::ClientAsyncResponseReader<Reply>>;
+class AsyncUnaryClient final : public AsyncCompletionHandler {
+    using AsyncResponseReaderPtr = std::unique_ptr<grpc::ClientAsyncResponseReader<Reply>>;
 
     enum CallStatus { CALL_IDLE, CALL_STARTED, CALL_ENDED };
 
 public:
-    explicit AsyncUnaryClient(std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
-    : queue_(queue), stub_{NewStub(channel, ::grpc::StubOptions())} {
+    explicit AsyncUnaryClient(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
+    : queue_(queue), stub_{NewStub(channel, grpc::StubOptions())} {
         SILKRPC_TRACE << "AsyncUnaryClient::ctor " << this << " state: " << magic_enum::enum_name(state_) << "\n";
     }
 
@@ -52,14 +52,14 @@ public:
         SILKRPC_TRACE << "AsyncUnaryClient::dtor " << this << " state: " << magic_enum::enum_name(state_) << "\n";
     }
 
-    void async_call(std::function<void(const ::grpc::Status&, const Reply&)> completed) {
+    void async_call(std::function<void(const grpc::Status&, const Reply&)> completed) {
         SILKRPC_TRACE << "AsyncUnaryClient::async_call " << this << " state: " << magic_enum::enum_name(state_) << " start\n";
         completed_ = completed;
-        ::grpc::ClientContext context;
+        grpc::ClientContext context;
         client_ = (stub_.get()->*PrepareAsync)(&context, Request{}, queue_);
         state_ = CALL_STARTED;
         client_->StartCall();
-        client_->Finish(&reply_, &result_, grpc::AsyncCompletionHandler::tag(this));
+        client_->Finish(&reply_, &result_, AsyncCompletionHandler::tag(this));
         SILKRPC_TRACE << "AsyncUnaryClient::async_call " << this << " state: " << magic_enum::enum_name(state_) << " end\n";
     }
 
@@ -80,15 +80,15 @@ public:
     }
 
 private:
-    ::grpc::CompletionQueue* queue_;
+    grpc::CompletionQueue* queue_;
     std::unique_ptr<Stub> stub_;
     AsyncResponseReaderPtr client_;
     Reply reply_;
-    ::grpc::Status result_;
+    grpc::Status result_;
     CallStatus state_{CALL_IDLE};
-    std::function<void(const ::grpc::Status&, const Reply&)> completed_;
+    std::function<void(const grpc::Status&, const Reply&)> completed_;
 };
 
-} // namespace silkrpc::ethbackend
+} // namespace silkrpc
 
-#endif // SILKRPC_ETHBACKEND_CLIENT_HPP_
+#endif // SILKRPC_GRPC_CLIENT_HPP_
