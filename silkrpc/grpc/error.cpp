@@ -33,7 +33,7 @@ private:
     std::string error_message_;
 };
 
-const char* generic_error_category::name() const noexcept { return "ethbackend"; }
+const char* generic_error_category::name() const noexcept { return "grpc"; }
 
 std::string generic_error_category::message(int ev) const { return error_message_; }
 

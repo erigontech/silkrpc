@@ -27,11 +27,11 @@
 
 #include <silkrpc/common/log.hpp>
 
-namespace silkrpc::grpc {
+namespace silkrpc {
 
 class CompletionRunner {
 public:
-    CompletionRunner(::grpc::CompletionQueue& queue, asio::io_context& io_context)
+    CompletionRunner(grpc::CompletionQueue& queue, asio::io_context& io_context)
     : queue_(queue), io_context_(io_context) {}
 
     ~CompletionRunner() { stop(); }
@@ -44,10 +44,10 @@ public:
     void stop();
 
 private:
-    ::grpc::CompletionQueue& queue_;
+    grpc::CompletionQueue& queue_;
     asio::io_context& io_context_;
 };
 
-} // namespace silkrpc::grpc
+} // namespace silkrpc
 
 #endif  // SILKRPC_GRPC_COMPLETION_RUNNER_HPP_

@@ -14,12 +14,12 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_ETHBACKEND_ERROR_HPP_
-#define SILKRPC_ETHBACKEND_ERROR_HPP_
+#ifndef SILKRPC_GRPC_ERROR_HPP_
+#define SILKRPC_GRPC_ERROR_HPP_
 
 #include <system_error>
 #include <string>
 
 std::error_code make_error_code(int errc, std::string&& errmsg);
 
-#endif // SILKRPC_ETHBACKEND_ERROR_HPP_
+#endif // SILKRPC_GRPC_ERROR_HPP_
