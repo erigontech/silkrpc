@@ -26,6 +26,8 @@
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/json/types.hpp>
+#include <silkrpc/context_pool.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
@@ -33,7 +35,7 @@ namespace silkrpc::commands {
 
 class NetRpcApi {
 public:
-    NetRpcApi() = default;
+    explicit NetRpcApi(std::unique_ptr<ethbackend::BackEnd>& backend) : backend_(backend) {}
     virtual ~NetRpcApi() = default;
 
     NetRpcApi(const NetRpcApi&) = delete;
@@ -46,8 +48,9 @@ protected:
 
 private:
     friend class silkrpc::http::RequestHandler;
-};
 
+    std::unique_ptr<ethbackend::BackEnd>& backend_;
+};
 } // namespace silkrpc::commands
 
 #endif  // SILKRPC_COMMANDS_NET_API_HPP_

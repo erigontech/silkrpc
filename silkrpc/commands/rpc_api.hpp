@@ -35,7 +35,7 @@ namespace silkrpc::commands {
 class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, TurboGethRpcApi, TraceRpcApi {
 public:
     explicit RpcApi(Context& context) :
-        EthereumRpcApi{context}, NetRpcApi{}, Web3RpcApi{context.database}, DebugRpcApi{context.database},
+        EthereumRpcApi{context}, NetRpcApi{context.backend}, Web3RpcApi{context}, DebugRpcApi{context.database},
         ParityRpcApi{context.database}, TurboGethRpcApi{context.database}, TraceRpcApi{context.database} {}
     virtual ~RpcApi() {}
 

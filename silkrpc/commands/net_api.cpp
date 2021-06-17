@@ -17,6 +17,7 @@
 #include "net_api.hpp"
 
 #include <silkrpc/json/types.hpp>
+#include <string>
 
 namespace silkrpc::commands {
 
@@ -36,9 +37,17 @@ asio::awaitable<void> NetRpcApi::handle_net_peer_count(const nlohmann::json& req
 
 // https://eth.wiki/json-rpc/API#net_version
 asio::awaitable<void> NetRpcApi::handle_net_version(const nlohmann::json& request, nlohmann::json& reply) {
-    reply = make_json_content(request["id"], 5);
-    // TODO(canepat): use NetVersion RPC by exposed ETHBACKEND gRPC service
-    co_return;
+    try {
+        const auto net_version = co_await backend_->get_net_version();
+        const auto net_version_str = std::to_string(net_version);
+        reply = make_json_content(request["id"], net_version_str);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], -32000, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
 }
 
 } // namespace silkrpc::commands
