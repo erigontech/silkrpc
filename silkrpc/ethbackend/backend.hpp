@@ -110,7 +110,7 @@ public:
         const auto start_time = clock_time::now();
         const auto reply = co_await nv_awaitable_.async_call(asio::use_awaitable);
         const auto nv = reply.id();
-        SILKRPC_DEBUG << "BackEnd::net_version version=" << nv << " t=" << clock_time::since(start_time) << "\n";
+        SILKRPC_DEBUG << "BackEnd::get_net_version version=" << nv << " t=" << clock_time::since(start_time) << "\n";
         co_return nv;
     }
 
@@ -118,7 +118,7 @@ public:
         const auto start_time = clock_time::now();
         const auto reply = co_await cv_awaitable_.async_call(asio::use_awaitable);
         const auto cv = reply.nodename();
-        SILKRPC_DEBUG << "BackEnd::web3_client_version version=" << cv << " t=" << clock_time::since(start_time) << "\n";
+        SILKRPC_DEBUG << "BackEnd::get_client_version version=" << cv << " t=" << clock_time::since(start_time) << "\n";
         co_return cv;
     }
 
