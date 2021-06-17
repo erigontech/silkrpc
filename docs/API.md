@@ -17,8 +17,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_syncing                             | Yes          |                                            |
 | eth_gasPrice                            | -            | not yet implemented                        |
 |                                         |              |                                            |
-| eth_getBlockByHash                      | Yes          | not yet tested for performance             |
-| eth_getBlockByNumber                    | Yes          | not yet tested for performance             |
+| eth_getBlockByHash                      | Yes          |                                            |
+| eth_getBlockByNumber                    | Yes          |                                            |
 | eth_getBlockTransactionCountByHash      | Yes          |                                            |
 | eth_getBlockTransactionCountByNumber    | Yes          |                                            |
 | eth_getUncleByBlockHashAndIndex         | Yes          |                                            |
@@ -37,7 +37,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getCode                             | Yes          |                                            |
 | eth_getTransactionCount                 | Yes          |                                            |
 | eth_getStorageAt                        | Yes          |                                            |
-| eth_call                                | -            | work in progress                           |
+| eth_call                                | Yes          | not yet tested for performance             |
 |                                         |              |                                            |
 | eth_newFilter                           | -            | not yet implemented                        |
 | eth_newBlockFilter                      | -            | not yet implemented                        |
