@@ -9,7 +9,7 @@
         "response":{
             "jsonrpc":"2.0",
             "id":1,
-            "result":"Erigon/v2021.06.1-alpha-29fa1aa3/linux/go1.16.4"
+            "result":null
         }
     },
     {
