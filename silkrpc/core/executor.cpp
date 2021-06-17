@@ -82,7 +82,7 @@ asio::awaitable<ExecutionResult> Executor::call(const silkworm::Block& block, co
     const auto exec_result = co_await asio::async_compose<decltype(asio::use_awaitable), void(ExecutionResult)>(
         [this, &block, &txn, gas](auto&& self) {
             SILKRPC_TRACE << "Executor::call post block: " << block.header.number << " txn: " << &txn << " gas: " << gas << "\n";
-            asio::post(thread_pool_, [this, &block, &txn, gas, self = std::move(self)]() mutable {
+            asio::post(workers_, [this, &block, &txn, gas, self = std::move(self)]() mutable {
                 silkworm::IntraBlockState state{buffer_};
                 silkworm::EVM evm{block, state, config_};
 
