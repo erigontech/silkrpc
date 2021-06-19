@@ -139,11 +139,11 @@ silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
 
   Flags from main.cpp:
     --chaindata (chain data path as string); default: "";
-    --local (HTTP JSON local binding as string <address>:<port>);
-      default: "localhost:8545";
+    --local (HTTP JSON local binding as string <address>:<port>); default: "localhost:8545";
     --logLevel (logging level); default: c;
-    --target (Erigon Core gRPC service location as string <address>:<port>);
-      default: "localhost:9090";
+    --numContexts (number of running I/O contexts as 32-bit integer); default: number of hardware thread contexts / 2;
+    --numWorkers (number of worker threads as 32-bit integer); default: number of hardware thread contexts;
+    --target (Erigon Core gRPC service location as string <address>:<port>); default: "localhost:9090";
     --timeout (gRPC call timeout as 32-bit integer); default: 10000;
 ```
 

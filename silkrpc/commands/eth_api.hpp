@@ -23,6 +23,7 @@
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
+#include <asio/thread_pool.hpp>
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
@@ -43,7 +44,8 @@ namespace silkrpc::commands {
 
 class EthereumRpcApi {
 public:
-    explicit EthereumRpcApi(Context& context) : context_(context), database_(context.database), backend_(context.backend) {}
+    explicit EthereumRpcApi(Context& context, asio::thread_pool& workers)
+    : context_(context), database_(context.database), backend_(context.backend), workers_{workers} {}
     virtual ~EthereumRpcApi() {}
 
     EthereumRpcApi(const EthereumRpcApi&) = delete;
@@ -99,6 +101,7 @@ protected:
     Context& context_;
     std::unique_ptr<ethdb::Database>& database_;
     std::unique_ptr<ethbackend::BackEnd>& backend_;
+    asio::thread_pool& workers_;
 
     friend class silkrpc::http::RequestHandler;
 };

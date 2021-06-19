@@ -45,8 +45,8 @@ class Executor {
 public:
     static std::string get_error_message(int64_t error_code);
 
-    explicit Executor(const Context& context, const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config, uint64_t block_number)
-    : context_(context), db_reader_(db_reader), config_(config), buffer_{*context.io_context, db_reader, block_number}, thread_pool_{10} {}
+    explicit Executor(const Context& context, const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config, asio::thread_pool& workers, uint64_t block_number)
+    : context_(context), db_reader_(db_reader), config_(config), workers_{workers}, buffer_{*context.io_context, db_reader, block_number} {}
     virtual ~Executor() {}
 
     Executor(const Executor&) = delete;
@@ -58,8 +58,8 @@ private:
     const Context& context_;
     const core::rawdb::DatabaseReader& db_reader_;
     const silkworm::ChainConfig& config_;
+    asio::thread_pool& workers_;
     RemoteBuffer buffer_;
-    asio::thread_pool thread_pool_;
 };
 
 } // namespace silkrpc

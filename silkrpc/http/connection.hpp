@@ -30,6 +30,7 @@
 
 #include <asio/awaitable.hpp>
 #include <asio/ip/tcp.hpp>
+#include <asio/thread_pool.hpp>
 
 #include <silkrpc/context_pool.hpp>
 #include "reply.hpp"
@@ -48,7 +49,7 @@ public:
     Connection& operator=(const Connection&) = delete;
 
     /// Construct a connection running within the given execution context.
-    explicit Connection(Context& context);
+    explicit Connection(Context& context, asio::thread_pool& workers);
 
     ~Connection();
 
