@@ -21,7 +21,6 @@
 #include <utility>
 
 #include <boost/endian/conversion.hpp>
-#include <boost/format.hpp>
 #include <intx/intx.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/db/silkworm/db/util.hpp>
@@ -306,36 +305,27 @@ void to_json(nlohmann::json& json, const Receipt& receipt) {
 void from_json(const nlohmann::json& json, Receipt& receipt) {
     SILKRPC_TRACE << "from_json<Receipt> json: " << json.dump() << "\n";
     if (json.is_array()) {
-        int start_index = 0;
-        if (json.size() == 4) {
-            if (!json[start_index].is_number()) {
-                auto message = str(boost::format("Receipt CBOR: number expected in [%d]") % start_index);
-                throw std::system_error{std::make_error_code(std::errc::invalid_argument), ""};
-            }
-            receipt.type = json[start_index];
-            start_index++;
-        } else if (json.size() != 3) {
+        if (json.size() < 4) {
             throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Receipt CBOR: missing entries"};
         }
+        if (!json[0].is_number()) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Receipt CBOR: number expected in [0]"};
+        }
+        receipt.type = json[0];
 
-        if (!json[start_index].is_null()) {
-            auto message = str(boost::format("Receipt CBOR: null expected in [%d]") % start_index);
-            throw std::system_error{std::make_error_code(std::errc::invalid_argument), message};
+        if (!json[1].is_null()) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Receipt CBOR: null expected in [1]"};
         }
 
-        start_index++;
-        if (!json[start_index].is_number()) {
-            auto message = str(boost::format("Receipt CBOR: number expected in [%d]") % start_index);
-            throw std::system_error{std::make_error_code(std::errc::invalid_argument), message};
+        if (!json[2].is_number()) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Receipt CBOR: number expected in [2]"};
         }
-        receipt.success = json[start_index] == 1u;
+        receipt.success = json[2] == 1u;
 
-        start_index++;
-        if (!json[start_index].is_number()) {
-            auto message = str(boost::format("Receipt CBOR: number expected in [%d]") % start_index);
-            throw std::system_error{std::make_error_code(std::errc::invalid_argument), message};
+        if (!json[3].is_number()) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Receipt CBOR: number expected in [3]"};
         }
-        receipt.cumulative_gas_used = json[start_index];
+        receipt.cumulative_gas_used = json[3];
     } else {
         receipt.success = json.at("success").get<bool>();
         receipt.cumulative_gas_used = json.at("cumulative_gas_used").get<uint64_t>();

@@ -583,7 +583,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_number
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
-        auto error_msg = "invalid eth_getTransactionByHash params: " + params.dump();
+        auto error_msg = "invalid eth_getTransactionReceipt params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
@@ -602,13 +602,13 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const n
         if (receipts.size() != transactions.size()) {
             throw std::invalid_argument{"Unexpected size for receipts in handle_eth_get_transaction_receipt"};
         }
-        const silkworm::ByteView tx_hash{transaction_hash.bytes, silkworm::kHashLength};
+        // const silkworm::ByteView tx_hash{transaction_hash.bytes, silkworm::kHashLength};
         size_t tx_index = -1;
         for (size_t idx{0}; idx < transactions.size(); idx++) {
             auto ethash_hash{hash_of_transaction(transactions[idx])};
-            silkworm::ByteView hash_view{ethash_hash.bytes, silkworm::kHashLength};
-            SILKRPC_TRACE << "tx " << idx << ") hash: " << silkworm::to_bytes32(hash_view) << "\n";
-            if (tx_hash == hash_view) {
+            // silkworm::ByteView hash_view{ethash_hash.bytes, silkworm::kHashLength};
+            SILKRPC_TRACE << "tx " << idx << ") hash: " << silkworm::to_bytes32(ethash_hash.bytes) << "\n";
+            if (memcmp(transaction_hash.bytes, ethash_hash.bytes, silkworm::kHashLength) == 0) {
                 tx_index = idx;
                 break;
             }

@@ -55,6 +55,7 @@ void cbor_decode(const silkworm::Bytes& bytes, std::vector<Receipt>& receipts) {
     if (bytes.size() == 0) {
         return;
     }
+    SILKRPC_TRACE << "cbor_decode bytes: " << silkworm::to_hex(bytes) << "\n";
     auto json = nlohmann::json::from_cbor(bytes);
     SILKRPC_TRACE << "cbor_decode<std::vector<Receipt>> json: " << json.dump() << "\n";
     if (json.is_array()) {

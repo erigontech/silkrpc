@@ -52,7 +52,7 @@ std::ostream& operator<<(std::ostream& out, const Transaction& t) {
     }
     out << " transaction_index: " << t.transaction_index;
     if (t.type) {
-        out << " type: 0x" << std::hex << *t.type; // TODO(sixtysister) to_hex for uint8_t?
+        out << " type: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(*t.type);
     } else {
         out << " type: null";
     }
