@@ -23,12 +23,14 @@
 #ifndef SILKRPC_HTTP_SERVER_HPP_
 #define SILKRPC_HTTP_SERVER_HPP_
 
+#include <cstddef>
 #include <string>
 
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
 #include <asio/ip/tcp.hpp>
+#include <asio/thread_pool.hpp>
 
 #include <silkrpc/context_pool.hpp>
 
@@ -41,7 +43,7 @@ public:
     Server& operator=(const Server&) = delete;
 
     // Construct the server to listen on the specified TCP address and port
-    explicit Server(const std::string& address, const std::string& port, ContextPool& context_pool);
+    explicit Server(const std::string& address, const std::string& port, ContextPool& context_pool, std::size_t num_workers);
 
     void start();
 
@@ -55,6 +57,8 @@ private:
 
     // The acceptor used to listen for incoming TCP connections
     asio::ip::tcp::acceptor acceptor_;
+
+    asio::thread_pool workers_;
 };
 
 } // namespace silkrpc::http

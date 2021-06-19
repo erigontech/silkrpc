@@ -19,6 +19,8 @@
 
 #include <memory>
 
+#include <asio/thread_pool.hpp>
+
 #include <silkrpc/commands/debug_api.hpp>
 #include <silkrpc/commands/eth_api.hpp>
 #include <silkrpc/commands/net_api.hpp>
@@ -34,8 +36,8 @@ namespace silkrpc::commands {
 
 class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, TurboGethRpcApi, TraceRpcApi {
 public:
-    explicit RpcApi(Context& context) :
-        EthereumRpcApi{context}, NetRpcApi{context.backend}, Web3RpcApi{context}, DebugRpcApi{context.database},
+    explicit RpcApi(Context& context, asio::thread_pool& workers) :
+        EthereumRpcApi{context, workers}, NetRpcApi{context.backend}, Web3RpcApi{context}, DebugRpcApi{context.database},
         ParityRpcApi{context.database}, TurboGethRpcApi{context.database}, TraceRpcApi{context.database} {}
     virtual ~RpcApi() {}
 

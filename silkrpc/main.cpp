@@ -45,6 +45,7 @@ ABSL_FLAG(std::string, chaindata, silkrpc::common::kEmptyChainData, "chain data 
 ABSL_FLAG(std::string, local, silkrpc::common::kDefaultLocal, "HTTP JSON local binding as string <address>:<port>");
 ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "TG Core gRPC service location as string <address>:<port>");
 ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "number of running I/O contexts as 32-bit integer");
+ABSL_FLAG(uint32_t, numWorkers, std::thread::hardware_concurrency(), "number of worker threads as 32-bit integer");
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
 
@@ -74,7 +75,7 @@ int main(int argc, char* argv[]) {
         auto chaindata{absl::GetFlag(FLAGS_chaindata)};
         if (!chaindata.empty() && !std::filesystem::exists(chaindata)) {
             SILKRPC_ERROR << "Parameter chaindata is invalid: [" << chaindata << "]\n";
-            SILKRPC_ERROR << "Use --chaindata flag to specify the path of Turbo-Geth database\n";
+            SILKRPC_ERROR << "Use --chaindata flag to specify the path of Erigon database\n";
             return -1;
         }
 
@@ -88,20 +89,20 @@ int main(int argc, char* argv[]) {
         auto target{absl::GetFlag(FLAGS_target)};
         if (!target.empty() && target.find(":") == std::string::npos) {
             SILKRPC_ERROR << "Parameter target is invalid: [" << target << "]\n";
-            SILKRPC_ERROR << "Use --target flag to specify the location of Turbo-Geth running instance\n";
+            SILKRPC_ERROR << "Use --target flag to specify the location of Erigon running instance\n";
             return -1;
         }
 
         if (chaindata.empty() && target.empty()) {
             SILKRPC_ERROR << "Parameters chaindata and target cannot be both empty, specify one of them\n";
-            SILKRPC_ERROR << "Use --chaindata or --target flag to specify the path or the location of Turbo-Geth instance\n";
+            SILKRPC_ERROR << "Use --chaindata or --target flag to specify the path or the location of Erigon instance\n";
             return -1;
         }
 
         auto timeout{absl::GetFlag(FLAGS_timeout)};
         if (timeout < 0) {
             SILKRPC_ERROR << "Parameter timeout is invalid: [" << timeout << "]\n";
-            SILKRPC_ERROR << "Use --timeout flag to specify the timeout in msecs for Turbo-Geth KV gRPC I/F\n";
+            SILKRPC_ERROR << "Use --timeout flag to specify the timeout in msecs for Erigon KV gRPC I/F\n";
             return -1;
         }
 
@@ -109,6 +110,13 @@ int main(int argc, char* argv[]) {
         if (numContexts < 0) {
             SILKRPC_ERROR << "Parameter numContexts is invalid: [" << numContexts << "]\n";
             SILKRPC_ERROR << "Use --numContexts flag to specify the number of threads running I/O contexts\n";
+            return -1;
+        }
+
+        auto numWorkers{absl::GetFlag(FLAGS_numWorkers)};
+        if (numWorkers < 0) {
+            SILKRPC_ERROR << "Parameter numWorkers is invalid: [" << numWorkers << "]\n";
+            SILKRPC_ERROR << "Use --numWorkers flag to specify the number of worker threads executing long-run operations\n";
             return -1;
         }
 
@@ -139,7 +147,7 @@ int main(int argc, char* argv[]) {
 
         const auto http_host = local.substr(0, local.find(kAddressPortSeparator));
         const auto http_port = local.substr(local.find(kAddressPortSeparator) + 1, std::string::npos);
-        silkrpc::http::Server http_server{http_host, http_port, context_pool};
+        silkrpc::http::Server http_server{http_host, http_port, context_pool, numWorkers};
 
         auto& io_context = context_pool.get_io_context();
         asio::signal_set signals{io_context, SIGINT, SIGTERM};
