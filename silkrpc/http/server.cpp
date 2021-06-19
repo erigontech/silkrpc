@@ -35,8 +35,8 @@
 
 namespace silkrpc::http {
 
-Server::Server(const std::string& address, const std::string& port, ContextPool& context_pool)
-: context_pool_(context_pool), acceptor_{context_pool.get_io_context()} {
+Server::Server(const std::string& address, const std::string& port, ContextPool& context_pool, std::size_t num_workers)
+: context_pool_(context_pool), acceptor_{context_pool.get_io_context()}, workers_{num_workers} {
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
     asio::ip::tcp::resolver resolver{acceptor_.get_executor()};
     asio::ip::tcp::endpoint endpoint = *resolver.resolve(address, port).begin();
@@ -62,7 +62,7 @@ asio::awaitable<void> Server::run() {
 
             SILKRPC_DEBUG << "Server::start accepting using io_context " << io_context << "...\n" << std::flush;
 
-            auto new_connection = std::make_shared<Connection>(context);
+            auto new_connection = std::make_shared<Connection>(context, workers_);
             co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);
             if (!acceptor_.is_open()) {
                 SILKRPC_TRACE << "Server::start returning...\n";
