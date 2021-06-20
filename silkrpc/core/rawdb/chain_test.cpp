@@ -34,13 +34,15 @@ TEST_CASE("decode empty receipt list", "[silkrpc::core][cbor_decode]") {
 
 TEST_CASE("decode receipt list", "[silkrpc::core][cbor_decode]") {
     std::vector<Receipt> receipts{};
-    auto bytes = silkworm::from_hex("8283f6001a0032f05d83f6011a00beadd0").value();
+    auto bytes = silkworm::from_hex("838400f601196d398400f6011a00371b0b8400f6011a003947f4").value();
     cbor_decode(bytes, receipts);
-    CHECK(receipts.size() == 2);
-    CHECK(receipts[0].success == false);
-    CHECK(receipts[0].cumulative_gas_used == 0x32f05d);
+    CHECK(receipts.size() == 3);
+    CHECK(receipts[0].success == true);
+    CHECK(receipts[0].cumulative_gas_used == 0x6d39);
     CHECK(receipts[1].success == true);
-    CHECK(receipts[1].cumulative_gas_used == 0xbeadd0);
+    CHECK(receipts[1].cumulative_gas_used == 0x371b0b);
+    CHECK(receipts[2].success == true);
+    CHECK(receipts[2].cumulative_gas_used == 0x3947f4);
 }
 
 TEST_CASE("decode empty log list", "[silkrpc::core][cbor_decode]") {

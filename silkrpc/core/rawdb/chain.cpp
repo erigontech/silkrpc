@@ -133,6 +133,18 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const DatabaseRead
     co_return co_await read_block(reader, block_hash, block_number);
 }
 
+asio::awaitable<silkworm::BlockWithHash> read_block_by_transaction_hash(const DatabaseReader& reader, const evmc::bytes32& transaction_hash) {
+    const silkworm::ByteView tx_hash{transaction_hash.bytes, silkworm::kHashLength};
+
+    auto bytes = co_await reader.get_one(silkworm::db::table::kTxLookup.name, tx_hash);
+    if (bytes.empty()) {
+        throw std::invalid_argument{"empty block number value in read_block_by_transaction_hash"};
+    }
+    auto block_number = std::stoul(silkworm::to_hex(bytes), 0, 16);
+    SILKRPC_TRACE << "Block number " << block_number << " for transaction hash " << transaction_hash << "\n";
+    co_return co_await core::rawdb::read_block_by_number(reader, block_number);
+}
+
 asio::awaitable<silkworm::BlockWithHash> read_block(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     auto header = co_await read_header(reader, block_hash, block_number);
     SILKRPC_INFO << "header: number=" << header.number << "\n";
@@ -255,6 +267,7 @@ asio::awaitable<Receipts> read_raw_receipts(const DatabaseReader& reader, const 
     Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
         auto tx_id = boost::endian::load_big_u32(&k[sizeof(uint64_t)]);
         cbor_decode(v, receipts[tx_id].logs);
+        receipts[tx_id].bloom = bloom_from_logs(receipts[tx_id].logs);
         SILKRPC_DEBUG << "#receipts[" << tx_id << "].logs: " << receipts[tx_id].logs.size() << "\n";
         return true;
     };
@@ -295,8 +308,11 @@ asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc
         if (i == 0) {
             receipts[i].gas_used = receipts[i].cumulative_gas_used;
         } else {
-            receipts[i].gas_used = receipts[i].cumulative_gas_used - receipts[i-1].cumulative_gas_used;;
+            receipts[i].gas_used = receipts[i].cumulative_gas_used - receipts[i-1].cumulative_gas_used;
         }
+
+        receipts[i].from = senders[i];
+        receipts[i].to = transactions[i].to;
 
         // The derived fields of receipt are taken from block and transaction
         for (size_t j{0}; j < receipts[i].logs.size(); j++) {
