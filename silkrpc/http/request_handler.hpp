@@ -30,6 +30,7 @@
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
+#include <asio/thread_pool.hpp>
 
 #include <silkrpc/commands/rpc_api.hpp>
 #include <silkrpc/context_pool.hpp>
@@ -44,7 +45,7 @@ public:
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
-    explicit RequestHandler(Context& context) : rpc_api_{context} {}
+    explicit RequestHandler(Context& context, asio::thread_pool& workers) : rpc_api_{context, workers} {}
 
     virtual ~RequestHandler() {}
 

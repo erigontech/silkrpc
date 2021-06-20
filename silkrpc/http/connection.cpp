@@ -38,7 +38,7 @@
 
 namespace silkrpc::http {
 
-Connection::Connection(Context& context) : socket_{*context.io_context}, request_handler_{context} {
+Connection::Connection(Context& context, asio::thread_pool& workers) : socket_{*context.io_context}, request_handler_{context, workers} {
     request_.content.reserve(1024);
     request_.headers.reserve(8);
     request_.method.reserve(64);

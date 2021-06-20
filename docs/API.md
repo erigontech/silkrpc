@@ -4,12 +4,12 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 
 | Command                                 | Availability | Notes                                      |
 | :-------------------------------------- | :----------: | -----------------------------------------: |
-| web3_clientVersion                      | Yes          | hard-coded (needs ethbackend integration)  |
+| web3_clientVersion                      | Yes          |                                            |
 | web3_sha3                               | Yes          |                                            |
 |                                         |              |                                            |
 | net_listening                           | Yes          | hard-coded (needs p2pSentry integration)   |
 | net_peerCount                           | Yes          | hard-coded (needs p2pSentry integration)   |
-| net_version                             | Yes          | hard-coded (needs ethbackend integration)  |
+| net_version                             | Yes          |                                            | 
 |                                         |              |                                            |
 | eth_blockNumber                         | Yes          |                                            |
 | eth_chainId                             | Yes          |                                            |
@@ -17,8 +17,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_syncing                             | Yes          |                                            |
 | eth_gasPrice                            | -            | not yet implemented                        |
 |                                         |              |                                            |
-| eth_getBlockByHash                      | Yes          | not yet tested for performance             |
-| eth_getBlockByNumber                    | Yes          | not yet tested for performance             |
+| eth_getBlockByHash                      | Yes          |                                            |
+| eth_getBlockByNumber                    | Yes          |                                            |
 | eth_getBlockTransactionCountByHash      | Yes          |                                            |
 | eth_getBlockTransactionCountByNumber    | Yes          |                                            |
 | eth_getUncleByBlockHashAndIndex         | Yes          |                                            |
@@ -37,7 +37,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getCode                             | Yes          |                                            |
 | eth_getTransactionCount                 | Yes          |                                            |
 | eth_getStorageAt                        | Yes          |                                            |
-| eth_call                                | -            | work in progress                           |
+| eth_call                                | Yes          | not yet tested for performance             |
 |                                         |              |                                            |
 | eth_newFilter                           | -            | not yet implemented                        |
 | eth_newBlockFilter                      | -            | not yet implemented                        |
