@@ -42,7 +42,10 @@ namespace silkrpc {
 template<typename Executor, typename UnaryClient, typename Reply>
 struct unary_awaitable;
 
-template<typename Executor, typename UnaryClient, typename Reply, template<class, class, class> typename AsyncReplyOperation>
+template<typename Executor, typename UnaryClient>
+struct unary_awaitable<Executor, UnaryClient, void>;
+
+template<typename Executor, typename UnaryClient, template<class, class, class> typename AsyncReplyOperation, typename Reply>
 class initiate_unary_async {
 public:
     typedef Executor executor_type;
@@ -75,6 +78,39 @@ private:
     void* wrapper_;
 };
 
+template<typename Executor, typename UnaryClient, template<class, class, class> typename AsyncReplyOperation>
+class initiate_unary_async<Executor, UnaryClient, AsyncReplyOperation, void> {
+public:
+    typedef Executor executor_type;
+
+    explicit initiate_unary_async(unary_awaitable<Executor, UnaryClient, void>* self)
+    : self_(self) {}
+
+    executor_type get_executor() const noexcept { return self_->executor_; }
+
+    template <typename WaitHandler>
+    void operator()(WaitHandler&& handler) {
+        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        using OP = AsyncReplyOperation<WaitHandler, Executor, void>;
+        typename OP::ptr p = {asio::detail::addressof(handler2.value), OP::ptr::allocate(handler2.value), 0};
+        wrapper_ = new OP(handler2.value, self_->executor_);
+
+        self_->client_.async_call([this](const grpc::Status& status) {
+            using OP = AsyncReplyOperation<WaitHandler, Executor, void>;
+            auto async_reply_op = static_cast<OP*>(wrapper_);
+            if (status.ok()) {
+                async_reply_op->complete(this, {});
+            } else {
+                async_reply_op->complete(this, make_error_code(status.error_code(), status.error_message()));
+            }
+        });
+    }
+
+private:
+    unary_awaitable<Executor, UnaryClient, void>* self_;
+    void* wrapper_;
+};
+
 template<typename Executor, typename UnaryClient, typename Reply>
 struct unary_awaitable {
     typedef Executor executor_type;
@@ -84,7 +120,23 @@ struct unary_awaitable {
 
     template<typename WaitHandler>
     auto async_call(WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, Reply)>(initiate_unary_async<Executor, UnaryClient, Reply, async_reply_operation>{this}, handler);
+        return asio::async_initiate<WaitHandler, void(asio::error_code, Reply)>(initiate_unary_async<Executor, UnaryClient, async_reply_operation, Reply>{this}, handler);
+    }
+
+    const Executor& executor_;
+    UnaryClient client_;
+};
+
+template<typename Executor, typename UnaryClient>
+struct unary_awaitable<Executor, UnaryClient, void> {
+    typedef Executor executor_type;
+
+    explicit unary_awaitable(const Executor& executor, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
+    : executor_(executor), client_{channel, queue} {}
+
+    template<typename WaitHandler>
+    auto async_call(WaitHandler&& handler) {
+        return asio::async_initiate<WaitHandler, void(asio::error_code)>(initiate_unary_async<Executor, UnaryClient, async_reply_operation, void>{this}, handler);
     }
 
     const Executor& executor_;

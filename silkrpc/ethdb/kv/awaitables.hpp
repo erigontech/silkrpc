@@ -42,6 +42,7 @@
 #include <silkrpc/ethdb/kv/async_start.hpp>
 #include <silkrpc/ethdb/kv/error.hpp>
 #include <silkrpc/ethdb/kv/streaming_client.hpp>
+#include <silkrpc/grpc/awaitables.hpp>
 #include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 namespace silkrpc::ethdb::kv {
@@ -398,6 +399,7 @@ struct KvAsioAwaitable {
     template<typename WaitHandler>
     auto async_end(WaitHandler&& handler) {
         return asio::async_initiate<WaitHandler, void(asio::error_code)>(initiate_async_end{this}, handler);
+        //return asio::async_initiate<WaitHandler, void(asio::error_code)>(initiate_unary_async<Executor, UnaryClient, async_noreply_operation, void>{this}, handler);
     }
 
     asio::io_context& context_;

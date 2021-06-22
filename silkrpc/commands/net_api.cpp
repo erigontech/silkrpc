@@ -38,9 +38,8 @@ asio::awaitable<void> NetRpcApi::handle_net_peer_count(const nlohmann::json& req
 // https://eth.wiki/json-rpc/API#net_version
 asio::awaitable<void> NetRpcApi::handle_net_version(const nlohmann::json& request, nlohmann::json& reply) {
     try {
-        const auto net_version = co_await backend_->get_net_version();
-        const auto net_version_str = std::to_string(net_version);
-        reply = make_json_content(request["id"], net_version_str);
+        const auto net_version = co_await backend_->net_version();
+        reply = make_json_content(request["id"], std::to_string(net_version));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());
