@@ -26,7 +26,6 @@
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/receipt.hpp>
-#include <silkworm/db/tables.hpp>
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
@@ -37,6 +36,7 @@
 #include <silkrpc/core/receipts.hpp>
 #include <silkrpc/core/state_reader.hpp>
 #include <silkrpc/ethdb/bitmap.hpp>
+#include <silkrpc/ethdb/tables.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/types/block.hpp>
@@ -1309,7 +1309,7 @@ asio::awaitable<roaring::Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb:
         for (auto topic : subtopics) {
             silkworm::Bytes topic_key{std::begin(topic.bytes), std::end(topic.bytes)};
             SILKRPC_TRACE << "topic: " << topic << " topic_key: " << silkworm::to_hex(topic) <<"\n";
-            auto bitmap = co_await ethdb::bitmap::get(db_reader, silkworm::db::table::kLogTopicIndex.name, topic_key, start, end);
+            auto bitmap = co_await ethdb::bitmap::get(db_reader, silkrpc::db::table::kLogTopicIndex, topic_key, start, end);
             SILKRPC_TRACE << "bitmap: " << bitmap.toString() << "\n";
             subtopic_bitmap |= bitmap;
             SILKRPC_TRACE << "subtopic_bitmap: " << subtopic_bitmap.toString() << "\n";
@@ -1331,7 +1331,7 @@ asio::awaitable<roaring::Roaring> EthereumRpcApi::get_addresses_bitmap(core::raw
     roaring::Roaring result_bitmap;
     for (auto address : addresses) {
         silkworm::Bytes address_key{std::begin(address.bytes), std::end(address.bytes)};
-        auto bitmap = co_await ethdb::bitmap::get(db_reader, silkworm::db::table::kLogAddressIndex.name, address_key, start, end);
+        auto bitmap = co_await ethdb::bitmap::get(db_reader, silkrpc::db::table::kLogAddressIndex, address_key, start, end);
         SILKRPC_TRACE << "bitmap: " << bitmap.toString() << "\n";
         result_bitmap |= bitmap;
     }
