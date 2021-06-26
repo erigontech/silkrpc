@@ -30,8 +30,8 @@ namespace silkrpc::commands {
 // https://eth.wiki/json-rpc/API#web3_clientversion
 asio::awaitable<void> Web3RpcApi::handle_web3_client_version(const nlohmann::json& request, nlohmann::json& reply) {
    try {
-        const auto web3_client_version = co_await backend_->get_client_version();
-        reply = make_json_content(request["id"], web3_client_version);
+        const auto client_version = co_await backend_->client_version();
+        reply = make_json_content(request["id"], client_version);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());

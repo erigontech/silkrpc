@@ -98,17 +98,17 @@ private:
 };
 
 template <typename Handler, typename IoExecutor>
-class async_noreply_operation : public async_operation<void, asio::error_code> {
+class async_reply_operation<Handler, IoExecutor, void> : public async_operation<void, asio::error_code> {
 public:
-    ASIO_DEFINE_HANDLER_PTR(async_noreply_operation);
+    ASIO_DEFINE_HANDLER_PTR(async_reply_operation);
 
-    async_noreply_operation(Handler& h, const IoExecutor& io_ex)
-    : async_operation<void, asio::error_code>(&async_noreply_operation::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
+    async_reply_operation(Handler& h, const IoExecutor& io_ex)
+    : async_operation<void, asio::error_code>(&async_reply_operation::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
     {}
 
     static void do_complete(void* owner, async_operation<void, asio::error_code>* base, asio::error_code error = {}) {
         // Take ownership of the handler object.
-        async_noreply_operation* h{static_cast<async_noreply_operation*>(base)};
+        async_reply_operation* h{static_cast<async_reply_operation*>(base)};
         ptr p = {asio::detail::addressof(h->handler_), h, h};
 
         ASIO_HANDLER_COMPLETION((*h));
@@ -140,6 +140,9 @@ private:
     Handler handler_;
     asio::detail::handler_work<Handler, IoExecutor> work_;
 };
+
+template <typename Handler, typename IoExecutor>
+using async_noreply_operation = async_reply_operation<Handler, IoExecutor, void>;
 
 } // namespace silkrpc
 
