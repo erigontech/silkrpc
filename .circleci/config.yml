@@ -107,6 +107,8 @@ jobs:
           command: |
             sudo apt update
             sudo apt -y install clang-10
+            sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-10 50
+            sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-10 50
             clang-10 --version
             clang++-10 --version
       - run:
