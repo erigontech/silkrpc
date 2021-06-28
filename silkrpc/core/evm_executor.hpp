@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_EXECUTOR_HPP_
-#define SILKRPC_CORE_EXECUTOR_HPP_
+#ifndef SILKRPC_CORE_EVM_EXECUTOR_HPP_
+#define SILKRPC_CORE_EVM_EXECUTOR_HPP_
 
 #include <string>
 
@@ -41,16 +41,16 @@ struct ExecutionResult {
     silkworm::Bytes data;
 };
 
-class Executor {
+class EVMExecutor {
 public:
     static std::string get_error_message(int64_t error_code);
 
-    explicit Executor(const Context& context, const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config, asio::thread_pool& workers, uint64_t block_number)
+    explicit EVMExecutor(const Context& context, const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config, asio::thread_pool& workers, uint64_t block_number)
     : context_(context), db_reader_(db_reader), config_(config), workers_{workers}, buffer_{*context.io_context, db_reader, block_number} {}
-    virtual ~Executor() {}
+    virtual ~EVMExecutor() {}
 
-    Executor(const Executor&) = delete;
-    Executor& operator=(const Executor&) = delete;
+    EVMExecutor(const EVMExecutor&) = delete;
+    EVMExecutor& operator=(const EVMExecutor&) = delete;
 
     asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, uint64_t gas);
 
@@ -64,4 +64,4 @@ private:
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_CORE_EXECUTOR_HPP_
+#endif  // SILKRPC_CORE_EVM_EXECUTOR_HPP_

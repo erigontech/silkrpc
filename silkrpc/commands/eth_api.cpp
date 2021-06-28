@@ -31,7 +31,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/core/blocks.hpp>
-#include <silkrpc/core/executor.hpp>
+#include <silkrpc/core/evm_executor.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/core/receipts.hpp>
 #include <silkrpc/core/state_reader.hpp>
@@ -828,7 +828,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
 
-        Executor executor{context_, tx_database, *chain_config_ptr, workers_, block_number};
+        EVMExecutor executor{context_, tx_database, *chain_config_ptr, workers_, block_number};
         const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
         silkworm::Transaction txn{call.to_transaction()};
         const auto execution_result = co_await executor.call(block_with_hash.block, txn, txn.gas_limit);
@@ -836,7 +836,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
         if (execution_result.error_code == evmc_status_code::EVMC_SUCCESS) {
             reply = make_json_content(request["id"], "0x" + silkworm::to_hex(execution_result.data));
         } else {
-            const auto error_message = Executor::get_error_message(execution_result.error_code);
+            const auto error_message = EVMExecutor::get_error_message(execution_result.error_code);
             reply = make_json_error(request["id"], -32000, error_message);
         }
     } catch (const std::exception& e) {
