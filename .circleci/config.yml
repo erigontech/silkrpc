@@ -107,7 +107,7 @@ jobs:
           name: "Install Clang 10"
           command: |
             sudo apt update
-            sudo apt -y install clang-10 clang++-10
+            sudo apt -y install clang-10
             clang-10 --version
             clang++-10 --version
       - run:
