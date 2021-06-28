@@ -101,9 +101,16 @@ jobs:
       BUILD_TYPE: Debug
       CLANG_COVERAGE: ON
     docker:
-      - image: ethereum/cpp-build-env:14-clang-10
+      - image: ubuntu-2004:202101-01
     resource_class: large
     steps:
+      - run:
+          name: "Install Clang 10"
+          command: |
+            sudo apt update
+            sudo apt -y install clang-10 clang++-10
+            clang-10 --version
+            clang++-10 --version
       - run:
           name: "Install LLVM C++ Standard Library" # for C++ standard headers clang does not have
           command: |
