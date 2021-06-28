@@ -13,7 +13,7 @@ from datetime import datetime
 
 DEFAULT_TEST_SEQUENCE = "50:30,200:30,200:60,400:30,600:60"
 DEFAULT_REPETITIONS = 10
-DEFAULT_VEGETA_PATTERN_TAR_FILE = "./vegeta/erigon_stress_test_001.tar"
+DEFAULT_VEGETA_PATTERN_TAR_FILE = "./vegeta/erigon_stress_test_eth_getLogs_goerly_001.tar"
 DEFAULT_DAEMON_VEGETA_ON_CORE = "-:-"
 DEFAULT_ERIGON_ADDRESS = "localhost:9090"
 DEFAULT_ERIGON_BUILD_DIR = "../../../erigon/build/"
@@ -21,10 +21,13 @@ DEFAULT_SILKRPC_BUILD_DIR = "../../build_gcc_release/"
 DEFAULT_SILKRPC_NUM_CONTEXTS = int(multiprocessing.cpu_count() / 2)
 DEFAULT_RPCDAEMON_ADDRESS = "localhost"
 DEFAULT_TEST_MODE = "3"
+DEFAULT_TEST_TYPE = "eth_getLogs"
 
+VEGETA_PATTERN_DIRNAME = "erigon_stress_test"
 VEGETA_REPORT = "vegeta_report.hrd"
-VEGETA_PATTERN_SILKRPC = "/tmp/turbo_geth_stress_test/vegeta_geth_eth_getLogs.txt"
-VEGETA_PATTERN_RPCDAEMON = "/tmp/turbo_geth_stress_test/vegeta_turbo_geth_eth_getLogs.txt"
+VEGETA_TAR_FILE_NAME = "vegeta_TAR_File"
+VEGETA_PATTERN_SILKRPC_BASE = "/tmp/" + VEGETA_PATTERN_DIRNAME + "/vegeta_geth_"
+VEGETA_PATTERN_RPCDAEMON_BASE = "/tmp/" + VEGETA_PATTERN_DIRNAME + "/vegeta_erigon_"
 
 def usage(argv):
     """ Print script usage
@@ -34,6 +37,7 @@ def usage(argv):
     print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
     print("")
     print("-h                      print this help")
+    print("-y                      test type (i.e eth_call, eth_logs)                                                     [default: " + DEFAULT_TEST_TYPE + "]")
     print("-d rpcDaemonAddress     address of daemon eg (10.1.1.20)                                                       [default: " + DEFAULT_RPCDAEMON_ADDRESS +"]")
     print("-p vegetaPatternTarFile path to the request file for Vegeta attack                                             [default: " + DEFAULT_VEGETA_PATTERN_TAR_FILE +"]")
     print("-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
@@ -63,10 +67,11 @@ class Config:
         self.test_sequence = DEFAULT_TEST_SEQUENCE
         self.rpc_daemon_address = DEFAULT_RPCDAEMON_ADDRESS
         self.test_mode = DEFAULT_TEST_MODE
+        self.test_type = DEFAULT_TEST_TYPE
 
         try:
             local_config = 0
-            opts, _ = getopt.getopt(argv[1:], "hm:d:p:c:a:g:s:r:t:n:")
+            opts, _ = getopt.getopt(argv[1:], "hm:d:p:c:a:g:s:r:t:n:y:")
 
             for option, optarg in opts:
                 if option in ("-h", "--help"):
@@ -110,6 +115,8 @@ class Config:
                     self.repetitions = int(optarg)
                 elif option == "-t":
                     self.test_sequence = optarg
+                elif option == "-y":
+                    self.test_type = optarg
                 elif option == "-n":
                     if local_config == 2:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
@@ -140,8 +147,7 @@ class PerfTest:
         """
         self.test_report = test_report
         self.config = config
-        self.rpc_daemon = 0
-        self.silk_daemon = 0
+        self.cleanup()
         self.stop_silk_daemon()
         self.stop_rpc_daemon()
         print("\nSetup temporary daemon to verify configuration is OK")
@@ -151,21 +157,32 @@ class PerfTest:
         self.stop_rpc_daemon()
         self.copy_pattern_file()
 
+    def cleanup(self):
+        """ cleanup
+        """
+        self.silk_daemon = 0
+        self.rpc_daemon = 0
+        cmd = "/bin/rm -f " +  " /tmp/" + VEGETA_TAR_FILE_NAME
+        os.system(cmd)
+        cmd = "/bin/rm -f -rf /tmp/" + VEGETA_PATTERN_DIRNAME
+        os.system(cmd)
+
     def copy_pattern_file(self):
         """ copy the vegeta pattern file into /tmp and untar zip file
         """
-        cmd = "/bin/cp -f " + self.config.vegeta_pattern_tar_file + " /tmp"
+        cmd = "/bin/cp -f " + self.config.vegeta_pattern_tar_file + " /tmp/" + VEGETA_TAR_FILE_NAME
         print("Copy vegeta pattern: ", cmd)
         status = os.system(cmd)
         if int(status) != 0:
             print("Copy failed. Test Aborted!")
             sys.exit(-1)
 
-        file_path = self.config.vegeta_pattern_tar_file
-        tokenize_path = file_path.split('/')
-        n_subdir = len(tokenize_path)
-        file_name = tokenize_path[n_subdir-1]
-        cmd = "cd /tmp; tar xvf " + file_name + " > /dev/null"
+        #file_path = self.config.vegeta_pattern_tar_file
+        #tokenize_path = file_path.split('/')
+        #n_subdir = len(tokenize_path)
+        #file_name = tokenize_path[n_subdir-1]
+        #cmd = "cd /tmp; tar xvf " + file_name + " > /dev/null"
+        cmd = "cd /tmp; tar xvf " + VEGETA_TAR_FILE_NAME + " > /dev/null"
         print("Extracting vegeta pattern: ", cmd)
         status = os.system(cmd)
         if int(status) != 0:
@@ -173,9 +190,9 @@ class PerfTest:
             sys.exit(-1)
         # if address is provided substitute the address and port of daemon in the vegeta file
         if  self.config.rpc_daemon_address != "localhost":
-            cmd = "sed -i 's/localhost/" + self.config.rpc_daemon_address + "/g' " + VEGETA_PATTERN_SILKRPC
+            cmd = "sed -i 's/localhost/" + self.config.rpc_daemon_address + "/g' " + VEGETA_PATTERN_SILKRPC_BASE + self.config.test_type + ".txt"
             os.system(cmd)
-            cmd = "sed -i 's/localhost/" + self.config.rpc_daemon_address + "/g' " + VEGETA_PATTERN_RPCDAEMON
+            cmd = "sed -i 's/localhost/" + self.config.rpc_daemon_address + "/g' " + VEGETA_PATTERN_RPCDAEMON_BASE + self.config.test_type + ".txt"
             os.system(cmd)
 
     def start_rpc_daemon(self):
@@ -188,10 +205,10 @@ class PerfTest:
         self.rpc_daemon = 1
         on_core = self.config.daemon_vegeta_on_core.split(':')
         if on_core[0] == "-":
-            cmd = self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3 &"
+            cmd = self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3  &"
         else:
             cmd = "taskset -c " + on_core[0] + " " + \
-                   self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3 &"
+                   self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3  &"
         print("RpcDaemon starting ...: ", cmd)
         status = os.system(cmd)
         if int(status) != 0:
@@ -258,9 +275,9 @@ class PerfTest:
         """ Executes the tests using qps and time variable
         """
         if name == "silkrpc":
-            pattern = VEGETA_PATTERN_SILKRPC
+            pattern = VEGETA_PATTERN_SILKRPC_BASE + self.config.test_type + ".txt"
         else:
-            pattern = VEGETA_PATTERN_RPCDAEMON
+            pattern = VEGETA_PATTERN_RPCDAEMON_BASE + self.config.test_type + ".txt"
         on_core = self.config.daemon_vegeta_on_core.split(':')
         if on_core[1] == "-":
             cmd = "cat " + pattern + " | " \
@@ -393,6 +410,7 @@ def main(argv):
     test_report.open()
 
     current_sequence = str(config.test_sequence).split(',')
+
 
     if (config.test_mode == "1" or config.test_mode == "3"):
         perf_test.start_silk_daemon()
