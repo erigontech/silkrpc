@@ -100,9 +100,8 @@ jobs:
     environment:
       BUILD_TYPE: Debug
       CLANG_COVERAGE: ON
-    docker:
+    machine:
       - image: ubuntu-2004:202101-01
-    resource_class: large
     steps:
       - run:
           name: "Install Clang 10"
