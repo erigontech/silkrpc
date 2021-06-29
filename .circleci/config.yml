@@ -125,6 +125,7 @@ jobs:
           working_directory: ~/build
           command: |
             cmd/unit_test
+            ls -la ~/build
             mv default.profraw unit_test.profraw
       - run:
           name: "Coverage"
