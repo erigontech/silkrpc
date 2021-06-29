@@ -44,6 +44,13 @@ find_package(intx CONFIG REQUIRED)
 add_subdirectory(silkworm)
 
 # Silkrpc itself
+option(SILKRPC_CLANG_COVERAGE "Clang instrumentation for code coverage reports" OFF)
+
+if(SILKRPC_CLANG_COVERAGE)
+  add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
+  add_link_options(-fprofile-instr-generate -fcoverage-mapping)
+endif()
+
 add_subdirectory(silkrpc)
 add_subdirectory(cmd)
 add_subdirectory(examples)
