@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-#include "executor.hpp"
+#include "evm_executor.hpp"
 
 #include <utility>
 
@@ -29,7 +29,7 @@
 
 namespace silkrpc {
 
-std::string Executor::get_error_message(int64_t error_code) {
+std::string EVMExecutor::get_error_message(int64_t error_code) {
     switch (error_code) {
         case evmc_status_code::EVMC_FAILURE:
             return "execution failed";
@@ -76,7 +76,7 @@ std::string Executor::get_error_message(int64_t error_code) {
     }
 }
 
-asio::awaitable<ExecutionResult> Executor::call(const silkworm::Block& block, const silkworm::Transaction& txn, uint64_t gas) {
+asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block, const silkworm::Transaction& txn, uint64_t gas) {
     SILKRPC_DEBUG << "Executor::call block: " << block.header.number << " txn: " << &txn << " gas: " << gas << " start\n";
 
     const auto exec_result = co_await asio::async_compose<decltype(asio::use_awaitable), void(ExecutionResult)>(
