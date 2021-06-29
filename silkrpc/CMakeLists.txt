@@ -17,13 +17,6 @@
 find_package(absl CONFIG REQUIRED)
 find_package(intx CONFIG REQUIRED)
 
-option(SILKRPC_CLANG_COVERAGE "Clang instrumentation for code coverage reports" OFF)
-
-if(SILKRPC_CLANG_COVERAGE)
-  add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
-  add_link_options(-fprofile-instr-generate -fcoverage-mapping)
-endif()
-
 # Find Protobuf installation
 set(protobuf_MODULE_COMPATIBLE TRUE)
 find_package(Protobuf CONFIG REQUIRED)
