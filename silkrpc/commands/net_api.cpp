@@ -16,8 +16,9 @@
 
 #include "net_api.hpp"
 
-#include <silkrpc/json/types.hpp>
 #include <string>
+
+#include <silkrpc/json/types.hpp>
 
 namespace silkrpc::commands {
 

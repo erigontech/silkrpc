@@ -29,6 +29,193 @@ namespace silkrpc {
 
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
+TEST_CASE("serialize empty address", "[silkrpc][to_json]") {
+    evmc::address address{};
+    nlohmann::json j = address;
+    CHECK(j == R"("0x0000000000000000000000000000000000000000")"_json);
+}
+
+TEST_CASE("serialize address", "[silkrpc][to_json]") {
+    evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
+    nlohmann::json j = address;
+    CHECK(j == R"("0x0715a7794a1dc8e42615f059dd6e406a6594651a")"_json);
+}
+
+TEST_CASE("deserialize empty address", "[silkrpc][from_json]") {
+    auto j1 = R"("0000000000000000000000000000000000000000")"_json;
+    auto address = j1.get<evmc::address>();
+    CHECK(address == evmc::address{});
+}
+
+TEST_CASE("deserialize address", "[silkrpc][from_json]") {
+    auto j1 = R"("0x0715a7794a1dc8e42615f059dd6e406a6594651a")"_json;
+    auto address = j1.get<evmc::address>();
+    CHECK(address == evmc::address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address});
+}
+
+TEST_CASE("serialize empty bytes32", "[silkrpc][to_json]") {
+    evmc::bytes32 b32{};
+    nlohmann::json j = b32;
+    CHECK(j == R"("0x0000000000000000000000000000000000000000000000000000000000000000")"_json);
+}
+
+TEST_CASE("serialize non-empty bytes32", "[silkrpc][to_json]") {
+    evmc::bytes32 b32{0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32};
+    nlohmann::json j = b32;
+    CHECK(j == R"("0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c")"_json);
+}
+
+TEST_CASE("serialize empty block header", "[silkrpc][to_json]") {
+    silkworm::BlockHeader header{};
+    nlohmann::json j = header;
+    CHECK(j == R"({
+        "parentHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "miner":"0x0000000000000000000000000000000000000000",
+        "stateRoot":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsRoot":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "receiptsRoot":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "difficulty":"0x",
+        "nonce":"0x0",
+        "number":"0x0",
+        "gasLimit":"0x0",
+        "gasUsed":"0x0",
+        "timestamp":"0x0",
+        "extraData":"0x",
+        "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000000"
+    })"_json);
+}
+
+TEST_CASE("serialize block header", "[silkrpc][to_json]") {
+    silkworm::BlockHeader header{
+        0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
+        0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d_bytes32,
+        0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+        0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d_bytes32,
+        0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e_bytes32,
+        0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f_bytes32,
+        silkworm::Bloom{},
+        intx::uint256{0},
+        uint64_t(5),
+        uint64_t(1000000),
+        uint64_t(1000000),
+        uint64_t(5405021),
+        *silkworm::from_hex("0001FF0100"),
+        0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
+        {0, 0, 0, 0, 0, 0, 0, 255}
+    };
+    nlohmann::json j = header;
+    CHECK(j == R"({
+        "parentHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
+        "sha3Uncles":"0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d",
+        "miner":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
+        "stateRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d",
+        "transactionsRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e",
+        "receiptsRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f",
+        "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "difficulty":"0x",
+        "number":"0x5",
+        "gasLimit":"0xf4240",
+        "gasUsed":"0xf4240",
+        "timestamp":"0x52795d",
+        "extraData":"0x0001ff0100",
+        "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",
+        "nonce":"0xff"
+    })"_json);
+}
+
+TEST_CASE("serialize empty transaction", "[silkrpc][to_json]") {
+    silkworm::Transaction txn{};
+    txn.type = 0;
+    txn.to = 0x0000000000000000000000000000000000000000_address;
+    txn.from = 0x0000000000000000000000000000000000000000_address;
+    nlohmann::json j = txn;
+    CHECK(j == R"({
+        "nonce":"0x0",
+        "gasPrice":"0x",
+        "gas":"0x0",
+        "to":"0x0000000000000000000000000000000000000000",
+        "from":"0x0000000000000000000000000000000000000000",
+        "value":"0x",
+        "input":"0x",
+        "hash":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c05356a561fa4813f0ee2b7a54b3",
+        "r":"0x",
+        "s":"0x",
+        "v":"0x1b"
+    })"_json);
+}
+
+TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
+    silkworm::Transaction txn{
+        0,
+        0,
+        intx::uint256{0},
+        uint64_t{0},
+        0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+        intx::uint256{0},
+        *silkworm::from_hex("001122aabbcc"),
+        false,
+        intx::uint256{1},
+        intx::uint256{18},
+        intx::uint256{36},
+        std::vector<silkworm::AccessListEntry>{},
+        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address
+    };
+    txn.type = 0;
+    txn.to = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address;
+    txn.from = 0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address;
+    nlohmann::json j = txn;
+    CHECK(j == R"({
+        "nonce":"0x0",
+        "gasPrice":"0x",
+        "gas":"0x0",
+        "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
+        "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
+        "value":"0x",
+        "input":"0x001122aabbcc",
+        "hash":"0x09bb35827cf86925d8440cb2adea14130b8640c7d1c1f23007e88f8ead8afe5f",
+        "r":"0x12",
+        "s":"0x24",
+        "v":"0x25"
+    })"_json);
+}
+
+TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
+    silkworm::Transaction txn{
+        1,
+        0,
+        intx::uint256{0},
+        uint64_t{0},
+        0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+        intx::uint256{0},
+        *silkworm::from_hex("001122aabbcc"),
+        false,
+        intx::uint256{1},
+        intx::uint256{18},
+        intx::uint256{36},
+        std::vector<silkworm::AccessListEntry>{},
+        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address
+    };
+    txn.type = 0;
+    txn.to = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address;
+    txn.from = 0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address;
+    nlohmann::json j = txn;
+    CHECK(j == R"({
+        "nonce":"0x0",
+        "gasPrice":"0x",
+        "gas":"0x0",
+        "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
+        "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
+        "value":"0x",
+        "input":"0x001122aabbcc",
+        "hash":"0x09bb35827cf86925d8440cb2adea14130b8640c7d1c1f23007e88f8ead8afe5f",
+        "r":"0x12",
+        "s":"0x24",
+        "v":"0x25"
+    })"_json);
+}
+
 TEST_CASE("serialize error", "[silkrpc][to_json]") {
     Error err{100, {"generic error"}};
     nlohmann::json j = err;
@@ -173,6 +360,49 @@ TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
     CHECK(c1.gas == intx::uint256{1000000});
     CHECK(c1.gas_price == intx::uint256{4499999744});
     CHECK(c1.data == silkworm::from_hex("0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000"));
+}
+
+TEST_CASE("serialize zero forks", "[silkrpc::json][to_json]") {
+    silkrpc::ChainConfig cc{};
+    silkrpc::Forks f{{}};
+    nlohmann::json j = f;
+    CHECK(j == R"({
+        "genesis":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "forks":[]
+    })"_json);
+}
+
+TEST_CASE("serialize forks", "[silkrpc::json][to_json]") {
+    silkrpc::ChainConfig cc{
+        0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
+        R"({"istanbulBlock":100,"berlinBlock":200})"_json
+    };
+    silkrpc::Forks f{cc};
+    nlohmann::json j = f;
+    CHECK(j == R"({
+        "genesis":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
+        "forks":[100,200]
+    })"_json);
+}
+
+TEST_CASE("serialize empty issuance", "[silkrpc::json][to_json]") {
+    silkrpc::Issuance issuance{};
+    nlohmann::json j = issuance;
+    CHECK(j.is_null());
+}
+
+TEST_CASE("serialize issuance", "[silkrpc::json][to_json]") {
+    silkrpc::Issuance issuance{
+        "0x0",
+        "0x0",
+        "0x0"
+    };
+    nlohmann::json j = issuance;
+    CHECK(j == R"({
+        "blockReward":"0x0",
+        "uncleReward":"0x0",
+        "issuance":"0x0"
+    })"_json);
 }
 
 } // namespace silkrpc::json
