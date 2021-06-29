@@ -125,14 +125,13 @@ jobs:
           working_directory: ~/build
           command: |
             cmd/unit_test
-            ls -la ~/build
             mv default.profraw unit_test.profraw
       - run:
           name: "Coverage"
           working_directory: ~/build
           command: |
             llvm-profdata merge *.profraw -o profdata
-            llvm-cov export -instr-profile profdata -format=lcov cmd/unit_test -object > silkrpc.lcov
+            llvm-cov export -instr-profile profdata -format=lcov cmd/unit_test > silkrpc.lcov
       - run:
           name: "Upload to Codecov"
           command: |
