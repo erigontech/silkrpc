@@ -148,5 +148,5 @@ workflows:
   version: 2
   silkworm:
     jobs:
-      #- linux-gcc-10
+      - linux-gcc-10
       - linux-clang-coverage
