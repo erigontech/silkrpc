@@ -127,19 +127,17 @@ TEST_CASE("serialize block header", "[silkrpc][to_json]") {
 
 TEST_CASE("serialize empty transaction", "[silkrpc][to_json]") {
     silkworm::Transaction txn{};
-    txn.type = 0;
-    txn.to = 0x0000000000000000000000000000000000000000_address;
     txn.from = 0x0000000000000000000000000000000000000000_address;
     nlohmann::json j = txn;
     CHECK(j == R"({
         "nonce":"0x0",
         "gasPrice":"0x",
         "gas":"0x0",
-        "to":"0x0000000000000000000000000000000000000000",
+        "to":"0x",
         "from":"0x0000000000000000000000000000000000000000",
         "value":"0x",
         "input":"0x",
-        "hash":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c05356a561fa4813f0ee2b7a54b3",
+        "hash":"0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5",
         "r":"0x",
         "s":"0x",
         "v":"0x1b"
@@ -148,7 +146,7 @@ TEST_CASE("serialize empty transaction", "[silkrpc][to_json]") {
 
 TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
     silkworm::Transaction txn{
-        0,
+        std::nullopt,
         0,
         intx::uint256{0},
         uint64_t{0},
@@ -162,9 +160,6 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
         std::vector<silkworm::AccessListEntry>{},
         0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address
     };
-    txn.type = 0;
-    txn.to = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address;
-    txn.from = 0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address;
     nlohmann::json j = txn;
     CHECK(j == R"({
         "nonce":"0x0",
@@ -174,7 +169,7 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
         "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
         "value":"0x",
         "input":"0x001122aabbcc",
-        "hash":"0x09bb35827cf86925d8440cb2adea14130b8640c7d1c1f23007e88f8ead8afe5f",
+        "hash":"0x861b1b1b1d2609b3dec5fcb8f0b411e5b88a2c2e896daa9ee8e80b9f4839e6d9",
         "r":"0x12",
         "s":"0x24",
         "v":"0x25"
@@ -183,7 +178,7 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
 
 TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
     silkworm::Transaction txn{
-        1,
+        silkworm::kEip2930TransactionType,
         0,
         intx::uint256{0},
         uint64_t{0},
