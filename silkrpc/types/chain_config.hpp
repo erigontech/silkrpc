@@ -35,10 +35,12 @@ struct Forks {
     std::vector<uint64_t> block_numbers;
 
     explicit Forks(const ChainConfig& chain_config) : genesis_hash(chain_config.genesis_hash) {
-        block_numbers = {
-            chain_config.config["istanbulBlock"],
-            chain_config.config["berlinBlock"],
-        };
+        if (chain_config.config.count("istanbulBlock") > 0) {
+            block_numbers.push_back(chain_config.config["istanbulBlock"]);
+        }
+        if (chain_config.config.count("berlinBlock") > 0) {
+            block_numbers.push_back(chain_config.config["berlinBlock"]);
+        }
     }
 };
 
