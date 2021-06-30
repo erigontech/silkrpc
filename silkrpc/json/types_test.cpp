@@ -192,9 +192,6 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
         std::vector<silkworm::AccessListEntry>{},
         0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address
     };
-    txn.type = 0;
-    txn.to = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address;
-    txn.from = 0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address;
     nlohmann::json j = txn;
     CHECK(j == R"({
         "nonce":"0x0",
@@ -204,7 +201,7 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
         "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
         "value":"0x",
         "input":"0x001122aabbcc",
-        "hash":"0x09bb35827cf86925d8440cb2adea14130b8640c7d1c1f23007e88f8ead8afe5f",
+        "hash":"0xeb53825c24220f4478abdf08304920838c5d1b92ac07efa6f36e0352cb01d9f8",
         "r":"0x12",
         "s":"0x24",
         "v":"0x25"
