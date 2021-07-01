@@ -250,11 +250,15 @@ TEST_CASE("shortest hex for 4206337", "[silkrpc][to_json]") {
 }
 
 TEST_CASE("deserialize empty log", "[silkrpc][from_json]") {
-    auto j1 = R"({"address":"0000000000000000000000000000000000000000","topics":[],"data":[]})"_json;
-    auto f1 = j1.get<Log>();
-    CHECK(f1.address == evmc::address{});
-    CHECK(f1.topics == std::vector<evmc::bytes32>{});
-    CHECK(f1.data == silkworm::Bytes{});
+    const auto j = R"({
+        "address":"0000000000000000000000000000000000000000",
+        "topics":[],
+        "data":[]
+    })"_json;
+    const auto log = j.get<Log>();
+    CHECK(log.address == evmc::address{});
+    CHECK(log.topics == std::vector<evmc::bytes32>{});
+    CHECK(log.data == silkworm::Bytes{});
 }
 
 TEST_CASE("deserialize topics", "[silkrpc][from_json]") {
@@ -269,14 +273,113 @@ TEST_CASE("deserialize topics", "[silkrpc][from_json]") {
     CHECK(f1.data == silkworm::Bytes{});
 }
 
-} // namespace silkrpc
+TEST_CASE("deserialize wrong receipt", "[silkrpc][from_json]") {
+    const auto j = R"({})"_json;
+    CHECK_THROWS(j.get<Receipt>());
+}
 
-namespace silkrpc::json {
+TEST_CASE("deserialize empty receipt", "[silkrpc][from_json]") {
+    const auto j = R"({"success":false,"cumulative_gas_used":0})"_json;
+    const auto r = j.get<Receipt>();
+    CHECK(r.success == false);
+    CHECK(r.cumulative_gas_used == 0);
+}
+
+TEST_CASE("deserialize wrong array receipt", "[silkrpc][from_json]") {
+    CHECK_THROWS_AS(R"([])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([""])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([null])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([0])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([0,0])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([0,""])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([0,null])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([0,null,""])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([0,null,null])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([0,null,0])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([0,null,0,""])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([0,null,0,null])"_json.get<Receipt>(), std::system_error);
+}
+
+TEST_CASE("deserialize empty array receipt", "[silkrpc][from_json]") {
+    const auto j = R"([0,null,0,0])"_json;
+    const auto r = j.get<Receipt>();
+    CHECK(*r.type == 0);
+    CHECK(r.success == false);
+    CHECK(r.cumulative_gas_used == 0);
+}
+
+TEST_CASE("deserialize array receipt", "[silkrpc][from_json]") {
+    const auto j = R"([1,null,1,123456])"_json;
+    const auto r = j.get<Receipt>();
+    CHECK(*r.type == 1);
+    CHECK(r.success == true);
+    CHECK(r.cumulative_gas_used == 123456);
+}
+
+TEST_CASE("serialize empty receipt", "[silkrpc::json][to_json]") {
+    Receipt r{};
+    nlohmann::json j = r;
+    CHECK(j == R"({
+        "blockHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "blockNumber":"0x0",
+        "contractAddress":null,
+        "cumulativeGasUsed":"0x0",
+        "from":"0x0000000000000000000000000000000000000000",
+        "gasUsed":"0x0",
+        "logs":[],
+        "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","status":"0x0",
+        "to":"0x0000000000000000000000000000000000000000",
+        "transactionHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionIndex":"0x0",
+        "type":"0x0"
+    })"_json);
+}
+
+TEST_CASE("serialize receipt", "[silkrpc::json][to_json]") {
+    Receipt r{
+        true,
+        454647,
+        silkworm::Bloom{},
+        Logs{},
+        0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
+        0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+        10,
+        0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f_bytes32,
+        5000000,
+        3,
+        0x22ea9f6b28db76a7162054c05ed812deb2f519cd_address,
+        0x22ea9f6b28db76a7162054c05ed812deb2f519cd_address,
+        1
+    };
+    nlohmann::json j = r;
+    CHECK(j == R"({
+        "blockHash":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f",
+        "blockNumber":"0x4c4b40",
+        "contractAddress":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
+        "cumulativeGasUsed":"0x6eff7",
+        "from":"0x22ea9f6b28db76a7162054c05ed812deb2f519cd",
+        "gasUsed":"0xa",
+        "logs":[],
+        "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","status":"0x0",
+        "status":"0x1",
+        "to":"0x22ea9f6b28db76a7162054c05ed812deb2f519cd",
+        "transactionHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
+        "transactionIndex":"0x3",
+        "type":"0x1"
+    })"_json);
+}
 
 TEST_CASE("serialize empty filter", "[silkrpc::json][to_json]") {
     Filter f{{0}, {0}, {{"", ""}}, {{{"", ""}, {"", ""}}}, {""}};
     nlohmann::json j = f;
     CHECK(j == R"({"address":[],"blockHash":"","fromBlock":0,"toBlock":0,"topics":[[], []]})"_json);
+}
+
+TEST_CASE("serialize filter with one address", "[silkrpc::json][to_json]") {
+    Filter f;
+    f.addresses = {{0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address}};
+    nlohmann::json j = f;
+    CHECK(j == R"({"address":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053"})"_json);
 }
 
 TEST_CASE("serialize filter with fromBlock and toBlock", "[silkrpc::json][to_json]") {
@@ -397,4 +500,41 @@ TEST_CASE("serialize issuance", "[silkrpc::json][to_json]") {
     })"_json);
 }
 
-} // namespace silkrpc::json
+TEST_CASE("make empty json content", "[silkrpc::json][make_json_content]") {
+    const auto j = silkrpc::make_json_content(0, {});
+    CHECK(j == R"({
+        "jsonrpc":"2.0",
+        "id":0,
+        "result":null
+    })"_json);
+}
+
+TEST_CASE("make json content", "[silkrpc::json][make_json_content]") {
+    nlohmann::json json_result = {{"currency", "ETH"}, {"value", 4.2}};
+    const auto j = silkrpc::make_json_content(123, json_result);
+    CHECK(j == R"({
+        "jsonrpc":"2.0",
+        "id":123,
+        "result":{"currency":"ETH","value":4.2}
+    })"_json);
+}
+
+TEST_CASE("make empty json error", "[silkrpc::json][make_json_error]") {
+    const auto j = silkrpc::make_json_error(0, 0, "");
+    CHECK(j == R"({
+        "jsonrpc":"2.0",
+        "id":0,
+        "error":{"code":0,"message":""}
+    })"_json);
+}
+
+TEST_CASE("make json error", "[silkrpc::json][make_json_error]") {
+    const auto j = silkrpc::make_json_error(123, -32000, "revert");
+    CHECK(j == R"({
+        "jsonrpc":"2.0",
+        "id":123,
+        "error":{"code":-32000,"message":"revert"}
+    })"_json);
+}
+
+} // namespace silkrpc
