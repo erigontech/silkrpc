@@ -72,6 +72,13 @@ std::string to_quantity(uint64_t number) {
     return "0x" + to_hex_no_leading_zeros(number);
 }
 
+std::string to_quantity(intx::uint256 number) {
+    if (number == 0) {
+       return "0x0";
+    }
+    return silkrpc::to_quantity(silkworm::rlp::big_endian(number));
+}
+
 } // namespace silkrpc
 
 namespace evmc {
@@ -139,9 +146,9 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
     if (transaction.to) {
         json["to"] =  transaction.to.value();
     } else {
-        json["to"] =  "0x";
+        json["to"] =  nullptr;
     }
-    json["value"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.value));
+    json["value"] = silkrpc::to_quantity(transaction.value);
     json["v"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.v()));
     json["r"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.r));
     json["s"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.s));

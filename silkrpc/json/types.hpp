@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include <intx/intx.hpp>
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
@@ -81,6 +82,7 @@ std::string to_hex_no_leading_zeros(uint64_t number);
 std::string to_hex_no_leading_zeros(silkworm::ByteView bytes);
 
 std::string to_quantity(uint64_t number);
+std::string to_quantity(intx::uint256 number);
 std::string to_quantity(silkworm::ByteView bytes);
 
 nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result);
