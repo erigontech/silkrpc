@@ -159,7 +159,7 @@
                         "to":"0x63dc5749fa134ff3b752813388a7215460a8ab01",
                         "transactionIndex":"0x0",
                         "v":"0x1c",
-                        "value":"0x"
+                        "value":"0x0"
                     },
                     {
                         "blockHash":"0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8",
@@ -190,7 +190,7 @@
                         "to":"0x15b1281f4e58215b2c3243d864bdf8b9dddc0da2",
                         "transactionIndex":"0x2",
                         "v":"0x1b",
-                        "value":"0x"
+                        "value":"0x0"
                     },
                     {
                         "blockHash":"0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8",
@@ -206,7 +206,7 @@
                         "to":"0xf74a5ca65e4552cff0f13b116113ccb493c580c5",
                         "transactionIndex":"0x3",
                         "v":"0x1b",
-                        "value":"0x"
+                        "value":"0x0"
                     }
                 ],
                 "transactionsRoot":"0x58abd7a6648af7c90efb41311795db59b4e9c9706f80f90b5aa1e24186cfcbca",
@@ -270,7 +270,7 @@
                         "to":"0x63dc5749fa134ff3b752813388a7215460a8ab01",
                         "transactionIndex":"0x0",
                         "v":"0x1c",
-                        "value":"0x"
+                        "value":"0x0"
                     },
                     {
                         "blockHash":"0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8",
@@ -301,7 +301,7 @@
                         "to":"0x15b1281f4e58215b2c3243d864bdf8b9dddc0da2",
                         "transactionIndex":"0x2",
                         "v":"0x1b",
-                        "value":"0x"
+                        "value":"0x0"
                     },
                     {
                         "blockHash":"0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8",
@@ -317,7 +317,7 @@
                         "to":"0xf74a5ca65e4552cff0f13b116113ccb493c580c5",
                         "transactionIndex":"0x3",
                         "v":"0x1b",
-                        "value":"0x"
+                        "value":"0x0"
                     }
                 ],
                 "transactionsRoot":"0x58abd7a6648af7c90efb41311795db59b4e9c9706f80f90b5aa1e24186cfcbca",
@@ -440,7 +440,7 @@
                 "to": "0x73c412512e1ca0be3b89b77ab3466da6a1b9d273",
                 "transactionIndex": "0x5f",
                 "v": "0x2e",
-                "value": "0x"
+                "value": "0x0"
             }
         }
     },
@@ -468,7 +468,7 @@
                 "to":"0x63dc5749fa134ff3b752813388a7215460a8ab01",
                 "transactionIndex":"0x0",
                 "v":"0x1c",
-                "value":"0x"
+                "value":"0x0"
             }
         }
     },
@@ -496,7 +496,7 @@
                 "to":"0xf74a5ca65e4552cff0f13b116113ccb493c580c5",
                 "transactionIndex":"0x0",
                 "v":"0x2e",
-                "value":"0x"
+                "value":"0x0"
             }
         }
     },
@@ -603,7 +603,7 @@
                   "from": "0x6e508ed8c6381e19668a17d9e0c2d4d2dd3c39f5",
                   "to": "0x49a984490a7762b0e5d775f0ffa608899ebe2ee8"
                 },
-                "latest"
+                "0x4D3FCC"
             ],
             "id":1
         },
