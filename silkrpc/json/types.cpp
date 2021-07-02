@@ -138,7 +138,7 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
     }
     json["from"] = transaction.from.value();
     json["gas"] = silkrpc::to_quantity(transaction.gas_limit);
-    json["gasPrice"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.gas_price));
+    json["gasPrice"] = silkrpc::to_quantity(transaction.gas_price);
     auto ethash_hash{hash_of_transaction(transaction)};
     json["hash"] = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
     json["input"] = "0x" + silkworm::to_hex(transaction.data);
