@@ -131,7 +131,7 @@ TEST_CASE("serialize empty transaction", "[silkrpc][to_json]") {
     nlohmann::json j = txn;
     CHECK(j == R"({
         "nonce":"0x0",
-        "gasPrice":"0x",
+        "gasPrice":"0x0",
         "gas":"0x0",
         "to":null,
         "from":"0x0000000000000000000000000000000000000000",
@@ -163,7 +163,7 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
     nlohmann::json j = txn;
     CHECK(j == R"({
         "nonce":"0x0",
-        "gasPrice":"0x",
+        "gasPrice":"0x0",
         "gas":"0x0",
         "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
         "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
@@ -195,7 +195,7 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
     nlohmann::json j = txn;
     CHECK(j == R"({
         "nonce":"0x0",
-        "gasPrice":"0x",
+        "gasPrice":"0x0",
         "gas":"0x0",
         "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
         "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
