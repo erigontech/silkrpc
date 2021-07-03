@@ -27,6 +27,7 @@
 
 namespace silkrpc {
 
+using Catch::Matchers::Message;
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
 TEST_CASE("serialize empty address", "[silkrpc][to_json]") {
@@ -249,19 +250,32 @@ TEST_CASE("shortest hex for 4206337", "[silkrpc][to_json]") {
     })"_json);
 }
 
-TEST_CASE("deserialize wrong log", "[silkrpc][from_json]") {
-    CHECK_THROWS_AS(R"([])"_json.get<Log>(), std::system_error);
-    CHECK_THROWS_AS(R"([""])"_json.get<Log>(), std::system_error);
-    CHECK_THROWS_AS(R"([[0,0,1]])"_json.get<Log>(), std::system_error);
+TEST_CASE("deserialize wrong size log", "[silkrpc][from_json]") {
+    const auto j1 = nlohmann::json::from_cbor(*silkworm::from_hex("80"));
+    CHECK_THROWS_MATCHES(j1.get<Log>(), std::system_error, Message("Log CBOR: missing entries: Invalid argument"));
+    const auto j2 = nlohmann::json::from_cbor(*silkworm::from_hex("81540000000000000000000000000000000000000000"));
+    CHECK_THROWS_MATCHES(j2.get<Log>(), std::system_error, Message("Log CBOR: missing entries: Invalid argument"));
+    const auto j3 = nlohmann::json::from_cbor(*silkworm::from_hex("8254000000000000000000000000000000000000000080"));
+    CHECK_THROWS_MATCHES(j3.get<Log>(), std::system_error, Message("Log CBOR: missing entries: Invalid argument"));
+    const auto j4 = nlohmann::json::from_cbor(*silkworm::from_hex("83808040"));
+    CHECK_THROWS_MATCHES(j4.get<Log>(), std::system_error, Message("Log CBOR: binary expected in [0]: Invalid argument"));
+    const auto j5 = nlohmann::json::from_cbor(*silkworm::from_hex("835400000000000000000000000000000000000000004040"));
+    CHECK_THROWS_MATCHES(j5.get<Log>(), std::system_error, Message("Log CBOR: array expected in [1]: Invalid argument"));
+    const auto j6 = nlohmann::json::from_cbor(*silkworm::from_hex("835400000000000000000000000000000000000000008080"));
+    CHECK_THROWS_MATCHES(j6.get<Log>(), std::system_error, Message("Log CBOR: binary or null expected in [2]: Invalid argument"));
 }
 
 TEST_CASE("deserialize empty array log", "[silkrpc][from_json]") {
-    const auto bytes = silkworm::from_hex("835400000000000000000000000000000000000000008040").value();
-    const auto j = nlohmann::json::from_cbor(bytes);
-    const auto log = j.get<Log>();
-    CHECK(log.address == evmc::address{});
-    CHECK(log.topics == std::vector<evmc::bytes32>{});
-    CHECK(log.data == silkworm::Bytes{});
+    const auto j1 = nlohmann::json::from_cbor(*silkworm::from_hex("835400000000000000000000000000000000000000008040"));
+    const auto log1 = j1.get<Log>();
+    CHECK(log1.address == evmc::address{});
+    CHECK(log1.topics == std::vector<evmc::bytes32>{});
+    CHECK(log1.data == silkworm::Bytes{});
+    const auto j2 = nlohmann::json::from_cbor(*silkworm::from_hex("8354000000000000000000000000000000000000000080f6"));
+    const auto log2 = j2.get<Log>();
+    CHECK(log2.address == evmc::address{});
+    CHECK(log2.topics == std::vector<evmc::bytes32>{});
+    CHECK(log2.data == silkworm::Bytes{});
 }
 
 TEST_CASE("deserialize empty log", "[silkrpc][from_json]") {
