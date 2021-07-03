@@ -249,6 +249,21 @@ TEST_CASE("shortest hex for 4206337", "[silkrpc][to_json]") {
     })"_json);
 }
 
+TEST_CASE("deserialize wrong log", "[silkrpc][from_json]") {
+    CHECK_THROWS_AS(R"([])"_json.get<Log>(), std::system_error);
+    CHECK_THROWS_AS(R"([""])"_json.get<Log>(), std::system_error);
+    CHECK_THROWS_AS(R"([[0,0,1]])"_json.get<Log>(), std::system_error);
+}
+
+TEST_CASE("deserialize empty array log", "[silkrpc][from_json]") {
+    const auto bytes = silkworm::from_hex("835400000000000000000000000000000000000000008040").value();
+    const auto j = nlohmann::json::from_cbor(bytes);
+    const auto log = j.get<Log>();
+    CHECK(log.address == evmc::address{});
+    CHECK(log.topics == std::vector<evmc::bytes32>{});
+    CHECK(log.data == silkworm::Bytes{});
+}
+
 TEST_CASE("deserialize empty log", "[silkrpc][from_json]") {
     const auto j = R"({
         "address":"0000000000000000000000000000000000000000",
@@ -259,6 +274,15 @@ TEST_CASE("deserialize empty log", "[silkrpc][from_json]") {
     CHECK(log.address == evmc::address{});
     CHECK(log.topics == std::vector<evmc::bytes32>{});
     CHECK(log.data == silkworm::Bytes{});
+}
+
+TEST_CASE("deserialize array log", "[silkrpc][from_json]") {
+    const auto bytes = silkworm::from_hex("8354ea674fdde714fd979de3edf0f56aa9716b898ec88043010043").value();
+    const auto j = nlohmann::json::from_cbor(bytes);
+    const auto log = j.get<Log>();
+    CHECK(log.address == 0xea674fdde714fd979de3edf0f56aa9716b898ec8_address);
+    CHECK(log.topics == std::vector<evmc::bytes32>{});
+    CHECK(log.data == silkworm::Bytes{0x01, 0x00, 0x43});
 }
 
 TEST_CASE("deserialize topics", "[silkrpc][from_json]") {
@@ -296,6 +320,9 @@ TEST_CASE("deserialize wrong array receipt", "[silkrpc][from_json]") {
     CHECK_THROWS_AS(R"([0,null,""])"_json.get<Receipt>(), std::system_error);
     CHECK_THROWS_AS(R"([0,null,null])"_json.get<Receipt>(), std::system_error);
     CHECK_THROWS_AS(R"([0,null,0])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"(["",null,0,0])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([0,"",0,0])"_json.get<Receipt>(), std::system_error);
+    CHECK_THROWS_AS(R"([0,null,"",0])"_json.get<Receipt>(), std::system_error);
     CHECK_THROWS_AS(R"([0,null,0,""])"_json.get<Receipt>(), std::system_error);
     CHECK_THROWS_AS(R"([0,null,0,null])"_json.get<Receipt>(), std::system_error);
 }
