@@ -29,7 +29,7 @@
 namespace silkrpc {
 
 asio::awaitable<std::optional<silkworm::Account>> AsyncRemoteBuffer::read_account(const evmc::address& address) const noexcept {
-    co_return co_await state_reader_.read_account(address, block_number_);
+    co_return co_await state_reader_.read_account(address, block_number_+1);
 }
 
 asio::awaitable<silkworm::Bytes> AsyncRemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
@@ -38,7 +38,7 @@ asio::awaitable<silkworm::Bytes> AsyncRemoteBuffer::read_code(const evmc::bytes3
 }
 
 asio::awaitable<evmc::bytes32> AsyncRemoteBuffer::read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept {
-    co_return co_await state_reader_.read_storage(address, incarnation, location, block_number_);
+    co_return co_await state_reader_.read_storage(address, incarnation, location, block_number_+1);
 }
 
 asio::awaitable<uint64_t> AsyncRemoteBuffer::previous_incarnation(const evmc::address& address) const noexcept {
@@ -130,6 +130,7 @@ evmc::bytes32 RemoteBuffer::state_root_hash() const {
 }
 
 uint64_t RemoteBuffer::current_canonical_block() const {
+    SILKRPC_DEBUG << "RemoteBuffer::current_canonical_block \n";
     return 0;
 }
 
