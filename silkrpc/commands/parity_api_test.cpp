@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "types.hpp"
+#include "parity_api.hpp"
 
 #include <catch2/catch.hpp>
 

@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "types.hpp"
+#include "completion_runner.hpp"
 
 #include <catch2/catch.hpp>
 

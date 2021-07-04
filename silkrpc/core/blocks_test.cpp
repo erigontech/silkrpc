@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "types.hpp"
+#include "blocks.hpp"
 
 #include <catch2/catch.hpp>
 

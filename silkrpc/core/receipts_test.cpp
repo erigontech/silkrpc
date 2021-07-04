@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "types.hpp"
+#include "receipts.hpp"
 
 #include <catch2/catch.hpp>
 

@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "types.hpp"
+#include "mime_types.hpp"
 
 #include <catch2/catch.hpp>
 

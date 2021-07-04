@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "types.hpp"
+#include "async_completion_handler.hpp"
 
 #include <catch2/catch.hpp>
 

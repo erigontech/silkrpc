@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "types.hpp"
+#include "request_handler.hpp"
 
 #include <catch2/catch.hpp>
 
