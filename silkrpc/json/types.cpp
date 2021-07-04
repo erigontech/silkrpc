@@ -133,10 +133,9 @@ void to_json(nlohmann::json& json, const BlockHeader& header) {
 }
 
 void to_json(nlohmann::json& json, const Transaction& transaction) {
-    if (!transaction.from) {
-        (const_cast<Transaction&>(transaction)).recover_sender();
+    if (transaction.from) {
+        json["from"] = transaction.from.value();
     }
-    json["from"] = transaction.from.value();
     json["gas"] = silkrpc::to_quantity(transaction.gas_limit);
     json["gasPrice"] = silkrpc::to_quantity(transaction.gas_price);
     auto ethash_hash{hash_of_transaction(transaction)};
@@ -211,9 +210,8 @@ void to_json(nlohmann::json& json, const Block& b) {
 void to_json(nlohmann::json& json, const Transaction& transaction) {
     to_json(json, silkworm::Transaction(transaction));
 
-    const auto block_number = silkrpc::to_quantity(transaction.block_number);
     json["blockHash"] = transaction.block_hash;
-    json["blockNumber"] = block_number;
+    json["blockNumber"] = silkrpc::to_quantity(transaction.block_number);
     json["transactionIndex"] = silkrpc::to_quantity(transaction.transaction_index);
 }
 

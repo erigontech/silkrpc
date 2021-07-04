@@ -30,6 +30,18 @@ namespace silkrpc {
 using Catch::Matchers::Message;
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
+TEST_CASE("convert zero uint256 to quantity", "[silkrpc][to_quantity]") {
+    intx::uint256 zero_u256{0};
+    const auto zero_quantity = to_quantity(zero_u256);
+    CHECK(zero_quantity == "0x0");
+}
+
+TEST_CASE("convert positive uint256 to quantity", "[silkrpc][to_quantity]") {
+    intx::uint256 positive_u256{100};
+    const auto positive_quantity = to_quantity(positive_u256);
+    CHECK(positive_quantity == "0x64");
+}
+
 TEST_CASE("serialize empty address", "[silkrpc][to_json]") {
     evmc::address address{};
     nlohmann::json j = address;
@@ -126,6 +138,33 @@ TEST_CASE("serialize block header", "[silkrpc][to_json]") {
     })"_json);
 }
 
+TEST_CASE("serialize empty block", "[silkrpc][to_json]") {
+    silkrpc::Block block{};
+    nlohmann::json j = block;
+    CHECK(j == R"({
+        "parentHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "miner":"0x0000000000000000000000000000000000000000",
+        "stateRoot":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "transactionsRoot":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "receiptsRoot":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        "difficulty":"0x",
+        "nonce":"0x0",
+        "number":"0x0",
+        "gasLimit":"0x0",
+        "gasUsed":"0x0",
+        "timestamp":"0x0",
+        "extraData":"0x",
+        "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "hash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "size":"0x3",
+        "totalDifficulty":"0x",
+        "transactions":[],
+        "uncles":[]
+    })"_json);
+}
+
 TEST_CASE("serialize empty transaction", "[silkrpc][to_json]") {
     silkworm::Transaction txn{};
     txn.from = 0x0000000000000000000000000000000000000000_address;
@@ -146,7 +185,7 @@ TEST_CASE("serialize empty transaction", "[silkrpc][to_json]") {
 }
 
 TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
-    silkworm::Transaction txn{
+    silkworm::Transaction txn1{
         std::nullopt,
         0,
         intx::uint256{0},
@@ -161,8 +200,8 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
         std::vector<silkworm::AccessListEntry>{},
         0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address
     };
-    nlohmann::json j = txn;
-    CHECK(j == R"({
+    nlohmann::json j1 = txn1;
+    CHECK(j1 == R"({
         "nonce":"0x0",
         "gasPrice":"0x0",
         "gas":"0x0",
@@ -174,6 +213,42 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
         "r":"0x12",
         "s":"0x24",
         "v":"0x25"
+    })"_json);
+
+    silkrpc::Transaction txn2{
+        std::nullopt,
+        0,
+        intx::uint256{0},
+        uint64_t{0},
+        0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+        intx::uint256{0},
+        *silkworm::from_hex("001122aabbcc"),
+        false,
+        intx::uint256{1},
+        intx::uint256{18},
+        intx::uint256{36},
+        std::vector<silkworm::AccessListEntry>{},
+        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address,
+        0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
+        123123,
+        3
+    };
+    nlohmann::json j2 = txn2;
+    CHECK(j2 == R"({
+        "nonce":"0x0",
+        "gasPrice":"0x0",
+        "gas":"0x0",
+        "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
+        "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
+        "value":"0x0",
+        "input":"0x001122aabbcc",
+        "hash":"0x861b1b1b1d2609b3dec5fcb8f0b411e5b88a2c2e896daa9ee8e80b9f4839e6d9",
+        "r":"0x12",
+        "s":"0x24",
+        "v":"0x25",
+        "blockHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
+        "blockNumber":"0x1e0f3",
+        "transactionIndex":"0x3"
     })"_json);
 }
 
@@ -311,6 +386,25 @@ TEST_CASE("deserialize topics", "[silkrpc][from_json]") {
     CHECK(f1.data == silkworm::Bytes{});
 }
 
+TEST_CASE("deserialize wrong size receipt", "[silkrpc][from_json]") {
+    const auto j1 = nlohmann::json::from_cbor(*silkworm::from_hex("80"));
+    CHECK_THROWS_MATCHES(j1.get<Receipt>(), std::system_error, Message("Receipt CBOR: missing entries: Invalid argument"));
+    const auto j2 = nlohmann::json::from_cbor(*silkworm::from_hex("8100"));
+    CHECK_THROWS_MATCHES(j2.get<Receipt>(), std::system_error, Message("Receipt CBOR: missing entries: Invalid argument"));
+    const auto j3 = nlohmann::json::from_cbor(*silkworm::from_hex("8200f6"));
+    CHECK_THROWS_MATCHES(j3.get<Receipt>(), std::system_error, Message("Receipt CBOR: missing entries: Invalid argument"));
+    const auto j4 = nlohmann::json::from_cbor(*silkworm::from_hex("8300f600"));
+    CHECK_THROWS_MATCHES(j4.get<Receipt>(), std::system_error, Message("Receipt CBOR: missing entries: Invalid argument"));
+    const auto j5 = nlohmann::json::from_cbor(*silkworm::from_hex("84f4f60000"));
+    CHECK_THROWS_MATCHES(j5.get<Receipt>(), std::system_error, Message("Receipt CBOR: number expected in [0]: Invalid argument"));
+    const auto j6 = nlohmann::json::from_cbor(*silkworm::from_hex("8400f40000"));
+    CHECK_THROWS_MATCHES(j6.get<Receipt>(), std::system_error, Message("Receipt CBOR: null expected in [1]: Invalid argument"));
+    const auto j7 = nlohmann::json::from_cbor(*silkworm::from_hex("8400f6f500"));
+    CHECK_THROWS_MATCHES(j7.get<Receipt>(), std::system_error, Message("Receipt CBOR: number expected in [2]: Invalid argument"));
+    const auto j8 = nlohmann::json::from_cbor(*silkworm::from_hex("8400f600f5"));
+    CHECK_THROWS_MATCHES(j8.get<Receipt>(), std::system_error, Message("Receipt CBOR: number expected in [3]: Invalid argument"));
+}
+
 TEST_CASE("deserialize wrong receipt", "[silkrpc][from_json]") {
     const auto j = R"({})"_json;
     CHECK_THROWS(j.get<Receipt>());
@@ -342,11 +436,16 @@ TEST_CASE("deserialize wrong array receipt", "[silkrpc][from_json]") {
 }
 
 TEST_CASE("deserialize empty array receipt", "[silkrpc][from_json]") {
-    const auto j = R"([0,null,0,0])"_json;
-    const auto r = j.get<Receipt>();
-    CHECK(*r.type == 0);
-    CHECK(r.success == false);
-    CHECK(r.cumulative_gas_used == 0);
+    const auto j1 = R"([0,null,0,0])"_json;
+    const auto r1 = j1.get<Receipt>();
+    CHECK(*r1.type == 0);
+    CHECK(r1.success == false);
+    CHECK(r1.cumulative_gas_used == 0);
+    const auto j2 = nlohmann::json::from_cbor(*silkworm::from_hex("8400f60000"));
+    const auto r2 = j2.get<Receipt>();
+    CHECK(*r2.type == 0);
+    CHECK(r2.success == false);
+    CHECK(r2.cumulative_gas_used == 0);
 }
 
 TEST_CASE("deserialize array receipt", "[silkrpc][from_json]") {
@@ -496,6 +595,22 @@ TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
     CHECK(c1.gas == intx::uint256{1000000});
     CHECK(c1.gas_price == intx::uint256{4499999744});
     CHECK(c1.data == silkworm::from_hex("0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000"));
+
+    auto j2 = R"({
+        "from":"0x52c24586c31cff0485a6208bb63859290fba5bce",
+        "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
+        "gas":1000000,
+        "gasPrice":"0x10C388C00",
+        "data":"0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000",
+        "value":"0x124F80"
+    })"_json;
+    auto c2 = j2.get<Call>();
+    CHECK(c2.from == 0x52c24586c31cff0485a6208bb63859290fba5bce_address);
+    CHECK(c2.to == 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address);
+    CHECK(c2.gas == intx::uint256{1000000});
+    CHECK(c2.gas_price == intx::uint256{4499999744});
+    CHECK(c2.data == silkworm::from_hex("0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000"));
+    CHECK(c2.value == intx::uint256{1200000});
 }
 
 TEST_CASE("serialize zero forks", "[silkrpc::json][to_json]") {
