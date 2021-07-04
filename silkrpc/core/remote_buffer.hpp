@@ -123,9 +123,7 @@ public:
     void unwind_state_changes(uint64_t block_number) override {}
 
 private:
-    silkworm::Bytes db_get(const std::string& table, const silkworm::ByteView& key) const;
-
-    asio::io_context& io_context_; // TODO(canepat): should become context pool in multicore scenario
+    asio::io_context& io_context_;
     AsyncRemoteBuffer async_buffer_;
 };
 
