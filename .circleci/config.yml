@@ -62,6 +62,7 @@ commands:
             - ~/.hunter
       - run:
           name: "Build"
+          no_output_timeout: 30m
           command: cmake --build ~/build -j
 
   test:
