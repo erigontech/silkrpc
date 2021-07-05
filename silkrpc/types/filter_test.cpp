@@ -14,13 +14,64 @@
    limitations under the License.
 */
 
-#include "filter.hpp"
+#include "filter.cpp" // NOLINT(build/include)
 
+#include <evmc/evmc.h>
+#include <sstream>
 #include <catch2/catch.hpp>
+
+#include <silkrpc/common/util.hpp>
 
 namespace silkrpc {
 
-using Catch::Matchers::Message;
+using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
+
+TEST_CASE("write 0-sized filter addresses to ostream", "[silkrpc][operator<<]") {
+    FilterAddresses addresses{};
+    std::ostringstream oss;
+    oss << addresses;
+    CHECK(oss.str() == "[]");
+}
+
+TEST_CASE("write 1-sized filter addresses to ostream", "[silkrpc][operator<<]") {
+    FilterAddresses addresses{0x6090a6e47849629b7245dfa1ca21d94cd15878ef_address};
+    std::ostringstream oss;
+    oss << addresses;
+    CHECK(oss.str() == "[0x6090a6e47849629b7245dfa1ca21d94cd15878ef]");
+}
+
+TEST_CASE("write 2-sized filter addresses to ostream", "[silkrpc][operator<<]") {
+    FilterAddresses addresses{
+        0x6090a6e47849629b7245dfa1ca21d94cd15878ef_address,
+        0x702a999710cfd011b475505335d4f437d8132fae_address
+    };
+    std::ostringstream oss;
+    oss << addresses;
+    CHECK(oss.str() == "[0x6090a6e47849629b7245dfa1ca21d94cd15878ef 0x702a999710cfd011b475505335d4f437d8132fae]");
+}
+
+TEST_CASE("write 0-sized filter subtopics to ostream", "[silkrpc][operator<<]") {
+    FilterSubTopics subtopics{};
+    std::ostringstream oss;
+    oss << subtopics;
+    CHECK(oss.str() == "[]");
+}
+
+TEST_CASE("write 1-sized filter subtopics to ostream", "[silkrpc][operator<<]") {
+    FilterSubTopics subtopics{0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32};
+    std::ostringstream oss;
+    oss << subtopics;
+    CHECK(oss.str() == "[0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c]");
+}
+
+TEST_CASE("write 2-sized filter subtopics to ostream", "[silkrpc][operator<<]") {
+    FilterSubTopics subtopics{
+        0x0000000000000000000000000000000000000000000000000000000000000000_bytes32,
+        0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32
+    };
+    std::ostringstream oss;
+    oss << subtopics;
+    CHECK(oss.str() == R"([0x0000000000000000000000000000000000000000000000000000000000000000 0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c])");
+}
 
 } // namespace silkrpc
-
