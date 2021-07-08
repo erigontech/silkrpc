@@ -30,20 +30,20 @@ using Catch::Matchers::Message;
 
 ChannelFactory create_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
 
-TEST_CASE("context pool constructor", "[silkrpc][context_pool]") {
+TEST_CASE("create context pool", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    SECTION("reject size 0 for context pool") {
+    SECTION("reject size 0") {
         CHECK_THROWS_MATCHES((ContextPool{0, create_channel}), std::logic_error, Message("ContextPool::ContextPool pool_size is 0"));
     }
 
-    SECTION("accept size 1 for context pool") {
+    SECTION("accept size 1") {
         ContextPool cp{1, create_channel};
         CHECK(&cp.get_context() == &cp.get_context());
         CHECK(&cp.get_io_context() == &cp.get_io_context());
     }
 
-    SECTION("accept size greater than 1 for context pool") {
+    SECTION("accept size greater than 1") {
         ContextPool cp{3, create_channel};
 
         const auto& context1 = cp.get_context();
@@ -72,19 +72,70 @@ TEST_CASE("context pool constructor", "[silkrpc][context_pool]") {
     }
 }
 
-TEST_CASE("context pool run", "[silkrpc][context_pool]") {
+TEST_CASE("start context pool", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    SECTION("context pool running 1 thread") {
+    SECTION("running 1 thread") {
         ContextPool cp{1, create_channel};
         auto context_pool_thread = std::thread([&]() { cp.run(); });
         cp.stop();
         CHECK_NOTHROW(context_pool_thread.join());
     }
 
-    SECTION("context pool running 3 thread") {
+    SECTION("running 3 thread") {
         ContextPool cp{3, create_channel};
         auto context_pool_thread = std::thread([&]() { cp.run(); });
+        cp.stop();
+        CHECK_NOTHROW(context_pool_thread.join());
+    }
+
+    SECTION("with multiple runners") {
+        ContextPool cp{3, create_channel};
+        auto context_pool_thread1 = std::thread([&]() { cp.run(); });
+        auto context_pool_thread2 = std::thread([&]() { cp.run(); });
+        cp.stop();
+        CHECK_NOTHROW(context_pool_thread1.join());
+        CHECK_NOTHROW(context_pool_thread2.join());
+    }
+}
+
+TEST_CASE("stop context pool", "[silkrpc][context_pool]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("not yet running") {
+        ContextPool cp{3, create_channel};
+        CHECK_NOTHROW(cp.stop());
+    }
+
+    SECTION("already stopped") {
+        ContextPool cp{3, create_channel};
+        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        cp.stop();
+        CHECK_NOTHROW(cp.stop());
+        context_pool_thread.join();
+        CHECK_NOTHROW(cp.stop());
+    }
+}
+
+TEST_CASE("restart context pool", "[silkrpc][context_pool]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("running 1 thread") {
+        ContextPool cp{1, create_channel};
+        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        cp.stop();
+        CHECK_NOTHROW(context_pool_thread.join());
+        context_pool_thread = std::thread([&]() { cp.run(); });
+        cp.stop();
+        CHECK_NOTHROW(context_pool_thread.join());
+    }
+
+    SECTION("running 3 thread") {
+        ContextPool cp{3, create_channel};
+        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        cp.stop();
+        CHECK_NOTHROW(context_pool_thread.join());
+        context_pool_thread = std::thread([&]() { cp.run(); });
         cp.stop();
         CHECK_NOTHROW(context_pool_thread.join());
     }
