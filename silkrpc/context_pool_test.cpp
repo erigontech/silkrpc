@@ -21,6 +21,7 @@
 
 #include <catch2/catch.hpp>
 #include <grpcpp/grpcpp.h>
+#include <silkworm/common/log.hpp>
 
 #include <silkrpc/common/log.hpp>
 
@@ -141,5 +142,10 @@ TEST_CASE("restart context pool", "[silkrpc][context_pool]") {
     }
 }
 
-} // namespace silkrpc
+TEST_CASE("print context pool", "[silkrpc][context_pool]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    ContextPool cp{1, create_channel};
+    CHECK_NOTHROW(silkworm::null_stream() << cp.get_context());
+}
 
+} // namespace silkrpc

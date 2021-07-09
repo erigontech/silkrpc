@@ -22,5 +22,23 @@ namespace silkrpc {
 
 using Catch::Matchers::Message;
 
+TEST_CASE("check configuration", "[silkrpc][config]") {
+#if __has_include(<coroutine>)
+    #ifdef ASIO_HAS_CO_AWAIT
+    CHECK(true);
+    #else
+    CHECK(false);
+    #endif // ASIO_HAS_CO_AWAIT
+    #ifdef ASIO_HAS_STD_COROUTINE
+    CHECK(true);
+    #else
+    CHECK(false);
+    #endif // ASIO_HAS_STD_COROUTINE
+#endif // __has_include(<coroutine>)
+    CHECK(&typeid(std::coroutine_handle<void>) != nullptr);
+    CHECK(&typeid(std::suspend_always) != nullptr);
+    CHECK(&typeid(std::suspend_never) != nullptr);
+}
+
 } // namespace silkrpc
 

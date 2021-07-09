@@ -17,10 +17,25 @@
 #include "transaction.hpp"
 
 #include <catch2/catch.hpp>
+#include <evmc/evmc.hpp>
+
+#include <silkrpc/common/log.hpp>
 
 namespace silkrpc {
 
 using Catch::Matchers::Message;
+
+TEST_CASE("create empty transaction", "[silkrpc][types][transaction]") {
+    Transaction txn{};
+    CHECK(txn.block_hash == evmc::bytes32{});
+    CHECK(txn.block_number == 0);
+    CHECK(txn.transaction_index == 0);
+}
+
+TEST_CASE("print empty transaction", "[silkrpc][types][transaction]") {
+    Transaction txn{};
+    CHECK_NOTHROW(silkworm::null_stream() << txn);
+}
 
 } // namespace silkrpc
 

@@ -18,9 +18,29 @@
 
 #include <catch2/catch.hpp>
 
+#include <silkrpc/common/log.hpp>
+#include <silkrpc/types/log.hpp>
+
 namespace silkrpc {
 
 using Catch::Matchers::Message;
+
+TEST_CASE("create empty receipt", "[silkrpc][types][receipt]") {
+    Receipt r{};
+    CHECK(r.success == false);
+    CHECK(r.cumulative_gas_used == 0);
+    CHECK(r.bloom == silkworm::Bloom{});
+}
+
+TEST_CASE("print empty receipt", "[silkrpc][types][receipt]") {
+    Receipt r{};
+    CHECK_NOTHROW(silkworm::null_stream() << r);
+}
+
+TEST_CASE("bloom from no logs", "[silkrpc][types][receipt]") {
+    Logs logs{};
+    CHECK(bloom_from_logs(logs) == silkworm::Bloom{});
+}
 
 } // namespace silkrpc
 
