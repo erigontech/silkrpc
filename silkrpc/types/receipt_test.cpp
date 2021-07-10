@@ -16,7 +16,11 @@
 
 #include "receipt.hpp"
 
+#include <iomanip>
+#include <iostream>
+
 #include <catch2/catch.hpp>
+#include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/types/log.hpp>
@@ -24,6 +28,8 @@
 namespace silkrpc {
 
 using Catch::Matchers::Message;
+
+using evmc::literals::operator""_address;
 
 TEST_CASE("create empty receipt", "[silkrpc][types][receipt]") {
     Receipt r{};
@@ -37,9 +43,42 @@ TEST_CASE("print empty receipt", "[silkrpc][types][receipt]") {
     CHECK_NOTHROW(silkworm::null_stream() << r);
 }
 
-TEST_CASE("bloom from no logs", "[silkrpc][types][receipt]") {
+TEST_CASE("bloom from empty logs", "[silkrpc][types][receipt]") {
     Logs logs{};
     CHECK(bloom_from_logs(logs) == silkworm::Bloom{});
+}
+
+TEST_CASE("bloom from one empty log", "[silkrpc][types][receipt]") {
+    Logs logs{
+        Log{}
+    };
+    auto bloom = bloom_from_logs(logs);
+    silkworm::Bloom expected_bloom{};
+    expected_bloom[9] = uint8_t(128);
+    expected_bloom[47] = uint8_t(2);
+    expected_bloom[143] = uint8_t(1);
+    CHECK(bloom_from_logs(logs) == expected_bloom);
+}
+
+TEST_CASE("bloom from more than one log", "[silkrpc][types][receipt]") {
+    Logs logs{
+        Log{
+            0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+            {},
+            *silkworm::from_hex("0x1234abcd")
+        },
+        Log{
+            0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+            {},
+            *silkworm::from_hex("0x1234abcd")
+        }
+    };
+    auto bloom = bloom_from_logs(logs);
+    silkworm::Bloom expected_bloom{};
+    expected_bloom[73] = uint8_t(16);
+    expected_bloom[87] = uint8_t(8);
+    expected_bloom[190] = uint8_t(8);
+    CHECK(bloom_from_logs(logs) == expected_bloom);
 }
 
 } // namespace silkrpc
