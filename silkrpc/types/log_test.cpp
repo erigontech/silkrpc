@@ -17,10 +17,26 @@
 #include "log.hpp"
 
 #include <catch2/catch.hpp>
+#include <evmc/evmc.hpp>
+#include <silkworm/common/util.hpp>
+
+#include <silkrpc/common/log.hpp>
 
 namespace silkrpc {
 
 using Catch::Matchers::Message;
+
+TEST_CASE("create empty log", "[silkrpc][types][log]") {
+    Log l{};
+    CHECK(l.address == evmc::address{});
+    CHECK(l.topics == std::vector<evmc::bytes32>{});
+    CHECK(l.data == silkworm::Bytes{});
+}
+
+TEST_CASE("print empty log", "[silkrpc][types][log]") {
+    Log l{};
+    CHECK_NOTHROW(silkworm::null_stream() << l);
+}
 
 } // namespace silkrpc
 

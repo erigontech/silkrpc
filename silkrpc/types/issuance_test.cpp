@@ -17,10 +17,26 @@
 #include "issuance.hpp"
 
 #include <catch2/catch.hpp>
+#include <evmc/evmc.hpp>
+#include <silkworm/common/util.hpp>
+
+#include <silkrpc/common/log.hpp>
 
 namespace silkrpc {
 
 using Catch::Matchers::Message;
+
+TEST_CASE("create empty issuance", "[silkrpc][types][issuance]") {
+    Issuance i{};
+    CHECK(i.block_reward == std::nullopt);
+    CHECK(i.ommer_reward == std::nullopt);
+    CHECK(i.issuance == std::nullopt);
+}
+
+TEST_CASE("print empty issuance", "[silkrpc][types][issuance]") {
+    Issuance i{};
+    CHECK_NOTHROW(silkworm::null_stream() << i);
+}
 
 } // namespace silkrpc
 
