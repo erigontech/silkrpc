@@ -79,6 +79,7 @@ jobs:
       CLANG_COVERAGE: OFF
     machine:
       image: ubuntu-2004:202101-01
+    resource_class: large
     steps:
       - run:
           name: "Install GCC 10"
@@ -101,6 +102,7 @@ jobs:
       CLANG_COVERAGE: ON
     machine:
       image: ubuntu-2004:202101-01
+    resource_class: large
     steps:
       - run:
           name: "Install Clang 10"

@@ -54,7 +54,7 @@ private:
             }
 
             awaitable* awaitable_;
-            std::coroutine_handle<> coro_;
+            std::coroutine_handle<void> coro_;
         };
 
         template <typename T>
@@ -84,7 +84,7 @@ private:
             return false;
         }
 
-        void await_suspend(std::coroutine_handle<> h) noexcept {
+        void await_suspend(std::coroutine_handle<void> h) noexcept {
             std::apply(
                 [&](auto&&... a) {
                     initiation_(handler{this, h}, std::forward<decltype(a)>(a)...);
