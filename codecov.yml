@@ -1,3 +1,7 @@
+coverage:
+    status:
+        patch: off
+        project: off
 ignore:
   - "**/*_test.cpp"
   - "cmd"
