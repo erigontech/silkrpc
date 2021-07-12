@@ -565,7 +565,7 @@ TEST_CASE("deserialize filter with topic", "[silkrpc::json][from_json]") {
 
 TEST_CASE("deserialize null call", "[silkrpc::json][from_json]") {
     auto j1 = R"({})"_json;
-    CHECK_THROWS(j1.get<Call>());
+    CHECK_NOTHROW(j1.get<Call>());
 }
 
 TEST_CASE("deserialize minimal call", "[silkrpc::json][from_json]") {

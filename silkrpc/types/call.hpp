@@ -30,7 +30,7 @@ namespace silkrpc {
 
 struct Call {
     std::optional<evmc::address> from;
-    evmc::address to;
+    std::optional<evmc::address> to;
     std::optional<uint64_t> gas;
     std::optional<intx::uint256> gas_price;
     std::optional<intx::uint256> value;
