@@ -133,6 +133,9 @@ void to_json(nlohmann::json& json, const BlockHeader& header) {
 }
 
 void to_json(nlohmann::json& json, const Transaction& transaction) {
+    if (!transaction.from) {
+        (const_cast<Transaction&>(transaction)).recover_sender();
+    }
     if (transaction.from) {
         json["from"] = transaction.from.value();
     }
@@ -219,7 +222,9 @@ void from_json(const nlohmann::json& json, Call& call) {
     if (json.count("from") != 0) {
         call.from = json.at("from").get<evmc::address>();
     }
-    call.to = json.at("to").get<evmc::address>();
+    if (json.count("to") != 0) {
+        call.to = json.at("to").get<evmc::address>();
+    }
     if (json.count("gas") != 0) {
         auto json_gas = json.at("gas");
         if (json_gas.is_string()) {
