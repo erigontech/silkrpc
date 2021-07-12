@@ -136,7 +136,9 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
     if (!transaction.from) {
         (const_cast<Transaction&>(transaction)).recover_sender();
     }
-    json["from"] = transaction.from.value();
+    if (transaction.from) {
+        json["from"] = transaction.from.value();
+    }
     json["gas"] = silkrpc::to_quantity(transaction.gas_limit);
     json["gasPrice"] = silkrpc::to_quantity(transaction.gas_price);
     auto ethash_hash{hash_of_transaction(transaction)};

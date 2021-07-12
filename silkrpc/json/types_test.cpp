@@ -167,6 +167,23 @@ TEST_CASE("serialize empty block", "[silkrpc][to_json]") {
 
 TEST_CASE("serialize empty transaction", "[silkrpc][to_json]") {
     silkworm::Transaction txn{};
+    nlohmann::json j = txn;
+    CHECK(j == R"({
+        "nonce":"0x0",
+        "gasPrice":"0x0",
+        "gas":"0x0",
+        "to":null,
+        "value":"0x0",
+        "input":"0x",
+        "hash":"0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5",
+        "r":"0x",
+        "s":"0x",
+        "v":"0x1b"
+    })"_json);
+}
+
+TEST_CASE("serialize transaction from zero address", "[silkrpc][to_json]") {
+    silkworm::Transaction txn{};
     txn.from = 0x0000000000000000000000000000000000000000_address;
     nlohmann::json j = txn;
     CHECK(j == R"({
