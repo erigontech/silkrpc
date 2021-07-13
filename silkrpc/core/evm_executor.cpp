@@ -27,7 +27,10 @@
 #include <asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
+<<<<<<< HEAD
 #include <silkworm/chain/intrinsic_gas.hpp>
+=======
+>>>>>>> eth_getGasPrice implementation
 #include <silkworm/common/util.hpp>
 #include <silkworm/execution/evm.hpp>
 #include <silkworm/state/intra_block_state.hpp>
@@ -58,7 +61,11 @@ std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data
 
     const auto offset_uint256{intx::be::unsafe::load<intx::uint256>(encoded_msg.data())};
     SILKRPC_TRACE << "silkrpc::decode_error_reason offset_uint256: " << intx::to_string(offset_uint256) << "\n";
+<<<<<<< HEAD
     const auto offset = static_cast<uint64_t>(offset_uint256);
+=======
+    const auto offset = intx::narrow_cast<uint64_t>(offset_uint256);
+>>>>>>> eth_getGasPrice implementation
     if (encoded_msg.size() < kAbiStringOffsetSize + offset) {
         return std::nullopt;
     }
@@ -147,7 +154,6 @@ std::string EVMExecutor::get_error_message(int64_t error_code, const silkworm::B
     if (error_reason) {
         error_message += ": " + *error_reason;
     }
-
     SILKRPC_DEBUG << "EVMExecutor::get_error_message error_message: " << error_message << "\n";
 
     return error_message;
