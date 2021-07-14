@@ -16,64 +16,140 @@
 
 #include "evm_executor.hpp"
 
+#include <array>
+#include <optional>
+#include <string>
+#include <string_view>
 #include <utility>
 
 #include <asio/compose.hpp>
 #include <asio/post.hpp>
 #include <asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
+#include <intx/intx.hpp>
+#include <silkworm/common/util.hpp>
 #include <silkworm/execution/evm.hpp>
 #include <silkworm/state/intra_block_state.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 
 namespace silkrpc {
 
-std::string EVMExecutor::get_error_message(int64_t error_code) {
+silkworm::Bytes build_abi_selector(const std::string& signature) {
+    const auto signature_hash = hash_of(silkworm::byte_view_of_string(signature));
+    return {std::begin(signature_hash.bytes), std::begin(signature_hash.bytes) + 4};
+}
+
+const auto kRevertSelector{build_abi_selector("Error(string)")};
+const auto kAbiStringOffsetSize{32};
+
+std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data) {
+    if (error_data.size() < kRevertSelector.size() || error_data.substr(0, kRevertSelector.size()) != kRevertSelector) {
+        return std::nullopt;
+    }
+
+    silkworm::ByteView encoded_msg{error_data.data() + kRevertSelector.size(), error_data.size() - kRevertSelector.size()};
+    SILKRPC_TRACE << "silkrpc::decode_error_reason size: " << encoded_msg.size() << " error_message: " << silkworm::to_hex(encoded_msg) << "\n";
+    if (encoded_msg.size() < kAbiStringOffsetSize) {
+        return std::nullopt;
+    }
+
+    const auto offset_uint256{intx::be::unsafe::load<intx::uint256>(encoded_msg.data())};
+    SILKRPC_TRACE << "silkrpc::decode_error_reason offset_uint256: " << intx::to_string(offset_uint256) << "\n";
+    const auto offset = intx::narrow_cast<uint64_t>(offset_uint256);
+    if (encoded_msg.size() < kAbiStringOffsetSize + offset) {
+        return std::nullopt;
+    }
+
+    const uint64_t message_offset{kAbiStringOffsetSize + offset};
+    const auto length_uint256{intx::be::unsafe::load<intx::uint256>(encoded_msg.data() + offset)};
+    SILKRPC_TRACE << "silkrpc::decode_error_reason length_uint256: " << intx::to_string(length_uint256) << "\n";
+    const auto length = intx::narrow_cast<uint64_t>(length_uint256);
+    if (encoded_msg.size() < message_offset + length) {
+        return std::nullopt;
+    }
+
+    return std::string{std::begin(encoded_msg) + message_offset, std::begin(encoded_msg) + message_offset + length};
+}
+
+std::string EVMExecutor::get_error_message(int64_t error_code, const silkworm::Bytes& error_data) {
+    SILKRPC_DEBUG << "EVMExecutor::get_error_message error_data: " << silkworm::to_hex(error_data) << "\n";
+
+    std::string error_message;
     switch (error_code) {
         case evmc_status_code::EVMC_FAILURE:
-            return "execution failed";
+            error_message = "execution failed";
+            break;
         case evmc_status_code::EVMC_REVERT:
-            return "execution reverted";
+            error_message = "execution reverted";
+            break;
         case evmc_status_code::EVMC_OUT_OF_GAS:
-            return "out of gas";
+            error_message = "out of gas";
+            break;
         case evmc_status_code::EVMC_INVALID_INSTRUCTION:
-            return "invalid instruction";
+            error_message = "invalid instruction";
+            break;
         case evmc_status_code::EVMC_UNDEFINED_INSTRUCTION:
-            return "undefined instruction";
+            error_message = "undefined instruction";
+            break;
         case evmc_status_code::EVMC_STACK_OVERFLOW:
-            return "stack overflow";
+            error_message = "stack overflow";
+            break;
         case evmc_status_code::EVMC_STACK_UNDERFLOW:
-            return "stack underflow";
+            error_message = "stack underflow";
+            break;
         case evmc_status_code::EVMC_BAD_JUMP_DESTINATION:
-            return "bad jump destination";
+            error_message = "bad jump destination";
+            break;
         case evmc_status_code::EVMC_INVALID_MEMORY_ACCESS:
-            return "invalid memory access";
+            error_message = "invalid memory access";
+            break;
         case evmc_status_code::EVMC_CALL_DEPTH_EXCEEDED:
-            return "call depth exceeded";
+            error_message = "call depth exceeded";
+            break;
         case evmc_status_code::EVMC_STATIC_MODE_VIOLATION:
-            return "static mode violation";
+            error_message = "static mode violation";
+            break;
         case evmc_status_code::EVMC_PRECOMPILE_FAILURE:
-            return "precompile failure";
+            error_message = "precompile failure";
+            break;
         case evmc_status_code::EVMC_CONTRACT_VALIDATION_FAILURE:
-            return "contract validation failure";
+            error_message = "contract validation failure";
+            break;
         case evmc_status_code::EVMC_ARGUMENT_OUT_OF_RANGE:
-            return "argument out of range";
+            error_message = "argument out of range";
+            break;
         case evmc_status_code::EVMC_WASM_UNREACHABLE_INSTRUCTION:
-            return "wasm unreachable instruction";
+            error_message = "wasm unreachable instruction";
+            break;
         case evmc_status_code::EVMC_WASM_TRAP:
-            return "wasm trap";
+            error_message = "wasm trap";
+            break;
         case evmc_status_code::EVMC_INSUFFICIENT_BALANCE:
-            return "insufficient balance";
+            error_message = "insufficient balance";
+            break;
         case evmc_status_code::EVMC_INTERNAL_ERROR:
-            return "internal error";
+            error_message = "internal error";
+            break;
         case evmc_status_code::EVMC_REJECTED:
-            return "execution rejected";
+            error_message = "execution rejected";
+            break;
         case evmc_status_code::EVMC_OUT_OF_MEMORY:
-            return "out of memory";
+            error_message = "out of memory";
+            break;
         default:
-            return "unknown error code";
+            error_message = "unknown error code";
     }
+
+    const auto error_reason{decode_error_reason(error_data)};
+    if (error_reason) {
+        error_message += ": " + *error_reason;
+    }
+
+    SILKRPC_DEBUG << "EVMExecutor::get_error_message error_message: " << error_message << "\n";
+
+    return error_message;
 }
 
 asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block, const silkworm::Transaction& txn, uint64_t gas) {

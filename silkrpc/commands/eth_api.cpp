@@ -836,8 +836,12 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
         if (execution_result.error_code == evmc_status_code::EVMC_SUCCESS) {
             reply = make_json_content(request["id"], "0x" + silkworm::to_hex(execution_result.data));
         } else {
-            const auto error_message = EVMExecutor::get_error_message(execution_result.error_code);
-            reply = make_json_error(request["id"], -32000, error_message);
+            const auto error_message = EVMExecutor::get_error_message(execution_result.error_code, execution_result.data);
+            if (execution_result.data.empty()) {
+                reply = make_json_error(request["id"], -32000, error_message);
+            } else {
+                reply = make_json_error(request["id"], {3, error_message, execution_result.data});
+            }
         }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";

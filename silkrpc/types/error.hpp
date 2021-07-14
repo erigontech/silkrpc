@@ -33,6 +33,12 @@ struct Error {
 
 std::ostream& operator<<(std::ostream& out, const Error& error);
 
-} // silkrpc
+struct RevertError : public Error {
+    silkworm::Bytes data;
+};
+
+std::ostream& operator<<(std::ostream& out, const RevertError& error);
+
+} // namespace silkrpc
 
 #endif  // SILKRPC_TYPES_ERROR_HPP_

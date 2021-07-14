@@ -43,7 +43,7 @@ struct ExecutionResult {
 
 class EVMExecutor {
 public:
-    static std::string get_error_message(int64_t error_code);
+    static std::string get_error_message(int64_t error_code, const silkworm::Bytes& error_data);
 
     explicit EVMExecutor(const Context& context, const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config, asio::thread_pool& workers, uint64_t block_number)
     : context_(context), db_reader_(db_reader), config_(config), workers_{workers}, buffer_{*context.io_context, db_reader, block_number} {}
