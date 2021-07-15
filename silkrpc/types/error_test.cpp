@@ -17,10 +17,36 @@
 #include "error.hpp"
 
 #include <catch2/catch.hpp>
+#include <silkworm/common/base.hpp>
+
+#include <silkrpc/common/log.hpp>
 
 namespace silkrpc {
 
 using Catch::Matchers::Message;
+
+TEST_CASE("create empty error", "[silkrpc][types][error]") {
+    Error err{};
+    CHECK(err.code == 0);
+    CHECK(err.message == "");
+}
+
+TEST_CASE("create empty revert error", "[silkrpc][types][error]") {
+    RevertError err{};
+    CHECK(err.code == 0);
+    CHECK(err.message == "");
+    CHECK(err.data == silkworm::Bytes{});
+}
+
+TEST_CASE("print empty error", "[silkrpc][types][error]") {
+    Error err{};
+    CHECK_NOTHROW(silkworm::null_stream() << err);
+}
+
+TEST_CASE("print empty revert error", "[silkrpc][types][error]") {
+    RevertError err{};
+    CHECK_NOTHROW(silkworm::null_stream() << err);
+}
 
 } // namespace silkrpc
 

@@ -701,12 +701,30 @@ TEST_CASE("make empty json error", "[silkrpc::json][make_json_error]") {
     })"_json);
 }
 
+TEST_CASE("make empty json revert error", "[silkrpc::json][make_json_error]") {
+    const auto j = silkrpc::make_json_error(0, {0, "", silkworm::Bytes{}});
+    CHECK(j == R"({
+        "jsonrpc":"2.0",
+        "id":0,
+        "error":{"code":0,"message":"","data":"0x"}
+    })"_json);
+}
+
 TEST_CASE("make json error", "[silkrpc::json][make_json_error]") {
     const auto j = silkrpc::make_json_error(123, -32000, "revert");
     CHECK(j == R"({
         "jsonrpc":"2.0",
         "id":123,
         "error":{"code":-32000,"message":"revert"}
+    })"_json);
+}
+
+TEST_CASE("make json revert error", "[silkrpc::json][make_json_error]") {
+    const auto j = silkrpc::make_json_error(123, {3, "execution reverted: Ownable: caller is not the owner", *silkworm::from_hex("0x00010203")});
+    CHECK(j == R"({
+        "jsonrpc":"2.0",
+        "id":123,
+        "error":{"code":3,"message":"execution reverted: Ownable: caller is not the owner","data":"0x00010203"}
     })"_json);
 }
 

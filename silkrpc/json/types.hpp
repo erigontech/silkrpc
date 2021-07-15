@@ -77,6 +77,7 @@ void to_json(nlohmann::json& json, const Forks& forks);
 void to_json(nlohmann::json& json, const Issuance& issuance);
 
 void to_json(nlohmann::json& json, const Error& error);
+void to_json(nlohmann::json& json, const RevertError& error);
 
 std::string to_hex_no_leading_zeros(uint64_t number);
 std::string to_hex_no_leading_zeros(silkworm::ByteView bytes);
@@ -87,6 +88,7 @@ std::string to_quantity(silkworm::ByteView bytes);
 
 nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result);
 nlohmann::json make_json_error(uint32_t id, int32_t code, const std::string& message);
+nlohmann::json make_json_error(uint32_t id, const RevertError& error);
 
 } // namespace silkrpc
 

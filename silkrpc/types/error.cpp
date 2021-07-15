@@ -18,6 +18,8 @@
 
 #include <iomanip>
 
+#include <silkworm/common/util.hpp>
+
 namespace silkrpc {
 
 std::ostream& operator<<(std::ostream& out, const Error& error) {
@@ -25,4 +27,9 @@ std::ostream& operator<<(std::ostream& out, const Error& error) {
     return out;
 }
 
-} // silkrpc
+std::ostream& operator<<(std::ostream& out, const RevertError& error) {
+    out << " code: " << error.code << " message: " << error.message << " data: " << silkworm::to_hex(error.data);
+    return out;
+}
+
+} // namespace silkrpc
