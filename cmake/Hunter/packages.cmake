@@ -16,12 +16,9 @@
 
 hunter_add_package(abseil)
 hunter_add_package(asio)
-hunter_add_package(Boost COMPONENTS filesystem)
 hunter_add_package(Catch)
-hunter_add_package(cryptopp)
 hunter_add_package(ethash)
 hunter_add_package(gRPC)
 hunter_add_package(intx)
-hunter_add_package(Microsoft.GSL)
 hunter_add_package(nlohmann_json)
 hunter_add_package(Protobuf)
