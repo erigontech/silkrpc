@@ -24,16 +24,28 @@
 #include <intx/intx.hpp>
 
 #include <silkworm/common/util.hpp>
+#include <silkworm/types/transaction.hpp>
 
 namespace silkrpc {
 
 struct Call {
     std::optional<evmc::address> from;
-    evmc::address to;
+    std::optional<evmc::address> to;
     std::optional<uint64_t> gas;
-    std::optional<uint64_t> gas_price;
+    std::optional<intx::uint256> gas_price;
     std::optional<intx::uint256> value;
     std::optional<silkworm::Bytes> data;
+
+    silkworm::Transaction to_transaction() const {
+        silkworm::Transaction txn{};
+        txn.from = from;
+        txn.to = to;
+        txn.gas_limit = gas.value_or(0);
+        txn.gas_price = gas_price.value_or(intx::uint256{0});
+        txn.value = value.value_or(intx::uint256{0});
+        txn.data = data.value_or(silkworm::Bytes{});
+        return txn;
+    }
 };
 
 std::ostream& operator<<(std::ostream& out, const Call& call);

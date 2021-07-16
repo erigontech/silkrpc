@@ -28,6 +28,9 @@
 
 namespace silkrpc::ethdb::bitmap {
 
+using roaring_bitmap_t = roaring::api::roaring_bitmap_t;
+using Roaring = roaring::Roaring;
+
 static Roaring fast_or(size_t n, const std::vector<std::unique_ptr<Roaring>>& inputs) {
     const roaring_bitmap_t **x = (const roaring_bitmap_t **)malloc(n * sizeof(roaring_bitmap_t *));
     if (x == NULL) {

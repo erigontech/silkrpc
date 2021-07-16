@@ -23,13 +23,16 @@
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
+#include <asio/thread_pool.hpp>
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
 #include <silkworm/types/receipt.hpp>
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/croaring/roaring.hh> // NOLINT(build/include_order)
+#include <silkrpc/croaring/roaring.hh>
 #include <silkrpc/json/types.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/transaction.hpp>
 #include <silkrpc/types/log.hpp>
@@ -41,7 +44,8 @@ namespace silkrpc::commands {
 
 class EthereumRpcApi {
 public:
-    explicit EthereumRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
+    explicit EthereumRpcApi(Context& context, asio::thread_pool& workers)
+    : context_(context), database_(context.database), backend_(context.backend), workers_{workers} {}
     virtual ~EthereumRpcApi() {}
 
     EthereumRpcApi(const EthereumRpcApi&) = delete;
@@ -89,13 +93,15 @@ protected:
     asio::awaitable<void> handle_eth_submit_work(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_subscribe(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_unsubscribe(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<Roaring> get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end);
-    asio::awaitable<Roaring> get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end);
+    asio::awaitable<roaring::Roaring> get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end);
+    asio::awaitable<roaring::Roaring> get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end);
     asio::awaitable<Receipts> get_receipts(core::rawdb::DatabaseReader& db_reader, uint64_t number, evmc::bytes32 hash);
     std::vector<Log> filter_logs(std::vector<Log>& logs, const Filter& filter);
 
-private:
+    Context& context_;
     std::unique_ptr<ethdb::Database>& database_;
+    std::unique_ptr<ethbackend::BackEnd>& backend_;
+    asio::thread_pool& workers_;
 
     friend class silkrpc::http::RequestHandler;
 };

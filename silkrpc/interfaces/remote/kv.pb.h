@@ -50,7 +50,7 @@ struct TableStruct_remote_2fkv_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxillaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[2]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[5]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -58,16 +58,28 @@ struct TableStruct_remote_2fkv_2eproto {
 };
 extern const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_remote_2fkv_2eproto;
 namespace remote {
+class AccountChange;
+class AccountChangeDefaultTypeInternal;
+extern AccountChangeDefaultTypeInternal _AccountChange_default_instance_;
 class Cursor;
 class CursorDefaultTypeInternal;
 extern CursorDefaultTypeInternal _Cursor_default_instance_;
 class Pair;
 class PairDefaultTypeInternal;
 extern PairDefaultTypeInternal _Pair_default_instance_;
+class StateChange;
+class StateChangeDefaultTypeInternal;
+extern StateChangeDefaultTypeInternal _StateChange_default_instance_;
+class StorageChange;
+class StorageChangeDefaultTypeInternal;
+extern StorageChangeDefaultTypeInternal _StorageChange_default_instance_;
 }  // namespace remote
 PROTOBUF_NAMESPACE_OPEN
+template<> ::remote::AccountChange* Arena::CreateMaybeMessage<::remote::AccountChange>(Arena*);
 template<> ::remote::Cursor* Arena::CreateMaybeMessage<::remote::Cursor>(Arena*);
 template<> ::remote::Pair* Arena::CreateMaybeMessage<::remote::Pair>(Arena*);
+template<> ::remote::StateChange* Arena::CreateMaybeMessage<::remote::StateChange>(Arena*);
+template<> ::remote::StorageChange* Arena::CreateMaybeMessage<::remote::StorageChange>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace remote {
 
@@ -110,6 +122,59 @@ inline bool Op_Parse(
     const std::string& name, Op* value) {
   return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<Op>(
     Op_descriptor(), name, value);
+}
+enum Action : int {
+  STORAGE = 0,
+  UPSERT = 1,
+  CODE = 2,
+  UPSERT_CODE = 3,
+  DELETE = 4,
+  Action_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
+  Action_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
+};
+bool Action_IsValid(int value);
+constexpr Action Action_MIN = STORAGE;
+constexpr Action Action_MAX = DELETE;
+constexpr int Action_ARRAYSIZE = Action_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* Action_descriptor();
+template<typename T>
+inline const std::string& Action_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, Action>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function Action_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    Action_descriptor(), enum_t_value);
+}
+inline bool Action_Parse(
+    const std::string& name, Action* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<Action>(
+    Action_descriptor(), name, value);
+}
+enum Direction : int {
+  FORWARD = 0,
+  UNWIND = 1,
+  Direction_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
+  Direction_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
+};
+bool Direction_IsValid(int value);
+constexpr Direction Direction_MIN = FORWARD;
+constexpr Direction Direction_MAX = UNWIND;
+constexpr int Direction_ARRAYSIZE = Direction_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* Direction_descriptor();
+template<typename T>
+inline const std::string& Direction_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, Direction>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function Direction_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    Direction_descriptor(), enum_t_value);
+}
+inline bool Direction_Parse(
+    const std::string& name, Direction* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<Direction>(
+    Direction_descriptor(), name, value);
 }
 // ===================================================================
 
@@ -528,6 +593,609 @@ class Pair PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr k_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr v_;
   ::PROTOBUF_NAMESPACE_ID::uint32 cursorid_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_remote_2fkv_2eproto;
+};
+// -------------------------------------------------------------------
+
+class StorageChange PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:remote.StorageChange) */ {
+ public:
+  inline StorageChange() : StorageChange(nullptr) {};
+  virtual ~StorageChange();
+
+  StorageChange(const StorageChange& from);
+  StorageChange(StorageChange&& from) noexcept
+    : StorageChange() {
+    *this = ::std::move(from);
+  }
+
+  inline StorageChange& operator=(const StorageChange& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline StorageChange& operator=(StorageChange&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const StorageChange& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const StorageChange* internal_default_instance() {
+    return reinterpret_cast<const StorageChange*>(
+               &_StorageChange_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    2;
+
+  friend void swap(StorageChange& a, StorageChange& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(StorageChange* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(StorageChange* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline StorageChange* New() const final {
+    return CreateMaybeMessage<StorageChange>(nullptr);
+  }
+
+  StorageChange* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<StorageChange>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const StorageChange& from);
+  void MergeFrom(const StorageChange& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(StorageChange* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "remote.StorageChange";
+  }
+  protected:
+  explicit StorageChange(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_remote_2fkv_2eproto);
+    return ::descriptor_table_remote_2fkv_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kDataFieldNumber = 2,
+    kLocationFieldNumber = 1,
+  };
+  // bytes data = 2;
+  void clear_data();
+  const std::string& data() const;
+  void set_data(const std::string& value);
+  void set_data(std::string&& value);
+  void set_data(const char* value);
+  void set_data(const void* value, size_t size);
+  std::string* mutable_data();
+  std::string* release_data();
+  void set_allocated_data(std::string* data);
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  std::string* unsafe_arena_release_data();
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_data(
+      std::string* data);
+  private:
+  const std::string& _internal_data() const;
+  void _internal_set_data(const std::string& value);
+  std::string* _internal_mutable_data();
+  public:
+
+  // .types.H256 location = 1;
+  bool has_location() const;
+  private:
+  bool _internal_has_location() const;
+  public:
+  void clear_location();
+  const ::types::H256& location() const;
+  ::types::H256* release_location();
+  ::types::H256* mutable_location();
+  void set_allocated_location(::types::H256* location);
+  private:
+  const ::types::H256& _internal_location() const;
+  ::types::H256* _internal_mutable_location();
+  public:
+  void unsafe_arena_set_allocated_location(
+      ::types::H256* location);
+  ::types::H256* unsafe_arena_release_location();
+
+  // @@protoc_insertion_point(class_scope:remote.StorageChange)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr data_;
+  ::types::H256* location_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_remote_2fkv_2eproto;
+};
+// -------------------------------------------------------------------
+
+class AccountChange PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:remote.AccountChange) */ {
+ public:
+  inline AccountChange() : AccountChange(nullptr) {};
+  virtual ~AccountChange();
+
+  AccountChange(const AccountChange& from);
+  AccountChange(AccountChange&& from) noexcept
+    : AccountChange() {
+    *this = ::std::move(from);
+  }
+
+  inline AccountChange& operator=(const AccountChange& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline AccountChange& operator=(AccountChange&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const AccountChange& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const AccountChange* internal_default_instance() {
+    return reinterpret_cast<const AccountChange*>(
+               &_AccountChange_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    3;
+
+  friend void swap(AccountChange& a, AccountChange& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(AccountChange* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(AccountChange* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline AccountChange* New() const final {
+    return CreateMaybeMessage<AccountChange>(nullptr);
+  }
+
+  AccountChange* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<AccountChange>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const AccountChange& from);
+  void MergeFrom(const AccountChange& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(AccountChange* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "remote.AccountChange";
+  }
+  protected:
+  explicit AccountChange(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_remote_2fkv_2eproto);
+    return ::descriptor_table_remote_2fkv_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kStorageChangesFieldNumber = 6,
+    kDataFieldNumber = 4,
+    kCodeFieldNumber = 5,
+    kAddressFieldNumber = 1,
+    kIncarnationFieldNumber = 2,
+    kActionFieldNumber = 3,
+  };
+  // repeated .remote.StorageChange storageChanges = 6;
+  int storagechanges_size() const;
+  private:
+  int _internal_storagechanges_size() const;
+  public:
+  void clear_storagechanges();
+  ::remote::StorageChange* mutable_storagechanges(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::remote::StorageChange >*
+      mutable_storagechanges();
+  private:
+  const ::remote::StorageChange& _internal_storagechanges(int index) const;
+  ::remote::StorageChange* _internal_add_storagechanges();
+  public:
+  const ::remote::StorageChange& storagechanges(int index) const;
+  ::remote::StorageChange* add_storagechanges();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::remote::StorageChange >&
+      storagechanges() const;
+
+  // bytes data = 4;
+  void clear_data();
+  const std::string& data() const;
+  void set_data(const std::string& value);
+  void set_data(std::string&& value);
+  void set_data(const char* value);
+  void set_data(const void* value, size_t size);
+  std::string* mutable_data();
+  std::string* release_data();
+  void set_allocated_data(std::string* data);
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  std::string* unsafe_arena_release_data();
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_data(
+      std::string* data);
+  private:
+  const std::string& _internal_data() const;
+  void _internal_set_data(const std::string& value);
+  std::string* _internal_mutable_data();
+  public:
+
+  // bytes code = 5;
+  void clear_code();
+  const std::string& code() const;
+  void set_code(const std::string& value);
+  void set_code(std::string&& value);
+  void set_code(const char* value);
+  void set_code(const void* value, size_t size);
+  std::string* mutable_code();
+  std::string* release_code();
+  void set_allocated_code(std::string* code);
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  std::string* unsafe_arena_release_code();
+  GOOGLE_PROTOBUF_RUNTIME_DEPRECATED("The unsafe_arena_ accessors for"
+  "    string fields are deprecated and will be removed in a"
+  "    future release.")
+  void unsafe_arena_set_allocated_code(
+      std::string* code);
+  private:
+  const std::string& _internal_code() const;
+  void _internal_set_code(const std::string& value);
+  std::string* _internal_mutable_code();
+  public:
+
+  // .types.H160 address = 1;
+  bool has_address() const;
+  private:
+  bool _internal_has_address() const;
+  public:
+  void clear_address();
+  const ::types::H160& address() const;
+  ::types::H160* release_address();
+  ::types::H160* mutable_address();
+  void set_allocated_address(::types::H160* address);
+  private:
+  const ::types::H160& _internal_address() const;
+  ::types::H160* _internal_mutable_address();
+  public:
+  void unsafe_arena_set_allocated_address(
+      ::types::H160* address);
+  ::types::H160* unsafe_arena_release_address();
+
+  // uint64 incarnation = 2;
+  void clear_incarnation();
+  ::PROTOBUF_NAMESPACE_ID::uint64 incarnation() const;
+  void set_incarnation(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint64 _internal_incarnation() const;
+  void _internal_set_incarnation(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  public:
+
+  // .remote.Action action = 3;
+  void clear_action();
+  ::remote::Action action() const;
+  void set_action(::remote::Action value);
+  private:
+  ::remote::Action _internal_action() const;
+  void _internal_set_action(::remote::Action value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:remote.AccountChange)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::remote::StorageChange > storagechanges_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr data_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr code_;
+  ::types::H160* address_;
+  ::PROTOBUF_NAMESPACE_ID::uint64 incarnation_;
+  int action_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_remote_2fkv_2eproto;
+};
+// -------------------------------------------------------------------
+
+class StateChange PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:remote.StateChange) */ {
+ public:
+  inline StateChange() : StateChange(nullptr) {};
+  virtual ~StateChange();
+
+  StateChange(const StateChange& from);
+  StateChange(StateChange&& from) noexcept
+    : StateChange() {
+    *this = ::std::move(from);
+  }
+
+  inline StateChange& operator=(const StateChange& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline StateChange& operator=(StateChange&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const StateChange& default_instance();
+
+  static void InitAsDefaultInstance();  // FOR INTERNAL USE ONLY
+  static inline const StateChange* internal_default_instance() {
+    return reinterpret_cast<const StateChange*>(
+               &_StateChange_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    4;
+
+  friend void swap(StateChange& a, StateChange& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(StateChange* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(StateChange* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline StateChange* New() const final {
+    return CreateMaybeMessage<StateChange>(nullptr);
+  }
+
+  StateChange* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<StateChange>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const StateChange& from);
+  void MergeFrom(const StateChange& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(StateChange* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "remote.StateChange";
+  }
+  protected:
+  explicit StateChange(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_remote_2fkv_2eproto);
+    return ::descriptor_table_remote_2fkv_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kChangesFieldNumber = 4,
+    kBlockHashFieldNumber = 3,
+    kBlockHeightFieldNumber = 2,
+    kDirectionFieldNumber = 1,
+  };
+  // repeated .remote.AccountChange changes = 4;
+  int changes_size() const;
+  private:
+  int _internal_changes_size() const;
+  public:
+  void clear_changes();
+  ::remote::AccountChange* mutable_changes(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::remote::AccountChange >*
+      mutable_changes();
+  private:
+  const ::remote::AccountChange& _internal_changes(int index) const;
+  ::remote::AccountChange* _internal_add_changes();
+  public:
+  const ::remote::AccountChange& changes(int index) const;
+  ::remote::AccountChange* add_changes();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::remote::AccountChange >&
+      changes() const;
+
+  // .types.H256 blockHash = 3;
+  bool has_blockhash() const;
+  private:
+  bool _internal_has_blockhash() const;
+  public:
+  void clear_blockhash();
+  const ::types::H256& blockhash() const;
+  ::types::H256* release_blockhash();
+  ::types::H256* mutable_blockhash();
+  void set_allocated_blockhash(::types::H256* blockhash);
+  private:
+  const ::types::H256& _internal_blockhash() const;
+  ::types::H256* _internal_mutable_blockhash();
+  public:
+  void unsafe_arena_set_allocated_blockhash(
+      ::types::H256* blockhash);
+  ::types::H256* unsafe_arena_release_blockhash();
+
+  // uint64 blockHeight = 2;
+  void clear_blockheight();
+  ::PROTOBUF_NAMESPACE_ID::uint64 blockheight() const;
+  void set_blockheight(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint64 _internal_blockheight() const;
+  void _internal_set_blockheight(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  public:
+
+  // .remote.Direction direction = 1;
+  void clear_direction();
+  ::remote::Direction direction() const;
+  void set_direction(::remote::Direction value);
+  private:
+  ::remote::Direction _internal_direction() const;
+  void _internal_set_direction(::remote::Direction value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:remote.StateChange)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::remote::AccountChange > changes_;
+  ::types::H256* blockhash_;
+  ::PROTOBUF_NAMESPACE_ID::uint64 blockheight_;
+  int direction_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_remote_2fkv_2eproto;
 };
@@ -1011,9 +1679,653 @@ inline void Pair::set_cursorid(::PROTOBUF_NAMESPACE_ID::uint32 value) {
   // @@protoc_insertion_point(field_set:remote.Pair.cursorID)
 }
 
+// -------------------------------------------------------------------
+
+// StorageChange
+
+// .types.H256 location = 1;
+inline bool StorageChange::_internal_has_location() const {
+  return this != internal_default_instance() && location_ != nullptr;
+}
+inline bool StorageChange::has_location() const {
+  return _internal_has_location();
+}
+inline const ::types::H256& StorageChange::_internal_location() const {
+  const ::types::H256* p = location_;
+  return p != nullptr ? *p : *reinterpret_cast<const ::types::H256*>(
+      &::types::_H256_default_instance_);
+}
+inline const ::types::H256& StorageChange::location() const {
+  // @@protoc_insertion_point(field_get:remote.StorageChange.location)
+  return _internal_location();
+}
+inline void StorageChange::unsafe_arena_set_allocated_location(
+    ::types::H256* location) {
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(location_);
+  }
+  location_ = location;
+  if (location) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:remote.StorageChange.location)
+}
+inline ::types::H256* StorageChange::release_location() {
+  auto temp = unsafe_arena_release_location();
+  if (GetArena() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+  return temp;
+}
+inline ::types::H256* StorageChange::unsafe_arena_release_location() {
+  // @@protoc_insertion_point(field_release:remote.StorageChange.location)
+  
+  ::types::H256* temp = location_;
+  location_ = nullptr;
+  return temp;
+}
+inline ::types::H256* StorageChange::_internal_mutable_location() {
+  
+  if (location_ == nullptr) {
+    auto* p = CreateMaybeMessage<::types::H256>(GetArena());
+    location_ = p;
+  }
+  return location_;
+}
+inline ::types::H256* StorageChange::mutable_location() {
+  // @@protoc_insertion_point(field_mutable:remote.StorageChange.location)
+  return _internal_mutable_location();
+}
+inline void StorageChange::set_allocated_location(::types::H256* location) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
+  if (message_arena == nullptr) {
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(location_);
+  }
+  if (location) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(location)->GetArena();
+    if (message_arena != submessage_arena) {
+      location = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, location, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  location_ = location;
+  // @@protoc_insertion_point(field_set_allocated:remote.StorageChange.location)
+}
+
+// bytes data = 2;
+inline void StorageChange::clear_data() {
+  data_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& StorageChange::data() const {
+  // @@protoc_insertion_point(field_get:remote.StorageChange.data)
+  return _internal_data();
+}
+inline void StorageChange::set_data(const std::string& value) {
+  _internal_set_data(value);
+  // @@protoc_insertion_point(field_set:remote.StorageChange.data)
+}
+inline std::string* StorageChange::mutable_data() {
+  // @@protoc_insertion_point(field_mutable:remote.StorageChange.data)
+  return _internal_mutable_data();
+}
+inline const std::string& StorageChange::_internal_data() const {
+  return data_.Get();
+}
+inline void StorageChange::_internal_set_data(const std::string& value) {
+  
+  data_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void StorageChange::set_data(std::string&& value) {
+  
+  data_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:remote.StorageChange.data)
+}
+inline void StorageChange::set_data(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  data_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:remote.StorageChange.data)
+}
+inline void StorageChange::set_data(const void* value,
+    size_t size) {
+  
+  data_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:remote.StorageChange.data)
+}
+inline std::string* StorageChange::_internal_mutable_data() {
+  
+  return data_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* StorageChange::release_data() {
+  // @@protoc_insertion_point(field_release:remote.StorageChange.data)
+  return data_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void StorageChange::set_allocated_data(std::string* data) {
+  if (data != nullptr) {
+    
+  } else {
+    
+  }
+  data_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), data,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:remote.StorageChange.data)
+}
+inline std::string* StorageChange::unsafe_arena_release_data() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:remote.StorageChange.data)
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  
+  return data_.UnsafeArenaRelease(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      GetArena());
+}
+inline void StorageChange::unsafe_arena_set_allocated_data(
+    std::string* data) {
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  if (data != nullptr) {
+    
+  } else {
+    
+  }
+  data_.UnsafeArenaSetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      data, GetArena());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:remote.StorageChange.data)
+}
+
+// -------------------------------------------------------------------
+
+// AccountChange
+
+// .types.H160 address = 1;
+inline bool AccountChange::_internal_has_address() const {
+  return this != internal_default_instance() && address_ != nullptr;
+}
+inline bool AccountChange::has_address() const {
+  return _internal_has_address();
+}
+inline const ::types::H160& AccountChange::_internal_address() const {
+  const ::types::H160* p = address_;
+  return p != nullptr ? *p : *reinterpret_cast<const ::types::H160*>(
+      &::types::_H160_default_instance_);
+}
+inline const ::types::H160& AccountChange::address() const {
+  // @@protoc_insertion_point(field_get:remote.AccountChange.address)
+  return _internal_address();
+}
+inline void AccountChange::unsafe_arena_set_allocated_address(
+    ::types::H160* address) {
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(address_);
+  }
+  address_ = address;
+  if (address) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:remote.AccountChange.address)
+}
+inline ::types::H160* AccountChange::release_address() {
+  auto temp = unsafe_arena_release_address();
+  if (GetArena() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+  return temp;
+}
+inline ::types::H160* AccountChange::unsafe_arena_release_address() {
+  // @@protoc_insertion_point(field_release:remote.AccountChange.address)
+  
+  ::types::H160* temp = address_;
+  address_ = nullptr;
+  return temp;
+}
+inline ::types::H160* AccountChange::_internal_mutable_address() {
+  
+  if (address_ == nullptr) {
+    auto* p = CreateMaybeMessage<::types::H160>(GetArena());
+    address_ = p;
+  }
+  return address_;
+}
+inline ::types::H160* AccountChange::mutable_address() {
+  // @@protoc_insertion_point(field_mutable:remote.AccountChange.address)
+  return _internal_mutable_address();
+}
+inline void AccountChange::set_allocated_address(::types::H160* address) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
+  if (message_arena == nullptr) {
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(address_);
+  }
+  if (address) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(address)->GetArena();
+    if (message_arena != submessage_arena) {
+      address = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, address, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  address_ = address;
+  // @@protoc_insertion_point(field_set_allocated:remote.AccountChange.address)
+}
+
+// uint64 incarnation = 2;
+inline void AccountChange::clear_incarnation() {
+  incarnation_ = PROTOBUF_ULONGLONG(0);
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 AccountChange::_internal_incarnation() const {
+  return incarnation_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 AccountChange::incarnation() const {
+  // @@protoc_insertion_point(field_get:remote.AccountChange.incarnation)
+  return _internal_incarnation();
+}
+inline void AccountChange::_internal_set_incarnation(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  
+  incarnation_ = value;
+}
+inline void AccountChange::set_incarnation(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  _internal_set_incarnation(value);
+  // @@protoc_insertion_point(field_set:remote.AccountChange.incarnation)
+}
+
+// .remote.Action action = 3;
+inline void AccountChange::clear_action() {
+  action_ = 0;
+}
+inline ::remote::Action AccountChange::_internal_action() const {
+  return static_cast< ::remote::Action >(action_);
+}
+inline ::remote::Action AccountChange::action() const {
+  // @@protoc_insertion_point(field_get:remote.AccountChange.action)
+  return _internal_action();
+}
+inline void AccountChange::_internal_set_action(::remote::Action value) {
+  
+  action_ = value;
+}
+inline void AccountChange::set_action(::remote::Action value) {
+  _internal_set_action(value);
+  // @@protoc_insertion_point(field_set:remote.AccountChange.action)
+}
+
+// bytes data = 4;
+inline void AccountChange::clear_data() {
+  data_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& AccountChange::data() const {
+  // @@protoc_insertion_point(field_get:remote.AccountChange.data)
+  return _internal_data();
+}
+inline void AccountChange::set_data(const std::string& value) {
+  _internal_set_data(value);
+  // @@protoc_insertion_point(field_set:remote.AccountChange.data)
+}
+inline std::string* AccountChange::mutable_data() {
+  // @@protoc_insertion_point(field_mutable:remote.AccountChange.data)
+  return _internal_mutable_data();
+}
+inline const std::string& AccountChange::_internal_data() const {
+  return data_.Get();
+}
+inline void AccountChange::_internal_set_data(const std::string& value) {
+  
+  data_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void AccountChange::set_data(std::string&& value) {
+  
+  data_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:remote.AccountChange.data)
+}
+inline void AccountChange::set_data(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  data_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:remote.AccountChange.data)
+}
+inline void AccountChange::set_data(const void* value,
+    size_t size) {
+  
+  data_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:remote.AccountChange.data)
+}
+inline std::string* AccountChange::_internal_mutable_data() {
+  
+  return data_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* AccountChange::release_data() {
+  // @@protoc_insertion_point(field_release:remote.AccountChange.data)
+  return data_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void AccountChange::set_allocated_data(std::string* data) {
+  if (data != nullptr) {
+    
+  } else {
+    
+  }
+  data_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), data,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:remote.AccountChange.data)
+}
+inline std::string* AccountChange::unsafe_arena_release_data() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:remote.AccountChange.data)
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  
+  return data_.UnsafeArenaRelease(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      GetArena());
+}
+inline void AccountChange::unsafe_arena_set_allocated_data(
+    std::string* data) {
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  if (data != nullptr) {
+    
+  } else {
+    
+  }
+  data_.UnsafeArenaSetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      data, GetArena());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:remote.AccountChange.data)
+}
+
+// bytes code = 5;
+inline void AccountChange::clear_code() {
+  code_.ClearToEmpty(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline const std::string& AccountChange::code() const {
+  // @@protoc_insertion_point(field_get:remote.AccountChange.code)
+  return _internal_code();
+}
+inline void AccountChange::set_code(const std::string& value) {
+  _internal_set_code(value);
+  // @@protoc_insertion_point(field_set:remote.AccountChange.code)
+}
+inline std::string* AccountChange::mutable_code() {
+  // @@protoc_insertion_point(field_mutable:remote.AccountChange.code)
+  return _internal_mutable_code();
+}
+inline const std::string& AccountChange::_internal_code() const {
+  return code_.Get();
+}
+inline void AccountChange::_internal_set_code(const std::string& value) {
+  
+  code_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), value, GetArena());
+}
+inline void AccountChange::set_code(std::string&& value) {
+  
+  code_.Set(
+    &::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:remote.AccountChange.code)
+}
+inline void AccountChange::set_code(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  code_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(value),
+              GetArena());
+  // @@protoc_insertion_point(field_set_char:remote.AccountChange.code)
+}
+inline void AccountChange::set_code(const void* value,
+    size_t size) {
+  
+  code_.Set(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:remote.AccountChange.code)
+}
+inline std::string* AccountChange::_internal_mutable_code() {
+  
+  return code_.Mutable(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline std::string* AccountChange::release_code() {
+  // @@protoc_insertion_point(field_release:remote.AccountChange.code)
+  return code_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void AccountChange::set_allocated_code(std::string* code) {
+  if (code != nullptr) {
+    
+  } else {
+    
+  }
+  code_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), code,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:remote.AccountChange.code)
+}
+inline std::string* AccountChange::unsafe_arena_release_code() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:remote.AccountChange.code)
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  
+  return code_.UnsafeArenaRelease(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      GetArena());
+}
+inline void AccountChange::unsafe_arena_set_allocated_code(
+    std::string* code) {
+  GOOGLE_DCHECK(GetArena() != nullptr);
+  if (code != nullptr) {
+    
+  } else {
+    
+  }
+  code_.UnsafeArenaSetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(),
+      code, GetArena());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:remote.AccountChange.code)
+}
+
+// repeated .remote.StorageChange storageChanges = 6;
+inline int AccountChange::_internal_storagechanges_size() const {
+  return storagechanges_.size();
+}
+inline int AccountChange::storagechanges_size() const {
+  return _internal_storagechanges_size();
+}
+inline void AccountChange::clear_storagechanges() {
+  storagechanges_.Clear();
+}
+inline ::remote::StorageChange* AccountChange::mutable_storagechanges(int index) {
+  // @@protoc_insertion_point(field_mutable:remote.AccountChange.storageChanges)
+  return storagechanges_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::remote::StorageChange >*
+AccountChange::mutable_storagechanges() {
+  // @@protoc_insertion_point(field_mutable_list:remote.AccountChange.storageChanges)
+  return &storagechanges_;
+}
+inline const ::remote::StorageChange& AccountChange::_internal_storagechanges(int index) const {
+  return storagechanges_.Get(index);
+}
+inline const ::remote::StorageChange& AccountChange::storagechanges(int index) const {
+  // @@protoc_insertion_point(field_get:remote.AccountChange.storageChanges)
+  return _internal_storagechanges(index);
+}
+inline ::remote::StorageChange* AccountChange::_internal_add_storagechanges() {
+  return storagechanges_.Add();
+}
+inline ::remote::StorageChange* AccountChange::add_storagechanges() {
+  // @@protoc_insertion_point(field_add:remote.AccountChange.storageChanges)
+  return _internal_add_storagechanges();
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::remote::StorageChange >&
+AccountChange::storagechanges() const {
+  // @@protoc_insertion_point(field_list:remote.AccountChange.storageChanges)
+  return storagechanges_;
+}
+
+// -------------------------------------------------------------------
+
+// StateChange
+
+// .remote.Direction direction = 1;
+inline void StateChange::clear_direction() {
+  direction_ = 0;
+}
+inline ::remote::Direction StateChange::_internal_direction() const {
+  return static_cast< ::remote::Direction >(direction_);
+}
+inline ::remote::Direction StateChange::direction() const {
+  // @@protoc_insertion_point(field_get:remote.StateChange.direction)
+  return _internal_direction();
+}
+inline void StateChange::_internal_set_direction(::remote::Direction value) {
+  
+  direction_ = value;
+}
+inline void StateChange::set_direction(::remote::Direction value) {
+  _internal_set_direction(value);
+  // @@protoc_insertion_point(field_set:remote.StateChange.direction)
+}
+
+// uint64 blockHeight = 2;
+inline void StateChange::clear_blockheight() {
+  blockheight_ = PROTOBUF_ULONGLONG(0);
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 StateChange::_internal_blockheight() const {
+  return blockheight_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 StateChange::blockheight() const {
+  // @@protoc_insertion_point(field_get:remote.StateChange.blockHeight)
+  return _internal_blockheight();
+}
+inline void StateChange::_internal_set_blockheight(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  
+  blockheight_ = value;
+}
+inline void StateChange::set_blockheight(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  _internal_set_blockheight(value);
+  // @@protoc_insertion_point(field_set:remote.StateChange.blockHeight)
+}
+
+// .types.H256 blockHash = 3;
+inline bool StateChange::_internal_has_blockhash() const {
+  return this != internal_default_instance() && blockhash_ != nullptr;
+}
+inline bool StateChange::has_blockhash() const {
+  return _internal_has_blockhash();
+}
+inline const ::types::H256& StateChange::_internal_blockhash() const {
+  const ::types::H256* p = blockhash_;
+  return p != nullptr ? *p : *reinterpret_cast<const ::types::H256*>(
+      &::types::_H256_default_instance_);
+}
+inline const ::types::H256& StateChange::blockhash() const {
+  // @@protoc_insertion_point(field_get:remote.StateChange.blockHash)
+  return _internal_blockhash();
+}
+inline void StateChange::unsafe_arena_set_allocated_blockhash(
+    ::types::H256* blockhash) {
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(blockhash_);
+  }
+  blockhash_ = blockhash;
+  if (blockhash) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:remote.StateChange.blockHash)
+}
+inline ::types::H256* StateChange::release_blockhash() {
+  auto temp = unsafe_arena_release_blockhash();
+  if (GetArena() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+  return temp;
+}
+inline ::types::H256* StateChange::unsafe_arena_release_blockhash() {
+  // @@protoc_insertion_point(field_release:remote.StateChange.blockHash)
+  
+  ::types::H256* temp = blockhash_;
+  blockhash_ = nullptr;
+  return temp;
+}
+inline ::types::H256* StateChange::_internal_mutable_blockhash() {
+  
+  if (blockhash_ == nullptr) {
+    auto* p = CreateMaybeMessage<::types::H256>(GetArena());
+    blockhash_ = p;
+  }
+  return blockhash_;
+}
+inline ::types::H256* StateChange::mutable_blockhash() {
+  // @@protoc_insertion_point(field_mutable:remote.StateChange.blockHash)
+  return _internal_mutable_blockhash();
+}
+inline void StateChange::set_allocated_blockhash(::types::H256* blockhash) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
+  if (message_arena == nullptr) {
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(blockhash_);
+  }
+  if (blockhash) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(blockhash)->GetArena();
+    if (message_arena != submessage_arena) {
+      blockhash = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, blockhash, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  blockhash_ = blockhash;
+  // @@protoc_insertion_point(field_set_allocated:remote.StateChange.blockHash)
+}
+
+// repeated .remote.AccountChange changes = 4;
+inline int StateChange::_internal_changes_size() const {
+  return changes_.size();
+}
+inline int StateChange::changes_size() const {
+  return _internal_changes_size();
+}
+inline void StateChange::clear_changes() {
+  changes_.Clear();
+}
+inline ::remote::AccountChange* StateChange::mutable_changes(int index) {
+  // @@protoc_insertion_point(field_mutable:remote.StateChange.changes)
+  return changes_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::remote::AccountChange >*
+StateChange::mutable_changes() {
+  // @@protoc_insertion_point(field_mutable_list:remote.StateChange.changes)
+  return &changes_;
+}
+inline const ::remote::AccountChange& StateChange::_internal_changes(int index) const {
+  return changes_.Get(index);
+}
+inline const ::remote::AccountChange& StateChange::changes(int index) const {
+  // @@protoc_insertion_point(field_get:remote.StateChange.changes)
+  return _internal_changes(index);
+}
+inline ::remote::AccountChange* StateChange::_internal_add_changes() {
+  return changes_.Add();
+}
+inline ::remote::AccountChange* StateChange::add_changes() {
+  // @@protoc_insertion_point(field_add:remote.StateChange.changes)
+  return _internal_add_changes();
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::remote::AccountChange >&
+StateChange::changes() const {
+  // @@protoc_insertion_point(field_list:remote.StateChange.changes)
+  return changes_;
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 
@@ -1027,6 +2339,16 @@ template <> struct is_proto_enum< ::remote::Op> : ::std::true_type {};
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::remote::Op>() {
   return ::remote::Op_descriptor();
+}
+template <> struct is_proto_enum< ::remote::Action> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::remote::Action>() {
+  return ::remote::Action_descriptor();
+}
+template <> struct is_proto_enum< ::remote::Direction> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::remote::Direction>() {
+  return ::remote::Direction_descriptor();
 }
 
 PROTOBUF_NAMESPACE_CLOSE

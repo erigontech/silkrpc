@@ -1,39 +1,112 @@
 #!/usr/bin/python3
 """ Run the JSON RPC API curl commands as integration tests """
 
-# pylint: disable=line-too-long
-
 import json
 import shlex
 import subprocess
 import sys
+import getopt
 
-def run_shell_command(command: str) -> int:
+
+def run_shell_command(command: str, expected_response: str, exit_on_fail) -> int:
     """ Run the specified command as shell. """
     command_and_args = shlex.split(command)
-    process = subprocess.run(command_and_args, stdout=subprocess.PIPE, universal_newlines=True, check=True)
+    process = subprocess.run(command_and_args, stdout=subprocess.PIPE,
+                             universal_newlines=True, check=True)
     if process.returncode != 0:
         sys.exit(process.returncode)
+    process.stdout = process.stdout.strip('\n')
     response = json.loads(process.stdout)
-    if "error" in response:
-        print("KO: ", command_and_args, " ERROR: ", response["error"])
-        sys.exit(1)
+    if "result" in expected_response and expected_response["result"] is not None and response != expected_response:
+        print("--> KO: unexpected result for command: {0}\nexpected: {1}\nreceived: {2}".format(command, expected_response, response))
+        if exit_on_fail:
+            sys.exit(1)
+    elif "error" in expected_response and expected_response["error"] is not None and response != expected_response:
+        print("--> KO: unexpected error for command: {0}\nexpected: {1}\nreceived: {2}".format(command, expected_response, response))
+        if exit_on_fail:
+            sys.exit(1)
 
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"web3_clientVersion","params":[],"id":1}' localhost:51515''')
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"web3_sha3","params":["0x00"],"id":1}' localhost:51515''')
+def run_tests(json_filename, verbose, silk, exit_on_fail, req_test):
+    """ Run integration tests. """
+    with open(json_filename) as json_file:
+        jsonrpc_commands = json.load(json_file)
+        test_number = 0
+        for json_rpc in jsonrpc_commands:
+            if req_test in (-1, test_number):
+                request = json.dumps(json_rpc["request"])
+                if verbose:
+                    print (str(test_number) + ") " + request)
+                response = json_rpc["response"]
+                if silk:
+                    run_shell_command(
+                        '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
+                        request + '''\' localhost:51515''',
+                        response, exit_on_fail)
+                else:
+                    run_shell_command(
+                        '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
+                        request + '''\' localhost:8545''',
+                        response, exit_on_fail)
+            test_number = test_number + 1
 
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"net_listening","params":[],"id":1}' localhost:51515''')
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"net_peerCount","params":[],"id":1}' localhost:51515''')
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"net_version","params":[],"id":1}' localhost:51515''')
+#
+# usage
+#
+def usage(argv):
+    """ Print script usage
+    """
+    print("Usage: " + argv[0] + " -h -c -r -v")
+    print("")
+    print("Launch an automated test sequence on Silkrpc or RPCDaemon")
+    print("")
+    print("-h print this help")
+    print("-c runs all tests even if one test fails [ default exit at first test fail ]")
+    print("-t test_number (-1 all test)")
+    print("-r connect to rpcdaemon [ default connect to silk ] ")
+    print("-v verbose")
 
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' localhost:51515''')
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' localhost:51515''')
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_protocolVersion","params":[],"id":1}' localhost:51515''')
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_syncing","params":[],"id":1}' localhost:51515''')
 
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockByHash","params":["0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8", true],"id":25388}' localhost:51515''')
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockByNumber","params":["0x41b57c", true],"id":25388}' localhost:51515''')
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockTransactionCountByNumber","params":["0x41b57c"],"id":1}' localhost:51515''')
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getBlockTransactionCountByHash","params":["0x814672e6913a3879217169c6ba461114fa032d9510a56a409d3aab19f668e299"],"id":1}' localhost:51515''')
 
-run_shell_command('''curl --silent -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"eth_getLogs","params":[{"fromBlock": "0x3d0900", "toBlock": "0x3d0964", "address": "0x2a89f54a9f8e727a7be754fd055bb8ea93d0557d"}],"id":3}' localhost:51515''')
+#
+# main
+#
+def main(argv):
+    """ parse command line and execute tests
+    """
+    exit_on_fail = 1
+    silk = 1
+    verbose = 0
+    req_test = -1
+
+    try:
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:")
+        for option, optarg in opts:
+            if option in ("-h", "--help"):
+                usage(argv)
+                sys.exit(-1)
+            elif option == "-c":
+                exit_on_fail = 0
+            elif option == "-r":
+                silk = 0
+            elif option == "-v":
+                verbose = 1
+            elif option == "-t":
+                req_test = int(optarg)
+            else:
+                usage(argv)
+                sys.exit(-1)
+
+    except getopt.GetoptError as err:
+        # print help information and exit:
+        print(err)
+        usage(argv)
+        sys.exit(-1)
+
+    run_tests('./jsonrpc_commands_goerli.json', verbose, silk, exit_on_fail, req_test)
+
+#
+# module as main
+#
+if __name__ == "__main__":
+    main(sys.argv)
+    sys.exit(0)

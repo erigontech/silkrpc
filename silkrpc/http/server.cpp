@@ -27,47 +27,76 @@
 #include <utility>
 
 #include <asio/co_spawn.hpp>
-#include <asio/ip/tcp.hpp>
+#include <asio/dispatch.hpp>
+#include <asio/use_awaitable.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/http/connection.hpp>
 
 namespace silkrpc::http {
 
-Server::Server(asio::io_context& io_context, const std::string& address, const std::string& port, std::unique_ptr<ethdb::Database>& database)
-: io_context_(io_context), acceptor_{io_context_}, request_handler_{database} {
+Server::Server(const std::string& address, const std::string& port, ContextPool& context_pool, std::size_t num_workers)
+: context_pool_(context_pool), acceptor_{context_pool.get_io_context()}, workers_{num_workers} {
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-    asio::ip::tcp::resolver resolver{io_context_};
+    asio::ip::tcp::resolver resolver{acceptor_.get_executor()};
     asio::ip::tcp::endpoint endpoint = *resolver.resolve(address, port).begin();
     acceptor_.open(endpoint.protocol());
     acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));
     acceptor_.bind(endpoint);
 }
 
-asio::awaitable<void> Server::start() {
+void Server::start() {
+    asio::co_spawn(acceptor_.get_executor(), run(), [&](std::exception_ptr eptr) {
+        if (eptr) std::rethrow_exception(eptr);
+    });
+}
+
+asio::awaitable<void> Server::run() {
     acceptor_.listen();
 
-    while (acceptor_.is_open()) {
-        SILKRPC_DEBUG << "Server::start accepting...\n" << std::flush;
-        auto socket = co_await acceptor_.async_accept(asio::use_awaitable);
-        socket.set_option(asio::ip::tcp::socket::keep_alive(true));
-        SILKRPC_TRACE << "Server::start new socket: " << &socket << "\n";
-        if (!acceptor_.is_open()) {
-            SILKRPC_TRACE << "Server::start returning...\n";
-            co_return;
-        }
+    try {
+        while (acceptor_.is_open()) {
+            // Get the next context to use chosen round-robin, then get both io_context *and* database from it
+            auto& context = context_pool_.get_context();
+            auto& io_context = context.io_context;
 
-        auto new_connection = std::make_shared<Connection>(std::move(socket), connection_manager_, request_handler_);
-        asio::co_spawn(io_context_, connection_manager_.start(new_connection), [&](std::exception_ptr eptr) {
-            if (eptr) std::rethrow_exception(eptr);
-        });
+            SILKRPC_DEBUG << "Server::start accepting using io_context " << io_context << "...\n" << std::flush;
+
+            auto new_connection = std::make_shared<Connection>(context, workers_);
+            co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);
+            if (!acceptor_.is_open()) {
+                SILKRPC_TRACE << "Server::start returning...\n";
+                co_return;
+            }
+
+            new_connection->socket().set_option(asio::ip::tcp::socket::keep_alive(true));
+
+            SILKRPC_TRACE << "Server::start starting connection for socket: " << &new_connection->socket() << "\n";
+            auto new_connection_starter = [=]() -> asio::awaitable<void> { co_await new_connection->start(); };
+
+            // https://github.com/chriskohlhoff/asio/issues/552
+            asio::dispatch(*io_context, [=]() mutable {
+                asio::co_spawn(*io_context, new_connection_starter, [&](std::exception_ptr eptr) {
+                    if (eptr) std::rethrow_exception(eptr);
+                });
+            });
+        }
+    } catch (const std::system_error& se) {
+        if (se.code() != asio::error::operation_aborted) {
+            SILKRPC_ERROR << "Server::start system_error: " << se.what() << "\n" << std::flush;
+            std::rethrow_exception(std::make_exception_ptr(se));
+        } else {
+            SILKRPC_DEBUG << "Server::start operation_aborted: " << se.what() << "\n" << std::flush;
+        }
     }
     SILKRPC_DEBUG << "Server::start exiting...\n" << std::flush;
 }
 
 void Server::stop() {
     // The server is stopped by cancelling all outstanding asynchronous operations.
+    SILKRPC_DEBUG << "Server::stop started...\n";
     acceptor_.close();
-    connection_manager_.stop_all();
+    SILKRPC_DEBUG << "Server::stop completed\n" << std::flush;
 }
 
 } // namespace silkrpc::http

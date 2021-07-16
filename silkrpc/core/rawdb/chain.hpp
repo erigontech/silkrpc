@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_RAWDB_CHAIN_H_
-#define SILKRPC_CORE_RAWDB_CHAIN_H_
+#ifndef SILKRPC_CORE_RAWDB_CHAIN_HPP_
+#define SILKRPC_CORE_RAWDB_CHAIN_HPP_
 
 #include <vector>
 
@@ -29,16 +29,17 @@
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/types/chain_config.hpp>
 #include <silkrpc/types/receipt.hpp>
 
 namespace silkrpc::core::rawdb {
 
-typedef std::vector<evmc::address> Addresses;
-typedef std::vector<silkworm::Transaction> Transactions;
+using Addresses = std::vector<evmc::address>;
+using Transactions = std::vector<silkworm::Transaction>;
 
 asio::awaitable<uint64_t> read_header_number(const DatabaseReader& reader, const evmc::bytes32& block_hash);
 
-asio::awaitable<nlohmann::json> read_chain_config(const DatabaseReader& reader);
+asio::awaitable<ChainConfig> read_chain_config(const DatabaseReader& reader);
 
 asio::awaitable<uint64_t> read_chain_id(const DatabaseReader& reader);
 
@@ -50,7 +51,13 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const DatabaseReader
 
 asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const DatabaseReader& reader, uint64_t block_number);
 
+asio::awaitable<silkworm::BlockWithHash> read_block_by_transaction_hash(const DatabaseReader& reader, const evmc::bytes32& transaction_hash);
+
 asio::awaitable<silkworm::BlockWithHash> read_block(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
+
+asio::awaitable<silkworm::BlockHeader> read_header_by_hash(const DatabaseReader& reader, const evmc::bytes32& block_hash);
+
+asio::awaitable<silkworm::BlockHeader> read_header_by_number(const DatabaseReader& reader, uint64_t block_number);
 
 asio::awaitable<silkworm::BlockHeader> read_header(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
 
@@ -59,6 +66,8 @@ asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& reader, con
 asio::awaitable<silkworm::Bytes> read_header_rlp(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
 
 asio::awaitable<silkworm::Bytes> read_body_rlp(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
+
+asio::awaitable<std::optional<silkrpc::Transaction>> read_transaction_by_hash(const DatabaseReader& reader, const evmc::bytes32& transaction_hash);
 
 asio::awaitable<Addresses> read_senders(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
 
@@ -70,4 +79,4 @@ asio::awaitable<Transactions> read_transactions(const DatabaseReader& reader, ui
 
 } // namespace silkrpc::core::rawdb
 
-#endif  // SILKRPC_CORE_RAWDB_CHAIN_H_
+#endif  // SILKRPC_CORE_RAWDB_CHAIN_HPP_

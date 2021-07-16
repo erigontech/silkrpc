@@ -49,12 +49,6 @@ constexpr const char* kDefaultLocal{"localhost:8545"};
 constexpr const char* kDefaultTarget{"localhost:9090"};
 constexpr const std::chrono::milliseconds kDefaultTimeout{10000};
 
-constexpr const char* kNodeName{"TurboGeth"};
-constexpr const char* kVersion{"2021.03.2-alpha"};
-const std::string kEthereumNodeName = boost::str(boost::format("%1%/v%2%/%3%") % kNodeName % kVersion % kOsName); // NOLINT
-
-constexpr uint64_t kETH66{66};
-
 }  // namespace silkrpc::common
 
 #endif  // SILKRPC_COMMON_CONSTANTS_HPP_

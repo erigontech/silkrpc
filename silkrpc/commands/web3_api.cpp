@@ -29,8 +29,16 @@ namespace silkrpc::commands {
 
 // https://eth.wiki/json-rpc/API#web3_clientversion
 asio::awaitable<void> Web3RpcApi::handle_web3_client_version(const nlohmann::json& request, nlohmann::json& reply) {
-    reply = make_json_content(request["id"], common::kEthereumNodeName);
-    // TODO(canepat): use ClientVersion RPC exposed by ETHBACKEND gRPC service
+   try {
+        const auto client_version = co_await backend_->client_version();
+        reply = make_json_content(request["id"], client_version);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], -32000, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
     co_return;
 }
 

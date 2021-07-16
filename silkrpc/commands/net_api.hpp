@@ -26,6 +26,8 @@
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/json/types.hpp>
+#include <silkrpc/context_pool.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
@@ -33,7 +35,7 @@ namespace silkrpc::commands {
 
 class NetRpcApi {
 public:
-    NetRpcApi() = default;
+    explicit NetRpcApi(std::unique_ptr<ethbackend::BackEnd>& backend) : backend_(backend) {}
     virtual ~NetRpcApi() = default;
 
     NetRpcApi(const NetRpcApi&) = delete;
@@ -44,9 +46,11 @@ protected:
     asio::awaitable<void> handle_net_peer_count(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_net_version(const nlohmann::json& request, nlohmann::json& reply);
 
+private:
     friend class silkrpc::http::RequestHandler;
-};
 
+    std::unique_ptr<ethbackend::BackEnd>& backend_;
+};
 } // namespace silkrpc::commands
 
 #endif  // SILKRPC_COMMANDS_NET_API_HPP_

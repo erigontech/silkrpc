@@ -22,6 +22,8 @@
 
 #include <silkworm/db/tables.hpp>
 
+#include <silkrpc/ethdb/tables.hpp>
+
 namespace silkrpc::stages {
 
 class Exception : public std::exception {
@@ -36,7 +38,8 @@ class Exception : public std::exception {
 };
 
 asio::awaitable<uint64_t> get_sync_stage_progress(const core::rawdb::DatabaseReader& db_reader, const Bytes& stage_key) {
-    const auto value = co_await db_reader.get(silkworm::db::table::kSyncStageProgress.name, stage_key);
+    const auto kv_pair = co_await db_reader.get(silkrpc::db::table::kSyncStageProgress, stage_key);
+    const auto value = kv_pair.value;
     if (value.length() == 0) {
         co_return 0;
     }

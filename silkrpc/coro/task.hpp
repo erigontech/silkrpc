@@ -101,7 +101,7 @@ struct task<void> {
         std::coroutine_handle<void> caller_coro;
         std::function<void()> completion_handler;
 
-        task get_return_object() { return {this}; }
+        auto get_return_object() { return task{this}; }
         auto initial_suspend() { return std::suspend_always{}; }
         auto final_suspend() {
             struct Awaiter {

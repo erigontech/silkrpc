@@ -17,11 +17,14 @@
 #ifndef SILKRPC_TYPES_RECEIPT_HPP_
 #define SILKRPC_TYPES_RECEIPT_HPP_
 
+#include <optional>
 #include <vector>
 
 #include <evmc/evmc.hpp>
 
 #include <silkworm/types/bloom.hpp>
+
+#include <silkrpc/types/transaction.hpp>
 
 #include "log.hpp"
 
@@ -31,7 +34,7 @@ struct Receipt {
     /* raw fields */
     bool success{false};
     uint64_t cumulative_gas_used{0};
-    silkworm::Bloom bloom;
+    silkworm::Bloom bloom{};
     Logs logs;
 
     /* derived fields */
@@ -41,7 +44,14 @@ struct Receipt {
     evmc::bytes32 block_hash;
     uint64_t block_number;
     uint32_t tx_index;
+    std::optional<evmc::address> from;
+    std::optional<evmc::address> to;
+    std::optional<uint8_t> type{std::nullopt};  // EIP-2718
 };
+
+std::ostream& operator<<(std::ostream& out, const Receipt& r);
+
+silkworm::Bloom bloom_from_logs(const Logs& logs);
 
 typedef std::vector<Receipt> Receipts;
 

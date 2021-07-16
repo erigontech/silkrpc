@@ -25,15 +25,14 @@
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
 #include <asio/co_spawn.hpp>
-#include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
-
 #include <silkworm/common/util.hpp>
+
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
-#include <silkrpc/grpc/completion_poller.hpp>
 
 ABSL_FLAG(std::string, table, "", "database table name");
 ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
@@ -41,9 +40,9 @@ ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
 
-using namespace silkrpc;
+using silkrpc::LogLevel;
 
-asio::awaitable<void> kv_seek(ethdb::Database& kv_db, const std::string& table_name, const silkworm::Bytes& seek_key) {
+asio::awaitable<void> kv_seek(silkrpc::ethdb::Database& kv_db, const std::string& table_name, const silkworm::Bytes& seek_key) {
     const auto kv_transaction = co_await kv_db.begin();
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
     const auto kv_cursor = co_await kv_transaction->cursor(table_name);
@@ -95,23 +94,21 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        asio::io_context context;
-        asio::io_context::work work{context};
+        // TODO(canepat): handle also secure channel for remote
+        silkrpc::ChannelFactory create_channel = [&]() {
+            return grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
+        };
+        // TODO(canepat): handle also local (shared-memory) database
+        silkrpc::ContextPool context_pool{1, create_channel};
+        auto& context = context_pool.get_context();
+        auto& io_context = context.io_context;
+        auto& database = context.database;
 
-        const auto channel = ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
-        ::grpc::CompletionQueue queue;
-        silkrpc::grpc::CompletionPoller grpc_completion_poller{queue, context};
-
-        ethdb::kv::RemoteDatabase kv_database{context, channel, &queue};
-
-        asio::co_spawn(context, kv_seek(kv_database, table_name, seek_key_bytes), [&](std::exception_ptr exptr) {
-            grpc_completion_poller.stop();
-            context.stop();
+        asio::co_spawn(*io_context, kv_seek(*database, table_name, seek_key_bytes), [&](std::exception_ptr exptr) {
+            context_pool.stop();
         });
 
-        grpc_completion_poller.start();
-
-        context.run();
+        context_pool.run();
     } catch (const std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n" << std::flush;
     } catch (...) {

@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "chain.cpp"
+#include "chain.cpp" // NOLINT(build/include)
 
 #include <catch2/catch.hpp>
 #include <evmc/evmc.h>
@@ -34,13 +34,15 @@ TEST_CASE("decode empty receipt list", "[silkrpc::core][cbor_decode]") {
 
 TEST_CASE("decode receipt list", "[silkrpc::core][cbor_decode]") {
     std::vector<Receipt> receipts{};
-    auto bytes = silkworm::from_hex("8283f6001a0032f05d83f6011a00beadd0").value();
+    auto bytes = silkworm::from_hex("838400f601196d398400f6011a00371b0b8400f6011a003947f4").value();
     cbor_decode(bytes, receipts);
-    CHECK(receipts.size() == 2);
-    CHECK(receipts[0].success == false);
-    CHECK(receipts[0].cumulative_gas_used == 0x32f05d);
+    CHECK(receipts.size() == 3);
+    CHECK(receipts[0].success == true);
+    CHECK(receipts[0].cumulative_gas_used == 0x6d39);
     CHECK(receipts[1].success == true);
-    CHECK(receipts[1].cumulative_gas_used == 0xbeadd0);
+    CHECK(receipts[1].cumulative_gas_used == 0x371b0b);
+    CHECK(receipts[2].success == true);
+    CHECK(receipts[2].cumulative_gas_used == 0x3947f4);
 }
 
 TEST_CASE("decode empty log list", "[silkrpc::core][cbor_decode]") {
@@ -50,7 +52,7 @@ TEST_CASE("decode empty log list", "[silkrpc::core][cbor_decode]") {
 }
 
 TEST_CASE("encode log list", "[silkrpc::core][cbor_encode]") {
-    using namespace evmc;
+    using namespace evmc; // NOLINT(build/namespaces)
     std::vector<silkworm::Log> logs{
         silkworm::Log{
             0xea674fdde714fd979de3edf0f56aa9716b898ec8_address,
@@ -63,7 +65,7 @@ TEST_CASE("encode log list", "[silkrpc::core][cbor_encode]") {
 }
 
 TEST_CASE("decode log", "[silkrpc::core][cbor_decode]") {
-    using namespace evmc;
+    using namespace evmc; // NOLINT(build/namespaces)
     std::vector<Log> logs{};
     auto bytes = silkworm::from_hex("818354ea674fdde714fd979de3edf0f56aa9716b898ec88043010043").value();
     cbor_decode(bytes, logs);
@@ -74,7 +76,7 @@ TEST_CASE("decode log", "[silkrpc::core][cbor_decode]") {
 }
 
 TEST_CASE("decode log list", "[silkrpc::core][cbor_decode]") {
-    using namespace evmc;
+    using namespace evmc; // NOLINT(build/namespaces)
     std::vector<Log> logs{};
     auto bytes = silkworm::from_hex(
         "81835456c0369e002852c2570ca0cc3442e26df98e01a2835820ddf252ad1be2c89b69c2b068fc37"

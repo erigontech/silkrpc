@@ -4,12 +4,12 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 
 | Command                                 | Availability | Notes                                      |
 | :-------------------------------------- | :----------: | -----------------------------------------: |
-| web3_clientVersion                      | Yes          | hard-coded (needs ethbackend integration)  |
+| web3_clientVersion                      | Yes          |                                            |
 | web3_sha3                               | Yes          |                                            |
 |                                         |              |                                            |
 | net_listening                           | Yes          | hard-coded (needs p2pSentry integration)   |
 | net_peerCount                           | Yes          | hard-coded (needs p2pSentry integration)   |
-| net_version                             | Yes          | hard-coded (needs ethbackend integration)  |
+| net_version                             | Yes          |                                            | 
 |                                         |              |                                            |
 | eth_blockNumber                         | Yes          |                                            |
 | eth_chainId                             | Yes          |                                            |
@@ -17,26 +17,27 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_syncing                             | Yes          |                                            |
 | eth_gasPrice                            | -            | not yet implemented                        |
 |                                         |              |                                            |
-| eth_getBlockByHash                      | Yes          | not yet tested for performance             |
-| eth_getBlockByNumber                    | Yes          | not yet tested for performance             |
+| eth_getBlockByHash                      | Yes          |                                            |
+| eth_getBlockByNumber                    | Yes          |                                            |
 | eth_getBlockTransactionCountByHash      | Yes          |                                            |
 | eth_getBlockTransactionCountByNumber    | Yes          |                                            |
-| eth_getUncleByBlockHashAndIndex         | -            | not yet implemented                        |
-| eth_getUncleByBlockNumberAndIndex       | -            | not yet implemented                        |
-| eth_getUncleCountByBlockHash            | -            | not yet implemented                        |
-| eth_getUncleCountByBlockNumber          | -            | not yet implemented                        |
+| eth_getUncleByBlockHashAndIndex         | Yes          |                                            |
+| eth_getUncleByBlockNumberAndIndex       | Yes          |                                            |
+| eth_getUncleCountByBlockHash            | Yes          |                                            |
+| eth_getUncleCountByBlockNumber          | Yes          |                                            |
+| eth_getBlockReceipts                    | Yes          | same as parity_getBlockReceipts            |
 |                                         |              |                                            |
-| eth_getTransactionByHash                | -            | not yet implemented                        |
-| eth_getTransactionByBlockHashAndIndex   | -            | not yet implemented                        |
-| eth_getTransactionByBlockNumberAndIndex | -            | not yet implemented                        |
-| eth_getTransactionReceipt               | -            | not yet implemented                        |
+| eth_getTransactionByHash                | Yes          | partially implemented                      |
+| eth_getTransactionByBlockHashAndIndex   | Yes          |                                            |
+| eth_getTransactionByBlockNumberAndIndex | Yes          |                                            |
+| eth_getTransactionReceipt               | Yes          | partially implemented                      |
 |                                         |              |                                            |
 | eth_estimateGas                         | -            | not yet implemented                        |
-| eth_getBalance                          | -            | not yet implemented                        |
-| eth_getCode                             | -            | not yet implemented                        |
-| eth_getTransactionCount                 | -            | not yet implemented                        |
-| eth_getStorageAt                        | -            | not yet implemented                        |
-| eth_call                                | -            | work in progress                           |
+| eth_getBalance                          | Yes          |                                            |
+| eth_getCode                             | Yes          |                                            |
+| eth_getTransactionCount                 | Yes          |                                            |
+| eth_getStorageAt                        | Yes          |                                            |
+| eth_call                                | Yes          | not yet tested for performance             |
 |                                         |              |                                            |
 | eth_newFilter                           | -            | not yet implemented                        |
 | eth_newBlockFilter                      | -            | not yet implemented                        |
@@ -55,7 +56,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getProof                            | -            | not yet implemented                        |
 |                                         |              |                                            |
 | eth_mining                              | -            | not yet implemented                        |
-| eth_coinbase                            | -            | not yet implemented                        |
+| eth_coinbase                            | Yes          |                                            |
 | eth_hashrate                            | -            | not yet implemented                        |
 | eth_submitHashrate                      | -            | not yet implemented                        |
 | eth_getWork                             | -            | not yet implemented                        |
@@ -102,13 +103,13 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | shh_getFilterChanges                    | No           | deprecated                                 |
 | shh_getMessages                         | No           | deprecated                                 |
 |                                         |              |                                            |
-| tg_getHeaderByHash                      | -            | not yet implemented                        |
-| tg_getHeaderByNumber                    | -            | not yet implemented                        |
-| tg_getLogsByHash                        | -            | not yet implemented                        |
-| tg_forks                                | -            | not yet implemented                        |
-| tg_issuance                             | -            | not yet implemented                        |
+| tg_getHeaderByHash                      | Yes          |                                            |
+| tg_getHeaderByNumber                    | Yes          |                                            |
+| tg_getLogsByHash                        | Yes          |                                            |
+| tg_forks                                | Yes          |                                            |
+| tg_issuance                             | Yes          |                                            |
 |                                         |              |                                            |
-| parity_getBlockReceipts                 | -            | not yet implemented                        |
+| parity_getBlockReceipts                 | Yes          | same as eth_getBlockReceipts               |
 
 This table is constantly updated. Please visit again.
 

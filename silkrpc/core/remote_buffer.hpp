@@ -25,14 +25,53 @@
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
+#include <asio/io_context.hpp>
 #include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/state/buffer.hpp>
 
+#include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/core/state_reader.hpp>
+
 namespace silkrpc {
+
+class AsyncRemoteBuffer {
+public:
+    explicit AsyncRemoteBuffer(asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, uint64_t block_number)
+    : io_context_(io_context), db_reader_(db_reader), block_number_(block_number), state_reader_{db_reader} {}
+
+    asio::awaitable<std::optional<silkworm::Account>> read_account(const evmc::address& address) const noexcept;
+
+    asio::awaitable<silkworm::Bytes> read_code(const evmc::bytes32& code_hash) const noexcept;
+
+    asio::awaitable<evmc::bytes32> read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept;
+
+    asio::awaitable<uint64_t> previous_incarnation(const evmc::address& address) const noexcept;
+
+    asio::awaitable<std::optional<silkworm::BlockHeader>> read_header(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept;
+
+    asio::awaitable<std::optional<silkworm::BlockBody>> read_body(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept;
+
+    asio::awaitable<std::optional<intx::uint256>> total_difficulty(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept;
+
+    asio::awaitable<evmc::bytes32> state_root_hash() const;
+
+    asio::awaitable<uint64_t> current_canonical_block() const;
+
+    asio::awaitable<std::optional<evmc::bytes32>> canonical_hash(uint64_t block_number) const;
+
+private:
+    asio::io_context& io_context_;
+    const core::rawdb::DatabaseReader& db_reader_;
+    uint64_t block_number_;
+    StateReader state_reader_;
+};
 
 class RemoteBuffer : public silkworm::StateBuffer {
 public:
+    explicit RemoteBuffer(asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, uint64_t block_number)
+    : io_context_(io_context), async_buffer_{io_context, db_reader, block_number} {}
+
     std::optional<silkworm::Account> read_account(const evmc::address& address) const noexcept override;
 
     silkworm::Bytes read_code(const evmc::bytes32& code_hash) const noexcept override;
@@ -84,7 +123,8 @@ public:
     void unwind_state_changes(uint64_t block_number) override {}
 
 private:
-    silkworm::Bytes db_get(const std::string& table, const silkworm::ByteView& key) const;
+    asio::io_context& io_context_;
+    AsyncRemoteBuffer async_buffer_;
 };
 
 std::ostream& operator<<(std::ostream& out, const RemoteBuffer& s);

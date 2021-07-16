@@ -22,6 +22,7 @@
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
+#include <asio/io_context.hpp>
 
 #include <silkrpc/ethdb/transaction.hpp>
 

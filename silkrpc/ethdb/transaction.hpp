@@ -41,9 +41,9 @@ public:
 
     virtual asio::awaitable<void> open() = 0;
 
-    virtual std::unique_ptr<Cursor> cursor() = 0;
-
     virtual asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) = 0;
+
+    virtual asio::awaitable<std::shared_ptr<CursorDupSort>> cursor_dup_sort(const std::string& table) = 0;
 
     virtual asio::awaitable<void> close() = 0;
 };

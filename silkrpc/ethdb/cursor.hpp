@@ -40,11 +40,20 @@ public:
 
     virtual asio::awaitable<void> open_cursor(const std::string& table_name) = 0;
 
-    virtual asio::awaitable<KeyValue> seek(const silkworm::ByteView& seek_key) = 0;
+    virtual asio::awaitable<KeyValue> seek(const silkworm::ByteView& key) = 0;
+
+    virtual asio::awaitable<KeyValue> seek_exact(const silkworm::ByteView& key) = 0;
 
     virtual asio::awaitable<KeyValue> next() = 0;
 
     virtual asio::awaitable<void> close_cursor() = 0;
+};
+
+class CursorDupSort : public Cursor {
+public:
+    virtual asio::awaitable<silkworm::Bytes> seek_both(const silkworm::ByteView& key, const silkworm::ByteView& value) = 0;
+
+    virtual asio::awaitable<KeyValue> seek_both_exact(const silkworm::ByteView& key, const silkworm::ByteView& value) = 0;
 };
 
 } // namespace silkrpc::ethdb
