@@ -154,6 +154,7 @@ TEST_CASE("serialize empty block", "[silkrpc][to_json]") {
         "number":"0x0",
         "gasLimit":"0x0",
         "gasUsed":"0x0",
+        "baseFeePerGas":"0x0",
         "timestamp":"0x0",
         "extraData":"0x",
         "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -170,9 +171,9 @@ TEST_CASE("serialize empty transaction", "[silkrpc][to_json]") {
     nlohmann::json j = txn;
     CHECK(j == R"({
         "nonce":"0x0",
-        "gasPrice":"0x0",
         "gas":"0x0",
         "to":null,
+        "type":"0x0",
         "value":"0x0",
         "input":"0x",
         "hash":"0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5",
@@ -188,10 +189,10 @@ TEST_CASE("serialize transaction from zero address", "[silkrpc][to_json]") {
     nlohmann::json j = txn;
     CHECK(j == R"({
         "nonce":"0x0",
-        "gasPrice":"0x0",
         "gas":"0x0",
         "to":null,
         "from":"0x0000000000000000000000000000000000000000",
+        "type":"0x0",
         "value":"0x0",
         "input":"0x",
         "hash":"0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5",
@@ -205,6 +206,7 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
     silkworm::Transaction txn1{
         std::nullopt,
         0,
+        intx::uint256{0},
         intx::uint256{0},
         uint64_t{0},
         0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
@@ -220,10 +222,10 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
     nlohmann::json j1 = txn1;
     CHECK(j1 == R"({
         "nonce":"0x0",
-        "gasPrice":"0x0",
         "gas":"0x0",
         "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
         "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
+        "type":"0x0",
         "value":"0x0",
         "input":"0x001122aabbcc",
         "hash":"0x861b1b1b1d2609b3dec5fcb8f0b411e5b88a2c2e896daa9ee8e80b9f4839e6d9",
@@ -235,6 +237,7 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
     silkrpc::Transaction txn2{
         std::nullopt,
         0,
+        intx::uint256{0},
         intx::uint256{0},
         uint64_t{0},
         0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
@@ -248,6 +251,7 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
         0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address,
         0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
         123123,
+        intx::uint256{0},
         3
     };
     nlohmann::json j2 = txn2;
@@ -257,6 +261,7 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
         "gas":"0x0",
         "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
         "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
+        "type":"0x0",
         "value":"0x0",
         "input":"0x001122aabbcc",
         "hash":"0x861b1b1b1d2609b3dec5fcb8f0b411e5b88a2c2e896daa9ee8e80b9f4839e6d9",
@@ -270,10 +275,11 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
 }
 
 TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
-    silkworm::Transaction txn{
+    silkworm::Transaction txn1{
         silkworm::kEip2930TransactionType,
         0,
-        intx::uint256{0},
+        intx::uint256{1},
+        intx::uint256{2},
         uint64_t{0},
         0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
         intx::uint256{0},
@@ -285,19 +291,58 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
         std::vector<silkworm::AccessListEntry>{},
         0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address
     };
-    nlohmann::json j = txn;
-    CHECK(j == R"({
+    nlohmann::json j1 = txn1;
+    CHECK(j1 == R"({
         "nonce":"0x0",
-        "gasPrice":"0x0",
         "gas":"0x0",
         "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
         "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
+        "type":"0x1",
         "value":"0x0",
         "input":"0x001122aabbcc",
-        "hash":"0xeb53825c24220f4478abdf08304920838c5d1b92ac07efa6f36e0352cb01d9f8",
+        "hash":"0xf9620bf84ce91b2bcdd151a5ae9891243f491b164367af25e23b2a450bf34834",
         "r":"0x12",
         "s":"0x24",
         "v":"0x25"
+    })"_json);
+
+    silkrpc::Transaction txn2{
+        silkworm::kEip2930TransactionType,
+        0,
+        intx::uint256{1},
+        intx::uint256{2},
+        uint64_t{0},
+        0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+        intx::uint256{0},
+        *silkworm::from_hex("001122aabbcc"),
+        false,
+        intx::uint256{1},
+        intx::uint256{18},
+        intx::uint256{36},
+        std::vector<silkworm::AccessListEntry>{},
+        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address,
+        0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
+        123123,
+        intx::uint256{12},
+        3
+    };
+    nlohmann::json j2 = txn2;
+    CHECK(j2 == R"({
+        "nonce":"0x0",
+        "gasPrice":"0xd",
+        "gas":"0x0",
+        "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
+        "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
+        "type":"0x1",
+        "value":"0x0",
+        "input":"0x001122aabbcc",
+        "hash":"0xf9620bf84ce91b2bcdd151a5ae9891243f491b164367af25e23b2a450bf34834",
+        "r":"0x12",
+        "s":"0x24",
+        "v":"0x25",
+        "blockHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
+        "blockNumber":"0x1e0f3",
+        "transactionIndex":"0x3"
     })"_json);
 }
 

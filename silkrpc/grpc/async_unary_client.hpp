@@ -23,7 +23,7 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
 #include <grpcpp/impl/codegen/stub_options.h>
-#include <silkworm/common/magic_enum.hpp>
+#include <magic_enum.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/async_completion_handler.hpp>

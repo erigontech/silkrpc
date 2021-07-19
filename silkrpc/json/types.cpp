@@ -140,7 +140,6 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
         json["from"] = transaction.from.value();
     }
     json["gas"] = silkrpc::to_quantity(transaction.gas_limit);
-    json["gasPrice"] = silkrpc::to_quantity(transaction.gas_price);
     auto ethash_hash{hash_of_transaction(transaction)};
     json["hash"] = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
     json["input"] = "0x" + silkworm::to_hex(transaction.data);
@@ -150,6 +149,7 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
     } else {
         json["to"] =  nullptr;
     }
+    json["type"] = silkrpc::to_quantity(transaction.type.value_or(0));
     json["value"] = silkrpc::to_quantity(transaction.value);
     json["v"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.v()));
     json["r"] = silkrpc::to_quantity(silkworm::rlp::big_endian(transaction.r));
@@ -181,6 +181,7 @@ void to_json(nlohmann::json& json, const Block& b) {
     json["size"] = silkrpc::to_quantity(block_rlp.length());
     json["gasLimit"] = silkrpc::to_quantity(b.block.header.gas_limit);
     json["gasUsed"] = silkrpc::to_quantity(b.block.header.gas_used);
+    json["baseFeePerGas"] = silkrpc::to_quantity(b.block.header.base_fee_per_gas.value_or(0));
     json["timestamp"] = silkrpc::to_quantity(b.block.header.timestamp);
     if (b.full_tx) {
         json["transactions"] = b.block.transactions;
@@ -189,6 +190,7 @@ void to_json(nlohmann::json& json, const Block& b) {
             json_txn["transactionIndex"] = silkrpc::to_quantity(i);
             json_txn["blockHash"] = b.hash;
             json_txn["blockNumber"] = block_number;
+            json_txn["gasPrice"] = silkrpc::to_quantity(b.block.transactions[i].effective_gas_price(b.block.header.base_fee_per_gas.value_or(0)));
         }
     } else {
         std::vector<evmc::bytes32> transaction_hashes;
@@ -213,6 +215,7 @@ void to_json(nlohmann::json& json, const Block& b) {
 void to_json(nlohmann::json& json, const Transaction& transaction) {
     to_json(json, silkworm::Transaction(transaction));
 
+    json["gasPrice"] = silkrpc::to_quantity(transaction.effective_gas_price(transaction.block_base_fee_per_gas.value_or(0)));
     json["blockHash"] = transaction.block_hash;
     json["blockNumber"] = silkrpc::to_quantity(transaction.block_number);
     json["transactionIndex"] = silkrpc::to_quantity(transaction.transaction_index);
@@ -223,7 +226,10 @@ void from_json(const nlohmann::json& json, Call& call) {
         call.from = json.at("from").get<evmc::address>();
     }
     if (json.count("to") != 0) {
-        call.to = json.at("to").get<evmc::address>();
+        const auto to = json.at("to");
+        if (!to.is_null()) {
+            call.to = json.at("to").get<evmc::address>();
+        }
     }
     if (json.count("gas") != 0) {
         auto json_gas = json.at("gas");

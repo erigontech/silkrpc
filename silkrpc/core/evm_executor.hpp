@@ -52,7 +52,7 @@ public:
     EVMExecutor(const EVMExecutor&) = delete;
     EVMExecutor& operator=(const EVMExecutor&) = delete;
 
-    asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, uint64_t gas);
+    asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn);
 
 private:
     const Context& context_;

@@ -26,6 +26,7 @@ std::ostream& operator<<(std::ostream& out, const Transaction& t) {
     out << " #access_list: " << t.access_list.size();
     out << " block_hash: " << t.block_hash;
     out << " block_number: " << t.block_number;
+    out << " block_base_fee_per_gas: " << silkworm::to_hex(silkworm::rlp::big_endian(t.block_base_fee_per_gas.value_or(0)));
     if (t.chain_id) {
         out << " chain_id: " << silkworm::to_hex(silkworm::rlp::big_endian(*t.chain_id));
     } else {
@@ -38,7 +39,9 @@ std::ostream& operator<<(std::ostream& out, const Transaction& t) {
         out << " from: null";
     }
     out << " nonce: " << t.nonce;
-    out << " gas_price: " << silkworm::to_hex(silkworm::rlp::big_endian(t.gas_price));
+    out << " max_priority_fee_per_gas: " << silkworm::to_hex(silkworm::rlp::big_endian(t.max_priority_fee_per_gas));
+    out << " max_fee_per_gas: " << silkworm::to_hex(silkworm::rlp::big_endian(t.max_fee_per_gas));
+    out << " gas_price: " << silkworm::to_hex(silkworm::rlp::big_endian(t.effective_gas_price(t.block_base_fee_per_gas.value_or(0))));
     out << " gas_limit: " << t.gas_limit;
     out << " odd_y_parity: " << t.odd_y_parity;
 

@@ -33,6 +33,8 @@ struct Call {
     std::optional<evmc::address> to;
     std::optional<uint64_t> gas;
     std::optional<intx::uint256> gas_price;
+    std::optional<intx::uint256> max_priority_fee_per_gas;
+    std::optional<intx::uint256> max_fee_per_gas;
     std::optional<intx::uint256> value;
     std::optional<silkworm::Bytes> data;
 
@@ -41,7 +43,13 @@ struct Call {
         txn.from = from;
         txn.to = to;
         txn.gas_limit = gas.value_or(0);
-        txn.gas_price = gas_price.value_or(intx::uint256{0});
+        if (gas_price) {
+            txn.max_priority_fee_per_gas = gas_price.value();
+            txn.max_fee_per_gas = gas_price.value();
+        } else {
+            txn.max_priority_fee_per_gas = max_priority_fee_per_gas.value_or(intx::uint256{0});
+            txn.max_fee_per_gas = max_fee_per_gas.value_or(intx::uint256{0});
+        }
         txn.value = value.value_or(intx::uint256{0});
         txn.data = data.value_or(silkworm::Bytes{});
         return txn;
