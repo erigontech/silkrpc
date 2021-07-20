@@ -308,6 +308,7 @@ void to_json(nlohmann::json& json, const Receipt& receipt) {
     json["type"] = silkrpc::to_quantity(receipt.type ? receipt.type.value() : 0);
     json["gasUsed"] = silkrpc::to_quantity(receipt.gas_used);
     json["cumulativeGasUsed"] = silkrpc::to_quantity(receipt.cumulative_gas_used);
+    json["effectiveGasPrice"] = silkrpc::to_quantity(receipt.effective_gas_price);
     if (receipt.contract_address) {
         json["contractAddress"] = receipt.contract_address;
     } else {
