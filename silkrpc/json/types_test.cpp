@@ -24,11 +24,13 @@
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 #include <nlohmann/json.hpp>
+#include <silkworm/common/util.hpp>
 
 namespace silkrpc {
 
 using Catch::Matchers::Message;
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
+using silkworm::kGiga;
 
 TEST_CASE("convert zero uint256 to quantity", "[silkrpc][to_quantity]") {
     intx::uint256 zero_u256{0};
@@ -203,74 +205,74 @@ TEST_CASE("serialize transaction from zero address", "[silkrpc][to_json]") {
 }
 
 TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
+    // https://etherscan.io/tx/0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060
+    // Block 46147
     silkworm::Transaction txn1{
-        std::nullopt,
-        0,
-        intx::uint256{0},
-        intx::uint256{0},
-        uint64_t{0},
-        0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
-        intx::uint256{0},
-        *silkworm::from_hex("001122aabbcc"),
-        false,
-        intx::uint256{1},
-        intx::uint256{18},
-        intx::uint256{36},
-        std::vector<silkworm::AccessListEntry>{},
-        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address
+        std::nullopt,                                       // type
+        0,                                                  // nonce
+        50'000 * kGiga,                                     // max_priority_fee_per_gas
+        50'000 * kGiga,                                     // max_fee_per_gas
+        21'000,                                             // gas_limit
+        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address, // to
+        31337,                                              // value
+        {},                                                 // data
+        true,                                               // odd_y_parity
+        std::nullopt,                                       // chain_id
+        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
+        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
     };
     nlohmann::json j1 = txn1;
     CHECK(j1 == R"({
+        "from":"0xa1e4380a3b1f749673e270229993ee55f35663b4",
+        "gas":"0x5208",
+        "hash":"0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060",
+        "input":"0x",
         "nonce":"0x0",
-        "gas":"0x0",
-        "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
-        "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
+        "r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",
+        "s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a",
+        "to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",
         "type":"0x0",
-        "value":"0x0",
-        "input":"0x001122aabbcc",
-        "hash":"0x861b1b1b1d2609b3dec5fcb8f0b411e5b88a2c2e896daa9ee8e80b9f4839e6d9",
-        "r":"0x12",
-        "s":"0x24",
-        "v":"0x25"
+        "v":"0x1c",
+        "value":"0x7a69"
     })"_json);
 
     silkrpc::Transaction txn2{
-        std::nullopt,
-        0,
-        intx::uint256{0},
-        intx::uint256{0},
-        uint64_t{0},
-        0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
-        intx::uint256{0},
-        *silkworm::from_hex("001122aabbcc"),
-        false,
-        intx::uint256{1},
-        intx::uint256{18},
-        intx::uint256{36},
-        std::vector<silkworm::AccessListEntry>{},
-        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address,
-        0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
-        123123,
-        intx::uint256{0},
-        3
+        std::nullopt,                                       // type
+        0,                                                  // nonce
+        50'000 * kGiga,                                     // max_priority_fee_per_gas
+        50'000 * kGiga,                                     // max_fee_per_gas
+        21'000,                                             // gas_limit
+        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address, // to
+        31337,                                              // value
+        {},                                                 // data
+        true,                                               // odd_y_parity
+        std::nullopt,                                       // chain_id
+        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
+        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
+        std::vector<silkworm::AccessListEntry>{},                                    // access_list
+        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address,                          // from
+        0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd_bytes32,  // block_hash
+        46147,                                                                       // block_number
+        intx::uint256{0},                                                            // block_base_fee_per_gas
+        0                                                                            // transactionIndex
     };
     nlohmann::json j2 = txn2;
     CHECK(j2 == R"({
-        "nonce":"0x0",
-        "gasPrice":"0x0",
-        "gas":"0x0",
-        "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
+        "blockHash":"0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd",
+        "blockNumber":"0xb443",
         "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
+        "gas":"0x5208",
+        "gasPrice":"0x2d79883d2000",
+        "hash":"0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060",
+        "input":"0x",
+        "nonce":"0x0",
+        "r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",
+        "s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a",
+        "to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",
+        "transactionIndex":"0x0",
         "type":"0x0",
-        "value":"0x0",
-        "input":"0x001122aabbcc",
-        "hash":"0x861b1b1b1d2609b3dec5fcb8f0b411e5b88a2c2e896daa9ee8e80b9f4839e6d9",
-        "r":"0x12",
-        "s":"0x24",
-        "v":"0x25",
-        "blockHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
-        "blockNumber":"0x1e0f3",
-        "transactionIndex":"0x3"
+        "v":"0x1c",
+        "value":"0x7a69"
     })"_json);
 }
 
@@ -278,8 +280,8 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
     silkworm::Transaction txn1{
         silkworm::kEip2930TransactionType,
         0,
-        intx::uint256{1},
-        intx::uint256{2},
+        20000000000,
+        30000000000,
         uint64_t{0},
         0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
         intx::uint256{0},
@@ -300,17 +302,26 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
         "type":"0x1",
         "value":"0x0",
         "input":"0x001122aabbcc",
-        "hash":"0xf9620bf84ce91b2bcdd151a5ae9891243f491b164367af25e23b2a450bf34834",
+        "hash":"0x97a8b0f46a6592052a683442bb7f86502d08af6354bfece6957793293587b660",
         "r":"0x12",
         "s":"0x24",
         "v":"0x25"
     })"_json);
 
+    std::vector<silkworm::AccessListEntry> access_list{
+        {0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae_address,
+         {
+             0x0000000000000000000000000000000000000000000000000000000000000003_bytes32,
+             0x0000000000000000000000000000000000000000000000000000000000000007_bytes32,
+         }},
+        {0xbb9bc244d798123fde783fcc1c72d3bb8c189413_address, {}},
+    };
+
     silkrpc::Transaction txn2{
         silkworm::kEip2930TransactionType,
         0,
-        intx::uint256{1},
-        intx::uint256{2},
+        20000000000,
+        30000000000,
         uint64_t{0},
         0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
         intx::uint256{0},
@@ -329,14 +340,14 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
     nlohmann::json j2 = txn2;
     CHECK(j2 == R"({
         "nonce":"0x0",
-        "gasPrice":"0xd",
+        "gasPrice":"0x4a817c80c",
         "gas":"0x0",
         "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
         "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
         "type":"0x1",
         "value":"0x0",
         "input":"0x001122aabbcc",
-        "hash":"0xf9620bf84ce91b2bcdd151a5ae9891243f491b164367af25e23b2a450bf34834",
+        "hash":"0x97a8b0f46a6592052a683442bb7f86502d08af6354bfece6957793293587b660",
         "r":"0x12",
         "s":"0x24",
         "v":"0x25",
