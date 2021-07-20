@@ -30,8 +30,7 @@ commands:
           name: "Install Linters"
           command: |
             sudo apt-get install -y python3-pip
-            sudo pip3 install cpplint
-            sudo pip3 install pylint
+            sudo pip3 install -r requirements.txt
       - run:
           name: "Run CppLint and PyLint"
           command: ./run_linter.sh
