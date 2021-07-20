@@ -1,5 +1,5 @@
 #!/bin/bash
 
 cd build_gcc_release
-cmake --build .
+cmake --build . --parallel
 cmd/unit_test
