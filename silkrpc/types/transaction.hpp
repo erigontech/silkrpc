@@ -18,7 +18,9 @@
 #define SILKRPC_TYPES_TRANSACTION_HPP_
 
 #include <iostream>
+#include <optional>
 
+#include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 
 #include <silkworm/common/base.hpp>
@@ -29,6 +31,7 @@ namespace silkrpc {
 struct Transaction : public silkworm::Transaction {
     evmc::bytes32 block_hash;
     uint64_t block_number{0};
+    std::optional<intx::uint256> block_base_fee_per_gas{std::nullopt};
     uint64_t transaction_index{0};
 };
 

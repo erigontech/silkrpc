@@ -233,8 +233,8 @@ asio::awaitable<std::optional<silkrpc::Transaction>> read_transaction_by_hash(co
         silkworm::ByteView hash_view{ethash_hash.bytes, silkworm::kHashLength};
         SILKRPC_TRACE << "tx " << idx << ") hash: " << silkworm::to_bytes32(hash_view) << "\n";
         if (tx_hash == hash_view) {
-            silkrpc::Transaction new_transaction{{transactions[idx]}, {block_with_hash.hash}, block_with_hash.block.header.number, idx};
-            co_return new_transaction;
+            const auto block_header = block_with_hash.block.header;
+            co_return silkrpc::Transaction{transactions[idx], block_with_hash.hash, block_header.number, block_header.base_fee_per_gas, idx};
         }
     }
     co_return std::nullopt;
