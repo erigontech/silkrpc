@@ -690,8 +690,11 @@ TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
 }
 
 TEST_CASE("serialize zero forks", "[silkrpc::json][to_json]") {
-    silkrpc::ChainConfig cc{};
-    silkrpc::Forks f{{}};
+    silkrpc::ChainConfig cc{
+        0x0000000000000000000000000000000000000000000000000000000000000000_bytes32,
+        R"({"chainId":1,"ethash":{}})"_json
+    };
+    silkrpc::Forks f{cc};
     nlohmann::json j = f;
     CHECK(j == R"({
         "genesis":"0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -702,13 +705,27 @@ TEST_CASE("serialize zero forks", "[silkrpc::json][to_json]") {
 TEST_CASE("serialize forks", "[silkrpc::json][to_json]") {
     silkrpc::ChainConfig cc{
         0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
-        R"({"istanbulBlock":100,"berlinBlock":200})"_json
+        R"({
+            "berlinBlock":12244000,
+            "byzantiumBlock":4370000,
+            "chainId":1,
+            "constantinopleBlock":7280000,
+            "daoForkBlock":1920000,
+            "eip150Block":2463000,
+            "eip155Block":2675000,
+            "ethash":{},
+            "homesteadBlock":1150000,
+            "istanbulBlock":9069000,
+            "londonBlock":12965000,
+            "muirGlacierBlock":9200000,
+            "petersburgBlock":7280000
+        })"_json
     };
     silkrpc::Forks f{cc};
     nlohmann::json j = f;
     CHECK(j == R"({
         "genesis":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
-        "forks":[100,200]
+        "forks":[1150000,2463000,2675000,4370000,7280000,7280000,9069000,12244000,12965000]
     })"_json);
 }
 
