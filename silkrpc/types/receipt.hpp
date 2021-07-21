@@ -22,12 +22,10 @@
 
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
-
 #include <silkworm/types/bloom.hpp>
 
+#include <silkrpc/types/log.hpp>
 #include <silkrpc/types/transaction.hpp>
-
-#include "log.hpp"
 
 namespace silkrpc {
 
