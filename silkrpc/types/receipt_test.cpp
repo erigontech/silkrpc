@@ -81,5 +81,19 @@ TEST_CASE("bloom from more than one log", "[silkrpc][types][receipt]") {
     CHECK(bloom_from_logs(logs) == expected_bloom);
 }
 
+TEST_CASE("receipt with empty bloom", "[silkrpc][types][receipt]") {
+    Logs logs{};
+    Receipt r{
+        true,
+        210000,
+        bloom_from_logs(logs),
+        logs
+    };
+    CHECK(r.success == true);
+    CHECK(r.cumulative_gas_used == 210000);
+    CHECK(r.bloom == silkworm::Bloom{});
+    CHECK(r.logs.size() == 0);
+}
+
 } // namespace silkrpc
 

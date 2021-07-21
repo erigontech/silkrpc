@@ -314,6 +314,7 @@ asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc
 
         receipts[i].from = senders[i];
         receipts[i].to = transactions[i].to;
+        receipts[i].type = transactions[i].type;
 
         // The derived fields of receipt are taken from block and transaction
         for (size_t j{0}; j < receipts[i].logs.size(); j++) {

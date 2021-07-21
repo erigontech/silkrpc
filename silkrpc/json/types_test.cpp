@@ -537,6 +537,7 @@ TEST_CASE("serialize empty receipt", "[silkrpc::json][to_json]") {
         "blockNumber":"0x0",
         "contractAddress":null,
         "cumulativeGasUsed":"0x0",
+        "effectiveGasPrice":"0x0",
         "from":"0x0000000000000000000000000000000000000000",
         "gasUsed":"0x0",
         "logs":[],
@@ -562,7 +563,8 @@ TEST_CASE("serialize receipt", "[silkrpc::json][to_json]") {
         3,
         0x22ea9f6b28db76a7162054c05ed812deb2f519cd_address,
         0x22ea9f6b28db76a7162054c05ed812deb2f519cd_address,
-        1
+        1,
+        2000000000
     };
     nlohmann::json j = r;
     CHECK(j == R"({
@@ -570,6 +572,7 @@ TEST_CASE("serialize receipt", "[silkrpc::json][to_json]") {
         "blockNumber":"0x4c4b40",
         "contractAddress":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
         "cumulativeGasUsed":"0x6eff7",
+        "effectiveGasPrice":"0x77359400",
         "from":"0x22ea9f6b28db76a7162054c05ed812deb2f519cd",
         "gasUsed":"0xa",
         "logs":[],
