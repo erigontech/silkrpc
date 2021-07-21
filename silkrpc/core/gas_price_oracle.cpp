@@ -30,11 +30,8 @@
 namespace silkrpc {
 
 intx::uint256 get_block_base_fee(const silkworm::BlockHeader& block_header) {
-    return 0;
-}
-
-intx::uint256 get_effective_gas_price(const silkworm::Transaction& transaction, intx::uint256 base_fee) {
-    return transaction.gas_price;
+    const auto base_fee_per_gas = block_header.base_fee_per_gas;
+    return !base_fee_per_gas ? 0 : *base_fee_per_gas;
 }
 
 struct PriceComparator {
@@ -86,7 +83,7 @@ asio::awaitable<void> GasPriceOracle::load_block_prices(uint64_t block_number, u
     std::vector<intx::uint256> block_prices;
     block_prices.reserve(block_with_hash.block.transactions.size());
     for (const auto& transaction : block_with_hash.block.transactions) {
-        const auto effective_gas_price = get_effective_gas_price(transaction, base_fee);
+        const auto effective_gas_price = transaction.effective_gas_price(base_fee);
         if (effective_gas_price < kDefaultMinPrice) {
             continue;
         }
