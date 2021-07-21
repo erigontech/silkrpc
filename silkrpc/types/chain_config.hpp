@@ -17,11 +17,13 @@
 #ifndef SILKRPC_TYPES_CHAIN_CONFIG_HPP_
 #define SILKRPC_TYPES_CHAIN_CONFIG_HPP_
 
+#include <stdexcept>
 #include <iostream>
 #include <vector>
 
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
+#include <silkworm/chain/config.hpp>
 
 namespace silkrpc {
 
@@ -35,11 +37,14 @@ struct Forks {
     std::vector<uint64_t> block_numbers;
 
     explicit Forks(const ChainConfig& chain_config) : genesis_hash(chain_config.genesis_hash) {
-        if (chain_config.config.count("istanbulBlock") > 0) {
-            block_numbers.push_back(chain_config.config["istanbulBlock"]);
+        const auto cc{silkworm::ChainConfig::from_json(chain_config.config)};
+        if (!cc) {
+            throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Chain config missing"};
         }
-        if (chain_config.config.count("berlinBlock") > 0) {
-            block_numbers.push_back(chain_config.config["berlinBlock"]);
+        for (auto& fork_block : cc->fork_blocks) {
+            if (fork_block) {
+                block_numbers.push_back(*fork_block);
+            }
         }
     }
 };
