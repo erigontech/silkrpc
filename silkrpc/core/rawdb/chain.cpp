@@ -33,37 +33,11 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/core/blocks.hpp>
+#include <silkrpc/ethdb/cbor.hpp>
 #include <silkrpc/ethdb/tables.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/receipt.hpp>
-
-// TODO(canepat): move to db/types/log_cbor.*,receipt_cbor.*
-namespace silkrpc::core {
-
-void cbor_decode(const silkworm::Bytes& bytes, std::vector<Log>& logs) {
-    if (bytes.size() == 0) {
-        return;
-    }
-    auto json = nlohmann::json::from_cbor(bytes);
-    SILKRPC_TRACE << "cbor_decode<std::vector<Log>> json: " << json.dump() << "\n";
-    if (json.is_array()) {
-        logs = json.get<std::vector<Log>>();
-    }
-}
-
-void cbor_decode(const silkworm::Bytes& bytes, std::vector<Receipt>& receipts) {
-    if (bytes.size() == 0) {
-        return;
-    }
-    auto json = nlohmann::json::from_cbor(bytes);
-    SILKRPC_TRACE << "cbor_decode<std::vector<Receipt>> json: " << json.dump() << "\n";
-    if (json.is_array()) {
-        receipts = json.get<std::vector<Receipt>>();
-    }
-}
-
-} // namespace silkrpc::core
 
 namespace silkrpc::core::rawdb {
 

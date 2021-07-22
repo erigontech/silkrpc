@@ -14,37 +14,22 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_LOG_HPP_
-#define SILKRPC_TYPES_LOG_HPP_
+#ifndef SILKRPC_ETHDB_CBOR_HPP_
+#define SILKRPC_ETHDB_CBOR_HPP_
 
-#include <iostream>
 #include <vector>
 
-#include <evmc/evmc.hpp>
+#include <silkworm/common/util.hpp>
 
-#include <silkworm/common/base.hpp>
+#include <silkrpc/types/log.hpp>
+#include <silkrpc/types/receipt.hpp>
 
 namespace silkrpc {
 
-struct Log {
-    /* raw fields */
-    evmc::address address;
-    std::vector<evmc::bytes32> topics;
-    silkworm::Bytes data;
+void cbor_decode(const silkworm::Bytes& bytes, std::vector<Log>& logs);
 
-    /* derived fields */
-    uint64_t block_number{0};
-    evmc::bytes32 tx_hash;
-    uint32_t tx_index{0};
-    evmc::bytes32 block_hash;
-    uint32_t index{0};
-    bool removed{false};
-};
-
-typedef std::vector<Log> Logs;
-
-std::ostream& operator<<(std::ostream& out, const Log& log);
+void cbor_decode(const silkworm::Bytes& bytes, std::vector<Receipt>& receipts);
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_LOG_HPP_
+#endif  // SILKRPC_ETHDB_CBOR_HPP_

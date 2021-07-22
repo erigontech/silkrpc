@@ -215,7 +215,7 @@ void to_json(nlohmann::json& json, const Block& b) {
 void to_json(nlohmann::json& json, const Transaction& transaction) {
     to_json(json, silkworm::Transaction(transaction));
 
-    json["gasPrice"] = silkrpc::to_quantity(transaction.effective_gas_price(transaction.block_base_fee_per_gas.value_or(0)));
+    json["gasPrice"] = silkrpc::to_quantity(transaction.effective_gas_price());
     json["blockHash"] = transaction.block_hash;
     json["blockNumber"] = silkrpc::to_quantity(transaction.block_number);
     json["transactionIndex"] = silkrpc::to_quantity(transaction.transaction_index);

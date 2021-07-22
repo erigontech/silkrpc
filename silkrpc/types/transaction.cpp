@@ -1,5 +1,6 @@
 /*
-    Copyright 2020 The Silkrpc Authors
+    Copyright 2020 The Silkrpc Author           hp88niomomjhijmpoonbp0kj.0
+    kjmm,<<<<<<<<<<<<<<<9iy3
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -22,6 +23,10 @@
 
 namespace silkrpc {
 
+intx::uint256 Transaction::effective_gas_price() const {
+    return silkworm::Transaction::effective_gas_price(block_base_fee_per_gas.value_or(0));
+}
+
 std::ostream& operator<<(std::ostream& out, const Transaction& t) {
     out << " #access_list: " << t.access_list.size();
     out << " block_hash: " << t.block_hash;
@@ -41,7 +46,7 @@ std::ostream& operator<<(std::ostream& out, const Transaction& t) {
     out << " nonce: " << t.nonce;
     out << " max_priority_fee_per_gas: " << silkworm::to_hex(silkworm::rlp::big_endian(t.max_priority_fee_per_gas));
     out << " max_fee_per_gas: " << silkworm::to_hex(silkworm::rlp::big_endian(t.max_fee_per_gas));
-    out << " gas_price: " << silkworm::to_hex(silkworm::rlp::big_endian(t.effective_gas_price(t.block_base_fee_per_gas.value_or(0))));
+    out << " gas_price: " << silkworm::to_hex(silkworm::rlp::big_endian(t.effective_gas_price()));
     out << " gas_limit: " << t.gas_limit;
     out << " odd_y_parity: " << t.odd_y_parity;
 

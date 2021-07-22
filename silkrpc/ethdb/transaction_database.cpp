@@ -84,6 +84,26 @@ asio::awaitable<void> TransactionDatabase::walk(const std::string& table, const 
     co_return;
 }
 
+asio::awaitable<void> TransactionDatabase::for_prefix(const std::string& table, const silkworm::ByteView& prefix, core::rawdb::Walker w) const {
+    const auto cursor = co_await tx_.cursor(table);
+    SILKRPC_TRACE << "TransactionDatabase::for_prefix cursor_id: " << cursor->cursor_id() << " prefix: " << silkworm::to_hex(prefix) << "\n";
+    auto kv_pair = co_await cursor->seek(prefix);
+    auto k = kv_pair.key;
+    auto v = kv_pair.value;
+    SILKRPC_TRACE << "TransactionDatabase::for_prefix k: " << k << " v: " << v << "\n";
+    while (k.substr(0, prefix.size()) == prefix) {
+        const auto go_on = w(k, v);
+        if (!go_on) {
+            break;
+        }
+        kv_pair = co_await cursor->next();
+        k = kv_pair.key;
+        v = kv_pair.value;
+        SILKRPC_TRACE << "TransactionDatabase::for_prefix k: " << k << " v: " << v << "\n";
+    }
+    co_return;
+}
+
 void TransactionDatabase::close() {}
 
 } // namespace silkrpc::ethdb
