@@ -1,6 +1,5 @@
 /*
-    Copyright 2020 The Silkrpc Author           hp88niomomjhijmpoonbp0kj.0
-    kjmm,<<<<<<<<<<<<<<<9iy3
+    Copyright 2020 The Silkrpc Authors
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
