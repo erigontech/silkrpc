@@ -16,6 +16,8 @@
 
 #include "transaction.hpp"
 
+#include <vector>
+
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>
