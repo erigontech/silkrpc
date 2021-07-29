@@ -1040,7 +1040,10 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
             SILKRPC_TRACE << "block_to_match: " << block_to_match << " block_key: " << silkworm::to_hex(block_key) << "\n";
             co_await tx_database.for_prefix(silkrpc::db::table::kLogs, block_key, [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
                 Logs chunck_logs{};
-                cbor_decode(v, chunck_logs);
+                const bool decoding_ok{cbor_decode(v, chunck_logs)};
+                if (!decoding_ok) {
+                    return false;
+                }
                 for (auto& log : chunck_logs) {
                     log.index = log_index++;
                 }

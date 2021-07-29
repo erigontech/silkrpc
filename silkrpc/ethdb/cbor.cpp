@@ -23,29 +23,33 @@
 
 namespace silkrpc {
 
-void cbor_decode(const silkworm::Bytes& bytes, std::vector<Log>& logs) {
+bool cbor_decode(const silkworm::Bytes& bytes, std::vector<Log>& logs) {
     if (bytes.size() == 0) {
-        return;
+        return false;
     }
     auto json = nlohmann::json::from_cbor(bytes);
     SILKRPC_TRACE << "cbor_decode<std::vector<Log>> json: " << json.dump() << "\n";
     if (json.is_array()) {
         logs = json.get<std::vector<Log>>();
+        return true;
     } else {
         SILKRPC_WARN << "cbor_decode<std::vector<Log>> unexpected json: " << json.dump() << "\n";
+        return false;
     }
 }
 
-void cbor_decode(const silkworm::Bytes& bytes, std::vector<Receipt>& receipts) {
+bool cbor_decode(const silkworm::Bytes& bytes, std::vector<Receipt>& receipts) {
     if (bytes.size() == 0) {
-        return;
+        return false;
     }
     auto json = nlohmann::json::from_cbor(bytes);
     SILKRPC_TRACE << "cbor_decode<std::vector<Receipt>> json: " << json.dump() << "\n";
     if (json.is_array()) {
         receipts = json.get<std::vector<Receipt>>();
+        return true;
     } else {
-        SILKRPC_WARN << "cbor_decode<std::vector<Log>> unexpected json: " << json.dump() << "\n";
+        SILKRPC_WARN << "cbor_decode<std::vector<Receipt>> unexpected json: " << json.dump() << "\n";
+        return false;
     }
 }
 

@@ -69,7 +69,7 @@ TEST_CASE("decode logs from CBOR 2", "[silkrpc][ethdb][cbor]") {
 TEST_CASE("decode logs from CBOR 3", "[silkrpc][ethdb][cbor]") {
     Logs logs{};
     auto bytes = *silkworm::from_hex("818354ea674fdde714fd979de3edf0f56aa9716b898ec88043010043");
-    cbor_decode(bytes, logs);
+    CHECK_NOTHROW(cbor_decode(bytes, logs));
     CHECK(logs.size() == 1);
     CHECK(logs[0].address == 0xea674fdde714fd979de3edf0f56aa9716b898ec8_address);
     CHECK(logs[0].topics == std::vector<evmc::bytes32>{});
@@ -83,7 +83,7 @@ TEST_CASE("decode logs from CBOR 4", "[silkrpc][ethdb][cbor]") {
         "8daa952ba7f163c4a11628f55a4df523b3ef5820000000000000000000000000a2e1ffe3aa9cbcde"
         "1955b04d22e2cc092c3738785820000000000000000000000000520d849db6e4bf7e0c58a45fc513"
         "a6d633baf77e5820000000000000000000000000000000000000000000084595161401484a000000");
-    cbor_decode(bytes, logs);
+    CHECK_NOTHROW(cbor_decode(bytes, logs));
     CHECK(logs.size() == 1);
     CHECK(logs[0].address == 0x56c0369e002852c2570ca0cc3442e26df98e01a2_address);
     CHECK(logs[0].topics.size() == 3);
@@ -142,7 +142,7 @@ TEST_CASE("decode receipts from CBOR 2", "[silkrpc][ethdb][cbor]") {
 TEST_CASE("decode receipts from CBOR 3", "[silkrpc][ethdb][cbor]") {
     Receipts receipts{};
     auto bytes = *silkworm::from_hex("838400f601196d398400f6011a00371b0b8400f6011a003947f4");
-    cbor_decode(bytes, receipts);
+    CHECK_NOTHROW(cbor_decode(bytes, receipts));
     CHECK(receipts.size() == 3);
     CHECK(receipts[0].success == true);
     CHECK(receipts[0].cumulative_gas_used == 0x6d39);

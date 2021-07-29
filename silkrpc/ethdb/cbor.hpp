@@ -26,9 +26,9 @@
 
 namespace silkrpc {
 
-void cbor_decode(const silkworm::Bytes& bytes, std::vector<Log>& logs);
+[[nodiscard]] bool cbor_decode(const silkworm::Bytes& bytes, std::vector<Log>& logs);
 
-void cbor_decode(const silkworm::Bytes& bytes, std::vector<Receipt>& receipts);
+[[nodiscard]] bool cbor_decode(const silkworm::Bytes& bytes, std::vector<Receipt>& receipts);
 
 } // namespace silkrpc
 
