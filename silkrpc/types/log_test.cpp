@@ -39,4 +39,3 @@ TEST_CASE("print empty log", "[silkrpc][types][log]") {
 }
 
 } // namespace silkrpc
-

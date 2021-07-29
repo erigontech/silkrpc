@@ -16,11 +16,67 @@
 
 #include "eth_api.hpp"
 
+#include <memory>
+#include <thread>
+
+#include <asio/co_spawn.hpp>
+#include <asio/thread_pool.hpp>
+#include <asio/use_future.hpp>
 #include <catch2/catch.hpp>
+#include <grpcpp/grpcpp.h>
+#include <nlohmann/json.hpp>
+
+#include <silkrpc/common/log.hpp>
+#include <silkrpc/context_pool.hpp>
+#include <silkrpc/ethdb/cursor.hpp>
+#include <silkrpc/ethdb/database.hpp>
+#include <silkrpc/ethdb/transaction.hpp>
 
 namespace silkrpc {
 
 using Catch::Matchers::Message;
+
+class EthereumRpcApiTest : public commands::EthereumRpcApi {
+public:
+    explicit EthereumRpcApiTest(Context& context, asio::thread_pool& workers) : commands::EthereumRpcApi{context, workers} {}
+
+    using commands::EthereumRpcApi::handle_eth_block_number;
+};
+
+typedef asio::awaitable<void> (EthereumRpcApiTest::*HandleTestMethod)(const nlohmann::json&, nlohmann::json&);
+
+void test_eth_api(HandleTestMethod test_handle_method, const nlohmann::json& request, nlohmann::json& reply) {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    asio::thread_pool workers{1};
+    try {
+        EthereumRpcApiTest eth_api{cp.get_context(), workers};
+        auto result{asio::co_spawn(cp.get_io_context(), [&]() {
+            return (&eth_api->*test_handle_method)(request, reply);
+        }, asio::use_future)};
+        result.get();
+    } catch (...) {
+        CHECK(false);
+    }
+    cp.stop();
+    context_pool_thread.join();
+}
+
+TEST_CASE("handle_eth_block_number succeeds if request well-formed", "[silkrpc][eth_api]") {
+    nlohmann::json reply;
+    /*test_eth_api(&EthereumRpcApiTest::handle_eth_block_number, R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":"eth_blockNumber",
+        "params":[]
+    })"_json, reply);*/
+}
+
+TEST_CASE("handle_eth_block_number fails if request empty", "[silkrpc][eth_api]") {
+    nlohmann::json reply;
+    //test_eth_api(&EthereumRpcApiTest::handle_eth_block_number, R"({})"_json, reply);
+}
 
 } // namespace silkrpc
 
