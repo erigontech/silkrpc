@@ -40,23 +40,23 @@ struct PriceComparator {
     }
 };
 
-asio::awaitable<intx::uint256> GasPriceOracle::suggested_price() {
-    auto block_number = co_await core::get_block_number(silkrpc::core::kLatestBlockId, db_reader_);
-    block_number = 4000000; // TODO(sixtysixter) remove when sync with silkworm is completed
-    SILKRPC_DEBUG << "block_number " << block_number << "\n";
-
+asio::awaitable<intx::uint256> GasPriceOracle::suggested_price(uint64_t block_number) {
+    // block_number = 4000000;
+    block_number = 5220662;
+    SILKRPC_INFO << "GasPriceOracle::suggested_price starting block: " << block_number << "\n";
     std::vector<intx::uint256> tx_prices;
     tx_prices.reserve(kMaxSamples);
     while (tx_prices.size() < kMaxSamples && block_number > 0) {
         co_await load_block_prices(block_number--, kSamples, tx_prices);
     }
+    SILKRPC_INFO << "GasPriceOracle::suggested_price ending block: " << block_number << "\n";
 
     std::sort(tx_prices.begin(), tx_prices.end(), PriceComparator());
 
     intx::uint256 price = kDefaultPrice;
     if (tx_prices.size() > 0) {
         auto position = (tx_prices.size() - 1) * kPercentile / 100;
-        SILKRPC_INFO << "GasPriceOracle::suggested_price getting price in position: " << position << "\n";
+        SILKRPC_TRACE << "GasPriceOracle::suggested_price getting price in position: " << position << "\n";
         if (tx_prices.size() > position) {
             price = tx_prices[position];
         }
@@ -66,24 +66,36 @@ asio::awaitable<intx::uint256> GasPriceOracle::suggested_price() {
         price = silkrpc::kDefaultMaxPrice;
     }
 
+    SILKRPC_INFO << "GasPriceOracle::suggested_price price: 0x" << intx::hex(price) << "\n";
+
     co_return price;
 }
 
 asio::awaitable<void> GasPriceOracle::load_block_prices(uint64_t block_number, uint64_t limit, std::vector<intx::uint256>& tx_prices) {
     SILKRPC_TRACE << "GasPriceOracle::load_block_prices processing block: " << block_number << "\n";
 
-    const auto block_with_hash = co_await core::rawdb::read_block_by_number(db_reader_, block_number);
+    const auto block_with_hash = co_await block_provider_( block_number);
     const auto base_fee = get_block_base_fee(block_with_hash.block.header);
     const auto coinbase = block_with_hash.block.header.beneficiary;
 
     SILKRPC_TRACE << "GasPriceOracle::load_block_prices # transactions in block: " << block_with_hash.block.transactions.size() << "\n";
-    SILKRPC_TRACE << "GasPriceOracle::load_block_prices # block base_fee: 0x" << silkworm::to_hex(silkworm::rlp::big_endian(base_fee)) << "\n";
+    SILKRPC_TRACE << "GasPriceOracle::load_block_prices # block base_fee: 0x" << intx::hex(base_fee) << "\n";
     SILKRPC_TRACE << "GasPriceOracle::load_block_prices # block beneficiary: 0x" << coinbase << "\n";
 
     std::vector<intx::uint256> block_prices;
+    int idx = 0;
     block_prices.reserve(block_with_hash.block.transactions.size());
     for (const auto& transaction : block_with_hash.block.transactions) {
         const auto effective_gas_price = transaction.effective_gas_price(base_fee);
+        const auto hash = hash_of_transaction(transaction);
+        SILKRPC_TRACE << "idx: " << idx++ 
+            << " hash: " <<  silkworm::to_hex(hash.bytes) 
+            << " effective_gas_price: 0x" <<  intx::hex(effective_gas_price)
+            << " priority_fee_per_gas: 0x" <<  intx::hex(transaction.priority_fee_per_gas(base_fee))
+            << " max_fee_per_gas: 0x" <<  intx::hex(transaction.max_fee_per_gas)
+            << " max_priority_fee_per_gas: 0x" <<  intx::hex(transaction.max_priority_fee_per_gas)
+            << "\n";
+
         if (effective_gas_price < kDefaultMinPrice) {
             continue;
         }
@@ -97,6 +109,7 @@ asio::awaitable<void> GasPriceOracle::load_block_prices(uint64_t block_number, u
     std::sort(block_prices.begin(), block_prices.end(), PriceComparator());
 
     for (const auto& effective_gas_price : block_prices) {
+        SILKRPC_TRACE << " effective_gas_price: 0x" <<  intx::hex(effective_gas_price) << "\n";
         tx_prices.push_back(effective_gas_price);
         if (tx_prices.size() >= limit) {
             break;

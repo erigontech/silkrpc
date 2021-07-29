@@ -140,8 +140,15 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_gas_price(const nlohmann::json&
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        GasPriceOracle gas_price_oracle{ tx_database};
-        const auto gas_price = co_await gas_price_oracle.suggested_price();
+        auto block_number = co_await core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
+        SILKRPC_INFO << "block_number " << block_number << "\n";
+
+        BlockProvider block_provider = [&tx_database](uint64_t block_number) {
+            return core::rawdb::read_block_by_number(tx_database, block_number);
+        };
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        const auto gas_price = co_await gas_price_oracle.suggested_price(block_number);
         reply = make_json_content(request["id"], to_quantity(gas_price));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";

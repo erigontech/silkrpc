@@ -17,21 +17,20 @@
 #ifndef SILKRPC_CORE_GAS_PRICE_ORACLE_HPP_
 #define SILKRPC_CORE_GAS_PRICE_ORACLE_HPP_
 
+#include <functional>
 #include <string>
 #include <vector>
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
-#include <asio/thread_pool.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/state/buffer.hpp>
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 
-#include <silkrpc/context_pool.hpp>
-#include <silkrpc/core/remote_buffer.hpp>
+#include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 
 namespace silkrpc {
@@ -48,21 +47,27 @@ const std::uint8_t kSamples = 3;
 const std::uint8_t kMaxSamples = kCheckBlocks * kSamples;
 const std::uint8_t kPercentile = 60;
 
+typedef std::function<asio::awaitable<silkworm::BlockWithHash>(uint64_t)> BlockProvider;
+
+// struct BlockProvider {
+//     virtual asio::awaitable<silkworm::BlockWithHash>operator() (uint64_t number) const;
+// };
+
 class GasPriceOracle {
 public:
-    explicit GasPriceOracle(const core::rawdb::DatabaseReader& db_reader)
-        : db_reader_(db_reader) {}
+    explicit GasPriceOracle(const BlockProvider& block_provider)
+        : block_provider_(block_provider) {}
     virtual ~GasPriceOracle() {}
 
     GasPriceOracle(const GasPriceOracle&) = delete;
     GasPriceOracle& operator=(const GasPriceOracle&) = delete;
 
-    asio::awaitable<intx::uint256> suggested_price();
+    asio::awaitable<intx::uint256> suggested_price(uint64_t block_number);
 
 private:
     asio::awaitable<void> load_block_prices(uint64_t block_number, uint64_t limit, std::vector<intx::uint256>& tx_prices);
 
-    const core::rawdb::DatabaseReader& db_reader_;
+    const BlockProvider& block_provider_;
 };
 
 } // namespace silkrpc
