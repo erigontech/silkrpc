@@ -92,7 +92,7 @@ std::string EVMExecutor::get_error_message(int64_t error_code, const silkworm::B
             error_message = "invalid instruction";
             break;
         case evmc_status_code::EVMC_UNDEFINED_INSTRUCTION:
-            error_message = "undefined instruction";
+            error_message = "invalid opcode";
             break;
         case evmc_status_code::EVMC_STACK_OVERFLOW:
             error_message = "stack overflow";
@@ -101,7 +101,7 @@ std::string EVMExecutor::get_error_message(int64_t error_code, const silkworm::B
             error_message = "stack underflow";
             break;
         case evmc_status_code::EVMC_BAD_JUMP_DESTINATION:
-            error_message = "bad jump destination";
+            error_message = "invalid jump destination";
             break;
         case evmc_status_code::EVMC_INVALID_MEMORY_ACCESS:
             error_message = "invalid memory access";
@@ -168,34 +168,45 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
 
                 const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
                 const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
-                state.subtract_from_balance(*txn.from, txn.gas_limit * effective_gas_price);
+                const auto value = txn.gas_limit * effective_gas_price;
 
-                if (txn.to.has_value()) {
-                    state.access_account(*txn.to);
-                    // EVM itself increments the nonce for contract creation
-                    state.set_nonce(*txn.from, txn.nonce + 1);
+                if (state.get_balance(*txn.from) < value) {
+                   silkworm::Bytes data{};
+                   ExecutionResult exec_result{evmc_status_code::EVMC_INSUFFICIENT_BALANCE, txn.gas_limit, data};
+                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                      self.complete(exec_result);
+                   });
                 }
+                else {
+                   state.subtract_from_balance(*txn.from, value);
 
-                for (const silkworm::AccessListEntry& ae : txn.access_list) {
-                    state.access_account(ae.account);
-                    for (const evmc::bytes32& key : ae.storage_keys) {
-                        state.access_storage(ae.account, key);
-                    }
+                   if (txn.to.has_value()) {
+                       state.access_account(*txn.to);
+                       // EVM itself increments the nonce for contract creation
+                       state.set_nonce(*txn.from, txn.nonce + 1);
+                   }
+   
+                   for (const silkworm::AccessListEntry& ae : txn.access_list) {
+                       state.access_account(ae.account);
+                       for (const evmc::bytes32& key : ae.storage_keys) {
+                           state.access_storage(ae.account, key);
+                       }
+                   }
+
+                   const evmc_revision rev{evm.revision()};
+
+                   const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev >= EVMC_HOMESTEAD, rev >= EVMC_ISTANBUL)};
+                   assert(g0 <= UINT64_MAX); // true due to the precondition (transaction must be valid)
+
+                   SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " g0: " << static_cast<uint64_t>(g0) << " start\n";
+                   const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
+                   SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
+
+                   ExecutionResult exec_result{result.status, result.gas_left, result.data};
+                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                       self.complete(exec_result);
+                   });
                 }
-
-                const evmc_revision rev{evm.revision()};
-
-                const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev >= EVMC_HOMESTEAD, rev >= EVMC_ISTANBUL)};
-                assert(g0 <= UINT64_MAX); // true due to the precondition (transaction must be valid)
-
-                SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " g0: " << static_cast<uint64_t>(g0) << " start\n";
-                const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
-                SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
-
-                ExecutionResult exec_result{result.status, result.gas_left, result.data};
-                asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
-                    self.complete(exec_result);
-                });
             });
         },
         asio::use_awaitable);
