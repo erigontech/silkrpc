@@ -168,17 +168,25 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
 
                 const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
                 const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
-                const auto value = txn.gas_limit * effective_gas_price;
+                const auto have = state.get_balance(*txn.from);
+                const auto want = txn.gas_limit * effective_gas_price;
 
-                if (state.get_balance(*txn.from) < value) {
+                if (have < want) {
                    silkworm::Bytes data{};
-                   ExecutionResult exec_result{evmc_status_code::EVMC_INSUFFICIENT_BALANCE, txn.gas_limit, data};
+                   std::string s1 = "insufficient funds for gas * price + value: address 0x";
+                   std::string addrValue = silkworm::to_hex(*txn.from);
+                   std::string haveStr = " have ";
+                   std::string haveValue = intx::to_string(have);
+                   std::string wantStr = " want ";
+                   std::string wantValue = intx::to_string(want);
+                   std::string error_message = s1 + addrValue + haveStr + haveValue + wantStr + wantValue;
+                   ExecutionResult exec_result{evmc_status_code::EVMC_INSUFFICIENT_BALANCE, txn.gas_limit, data, error_message};
                    asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
                       self.complete(exec_result);
                    });
                 }
                 else {
-                   state.subtract_from_balance(*txn.from, value);
+                   state.subtract_from_balance(*txn.from, want);
 
                    if (txn.to.has_value()) {
                        state.access_account(*txn.to);
@@ -215,5 +223,6 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
 
     co_return exec_result;
 }
+
 
 } // namespace silkrpc
