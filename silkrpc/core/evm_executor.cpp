@@ -184,8 +184,7 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                    asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
                       self.complete(exec_result);
                    });
-                }
-                else {
+                } else {
                    state.subtract_from_balance(*txn.from, want);
 
                    if (txn.to.has_value()) {
@@ -193,7 +192,6 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                        // EVM itself increments the nonce for contract creation
                        state.set_nonce(*txn.from, txn.nonce + 1);
                    }
-   
                    for (const silkworm::AccessListEntry& ae : txn.access_list) {
                        state.access_account(ae.account);
                        for (const evmc::bytes32& key : ae.storage_keys) {
