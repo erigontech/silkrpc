@@ -33,6 +33,8 @@ struct Transaction : public silkworm::Transaction {
     uint64_t block_number{0};
     std::optional<intx::uint256> block_base_fee_per_gas{std::nullopt};
     uint64_t transaction_index{0};
+
+    intx::uint256 effective_gas_price() const; // EIP-1559
 };
 
 std::ostream& operator<<(std::ostream& out, const Transaction& t);

@@ -16,25 +16,57 @@
 
 #include "transaction.hpp"
 
+#include <vector>
+
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
+#include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/log.hpp>
 
 namespace silkrpc {
 
 using Catch::Matchers::Message;
+using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
+using silkworm::kGiga;
 
 TEST_CASE("create empty transaction", "[silkrpc][types][transaction]") {
     Transaction txn{};
     CHECK(txn.block_hash == evmc::bytes32{});
     CHECK(txn.block_number == 0);
     CHECK(txn.transaction_index == 0);
+    CHECK(txn.effective_gas_price() == intx::uint256{0});
 }
 
 TEST_CASE("print empty transaction", "[silkrpc][types][transaction]") {
     Transaction txn{};
     CHECK_NOTHROW(silkworm::null_stream() << txn);
+}
+
+TEST_CASE("create legacy transaction", "[silkrpc][types][transaction]") {
+    // https://etherscan.io/tx/0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060
+    Transaction txn{
+        std::nullopt,                                        // type
+        0,                                                   // nonce
+        50'000 * kGiga,                                      // max_priority_fee_per_gas
+        50'000 * kGiga,                                      // max_fee_per_gas
+        21'000,                                              // gas_limit
+        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address,  // to
+        31337,                                               // value
+        {},                                                  // data
+        true,                                                // odd_y_parity
+        std::nullopt,                                        // chain_id
+        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"),  // r
+        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"),  // s
+        std::vector<silkworm::AccessListEntry>{},  // access list
+        0xa1e4380a3b1f749673e270229993ee55f35663b4_address,  // to
+        0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd_bytes32,  // block hash
+        46147,         // block number
+        std::nullopt,  // block_base_fee_per_gas
+        0,             // transaction index
+    };
+
+    CHECK(txn.effective_gas_price() == 50000000000000);
 }
 
 } // namespace silkrpc
