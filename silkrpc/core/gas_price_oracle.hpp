@@ -49,10 +49,6 @@ const std::uint8_t kPercentile = 60;
 
 typedef std::function<asio::awaitable<silkworm::BlockWithHash>(uint64_t)> BlockProvider;
 
-// struct BlockProvider {
-//     virtual asio::awaitable<silkworm::BlockWithHash>operator() (uint64_t number) const;
-// };
-
 class GasPriceOracle {
 public:
     explicit GasPriceOracle(const BlockProvider& block_provider)
