@@ -16,7 +16,7 @@
 
 #include "completion_runner.hpp"
 
-#include <mutex>
+#include <future>
 #include <thread>
 
 #include <asio/io_context.hpp>
@@ -142,23 +142,25 @@ TEST_CASE("start completion runner", "[silkrpc][grpc][completion_runner]") {
     SECTION("posting handler completion to I/O execution context") {
         grpc::CompletionQueue queue;
         asio::io_context io_context;
+        asio::io_context::work work{io_context};
         CompletionRunner completion_runner{queue, io_context};
         auto io_context_thread = std::thread([&]() { io_context.run(); });
         auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
         std::this_thread::yield();
-        std::mutex m;
+        std::promise<void> p;
+        std::future<void> f = p.get_future();
         class ACH : public AsyncCompletionHandler {
         public:
-            explicit ACH(std::mutex& m) : m_(m) {}
-            void completed(bool ok) override { m_.unlock(); };
+            explicit ACH(std::promise<void>& p) : p_(p) {}
+            void completed(bool ok) override { p_.set_value(); };
         private:
-            std::mutex& m_;
+            std::promise<void>& p_;
         };
-        ACH handler{m};
+        ACH handler{p};
         AsyncCompletionHandler* handler_ptr = &handler;
         grpc::Alarm alarm;
         alarm.Set(&queue, grpc_timeout_milliseconds_to_deadline(10), AsyncCompletionHandler::tag(handler_ptr));
-        m.lock();
+        f.get();
         completion_runner.stop();
         io_context.stop();
         CHECK_NOTHROW(io_context_thread.join());
