@@ -148,7 +148,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
         auto handle_method = RequestHandler::handlers_[method];
         co_await (&rpc_api_->*handle_method)(request_json, reply_json);
 
-        reply.content = reply_json.dump() + "\n";
+        reply.content = reply_json.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace) + "\n";
         reply.status = Reply::ok;
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
