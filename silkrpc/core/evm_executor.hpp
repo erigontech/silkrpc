@@ -39,6 +39,7 @@ struct ExecutionResult {
     int64_t error_code;
     uint64_t gas_left;
     silkworm::Bytes data;
+    std::optional<std::string> pre_check_error{std::nullopt};
 };
 
 class EVMExecutor {
