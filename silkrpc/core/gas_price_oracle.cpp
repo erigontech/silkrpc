@@ -93,7 +93,7 @@ asio::awaitable<void> GasPriceOracle::load_block_prices(uint64_t block_number, u
             continue;
         }
 
-        const auto &sender = transaction.from;
+        const auto& sender = transaction.from;
         if (sender == coinbase) {
             continue;
         }

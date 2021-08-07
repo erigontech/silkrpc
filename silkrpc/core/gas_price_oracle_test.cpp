@@ -32,88 +32,83 @@ namespace silkrpc {
 
 using evmc::literals::operator""_address;
 
-static std::vector<silkworm::BlockWithHash> kBlocks;
-
 static const evmc::address kBeneficiary = 0xe5ef458d37212a06e3f59d40c454e76150ae7c31_address;
 static const evmc::address kFromTnx1 = 0xe5ef458d37212a06e3f59d40c454e76150ae7c32_address;
 static const evmc::address kFromTnx2 = 0xe5ef458d37212a06e3f59d40c454e76150ae7c33_address;
 
+struct FixedBlockData {
+    intx::uint256 base_fee;
+    intx::uint256 max_priority_fee_per_gas_tx1;
+    intx::uint256 max_fee_per_gas_tx1;
+    intx::uint256 max_priority_fee_per_gas_tx2;
+    intx::uint256 max_fee_per_gas_tx2;
+};
+
+struct VariableBlockData {
+    intx::uint256 base_fee;
+    intx::uint256 max_priority_fee_per_gas;
+    int delta_max_priority_fee_per_gas;
+    intx::uint256 max_fee_per_gas;
+    int delta_max_fee_per_gas;
+};
+
 static silkworm::BlockWithHash allocate_block(uint64_t block_number,
-    const evmc::address &beneficiary,
-    const intx::uint256 &base_fee,
-    const intx::uint256 &max_priority_fee_per_gas_tx1,
-    const intx::uint256 &max_fee_per_gas_tx1,
-    const intx::uint256 &max_priority_fee_per_gas_tx2,
-    const intx::uint256 &max_fee_per_gas_tx2) {
+    const evmc::address& beneficiary, const FixedBlockData& block_data) {
 
     silkworm::BlockWithHash block_with_hash;
 
     block_with_hash.block.header.number = block_number;
     block_with_hash.block.header.beneficiary = beneficiary;
-    block_with_hash.block.header.base_fee_per_gas = base_fee;
+    block_with_hash.block.header.base_fee_per_gas = block_data.base_fee;
 
     block_with_hash.block.transactions.resize(2);
-    block_with_hash.block.transactions[0].max_priority_fee_per_gas = max_priority_fee_per_gas_tx1;
-    block_with_hash.block.transactions[0].max_fee_per_gas = max_fee_per_gas_tx1;
+    block_with_hash.block.transactions[0].max_priority_fee_per_gas = block_data.max_priority_fee_per_gas_tx1;
+    block_with_hash.block.transactions[0].max_fee_per_gas = block_data.max_fee_per_gas_tx1;
     block_with_hash.block.transactions[0].from = kFromTnx1;
 
-    block_with_hash.block.transactions[1].max_priority_fee_per_gas = max_priority_fee_per_gas_tx2;
-    block_with_hash.block.transactions[1].max_fee_per_gas = max_fee_per_gas_tx2;
+    block_with_hash.block.transactions[1].max_priority_fee_per_gas = block_data.max_priority_fee_per_gas_tx2;
+    block_with_hash.block.transactions[1].max_fee_per_gas = block_data.max_fee_per_gas_tx2;
     block_with_hash.block.transactions[1].from = kFromTnx2;
 
     return block_with_hash;
 }
 
-static void clear_blocks_vector() {
-    kBlocks.clear();
-}
+static void fill_blocks_vector(std::vector<silkworm::BlockWithHash>& kBlocks,
+    const evmc::address& beneficiary, const FixedBlockData& block_data) {
 
-static void fill_blocks_vector(uint16_t size,
-    const evmc::address &beneficiary,
-    const intx::uint256 &base_fee,
-    const intx::uint256 &max_priority_fee_per_gas_tx1,
-    const intx::uint256 &max_fee_per_gas_tx1,
-    const intx::uint256 &max_priority_fee_per_gas_tx2,
-    const intx::uint256 &max_fee_per_gas_tx2) {
-
-    kBlocks.reserve(size);
-    for (auto idx = 0; idx < size; idx++) {
-        silkworm::BlockWithHash block_with_hash = allocate_block(idx, beneficiary, base_fee,
-            max_priority_fee_per_gas_tx1, max_fee_per_gas_tx1,
-            max_priority_fee_per_gas_tx2, max_fee_per_gas_tx2);
+    for (auto idx = 0; idx < kBlocks.capacity(); idx++) {
+        silkworm::BlockWithHash block_with_hash = allocate_block(idx, beneficiary, block_data);
         kBlocks.push_back(block_with_hash);
     }
 }
 
-static void fill_blocks_vector(uint16_t size,
-    const evmc::address &beneficiary,
-    const intx::uint256 &base_fee,
-    const intx::uint256 &max_priority_fee_per_gas,
-    const int delta_max_priority_fee_per_gas,
-    const intx::uint256 &max_fee_per_gas,
-    const int delta_max_fee_per_gas) {
+static void fill_blocks_vector(std::vector<silkworm::BlockWithHash>& kBlocks,
+    const evmc::address& beneficiary,
+    const VariableBlockData& variable_block_data) {
 
-    kBlocks.reserve(size);
-    for (auto idx = 0; idx < size; idx++) {
-        int64_t max_priority = int64_t(max_priority_fee_per_gas) + delta_max_priority_fee_per_gas * idx;
+    for (auto idx = 0; idx < kBlocks.capacity(); idx++) {
+        int64_t max_priority = int64_t(variable_block_data.max_priority_fee_per_gas) + variable_block_data.delta_max_priority_fee_per_gas * idx;
         if (max_priority < 0) {
             max_priority = 0;
         }
-        int64_t  max_fee = int64_t(max_fee_per_gas) + delta_max_fee_per_gas * idx;
+        int64_t  max_fee = int64_t(variable_block_data.max_fee_per_gas) + variable_block_data.delta_max_fee_per_gas * idx;
         if (max_fee < 0) {
             max_fee = 0;
         }
 
-        silkworm::BlockWithHash block_with_hash = allocate_block(idx, beneficiary, base_fee,
+        FixedBlockData block_data = {
+            variable_block_data.base_fee,
             intx::uint256{max_priority},
             intx::uint256{max_fee},
             intx::uint256{max_priority},
-            intx::uint256{max_fee});
+            intx::uint256{max_fee}
+        };
+        silkworm::BlockWithHash block_with_hash = allocate_block(idx, beneficiary, block_data);
         kBlocks.push_back(block_with_hash);
     }
 }
 
-asio::awaitable<silkworm::BlockWithHash> get_block(uint64_t block_number) {
+asio::awaitable<silkworm::BlockWithHash> get_block(const std::vector<silkworm::BlockWithHash>& kBlocks, uint64_t block_number) {
     REQUIRE(kBlocks.size() > block_number);
 
     const silkworm::BlockWithHash block = kBlocks[block_number];
@@ -121,473 +116,549 @@ asio::awaitable<silkworm::BlockWithHash> get_block(uint64_t block_number) {
     co_return block;
 }
 
-BlockProvider block_provider = [](uint64_t block_number) {
-    return get_block(block_number);
-};
-
-asio::thread_pool pool{1};
-
 using Catch::Matchers::Message;
-TEST_CASE("0 blocks") {
-    const intx::uint256 base_fee = 0;
-    const intx::uint256 max_priority_fee_per_gas = 0x32;
-    const intx::uint256 max_fee_per_gas = 0x32;
-    const intx::uint256 expected_price = kDefaultPrice;
-
-    clear_blocks_vector();
-    fill_blocks_vector(1, kBeneficiary, base_fee, max_priority_fee_per_gas, max_fee_per_gas, max_priority_fee_per_gas, max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(0), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("1 block with 0x0 base fee") {
-    const intx::uint256 base_fee = 0;
-    const intx::uint256 max_priority_fee_per_gas = 0x32;
-    const intx::uint256 max_fee_per_gas = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas + base_fee, max_fee_per_gas);
-
-    clear_blocks_vector();
-    fill_blocks_vector(2, kBeneficiary, base_fee, max_priority_fee_per_gas, max_fee_per_gas, max_priority_fee_per_gas, max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("1 block with 0x7 base_fee and same max_priority and max_fee in tnxs") {
-    const intx::uint256 base_fee = 0x7;
-    const intx::uint256 max_priority_fee_per_gas = 0x32;
-    const intx::uint256 max_fee_per_gas = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas + base_fee, max_fee_per_gas);
-
-    clear_blocks_vector();
-    fill_blocks_vector(2, kBeneficiary, base_fee, max_priority_fee_per_gas, max_fee_per_gas, max_priority_fee_per_gas, max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("1 block with 0x7 base_fee and different max_priority and max_fee in tnxs") {
-    const intx::uint256 base_fee = 0x7;
-    const intx::uint256 max_priority_fee_per_gas_tx1 = 0x0;
-    const intx::uint256 max_fee_per_gas_tx1 = 0x32;
-    const intx::uint256 max_priority_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 max_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas_tx1 + base_fee, max_fee_per_gas_tx1);
-
-    clear_blocks_vector();
-    fill_blocks_vector(2, kBeneficiary, base_fee, max_priority_fee_per_gas_tx1, max_fee_per_gas_tx1, max_priority_fee_per_gas_tx2, max_fee_per_gas_tx2);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("20 block with 0x0 base_fee and same max_priority and max_fee") {
-    const intx::uint256 base_fee = 0x0;
-    const intx::uint256 max_priority_fee_per_gas = 0x32;
-    const intx::uint256 max_fee_per_gas = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas + base_fee, max_fee_per_gas);
-
-    clear_blocks_vector();
-    fill_blocks_vector(20, kBeneficiary, base_fee, max_priority_fee_per_gas, max_fee_per_gas, max_priority_fee_per_gas, max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("20 block with 0x7 base_fee and different max_priority and max_fee in tnxs") {
-    const intx::uint256 base_fee = 0x7;
-    const intx::uint256 max_priority_fee_per_gas_tx1 = 0x0;
-    const intx::uint256 max_fee_per_gas_tx1 = 0x32;
-    const intx::uint256 max_priority_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 max_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas_tx1 + base_fee, max_fee_per_gas_tx1);
-
-    clear_blocks_vector();
-    fill_blocks_vector(20, kBeneficiary, base_fee, max_priority_fee_per_gas_tx1, max_fee_per_gas_tx1, max_priority_fee_per_gas_tx2, max_fee_per_gas_tx2);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("30 block with 0x0 base_fee and same max_priority and max_fee") {
-    const intx::uint256 base_fee = 0x0;
-    const intx::uint256 max_priority_fee_per_gas = 0x32;
-    const intx::uint256 max_fee_per_gas = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas + base_fee, max_fee_per_gas);
-
-    clear_blocks_vector();
-    fill_blocks_vector(30, kBeneficiary, base_fee, max_priority_fee_per_gas, max_fee_per_gas, max_priority_fee_per_gas, max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("30 block with 0x7 base_fee and different max_priority and max_fee in tnxs") {
-    const intx::uint256 base_fee = 0x7;
-    const intx::uint256 max_priority_fee_per_gas_tx1 = 0x0;
-    const intx::uint256 max_fee_per_gas_tx1 = 0x32;
-    const intx::uint256 max_priority_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 max_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas_tx1 + base_fee, max_fee_per_gas_tx1);
-
-    clear_blocks_vector();
-    fill_blocks_vector(30, kBeneficiary, base_fee, max_priority_fee_per_gas_tx1, max_fee_per_gas_tx1, max_priority_fee_per_gas_tx2, max_fee_per_gas_tx2);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x0 base_fee and same max_priority and max_fee") {
-    const intx::uint256 base_fee = 0x0;
-    const intx::uint256 max_priority_fee_per_gas = 0x32;
-    const intx::uint256 max_fee_per_gas = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas + base_fee, max_fee_per_gas);
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas, max_fee_per_gas, max_priority_fee_per_gas, max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x7 base_fee and different max_priority and max_fee in tnxs") {
-    const intx::uint256 base_fee = 0x7;
-    const intx::uint256 max_priority_fee_per_gas_tx1 = 0x0;
-    const intx::uint256 max_fee_per_gas_tx1 = 0x32;
-    const intx::uint256 max_priority_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 max_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas_tx1 + base_fee, max_fee_per_gas_tx1);
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas_tx1, max_fee_per_gas_tx1, max_priority_fee_per_gas_tx2, max_fee_per_gas_tx2);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x7 base_fee and max_priority > max_fee") {
-    const intx::uint256 base_fee = 0x7;
-    const intx::uint256 max_priority_fee_per_gas = 0x40;
-    const intx::uint256 max_fee_per_gas = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas + base_fee, max_fee_per_gas);
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas, max_fee_per_gas, max_priority_fee_per_gas, max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x7 base_fee and max_priority < max_fee") {
-    const intx::uint256 base_fee = 0x7;
-    const intx::uint256 max_priority_fee_per_gas = 0x32;
-    const intx::uint256 max_fee_per_gas = 0x40;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas + base_fee, max_fee_per_gas);
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas, max_fee_per_gas, max_priority_fee_per_gas, max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x7 base_fee and different max_priority and max_fee in tnxs, beneficiary == tx1 from") {
-    const intx::uint256 base_fee = 0x7;
-    const intx::uint256 max_priority_fee_per_gas_tx1 = 0x0;
-    const intx::uint256 max_fee_per_gas_tx1 = 0x32;
-    const intx::uint256 max_priority_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 max_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas_tx2 + base_fee, max_fee_per_gas_tx2);
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kFromTnx1, base_fee, max_priority_fee_per_gas_tx1, max_fee_per_gas_tx1, max_priority_fee_per_gas_tx2, max_fee_per_gas_tx2);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x7 base_fee and different max_priority and max_fee in tnxs, beneficiary == tx2 from") {
-    const intx::uint256 base_fee = 0x7;
-    const intx::uint256 max_priority_fee_per_gas_tx1 = 0x0;
-    const intx::uint256 max_fee_per_gas_tx1 = 0x32;
-    const intx::uint256 max_priority_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 max_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas_tx1 + base_fee, max_fee_per_gas_tx1);
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kFromTnx2, base_fee, max_priority_fee_per_gas_tx1, max_fee_per_gas_tx1, max_priority_fee_per_gas_tx2, max_fee_per_gas_tx2);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x0 base fee and 1 tnx with fee == kDefaultMinPrice") {
-    const intx::uint256 base_fee = 0;
-    const intx::uint256 max_priority_fee_per_gas_tx1 = 0x32;
-    const intx::uint256 max_fee_per_gas_tx1 = 0x32;
-    const intx::uint256 max_priority_fee_per_gas_tx2 = kDefaultMinPrice;
-    const intx::uint256 max_fee_per_gas_tx2 = kDefaultMinPrice;
-    const intx::uint256 expected_price = kDefaultMinPrice;
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas_tx1, max_fee_per_gas_tx1, max_priority_fee_per_gas_tx2, max_fee_per_gas_tx2);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x0 base fee and 1 tnx with fee < kDefaultMinPrice") {
-    const intx::uint256 base_fee = 0;
-    const intx::uint256 max_priority_fee_per_gas_tx1 = 0x32;
-    const intx::uint256 max_fee_per_gas_tx1 = 0x32;
-    const intx::uint256 max_priority_fee_per_gas_tx2 = kDefaultMinPrice - 1;
-    const intx::uint256 max_fee_per_gas_tx2 = kDefaultMinPrice - 1;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas_tx1 + base_fee, max_fee_per_gas_tx1);
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas_tx1, max_fee_per_gas_tx1, max_priority_fee_per_gas_tx2, max_fee_per_gas_tx2);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x0 base fee with fee == kDefaultMaxPrice") {
-    const intx::uint256 base_fee = 0;
-    const intx::uint256 max_priority_fee_per_gas = kDefaultMaxPrice;
-    const intx::uint256 max_fee_per_gas = kDefaultMaxPrice;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas + base_fee, max_fee_per_gas);
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas, max_fee_per_gas, max_priority_fee_per_gas, max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x07 base fee with fee == kDefaultMaxPrice") {
-    const intx::uint256 base_fee = 0x07;
-    const intx::uint256 max_priority_fee_per_gas = kDefaultMaxPrice;
-    const intx::uint256 max_fee_per_gas = kDefaultMaxPrice;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas + base_fee, max_fee_per_gas);
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas, max_fee_per_gas, max_priority_fee_per_gas, max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x0 base fee with fee > kDefaultMaxPrice") {
-    const intx::uint256 base_fee = 0;
-    const intx::uint256 max_priority_fee_per_gas = kDefaultMaxPrice + 0x10;
-    const intx::uint256 max_fee_per_gas = kDefaultMaxPrice + 0x10;
-    const intx::uint256 expected_price = kDefaultMaxPrice;
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas, max_fee_per_gas, max_priority_fee_per_gas, max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x07 base fee with fee > kDefaultMaxPrice") {
-    const intx::uint256 base_fee = 0x07;
-    const intx::uint256 max_priority_fee_per_gas = kDefaultMaxPrice + 0x10;
-    const intx::uint256 max_fee_per_gas = kDefaultMaxPrice + 0x10;
-    const intx::uint256 expected_price = kDefaultMaxPrice;
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas, max_fee_per_gas, max_priority_fee_per_gas, max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x0 base fee and 1 tnx with fee > kDefaultMaxPrice") {
-    const intx::uint256 base_fee = 0;
-    const intx::uint256 max_priority_fee_per_gas_tx1 = kDefaultMaxPrice + 0x10;
-    const intx::uint256 max_fee_per_gas_tx1 = kDefaultMaxPrice + 0x10;
-    const intx::uint256 max_priority_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 max_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas_tx2 + base_fee, max_fee_per_gas_tx2);
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas_tx1, max_fee_per_gas_tx1, max_priority_fee_per_gas_tx2, max_fee_per_gas_tx2);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x7 base fee and 1 tnx with fee > kDefaultMaxPrice") {
-    const intx::uint256 base_fee = 0x7;
-    const intx::uint256 max_priority_fee_per_gas_tx1 = kDefaultMaxPrice + 0x10;
-    const intx::uint256 max_fee_per_gas_tx1 = kDefaultMaxPrice + 0x10;
-    const intx::uint256 max_priority_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 max_fee_per_gas_tx2 = 0x32;
-    const intx::uint256 expected_price = std::min(max_priority_fee_per_gas_tx2 + base_fee, max_fee_per_gas_tx2);
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas_tx1, max_fee_per_gas_tx1, max_priority_fee_per_gas_tx2, max_fee_per_gas_tx2);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x0 base fee with tnxs with increasing max_priority_fee_per_gas and max_fee_per_gas") {
-    const intx::uint256 base_fee = 0x0;
-    const intx::uint256 max_priority_fee_per_gas = 0x10;
-    const intx::uint256 max_fee_per_gas = 0x10;
-    const int delta_max_priority_fee_per_gas = 0x9;
-    const int delta_max_fee_per_gas = 0x9;
-    const intx::uint256 expected_price = 0x019;
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas, delta_max_priority_fee_per_gas, max_fee_per_gas, delta_max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x7 base fee with tnxs with increasing max_priority_fee_per_gas and max_fee_per_gas") {
-    const intx::uint256 base_fee = 0x7;
-    const intx::uint256 max_priority_fee_per_gas = 0x10;
-    const intx::uint256 max_fee_per_gas = 0x10;
-    const int delta_max_priority_fee_per_gas = 0x9;
-    const int delta_max_fee_per_gas = 0x9;
-    const intx::uint256 expected_price = 0x019;
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas, delta_max_priority_fee_per_gas, max_fee_per_gas, delta_max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x0 base fee with tnxs with decreasing max_priority_fee_per_gas and max_fee_per_gas") {
-    const intx::uint256 base_fee = 0x0;
-    const intx::uint256 max_priority_fee_per_gas = 0x300;
-    const intx::uint256 max_fee_per_gas = 0x300;
-    const int delta_max_priority_fee_per_gas = -0x9;
-    const int delta_max_fee_per_gas = -0x9;
-    const intx::uint256 expected_price = 0x2f7;
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas, delta_max_priority_fee_per_gas, max_fee_per_gas, delta_max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x7 base fee with tnxs with decreasing max_priority_fee_per_gas and max_fee_per_gas") {
-    const intx::uint256 base_fee = 0x7;
-    const intx::uint256 max_priority_fee_per_gas = 0x200;
-    const intx::uint256 max_fee_per_gas = 0x200;
-    const int delta_max_priority_fee_per_gas = -0x9;
-    const int delta_max_fee_per_gas = -0x9;
-    const intx::uint256 expected_price = 0x1f7;
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas, delta_max_priority_fee_per_gas, max_fee_per_gas, delta_max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
-}
-
-TEST_CASE("60 block with 0x0 base fee with tnxs with increasing max_priority_fee_per_gas and max_fee_per_gas over threshold") {
-    const intx::uint256 base_fee = 0x0;
-    const intx::uint256 max_priority_fee_per_gas = kDefaultMaxPrice - intx::uint256{0x200};
-    const intx::uint256 max_fee_per_gas = kDefaultMaxPrice - intx::uint256{0x200};
-    const int delta_max_priority_fee_per_gas = 0x9;
-    const int delta_max_fee_per_gas = 0x9;
-    const intx::uint256 expected_price = 0x746a528609;
-
-    clear_blocks_vector();
-    fill_blocks_vector(60, kBeneficiary, base_fee, max_priority_fee_per_gas, delta_max_priority_fee_per_gas, max_fee_per_gas, delta_max_fee_per_gas);
-
-    GasPriceOracle gas_price_oracle{ block_provider};
-    auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
-    const intx::uint256 &price = result.get();
-
-    CHECK(price == expected_price);
+TEST_CASE("suggested price") {
+    asio::thread_pool pool{1};
+    
+    SECTION("when there is no block in chain" ) {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0, 0x32, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = kDefaultPrice;
+
+        kBlocks.reserve(1);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(0), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there is just 1 block in chain with 0x0 base fee") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0, 0x32, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x32;
+
+        kBlocks.reserve(2);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there is just 1 block in chain with 0x7 base fee") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x7, 0x32, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x32;
+
+        kBlocks.reserve(2);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there is just 1 block in chain with 0x7 base fee and different max_priority and max_fee in tnxs") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x07;
+
+        kBlocks.reserve(2);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 20 blocks with 0x0 base fee and same max_priority and max_fee in tnxs") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x0, 0x32, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x32;
+
+        kBlocks.reserve(20);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 20 blocks with 0x7 base fee and different max_priority and max_fee in tnxs") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x7;
+
+        kBlocks.reserve(20);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 30 blocks with 0x0 base fee and same max_priority and max_fee in tnxs") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x0, 0x32, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x32;
+
+        kBlocks.reserve(30);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 30 blocks with 0x7 base fee and different max_priority and max_fee in tnxs") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x7;
+
+        kBlocks.reserve(30);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x0 base fee and same max_priority and max_fee in tnxs") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x0, 0x32, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x32;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x7 base fee and different max_priority and max_fee in tnxs") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x7;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x7 base fee and max_priority > max_fee") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x7, 0x40, 0x32, 0x40, 0x32};
+        const intx::uint256 expected_price = 0x32;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x7 base fee and max_priority < max_fee") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x7, 0x32, 0x40, 0x32, 0x40};
+        const intx::uint256 expected_price = 0x39;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x7 base fee and different max_priority and max_fee in tnxs, beneficiary == tx1 from") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x32;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kFromTnx1, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x7 base_fee and different max_priority and max_fee in tnxs, beneficiary == tx2 from") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x7;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kFromTnx2, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x0 base fee and 1 tnx with fee == kDefaultMinPrice") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x0, 0x32, 0x32, kDefaultMinPrice, kDefaultMinPrice};
+        const intx::uint256 expected_price = kDefaultMinPrice;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks ith 0x0 base fee and 1 tnx with fee < kDefaultMinPrice") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x0, 0x32, 0x32, kDefaultMinPrice - 1, kDefaultMinPrice - 1};
+        const intx::uint256 expected_price = 0x32;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x0 base fee with fee == kDefaultMaxPrice") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x0, kDefaultMaxPrice, kDefaultMaxPrice, kDefaultMaxPrice, kDefaultMaxPrice};
+        const intx::uint256 expected_price = kDefaultMaxPrice;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with with 0x07 base fee with fee == kDefaultMaxPrice") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x07, kDefaultMaxPrice, kDefaultMaxPrice, kDefaultMaxPrice, kDefaultMaxPrice};
+        const intx::uint256 expected_price = kDefaultMaxPrice;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x0 base fee with fee > kDefaultMaxPrice") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x0, kDefaultMaxPrice + 0x10, kDefaultMaxPrice + 0x10, kDefaultMaxPrice + 0x10, kDefaultMaxPrice + 0x10};
+        const intx::uint256 expected_price = kDefaultMaxPrice;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x07 base fee with fee > kDefaultMaxPrice") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x07, kDefaultMaxPrice + 0x10, kDefaultMaxPrice + 0x10, kDefaultMaxPrice + 0x10, kDefaultMaxPrice + 0x10};
+        const intx::uint256 expected_price = kDefaultMaxPrice;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x0 base fee and 1 tnx with fee > kDefaultMaxPrice") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x0, kDefaultMaxPrice + kDefaultMaxPrice + 0x10, 0x32, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x32;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x7 base fee and 1 tnx with fee > kDefaultMaxPrice") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        FixedBlockData data = {0x7, kDefaultMaxPrice + 0x10, kDefaultMaxPrice + 0x10, 0x32, 0x32};
+        const intx::uint256 expected_price = 0x32;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x0 base fee and tnxs with increasing max_priority_fee_per_gas and max_fee_per_gas") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        VariableBlockData data = {0x0, 0x10, 0x9, 0x10, 0x9};
+        const intx::uint256 expected_price = 0x019;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x7 base fee and tnxs with increasing max_priority_fee_per_gas and max_fee_per_gas") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        VariableBlockData data = {0x7, 0x10, 0x9, 0x10, 0x9};
+        const intx::uint256 expected_price = 0x019;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x0 base fee and tnxs with decreasing max_priority_fee_per_gas and max_fee_per_gas") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        VariableBlockData data = {0x0, 0x300, -0x9, 0x300, -0x9};
+        const intx::uint256 expected_price = 0x2f7;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x7 base fee and tnxs with decreasing max_priority_fee_per_gas and max_fee_per_gas") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        VariableBlockData data = {0x7, 0x200, -0x9, 0x200, -0x9};
+        const intx::uint256 expected_price = 0x1f7;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
+
+    SECTION("when there are 60 blocks with 0x0 base fee and tnxs with  max_priority_fee_per_gas and max_fee_per_gas increasing over threshold") {
+        std::vector<silkworm::BlockWithHash> kBlocks;
+
+        BlockProvider block_provider = [&kBlocks](uint64_t block_number) {
+            return get_block(kBlocks, block_number);
+        };
+
+        VariableBlockData data = {0x0, kDefaultMaxPrice - intx::uint256{0x200}, 0x9, kDefaultMaxPrice - intx::uint256{0x200}, 0x9};
+        const intx::uint256 expected_price = 0x746a528609;
+
+        kBlocks.reserve(60);
+        fill_blocks_vector(kBlocks, kBeneficiary, data);
+
+        GasPriceOracle gas_price_oracle{ block_provider};
+        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        const intx::uint256 &price = result.get();
+
+        CHECK(price == expected_price);
+    }
 }
 } // namespace silkrpc
 
