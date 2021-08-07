@@ -147,7 +147,6 @@ std::string EVMExecutor::get_error_message(int64_t error_code, const silkworm::B
     if (error_reason) {
         error_message += ": " + *error_reason;
     }
-
     SILKRPC_DEBUG << "EVMExecutor::get_error_message error_message: " << error_message << "\n";
 
     return error_message;
