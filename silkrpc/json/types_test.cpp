@@ -156,7 +156,6 @@ TEST_CASE("serialize empty block", "[silkrpc][to_json]") {
         "number":"0x0",
         "gasLimit":"0x0",
         "gasUsed":"0x0",
-        "baseFeePerGas":"0x0",
         "timestamp":"0x0",
         "extraData":"0x",
         "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -281,7 +280,7 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
         silkworm::kEip2930TransactionType,
         0,
         20000000000,
-        30000000000,
+        20000000000,
         uint64_t{0},
         0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
         intx::uint256{0},
@@ -296,16 +295,18 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
     nlohmann::json j1 = txn1;
     CHECK(j1 == R"({
         "nonce":"0x0",
+        "chainId":"0x1",
         "gas":"0x0",
         "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
         "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
         "type":"0x1",
         "value":"0x0",
         "input":"0x001122aabbcc",
-        "hash":"0x97a8b0f46a6592052a683442bb7f86502d08af6354bfece6957793293587b660",
+        "hash":"0x44fb44d17b46c3e63b85bf8e496418862082551ac6dacc8d68fafb937a0f722d",
+        "accessList":[],
         "r":"0x12",
         "s":"0x24",
-        "v":"0x25"
+        "v":"0x0"
     })"_json);
 
     std::vector<silkworm::AccessListEntry> access_list{
@@ -341,6 +342,7 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
     CHECK(j2 == R"({
         "nonce":"0x0",
         "gasPrice":"0x4a817c80c",
+        "chainId":"0x1",
         "gas":"0x0",
         "to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
         "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
@@ -350,10 +352,11 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
         "hash":"0x97a8b0f46a6592052a683442bb7f86502d08af6354bfece6957793293587b660",
         "r":"0x12",
         "s":"0x24",
-        "v":"0x25",
+        "v":"0x0",
         "blockHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
         "blockNumber":"0x1e0f3",
-        "transactionIndex":"0x3"
+        "transactionIndex":"0x3",
+        "accessList":[]
     })"_json);
 }
 
