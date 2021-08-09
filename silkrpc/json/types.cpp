@@ -177,6 +177,16 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
 
 namespace silkrpc {
 
+uint64_t getBlockSize(const Block &b) {
+   silkworm::rlp::Header rlp_head{true, 0};
+   rlp_head.payload_length = silkworm::rlp::length (b.block.header);
+   rlp_head.payload_length += silkworm::rlp::length(b.block.transactions);
+   rlp_head.payload_length += silkworm::rlp::length(b.block.ommers);
+
+   rlp_head.payload_length += silkworm::rlp::length_of_length(rlp_head.payload_length);
+   return rlp_head.payload_length;
+}
+
 void to_json(nlohmann::json& json, const Block& b) {
     const auto block_number = silkrpc::to_quantity(b.block.header.number);
     json["number"] = block_number;
@@ -193,9 +203,7 @@ void to_json(nlohmann::json& json, const Block& b) {
     json["totalDifficulty"] = silkrpc::to_quantity(silkworm::rlp::big_endian(b.total_difficulty));
     json["extraData"] = "0x" + silkworm::to_hex(b.block.header.extra_data);
     json["mixHash"]= b.block.header.mix_hash;
-    silkworm::Bytes block_rlp{};
-    silkworm::rlp::encode(block_rlp, b.block);
-    json["size"] = silkrpc::to_quantity(block_rlp.length());
+    json["size"] = silkrpc::to_quantity(getBlockSize(b));
     json["gasLimit"] = silkrpc::to_quantity(b.block.header.gas_limit);
     json["gasUsed"] = silkrpc::to_quantity(b.block.header.gas_used);
     if (b.block.header.base_fee_per_gas) { 

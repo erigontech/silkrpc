@@ -160,7 +160,7 @@ TEST_CASE("serialize empty block", "[silkrpc][to_json]") {
         "extraData":"0x",
         "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
         "hash":"0x0000000000000000000000000000000000000000000000000000000000000000",
-        "size":"0x3",
+        "size":"0x1f5",
         "totalDifficulty":"0x",
         "transactions":[],
         "uncles":[]
