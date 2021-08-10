@@ -154,7 +154,7 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
     }
     json["type"] = silkrpc::to_quantity(transaction.type.value_or(0));
 
-    if (transaction.type && transaction.type == 2) {
+    if (transaction.type && transaction.type == silkworm::kEip1559TransactionType) {
        json["maxPriorityFeePerGas"] = silkrpc::to_quantity(transaction.max_priority_fee_per_gas);
        json["maxFeePerGas"] = silkrpc::to_quantity(transaction.max_fee_per_gas);
     }
