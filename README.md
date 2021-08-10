@@ -15,7 +15,7 @@ C++ implementation of the daemon component exposing the [Ethereum JSON RPC proto
 ## Clone the repository
 
 ```
-git clone --recurse-submodules git@github.com:torquem-ch/silkrpc.git
+git clone --recurse-submodules https://github.com/torquem-ch/silkrpc.git
 ```
 
 To update the submodules later on run 
