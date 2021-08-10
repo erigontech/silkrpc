@@ -51,8 +51,7 @@ typedef std::function<asio::awaitable<silkworm::BlockWithHash>(uint64_t)> BlockP
 
 class GasPriceOracle {
 public:
-    explicit GasPriceOracle(const BlockProvider& block_provider)
-        : block_provider_(block_provider) {}
+    explicit GasPriceOracle(const BlockProvider& block_provider) : block_provider_(block_provider) {}
     virtual ~GasPriceOracle() {}
 
     GasPriceOracle(const GasPriceOracle&) = delete;
