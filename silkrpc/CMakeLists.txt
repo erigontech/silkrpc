@@ -37,10 +37,12 @@ set(BACKEND_PROTO_SOURCE "${PROTO_GENERATED_SRC_DIR}/remote/ethbackend.pb.cc")
 set(BACKEND_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/ethbackend.pb.h")
 set(BACKEND_GRPC_SOURCE "${PROTO_GENERATED_SRC_DIR}/remote/ethbackend.grpc.pb.cc")
 set(BACKEND_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/ethbackend.grpc.pb.h")
+set(BACKEND_MOCK_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/ethbackend_mock.grpc.pb.h")
 set(KV_PROTO_SOURCE "${PROTO_GENERATED_SRC_DIR}/remote/kv.pb.cc")
 set(KV_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/kv.pb.h")
 set(KV_GRPC_SOURCE "${PROTO_GENERATED_SRC_DIR}/remote/kv.grpc.pb.cc")
 set(KV_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/kv.grpc.pb.h")
+set(KV_MOCK_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/kv_mock.grpc.pb.h")
 set(TYPES_PROTO_SOURCE "${PROTO_GENERATED_SRC_DIR}/types/types.pb.cc")
 set(TYPES_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/types/types.pb.h")
 
@@ -51,7 +53,7 @@ add_custom_command(
       "${BACKEND_PROTO_HEADER}" "${BACKEND_PROTO_SOURCE}" "${BACKEND_GRPC_HEADER}" "${BACKEND_GRPC_SOURCE}"
       "${KV_PROTO_SOURCE}" "${KV_PROTO_HEADER}" "${KV_GRPC_SOURCE}" "${KV_GRPC_HEADER}"
     COMMAND ${PROTOBUF_PROTOC}
-    ARGS --grpc_out "${PROTO_GENERATED_SRC_DIR}"
+    ARGS --grpc_out generate_mock_code=true:"${PROTO_GENERATED_SRC_DIR}"
       --cpp_out "${PROTO_GENERATED_SRC_DIR}"
       --proto_path "${IF_PROTO_PATH}"
       --plugin=protoc-gen-grpc="${GRPC_CPP_PLUGIN_EXECUTABLE}"
@@ -82,8 +84,10 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy
         ${BACKEND_PROTO_HEADER}
         ${BACKEND_GRPC_HEADER}
+        ${BACKEND_MOCK_GRPC_HEADER}
         ${KV_PROTO_HEADER}
         ${KV_GRPC_HEADER}
+        ${KV_MOCK_GRPC_HEADER}
         ${REMOTE_IF_GENERATED_HEADER_DIR}
 )
 
