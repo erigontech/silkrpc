@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include <silkrpc/config.hpp>
 
@@ -38,49 +39,45 @@
 namespace silkrpc::ethbackend {
 
 using EtherbaseClient = AsyncUnaryClient<
-    ::remote::ETHBACKEND::Stub,
-    ::remote::ETHBACKEND::NewStub,
+    ::remote::ETHBACKEND::StubInterface,
     ::remote::EtherbaseRequest,
     ::remote::EtherbaseReply,
-    &::remote::ETHBACKEND::Stub::PrepareAsyncEtherbase
+    &::remote::ETHBACKEND::StubInterface::PrepareAsyncEtherbase
 >;
 
 using ProtocolVersionClient = AsyncUnaryClient<
-    ::remote::ETHBACKEND::Stub,
-    ::remote::ETHBACKEND::NewStub,
+    ::remote::ETHBACKEND::StubInterface,
     ::remote::ProtocolVersionRequest,
     ::remote::ProtocolVersionReply,
-    &::remote::ETHBACKEND::Stub::PrepareAsyncProtocolVersion
+    &::remote::ETHBACKEND::StubInterface::PrepareAsyncProtocolVersion
 >;
 
 using NetVersionClient = AsyncUnaryClient<
-    ::remote::ETHBACKEND::Stub,
-    ::remote::ETHBACKEND::NewStub,
+    ::remote::ETHBACKEND::StubInterface,
     ::remote::NetVersionRequest,
     ::remote::NetVersionReply,
-    &::remote::ETHBACKEND::Stub::PrepareAsyncNetVersion
+    &::remote::ETHBACKEND::StubInterface::PrepareAsyncNetVersion
 >;
 
 using ClientVersionClient = AsyncUnaryClient<
-    ::remote::ETHBACKEND::Stub,
-    ::remote::ETHBACKEND::NewStub,
+    ::remote::ETHBACKEND::StubInterface,
     ::remote::ClientVersionRequest,
     ::remote::ClientVersionReply,
-    &::remote::ETHBACKEND::Stub::PrepareAsyncClientVersion
+    &::remote::ETHBACKEND::StubInterface::PrepareAsyncClientVersion
 >;
 
-using EtherbaseAwaitable = unary_awaitable<asio::io_context::executor_type, EtherbaseClient, ::remote::EtherbaseReply>;
-using ProtocolVersionAwaitable = unary_awaitable<asio::io_context::executor_type, ProtocolVersionClient, ::remote::ProtocolVersionReply>;
-using NetVersionAwaitable = unary_awaitable<asio::io_context::executor_type, NetVersionClient, ::remote::NetVersionReply>;
-using ClientVersionAwaitable = unary_awaitable<asio::io_context::executor_type, ClientVersionClient, ::remote::ClientVersionReply>;
+using EtherbaseAwaitable = unary_awaitable<asio::io_context::executor_type, EtherbaseClient, ::remote::ETHBACKEND::StubInterface, ::remote::EtherbaseReply>;
+using ProtocolVersionAwaitable = unary_awaitable<asio::io_context::executor_type, ProtocolVersionClient, ::remote::ETHBACKEND::StubInterface, ::remote::ProtocolVersionReply>;
+using NetVersionAwaitable = unary_awaitable<asio::io_context::executor_type, NetVersionClient, ::remote::ETHBACKEND::StubInterface, ::remote::NetVersionReply>;
+using ClientVersionAwaitable = unary_awaitable<asio::io_context::executor_type, ClientVersionClient, ::remote::ETHBACKEND::StubInterface, ::remote::ClientVersionReply>;
 
 class BackEnd final {
 public:
     explicit BackEnd(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : eb_awaitable_{context.get_executor(), channel, queue},
-      pv_awaitable_{context.get_executor(), channel, queue},
-      nv_awaitable_{context.get_executor(), channel, queue},
-      cv_awaitable_{context.get_executor(), channel, queue} {
+    : BackEnd(context.get_executor(), ::remote::ETHBACKEND::NewStub(channel, grpc::StubOptions()), queue) {}
+
+    explicit BackEnd(asio::io_context::executor_type executor, std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub, grpc::CompletionQueue* queue)
+    : stub_(std::move(stub)), eb_awaitable_{executor, stub_, queue}, pv_awaitable_{executor, stub_, queue}, nv_awaitable_{executor, stub_, queue}, cv_awaitable_{executor, stub_, queue} {
         SILKRPC_TRACE << "BackEnd::ctor " << this << "\n";
     }
 
@@ -133,6 +130,7 @@ private:
         return address;
     }
 
+    std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub_;
     EtherbaseAwaitable eb_awaitable_;
     ProtocolVersionAwaitable pv_awaitable_;
     NetVersionAwaitable nv_awaitable_;
