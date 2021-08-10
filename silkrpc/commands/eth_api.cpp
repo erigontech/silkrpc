@@ -35,6 +35,7 @@
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/evm_executor.hpp>
 #include <silkrpc/core/gas_price_oracle.hpp>
+#include <silkrpc/core/estimate_gas_oracle.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/core/receipts.hpp>
 #include <silkrpc/core/state_reader.hpp>
@@ -648,12 +649,42 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const n
 
 // https://eth.wiki/json-rpc/API#eth_estimategas
 asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 1) {
+        auto error_msg = "invalid eth_estimategas params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto call = params[0].get<Call>();
+    // TODO mettere a debug
+    SILKRPC_INFO << "call: " << call << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"], to_quantity(0));
+        const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        auto block_number = co_await core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
+        SILKRPC_INFO << "block_number " << block_number << "\n";
+
+        const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
+        const auto block = block_with_hash.block;
+
+        Executor executor = [this, &tx_database, &block, &chain_config_ptr](const silkworm::Transaction &transaction) {
+            EVMExecutor evm_executor{context_, tx_database, *chain_config_ptr, workers_, block.header.number};
+            return evm_executor.call(block, transaction);
+        };
+
+        SILKRPC_LOG << "allocating oracle\n";
+        EstimateGasOracle estimate_gas_oracle{tx_database, executor};
+        SILKRPC_LOG << "calling oracle\n";
+        const auto estimated_gas = co_await estimate_gas_oracle.estimate_gas(call, block_number);
+
+        SILKRPC_LOG << "replying\n";
+        reply = make_json_content(request["id"], to_quantity(estimated_gas));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
