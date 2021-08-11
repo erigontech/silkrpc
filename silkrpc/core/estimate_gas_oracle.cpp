@@ -132,7 +132,18 @@ asio::awaitable<bool> EstimateGasOracle::execution_test(const Call& call, uint64
 
     SILKRPC_LOG << "calling executor \n";
     const auto result = co_await executor_(transaction);
+    SILKRPC_LOG << "executor returned \n";
     // SILKRPC_LOG << "executor result " << result << " \n";
+    if (result.pre_check_error) {
+        SILKRPC_LOG << "result error " << result.pre_check_error.value() << "\n";
+    } else if (result.error_code == evmc_status_code::EVMC_SUCCESS) {
+        SILKRPC_LOG << "result SUCCESS\n";
+    } else if (result.error_code == evmc_status_code::EVMC_INSUFFICIENT_BALANCE) {
+        SILKRPC_LOG << "result INSUFFICIENTE BALANCE\n";
+    } else {
+        const auto error_message = EVMExecutor::get_error_message(result.error_code, result.data);
+        SILKRPC_LOG << "result message " << error_message << ", code " << result.error_code << "\n";
+    }
 
     co_return false;
 }
