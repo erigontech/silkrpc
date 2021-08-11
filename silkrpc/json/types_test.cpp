@@ -360,6 +360,44 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
     })"_json);
 }
 
+TEST_CASE("serialize EIP-1559 transaction (type=2)", "[silkrpc][to_json]") {
+    silkworm::Transaction txn1{
+        silkworm::kEip1559TransactionType,                          // type
+        0,                                                          // nonce
+        50'000 * kGiga,                                             // max_priority_fee_per_gas
+        50'000 * kGiga,                                             // max_fee_per_gas
+        21'000,                                                     // gas_limit
+        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address,         // to
+        31337,                                                      // value
+        *silkworm::from_hex("001122aabbcc"),                        // data
+        true,                                                       // odd_y_parity
+        intx::uint256{1},                                           // chainId
+        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
+        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
+        std::vector<silkworm::AccessListEntry>{},
+        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address                           // 
+    };
+    nlohmann::json j1 = txn1;
+    CHECK(j1 == R"({
+        "nonce":"0x0",
+        "chainId":"0x1",
+        "gas":"0x5208",
+        "to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",
+        "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
+        "type":"0x2",
+        "value":"0x7a69",
+        "input":"0x001122aabbcc",
+        "hash":"0x64ab530a48c64d248b85dd6952539cae03cad7a001ed32ba5d358aca20eef0a8",
+        "accessList":[],
+        "r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",
+        "s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a",
+        "v":"0x1",
+        "maxPriorityFeePerGas":"0x2d79883d2000",
+        "maxFeePerGas":"0x2d79883d2000"
+    })"_json);
+}
+
+
 TEST_CASE("serialize error", "[silkrpc][to_json]") {
     Error err{100, {"generic error"}};
     nlohmann::json j = err;
