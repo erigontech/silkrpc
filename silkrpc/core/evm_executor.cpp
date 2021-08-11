@@ -138,7 +138,7 @@ std::string EVMExecutor::get_error_message(int64_t error_code, const silkworm::B
             break;
         case evmc_status_code::EVMC_OUT_OF_MEMORY:
             error_message = "out of memory";
-            break;
+            break;        
         default:
             error_message = "unknown error code";
     }
@@ -198,6 +198,16 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
 
                    const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev >= EVMC_HOMESTEAD, rev >= EVMC_ISTANBUL)};
                    assert(g0 <= UINT64_MAX); // true due to the precondition (transaction must be valid)
+
+                   if (txn.gas_limit < g0) {
+                      silkworm::Bytes data{};
+                      std::string from = silkworm::to_hex(*txn.from);
+                      std::string error = " have " + std::to_string(txn.gas_limit) + " want " + intx::to_string(g0);
+                      ExecutionResult exec_result{1000, txn.gas_limit, data, error};
+                      asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                          self.complete(exec_result);
+                      });
+                   }
 
                    SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " g0: " << static_cast<uint64_t>(g0) << " start\n";
                    const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
