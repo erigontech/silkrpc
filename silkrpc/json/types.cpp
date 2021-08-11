@@ -130,6 +130,9 @@ void to_json(nlohmann::json& json, const BlockHeader& header) {
     json["gasLimit"] = silkrpc::to_quantity(header.gas_limit);
     json["gasUsed"] = silkrpc::to_quantity(header.gas_used);
     json["timestamp"] = silkrpc::to_quantity(header.timestamp);
+    if (header.base_fee_per_gas.has_value()) {
+       json["baseFeePerGas"] = silkrpc::to_quantity(header.base_fee_per_gas.value_or(0));
+    }
 }
 
 void to_json(nlohmann::json& json, const AccessListEntry& access_list) {
@@ -195,7 +198,7 @@ void to_json(nlohmann::json& json, const Block& b) {
     json["size"] = silkrpc::to_quantity(b.get_block_size());
     json["gasLimit"] = silkrpc::to_quantity(b.block.header.gas_limit);
     json["gasUsed"] = silkrpc::to_quantity(b.block.header.gas_used);
-    if (b.block.header.base_fee_per_gas) {
+    if (b.block.header.base_fee_per_gas.has_value()) {
        json["baseFeePerGas"] = silkrpc::to_quantity(b.block.header.base_fee_per_gas.value_or(0));
     }
     json["timestamp"] = silkrpc::to_quantity(b.block.header.timestamp);
