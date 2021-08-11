@@ -668,13 +668,16 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::js
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
         auto block_number = co_await core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
-        SILKRPC_INFO << "block_number " << block_number << "\n";
+        SILKRPC_INFO << "chain_id: " << chain_id << ", block_number: " << block_number << "\n";
 
         const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
         const auto block = block_with_hash.block;
+        SILKRPC_INFO << "number in block: " << block.header.number << "\n";
 
         Executor executor = [this, &tx_database, &block, &chain_config_ptr](const silkworm::Transaction &transaction) {
+            SILKRPC_LOG << "lambda called, number in block: " << block.header.number << "\n";
             EVMExecutor evm_executor{context_, tx_database, *chain_config_ptr, workers_, block.header.number};
+            SILKRPC_LOG << "calling EVMExecutor::call\n";
             return evm_executor.call(block, transaction);
         };
 
