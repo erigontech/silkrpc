@@ -418,7 +418,7 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
         intx::uint256{1},
         intx::uint256{18},
         intx::uint256{36},
-        std::vector<silkworm::AccessListEntry>{},
+        access_list,
         0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address,
         0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
         123123,
@@ -436,14 +436,14 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
         "type":"0x1",
         "value":"0x0",
         "input":"0x001122aabbcc",
-        "hash":"0x8dcba33e30e0282cf6155f3929928794dabca072b208cbd4128d2534dd931c8d",
+        "hash":"0xae1aea7493cc9a029710b601f62538993ebc6281ac63a241b83a218bd060b291",
         "r":"0x12",
         "s":"0x24",
         "v":"0x0",
         "blockHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
         "blockNumber":"0x1e0f3",
         "transactionIndex":"0x3",
-        "accessList":[]
+        "accessList":[{"account":"0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae", "storage_keys": ["0x0000000000000000000000000000000000000000000000000000000000000003", "0x0000000000000000000000000000000000000000000000000000000000000007"]}, {"account":"0xbb9bc244d798123fde783fcc1c72d3bb8c189413","storage_keys":[]}]
     })"_json);
 }
 
