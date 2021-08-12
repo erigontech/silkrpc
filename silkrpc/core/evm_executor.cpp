@@ -138,7 +138,7 @@ std::string EVMExecutor::get_error_message(int64_t error_code, const silkworm::B
             break;
         case evmc_status_code::EVMC_OUT_OF_MEMORY:
             error_message = "out of memory";
-            break;        
+            break;
         default:
             error_message = "unknown error code";
     }
@@ -175,7 +175,7 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                    silkworm::Bytes data{};
                    std::string from = silkworm::to_hex(*txn.from);
                    std::string error = "insufficient funds for gas * price + value: address 0x" + from + " have " + intx::to_string(have) + " want " + intx::to_string(want);
-                   ExecutionResult exec_result{evmc_status_code::EVMC_INSUFFICIENT_BALANCE, txn.gas_limit, data, error};
+                   ExecutionResult exec_result{1000, txn.gas_limit, data, error};
                    asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
                       self.complete(exec_result);
                    });
@@ -202,7 +202,7 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                    if (txn.gas_limit < g0) {
                       silkworm::Bytes data{};
                       std::string from = silkworm::to_hex(*txn.from);
-                      std::string error = " have " + std::to_string(txn.gas_limit) + " want " + intx::to_string(g0);
+                      std::string error = "intrinsic gas too low: have " + std::to_string(txn.gas_limit) + " want " + intx::to_string(g0);
                       ExecutionResult exec_result{1000, txn.gas_limit, data, error};
                       asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
                           self.complete(exec_result);
