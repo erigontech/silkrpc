@@ -156,8 +156,8 @@ TEST_CASE("serialize block header with baseFeePerGas", "[silkrpc][to_json]") {
         uint64_t(5405021),
         *silkworm::from_hex("0001FF0100"),                                          // extradata
         0x0000000000000000000000000000000000000000000000000000000000000001_bytes32, // mixhash
-        {0, 0, 0, 0, 0, 0, 0, 255},                                                   // nonce
-        std::optional<intx::uint256>(0x262628),                                     // base_fee_per_gas                     
+        {1, 2, 3, 4, 5, 6, 7, 8},                                                   // nonce
+        std::optional<intx::uint256>(1000),                                         // base_fee_per_gas                     
     };
     nlohmann::json j = header;
     CHECK(j == R"({
@@ -175,8 +175,8 @@ TEST_CASE("serialize block header with baseFeePerGas", "[silkrpc][to_json]") {
         "timestamp":"0x52795d",
         "extraData":"0x0001ff0100",
         "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",
-        "nonce":"0x00000000000000ff",
-        "baseFeePerGas":"0x262628"
+        "nonce":"0x0102030405060708",
+        "baseFeePerGas":"0x3e8"
     })"_json);
 }
 
