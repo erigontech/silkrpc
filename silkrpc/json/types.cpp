@@ -140,12 +140,6 @@ void to_json(nlohmann::json& json, const AccessListEntry& access_list) {
     json["storage_keys"] = access_list.storage_keys;
 }
 
-void to_json(nlohmann::json& json, const std::vector<evmc::bytes32>& storage_keys) {
-     for (auto i{0}; i < storage_keys.size(); i++) {
-        json["storage"] = storage_keys[i];
-     }
-}
-
 void to_json(nlohmann::json& json, const Transaction& transaction) {
     if (!transaction.from) {
         (const_cast<Transaction&>(transaction)).recover_sender();
