@@ -157,7 +157,7 @@ TEST_CASE("serialize block header with baseFeePerGas", "[silkrpc][to_json]") {
         *silkworm::from_hex("0001FF0100"),                                          // extradata
         0x0000000000000000000000000000000000000000000000000000000000000001_bytes32, // mixhash
         {1, 2, 3, 4, 5, 6, 7, 8},                                                   // nonce
-        std::optional<intx::uint256>(1000),                                         // base_fee_per_gas                     
+        std::optional<intx::uint256>(1000),                                         // base_fee_per_gas
     };
     nlohmann::json j = header;
     CHECK(j == R"({
@@ -198,8 +198,8 @@ TEST_CASE("serialize block with baseFeePerGas", "[silkrpc][to_json]") {
         uint64_t(5405021),
         *silkworm::from_hex("0001FF0100"),                                          // extradata
         0x0000000000000000000000000000000000000000000000000000000000000001_bytes32, // mixhash
-        {0, 0, 0, 0, 0, 0, 0, 255},                                                   // nonce
-        std::optional<intx::uint256>(0x244428),                                     // base_fee_per_gas                     
+        {0, 0, 0, 0, 0, 0, 0, 255},                                                 // nonce
+        std::optional<intx::uint256>(0x244428),                                     // base_fee_per_gas
     };
     nlohmann::json j = block;
     CHECK(j == R"({
@@ -462,7 +462,7 @@ TEST_CASE("serialize EIP-1559 transaction (type=2)", "[silkrpc][to_json]") {
         intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
         intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
         std::vector<silkworm::AccessListEntry>{},
-        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address                           // 
+        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address                                                      //
     };
     nlohmann::json j1 = txn1;
     CHECK(j1 == R"({
