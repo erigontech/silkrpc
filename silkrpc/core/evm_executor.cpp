@@ -171,6 +171,19 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                 const auto have = state.get_balance(*txn.from);
                 const auto want = txn.gas_limit * effective_gas_price;
 
+                const evmc_revision rev{evm.revision()};
+                if (rev >= EVMC_LONDON && txn.max_fee_per_gas < base_fee_per_gas) {
+                   silkworm::Bytes data{};
+                   std::string from = silkworm::to_hex(*txn.from);
+                   std::string error = "fee cap less than block base fee: address 0x" + from + ", gasFeeCap: " + intx::to_string(txn.max_fee_per_gas) + \
+                                         " baseFee: " + intx::to_string(base_fee_per_gas);
+                   ExecutionResult exec_result{1000, txn.gas_limit, data, error};
+                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                      self.complete(exec_result);
+                   });
+                   return;
+                }
+
                 if (have < want) {
                    silkworm::Bytes data{};
                    std::string from = silkworm::to_hex(*txn.from);
@@ -179,27 +192,28 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                    asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
                       self.complete(exec_result);
                    });
-                } else {
-                   state.subtract_from_balance(*txn.from, want);
+                   return;
+                }
 
-                   if (txn.to.has_value()) {
-                       state.access_account(*txn.to);
-                       // EVM itself increments the nonce for contract creation
-                       state.set_nonce(*txn.from, txn.nonce + 1);
-                   }
-                   for (const silkworm::AccessListEntry& ae : txn.access_list) {
+                state.subtract_from_balance(*txn.from, want);
+
+                if (txn.to.has_value()) {
+                    state.access_account(*txn.to);
+                    // EVM itself increments the nonce for contract creation
+                    state.set_nonce(*txn.from, txn.nonce + 1);
+                }
+                for (const silkworm::AccessListEntry& ae : txn.access_list) {
                        state.access_account(ae.account);
                        for (const evmc::bytes32& key : ae.storage_keys) {
                            state.access_storage(ae.account, key);
                        }
-                   }
+                }
 
-                   const evmc_revision rev{evm.revision()};
 
-                   const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev >= EVMC_HOMESTEAD, rev >= EVMC_ISTANBUL)};
-                   assert(g0 <= UINT64_MAX); // true due to the precondition (transaction must be valid)
+                const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev >= EVMC_HOMESTEAD, rev >= EVMC_ISTANBUL)};
+                assert(g0 <= UINT64_MAX); // true due to the precondition (transaction must be valid)
 
-                   if (txn.gas_limit < g0) {
+                if (txn.gas_limit < g0) {
                       silkworm::Bytes data{};
                       std::string from = silkworm::to_hex(*txn.from);
                       std::string error = "intrinsic gas too low: have " + std::to_string(txn.gas_limit) + " want " + intx::to_string(g0);
@@ -207,17 +221,17 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                       asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
                           self.complete(exec_result);
                       });
-                   }
-
-                   SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " g0: " << static_cast<uint64_t>(g0) << " start\n";
-                   const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
-                   SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
-
-                   ExecutionResult exec_result{result.status, result.gas_left, result.data};
-                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
-                       self.complete(exec_result);
-                   });
+                      return;
                 }
+
+                SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " g0: " << static_cast<uint64_t>(g0) << " start\n";
+                const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
+                SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
+
+                ExecutionResult exec_result{result.status, result.gas_left, result.data};
+                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                      self.complete(exec_result);
+                });
             });
         },
         asio::use_awaitable);
