@@ -37,10 +37,6 @@ public:
         func_(owner, this, args...);
     }
 
-    void destroy() {
-        func_(0, this);
-    }
-
 protected:
     typedef R (*func_type)(void*, async_operation*, Args...);
 

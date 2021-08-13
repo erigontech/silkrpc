@@ -31,20 +31,19 @@
 namespace silkrpc {
 
 template<
-    typename Stub,
-    std::unique_ptr<Stub>(*NewStub)(const std::shared_ptr<grpc::ChannelInterface>&, const grpc::StubOptions&),
+    typename StubInterface,
     typename Request,
     typename Reply,
-    std::unique_ptr<grpc::ClientAsyncResponseReader<Reply>>(Stub::*PrepareAsync)(grpc::ClientContext*, const Request&, grpc::CompletionQueue*)
+    std::unique_ptr<grpc::ClientAsyncResponseReaderInterface<Reply>>(StubInterface::*PrepareAsync)(grpc::ClientContext*, const Request&, grpc::CompletionQueue*)
 >
 class AsyncUnaryClient final : public AsyncCompletionHandler {
-    using AsyncResponseReaderPtr = std::unique_ptr<grpc::ClientAsyncResponseReader<Reply>>;
+    using AsyncResponseReaderPtr = std::unique_ptr<grpc::ClientAsyncResponseReaderInterface<Reply>>;
 
     enum CallStatus { CALL_IDLE, CALL_STARTED, CALL_ENDED };
 
 public:
-    explicit AsyncUnaryClient(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : queue_(queue), stub_{NewStub(channel, grpc::StubOptions())} {
+    explicit AsyncUnaryClient(std::unique_ptr<StubInterface>& stub, grpc::CompletionQueue* queue)
+    : stub_(stub), queue_(queue) {
         SILKRPC_TRACE << "AsyncUnaryClient::ctor " << this << " state: " << magic_enum::enum_name(state_) << "\n";
     }
 
@@ -81,7 +80,7 @@ public:
 
 private:
     grpc::CompletionQueue* queue_;
-    std::unique_ptr<Stub> stub_;
+    std::unique_ptr<StubInterface>& stub_;
     AsyncResponseReaderPtr client_;
     Reply reply_;
     grpc::Status result_;

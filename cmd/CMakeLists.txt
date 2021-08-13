@@ -70,10 +70,11 @@ target_link_libraries(ethbackend_coroutines absl::flags_parse gRPC::grpc++_unsec
 enable_testing()
 
 find_package(Catch2 CONFIG REQUIRED)
+find_package(GTest CONFIG REQUIRED)
 
 file(GLOB_RECURSE SILKRPC_TESTS CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/silkrpc/*_test.cpp")
 add_executable(unit_test unit_test.cpp ${SILKRPC_TESTS})
-target_link_libraries(unit_test silkrpc Catch2::Catch2)
+target_link_libraries(unit_test silkrpc Catch2::Catch2 GTest::gmock)
 
 include(CTest)
 include(Catch)
