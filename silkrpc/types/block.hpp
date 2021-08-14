@@ -29,6 +29,8 @@ namespace silkrpc {
 struct Block : public silkworm::BlockWithHash {
     intx::uint256 total_difficulty{0};
     bool full_tx{false};
+
+    uint64_t get_block_size() const;
 };
 
 std::ostream& operator<<(std::ostream& out, const Block& b);
