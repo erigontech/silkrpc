@@ -27,7 +27,7 @@
 
 #include <silkrpc/common/log.hpp>
 
-namespace silkrpc {
+namespace silkrpc::ego {
 
 asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call, uint64_t block_number) {
     SILKRPC_LOG << "EstimateGasOracle::estimate_gas called\n";
@@ -37,13 +37,13 @@ asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call,
 
     SILKRPC_LOG << "Ready to check call.gas\n";
     if (call.gas.value_or(0) >= kTxGas) {
-        SILKRPC_LOG << "Set HI\n";
+        SILKRPC_LOG << "Set HI with gas in args: " << call.gas.value_or(0) << "\n";
         hi = call.gas.value(); 
     } else {
-        SILKRPC_LOG << "Evaluate HI\n";
-        // TODO(sixtysixter) serve mettere test sul valore ritornato?
-        const auto header = co_await core::rawdb::read_header_by_number(db_reader_, block_number);
+        // TODO(sixtysixter) worths it to test if returned header is not null?
+        const auto header = co_await block_header_provider_(block_number);
         hi = header.gas_limit;
+        SILKRPC_LOG << "Evaluate HI with gas in block " << header.gas_limit << "\n";
     }
 
     SILKRPC_LOG << "Ready to check call.gas_price\n";
@@ -53,8 +53,7 @@ asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call,
 
         evmc::address from = call.from.value_or(evmc::address{0});
     
-        StateReader state_reader{db_reader_};
-        std::optional<silkworm::Account> account{co_await state_reader.read_account(from, block_number + 1)};
+        std::optional<silkworm::Account> account{co_await account_reader_(from, block_number + 1)};
         
         intx::uint256 balance = account->balance;
         SILKRPC_LOG << "balance for address " << from << ": 0x" << intx::hex(balance) << "\n";
@@ -63,6 +62,7 @@ asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call,
         }
         auto available = balance - call.value.value_or(0);
         int64_t allowance = int64_t(available / gas_price);
+        SILKRPC_LOG << "allowance: " << allowance << ", available: 0x" << intx::hex(available) << ", balance: 0x" << intx::hex(balance)  << "\n";
         if (hi > allowance) {
             SILKRPC_WARN << "gas estimation capped by limited funds: original " << hi 
                 << ", balance 0x" << intx::hex(balance)
@@ -81,17 +81,16 @@ asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call,
         hi = kGasCap;
     }
     auto cap = hi;
-    // auto executable = [this, &call](uint64_t gas) {
-    //     SILKRPC_LOG << "test execution with gas " << gas << "\n";
-    //     silkworm::Transaction transaction{call.to_transaction()};
-    //     const auto execution_result = co_await executor_(transaction);
 
-    //     return false;
-    // };
+    SILKRPC_LOG << "hi: " << hi << ", lo: " << lo << ", cap: " << cap << "\n";
 
+    silkworm::Transaction transaction{call.to_transaction()};
     while (lo + 1 < hi) {
         auto mid = (hi + lo) / 2;
-        auto failed = co_await execution_test(call, mid);
+        transaction.gas_limit = mid;
+    
+        auto failed = co_await execution_test(transaction);
+        SILKRPC_LOG << "execution test, gas: " << mid << " failed: " << (failed ? "true" : "false") << "\n";
 
         if (failed) {
             lo = mid;
@@ -102,42 +101,34 @@ asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call,
 
     if (hi == cap) {
         SILKRPC_LOG << "HI is equal to cap test again...\n";
-        auto failed = co_await execution_test(call, hi);
+        transaction.gas_limit = hi;
+        auto failed = co_await execution_test(transaction);
     }
-        // EVMExecutor executor{context_, tx_database, *chain_config_ptr, workers_, block_number};
-        // const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
-        // silkworm::Transaction txn{call.to_transaction()};
-        // const auto execution_result = co_await executor.call(block_with_hash.block, txn);
-
-        // if (execution_result.pre_check_error) {
-        //     reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
-        // } else if (execution_result.error_code == evmc_status_code::EVMC_SUCCESS) {
-        //     reply = make_json_content(request["id"], "0x" + silkworm::to_hex(execution_result.data));
-        // } else {
-        //     const auto error_message = EVMExecutor::get_error_message(execution_result.error_code, execution_result.data);
-        //     if (execution_result.data.empty()) {
-        //         reply = make_json_error(request["id"], -32000, error_message);
-        //     } else {
-        //         reply = make_json_error(request["id"], {3, error_message, execution_result.data});
-        //     }
-        // }
 
     SILKRPC_LOG << "EstimateGasOracle::estimate_gas returning hi " << hi << "\n";
     co_return hi;
 }
 
-asio::awaitable<bool> EstimateGasOracle::execution_test(const Call& call, uint64_t gas) {
-    SILKRPC_LOG << "test execution with gas " << gas << "\n";
-    silkworm::Transaction transaction{call.to_transaction()};
+asio::awaitable<bool> EstimateGasOracle::execution_test(const silkworm::Transaction& transaction) {
+    silkrpc::Transaction tnx{transaction};
+    SILKRPC_LOG << "test execution transaction with gas " << transaction.gas_limit << " transaction" << tnx << "\n";
+    // silkworm::Transaction transaction{call.to_transaction()};
+    // transaction.gas_limit = gas;
 
-    SILKRPC_LOG << "calling executor \n";
+    // SILKRPC_LOG << "calling executor \n";
     const auto result = co_await executor_(transaction);
-    SILKRPC_LOG << "executor returned \n";
-    // SILKRPC_LOG << "executor result " << result << " \n";
+    // SILKRPC_LOG << "executor returned \n";
+
+    // bool failed = false;
+    // if (result.pre_check_error || result.error_code != evmc_status_code::EVMC_SUCCESS) {
+    //     failed = true;
+    // }
+    bool failed = true;
     if (result.pre_check_error) {
         SILKRPC_LOG << "result error " << result.pre_check_error.value() << "\n";
     } else if (result.error_code == evmc_status_code::EVMC_SUCCESS) {
         SILKRPC_LOG << "result SUCCESS\n";
+        failed = false;
     } else if (result.error_code == evmc_status_code::EVMC_INSUFFICIENT_BALANCE) {
         SILKRPC_LOG << "result INSUFFICIENTE BALANCE\n";
     } else {
@@ -145,7 +136,7 @@ asio::awaitable<bool> EstimateGasOracle::execution_test(const Call& call, uint64
         SILKRPC_LOG << "result message " << error_message << ", code " << result.error_code << "\n";
     }
 
-    co_return false;
+    co_return failed;
 }
 
 } // namespace silkrpc

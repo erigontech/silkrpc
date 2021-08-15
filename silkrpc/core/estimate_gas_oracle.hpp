@@ -35,17 +35,19 @@
 #include <silkrpc/types/call.hpp>
 #include <silkrpc/types/transaction.hpp>
 
-namespace silkrpc {
+namespace silkrpc::ego {
 
 const std::uint64_t kTxGas = 21'000;
 const std::uint64_t kGasCap = 25'000'000;
 
+typedef std::function<asio::awaitable<silkworm::BlockHeader>(uint64_t)> BlockHeaderProvider;
+typedef std::function<asio::awaitable<std::optional<silkworm::Account>>(const evmc::address&, uint64_t)> AccountReader;
 typedef std::function<asio::awaitable<silkrpc::ExecutionResult>(const silkworm::Transaction &)> Executor;
 
 class EstimateGasOracle {
 public:
-    explicit EstimateGasOracle(const core::rawdb::DatabaseReader& db_reader, const Executor& executor)
-        : db_reader_(db_reader), executor_(executor) {}
+    explicit EstimateGasOracle(const BlockHeaderProvider& block_header_provider, const AccountReader& account_reader, const Executor& executor)
+        : block_header_provider_(block_header_provider), account_reader_{account_reader}, executor_(executor) {}
     virtual ~EstimateGasOracle() {}
 
     EstimateGasOracle(const EstimateGasOracle&) = delete;
@@ -54,12 +56,13 @@ public:
     asio::awaitable<intx::uint256> estimate_gas(const Call& call, uint64_t block_number);
 
 private:
-    asio::awaitable<bool> execution_test(const Call& call, uint64_t gas);
+    asio::awaitable<bool> execution_test(const silkworm::Transaction& transaction);
 
-    const core::rawdb::DatabaseReader& db_reader_;
+    const BlockHeaderProvider& block_header_provider_;
+    const AccountReader& account_reader_;
     const Executor& executor_;
 };
 
-} // namespace silkrpc
+} // namespace silkrpc::ego
 
 #endif  // SILKRPC_CORE_ESTIMATE_GAS_ORACLE_HPP_

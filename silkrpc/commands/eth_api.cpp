@@ -674,15 +674,23 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::js
         const auto block = block_with_hash.block;
         SILKRPC_INFO << "number in block: " << block.header.number << "\n";
 
-        Executor executor = [this, &tx_database, &block, &chain_config_ptr](const silkworm::Transaction &transaction) {
-            SILKRPC_LOG << "lambda called, number in block: " << block.header.number << "\n";
-            EVMExecutor evm_executor{context_, tx_database, *chain_config_ptr, workers_, block.header.number};
-            SILKRPC_LOG << "calling EVMExecutor::call\n";
+        EVMExecutor evm_executor{context_, tx_database, *chain_config_ptr, workers_, block.header.number};
+
+        ego::Executor executor = [&block, &evm_executor](const silkworm::Transaction &transaction) {
             return evm_executor.call(block, transaction);
         };
 
+        ego::BlockHeaderProvider block_header_provider = [&tx_database](uint64_t block_number) {
+            return core::rawdb::read_header_by_number(tx_database, block_number);
+        };
+
+        StateReader state_reader{tx_database};
+        ego::AccountReader account_reader = [&state_reader](const evmc::address& address, uint64_t block_number) {
+            return state_reader.read_account(address, block_number + 1);
+        };
+
         SILKRPC_LOG << "allocating oracle\n";
-        EstimateGasOracle estimate_gas_oracle{tx_database, executor};
+        ego::EstimateGasOracle estimate_gas_oracle{block_header_provider, account_reader, executor};
         SILKRPC_LOG << "calling oracle\n";
         const auto estimated_gas = co_await estimate_gas_oracle.estimate_gas(call, block_number);
 
