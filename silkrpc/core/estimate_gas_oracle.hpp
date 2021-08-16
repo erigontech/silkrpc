@@ -18,6 +18,7 @@
 #define SILKRPC_CORE_ESTIMATE_GAS_ORACLE_HPP_
 
 #include <functional>
+#include <optional>
 #include <string>
 #include <vector>
 

@@ -39,8 +39,8 @@ static const evmc::address kFrom2 = 0xe5ef458d37212a06e3f59d40c454e76150ae7c33_a
 static silkworm::BlockHeader allocate_block_header(uint64_t block_number, uint64_t gas_limit) {
     silkworm::BlockHeader block_header;
 
-    block.header.number = block_number;
-    block.header.gas_limit = gas_limit;
+    block_header.number = block_number;
+    block_header.gas_limit = gas_limit;
 
     return block_header;
 }
@@ -50,20 +50,22 @@ using Catch::Matchers::Message;
 TEST_CASE("estimate gas") {
     asio::thread_pool pool{1};
 
-    const std::map<uint64_t, silkworm::BlockHeader> kBlockNumber2Header; 
-    const std::map<uint64_t, silkrpc::ExecutionResult> kBlockNumber2Result; 
-    const std::map<evmc::address, silkworm::Account> kAddress2Account; 
+    silkrpc::ExecutionResult kSuccessResult{evmc_status_code::EVMC_SUCCESS};
+    silkrpc::ExecutionResult kFailureResult{evmc_status_code::EVMC_INSUFFICIENT_BALANCE};
+    
+    silkworm::BlockHeader kBlockHeader; 
+    silkworm::Account kAccount; 
 
-    ego::Executor executor = [&kBlockNumber2Result](const silkworm::Transaction &transaction) -> asio::awaitable<silkrpc::ExecutionResult> {
-        co_return kBlockNumber2Result[transaction.];
+    ego::Executor executor = [&kSuccessResult](const silkworm::Transaction &transaction) -> asio::awaitable<silkrpc::ExecutionResult> {
+        co_return kSuccessResult;
     };
 
-    BlockHeaderProvider block_header_provider = [&kBlockNumber2Header](uint64_t block_number) -> asio::awaitable<silkworm::BlockHeader> {
-        co_return kBlockNumber2Header[block_number];
+    BlockHeaderProvider block_header_provider = [&kBlockHeader](uint64_t block_number) -> asio::awaitable<silkworm::BlockHeader> {
+        co_return kBlockHeader;
     };
 
-    ego::AccountReader account_reader = [&kAddress2Account](const evmc::address& address, uint64_t block_number) -> asio::awaitable<silkworm::Account> {
-        co_return kAddress2Account[address];
+    ego::AccountReader account_reader = [&kAccount](const evmc::address& address, uint64_t block_number) -> asio::awaitable<std::optional<silkworm::Account>> {
+        co_return kAccount;
     };
 
     EstimateGasOracle estimate_gas_oracle{block_header_provider, account_reader, executor};
