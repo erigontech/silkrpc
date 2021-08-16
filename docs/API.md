@@ -32,7 +32,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getTransactionByBlockNumberAndIndex | Yes          |                                            |
 | eth_getTransactionReceipt               | Yes          | partially implemented                      |
 |                                         |              |                                            |
-| eth_estimateGas                         | -            | not yet implemented                        |
+| eth_estimateGas                         | Yes          |                                            |
 | eth_getBalance                          | Yes          |                                            |
 | eth_getCode                             | Yes          |                                            |
 | eth_getTransactionCount                 | Yes          |                                            |
