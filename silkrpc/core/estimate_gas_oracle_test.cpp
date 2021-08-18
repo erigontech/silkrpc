@@ -63,17 +63,18 @@ TEST_CASE("estimate gas") {
 
     Call call;
     EstimateGasOracle estimate_gas_oracle{block_header_provider, account_reader, executor};
-
-    SECTION("Call empty, always fails") {
+/*
+    SECTION("Call empty, always fails but last step") {
         steps.resize(16);
         std::fill_n(steps.begin(), steps.size(), false);
+        steps[15] = true;
         auto result = asio::co_spawn(pool, estimate_gas_oracle.estimate_gas(call, 0), asio::use_future);
         const intx::uint256 &estimate_gas = result.get();
 
         CHECK(estimate_gas == kTxGas * 2);
     }
-
-    SECTION("Call empty, always succeed") {
+*/
+    SECTION("Call empty, always succeeds") {
         steps.resize(16);
         std::fill_n(steps.begin(), steps.size(), true);
 
@@ -82,8 +83,8 @@ TEST_CASE("estimate gas") {
 
         CHECK(estimate_gas == kTxGas);
     }
-
-    SECTION("Call empty, alternatively fails and succeed") {
+/*
+    SECTION("Call empty, alternatively fails and succeeds") {
         int current = false;
         auto generate = [&current]() -> bool {
             return ++current % 2 == 0;;
@@ -97,7 +98,7 @@ TEST_CASE("estimate gas") {
         CHECK(estimate_gas == 0x88b6);
     }
 
-    SECTION("Call empty, alternatively succeed and fails") {
+    SECTION("Call empty, alternatively succeeds and fails") {
         int current = false;
         auto generate = [&current]() -> bool {
             return current++ % 2 == 0;;
@@ -111,17 +112,18 @@ TEST_CASE("estimate gas") {
         CHECK(estimate_gas == 0x6d5e);
     }
 
-    SECTION("Call with gas, always fails") {
+    SECTION("Call with gas, always fails but last step") {
         call.gas = kTxGas * 4;
         steps.resize(17);
         std::fill_n(steps.begin(), steps.size(), false);
+        steps[16] = true;
         auto result = asio::co_spawn(pool, estimate_gas_oracle.estimate_gas(call, 0), asio::use_future);
         const intx::uint256 &estimate_gas = result.get();
 
         CHECK(estimate_gas == kTxGas * 4);
     }
 
-    SECTION("Call with gas, always succeed") {
+    SECTION("Call with gas, always succeeds") {
         call.gas = kTxGas * 4;
         steps.resize(17);
         std::fill_n(steps.begin(), steps.size(), true);
@@ -136,6 +138,7 @@ TEST_CASE("estimate gas") {
         call.gas_price = intx::uint256{10'000};
         steps.resize(16);
         std::fill_n(steps.begin(), steps.size(), false);
+        steps[15] = true;
         auto result = asio::co_spawn(pool, estimate_gas_oracle.estimate_gas(call, 0), asio::use_future);
         const intx::uint256 &estimate_gas = result.get();
 
@@ -145,8 +148,9 @@ TEST_CASE("estimate gas") {
     SECTION("Call with gas_price, gas capped") {
         call.gas = kTxGas * 2;
         call.gas_price = intx::uint256{40'000};
-        steps.resize(16);
+        steps.resize(13);
         std::fill_n(steps.begin(), steps.size(), false);
+        steps[12] = true;
         auto result = asio::co_spawn(pool, estimate_gas_oracle.estimate_gas(call, 0), asio::use_future);
         const intx::uint256 &estimate_gas = result.get();
 
@@ -159,6 +163,7 @@ TEST_CASE("estimate gas") {
         call.value = intx::uint256{500'000'000};
         steps.resize(16);
         std::fill_n(steps.begin(), steps.size(), false);
+        steps[15] = true;
         auto result = asio::co_spawn(pool, estimate_gas_oracle.estimate_gas(call, 0), asio::use_future);
         const intx::uint256 &estimate_gas = result.get();
 
@@ -169,33 +174,34 @@ TEST_CASE("estimate gas") {
         call.gas = kTxGas * 2;
         call.gas_price = intx::uint256{20'000};
         call.value = intx::uint256{500'000'000};
-        steps.resize(16);
+        steps.resize(13);
         std::fill_n(steps.begin(), steps.size(), false);
+        steps[12] = true;
         auto result = asio::co_spawn(pool, estimate_gas_oracle.estimate_gas(call, 0), asio::use_future);
         const intx::uint256 &estimate_gas = result.get();
 
         CHECK(estimate_gas == 0x61a8);
     }
 
-    SECTION("Call gas above allowance, always succeed, gas capped") {
+    SECTION("Call gas above allowance, always succeeds, gas capped") {
         call.gas = kGasCap * 2;
         steps.resize(26);
-        std::fill_n(steps.begin(), steps.size(), false);
+        std::fill_n(steps.begin(), steps.size(), true);
         auto result = asio::co_spawn(pool, estimate_gas_oracle.estimate_gas(call, 0), asio::use_future);
         const intx::uint256 &estimate_gas = result.get();
 
-        CHECK(estimate_gas == kGasCap);
+        CHECK(estimate_gas == kTxGas);
     }
 
-    SECTION("Call gas below minimum, always succeed") {
+    SECTION("Call gas below minimum, always succeeds") {
         call.gas = kTxGas / 2;
 
         steps.resize(26);
-        std::fill_n(steps.begin(), steps.size(), false);
+        std::fill_n(steps.begin(), steps.size(), true);
         auto result = asio::co_spawn(pool, estimate_gas_oracle.estimate_gas(call, 0), asio::use_future);
         const intx::uint256 &estimate_gas = result.get();
 
-        CHECK(estimate_gas == kTxGas * 2);
+        CHECK(estimate_gas == kTxGas);
     }
 
     SECTION("Call with too high value, exception") {
@@ -209,6 +215,6 @@ TEST_CASE("estimate gas") {
         // };
         // asio::co_spawn(pool, estimate_gas_oracle.estimate_gas(call, 0), handler);
     }
+*/
 }
-
 } // namespace silkrpc::ego

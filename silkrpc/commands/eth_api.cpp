@@ -666,16 +666,16 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::js
 
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
-        auto block_number = co_await core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
-        SILKRPC_DEBUG << "chain_id: " << chain_id << ", block_number: " << block_number << "\n";
+        auto latest_block_number = co_await core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
+        SILKRPC_DEBUG << "chain_id: " << chain_id << ", latest_block_number: " << latest_block_number << "\n";
 
-        const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
-        const auto block = block_with_hash.block;
+        const auto latest_block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, latest_block_number);
+        const auto latest_block = latest_block_with_hash.block;
 
-        EVMExecutor evm_executor{context_, tx_database, *chain_config_ptr, workers_, block.header.number};
+        EVMExecutor evm_executor{context_, tx_database, *chain_config_ptr, workers_, latest_block.header.number};
 
-        ego::Executor executor = [&block, &evm_executor](const silkworm::Transaction &transaction) {
-            return evm_executor.call(block, transaction);
+        ego::Executor executor = [&latest_block, &evm_executor](const silkworm::Transaction &transaction) {
+            return evm_executor.call(latest_block, transaction);
         };
 
         ego::BlockHeaderProvider block_header_provider = [&tx_database](uint64_t block_number) {
@@ -689,7 +689,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::js
 
         ego::EstimateGasOracle estimate_gas_oracle{block_header_provider, account_reader, executor};
 
-        auto estimated_gas = co_await estimate_gas_oracle.estimate_gas(call, block_number);
+        auto estimated_gas = co_await estimate_gas_oracle.estimate_gas(call, latest_block_number);
 
         reply = make_json_content(request["id"], to_quantity(estimated_gas));
     } catch (const ego::EstimateGasException& e) {

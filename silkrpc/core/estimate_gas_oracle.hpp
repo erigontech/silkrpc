@@ -41,9 +41,9 @@ namespace silkrpc::ego {
 const std::uint64_t kTxGas = 21'000;
 const std::uint64_t kGasCap = 25'000'000;
 
-typedef std::function<asio::awaitable<silkworm::BlockHeader>(uint64_t)> BlockHeaderProvider;
-typedef std::function<asio::awaitable<std::optional<silkworm::Account>>(const evmc::address&, uint64_t)> AccountReader;
-typedef std::function<asio::awaitable<silkrpc::ExecutionResult>(const silkworm::Transaction &)> Executor;
+using BlockHeaderProvider = std::function<asio::awaitable<silkworm::BlockHeader>(uint64_t)>;
+using AccountReader = std::function<asio::awaitable<std::optional<silkworm::Account>>(const evmc::address&, uint64_t)>;
+using Executor = std::function<asio::awaitable<silkrpc::ExecutionResult>(const silkworm::Transaction &)>;
 
 struct EstimateGasException : public std::exception {
 public:
@@ -89,7 +89,7 @@ public:
     asio::awaitable<intx::uint256> estimate_gas(const Call& call, uint64_t block_number);
 
 private:
-    asio::awaitable<bool> execution_test(const silkworm::Transaction& transaction);
+    asio::awaitable<bool> try_execution(const silkworm::Transaction& transaction);
 
     const BlockHeaderProvider& block_header_provider_;
     const AccountReader& account_reader_;

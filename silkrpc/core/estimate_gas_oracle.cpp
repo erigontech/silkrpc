@@ -17,6 +17,7 @@
 #include "estimate_gas_oracle.hpp"
 
 #include <algorithm>
+#include <string> 
 #include <utility>
 
 #include <asio/compose.hpp>
@@ -39,7 +40,6 @@ asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call,
         SILKRPC_DEBUG << "Set HI with gas in args: " << call.gas.value_or(0) << "\n";
         hi = call.gas.value();
     } else {
-        // TODO(sixtysixter) worths it to test if returned header is not null?
         const auto header = co_await block_header_provider_(block_number);
         hi = header.gas_limit;
         SILKRPC_DEBUG << "Evaluate HI with gas in block " << header.gas_limit << "\n";
@@ -54,7 +54,7 @@ asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call,
         intx::uint256 balance = account->balance;
         SILKRPC_DEBUG << "balance for address 0x" << from << ": 0x" << intx::hex(balance) << "\n";
         if (call.value.value_or(0) > balance) {
-        // TODO(sixtysixter) what is the right code?
+            // TODO(sixtysixter) what is the right code?
             throw EstimateGasException{-1, "insufficient funds for transfer"};
         }
         auto available = balance - call.value.value_or(0);
@@ -84,7 +84,7 @@ asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call,
         auto mid = (hi + lo) / 2;
         transaction.gas_limit = mid;
 
-        auto failed = co_await execution_test(transaction);
+        auto failed = co_await try_execution(transaction);
 
         if (failed) {
             lo = mid;
@@ -94,16 +94,20 @@ asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call,
     }
 
     if (hi == cap) {
-        SILKRPC_DEBUG << "HI == cap test again...\n";
         transaction.gas_limit = hi;
-        auto failed = co_await execution_test(transaction);
+        auto failed = co_await try_execution(transaction);
+        SILKRPC_DEBUG << "HI == cap tested again with " << (failed ? "failure" : "succeed") << "\n";
+
+        if (failed) {
+            throw EstimateGasException{-1, "gas required exceeds allowance (" + std::to_string(cap) + ")"};
+        }
     }
 
     SILKRPC_DEBUG << "EstimateGasOracle::estimate_gas returns " << hi << "\n";
     co_return hi;
 }
 
-asio::awaitable<bool> EstimateGasOracle::execution_test(const silkworm::Transaction& transaction) {
+asio::awaitable<bool> EstimateGasOracle::try_execution(const silkworm::Transaction& transaction) {
     silkrpc::Transaction tnx{transaction};
     const auto result = co_await executor_(transaction);
 
