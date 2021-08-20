@@ -42,7 +42,12 @@ struct Call {
         silkworm::Transaction txn{};
         txn.from = from;
         txn.to = to;
-        txn.gas_limit = gas.value_or(0);
+        if (gas) {
+           txn.gas_limit = gas.value();
+        }
+        else {
+           txn.gas_limit = 30000000; // to be used const
+        }
         if (gas_price) {
             txn.max_priority_fee_per_gas = gas_price.value();
             txn.max_fee_per_gas = gas_price.value();
