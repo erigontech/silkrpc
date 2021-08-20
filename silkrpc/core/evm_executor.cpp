@@ -152,6 +152,31 @@ std::string EVMExecutor::get_error_message(int64_t error_code, const silkworm::B
     return error_message;
 }
 
+std::optional<std::string> pre_check(const evmc_revision rev, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const silkworm::IntraBlockState & state,
+                                     const intx::uint256 want, const intx::uint128 g0) {
+   if (rev >= EVMC_LONDON && txn.max_fee_per_gas < base_fee_per_gas) {
+      std::string from = silkworm::to_hex(*txn.from);
+      std::string error = "fee cap less than block base fee: address 0x" + from + ", gasFeeCap: " + intx::to_string(txn.max_fee_per_gas) + " baseFee: " + intx::to_string(base_fee_per_gas);
+      return error;
+   }
+
+   const auto have = state.get_balance(*txn.from);
+   if (have < want + txn.value) {
+      std::string from = silkworm::to_hex(*txn.from);
+      std::string error = "insufficient funds for gas * price + value: address 0x" + from + " have " + intx::to_string(have) + " want " + intx::to_string(want+txn.value);
+      return error;
+   }
+
+   if (txn.gas_limit < g0) {
+      std::string from = silkworm::to_hex(*txn.from);
+      std::string error = "intrinsic gas too low: have " + std::to_string(txn.gas_limit) + " want " + intx::to_string(g0);
+      return error;
+   }
+
+   return std::nullopt;
+}
+
+
 asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block, const silkworm::Transaction& txn) {
     SILKRPC_DEBUG << "Executor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " start\n";
 
@@ -167,29 +192,15 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
 
                 const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
                 const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
-                const auto have = state.get_balance(*txn.from);
                 auto want = txn.gas_limit * effective_gas_price;
-
-
                 const evmc_revision rev{evm.revision()};
-                if (rev >= EVMC_LONDON && txn.max_fee_per_gas < base_fee_per_gas) {
-                   silkworm::Bytes data{};
-                   std::string from = silkworm::to_hex(*txn.from);
-                   std::string error = "fee cap less than block base fee: address 0x" + from + ", gasFeeCap: " + intx::to_string(txn.max_fee_per_gas) + \
-                                         " baseFee: " + intx::to_string(base_fee_per_gas);
-                   ExecutionResult exec_result{1000, txn.gas_limit, data, error};
-                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
-                      self.complete(exec_result);
-                   });
-                   return;
-                }
+                const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev >= EVMC_HOMESTEAD, rev >= EVMC_ISTANBUL)};
+                assert(g0 <= UINT64_MAX); // true due to the precondition (transaction must be valid)
 
-                if (have < want + txn.value) {
-                   want += txn.value;
+                const auto error = pre_check(rev, txn, base_fee_per_gas, state, want, g0);
+                if (error) {
                    silkworm::Bytes data{};
-                   std::string from = silkworm::to_hex(*txn.from);
-                   std::string error = "insufficient funds for gas * price + value: address 0x" + from + " have " + intx::to_string(have) + " want " + intx::to_string(want);
-                   ExecutionResult exec_result{1000, txn.gas_limit, data, error};
+                   ExecutionResult exec_result{1000, txn.gas_limit, data, *error};
                    asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
                       self.complete(exec_result);
                    });
@@ -210,19 +221,6 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                        }
                 }
 
-                const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev >= EVMC_HOMESTEAD, rev >= EVMC_ISTANBUL)};
-                assert(g0 <= UINT64_MAX); // true due to the precondition (transaction must be valid)
-
-                if (txn.gas_limit < g0) {
-                      silkworm::Bytes data{};
-                      std::string from = silkworm::to_hex(*txn.from);
-                      std::string error = "intrinsic gas too low: have " + std::to_string(txn.gas_limit) + " want " + intx::to_string(g0);
-                      ExecutionResult exec_result{1000, txn.gas_limit, data, error};
-                      asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
-                          self.complete(exec_result);
-                      });
-                      return;
-                }
 
                 SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " g0: " << static_cast<uint64_t>(g0) << " start\n";
                 const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
