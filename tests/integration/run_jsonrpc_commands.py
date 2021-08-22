@@ -31,7 +31,7 @@ def run_shell_command(command: str, expected_response: str, exit_on_fail) -> int
 
 def run_tests(json_filename, verbose, silk, exit_on_fail, req_test):
     """ Run integration tests. """
-    with open(json_filename) as json_file:
+    with open(json_filename, encoding='utf8') as json_file:
         jsonrpc_commands = json.load(json_file)
         test_number = 0
         for json_rpc in jsonrpc_commands:

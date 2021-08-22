@@ -106,7 +106,7 @@ TEST_CASE("create async unary client", "[silkrpc][grpc][async_unary_client]") {
         EtherbaseClient client{stub, &queue};
 
         MockClientAsyncEtherbaseReader mock_reader{remote::EtherbaseReply{}, ::grpc::Status::OK};
-        EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockETHBACKENDStub*>(stub.get()), PrepareAsyncEtherbaseRaw(_,_,_)).WillOnce(Return(&mock_reader));
+        EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockETHBACKENDStub*>(stub.get()), PrepareAsyncEtherbaseRaw(_, _, _)).WillOnce(Return(&mock_reader));
 
         MockFunction<void(::grpc::Status, ::remote::EtherbaseReply)> mock_callback;
         EXPECT_CALL(mock_callback, Call(grpc::Status::OK, remote::EtherbaseReply{}));
@@ -127,7 +127,7 @@ TEST_CASE("create async unary client", "[silkrpc][grpc][async_unary_client]") {
         EtherbaseClient client{stub, &queue};
 
         MockClientAsyncEtherbaseReader mock_reader{remote::EtherbaseReply{}, ::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"}};
-        EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockETHBACKENDStub*>(stub.get()), PrepareAsyncEtherbaseRaw(_,_,_)).WillOnce(Return(&mock_reader));
+        EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockETHBACKENDStub*>(stub.get()), PrepareAsyncEtherbaseRaw(_, _, _)).WillOnce(Return(&mock_reader));
 
         MockFunction<void(::grpc::Status, ::remote::EtherbaseReply)> mock_callback;
         EXPECT_CALL(mock_callback, Call(::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"}, remote::EtherbaseReply{}));

@@ -16,7 +16,6 @@
 
 #include <silkrpc/config.hpp>
 
-#include <chrono>
 #include <exception>
 #include <filesystem>
 #include <iostream>
@@ -39,7 +38,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/http/server.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
-#include <silkrpc/ethdb/kv/version.hpp>
+#include <silkrpc/protocol/version.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::common::kEmptyChainData, "chain data path as string");
 ABSL_FLAG(std::string, local, silkrpc::common::kDefaultLocal, "HTTP JSON local binding as string <address>:<port>");
@@ -48,8 +47,6 @@ ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "numbe
 ABSL_FLAG(uint32_t, numWorkers, std::thread::hardware_concurrency(), "number of worker threads as 32-bit integer");
 ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
-
-constexpr auto KV_SERVICE_API_VERSION = silkrpc::ethdb::kv::ProtocolVersion{3, 0, 0};
 
 int main(int argc, char* argv[]) {
     const auto pid = boost::this_process::get_id();
@@ -131,16 +128,18 @@ int main(int argc, char* argv[]) {
             return grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
         };
 
-        // Check KV protocol version compatibility
-        using std::chrono_literals::operator""ms;
-        silkrpc::ethdb::kv::ProtocolVersionCheck version_check;
-        while (!(version_check = silkrpc::ethdb::kv::check_protocol_version(create_channel(), KV_SERVICE_API_VERSION))) {
-            std::this_thread::sleep_for(1000ms);
+        // Check protocol version compatibility with Core Services
+        const auto core_service_channel{create_channel()};
+        const auto kv_protocol_check{silkrpc::wait_for_kv_protocol_check(core_service_channel)};
+        if (!kv_protocol_check.compatible) {
+            throw std::runtime_error{kv_protocol_check.result};
         }
-        if (!version_check.value().compatible) {
-            throw std::runtime_error{version_check.value().result};
+        SILKRPC_LOG << kv_protocol_check.result << "\n";
+        const auto ethbackend_protocol_check{silkrpc::wait_for_ethbackend_protocol_check(core_service_channel)};
+        if (!ethbackend_protocol_check.compatible) {
+            throw std::runtime_error{ethbackend_protocol_check.result};
         }
-        SILKRPC_LOG << version_check.value().result << "\n";
+        SILKRPC_LOG << ethbackend_protocol_check.result << "\n";
 
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{numContexts, create_channel};
