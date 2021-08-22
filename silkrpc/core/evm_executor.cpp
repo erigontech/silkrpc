@@ -195,19 +195,19 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
 
                 const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
                 const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
-                auto want = txn.gas_limit * effective_gas_price;
+                const auto want = txn.gas_limit * effective_gas_price;
                 const evmc_revision rev{evm.revision()};
                 const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev >= EVMC_HOMESTEAD, rev >= EVMC_ISTANBUL)};
                 assert(g0 <= UINT64_MAX); // true due to the precondition (transaction must be valid)
 
                 const auto error = pre_check(evm, txn, base_fee_per_gas, want, g0);
                 if (error) {
-                   silkworm::Bytes data{};
-                   ExecutionResult exec_result{1000, txn.gas_limit, data, *error};
-                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
-                      self.complete(exec_result);
-                   });
-                   return;
+                    silkworm::Bytes data{};
+                    ExecutionResult exec_result{1000, txn.gas_limit, data, *error};
+                    asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                        self.complete(exec_result);
+                    });
+                    return;
                 }
 
                 state.subtract_from_balance(*txn.from, want);
@@ -218,10 +218,10 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                     state.set_nonce(*txn.from, txn.nonce + 1);
                 }
                 for (const silkworm::AccessListEntry& ae : txn.access_list) {
-                       state.access_account(ae.account);
-                       for (const evmc::bytes32& key : ae.storage_keys) {
-                           state.access_storage(ae.account, key);
-                       }
+                    state.access_account(ae.account);
+                    for (const evmc::bytes32& key : ae.storage_keys) {
+                        state.access_storage(ae.account, key);
+                    }
                 }
 
                 SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " g0: " << static_cast<uint64_t>(g0) << " start\n";
@@ -229,8 +229,8 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                 SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
 
                 ExecutionResult exec_result{result.status, result.gas_left, result.data};
-                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
-                      self.complete(exec_result);
+                asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                    self.complete(exec_result);
                 });
             });
         },
