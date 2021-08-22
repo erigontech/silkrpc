@@ -98,16 +98,7 @@ TEST_CASE("create call with no gasprice & valid max_fee_per_gas and max_priority
 }
 
 TEST_CASE("create call with no gas", "[silkrpc][types][call]") {
-    Call call{
-       std::nullopt,
-       std::nullopt,
-       std::nullopt,
-       std::nullopt,
-       std::nullopt,
-       std::nullopt,
-       std::nullopt,
-       std::nullopt,
-    };
+    Call call;
     silkworm::Transaction txn = call.to_transaction();
     CHECK(txn.gas_limit == 30000000);
     CHECK(txn.value == 0);
