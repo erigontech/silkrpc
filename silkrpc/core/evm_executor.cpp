@@ -152,8 +152,11 @@ std::string EVMExecutor::get_error_message(int64_t error_code, const silkworm::B
     return error_message;
 }
 
-std::optional<std::string> pre_check(const evmc_revision rev, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const silkworm::IntraBlockState & state,
-                                     const intx::uint256 want, const intx::uint128 g0) {
+std::optional<std::string> EVMExecutor::pre_check(const silkworm::EVM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint256 want, const intx::uint128 g0) {
+
+   const silkworm::IntraBlockState& state{evm.state()};
+   const evmc_revision rev{evm.revision()};
+
    if (rev >= EVMC_LONDON && txn.max_fee_per_gas < base_fee_per_gas) {
       std::string from = silkworm::to_hex(*txn.from);
       std::string error = "fee cap less than block base fee: address 0x" + from + ", gasFeeCap: " + intx::to_string(txn.max_fee_per_gas) + " baseFee: " + intx::to_string(base_fee_per_gas);
@@ -197,7 +200,7 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                 const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev >= EVMC_HOMESTEAD, rev >= EVMC_ISTANBUL)};
                 assert(g0 <= UINT64_MAX); // true due to the precondition (transaction must be valid)
 
-                const auto error = pre_check(rev, txn, base_fee_per_gas, state, want, g0);
+                const auto error = pre_check(evm, txn, base_fee_per_gas, want, g0);
                 if (error) {
                    silkworm::Bytes data{};
                    ExecutionResult exec_result{1000, txn.gas_limit, data, *error};
@@ -220,7 +223,6 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                            state.access_storage(ae.account, key);
                        }
                 }
-
 
                 SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " g0: " << static_cast<uint64_t>(g0) << " start\n";
                 const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
