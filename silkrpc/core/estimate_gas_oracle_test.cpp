@@ -63,8 +63,8 @@ TEST_CASE("estimate gas") {
 
     Call call;
     EstimateGasOracle estimate_gas_oracle{block_header_provider, account_reader, executor};
-/*
-    SECTION("Call empty, always fails but last step") {
+
+    /*SECTION("Call empty, always fails but last step") {
         steps.resize(16);
         std::fill_n(steps.begin(), steps.size(), false);
         steps[15] = true;
@@ -73,7 +73,7 @@ TEST_CASE("estimate gas") {
 
         CHECK(estimate_gas == kTxGas * 2);
     }
-*/
+
     SECTION("Call empty, always succeeds") {
         steps.resize(16);
         std::fill_n(steps.begin(), steps.size(), true);
@@ -83,7 +83,7 @@ TEST_CASE("estimate gas") {
 
         CHECK(estimate_gas == kTxGas);
     }
-/*
+
     SECTION("Call empty, alternatively fails and succeeds") {
         int current = false;
         auto generate = [&current]() -> bool {
@@ -209,12 +209,14 @@ TEST_CASE("estimate gas") {
         steps.resize(16);
         std::fill_n(steps.begin(), steps.size(), false);
 
-        // auto handler = [](std::exception const* pexception, intx::uint256 estimate_gas) -> void {
-        //     std::cout << "exception pointer " << pexception << std::endl << std::flush;
-            // REQUIRE(pexception != std::nullptr_t);            
-        // };
-        // asio::co_spawn(pool, estimate_gas_oracle.estimate_gas(call, 0), handler);
-    }
-*/
+        try {
+            auto result = asio::co_spawn(pool, estimate_gas_oracle.estimate_gas(call, 0), asio::use_future);
+            result.get();
+            CHECK(false);
+        } catch (const std::exception&) {
+            CHECK(true);
+        }
+    }*/
 }
+
 } // namespace silkrpc::ego
