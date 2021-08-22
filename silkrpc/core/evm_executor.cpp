@@ -152,8 +152,8 @@ std::string EVMExecutor::get_error_message(int64_t error_code, const silkworm::B
     return error_message;
 }
 
-std::optional<std::string> EVMExecutor::pre_check(const silkworm::EVM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint256 want, const intx::uint128 g0) {
-
+std::optional<std::string> EVMExecutor::pre_check(const silkworm::EVM& evm, const silkworm::Transaction& txn,
+                                                  const intx::uint256 base_fee_per_gas, const intx::uint256 want, const intx::uint128 g0) {
    const silkworm::IntraBlockState& state{evm.state()};
    const evmc_revision rev{evm.revision()};
 
