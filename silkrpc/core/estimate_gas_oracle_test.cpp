@@ -47,7 +47,7 @@ TEST_CASE("estimate gas") {
 
     silkworm::Account kAccount{0, kBalance};
 
-    Executor executor = [&steps, &count](const silkworm::Transaction &transaction) -> asio::awaitable<silkrpc::ExecutionResult> {
+    Executor executor = [&steps, &count](const silkworm::Transaction& transaction) -> asio::awaitable<silkrpc::ExecutionResult> {
         bool success = steps[count++];
         silkrpc::ExecutionResult result{success ? evmc_status_code::EVMC_SUCCESS : evmc_status_code::EVMC_INSUFFICIENT_BALANCE};
         co_return result;
@@ -64,7 +64,7 @@ TEST_CASE("estimate gas") {
     Call call;
     EstimateGasOracle estimate_gas_oracle{block_header_provider, account_reader, executor};
 
-    /*SECTION("Call empty, always fails but last step") {
+    SECTION("Call empty, always fails but last step") {
         steps.resize(16);
         std::fill_n(steps.begin(), steps.size(), false);
         steps[15] = true;
@@ -216,7 +216,7 @@ TEST_CASE("estimate gas") {
         } catch (const std::exception&) {
             CHECK(true);
         }
-    }*/
+    }
 }
 
 } // namespace silkrpc::ego
