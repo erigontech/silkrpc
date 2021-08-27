@@ -23,6 +23,7 @@
 
 #include <asio/awaitable.hpp>
 #include <asio/thread_pool.hpp>
+#include <silkworm/execution/evm.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/state/buffer.hpp>
@@ -56,6 +57,8 @@ public:
     asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn);
 
 private:
+    std::optional<std::string> pre_check(const silkworm::EVM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint256 want, const intx::uint128 g0);
+
     const Context& context_;
     const core::rawdb::DatabaseReader& db_reader_;
     const silkworm::ChainConfig& config_;
