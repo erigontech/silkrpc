@@ -40,12 +40,12 @@
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 #include <silkrpc/protocol/version.hpp>
 
-ABSL_FLAG(std::string, chaindata, silkrpc::common::kEmptyChainData, "chain data path as string");
-ABSL_FLAG(std::string, local, silkrpc::common::kDefaultLocal, "HTTP JSON local binding as string <address>:<port>");
-ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "TG Core gRPC service location as string <address>:<port>");
+ABSL_FLAG(std::string, chaindata, silkrpc::kEmptyChainData, "chain data path as string");
+ABSL_FLAG(std::string, local, silkrpc::kDefaultLocal, "HTTP JSON local binding as string <address>:<port>");
+ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "TG Core gRPC service location as string <address>:<port>");
 ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "number of running I/O contexts as 32-bit integer");
 ABSL_FLAG(uint32_t, numWorkers, std::thread::hardware_concurrency(), "number of worker threads as 32-bit integer");
-ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
+ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
 
 int main(int argc, char* argv[]) {
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
     const auto tid = std::this_thread::get_id();
 
     using silkrpc::LogLevel;
-    using silkrpc::common::kAddressPortSeparator;
+    using silkrpc::kAddressPortSeparator;
 
     absl::FlagsUsageConfig config;
     config.contains_helpshort_flags = [](absl::string_view) { return false; };

@@ -50,6 +50,8 @@ using LogLevel = silkworm::LogLevel;
 
 #define SILKRPC_LOG_THREAD(log_thread_) (silkworm::log_thread_enabled_ = (log_thread_))
 
+#define SILKRPC_LOG_STREAMS(stream1_, stream2_) silkworm::log_set_streams_((stream1_), (stream2_))
+
 } // namespace silkrpc
 
 #endif  // SILKRPC_COMMON_LOG_HPP_

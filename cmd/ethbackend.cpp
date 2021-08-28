@@ -30,7 +30,7 @@
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
 
-ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location as string <address>:<port>");
+ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "server location as string <address>:<port>");
 
 int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("Query Erigon/Silkworm ETHBACKEND remote interface");
