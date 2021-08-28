@@ -42,7 +42,7 @@
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 
-ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location as string <address>:<port>");
+ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "server location as string <address>:<port>");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
 
 using silkrpc::LogLevel;

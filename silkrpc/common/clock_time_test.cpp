@@ -22,5 +22,25 @@ namespace silkrpc {
 
 using Catch::Matchers::Message;
 
+using std::chrono::duration_cast;
+using std::chrono::nanoseconds;
+using std::chrono::steady_clock;
+
+TEST_CASE("check current time", "[silkrpc][common][clock_time]") {
+    const auto now_before{duration_cast<nanoseconds>(steady_clock::now().time_since_epoch()).count()};
+    const auto now{clock_time::now()};
+    const auto now_after{duration_cast<nanoseconds>(steady_clock::now().time_since_epoch()).count()};
+    CHECK(now_before <= now);
+    CHECK(now <= now_after);
+}
+
+TEST_CASE("check elapsed time", "[silkrpc][common][clock_time]") {
+    const auto start{clock_time::now()};
+    const auto elapsed{clock_time::since(start)};
+    const auto end{clock_time::now()};
+    const auto window = end - start;
+    CHECK(elapsed <= window);
+}
+
 } // namespace silkrpc
 
