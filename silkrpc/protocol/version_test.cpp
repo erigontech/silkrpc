@@ -45,6 +45,16 @@ TEST_CASE("write protocol version to ostream", "[silkrpc][protocol][version]") {
     CHECK_NOTHROW(silkworm::null_stream() << v);
 }
 
+TEST_CASE("ETHBACKEND protocol version error", "[silkrpc][protocol][wait_for_ethbackend_protocol_check]") {
+    std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub{std::make_unique<::remote::FixIssue24351_MockETHBACKENDStub>()};
+
+    EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockETHBACKENDStub*>(stub.get()), Version(_, _, _)).WillOnce(
+        Return(grpc::Status::CANCELLED));
+    const auto version_result{wait_for_ethbackend_protocol_check(stub)};
+    CHECK(version_result.compatible == false);
+    CHECK(version_result.result.find("incompatible") != std::string::npos);
+}
+
 TEST_CASE("ETHBACKEND protocol version major mismatch", "[silkrpc][protocol][wait_for_ethbackend_protocol_check]") {
     std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub{std::make_unique<::remote::FixIssue24351_MockETHBACKENDStub>()};
     types::VersionReply reply;
@@ -95,6 +105,40 @@ TEST_CASE("ETHBACKEND protocol version match", "[silkrpc][protocol][wait_for_eth
     const auto version_result{wait_for_ethbackend_protocol_check(stub)};
     CHECK(version_result.compatible == true);
     CHECK(version_result.result.find("compatible") != std::string::npos);
+}
+
+TEST_CASE("ETHBACKEND protocol version with server stub", "[silkrpc][protocol][wait_for_ethbackend_protocol_check]") {
+    class TestService : public ::remote::ETHBACKEND::Service {
+    public:
+        ::grpc::Status Version(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response) override {
+            response->set_major(2);
+            response->set_minor(1);
+            response->set_patch(0);
+            return ::grpc::Status::OK;
+        }
+    };
+    TestService service;
+    std::ostringstream server_address;
+    server_address << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
+    grpc::ServerBuilder builder;
+    builder.AddListeningPort(server_address.str(), grpc::InsecureServerCredentials());
+    builder.RegisterService(&service);
+    const auto server_ptr = builder.BuildAndStart();
+    const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
+    const auto version_result{wait_for_ethbackend_protocol_check(channel)};
+    server_ptr->Shutdown();
+    CHECK(version_result.compatible == true);
+    CHECK(version_result.result.find("compatible") != std::string::npos);
+}
+
+TEST_CASE("KV protocol version error", "[silkrpc][protocol][wait_for_kv_protocol_check]") {
+    std::unique_ptr<::remote::KV::StubInterface> stub{std::make_unique<::remote::FixIssue24351_MockKVStub>()};
+
+    EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockKVStub*>(stub.get()), Version(_, _, _)).WillOnce(
+        Return(grpc::Status::CANCELLED));
+    const auto version_result{wait_for_kv_protocol_check(stub)};
+    CHECK(version_result.compatible == false);
+    CHECK(version_result.result.find("incompatible") != std::string::npos);
 }
 
 TEST_CASE("KV protocol version major mismatch", "[silkrpc][protocol][wait_for_kv_protocol_check]") {

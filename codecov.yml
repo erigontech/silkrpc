@@ -1,6 +1,4 @@
-fixes:
-  - "::silkrpc/" # move root "<path>/" => "silkrpc/<path>/"
-
 ignore:
   - "**/*_test.cpp"
   - "cmd"
+  - "silkrpc/interfaces"
