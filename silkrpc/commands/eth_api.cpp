@@ -35,6 +35,7 @@
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/evm_executor.hpp>
 #include <silkrpc/core/gas_price_oracle.hpp>
+#include <silkrpc/core/estimate_gas_oracle.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/core/receipts.hpp>
 #include <silkrpc/core/state_reader.hpp>
@@ -648,12 +649,56 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const n
 
 // https://eth.wiki/json-rpc/API#eth_estimategas
 asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 1) {
+        auto error_msg = "invalid eth_estimategas params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto call = params[0].get<Call>();
+    SILKRPC_DEBUG << "call: " << call << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"], to_quantity(0));
+        const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        auto latest_block_number = co_await core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
+        SILKRPC_DEBUG << "chain_id: " << chain_id << ", latest_block_number: " << latest_block_number << "\n";
+
+        const auto latest_block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, latest_block_number);
+        const auto latest_block = latest_block_with_hash.block;
+
+        EVMExecutor evm_executor{context_, tx_database, *chain_config_ptr, workers_, latest_block.header.number};
+
+        ego::Executor executor = [&latest_block, &evm_executor](const silkworm::Transaction &transaction) {
+            return evm_executor.call(latest_block, transaction);
+        };
+
+        ego::BlockHeaderProvider block_header_provider = [&tx_database](uint64_t block_number) {
+            return core::rawdb::read_header_by_number(tx_database, block_number);
+        };
+
+        StateReader state_reader{tx_database};
+        ego::AccountReader account_reader = [&state_reader](const evmc::address& address, uint64_t block_number) {
+            return state_reader.read_account(address, block_number + 1);
+        };
+
+        ego::EstimateGasOracle estimate_gas_oracle{block_header_provider, account_reader, executor};
+
+        auto estimated_gas = co_await estimate_gas_oracle.estimate_gas(call, latest_block_number);
+
+        reply = make_json_content(request["id"], to_quantity(estimated_gas));
+    } catch (const ego::EstimateGasException& e) {
+        SILKRPC_ERROR << "EstimateGasException: code: " << e.error_code() << " message: " << e.message() << " processing request: " << request.dump() << "\n";
+        if (e.data().empty()) {
+            reply = make_json_error(request["id"], e.error_code(), e.message());
+        } else {
+            reply = make_json_error(request["id"], {3, e.message(), e.data()});
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
