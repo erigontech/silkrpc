@@ -111,7 +111,7 @@ TEST_CASE("create async unary client", "[silkrpc][grpc][async_unary_client]") {
         MockFunction<void(::grpc::Status, ::remote::EtherbaseReply)> mock_callback;
         EXPECT_CALL(mock_callback, Call(grpc::Status::OK, remote::EtherbaseReply{}));
 
-        client.async_call(mock_callback.AsStdFunction());
+        client.async_call(::remote::EtherbaseRequest{}, mock_callback.AsStdFunction());
         client.completed(true);
     }
 
@@ -132,7 +132,7 @@ TEST_CASE("create async unary client", "[silkrpc][grpc][async_unary_client]") {
         MockFunction<void(::grpc::Status, ::remote::EtherbaseReply)> mock_callback;
         EXPECT_CALL(mock_callback, Call(::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"}, remote::EtherbaseReply{}));
 
-        client.async_call(mock_callback.AsStdFunction());
+        client.async_call(::remote::EtherbaseRequest{}, mock_callback.AsStdFunction());
         client.completed(false);
     }
 }
