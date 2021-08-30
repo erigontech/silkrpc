@@ -157,10 +157,22 @@ std::optional<std::string> EVMExecutor::pre_check(const silkworm::EVM& evm, cons
     const silkworm::IntraBlockState& state{evm.state()};
     const evmc_revision rev{evm.revision()};
 
-    if (rev >= EVMC_LONDON && txn.max_fee_per_gas < base_fee_per_gas) {
-        std::string from = silkworm::to_hex(*txn.from);
-        std::string error = "fee cap less than block base fee: address 0x" + from + ", gasFeeCap: " + intx::to_string(txn.max_fee_per_gas) + " baseFee: " + intx::to_string(base_fee_per_gas);
-        return error;
+    if (rev >= EVMC_LONDON) {
+        if (txn.max_fee_per_gas  > 0 || txn. max_priority_fee_per_gas > 0) {
+           if (txn.max_fee_per_gas < base_fee_per_gas) {
+              std::string from = silkworm::to_hex(*txn.from);
+              std::string error = "fee cap less than block base fee: address 0x" + from + ", gasFeeCap: " + intx::to_string(txn.max_fee_per_gas) + " baseFee: " +
+                                   intx::to_string(base_fee_per_gas);
+              return error;
+          }
+
+          if (txn.max_fee_per_gas < txn.max_priority_fee_per_gas) {
+              std::string from = silkworm::to_hex(*txn.from);
+              std::string error = "tip higher than fee cap: address 0x" + from + ", tip: " + intx::to_string(txn.max_priority_fee_per_gas) + " gasFeeCap: " +
+                                   intx::to_string(txn.max_fee_per_gas);
+              return error;
+          }
+       }
     }
 
     const auto have = state.get_balance(*txn.from);
@@ -193,8 +205,13 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                 state.access_account(*txn.from);
 
                 const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
-                const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
-                const auto want = txn.gas_limit * effective_gas_price;
+                intx::uint256 want;
+                if (txn.max_fee_per_gas  > 0 || txn. max_priority_fee_per_gas > 0) {
+                   const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
+                   want = txn.gas_limit * effective_gas_price;
+                } else {
+                   want = 0;
+                }
                 const evmc_revision rev{evm.revision()};
                 const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev >= EVMC_HOMESTEAD, rev >= EVMC_ISTANBUL)};
                 assert(g0 <= UINT64_MAX); // true due to the precondition (transaction must be valid)
