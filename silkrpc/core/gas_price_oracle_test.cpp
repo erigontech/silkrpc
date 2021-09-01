@@ -121,6 +121,7 @@ TEST_CASE("suggested price") {
     };
     GasPriceOracle gas_price_oracle{block_provider};
 
+
     SECTION("when there is no block in chain" ) {
         FixedBlockData data = {0, 0x32, 0x32, 0x32, 0x32};
         const intx::uint256 expected_price = kDefaultPrice;
