@@ -29,8 +29,6 @@
 #include <intx/intx.hpp>
 #include <silkworm/chain/intrinsic_gas.hpp>
 #include <silkworm/common/util.hpp>
-#include <silkworm/execution/evm.hpp>
-#include <silkworm/state/intra_block_state.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
@@ -74,7 +72,9 @@ std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data
     return std::string{std::begin(encoded_msg) + message_offset, std::begin(encoded_msg) + message_offset + length};
 }
 
-std::string EVMExecutor::get_error_message(int64_t error_code, const silkworm::Bytes& error_data) {
+template<typename WorldState, typename VM>
+
+std::string EVMExecutor<WorldState, VM>::get_error_message(int64_t error_code, const silkworm::Bytes& error_data) {
     SILKRPC_DEBUG << "EVMExecutor::get_error_message error_data: " << silkworm::to_hex(error_data) << "\n";
 
     std::string error_message;
@@ -152,13 +152,14 @@ std::string EVMExecutor::get_error_message(int64_t error_code, const silkworm::B
     return error_message;
 }
 
-std::optional<std::string> EVMExecutor::pre_check(const silkworm::EVM& evm, const silkworm::Transaction& txn,
+template<typename WorldState, typename VM>
+std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn,
                                                   const intx::uint256 base_fee_per_gas, const intx::uint256 want, const intx::uint128 g0) {
-    const silkworm::IntraBlockState& state{evm.state()};
+    const WorldState& state{evm.state()};
     const evmc_revision rev{evm.revision()};
 
     if (rev >= EVMC_LONDON) {
-        if (txn.max_fee_per_gas  > 0 || txn. max_priority_fee_per_gas > 0) {
+        if (txn.max_fee_per_gas  > 0 || txn.max_priority_fee_per_gas > 0) {
            if (txn.max_fee_per_gas < base_fee_per_gas) {
               std::string from = silkworm::to_hex(*txn.from);
               std::string error = "fee cap less than block base fee: address 0x" + from + ", gasFeeCap: " + intx::to_string(txn.max_fee_per_gas) + " baseFee: " +
@@ -191,15 +192,16 @@ std::optional<std::string> EVMExecutor::pre_check(const silkworm::EVM& evm, cons
     return std::nullopt;
 }
 
-asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block, const silkworm::Transaction& txn) {
+template<typename WorldState, typename VM>
+asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn) {
     SILKRPC_DEBUG << "Executor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " start\n";
 
     const auto exec_result = co_await asio::async_compose<decltype(asio::use_awaitable), void(ExecutionResult)>(
         [this, &block, &txn](auto&& self) {
-            SILKRPC_TRACE << "Executor::call post block: " << block.header.number << " txn: " << &txn << "\n";
+            SILKRPC_TRACE << "EVMExecutor::call post block: " << block.header.number << " txn: " << &txn << "\n";
             asio::post(workers_, [this, &block, &txn, self = std::move(self)]() mutable {
-                silkworm::IntraBlockState state{buffer_};
-                silkworm::EVM evm{block, state, config_};
+                WorldState state{buffer_};
+                VM evm{block, state, config_};
 
                 assert(txn.from.has_value());
                 state.access_account(*txn.from);
@@ -240,9 +242,9 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
                     }
                 }
 
-                SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " g0: " << static_cast<uint64_t>(g0) << " start\n";
+                SILKRPC_DEBUG << "EVMExecutor::call execute on EVM txn: " << &txn << " g0: " << static_cast<uint64_t>(g0) << " start\n";
                 const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
-                SILKRPC_DEBUG << "Executor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
+                SILKRPC_DEBUG << "EVMExecutor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
 
                 ExecutionResult exec_result{result.status, result.gas_left, result.data};
                 asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
@@ -252,10 +254,11 @@ asio::awaitable<ExecutionResult> EVMExecutor::call(const silkworm::Block& block,
         },
         asio::use_awaitable);
 
-    SILKRPC_DEBUG << "Executor::call exec_result: " << exec_result.error_code << " #data: " << exec_result.data.size() << " end\n";
+    SILKRPC_DEBUG << "EVMExecutor::call exec_result: " << exec_result.error_code << " #data: " << exec_result.data.size() << " end\n";
 
     co_return exec_result;
 }
 
+template class EVMExecutor<silkworm::IntraBlockState, silkworm::EVM>;
 
 } // namespace silkrpc
