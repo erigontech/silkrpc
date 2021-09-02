@@ -154,7 +154,7 @@ std::string EVMExecutor<WorldState, VM>::get_error_message(int64_t error_code, c
 
 template<typename WorldState, typename VM>
 std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn,
-                                                  const intx::uint256 base_fee_per_gas, const intx::uint256 want, const intx::uint128 g0) {
+                                                  const intx::uint256 base_fee_per_gas, const intx::uint128 g0) {
     const WorldState& state{evm.state()};
     const evmc_revision rev{evm.revision()};
 
@@ -175,14 +175,7 @@ std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm,
           }
        }
     }
-
-    const auto have = state.get_balance(*txn.from);
-    if (have < want + txn.value) {
-        std::string from = silkworm::to_hex(*txn.from);
-        std::string error = "insufficient funds for gas * price + value: address 0x" + from + " have " + intx::to_string(have) + " want " + intx::to_string(want+txn.value);
-        return error;
-    }
-
+    
     if (txn.gas_limit < g0) {
         std::string from = silkworm::to_hex(*txn.from);
         std::string error = "intrinsic gas too low: have " + std::to_string(txn.gas_limit) + " want " + intx::to_string(g0);
@@ -206,19 +199,12 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 assert(txn.from.has_value());
                 state.access_account(*txn.from);
 
-                const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
-                intx::uint256 want;
-                if (txn.max_fee_per_gas  > 0 || txn. max_priority_fee_per_gas > 0) {
-                   const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
-                   want = txn.gas_limit * effective_gas_price;
-                } else {
-                   want = 0;
-                }
                 const evmc_revision rev{evm.revision()};
+                const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
                 const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev >= EVMC_HOMESTEAD, rev >= EVMC_ISTANBUL)};
                 assert(g0 <= UINT64_MAX); // true due to the precondition (transaction must be valid)
 
-                const auto error = pre_check(evm, txn, base_fee_per_gas, want, g0);
+                const auto error = pre_check(evm, txn, base_fee_per_gas, g0);
                 if (error) {
                     silkworm::Bytes data{};
                     ExecutionResult exec_result{1000, txn.gas_limit, data, *error};
@@ -228,6 +214,25 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                     return;
                 }
 
+                intx::uint256 want;
+                if (txn.max_fee_per_gas  > 0 || txn. max_priority_fee_per_gas > 0) {
+                   // this method should be called after check (max_fee and base_fee) present in pre_check() method
+                   const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
+                   want = txn.gas_limit * effective_gas_price;
+                } else {
+                   want = 0;
+                }
+                const auto have = state.get_balance(*txn.from);
+                if (have < want + txn.value) {
+                   silkworm::Bytes data{};
+                   std::string from = silkworm::to_hex(*txn.from);
+                   std::string error = "insufficient funds for gas * price + value: address 0x" + from + " have " + intx::to_string(have) + " want " + intx::to_string(want+txn.value);
+                   ExecutionResult exec_result{1000, txn.gas_limit, data, error};
+                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                       self.complete(exec_result);
+                   });
+                   return;
+                }
                 state.subtract_from_balance(*txn.from, want);
 
                 if (txn.to.has_value()) {
