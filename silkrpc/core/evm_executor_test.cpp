@@ -16,15 +16,21 @@
 
 #include "evm_executor.hpp"
 
+#include <optional>
+#include <string>
+#include <vector>
+
 #include <catch2/catch.hpp>
 #include <asio/co_spawn.hpp>
 #include <asio/thread_pool.hpp>
 #include <asio/use_future.hpp>
-
+#include <evmc/evmc.hpp>
+#include <intx/intx.hpp>
 
 namespace silkrpc {
 
 using Catch::Matchers::Message;
+using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
 
 TEST_CASE("EVMexecutor ") {
@@ -61,6 +67,7 @@ TEST_CASE("EVMexecutor ") {
 
       const auto block_number = 10000;
       silkworm::Transaction txn{};
+      txn.from = 0xa872626373628737383927236382161739290870_address;
       silkworm::Block block{};
       block.header.number = block_number;
 
@@ -89,6 +96,7 @@ TEST_CASE("EVMexecutor ") {
       block.header.number = block_number;
       silkworm::Transaction txn{};
       txn.max_fee_per_gas = 0x2;
+      txn.from = 0xa872626373628737383927236382161739290870_address;
 
       EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
       auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn), asio::use_future);
@@ -96,7 +104,7 @@ TEST_CASE("EVMexecutor ") {
       my_pool.stop();
       pool_thread.join();
       CHECK(result.error_code == 1000);
-      CHECK(result.pre_check_error.value() == "fee cap less than block base fee: address 0x0000000000000000000000000000000000000000, gasFeeCap: 2 baseFee: 7");
+      CHECK(result.pre_check_error.value() == "fee cap less than block base fee: address 0xa872626373628737383927236382161739290870, gasFeeCap: 2 baseFee: 7");
    }
 
    SECTION("failed if  max_priority_fee_per_gas > max_fee_per_gas ") {
@@ -115,6 +123,7 @@ TEST_CASE("EVMexecutor ") {
       block.header.number = block_number;
       silkworm::Transaction txn{};
       txn.max_fee_per_gas = 0x2;
+      txn.from = 0xa872626373628737383927236382161739290870_address;
       txn.max_priority_fee_per_gas = 0x18;
 
       EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
@@ -123,7 +132,7 @@ TEST_CASE("EVMexecutor ") {
       my_pool.stop();
       pool_thread.join();
       CHECK(result.error_code == 1000);
-      CHECK(result.pre_check_error.value() == "tip higher than fee cap: address 0x0000000000000000000000000000000000000000, tip: 24 gasFeeCap: 2");
+      CHECK(result.pre_check_error.value() == "tip higher than fee cap: address 0xa872626373628737383927236382161739290870, tip: 24 gasFeeCap: 2");
    }
 
    SECTION("failed if transaction cost greater user amount") {
@@ -143,6 +152,7 @@ TEST_CASE("EVMexecutor ") {
       silkworm::Transaction txn{};
       txn.max_fee_per_gas = 0x2;
       txn.gas_limit = 60000;
+      txn.from = 0xa872626373628737383927236382161739290870_address;
 
       EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
       auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn), asio::use_future);
@@ -150,7 +160,7 @@ TEST_CASE("EVMexecutor ") {
       my_pool.stop();
       pool_thread.join();
       CHECK(result.error_code == 1000);
-      CHECK(result.pre_check_error.value() == "insufficient funds for gas * price + value: address 0x0000000000000000000000000000000000000000 have 0 want 60000");
+      CHECK(result.pre_check_error.value() == "insufficient funds for gas * price + value: address 0xa872626373628737383927236382161739290870 have 0 want 60000");
   }
 
   SECTION("call returns SUCCESS") {
@@ -168,6 +178,7 @@ TEST_CASE("EVMexecutor ") {
       block.header.number = block_number;
       silkworm::Transaction txn{};
       txn.gas_limit = 60000;
+      txn.from = 0xa872626373628737383927236382161739290870_address;
 
       EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
       auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn), asio::use_future);
