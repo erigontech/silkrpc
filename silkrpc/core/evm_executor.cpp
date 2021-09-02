@@ -175,7 +175,6 @@ std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm,
           }
        }
     }
-    
     if (txn.gas_limit < g0) {
         std::string from = silkworm::to_hex(*txn.from);
         std::string error = "intrinsic gas too low: have " + std::to_string(txn.gas_limit) + " want " + intx::to_string(g0);
