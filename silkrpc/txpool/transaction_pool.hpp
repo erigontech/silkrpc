@@ -69,31 +69,31 @@ public:
         SILKRPC_TRACE << "TransactionPool::dtor " << this << "\n";
     }
 
-    asio::awaitable<bool> add(const silkworm::ByteView& rlp_transaction) {
+    asio::awaitable<bool> add_transaction(const silkworm::ByteView& rlp_tx) {
         const auto start_time = clock_time::now();
-        //SILKRPC_DEBUG << "TransactionPool::add rlp_transaction=" << rlp_transaction << "\n";
+        SILKRPC_DEBUG << "TransactionPool::add_transaction rlp_tx=" << rlp_tx << "\n";
         ::txpool::AddRequest request;
-        request.add_rlptxs(rlp_transaction.data(), rlp_transaction.size());
+        request.add_rlptxs(rlp_tx.data(), rlp_tx.size());
         const auto reply = co_await add_awaitable_.async_call(request, asio::use_awaitable);
         const auto imported_size = reply.imported_size();
         const auto errors_size = reply.errors_size();
-        SILKRPC_DEBUG << "TransactionPool::add imported_size=" << imported_size << " errors_size=" << errors_size << "\n";
+        SILKRPC_DEBUG << "TransactionPool::add_transaction imported_size=" << imported_size << " errors_size=" << errors_size << "\n";
         bool result{false};
         if (imported_size == 1) {
             const auto import_result = reply.imported(0);
-            SILKRPC_DEBUG << "TransactionPool::add import_result=" << import_result << "\n";
+            SILKRPC_DEBUG << "TransactionPool::add_transaction import_result=" << import_result << "\n";
             if (import_result == ::txpool::ImportResult::SUCCESS) {
                 result = true;
             } else if (errors_size >= 1) {
                 const auto import_error = reply.errors(0);
-                SILKRPC_WARN << "TransactionPool::add import_result=" << import_result << " error=" << import_error << "\n";
+                SILKRPC_WARN << "TransactionPool::add_transaction import_result=" << import_result << " error=" << import_error << "\n";
             } else {
-                SILKRPC_WARN << "TransactionPool::add import_result=" << import_result << ", no error received\n";
+                SILKRPC_WARN << "TransactionPool::add_transaction import_result=" << import_result << ", no error received\n";
             }
         } else {
-            SILKRPC_WARN << "TransactionPool::add unexpected imported_size=" << imported_size << "\n";
+            SILKRPC_WARN << "TransactionPool::add_transaction unexpected imported_size=" << imported_size << "\n";
         }
-        SILKRPC_DEBUG << "TransactionPool::add t=" << clock_time::since(start_time) << "\n";
+        SILKRPC_DEBUG << "TransactionPool::add_transaction t=" << clock_time::since(start_time) << "\n";
         co_return result;
     }
 

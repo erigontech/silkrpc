@@ -17,16 +17,21 @@
 #include "transaction_pool.hpp"
 
 #include <memory>
+#include <thread>
 
+#include <asio/io_context.hpp>
+#include <asio/co_spawn.hpp>
+#include <asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
+#include <silkworm/common/base.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/grpc/completion_runner.hpp>
 #include <silkrpc/interfaces/txpool/txpool.grpc.pb.h>
 #include <silkrpc/interfaces/txpool/txpool_mock_fix24351.grpc.pb.h>
 
-//extern inline bool operator==(const grpc::Status& lhs, const grpc::Status& rhs);
 namespace grpc {
 
 inline bool operator==(const Status& lhs, const Status& rhs) {
@@ -61,7 +66,7 @@ using testing::MockFunction;
 using testing::Return;
 using testing::_;
 
-TEST_CASE("create transaction pool", "[silkrpc][txpool][transaction_pool]") {
+TEST_CASE("create AddClient", "[silkrpc][txpool][transaction_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     uint64_t g_fixture_slowdown_factor = 1;
@@ -142,6 +147,53 @@ TEST_CASE("create transaction pool", "[silkrpc][txpool][transaction_pool]") {
 
         client.async_call(::txpool::AddRequest{}, mock_callback.AsStdFunction());
         client.completed(false);
+    }
+}
+
+TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    class TestService : public ::txpool::Txpool::Service {
+    public:
+        TestService(const ::grpc::Status& status, const ::txpool::AddReply& reply) : status_(status), reply_(reply) {}
+        ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
+            for (auto i{0}; i < reply_.imported_size(); i++) response->add_imported(reply_.imported(i));
+            for (auto i{0}; i < reply_.errors_size(); i++) response->add_errors(reply_.errors(i));
+            return status_;
+        }
+    private:
+        const ::grpc::Status& status_;
+        const ::txpool::AddReply& reply_;
+    };
+
+    SECTION("call Add, get status OK and import success") {
+        ::txpool::AddReply reply;
+        reply.add_imported(::txpool::ImportResult::SUCCESS);
+        TestService service{::grpc::Status::OK, reply};
+        std::ostringstream server_address;
+        server_address << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
+        grpc::ServerBuilder builder;
+        builder.AddListeningPort(server_address.str(), grpc::InsecureServerCredentials());
+        builder.RegisterService(&service);
+        const auto server_ptr = builder.BuildAndStart();
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        grpc::CompletionQueue queue;
+        CompletionRunner completion_runner{queue, io_context};
+        auto io_context_thread = std::thread([&]() { io_context.run(); });
+        auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
+        std::this_thread::yield();
+        const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
+        txpool::TransactionPool tx_pool{io_context, channel, &queue};
+        //auto add_result{asio::co_spawn(io_context, tx_pool.add_transaction(silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        //const bool imported = add_result.get();
+        //std::cout << "imported=" << imported << "\n";
+        server_ptr->Shutdown();
+        completion_runner.stop();
+        io_context.stop();
+        CHECK_NOTHROW(completion_runner_thread.join());
+        CHECK_NOTHROW(io_context_thread.join());
+        //CHECK(imported == true);
     }
 }
 
