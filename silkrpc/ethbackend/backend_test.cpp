@@ -20,7 +20,7 @@
 
 #include <asio/io_context.hpp>
 #include <asio/co_spawn.hpp>
-#include <asio/use_future.hpp>
+#include <asio/detached.hpp>
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
@@ -33,19 +33,47 @@ namespace silkrpc {
 
 using Catch::Matchers::Message;
 
+class TestBackEndService : public ::remote::ETHBACKEND::Service {
+public:
+    TestBackEndService() {}
+    ::grpc::Status Etherbase(::grpc::ServerContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response) override {
+        return ::grpc::Status::OK;
+    }
+};
+
+asio::awaitable<void> test_etherbase() {
+    auto executor = co_await asio::this_coro::executor;
+    TestBackEndService service;
+    std::ostringstream server_address;
+    server_address << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
+    grpc::ServerBuilder builder;
+    builder.AddListeningPort(server_address.str(), grpc::InsecureServerCredentials());
+    builder.RegisterService(&service);
+    const auto server_ptr = builder.BuildAndStart();
+    asio::io_context io_context;
+    asio::io_context::work work{io_context};
+    grpc::CompletionQueue queue;
+    CompletionRunner completion_runner{queue, io_context};
+    auto io_context_thread = std::thread([&]() { io_context.run(); });
+    auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
+    const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
+    ethbackend::BackEnd backend{io_context, channel, &queue};
+    //std::cout << "BEFORE etherbase\n";
+    backend.etherbase();
+    //std::cout << "AFTER etherbase address=" << address << "\n";
+    server_ptr->Shutdown();
+    io_context.stop();
+    completion_runner.stop();
+    io_context_thread.join();
+    completion_runner_thread.join();
+    co_return;
+}
+
 TEST_CASE("create BackEnd", "[silkrpc][ethbackend][backend]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    class TestService : public ::remote::ETHBACKEND::Service {
-    public:
-        TestService() {}
-        ::grpc::Status Etherbase(::grpc::ServerContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response) override {
-            return ::grpc::Status::OK;
-        }
-    };
-
     SECTION("start call Etherbase, get status OK and get result") {
-        TestService service;
+        /*TestService service;
         std::ostringstream server_address;
         server_address << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
         grpc::ServerBuilder builder;
@@ -68,7 +96,10 @@ TEST_CASE("create BackEnd", "[silkrpc][ethbackend][backend]") {
         completion_runner.stop();
         io_context.stop();
         CHECK_NOTHROW(completion_runner_thread.join());
-        CHECK_NOTHROW(io_context_thread.join());
+        CHECK_NOTHROW(io_context_thread.join());*/
+        asio::io_context io_context;
+        asio::co_spawn(io_context, test_etherbase(), asio::detached);
+        io_context.run();
     }
 }
 

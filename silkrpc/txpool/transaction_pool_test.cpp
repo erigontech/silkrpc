@@ -185,6 +185,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         std::this_thread::yield();
         const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
         txpool::TransactionPool tx_pool{io_context, channel, &queue};
+        tx_pool.add_transaction(silkworm::Bytes{0x00, 0x01});
         //auto add_result{asio::co_spawn(io_context, tx_pool.add_transaction(silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         //const bool imported = add_result.get();
         //std::cout << "imported=" << imported << "\n";
