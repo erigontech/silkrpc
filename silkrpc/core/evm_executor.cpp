@@ -73,7 +73,6 @@ std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data
 }
 
 template<typename WorldState, typename VM>
-
 std::string EVMExecutor<WorldState, VM>::get_error_message(int64_t error_code, const silkworm::Bytes& error_data) {
     SILKRPC_DEBUG << "EVMExecutor::get_error_message error_data: " << silkworm::to_hex(error_data) << "\n";
 
@@ -153,8 +152,7 @@ std::string EVMExecutor<WorldState, VM>::get_error_message(int64_t error_code, c
 }
 
 template<typename WorldState, typename VM>
-std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn,
-                                                  const intx::uint256 base_fee_per_gas, const intx::uint128 g0) {
+std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0) {
     const WorldState& state{evm.state()};
     const evmc_revision rev{evm.revision()};
 
