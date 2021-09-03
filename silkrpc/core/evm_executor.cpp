@@ -184,7 +184,7 @@ std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm,
 
 template<typename WorldState, typename VM>
 asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn) {
-    SILKRPC_DEBUG << "Executor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " start\n";
+    SILKRPC_DEBUG << "EVMExecutor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " start\n";
 
     const auto exec_result = co_await asio::async_compose<decltype(asio::use_awaitable), void(ExecutionResult)>(
         [this, &block, &txn](auto&& self) {
@@ -212,7 +212,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 }
 
                 intx::uint256 want;
-                if (txn.max_fee_per_gas  > 0 || txn.max_priority_fee_per_gas > 0) {
+                if (txn.max_fee_per_gas > 0 || txn.max_priority_fee_per_gas > 0) {
                    // this method should be called after check (max_fee and base_fee) present in pre_check() method
                    const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
                    want = txn.gas_limit * effective_gas_price;
