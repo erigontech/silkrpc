@@ -161,14 +161,14 @@ std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm,
            if (txn.max_fee_per_gas < base_fee_per_gas) {
               std::string from = silkworm::to_hex(*txn.from);
               std::string error = "fee cap less than block base fee: address 0x" + from + ", gasFeeCap: " + intx::to_string(txn.max_fee_per_gas) + " baseFee: " +
-                                   intx::to_string(base_fee_per_gas);
+                  intx::to_string(base_fee_per_gas);
               return error;
           }
 
           if (txn.max_fee_per_gas < txn.max_priority_fee_per_gas) {
               std::string from = silkworm::to_hex(*txn.from);
               std::string error = "tip higher than fee cap: address 0x" + from + ", tip: " + intx::to_string(txn.max_priority_fee_per_gas) + " gasFeeCap: " +
-                                   intx::to_string(txn.max_fee_per_gas);
+                  intx::to_string(txn.max_fee_per_gas);
               return error;
           }
        }
@@ -212,7 +212,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 }
 
                 intx::uint256 want;
-                if (txn.max_fee_per_gas  > 0 || txn. max_priority_fee_per_gas > 0) {
+                if (txn.max_fee_per_gas  > 0 || txn.max_priority_fee_per_gas > 0) {
                    // this method should be called after check (max_fee and base_fee) present in pre_check() method
                    const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
                    want = txn.gas_limit * effective_gas_price;
