@@ -17,7 +17,7 @@
 #include "estimate_gas_oracle.hpp"
 
 #include <algorithm>
-#include <string> 
+#include <string>
 #include <utility>
 
 #include <asio/compose.hpp>
