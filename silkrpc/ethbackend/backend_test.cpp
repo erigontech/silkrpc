@@ -41,7 +41,7 @@ public:
     }
 };
 
-asio::awaitable<void> test_etherbase() {
+asio::awaitable<void> test_backend() {
     auto executor = co_await asio::this_coro::executor;
     TestBackEndService service;
     std::ostringstream server_address;
@@ -58,9 +58,11 @@ asio::awaitable<void> test_etherbase() {
     auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
     const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
     ethbackend::BackEnd backend{io_context, channel, &queue};
-    //std::cout << "BEFORE etherbase\n";
+    // TODO: the following calls should be co_await'ed but give SIGSEGV - Segmentation violation signal
     backend.etherbase();
-    //std::cout << "AFTER etherbase address=" << address << "\n";
+    backend.protocol_version();
+    backend.net_version();
+    backend.client_version();
     server_ptr->Shutdown();
     io_context.stop();
     completion_runner.stop();
@@ -98,7 +100,7 @@ TEST_CASE("create BackEnd", "[silkrpc][ethbackend][backend]") {
         CHECK_NOTHROW(completion_runner_thread.join());
         CHECK_NOTHROW(io_context_thread.join());*/
         asio::io_context io_context;
-        asio::co_spawn(io_context, test_etherbase(), asio::detached);
+        asio::co_spawn(io_context, test_backend(), asio::detached);
         io_context.run();
     }
 }
