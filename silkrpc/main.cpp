@@ -118,9 +118,9 @@ int main(int argc, char* argv[]) {
         }
 
         if (chaindata.empty()) {
-            SILKRPC_LOG << "Silkrpc launched with target " << target << " using " << numContexts << " contexts\n";
+            SILKRPC_LOG << "Silkrpc launched with target " << target << " using " << numContexts << " contexts, " << numWorkers << " workers\n";
         } else {
-            SILKRPC_LOG << "Silkrpc launched with chaindata " << chaindata << " using " << numContexts << " contexts\n";
+            SILKRPC_LOG << "Silkrpc launched with chaindata " << chaindata << " using " << numContexts << " contexts, " << numWorkers << " workers\n";
         }
 
         // TODO(canepat): handle also secure channel for remote
