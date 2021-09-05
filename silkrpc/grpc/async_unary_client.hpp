@@ -54,8 +54,7 @@ public:
     void async_call(const Request& request, std::function<void(const grpc::Status&, const Reply&)> completed) {
         SILKRPC_TRACE << "AsyncUnaryClient::async_call " << this << " state: " << magic_enum::enum_name(state_) << " start\n";
         completed_ = completed;
-        grpc::ClientContext context;
-        client_ = (stub_.get()->*PrepareAsync)(&context, request, queue_);
+        client_ = (stub_.get()->*PrepareAsync)(&context_, request, queue_);
         state_ = CALL_STARTED;
         client_->StartCall();
         client_->Finish(&reply_, &result_, AsyncCompletionHandler::tag(this));
@@ -81,6 +80,7 @@ public:
 private:
     grpc::CompletionQueue* queue_;
     std::unique_ptr<StubInterface>& stub_;
+    grpc::ClientContext context_;
     AsyncResponseReaderPtr client_;
     Reply reply_;
     grpc::Status result_;

@@ -21,7 +21,9 @@
 #include <asio/io_context.hpp>
 #include <asio/co_spawn.hpp>
 #include <asio/detached.hpp>
+#include <asio/use_future.hpp>
 #include <catch2/catch.hpp>
+#include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
 
@@ -39,9 +41,12 @@ public:
     ::grpc::Status Etherbase(::grpc::ServerContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response) override {
         return ::grpc::Status::OK;
     }
+    /*::grpc::Status ProtocolVersion(::grpc::ServerContext* context, const ::remote::ProtocolVersionRequest* request, ::remote::ProtocolVersionReply* response) override {
+        return ::grpc::Status::OK;
+    }*/
 };
 
-asio::awaitable<void> test_backend() {
+asio::awaitable<bool> test_backend() {
     auto executor = co_await asio::this_coro::executor;
     TestBackEndService service;
     std::ostringstream server_address;
@@ -58,50 +63,38 @@ asio::awaitable<void> test_backend() {
     auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
     const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
     ethbackend::BackEnd backend{io_context, channel, &queue};
-    // TODO: the following calls should be co_await'ed but give SIGSEGV - Segmentation violation signal
-    backend.etherbase();
-    backend.protocol_version();
-    backend.net_version();
-    backend.client_version();
+    const auto etherbase_address = co_await backend.etherbase();
+    const bool etherbase_success = etherbase_address == evmc::address{};
+    /*try {
+        const auto protocol_version = co_await backend.protocol_version();
+        std::cout << "got " << protocol_version << " processing backend.protocol_version()\n";
+    } catch (const std::system_error& se) {
+        std::cout << "exception: " << typeid(se).name() << " processing backend.protocol_version()\n";
+    } catch (...) {
+        std::cout << "unexpected exception processing backend.protocol_version()\n";
+    }*/
+    //backend.net_version();
+    //backend.client_version();
     server_ptr->Shutdown();
     io_context.stop();
     completion_runner.stop();
-    io_context_thread.join();
-    completion_runner_thread.join();
-    co_return;
+    if (io_context_thread.joinable()) {
+        io_context_thread.join();
+    }
+    if (completion_runner_thread.joinable()) {
+        completion_runner_thread.join();
+    }
+    co_return etherbase_success;
 }
 
 TEST_CASE("create BackEnd", "[silkrpc][ethbackend][backend]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    SECTION("start call Etherbase, get status OK and get result") {
-        /*TestService service;
-        std::ostringstream server_address;
-        server_address << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
-        grpc::ServerBuilder builder;
-        builder.AddListeningPort(server_address.str(), grpc::InsecureServerCredentials());
-        builder.RegisterService(&service);
-        const auto server_ptr = builder.BuildAndStart();
+    SECTION("start call, get status OK and get result") {
         asio::io_context io_context;
-        asio::io_context::work work{io_context};
-        grpc::CompletionQueue queue;
-        CompletionRunner completion_runner{queue, io_context};
-        auto io_context_thread = std::thread([&]() { io_context.run(); });
-        auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
-        std::this_thread::yield();
-        const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
-        ethbackend::BackEnd backend{io_context, channel, &queue};
-        //auto future_address{asio::co_spawn(io_context, backend.etherbase(), asio::use_future)};
-        //const auto address = future_address.get();
-        //std::cout << "address=" << address << "\n";
-        server_ptr->Shutdown();
-        completion_runner.stop();
-        io_context.stop();
-        CHECK_NOTHROW(completion_runner_thread.join());
-        CHECK_NOTHROW(io_context_thread.join());*/
-        asio::io_context io_context;
-        asio::co_spawn(io_context, test_backend(), asio::detached);
+        auto test_successful{asio::co_spawn(io_context, test_backend(), asio::use_future)};
         io_context.run();
+        CHECK(test_successful.get() == true);
     }
 }
 
