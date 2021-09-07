@@ -18,6 +18,7 @@
 #define SILKRPC_ETHBACKEND_BACKEND_HPP_
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -112,8 +113,11 @@ public:
     asio::awaitable<evmc::address> etherbase() {
         const auto start_time = clock_time::now();
         const auto reply = co_await eb_awaitable_.async_call(::remote::EtherbaseRequest{}, asio::use_awaitable);
-        const auto h160_address = reply.address();
-        const auto evmc_address{address_from_H160(h160_address)};
+        evmc::address evmc_address;
+        if (reply.has_address()) {
+            const auto h160_address = reply.address();
+            evmc_address = address_from_H160(h160_address);
+        }
         SILKRPC_DEBUG << "BackEnd::etherbase address=" << evmc_address << " t=" << clock_time::since(start_time) << "\n";
         co_return evmc_address;
     }
