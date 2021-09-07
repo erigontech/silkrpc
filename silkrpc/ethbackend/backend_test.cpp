@@ -37,8 +37,7 @@ using Catch::Matchers::Message;
 using evmc::literals::operator""_address;
 
 class EmptyBackEndService : public ::remote::ETHBACKEND::Service {
-  public:
-    EmptyBackEndService() = default;
+public:
     ::grpc::Status Etherbase(::grpc::ServerContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response) override {
         return ::grpc::Status::OK;
     }
@@ -55,7 +54,6 @@ class EmptyBackEndService : public ::remote::ETHBACKEND::Service {
 
 class TestBackEndService : public ::remote::ETHBACKEND::Service {
 public:
-    TestBackEndService() = default;
     ::grpc::Status Etherbase(::grpc::ServerContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response) override {
         auto h128_ptr = new ::types::H128();
         h128_ptr->set_hi(0x7F);
@@ -123,6 +121,7 @@ TEST_CASE("create BackEnd", "[silkrpc][ethbackend][backend]") {
         io_context.run();
         CHECK(etherbase.get() == 0x000000000000007f0000000000000000000000ff_address);
     }
+
     SECTION("call etherbase and check empty address") {
         EmptyBackEndService service;
         asio::io_context io_context;
