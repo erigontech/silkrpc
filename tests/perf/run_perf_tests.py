@@ -37,6 +37,7 @@ def usage(argv):
     print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
     print("")
     print("-h                      print this help")
+    print("-e                      perf enable                                                                            [default: 0]")
     print("-y                      test type (i.e eth_call, eth_logs)                                                     [default: " + DEFAULT_TEST_TYPE + "]")
     print("-d rpcDaemonAddress     address of daemon eg (10.1.1.20)                                                       [default: " + DEFAULT_RPCDAEMON_ADDRESS +"]")
     print("-p vegetaPatternTarFile path to the request file for Vegeta attack                                             [default: " + DEFAULT_VEGETA_PATTERN_TAR_FILE +"]")
@@ -68,10 +69,11 @@ class Config:
         self.rpc_daemon_address = DEFAULT_RPCDAEMON_ADDRESS
         self.test_mode = DEFAULT_TEST_MODE
         self.test_type = DEFAULT_TEST_TYPE
+        self.perf_enable = 0
 
         try:
             local_config = 0
-            opts, _ = getopt.getopt(argv[1:], "hm:d:p:c:a:g:s:r:t:n:y:")
+            opts, _ = getopt.getopt(argv[1:], "ehm:d:p:c:a:g:s:r:t:n:y:")
 
             for option, optarg in opts:
                 if option in ("-h", "--help"):
@@ -79,6 +81,8 @@ class Config:
                     sys.exit(-1)
                 elif option == "-m":
                     self.test_mode = optarg
+                elif option == "-e":
+                    self.perf_enable = 1
                 elif option == "-d":
                     if local_config == 1:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
@@ -151,7 +155,7 @@ class PerfTest:
         self.stop_silk_daemon()
         self.stop_rpc_daemon()
         print("\nSetup temporary daemon to verify configuration is OK")
-        self.start_silk_daemon()
+        self.start_silk_daemon(0)
         self.stop_silk_daemon()
         self.start_rpc_daemon()
         self.stop_rpc_daemon()
@@ -165,6 +169,8 @@ class PerfTest:
         cmd = "/bin/rm -f " +  " /tmp/" + VEGETA_TAR_FILE_NAME
         os.system(cmd)
         cmd = "/bin/rm -f -rf /tmp/" + VEGETA_PATTERN_DIRNAME
+        os.system(cmd)
+        cmd = "/bin/rm -f perf.data.old perf.data"
         os.system(cmd)
 
     def copy_pattern_file(self):
@@ -232,7 +238,7 @@ class PerfTest:
         print("RpcDaemon stopped")
         os.system("sleep 3")
 
-    def start_silk_daemon(self):
+    def start_silk_daemon(self, start_test):
         """ Starts SILKRPC daemon
         """
         if self.config.rpc_daemon_address != "localhost":
@@ -241,11 +247,15 @@ class PerfTest:
             return
         self.rpc_daemon = 1
         on_core = self.config.daemon_vegeta_on_core.split(':')
-        if on_core[0] == "-":
-            cmd = self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c &"
+        if self.config.perf_enable == 1 and start_test == 1:
+            perf_cmd = "perf record "
         else:
-            cmd = "taskset -c " + on_core[0] + " "\
-                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c --numContexts "\
+            perf_cmd = ""
+        if on_core[0] == "-":
+            cmd = perf_cmd + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c &"
+        else:
+            cmd = perf_cmd + "taskset -c " + on_core[0] + " "\
+                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c  --numWorkers 12 --numContexts "\
                     + str(self.config.silkrpc_num_contexts) + " &"
         print("SilkDaemon starting ...: ", cmd)
         status = os.system(cmd)
@@ -413,7 +423,7 @@ def main(argv):
 
 
     if (config.test_mode == "1" or config.test_mode == "3"):
-        perf_test.start_silk_daemon()
+        perf_test.start_silk_daemon(1)
         test_number = 1
         for test in current_sequence:
             for test_rep in range(0, config.repetitions):
