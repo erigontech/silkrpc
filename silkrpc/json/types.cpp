@@ -272,6 +272,14 @@ void from_json(const nlohmann::json& json, Call& call) {
     }
 }
 
+void from_json(const nlohmann::json& json, BlockNumberOrHash& bnoh) {
+    if (json.is_string()) {
+        bnoh = json.get<std::string>();
+    } else if (json.is_number()) {
+        bnoh = json.get<std::uint64_t>();
+    }
+}
+
 void to_json(nlohmann::json& json, const Log& log) {
     json["address"] = log.address;
     json["topics"] = log.topics;

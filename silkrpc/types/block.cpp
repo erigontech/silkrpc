@@ -17,8 +17,11 @@
 #include "block.hpp"
 
 #include <iomanip>
+#include <limits>
+#include <string>
 
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/core/blocks.hpp>
 
 namespace silkrpc {
 
@@ -57,6 +60,60 @@ uint64_t Block::get_block_size() const {
    rlp_head.payload_length += silkworm::rlp::length(block.ommers);
    rlp_head.payload_length += silkworm::rlp::length_of_length(rlp_head.payload_length);
    return rlp_head.payload_length;
+}
+
+std::ostream& operator<<(std::ostream& out, BlockNumberOrHash const& bnoh) {
+    if (bnoh.is_number()) {
+        out << bnoh.number();
+    } else if (bnoh.is_hash()) {
+        out << bnoh.hash();
+    } else if (bnoh.is_tag()) {
+        out << bnoh.tag();
+    } else {
+        out << "empty";
+    }
+    return out;
+}
+
+BlockNumberOrHash::BlockNumberOrHash(BlockNumberOrHash const& bnoh) {
+    if (bnoh.is_hash()) {
+        hash_ = std::make_unique<evmc::bytes32>(bnoh.hash());
+    } else if (bnoh.is_number()) {
+        number_ = std::make_unique<std::uint64_t>(bnoh.number());
+    } else if (bnoh.is_tag()) {
+        tag_ = std::make_unique<std::string>(bnoh.tag());
+    }
+}
+
+void BlockNumberOrHash::build(std::string const& bnoh) {
+    number_.release();
+    tag_.release();
+    hash_.release();
+
+    if (bnoh == core::kEarliestBlockId) {
+        number_ = std::make_unique<std::uint64_t>(core::kEarliestBlockNumber);
+    } else if (bnoh == core::kLatestBlockId || bnoh == core::kPendingBlockId) {
+        tag_ = std::make_unique<std::string>(bnoh);
+    } else if (bnoh.find("0x") == 0 || bnoh.find("0X") == 0) {
+        if (bnoh.length() == 66) {
+            const auto b32_bytes = silkworm::from_hex(bnoh);
+            const auto b32 = silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
+            hash_ = std::make_unique<evmc::bytes32>(b32);
+        } else {
+            set_number(bnoh, 16);
+        }
+    } else {
+        set_number(bnoh, 10);
+    }
+}
+
+void BlockNumberOrHash::set_number(std::string const& input, int base) {
+    char* end;
+    errno = 0;
+    auto value = strtoul(input.c_str(), &end, base);
+    if (errno == 0 && *end == '\0' && end != input.c_str() && value <= std::numeric_limits<uint64_t>::max()) {
+        number_ = std::make_unique<std::uint64_t>(value);
+    }
 }
 
 } // namespace silkrpc

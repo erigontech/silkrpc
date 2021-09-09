@@ -98,6 +98,19 @@ asio::awaitable<intx::uint256> read_total_difficulty(const DatabaseReader& reade
     co_return total_difficulty;
 }
 
+asio::awaitable<silkworm::BlockWithHash> read_block_by_number_or_hash(const DatabaseReader& reader, const silkrpc::BlockNumberOrHash& bnoh) {
+    if (bnoh.is_number()) {
+        co_return co_await read_block_by_number(reader, bnoh.number());
+    } else if (bnoh.is_hash()) {
+        co_return co_await read_block_by_hash(reader, bnoh.hash());
+    } else if (bnoh.is_tag()) {
+        auto block_number = co_await get_latest_block_number(reader);
+        co_return co_await read_block_by_number(reader, block_number);
+    }
+
+    throw std::runtime_error{"invalid block_number_or_hash value"};
+}
+
 asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const DatabaseReader& reader, const evmc::bytes32& block_hash) {
     const auto block_number = co_await read_header_number(reader, block_hash);
     co_return co_await read_block(reader, block_hash, block_number);

@@ -63,6 +63,8 @@ void to_json(nlohmann::json& json, const Transaction& transaction);
 
 void from_json(const nlohmann::json& json, Call& call);
 
+void from_json(const nlohmann::json& json, BlockNumberOrHash& bnoh);
+
 void to_json(nlohmann::json& json, const Log& log);
 void from_json(const nlohmann::json& json, Log& log);
 
