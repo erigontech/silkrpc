@@ -1,5 +1,5 @@
-#[[
-   Copyright 2020 The SilkRpc Authors
+/*
+   Copyright 2021 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -12,7 +12,15 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-]]
+*/
 
-# silkworm configuration
-include(${CMAKE_SOURCE_DIR}/silkworm/cmake/Hunter/config.cmake)
+#include "remote_database.hpp"
+
+#include <catch2/catch.hpp>
+
+namespace silkrpc::ethdb::kv {
+
+using Catch::Matchers::Message;
+
+} // namespace silkrpc::ethdb::kv
+

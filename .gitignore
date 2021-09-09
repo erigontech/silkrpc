@@ -1,5 +1,7 @@
 build*/
+cmake-*
 perf.data*
+.idea
 .vscode
 .vs
 *.code-workspace

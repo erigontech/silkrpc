@@ -29,7 +29,7 @@ namespace silkrpc {
 
 using Catch::Matchers::Message;
 
-using evmc::literals::operator""_address;
+using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
 TEST_CASE("create empty receipt", "[silkrpc][types][receipt]") {
     Receipt r{};
@@ -40,6 +40,20 @@ TEST_CASE("create empty receipt", "[silkrpc][types][receipt]") {
 
 TEST_CASE("print empty receipt", "[silkrpc][types][receipt]") {
     Receipt r{};
+    CHECK_NOTHROW(silkworm::null_stream() << r);
+}
+
+TEST_CASE("print receipt", "[silkrpc][types][receipt]") {
+    Logs logs{};
+    Receipt r{
+        true,
+        210000,
+        bloom_from_logs(logs),
+        logs
+    };
+    r.from = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address;
+    r.to = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address;
+    r.type = 2;
     CHECK_NOTHROW(silkworm::null_stream() << r);
 }
 
@@ -62,23 +76,27 @@ TEST_CASE("bloom from one empty log", "[silkrpc][types][receipt]") {
 
 TEST_CASE("bloom from more than one log", "[silkrpc][types][receipt]") {
     Logs logs{
-        Log{
-            0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
-            {},
-            *silkworm::from_hex("0x1234abcd")
+        {
+            0x22341ae42d6dd7384bc8584e50419ea3ac75b83f_address,                            // address
+            {0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32},  // topics
         },
-        Log{
-            0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
-            {},
-            *silkworm::from_hex("0x1234abcd")
-        }
+        {
+            0xe7fb22dfef11920312e4989a3a2b81e2ebf05986_address,  // address
+            {
+                0x7f1fef85c4b037150d3675218e0cdb7cf38fea354759471e309f3354918a442f_bytes32,
+                0xd85629c7eaae9ea4a10234fed31bc0aeda29b2683ebe0c1882499d272621f6b6_bytes32,
+            },                                                                            // topics
+            *silkworm::from_hex("0x2d690516512020171c1ec870f6ff45398cc8609250326be89915fb538e7b"),  // data
+        },
     };
-    auto bloom = bloom_from_logs(logs);
-    silkworm::Bloom expected_bloom{};
-    expected_bloom[73] = uint8_t(16);
-    expected_bloom[87] = uint8_t(8);
-    expected_bloom[190] = uint8_t(8);
-    CHECK(bloom_from_logs(logs) == expected_bloom);
+    silkworm::Bloom bloom{bloom_from_logs(logs)};
+    CHECK(silkworm::to_hex(silkworm::full_view(bloom)) ==
+        "000000000000000000810000000000000000000000000000000000020000000000000000000000000000008000"
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        "000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000"
+        "000000000000000000000000000000000000000000000000000000280000000000400000800000004000000000"
+        "000000000000000000000000000000000000000000000000000000000000100000100000000000000000000000"
+        "00000000001400000000000000008000000000000000000000000000000000");
 }
 
 TEST_CASE("receipt with empty bloom", "[silkrpc][types][receipt]") {

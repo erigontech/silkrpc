@@ -43,6 +43,7 @@ struct ExecutionResult {
     std::optional<std::string> pre_check_error{std::nullopt};
 };
 
+template<typename WorldState = silkworm::IntraBlockState, typename VM = silkworm::EVM>
 class EVMExecutor {
 public:
     static std::string get_error_message(int64_t error_code, const silkworm::Bytes& error_data);
@@ -57,7 +58,7 @@ public:
     asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn);
 
 private:
-    std::optional<std::string> pre_check(const silkworm::EVM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint256 want, const intx::uint128 g0);
+    std::optional<std::string> pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0);
 
     const Context& context_;
     const core::rawdb::DatabaseReader& db_reader_;

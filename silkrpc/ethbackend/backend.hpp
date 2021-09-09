@@ -18,6 +18,7 @@
 #define SILKRPC_ETHBACKEND_BACKEND_HPP_
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -66,10 +67,34 @@ using ClientVersionClient = AsyncUnaryClient<
     &::remote::ETHBACKEND::StubInterface::PrepareAsyncClientVersion
 >;
 
-using EtherbaseAwaitable = unary_awaitable<asio::io_context::executor_type, EtherbaseClient, ::remote::ETHBACKEND::StubInterface, ::remote::EtherbaseReply>;
-using ProtocolVersionAwaitable = unary_awaitable<asio::io_context::executor_type, ProtocolVersionClient, ::remote::ETHBACKEND::StubInterface, ::remote::ProtocolVersionReply>;
-using NetVersionAwaitable = unary_awaitable<asio::io_context::executor_type, NetVersionClient, ::remote::ETHBACKEND::StubInterface, ::remote::NetVersionReply>;
-using ClientVersionAwaitable = unary_awaitable<asio::io_context::executor_type, ClientVersionClient, ::remote::ETHBACKEND::StubInterface, ::remote::ClientVersionReply>;
+using EtherbaseAwaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    EtherbaseClient,
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::EtherbaseRequest,
+    ::remote::EtherbaseReply
+>;
+using ProtocolVersionAwaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    ProtocolVersionClient,
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::ProtocolVersionRequest,
+    ::remote::ProtocolVersionReply
+>;
+using NetVersionAwaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    NetVersionClient,
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::NetVersionRequest,
+    ::remote::NetVersionReply
+>;
+using ClientVersionAwaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    ClientVersionClient,
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::ClientVersionRequest,
+    ::remote::ClientVersionReply
+>;
 
 class BackEnd final {
 public:
@@ -87,16 +112,19 @@ public:
 
     asio::awaitable<evmc::address> etherbase() {
         const auto start_time = clock_time::now();
-        const auto reply = co_await eb_awaitable_.async_call(asio::use_awaitable);
-        const auto h160_address = reply.address();
-        const auto evmc_address{address_from_H160(h160_address)};
+        const auto reply = co_await eb_awaitable_.async_call(::remote::EtherbaseRequest{}, asio::use_awaitable);
+        evmc::address evmc_address;
+        if (reply.has_address()) {
+            const auto h160_address = reply.address();
+            evmc_address = address_from_H160(h160_address);
+        }
         SILKRPC_DEBUG << "BackEnd::etherbase address=" << evmc_address << " t=" << clock_time::since(start_time) << "\n";
         co_return evmc_address;
     }
 
     asio::awaitable<uint64_t> protocol_version() {
         const auto start_time = clock_time::now();
-        const auto reply = co_await pv_awaitable_.async_call(asio::use_awaitable);
+        const auto reply = co_await pv_awaitable_.async_call(::remote::ProtocolVersionRequest{}, asio::use_awaitable);
         const auto pv = reply.id();
         SILKRPC_DEBUG << "BackEnd::protocol_version version=" << pv << " t=" << clock_time::since(start_time) << "\n";
         co_return pv;
@@ -104,7 +132,7 @@ public:
 
     asio::awaitable<uint64_t> net_version() {
         const auto start_time = clock_time::now();
-        const auto reply = co_await nv_awaitable_.async_call(asio::use_awaitable);
+        const auto reply = co_await nv_awaitable_.async_call(::remote::NetVersionRequest{}, asio::use_awaitable);
         const auto nv = reply.id();
         SILKRPC_DEBUG << "BackEnd::net_version version=" << nv << " t=" << clock_time::since(start_time) << "\n";
         co_return nv;
@@ -112,7 +140,7 @@ public:
 
     asio::awaitable<std::string> client_version() {
         const auto start_time = clock_time::now();
-        const auto reply = co_await cv_awaitable_.async_call(asio::use_awaitable);
+        const auto reply = co_await cv_awaitable_.async_call(::remote::ClientVersionRequest{}, asio::use_awaitable);
         const auto cv = reply.nodename();
         SILKRPC_DEBUG << "BackEnd::client_version version=" << cv << " t=" << clock_time::since(start_time) << "\n";
         co_return cv;
