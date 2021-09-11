@@ -1,4 +1,8 @@
+codecov:
+  disable_default_path_fixes: true
+
 ignore:
   - "**/*_test.cpp"
   - "cmd"
+  - "silkrpc/croaring"
   - "silkrpc/interfaces"
