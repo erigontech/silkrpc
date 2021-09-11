@@ -64,19 +64,28 @@ using testing::_;
 TEST_CASE("create async unary client", "[silkrpc][grpc][async_unary_client]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    class MockClientAsyncEtherbaseReader : public grpc::ClientAsyncResponseReaderInterface<remote::EtherbaseReply> {
+    class MockClientAsyncEtherbaseOKReader : public grpc::ClientAsyncResponseReaderInterface<remote::EtherbaseReply> {
     public:
-        MockClientAsyncEtherbaseReader(remote::EtherbaseReply&& msg, const ::grpc::Status& status) : msg_(std::move(msg)), status_(status) {}
-        ~MockClientAsyncEtherbaseReader() override = default;
         void StartCall() override {};
         void ReadInitialMetadata(void* tag) override {};
         void Finish(remote::EtherbaseReply* msg, ::grpc::Status* status, void* tag) override {
-            *msg = msg_;
-            *status = status_;
+            auto h128_ptr = new ::types::H128();
+            h128_ptr->set_hi(0x7F);
+            auto h160_ptr = new ::types::H160();
+            h160_ptr->set_lo(0xFF);
+            h160_ptr->set_allocated_hi(h128_ptr);
+            msg->set_allocated_address(h160_ptr);
+            *status = ::grpc::Status::OK;
         };
-    private:
-        const remote::EtherbaseReply& msg_;
-        const grpc::Status& status_;
+    };
+
+    class MockClientAsyncEtherbaseKOReader : public grpc::ClientAsyncResponseReaderInterface<remote::EtherbaseReply> {
+    public:
+        void StartCall() override {};
+        void ReadInitialMetadata(void* tag) override {};
+        void Finish(remote::EtherbaseReply* msg, ::grpc::Status* status, void* tag) override {
+            *status = ::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"};
+        };
     };
 
     SECTION("start async Etherbase call and get OK result") {
@@ -90,11 +99,18 @@ TEST_CASE("create async unary client", "[silkrpc][grpc][async_unary_client]") {
         grpc::CompletionQueue queue;
         EtherbaseClient client{stub, &queue};
 
-        MockClientAsyncEtherbaseReader mock_reader{remote::EtherbaseReply{}, ::grpc::Status::OK};
+        MockClientAsyncEtherbaseOKReader mock_reader;
         EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockETHBACKENDStub*>(stub.get()), PrepareAsyncEtherbaseRaw(_, _, _)).WillOnce(Return(&mock_reader));
 
         MockFunction<void(::grpc::Status, ::remote::EtherbaseReply)> mock_callback;
-        EXPECT_CALL(mock_callback, Call(grpc::Status::OK, remote::EtherbaseReply{}));
+        ::remote::EtherbaseReply reply;
+        auto h128_ptr = new ::types::H128();
+        h128_ptr->set_hi(0x7F);
+        auto h160_ptr = new ::types::H160();
+        h160_ptr->set_lo(0xFF);
+        h160_ptr->set_allocated_hi(h128_ptr);
+        reply.set_allocated_address(h160_ptr);
+        EXPECT_CALL(mock_callback, Call(grpc::Status::OK, reply));
 
         client.async_call(::remote::EtherbaseRequest{}, mock_callback.AsStdFunction());
         client.completed(true);
@@ -111,7 +127,7 @@ TEST_CASE("create async unary client", "[silkrpc][grpc][async_unary_client]") {
         grpc::CompletionQueue queue;
         EtherbaseClient client{stub, &queue};
 
-        MockClientAsyncEtherbaseReader mock_reader{remote::EtherbaseReply{}, ::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"}};
+        MockClientAsyncEtherbaseKOReader mock_reader;
         EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockETHBACKENDStub*>(stub.get()), PrepareAsyncEtherbaseRaw(_, _, _)).WillOnce(Return(&mock_reader));
 
         MockFunction<void(::grpc::Status, ::remote::EtherbaseReply)> mock_callback;
