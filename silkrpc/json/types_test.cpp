@@ -181,7 +181,7 @@ TEST_CASE("serialize block header with baseFeePerGas", "[silkrpc][to_json]") {
 }
 
 TEST_CASE("serialize block with baseFeePerGas", "[silkrpc][to_json]") {
-    silkrpc::Block block {
+    silkrpc::Block rpc_block {
         std::vector<silkworm::Transaction> {},
         std::vector<silkworm::BlockHeader> {},
         0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
@@ -201,7 +201,51 @@ TEST_CASE("serialize block with baseFeePerGas", "[silkrpc][to_json]") {
         {0, 0, 0, 0, 0, 0, 0, 255},                                                 // nonce
         std::optional<intx::uint256>(0x244428),                                     // base_fee_per_gas
     };
-    nlohmann::json j = block;
+    auto body = rpc_block.block;
+    body.transactions.resize(2);
+    body.transactions[0].nonce = 172339;
+    body.transactions[0].max_priority_fee_per_gas = 50 * kGiga;
+    body.transactions[0].max_fee_per_gas = 50 * kGiga;
+    body.transactions[0].gas_limit = 90'000;
+    body.transactions[0].to = 0xe5ef458d37212a06e3f59d40c454e76150ae7c32_address;
+    body.transactions[0].value = 1'027'501'080 * kGiga;
+    body.transactions[0].data = {};
+    body.transactions[0].set_v(27);
+    body.transactions[0].r =
+        intx::from_string<intx::uint256>("0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353");
+    body.transactions[0].s =
+        intx::from_string<intx::uint256>("0x1fffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804");
+
+    body.transactions[1].type = silkworm::kEip1559TransactionType;
+    body.transactions[1].nonce = 1;
+    body.transactions[1].max_priority_fee_per_gas = 5 * kGiga;
+    body.transactions[1].max_fee_per_gas = 30 * kGiga;
+    body.transactions[1].gas_limit = 1'000'000;
+    body.transactions[1].to = {};
+    body.transactions[1].value = 0;
+    body.transactions[1].data = *silkworm::from_hex("602a6000556101c960015560068060166000396000f3600035600055");
+    body.transactions[1].set_v(37);
+    body.transactions[1].r =
+        intx::from_string<intx::uint256>("0x52f8f61201b2b11a78d6e866abc9c3db2ae8631fa656bfe5cb53668255367afb");
+    body.transactions[1].s =
+        intx::from_string<intx::uint256>("0x52f8f61201b2b11a78d6e866abc9c3db2ae8631fa656bfe5cb53668255367afb");
+
+    body.ommers.resize(1);
+    body.ommers[0].parent_hash = 0xb397a22bb95bf14753ec174f02f99df3f0bdf70d1851cdff813ebf745f5aeb55_bytes32;
+    body.ommers[0].ommers_hash = silkworm::kEmptyListHash;
+    body.ommers[0].beneficiary = 0x0c729be7c39543c3d549282a40395299d987cec2_address;
+    body.ommers[0].state_root = 0xc2bcdfd012534fa0b19ffba5fae6fc81edd390e9b7d5007d1e92e8e835286e9d_bytes32;
+    body.ommers[0].transactions_root = silkworm::kEmptyRoot;
+    body.ommers[0].receipts_root = silkworm::kEmptyRoot;
+    body.ommers[0].difficulty = 12'555'442'155'599;
+    body.ommers[0].number = 13'000'013;
+    body.ommers[0].gas_limit = 3'141'592;
+    body.ommers[0].gas_used = 0;
+    body.ommers[0].timestamp = 1455404305;
+    body.ommers[0].mix_hash = 0xf0a53dfdd6c2f2a661e718ef29092de60d81d45f84044bec7bf4b36630b2bc08_bytes32;
+    body.ommers[0].nonce[7] = 35;
+
+    nlohmann::json j = rpc_block;
     CHECK(j == R"({
         "parentHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
         "sha3Uncles":"0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d",
@@ -545,13 +589,13 @@ TEST_CASE("deserialize empty array log", "[silkrpc][from_json]") {
     const auto j1 = nlohmann::json::from_cbor(*silkworm::from_hex("835400000000000000000000000000000000000000008040"));
     const auto log1 = j1.get<Log>();
     CHECK(log1.address == evmc::address{});
-    CHECK(log1.topics == std::vector<evmc::bytes32>{});
-    CHECK(log1.data == silkworm::Bytes{});
+    CHECK(log1.topics.empty());
+    CHECK(log1.data.empty());
     const auto j2 = nlohmann::json::from_cbor(*silkworm::from_hex("8354000000000000000000000000000000000000000080f6"));
     const auto log2 = j2.get<Log>();
     CHECK(log2.address == evmc::address{});
-    CHECK(log2.topics == std::vector<evmc::bytes32>{});
-    CHECK(log2.data == silkworm::Bytes{});
+    CHECK(log2.topics.empty());
+    CHECK(log2.data.empty());
 }
 
 TEST_CASE("deserialize empty log", "[silkrpc][from_json]") {
@@ -562,8 +606,8 @@ TEST_CASE("deserialize empty log", "[silkrpc][from_json]") {
     })"_json;
     const auto log = j.get<Log>();
     CHECK(log.address == evmc::address{});
-    CHECK(log.topics == std::vector<evmc::bytes32>{});
-    CHECK(log.data == silkworm::Bytes{});
+    CHECK(log.topics.empty());
+    CHECK(log.data.empty());
 }
 
 TEST_CASE("deserialize array log", "[silkrpc][from_json]") {
@@ -571,7 +615,7 @@ TEST_CASE("deserialize array log", "[silkrpc][from_json]") {
     const auto j = nlohmann::json::from_cbor(bytes);
     const auto log = j.get<Log>();
     CHECK(log.address == 0xea674fdde714fd979de3edf0f56aa9716b898ec8_address);
-    CHECK(log.topics == std::vector<evmc::bytes32>{});
+    CHECK(log.topics.empty());
     CHECK(log.data == silkworm::Bytes{0x01, 0x00, 0x43});
 }
 
@@ -584,7 +628,7 @@ TEST_CASE("deserialize topics", "[silkrpc][from_json]") {
     auto f1 = j1.get<Log>();
     CHECK(f1.address == evmc::address{});
     CHECK(f1.topics == std::vector<evmc::bytes32>{0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32});
-    CHECK(f1.data == silkworm::Bytes{});
+    CHECK(f1.data.empty());
 }
 
 TEST_CASE("deserialize wrong size receipt", "[silkrpc][from_json]") {
