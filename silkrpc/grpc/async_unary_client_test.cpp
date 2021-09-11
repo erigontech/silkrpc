@@ -64,25 +64,10 @@ using testing::_;
 TEST_CASE("create async unary client", "[silkrpc][grpc][async_unary_client]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    uint64_t g_fixture_slowdown_factor = 1;
-    uint64_t g_poller_slowdown_factor = 1;
-
-    auto grpc_test_slowdown_factor = [&]() {
-        return 4/*grpc_test_sanitizer_slowdown_factor()*/ * g_fixture_slowdown_factor * g_poller_slowdown_factor;
-    };
-
-    auto grpc_timeout_milliseconds_to_deadline = [&](int64_t time_ms) {
-        return gpr_time_add(
-            gpr_now(GPR_CLOCK_MONOTONIC),
-            gpr_time_from_micros(
-                grpc_test_slowdown_factor() * static_cast<int64_t>(1e3) * time_ms,
-                GPR_TIMESPAN));
-    };
-
     class MockClientAsyncEtherbaseReader : public grpc::ClientAsyncResponseReaderInterface<remote::EtherbaseReply> {
     public:
-        MockClientAsyncEtherbaseReader(remote::EtherbaseReply msg, ::grpc::Status status) : msg_(msg), status_(status) {}
-        ~MockClientAsyncEtherbaseReader() {}
+        MockClientAsyncEtherbaseReader(remote::EtherbaseReply&& msg, const ::grpc::Status& status) : msg_(std::move(msg)), status_(status) {}
+        ~MockClientAsyncEtherbaseReader() override = default;
         void StartCall() override {};
         void ReadInitialMetadata(void* tag) override {};
         void Finish(remote::EtherbaseReply* msg, ::grpc::Status* status, void* tag) override {
@@ -90,8 +75,8 @@ TEST_CASE("create async unary client", "[silkrpc][grpc][async_unary_client]") {
             *status = status_;
         };
     private:
-        remote::EtherbaseReply msg_;
-        grpc::Status status_;
+        const remote::EtherbaseReply& msg_;
+        const grpc::Status& status_;
     };
 
     SECTION("start async Etherbase call and get OK result") {
