@@ -67,7 +67,15 @@ Once the prerequisites are installed, there are convenience [bash](https://www.g
 ```
 The resulting build folders are `build_[gcc, clang]_[debug, release]` according to your choice.
 
-You can also perform the build step-by-step manually, just bootstrap cmake by running
+To enable parallel compilation, set the `CMAKE_BUILD_PARALLEL_LEVEL` environment variable to the desired value ([see](https://cmake.org/cmake/help/latest/manual/cmake.1.html)). 
+
+For example, to have 4 concurrent compile processes, insert in `.bashrc` file the following line
+```
+export CMAKE_BUILD_PARALLEL_LEVEL=4
+```
+
+You can also perform the build step-by-step manually, just bootstrap cmake by running.
+
 ```
 mkdir build_gcc_release
 cd build_gcc_release
