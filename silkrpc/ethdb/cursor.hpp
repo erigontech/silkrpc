@@ -23,8 +23,8 @@
 #include <string>
 
 #include <asio/awaitable.hpp>
-
 #include <silkworm/common/util.hpp>
+
 #include <silkrpc/common/util.hpp>
 
 namespace silkrpc::ethdb {
@@ -65,11 +65,7 @@ struct SplittedKeyValue {
 
 class SplitCursor {
 public:
-    SplitCursor(Cursor& inner_cursor,
-        const silkworm::Bytes& key,
-        uint64_t match_bits,
-        uint64_t length1,
-        uint64_t length2);
+    SplitCursor(Cursor& inner_cursor, const silkworm::Bytes& key, uint64_t match_bits, uint64_t length1, uint64_t length2);
     SplitCursor& operator=(const SplitCursor&) = delete;
 
     asio::awaitable<SplittedKeyValue> seek();
