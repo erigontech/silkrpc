@@ -17,8 +17,11 @@
 #include "block.hpp"
 
 #include <iomanip>
+#include <limits>
+#include <string>
 
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/core/blocks.hpp>
 
 namespace silkrpc {
 
@@ -57,6 +60,47 @@ uint64_t Block::get_block_size() const {
    rlp_head.payload_length += silkworm::rlp::length(block.ommers);
    rlp_head.payload_length += silkworm::rlp::length_of_length(rlp_head.payload_length);
    return rlp_head.payload_length;
+}
+
+std::ostream& operator<<(std::ostream& out, const BlockNumberOrHash& bnoh) {
+    if (bnoh.is_number()) {
+        out << "0x" << std::hex << bnoh.number();
+    } else if (bnoh.is_hash()) {
+        out << "0x" << bnoh.hash();
+    } else if (bnoh.is_tag()) {
+        out << bnoh.tag();
+    } else {
+        out << "empty";
+    }
+    return out;
+}
+
+void BlockNumberOrHash::build(const std::string& bnoh) {
+    value_ = uint64_t{0};
+    if (bnoh == core::kEarliestBlockId) {
+        value_ = core::kEarliestBlockNumber;
+    } else if (bnoh == core::kLatestBlockId || bnoh == core::kPendingBlockId) {
+        value_ = bnoh;
+    } else if (bnoh.find("0x") == 0 || bnoh.find("0X") == 0) {
+        if (bnoh.length() == 66) {
+            const auto b32_bytes = silkworm::from_hex(bnoh);
+            const auto b32 = silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
+            value_ = b32;
+        } else {
+            set_number(bnoh, 16);
+        }
+    } else {
+        set_number(bnoh, 10);
+    }
+}
+
+void BlockNumberOrHash::set_number(const std::string& input, int base) {
+    char* end;
+    errno = 0;
+    auto value = strtoul(input.c_str(), &end, base);
+    if (errno == 0 && *end == '\0' && end != input.c_str() && value <= std::numeric_limits<uint64_t>::max()) {
+        value_ = value;
+    }
 }
 
 } // namespace silkrpc
