@@ -871,6 +871,7 @@ TEST_CASE("deserialize block_number_or_hash", "[silkrpc::json][from_json]") {
         CHECK(bnoh.is_tag() == false);
         CHECK(bnoh.hash() == 0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32);
     }
+
     SECTION("as decimal number string") {
         auto json = R"("1966")"_json;
         auto bnoh = json.get<BlockNumberOrHash>();
@@ -880,6 +881,7 @@ TEST_CASE("deserialize block_number_or_hash", "[silkrpc::json][from_json]") {
         CHECK(bnoh.is_tag() == false);
         CHECK(bnoh.number() == 1966);
     }
+
     SECTION("as hex number string") {
         auto json = R"("0x374f3")"_json;
         auto bnoh = json.get<BlockNumberOrHash>();
@@ -889,6 +891,7 @@ TEST_CASE("deserialize block_number_or_hash", "[silkrpc::json][from_json]") {
         CHECK(bnoh.is_tag() == false);
         CHECK(bnoh.number() == 0x374f3);
     }
+
     SECTION("as tag string") {
         auto json = R"("latest")"_json;
         auto bnoh = json.get<BlockNumberOrHash>();
@@ -898,6 +901,7 @@ TEST_CASE("deserialize block_number_or_hash", "[silkrpc::json][from_json]") {
         CHECK(bnoh.is_tag() == true);
         CHECK(bnoh.tag() == "latest");
     }
+
     SECTION("as number") {
         auto json = R"(123456)"_json;
         auto bnoh = json.get<BlockNumberOrHash>();
