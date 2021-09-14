@@ -62,7 +62,7 @@ uint64_t Block::get_block_size() const {
    return rlp_head.payload_length;
 }
 
-std::ostream& operator<<(std::ostream& out, BlockNumberOrHash const& bnoh) {
+std::ostream& operator<<(std::ostream& out, const BlockNumberOrHash& bnoh) {
     if (bnoh.is_number()) {
         out << "0x" << std::hex << bnoh.number();
     } else if (bnoh.is_hash()) {
@@ -75,8 +75,7 @@ std::ostream& operator<<(std::ostream& out, BlockNumberOrHash const& bnoh) {
     return out;
 }
 
-
-void BlockNumberOrHash::build(std::string const& bnoh) {
+void BlockNumberOrHash::build(const std::string& bnoh) {
     value_ = uint64_t{0};
     if (bnoh == core::kEarliestBlockId) {
         value_ = core::kEarliestBlockNumber;
@@ -95,7 +94,7 @@ void BlockNumberOrHash::build(std::string const& bnoh) {
     }
 }
 
-void BlockNumberOrHash::set_number(std::string const& input, int base) {
+void BlockNumberOrHash::set_number(const std::string& input, int base) {
     char* end;
     errno = 0;
     auto value = strtoul(input.c_str(), &end, base);
