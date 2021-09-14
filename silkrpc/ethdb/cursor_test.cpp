@@ -243,11 +243,6 @@ TEST_CASE("split cursor") {
             }
             count++;
 
-            // std::cout << "SECTION 6: SplittedKeyValue: " <<
-            //     "key1: " << skv.key1 <<
-            //     ", key2: " << skv.key2 <<
-            //     ", key3: " << skv.key3 <<
-            //     "\n" << std::flush;
             CHECK(skv.key1 == to_bytes(hex[ac.index()].part1));
             CHECK(skv.key2 == to_bytes(hex[ac.index()].part2));
             CHECK(skv.key3 == to_bytes(hex[ac.index()].part3));
@@ -271,4 +266,3 @@ TEST_CASE("split cursor") {
 }
 
 } // namespace silkrpc::ethdb
-
