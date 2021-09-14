@@ -18,12 +18,8 @@
 
 namespace silkrpc::ethdb {
 
-SplitCursor::SplitCursor(Cursor& inner_cursor,
-        const silkworm::Bytes& key,
-        uint64_t match_bits,
-        uint64_t length1,
-        uint64_t length2)
-            : inner_cursor_{inner_cursor}, key_{key} {
+SplitCursor::SplitCursor(Cursor& inner_cursor, const silkworm::Bytes& key, uint64_t match_bits, uint64_t length1, uint64_t length2)
+: inner_cursor_{inner_cursor}, key_{key} {
     length1_ = length1;
     length2_ = length2;
 
@@ -42,13 +38,11 @@ SplitCursor::SplitCursor(Cursor& inner_cursor,
 
 asio::awaitable<SplittedKeyValue> SplitCursor::seek() {
     KeyValue kv = co_await inner_cursor_.seek(key_);
-
     co_return split_key_value(kv);
 }
 
 asio::awaitable<SplittedKeyValue> SplitCursor::next() {
     KeyValue kv = co_await inner_cursor_.next();
-
     co_return split_key_value(kv);
 }
 
@@ -93,4 +87,3 @@ SplittedKeyValue SplitCursor::split_key_value(const KeyValue& kv) {
 }
 
 } // namespace silkrpc::ethdb
-
