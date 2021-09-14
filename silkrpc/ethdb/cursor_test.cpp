@@ -45,15 +45,14 @@ struct TriBytes {
 
 class ArrayCursor : public Cursor {
 public:
-    explicit ArrayCursor(const std::vector<TriBytes>& vector)
-        : vector_{vector}, index_{0} {};
+    explicit ArrayCursor(const std::vector<TriBytes>& vector) : vector_{vector}, index_{0} {}
 
     ArrayCursor(const ArrayCursor&) = delete;
     ArrayCursor& operator=(const ArrayCursor&) = delete;
 
-    uint32_t cursor_id() const override { return 0; };
+    uint32_t cursor_id() const override { return 0; }
 
-    asio::awaitable<void> open_cursor(const std::string& table_name) override { co_return; };
+    asio::awaitable<void> open_cursor(const std::string& table_name) override { co_return; }
 
     asio::awaitable<KeyValue> seek(const silkworm::ByteView& seek_key) override {
         index_ = 0;
@@ -64,9 +63,9 @@ public:
             }
         }
         co_return KeyValue{};
-    };
+    }
 
-    asio::awaitable<KeyValue> seek_exact(const silkworm::ByteView& key) override { co_return KeyValue{silkworm::Bytes{key}, value}; };
+    asio::awaitable<KeyValue> seek_exact(const silkworm::ByteView& key) override { co_return KeyValue{silkworm::Bytes{key}, value}; }
 
     asio::awaitable<KeyValue> next() override {
         if (++index_ >= vector_.size()) {
@@ -74,9 +73,9 @@ public:
         }
         silkworm::Bytes full_key = vector_[index_].part1 + vector_[index_].part2 + vector_[index_].part3;
         co_return KeyValue{full_key, value};
-    };
+    }
 
-    asio::awaitable<void> close_cursor() override { co_return; };
+    asio::awaitable<void> close_cursor() override { co_return; }
 
     uint32_t index() const { return index_; }
 
