@@ -98,15 +98,14 @@ template <>
 struct adl_serializer<silkrpc::BlockNumberOrHash> {
     static silkrpc::BlockNumberOrHash from_json(const json& json) {
         if (json.is_string()) {
-            auto value = json.get<std::string>();
-            return {value};
+            return {json.get<std::string>()};
         } else if (json.is_number()) {
             return {json.get<std::uint64_t>()};
         }
-
         return {0};
     }
 };
 
 } // namespace nlohmann
+
 #endif  // SILKRPC_JSON_TYPES_HPP_
