@@ -24,11 +24,9 @@
 #include <catch2/catch.hpp>
 #include <evmc/evmc.h>
 #include <nlohmann/json.hpp>
+#include <silkworm/common/util.hpp>
 
 #include <silkrpc/ethdb/tables.hpp>
-#include <silkworm/common/util.hpp>
-// #include <silkworm/types/log_cbor.hpp>
-// #include <silkrpc/json/types.hpp>
 
 namespace silkrpc::core::rawdb {
 
@@ -55,14 +53,13 @@ static silkworm::Bytes kBody{*silkworm::from_hex("c68369e45a03c0")};
 
 class DummyDatabaseReader : public DatabaseReader {
 public:
-    DummyDatabaseReader() {}
+    DummyDatabaseReader() = default;
     DummyDatabaseReader(const DummyDatabaseReader&) = delete;
     DummyDatabaseReader& operator=(const DummyDatabaseReader&) = delete;
 
     asio::awaitable<KeyValue> get(const std::string& table, const silkworm::ByteView& key) const override {
         silkworm::Bytes bk{key};
         silkworm::Bytes bv = co_await get_one(table, key);
-
         co_return KeyValue{bk, bv};
     }
 
@@ -95,6 +92,7 @@ TEST_CASE("read_block") {
     asio::thread_pool pool{1};
 
     DummyDatabaseReader reader;
+
     SECTION("read_block_by_number_or_hash by number") {
         BlockNumberOrHash bnoh{4000000};
 
@@ -117,4 +115,5 @@ TEST_CASE("read_block") {
         CHECK(bwh.hash == silkworm::to_bytes32(*silkworm::from_hex("439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff")));
     }
 }
+
 } // namespace silkrpc::core::rawdb
