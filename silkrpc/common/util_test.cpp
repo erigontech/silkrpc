@@ -29,11 +29,11 @@ using Catch::Matchers::Message;
 using evmc::literals::operator""_bytes32;
 
 TEST_CASE("byte view from string", "[silkrpc][common][util]") {
-    CHECK(silkworm::byte_view_of_string("") == silkworm::ByteView{});
+    CHECK(silkworm::byte_view_of_string("").empty());
 }
 
 TEST_CASE("bytes from string", "[silkrpc][common][util]") {
-    CHECK(silkworm::bytes_of_string("") == silkworm::Bytes{});
+    CHECK(silkworm::bytes_of_string("").empty());
 }
 
 TEST_CASE("calculate hash of byte array", "[silkrpc][common][util]") {

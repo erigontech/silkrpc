@@ -64,34 +64,28 @@ using testing::_;
 TEST_CASE("create async unary client", "[silkrpc][grpc][async_unary_client]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    uint64_t g_fixture_slowdown_factor = 1;
-    uint64_t g_poller_slowdown_factor = 1;
-
-    auto grpc_test_slowdown_factor = [&]() {
-        return 4/*grpc_test_sanitizer_slowdown_factor()*/ * g_fixture_slowdown_factor * g_poller_slowdown_factor;
-    };
-
-    auto grpc_timeout_milliseconds_to_deadline = [&](int64_t time_ms) {
-        return gpr_time_add(
-            gpr_now(GPR_CLOCK_MONOTONIC),
-            gpr_time_from_micros(
-                grpc_test_slowdown_factor() * static_cast<int64_t>(1e3) * time_ms,
-                GPR_TIMESPAN));
-    };
-
-    class MockClientAsyncEtherbaseReader : public grpc::ClientAsyncResponseReaderInterface<remote::EtherbaseReply> {
+    class MockClientAsyncEtherbaseOKReader : public grpc::ClientAsyncResponseReaderInterface<remote::EtherbaseReply> {
     public:
-        MockClientAsyncEtherbaseReader(remote::EtherbaseReply msg, ::grpc::Status status) : msg_(msg), status_(status) {}
-        ~MockClientAsyncEtherbaseReader() {}
         void StartCall() override {};
         void ReadInitialMetadata(void* tag) override {};
         void Finish(remote::EtherbaseReply* msg, ::grpc::Status* status, void* tag) override {
-            *msg = msg_;
-            *status = status_;
+            auto h128_ptr = new ::types::H128();
+            h128_ptr->set_hi(0x7F);
+            auto h160_ptr = new ::types::H160();
+            h160_ptr->set_lo(0xFF);
+            h160_ptr->set_allocated_hi(h128_ptr);
+            msg->set_allocated_address(h160_ptr);
+            *status = ::grpc::Status::OK;
         };
-    private:
-        remote::EtherbaseReply msg_;
-        grpc::Status status_;
+    };
+
+    class MockClientAsyncEtherbaseKOReader : public grpc::ClientAsyncResponseReaderInterface<remote::EtherbaseReply> {
+    public:
+        void StartCall() override {};
+        void ReadInitialMetadata(void* tag) override {};
+        void Finish(remote::EtherbaseReply* msg, ::grpc::Status* status, void* tag) override {
+            *status = ::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"};
+        };
     };
 
     SECTION("start async Etherbase call and get OK result") {
@@ -105,11 +99,18 @@ TEST_CASE("create async unary client", "[silkrpc][grpc][async_unary_client]") {
         grpc::CompletionQueue queue;
         EtherbaseClient client{stub, &queue};
 
-        MockClientAsyncEtherbaseReader mock_reader{remote::EtherbaseReply{}, ::grpc::Status::OK};
+        MockClientAsyncEtherbaseOKReader mock_reader;
         EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockETHBACKENDStub*>(stub.get()), PrepareAsyncEtherbaseRaw(_, _, _)).WillOnce(Return(&mock_reader));
 
         MockFunction<void(::grpc::Status, ::remote::EtherbaseReply)> mock_callback;
-        EXPECT_CALL(mock_callback, Call(grpc::Status::OK, remote::EtherbaseReply{}));
+        ::remote::EtherbaseReply reply;
+        auto h128_ptr = new ::types::H128();
+        h128_ptr->set_hi(0x7F);
+        auto h160_ptr = new ::types::H160();
+        h160_ptr->set_lo(0xFF);
+        h160_ptr->set_allocated_hi(h128_ptr);
+        reply.set_allocated_address(h160_ptr);
+        EXPECT_CALL(mock_callback, Call(grpc::Status::OK, reply));
 
         client.async_call(::remote::EtherbaseRequest{}, mock_callback.AsStdFunction());
         client.completed(true);
@@ -126,7 +127,7 @@ TEST_CASE("create async unary client", "[silkrpc][grpc][async_unary_client]") {
         grpc::CompletionQueue queue;
         EtherbaseClient client{stub, &queue};
 
-        MockClientAsyncEtherbaseReader mock_reader{remote::EtherbaseReply{}, ::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"}};
+        MockClientAsyncEtherbaseKOReader mock_reader;
         EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockETHBACKENDStub*>(stub.get()), PrepareAsyncEtherbaseRaw(_, _, _)).WillOnce(Return(&mock_reader));
 
         MockFunction<void(::grpc::Status, ::remote::EtherbaseReply)> mock_callback;
