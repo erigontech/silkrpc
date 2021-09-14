@@ -20,6 +20,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <variant>
 
 #include <intx/intx.hpp>
 
@@ -39,13 +40,14 @@ std::ostream& operator<<(std::ostream& out, const Block& b);
 
 class BlockNumberOrHash {
 public:
-    BlockNumberOrHash() {}
-    BlockNumberOrHash(BlockNumberOrHash const& bnoh);
-    explicit BlockNumberOrHash(std::string const& bnoh) {
+    BlockNumberOrHash(BlockNumberOrHash &&bnoh) = default;
+    BlockNumberOrHash(BlockNumberOrHash const& bnoh)
+        : value_{bnoh.value_} {};
+    BlockNumberOrHash(std::string const& bnoh) { // NOLINT(runtime/explicit)
         build(bnoh);
     }
-    explicit BlockNumberOrHash(std::uint64_t const& number)
-        : number_{std::make_unique<std::uint64_t>(number)} {};
+    BlockNumberOrHash(std::uint64_t const& number) // NOLINT(runtime/explicit)
+        : value_{number} {};
 
     virtual ~BlockNumberOrHash() noexcept {}
 
@@ -56,47 +58,39 @@ public:
     }
 
     BlockNumberOrHash& operator=(std::uint64_t const number) {
-        tag_.release();
-        hash_.release();
-        number_ = std::make_unique<std::uint64_t>(number);
+        value_ = number;
         return *this;
     }
 
-    bool is_undefined() const {
-        return !(is_number() || is_tag() || is_hash());
-    }
-
     bool is_number() const {
-        return number_.get() != nullptr;
+        return std::holds_alternative<std::uint64_t>(value_);
     }
 
     uint64_t number() const {
-        return is_number() ? *number_ : 0;
+        return is_number() ? *std::get_if<std::uint64_t>(&value_) : 0;
     }
 
     bool is_hash() const {
-        return hash_.get() != nullptr;
+        return std::holds_alternative<evmc::bytes32>(value_);
     }
 
     evmc::bytes32 hash() const {
-        return is_hash() ? *hash_ : evmc::bytes32{0};
+        return is_hash() ? *std::get_if<evmc::bytes32>(&value_) : evmc::bytes32{0};
     }
 
     bool is_tag() const {
-        return tag_.get() != nullptr;
+        return std::holds_alternative<std::string>(value_);
     }
 
     std::string tag() const {
-        return is_tag() ? *tag_ : "";
+        return is_tag() ? *std::get_if<std::string>(&value_) : "";
     }
 
 private:
     void build(std::string const& bnoh);
     void set_number(std::string const& input, int base);
 
-    std::unique_ptr<std::uint64_t> number_;
-    std::unique_ptr<evmc::bytes32> hash_;
-    std::unique_ptr<std::string> tag_;
+    std::variant<std::uint64_t, evmc::bytes32, std::string> value_;
 };
 
 std::ostream& operator<<(std::ostream& out, const BlockNumberOrHash& b);

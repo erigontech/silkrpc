@@ -63,8 +63,6 @@ void to_json(nlohmann::json& json, const Transaction& transaction);
 
 void from_json(const nlohmann::json& json, Call& call);
 
-void from_json(const nlohmann::json& json, BlockNumberOrHash& bnoh);
-
 void to_json(nlohmann::json& json, const Log& log);
 void from_json(const nlohmann::json& json, Log& log);
 
@@ -94,4 +92,21 @@ nlohmann::json make_json_error(uint32_t id, const RevertError& error);
 
 } // namespace silkrpc
 
+namespace nlohmann {
+
+template <>
+struct adl_serializer<silkrpc::BlockNumberOrHash> {
+    static silkrpc::BlockNumberOrHash from_json(const json& json) {
+        if (json.is_string()) {
+            auto value = json.get<std::string>();
+            return {value};
+        } else if (json.is_number()) {
+            return {json.get<std::uint64_t>()};
+        }
+
+        return {0};
+    }
+};
+
+} // namespace nlohmann
 #endif  // SILKRPC_JSON_TYPES_HPP_

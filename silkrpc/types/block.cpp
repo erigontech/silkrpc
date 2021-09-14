@@ -64,9 +64,9 @@ uint64_t Block::get_block_size() const {
 
 std::ostream& operator<<(std::ostream& out, BlockNumberOrHash const& bnoh) {
     if (bnoh.is_number()) {
-        out << bnoh.number();
+        out << "0x" << std::hex << bnoh.number();
     } else if (bnoh.is_hash()) {
-        out << bnoh.hash();
+        out << "0x" << bnoh.hash();
     } else if (bnoh.is_tag()) {
         out << bnoh.tag();
     } else {
@@ -75,30 +75,18 @@ std::ostream& operator<<(std::ostream& out, BlockNumberOrHash const& bnoh) {
     return out;
 }
 
-BlockNumberOrHash::BlockNumberOrHash(BlockNumberOrHash const& bnoh) {
-    if (bnoh.is_hash()) {
-        hash_ = std::make_unique<evmc::bytes32>(bnoh.hash());
-    } else if (bnoh.is_number()) {
-        number_ = std::make_unique<std::uint64_t>(bnoh.number());
-    } else if (bnoh.is_tag()) {
-        tag_ = std::make_unique<std::string>(bnoh.tag());
-    }
-}
 
 void BlockNumberOrHash::build(std::string const& bnoh) {
-    number_.release();
-    tag_.release();
-    hash_.release();
-
+    value_ = uint64_t{0};
     if (bnoh == core::kEarliestBlockId) {
-        number_ = std::make_unique<std::uint64_t>(core::kEarliestBlockNumber);
+        value_ = core::kEarliestBlockNumber;
     } else if (bnoh == core::kLatestBlockId || bnoh == core::kPendingBlockId) {
-        tag_ = std::make_unique<std::string>(bnoh);
+        value_ = bnoh;
     } else if (bnoh.find("0x") == 0 || bnoh.find("0X") == 0) {
         if (bnoh.length() == 66) {
             const auto b32_bytes = silkworm::from_hex(bnoh);
             const auto b32 = silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
-            hash_ = std::make_unique<evmc::bytes32>(b32);
+            value_ = b32;
         } else {
             set_number(bnoh, 16);
         }
@@ -112,7 +100,7 @@ void BlockNumberOrHash::set_number(std::string const& input, int base) {
     errno = 0;
     auto value = strtoul(input.c_str(), &end, base);
     if (errno == 0 && *end == '\0' && end != input.c_str() && value <= std::numeric_limits<uint64_t>::max()) {
-        number_ = std::make_unique<std::uint64_t>(value);
+        value_ = value;
     }
 }
 

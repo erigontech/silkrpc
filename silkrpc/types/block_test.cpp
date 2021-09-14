@@ -16,6 +16,8 @@
 
 #include "block.hpp"
 
+#include <sstream>
+
 #include <catch2/catch.hpp>
 #include <silkworm/common/base.hpp>
 #include <silkworm/types/transaction.hpp>
@@ -27,174 +29,214 @@ namespace silkrpc {
 using Catch::Matchers::Message;
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
+evmc::bytes32 kZeroHash{0};
+
 TEST_CASE("block_number_or_hash") {
-    SECTION("default ctor") {
-        BlockNumberOrHash bnoh;
-        CHECK(bnoh.is_undefined() == true);
-        CHECK(bnoh.is_hash() == false);
-        CHECK(bnoh.is_number() == false);
-        CHECK(bnoh.is_tag() == false);
-    }
     SECTION("ctor from hash string") {
         BlockNumberOrHash bnoh{"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c"};
-        CHECK(bnoh.is_undefined() == false);
+
         CHECK(bnoh.is_hash() == true);
         CHECK(bnoh.is_number() == false);
         CHECK(bnoh.is_tag() == false);
+
         CHECK(bnoh.hash() == 0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32);
+        CHECK(bnoh.number() == 0);
+        CHECK(bnoh.tag() == "");
     }
     SECTION("ctor from decimal number string") {
         BlockNumberOrHash bnoh{"1966"};
-        CHECK(bnoh.is_undefined() == false);
+
         CHECK(bnoh.is_hash() == false);
         CHECK(bnoh.is_number() == true);
         CHECK(bnoh.is_tag() == false);
+
+        CHECK(bnoh.hash() == kZeroHash);
         CHECK(bnoh.number() == 1966);
+        CHECK(bnoh.tag() == "");
     }
     SECTION("ctor from hex number string") {
         BlockNumberOrHash bnoh{"0x374f3"};
-        CHECK(bnoh.is_undefined() == false);
+
         CHECK(bnoh.is_hash() == false);
         CHECK(bnoh.is_number() == true);
         CHECK(bnoh.is_tag() == false);
+
+        CHECK(bnoh.hash() == kZeroHash);
         CHECK(bnoh.number() == 0x374f3);
+        CHECK(bnoh.tag() == "");
     }
-    SECTION("ctor from tag string") {
+    SECTION("ctor from 'latest' tag") {
         BlockNumberOrHash bnoh{"latest"};
-        CHECK(bnoh.is_undefined() == false);
+
         CHECK(bnoh.is_hash() == false);
         CHECK(bnoh.is_number() == false);
         CHECK(bnoh.is_tag() == true);
+
+        CHECK(bnoh.hash() == kZeroHash);
+        CHECK(bnoh.number() == 0);
         CHECK(bnoh.tag() == "latest");
     }
-    SECTION("ctor from number") {
-        BlockNumberOrHash bnoh{123456};
-        CHECK(bnoh.is_undefined() == false);
+    SECTION("ctor from 'earliest' tag") {
+        BlockNumberOrHash bnoh{"earliest"};
+
         CHECK(bnoh.is_hash() == false);
         CHECK(bnoh.is_number() == true);
         CHECK(bnoh.is_tag() == false);
+
+        CHECK(bnoh.hash() == kZeroHash);
+        CHECK(bnoh.number() == 0);
+        CHECK(bnoh.tag() == "");
+    }
+    SECTION("ctor from 'pending' tag") {
+        BlockNumberOrHash bnoh{"pending"};
+
+        CHECK(bnoh.is_hash() == false);
+        CHECK(bnoh.is_number() == false);
+        CHECK(bnoh.is_tag() == true);
+
+        CHECK(bnoh.hash() == kZeroHash);
+        CHECK(bnoh.number() == 0);
+        CHECK(bnoh.tag() == "pending");
+    }
+    SECTION("ctor from number") {
+        BlockNumberOrHash bnoh{123456};
+
+        CHECK(bnoh.is_hash() == false);
+        CHECK(bnoh.is_number() == true);
+        CHECK(bnoh.is_tag() == false);
+
+        CHECK(bnoh.hash() == kZeroHash);
         CHECK(bnoh.number() == 123456);
+        CHECK(bnoh.tag() == "");
     }
     SECTION("copy ctor") {
         BlockNumberOrHash bnoh{"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c"};
         BlockNumberOrHash copy{bnoh};
-        CHECK(bnoh.is_undefined() == copy.is_undefined());
+
         CHECK(bnoh.is_hash() == copy.is_hash());
         CHECK(bnoh.is_number() == copy.is_number());
         CHECK(bnoh.is_tag() == copy.is_tag());
+
         CHECK(bnoh.hash() == copy.hash());
+        CHECK(bnoh.number() == 0);
+        CHECK(bnoh.tag() == "");
     }
-    SECTION("assign from hash string") {
-        BlockNumberOrHash bnoh;
+    SECTION("reassigned to hash string") {
+        BlockNumberOrHash bnoh{10};
         bnoh = "0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c";
-        CHECK(bnoh.is_undefined() == false);
+
         CHECK(bnoh.is_hash() == true);
         CHECK(bnoh.is_number() == false);
         CHECK(bnoh.is_tag() == false);
+
         CHECK(bnoh.hash() == 0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32);
+        CHECK(bnoh.number() == 0);
+        CHECK(bnoh.tag() == "");
     }
-    SECTION("assign from decimal number string") {
-        BlockNumberOrHash bnoh;
+    SECTION("reassigned to decimal number string") {
+        BlockNumberOrHash bnoh{10};
         bnoh = "1966";
-        CHECK(bnoh.is_undefined() == false);
+
         CHECK(bnoh.is_hash() == false);
         CHECK(bnoh.is_number() == true);
         CHECK(bnoh.is_tag() == false);
+
+        CHECK(bnoh.hash() == kZeroHash);
         CHECK(bnoh.number() == 1966);
+        CHECK(bnoh.tag() == "");
     }
-    SECTION("assign from hex number string") {
-        BlockNumberOrHash bnoh;
+    SECTION("reassigned to hex number string") {
+        BlockNumberOrHash bnoh{10};
         bnoh = "0x374f3";
-        CHECK(bnoh.is_undefined() == false);
+
         CHECK(bnoh.is_hash() == false);
         CHECK(bnoh.is_number() == true);
         CHECK(bnoh.is_tag() == false);
+
+        CHECK(bnoh.hash() == kZeroHash);
         CHECK(bnoh.number() == 0x374f3);
+        CHECK(bnoh.tag() == "");
     }
-    SECTION("assign from tag string") {
-        BlockNumberOrHash bnoh;
+    SECTION("reassigned to tag string") {
+        BlockNumberOrHash bnoh{10};
         bnoh = "latest";
-        CHECK(bnoh.is_undefined() == false);
+
         CHECK(bnoh.is_hash() == false);
         CHECK(bnoh.is_number() == false);
         CHECK(bnoh.is_tag() == true);
+
+        CHECK(bnoh.hash() == kZeroHash);
+        CHECK(bnoh.number() == 0);
         CHECK(bnoh.tag() == "latest");
     }
-    SECTION("assign from number") {
-        BlockNumberOrHash bnoh;
-        bnoh = 123456;
-        CHECK(bnoh.is_undefined() == false);
-        CHECK(bnoh.is_hash() == false);
-        CHECK(bnoh.is_number() == true);
-        CHECK(bnoh.is_tag() == false);
-        CHECK(bnoh.number() == 123456);
-    }
-    SECTION("reassign from hash string") {
-        BlockNumberOrHash bnoh{10};
-        bnoh = "0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c";
-        CHECK(bnoh.is_undefined() == false);
-        CHECK(bnoh.is_hash() == true);
-        CHECK(bnoh.is_number() == false);
-        CHECK(bnoh.is_tag() == false);
-        CHECK(bnoh.hash() == 0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32);
-    }
-    SECTION("reassign from decimal number string") {
-        BlockNumberOrHash bnoh{10};
-        bnoh = "1966";
-        CHECK(bnoh.is_undefined() == false);
-        CHECK(bnoh.is_hash() == false);
-        CHECK(bnoh.is_number() == true);
-        CHECK(bnoh.is_tag() == false);
-        CHECK(bnoh.number() == 1966);
-    }
-    SECTION("reassign from hex number string") {
-        BlockNumberOrHash bnoh{10};
-        bnoh = "0x374f3";
-        CHECK(bnoh.is_undefined() == false);
-        CHECK(bnoh.is_hash() == false);
-        CHECK(bnoh.is_number() == true);
-        CHECK(bnoh.is_tag() == false);
-        CHECK(bnoh.number() == 0x374f3);
-    }
-    SECTION("reassign from tag string") {
-        BlockNumberOrHash bnoh{10};
-        bnoh = "latest";
-        CHECK(bnoh.is_undefined() == false);
-        CHECK(bnoh.is_hash() == false);
-        CHECK(bnoh.is_number() == false);
-        CHECK(bnoh.is_tag() == true);
-        CHECK(bnoh.tag() == "latest");
-    }
-    SECTION("reassign from number") {
+    SECTION("reassigned to number") {
         BlockNumberOrHash bnoh{10};
         bnoh = 123456;
-        CHECK(bnoh.is_undefined() == false);
+
         CHECK(bnoh.is_hash() == false);
         CHECK(bnoh.is_number() == true);
         CHECK(bnoh.is_tag() == false);
+
+        CHECK(bnoh.hash() == kZeroHash);
         CHECK(bnoh.number() == 123456);
+        CHECK(bnoh.tag() == "");
     }
     SECTION("emptying") {
         BlockNumberOrHash bnoh{10};
         bnoh = "";
-        CHECK(bnoh.is_undefined() == true);
+
         CHECK(bnoh.is_hash() == false);
-        CHECK(bnoh.is_number() == false);
+        CHECK(bnoh.is_number() == true);
         CHECK(bnoh.is_tag() == false);
+
+        CHECK(bnoh.hash() == kZeroHash);
+        CHECK(bnoh.number() == 0);
+        CHECK(bnoh.tag() == "");
     }
     SECTION("number overflow") {
         BlockNumberOrHash bnoh{"0x1ffffffffffffffff"};
-        CHECK(bnoh.is_undefined() == true);
+
         CHECK(bnoh.is_hash() == false);
-        CHECK(bnoh.is_number() == false);
+        CHECK(bnoh.is_number() == true);
         CHECK(bnoh.is_tag() == false);
+
+        CHECK(bnoh.hash() == kZeroHash);
+        CHECK(bnoh.number() == 0);
+        CHECK(bnoh.tag() == "");
     }
     SECTION("invalid string") {
         BlockNumberOrHash bnoh{"invalid"};
-        CHECK(bnoh.is_undefined() == true);
+
         CHECK(bnoh.is_hash() == false);
-        CHECK(bnoh.is_number() == false);
+        CHECK(bnoh.is_number() == true);
         CHECK(bnoh.is_tag() == false);
+
+        CHECK(bnoh.hash() == kZeroHash);
+        CHECK(bnoh.number() == 0);
+        CHECK(bnoh.tag() == "");
+    }
+    SECTION("operator<<") {
+        std::stringstream out;
+        BlockNumberOrHash bnoh{"0x374f3"};
+
+        out << bnoh;
+        CHECK(out.str() == "0x374f3");
+        out.str("");
+
+        bnoh = "0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c";
+        out << bnoh;
+        CHECK(out.str() == "0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c");
+        out.str("");
+
+        bnoh = "latest";
+        out << bnoh;
+        CHECK(out.str() == "latest");
+        out.str("");
+
+        bnoh = "pending";
+        out << bnoh;
+        CHECK(out.str() == "pending");
+        out.str("");
     }
 }
 
