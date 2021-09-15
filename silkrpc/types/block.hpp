@@ -18,6 +18,9 @@
 #define SILKRPC_TYPES_BLOCK_HPP_
 
 #include <iostream>
+#include <memory>
+#include <string>
+#include <variant>
 
 #include <intx/intx.hpp>
 
@@ -34,6 +37,63 @@ struct Block : public silkworm::BlockWithHash {
 };
 
 std::ostream& operator<<(std::ostream& out, const Block& b);
+
+class BlockNumberOrHash {
+public:
+    BlockNumberOrHash(BlockNumberOrHash &&bnoh) = default;
+    BlockNumberOrHash(BlockNumberOrHash const& bnoh)
+        : value_{bnoh.value_} {};
+    BlockNumberOrHash(std::string const& bnoh) { // NOLINT(runtime/explicit)
+        build(bnoh);
+    }
+    BlockNumberOrHash(std::uint64_t const& number) // NOLINT(runtime/explicit)
+        : value_{number} {};
+
+    virtual ~BlockNumberOrHash() noexcept {}
+
+    BlockNumberOrHash& operator=(BlockNumberOrHash const& bnoh) = delete;
+    BlockNumberOrHash& operator=(std::string const& bnoh)  {
+        build(bnoh);
+        return *this;
+    }
+
+    BlockNumberOrHash& operator=(std::uint64_t const number) {
+        value_ = number;
+        return *this;
+    }
+
+    bool is_number() const {
+        return std::holds_alternative<std::uint64_t>(value_);
+    }
+
+    uint64_t number() const {
+        return is_number() ? *std::get_if<std::uint64_t>(&value_) : 0;
+    }
+
+    bool is_hash() const {
+        return std::holds_alternative<evmc::bytes32>(value_);
+    }
+
+    evmc::bytes32 hash() const {
+        return is_hash() ? *std::get_if<evmc::bytes32>(&value_) : evmc::bytes32{0};
+    }
+
+    bool is_tag() const {
+        return std::holds_alternative<std::string>(value_);
+    }
+
+    std::string tag() const {
+        return is_tag() ? *std::get_if<std::string>(&value_) : "";
+    }
+
+private:
+    void build(std::string const& bnoh);
+    void set_number(std::string const& input, int base);
+
+    std::variant<std::uint64_t, evmc::bytes32, std::string> value_;
+};
+
+std::ostream& operator<<(std::ostream& out, const BlockNumberOrHash& b);
 
 } // namespace silkrpc
 

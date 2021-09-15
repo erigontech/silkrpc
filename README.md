@@ -20,7 +20,7 @@ git clone --recurse-submodules https://github.com/torquem-ch/silkrpc.git
 
 To update the submodules later on run 
 ```
-git submodule update --remote
+git submodule update --init --recursive
 ```
 
 ## Linux & MacOS
