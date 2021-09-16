@@ -61,6 +61,8 @@ asio::awaitable<void> Connection::do_read() {
         std::size_t bytes_read = co_await socket_.async_read_some(asio::buffer(buffer_), asio::use_awaitable);
         SILKRPC_DEBUG << "Connection::do_read bytes_read: " << bytes_read << "\n";
         SILKRPC_TRACE << "Connection::do_read buffer: " << std::string_view{static_cast<const char*>(buffer_.data()), bytes_read} << "\n";
+
+
         RequestParser::ResultType result = request_parser_.parse(request_, buffer_.data(), buffer_.data() + bytes_read);
 
         if (result == RequestParser::good) {
@@ -93,6 +95,9 @@ asio::awaitable<void> Connection::do_write() {
         SILKRPC_DEBUG << "Connection::do_write reply: " << reply_.content << "\n" << std::flush;
         const auto bytes_transferred = co_await asio::async_write(socket_, reply_.to_buffers(), asio::use_awaitable);
         SILKRPC_TRACE << "Connection::do_write bytes_transferred: " << bytes_transferred << "\n" << std::flush;
+        request_.reset();
+        request_parser_.reset();
+        reply_.reset();
     } catch (const std::system_error& se) {
         std::rethrow_exception(std::make_exception_ptr(se));
     } catch (const std::exception& e) {
