@@ -49,6 +49,7 @@ def usage(argv):
     print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10)       [default: " + DEFAULT_TEST_SEQUENCE + "]")
     print("-n numContexts          number of Silkrpc execution contexts (i.e. 1+1 asio+grpc threads)                      [default: " + str(DEFAULT_SILKRPC_NUM_CONTEXTS) + "]")
     print("-m mode                 tests type silkrpc(1), rpcdaemon(2) and both (3) (i.e. 3)                              [default: " + str(DEFAULT_TEST_MODE) + "]")
+    sys.exit(-1)
 
 
 class Config:
@@ -69,7 +70,6 @@ class Config:
         self.rpc_daemon_address = DEFAULT_RPCDAEMON_ADDRESS
         self.test_mode = DEFAULT_TEST_MODE
         self.test_type = DEFAULT_TEST_TYPE
-        self.perf_enable = 0
         self.user_perf_command = ""
 
         try:
@@ -79,7 +79,6 @@ class Config:
             for option, optarg in opts:
                 if option in ("-h", "--help"):
                     usage(argv)
-                    sys.exit(-1)
                 elif option == "-m":
                     self.test_mode = optarg
                 elif option == "-D":
@@ -88,7 +87,6 @@ class Config:
                     if local_config == 1:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
                         usage(argv)
-                        sys.exit(-1)
                     local_config = 2
                     self.rpc_daemon_address = optarg
                 elif option == "-p":
@@ -99,21 +97,18 @@ class Config:
                     if local_config == 2:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
                         usage(argv)
-                        sys.exit(-1)
                     local_config = 1
                     self.erigon_addr = optarg
                 elif option == "-g":
                     if local_config == 2:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
                         usage(argv)
-                        sys.exit(-1)
                     local_config = 1
                     self.erigon_builddir = optarg
                 elif option == "-s":
                     if local_config == 2:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
                         usage(argv)
-                        sys.exit(-1)
                     local_config = 1
                     self.silkrpc_build_dir = optarg
                 elif option == "-r":
@@ -126,17 +121,14 @@ class Config:
                     if local_config == 2:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
                         usage(argv)
-                        sys.exit(-1)
                     local_config = 1
                     on_core = self.daemon_vegeta_on_core.split(':')
                     if on_core[0] == "-":
                         print ("ERROR: incompatible option -n with default core configuration ")
                         usage(argv)
-                        sys.exit(-1)
                     self.silkrpc_num_contexts = optarg
                 else:
                     usage(argv)
-                    sys.exit(-1)
         except getopt.GetoptError as err:
             # print help information and exit:
             print(err)
