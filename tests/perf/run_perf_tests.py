@@ -22,7 +22,6 @@ DEFAULT_SILKRPC_NUM_CONTEXTS = int(multiprocessing.cpu_count() / 2)
 DEFAULT_RPCDAEMON_ADDRESS = "localhost"
 DEFAULT_TEST_MODE = "3"
 DEFAULT_TEST_TYPE = "eth_getLogs"
-DEFAULT_PERF_CMD = ""
 
 VEGETA_PATTERN_DIRNAME = "erigon_stress_test"
 VEGETA_REPORT = "vegeta_report.hrd"
@@ -38,7 +37,7 @@ def usage(argv):
     print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
     print("")
     print("-h                      print this help")
-    print("-D                      perf command                                                                           [default: " + DEFAULT_PERF_COMMAND + "]")
+    print("-D                      perf command")                                                                           
     print("-y                      test type (i.e eth_call, eth_logs)                                                     [default: " + DEFAULT_TEST_TYPE + "]")
     print("-d rpcDaemonAddress     address of daemon eg (10.1.1.20)                                                       [default: " + DEFAULT_RPCDAEMON_ADDRESS +"]")
     print("-p vegetaPatternTarFile path to the request file for Vegeta attack                                             [default: " + DEFAULT_VEGETA_PATTERN_TAR_FILE +"]")
