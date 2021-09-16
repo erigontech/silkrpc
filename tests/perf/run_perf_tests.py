@@ -22,6 +22,7 @@ DEFAULT_SILKRPC_NUM_CONTEXTS = int(multiprocessing.cpu_count() / 2)
 DEFAULT_RPCDAEMON_ADDRESS = "localhost"
 DEFAULT_TEST_MODE = "3"
 DEFAULT_TEST_TYPE = "eth_getLogs"
+DEFAULT_PERF_CMD = ""
 
 VEGETA_PATTERN_DIRNAME = "erigon_stress_test"
 VEGETA_REPORT = "vegeta_report.hrd"
@@ -37,7 +38,7 @@ def usage(argv):
     print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
     print("")
     print("-h                      print this help")
-    print("-e                      perf enable                                                                            [default: 0]")
+    print("-D                      perf command                                                                           [default: " + DEFAULT_PERF_COMMAND + "]")
     print("-y                      test type (i.e eth_call, eth_logs)                                                     [default: " + DEFAULT_TEST_TYPE + "]")
     print("-d rpcDaemonAddress     address of daemon eg (10.1.1.20)                                                       [default: " + DEFAULT_RPCDAEMON_ADDRESS +"]")
     print("-p vegetaPatternTarFile path to the request file for Vegeta attack                                             [default: " + DEFAULT_VEGETA_PATTERN_TAR_FILE +"]")
@@ -70,10 +71,11 @@ class Config:
         self.test_mode = DEFAULT_TEST_MODE
         self.test_type = DEFAULT_TEST_TYPE
         self.perf_enable = 0
+        self.user_perf_command = ""
 
         try:
             local_config = 0
-            opts, _ = getopt.getopt(argv[1:], "ehm:d:p:c:a:g:s:r:t:n:y:")
+            opts, _ = getopt.getopt(argv[1:], "D:hm:d:p:c:a:g:s:r:t:n:y:")
 
             for option, optarg in opts:
                 if option in ("-h", "--help"):
@@ -81,8 +83,8 @@ class Config:
                     sys.exit(-1)
                 elif option == "-m":
                     self.test_mode = optarg
-                elif option == "-e":
-                    self.perf_enable = 1
+                elif option == "-D":
+                    self.user_perf_command = optarg
                 elif option == "-d":
                     if local_config == 1:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
@@ -247,8 +249,8 @@ class PerfTest:
             return
         self.rpc_daemon = 1
         on_core = self.config.daemon_vegeta_on_core.split(':')
-        if self.config.perf_enable == 1 and start_test == 1:
-            perf_cmd = "perf record "
+        if self.config.user_perf_command != "" and start_test == 1:
+            perf_cmd = self.config.user_perf_command
         else:
             perf_cmd = ""
         if on_core[0] == "-":
@@ -276,7 +278,7 @@ class PerfTest:
         if self.config.test_mode == "2":
             return
         self.silk_daemon = 0
-        os.system("kill $(ps aux | grep 'silk' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
+        os.system("kill -2 $(ps aux | grep 'silk' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
         print("SilkDaemon stopped")
         os.system("sleep 3")
 
