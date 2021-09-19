@@ -35,6 +35,7 @@ const std::string internal_server_error = "HTTP/1.1 500 Internal Server Error\r\
 const std::string not_implemented = "HTTP/1.1 501 Not Implemented\r\n";             // NOLINT(runtime/string)
 const std::string bad_gateway = "HTTP/1.1 502 Bad Gateway\r\n";                     // NOLINT(runtime/string)
 const std::string service_unavailable = "HTTP/1.1 503 Service Unavailable\r\n";     // NOLINT(runtime/string)
+const std::string processing_continue = "HTTP/1.1 100 Continue\r\n";                // NOLINT(runtime/string)
 
 asio::const_buffer to_buffer(Reply::StatusType status) {
     switch (status) {
@@ -70,6 +71,8 @@ asio::const_buffer to_buffer(Reply::StatusType status) {
             return asio::buffer(bad_gateway);
         case Reply::service_unavailable:
             return asio::buffer(service_unavailable);
+        case Reply::processing_continue:
+            return asio::buffer(processing_continue);
         default:
             return asio::buffer(internal_server_error);
     }
@@ -102,9 +105,16 @@ std::vector<asio::const_buffer> Reply::to_buffers() {
     return buffers;
 }
 
+/*
+    "<html>"
+    "<head><title>Continue</title></head>"
+    "<body><h1>100 Continue</h1></body>"
+    "</html>";
+*/
 namespace stock_replies {
 
 const char ok[] = "";
+const char processing_continue[] = "";
 const char created[] =
     "<html>"
     "<head><title>Created</title></head>"
@@ -183,6 +193,8 @@ const char service_unavailable[] =
 
 std::string to_string(Reply::StatusType status) {
     switch (status) {
+        case Reply::processing_continue:
+            return processing_continue;
         case Reply::ok:
             return ok;
         case Reply::created:
@@ -226,9 +238,12 @@ Reply Reply::stock_reply(Reply::StatusType status) {
     Reply rep;
     rep.status = status;
     rep.content = stock_replies::to_string(status);
-    rep.headers.reserve(2);
-    rep.headers.emplace_back(Header{"Content-Length", std::to_string(rep.content.size())});
-    rep.headers.emplace_back(Header{"Content-Type", "text/html"});
+
+    if (status != processing_continue) {
+       rep.headers.reserve(2);
+       rep.headers.emplace_back(Header{"Content-Length", std::to_string(rep.content.size())});
+       rep.headers.emplace_back(Header{"Content-Type", "text/html"});
+    }
     return rep;
 }
 

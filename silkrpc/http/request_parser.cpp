@@ -257,4 +257,11 @@ inline bool RequestParser::is_digit(int c) {
     return c >= '0' && c <= '9';
 }
 
+bool RequestParser::check_if_ack_requested(Request& req) {
+  for (Header h : req.headers) {
+        if (h.name == "Expect" && h.value == "100-continue")
+           return true;
+  }
+  return false;
+}
 } // namespace silkrpc::http

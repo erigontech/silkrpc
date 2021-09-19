@@ -68,8 +68,13 @@ asio::awaitable<void> Connection::do_read() {
         if (result == RequestParser::good) {
             co_await request_handler_.handle_request(request_, reply_);
             co_await do_write();
+            reset_connection_data();
         } else if (result == RequestParser::bad) {
             reply_ = Reply::stock_reply(Reply::bad_request);
+            co_await do_write();
+            reset_connection_data();
+        } else if (request_parser_.check_if_ack_requested(request_)) {
+            reply_ = Reply::stock_reply(Reply::processing_continue);
             co_await do_write();
         }
 
@@ -95,14 +100,17 @@ asio::awaitable<void> Connection::do_write() {
         SILKRPC_DEBUG << "Connection::do_write reply: " << reply_.content << "\n" << std::flush;
         const auto bytes_transferred = co_await asio::async_write(socket_, reply_.to_buffers(), asio::use_awaitable);
         SILKRPC_TRACE << "Connection::do_write bytes_transferred: " << bytes_transferred << "\n" << std::flush;
-        request_.reset();
-        request_parser_.reset();
-        reply_.reset();
     } catch (const std::system_error& se) {
         std::rethrow_exception(std::make_exception_ptr(se));
     } catch (const std::exception& e) {
         std::rethrow_exception(std::make_exception_ptr(e));
     }
+}
+
+void Connection::reset_connection_data() {
+        request_.reset();
+        request_parser_.reset();
+        reply_.reset();
 }
 
 } // namespace silkrpc::http

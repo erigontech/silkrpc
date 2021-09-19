@@ -23,6 +23,7 @@ namespace silkrpc::http {
 struct Reply {
     /// The status of the reply.
     enum StatusType {
+        processing_continue = 100,
         ok = 200,
         created = 201,
         accepted = 202,
