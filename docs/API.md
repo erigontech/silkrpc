@@ -65,7 +65,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_subscribe                           | -            | not yet implemented                        |
 | eth_unsubscribe                         | -            | not yet implemented                        |
 |                                         |              |                                            |
-| debug_accountRange                      | -            | not yet implemented                        |
+| debug_accountRange                      | Yes          |                                            |
 | debug_getModifiedAccountsByNumber       | -            | not yet implemented                        |
 | debug_getModifiedAccountsByHash         | -            | not yet implemented                        |
 | debug_storageRangeAt                    | -            | not yet implemented                        |

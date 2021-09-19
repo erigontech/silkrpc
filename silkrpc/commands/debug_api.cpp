@@ -16,26 +16,68 @@
 
 #include "debug_api.hpp"
 
+#include <sstream>
 #include <string>
+#include <utility>
+#include <vector>
+
+#include <boost/endian/conversion.hpp>
 
 #include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/core/account_dumper.hpp>
+#include <silkrpc/core/account_walker.hpp>
+#include <silkrpc/core/blocks.hpp>
+#include <silkrpc/core/rawdb/chain.hpp>
+#include <silkrpc/core/state_reader.hpp>
+#include <silkrpc/ethdb/tables.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/json/types.hpp>
+#include <silkrpc/types/block.hpp>
+#include <silkrpc/types/dump_account.hpp>
 
 namespace silkrpc::commands {
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_accountrange
 asio::awaitable<void> DebugRpcApi::handle_debug_account_range(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 5) {
+        auto error_msg = "invalid debug_accountrange params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto block_number_or_hash = params[0].get<BlockNumberOrHash>();
+    const auto start_key_array = params[1].get<std::vector<std::uint8_t>>();
+    auto max_result = params[2].get<int16_t>();
+    const auto exclude_code = params[3].get<bool>();
+    const auto exclude_storage = params[4].get<bool>();
+
+    // silkworm::ByteView start_key(start_key_array.data(), start_key_array.size());
+    silkworm::Bytes start_key(start_key_array.data(), start_key_array.size());
+    const auto start_address = silkworm::to_address(start_key);
+
+    if (max_result > kAccountRangeMaxResults || max_result <= 0) {
+        max_result = kAccountRangeMaxResults;
+    }
+
+    SILKRPC_INFO << "block_number_or_hash: " << block_number_or_hash
+        << " start_address: 0x" << silkworm::to_hex(start_address)
+        << " max_result: " << max_result
+        << " exclude_code: " << exclude_code
+        << " exclude_storage: " << exclude_storage
+        << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
+        AccountDumper dumper{*tx};
+        DumpAccounts dump_accounts = co_await dumper.dump_accounts(block_number_or_hash, start_address, max_result, exclude_code, exclude_storage);
 
-        reply = make_json_error(request["id"], 500, "not yet implemented");
+        reply = make_json_content(request["id"], dump_accounts);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());

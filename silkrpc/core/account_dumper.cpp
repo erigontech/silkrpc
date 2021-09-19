@@ -1,0 +1,171 @@
+/*
+   Copyright 2021 The Silkrpc Authors
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
+
+#include "account_dumper.hpp"
+
+#include <sstream>
+#include <utility>
+
+#include <silkworm/core/silkworm/common/endian.hpp>
+#include <silkworm/core/silkworm/trie/hash_builder.hpp>
+#include <silkworm/node/silkworm/common/rlp_err.hpp>
+#include <silkworm/node/silkworm/db/bitmap.hpp>
+#include <silkworm/node/silkworm/db/util.hpp>
+
+#include <silkrpc/common/log.hpp>
+#include <silkrpc/core/account_walker.hpp>
+#include <silkrpc/core/rawdb/chain.hpp>
+#include <silkrpc/core/state_reader.hpp>
+#include <silkrpc/core/storage_walker.hpp>
+#include <silkrpc/ethdb/cursor.hpp>
+#include <silkrpc/ethdb/tables.hpp>
+#include <silkrpc/ethdb/transaction_database.hpp>
+#include <silkrpc/json/types.hpp>
+
+namespace silkrpc {
+
+asio::awaitable<DumpAccounts> AccountDumper::dump_accounts(const BlockNumberOrHash& bnoh, const evmc::address& start_adress, int16_t max_result, bool exclude_code, bool exclude_storage) {
+    DumpAccounts dump_accounts;
+    ethdb::TransactionDatabase tx_database{transaction_};
+
+    const auto block_with_hash = co_await core::rawdb::read_block_by_number_or_hash(tx_database, bnoh);
+    const auto block_number = block_with_hash.block.header.number;
+
+    dump_accounts.root = block_with_hash.block.header.state_root;
+
+    std::vector<silkrpc::KeyValue> collected_data;
+
+    AccountWalker::Collector collector = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
+        if (max_result > 0 && collected_data.size() >= max_result) {
+            dump_accounts.next = silkworm::to_address(k);
+            return false;
+        }
+
+        if (k.size() > silkworm::kAddressLength) {
+            return true;
+        }
+
+        SILKRPC_TRACE << "Collecting key: 0x" << silkworm::to_hex(k)
+            << " value: " << silkworm::to_hex(v)
+            << "\n";
+
+
+        silkrpc::KeyValue kv{k, v};
+        collected_data.push_back(kv);
+        return true;
+    };
+
+    AccountWalker walker{transaction_};
+    SILKRPC_TRACE << "Ready to walk accounts: block_number " << std::dec << block_number
+        << " start_adress 0x" << silkworm::to_hex(start_adress)
+        << "\n";
+
+    co_await walker.walk_of_accounts(block_number + 1, start_adress, collector);
+
+    co_await load_accounts(tx_database, collected_data, dump_accounts, exclude_code);
+    if (!exclude_storage) {
+        co_await load_storage(block_number, dump_accounts);
+    }
+
+    co_return dump_accounts;
+}
+
+asio::awaitable<void> AccountDumper::load_accounts(ethdb::TransactionDatabase& tx_database,
+        const std::vector<silkrpc::KeyValue>& collected_data, DumpAccounts& dump_accounts, bool exclude_code) {
+    StateReader state_reader{tx_database};
+    for (auto kv : collected_data) {
+        const auto address = silkworm::to_address(kv.key);
+
+        auto [account, err]{silkworm::decode_account_from_storage(kv.value)};
+        silkworm::rlp::err_handler(err);
+
+        DumpAccount dump_account;
+        dump_account.balance = account.balance;
+        dump_account.nonce = account.nonce;
+        dump_account.code_hash = account.code_hash;
+        dump_account.incarnation = account.incarnation;
+
+        if (account.incarnation > 0 && account.code_hash == silkworm::kEmptyHash) {
+            const auto storage_key{silkworm::db::storage_prefix(silkworm::full_view(address), account.incarnation)};
+            SILKRPC_TRACE << "Filling code_hash: address 0x" << silkworm::to_hex(address)
+                << " incarnation: " << account.incarnation
+                << " storage_key: " << silkworm::to_hex(storage_key)
+                << "\n";
+            auto code_hash{co_await tx_database.get_one(silkrpc::db::table::kPlainContractCode, storage_key)};
+            if (code_hash.length() == silkworm::kHashLength) {
+                std::memcpy(dump_account.code_hash.bytes, code_hash.data(), silkworm::kHashLength);
+            }
+        }
+        if (!exclude_code) {
+            auto code = co_await state_reader.read_code(account.code_hash);
+            dump_account.code.swap(code);
+        }
+        dump_accounts.accounts.insert(std::pair<evmc::address, DumpAccount>(address, dump_account));
+    }
+
+    co_return;
+}
+
+asio::awaitable<void> AccountDumper::load_storage(uint64_t block_number, DumpAccounts& dump_accounts) {
+    StorageWalker storage_walker{transaction_};
+    evmc::bytes32 start_location{};
+    for (AccountsMap::iterator itr = dump_accounts.accounts.begin(); itr != dump_accounts.accounts.end(); itr++) {
+        auto& address = itr->first;
+        auto& account = itr->second;
+
+        std::map<silkworm::Bytes, silkworm::Bytes> collected_entries;
+        StorageWalker::Collector collector = [&](const evmc::address& address, const silkworm::Bytes& loc, const silkworm::Bytes& data) {
+            SILKRPC_TRACE << "Collecting address 0x" << silkworm::to_hex(address)
+                << " loc 0x" << silkworm::to_hex(loc)
+                << " data 0x" << silkworm::to_hex(data)
+                << "\n";
+
+            if (!account.storage.has_value()) {
+                account.storage = Storage{};
+            }
+            auto& storage = *account.storage;
+            storage["0x" + silkworm::to_hex(loc)] = silkworm::to_hex(data);
+            auto hash = hash_of(loc);
+            auto key = silkworm::full_view(hash);
+            collected_entries[silkworm::Bytes{key}] = data;
+
+            return true;
+        };
+
+        SILKRPC_TRACE << "Ready to walk storages: address 0x" << silkworm::to_hex(address)
+            << " incarnation 0x" << account.incarnation
+            << " start_location 0x" << silkworm::to_hex(start_location)
+            << " block_number " << block_number
+            << "\n";
+
+        co_await storage_walker.walk_of_storages(block_number, address, start_location, account.incarnation, collector);
+
+        silkworm::trie::HashBuilder hb;
+        for (const auto& [key, value] : collected_entries) {
+            silkworm::Bytes encoded{};
+            silkworm::rlp::encode(encoded, value);
+            silkworm::Bytes unpacked = silkworm::trie::unpack_nibbles(key);
+
+            hb.add_leaf(unpacked, encoded);
+        }
+
+        account.root = hb.root_hash();
+    }
+
+    co_return;
+}
+
+} // namespace silkrpc

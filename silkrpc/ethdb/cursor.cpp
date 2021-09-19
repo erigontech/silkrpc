@@ -18,10 +18,11 @@
 
 namespace silkrpc::ethdb {
 
-SplitCursor::SplitCursor(Cursor& inner_cursor, const silkworm::Bytes& key, uint64_t match_bits, uint64_t length1, uint64_t length2)
+SplitCursor::SplitCursor(Cursor& inner_cursor, silkworm::ByteView key, uint64_t match_bits, uint64_t part1_end, uint64_t part2_start, uint64_t part3_start)
 : inner_cursor_{inner_cursor}, key_{key} {
-    length1_ = length1;
-    length2_ = length2;
+    part1_end_ = part1_end;
+    part2_start_ = part2_start;
+    part3_start_ = part3_start;
 
     match_bytes_ = (match_bits + 7) / 8;
 
@@ -72,13 +73,13 @@ SplittedKeyValue SplitCursor::split_key_value(const KeyValue& kv) {
         return SplittedKeyValue{};
     }
 
-    SplittedKeyValue skv{key.substr(0, length1_)};
+    SplittedKeyValue skv{key.substr(0, part1_end_)};
 
-    if (key.length() > length1_) {
-        skv.key2 = kv.key.substr(length1_, length2_);
+    if (key.length() > part2_start_) {
+        skv.key2 = kv.key.substr(part2_start_, part3_start_ - part2_start_);
     }
-    if (key.length() > length1_ + length2_) {
-        skv.key3 = kv.key.substr(length1_ + length2_);
+    if (key.length() > part3_start_) {
+        skv.key3 = kv.key.substr(part3_start_);
     }
 
     skv.value = kv.value;

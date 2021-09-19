@@ -65,7 +65,7 @@ struct SplittedKeyValue {
 
 class SplitCursor {
 public:
-    SplitCursor(Cursor& inner_cursor, const silkworm::Bytes& key, uint64_t match_bits, uint64_t length1, uint64_t length2);
+    SplitCursor(Cursor& inner_cursor, silkworm::ByteView key, uint64_t match_bits, uint64_t part1_end, uint64_t part2_start, uint64_t part3_start);
     SplitCursor& operator=(const SplitCursor&) = delete;
 
     asio::awaitable<SplittedKeyValue> seek();
@@ -77,8 +77,9 @@ private:
     silkworm::Bytes key_;
     silkworm::Bytes first_bytes_;
     uint8_t last_bits_;
-    uint64_t length1_;
-    uint64_t length2_;
+    uint64_t part1_end_;
+    uint64_t part2_start_;
+    uint64_t part3_start_;
     uint64_t match_bytes_;
     uint8_t mask_;
 
