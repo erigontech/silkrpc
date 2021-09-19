@@ -76,6 +76,7 @@ asio::awaitable<void> Connection::do_read() {
         } else if (request_parser_.check_if_ack_requested(request_)) {
             reply_ = Reply::stock_reply(Reply::processing_continue);
             co_await do_write();
+            reply_.reset();
         }
 
         // Read next chunck (result == RequestParser::indeterminate) or next request
