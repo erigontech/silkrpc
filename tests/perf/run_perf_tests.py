@@ -415,7 +415,7 @@ def main(argv):
     current_sequence = str(config.test_sequence).split(',')
 
 
-    if (config.test_mode == "1" or config.test_mode == "3"):
+    if (config.test_mode in ("1", "3")):
         perf_test.start_silk_daemon(1)
         test_number = 1
         for test in current_sequence:
@@ -433,7 +433,7 @@ def main(argv):
         if config.test_mode == "3":
             print("--------------------------------------------------------------------------------------------\n")
 
-    if (config.test_mode == "2" or config.test_mode == "3"):
+    if (config.test_mode in ("2", "3")):
         perf_test.start_rpc_daemon()
 
         test_number = 1
