@@ -30,15 +30,15 @@ TEST_CASE("check reset method", "[silkrpc][request]") {
         3,
         {{"v", "1"}},
         4,
-        "5678", 
+        "5678",
     };
     req.reset();
-    CHECK(req.method == "");    
-    CHECK(req.uri == "");    
-    CHECK(req.content == "");    
-    CHECK(req.content_length == 0);    
-    CHECK(req.headers.size() == 0);    
-} 
+    CHECK(req.method == "");
+    CHECK(req.uri == "");
+    CHECK(req.content == "");
+    CHECK(req.content_length == 0);
+    CHECK(req.headers.size() == 0);
+}
 
 } // namespace silkrpc
 
