@@ -217,7 +217,15 @@ RequestParser::ResultType RequestParser::consume(Request& req, char input) {
                     }
                     req.content_length = std::atoi((*it).value.c_str());
                 }
-                return req.content_length == 0 ? good : indeterminate;
+                if (req.content_length == 0)
+                   return good;
+
+                const auto elements = req.headers.size();
+                const auto h = req.headers[elements-1];
+                if (h.name == "Expect" && h.value == "100-continue") {
+                   return processing_continue;
+                }
+                return indeterminate;
             } else {
                 return bad;
             }
@@ -257,11 +265,4 @@ inline bool RequestParser::is_digit(int c) {
     return c >= '0' && c <= '9';
 }
 
-bool RequestParser::check_if_ack_requested(Request& req) {
-  for (Header h : req.headers) {
-        if (h.name == "Expect" && h.value == "100-continue")
-           return true;
-  }
-  return false;
-}
 } // namespace silkrpc::http

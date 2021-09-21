@@ -41,11 +41,11 @@ struct Request {
     std::string content;
 
     void reset() {
-       method.resize(0);
-       uri.resize(0);
-       headers.resize(0);
-       content.resize(0);
-       content_length = 0;
+        method.resize(0);
+        uri.resize(0);
+        headers.resize(0);
+        content.resize(0);
+        content_length = 0;
     }
 };
 
