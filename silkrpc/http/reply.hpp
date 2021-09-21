@@ -58,8 +58,8 @@ struct Reply {
 
     // reset Reply data
     void reset() {
-       headers.resize(0);
-       content.resize(0);
+        headers.resize(0);
+        content.resize(0);
     }
 };
 

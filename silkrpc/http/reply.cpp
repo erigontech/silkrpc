@@ -105,12 +105,6 @@ std::vector<asio::const_buffer> Reply::to_buffers() {
     return buffers;
 }
 
-/*
-    "<html>"
-    "<head><title>Continue</title></head>"
-    "<body><h1>100 Continue</h1></body>"
-    "</html>";
-*/
 namespace stock_replies {
 
 const char ok[] = "";

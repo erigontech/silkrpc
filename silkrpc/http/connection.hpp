@@ -60,7 +60,7 @@ public:
 
 private:
     // reset connection data
-    void reset_connection_data();
+    void clean();
 
     /// Perform an asynchronous read operation.
     asio::awaitable<void> do_read();

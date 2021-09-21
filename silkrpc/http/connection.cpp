@@ -68,12 +68,12 @@ asio::awaitable<void> Connection::do_read() {
         if (result == RequestParser::good) {
             co_await request_handler_.handle_request(request_, reply_);
             co_await do_write();
-            reset_connection_data();
+            clean();
         } else if (result == RequestParser::bad) {
             reply_ = Reply::stock_reply(Reply::bad_request);
             co_await do_write();
-            reset_connection_data();
-        } else if (request_parser_.check_if_ack_requested(request_)) {
+            clean();
+        } else if (result == RequestParser::processing_continue) {
             reply_ = Reply::stock_reply(Reply::processing_continue);
             co_await do_write();
             reply_.reset();
@@ -108,10 +108,10 @@ asio::awaitable<void> Connection::do_write() {
     }
 }
 
-void Connection::reset_connection_data() {
-        request_.reset();
-        request_parser_.reset();
-        reply_.reset();
+void Connection::clean() {
+    request_.reset();
+    request_parser_.reset();
+    reply_.reset();
 }
 
 } // namespace silkrpc::http
