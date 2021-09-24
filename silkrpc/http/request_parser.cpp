@@ -217,7 +217,16 @@ RequestParser::ResultType RequestParser::consume(Request& req, char input) {
                     }
                     req.content_length = std::atoi((*it).value.c_str());
                 }
-                return req.content_length == 0 ? good : indeterminate;
+                if (req.content_length == 0) {
+                   return good;
+                }
+
+                // Currently just support Expect as last header
+                const auto h = req.headers.back();
+                if (h.name == "Expect" && h.value == "100-continue") {
+                   return processing_continue;
+                }
+                return indeterminate;
             } else {
                 return bad;
             }

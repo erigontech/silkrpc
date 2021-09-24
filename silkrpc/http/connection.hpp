@@ -59,6 +59,9 @@ public:
     asio::awaitable<void> start();
 
 private:
+    // reset connection data
+    void clean();
+
     /// Perform an asynchronous read operation.
     asio::awaitable<void> do_read();
 

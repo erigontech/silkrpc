@@ -39,7 +39,7 @@ public:
     void reset();
 
     /// Result of parse.
-    enum ResultType { good, bad, indeterminate };
+    enum ResultType { good, bad, indeterminate, processing_continue };
 
     /// Parse some data. The enum return value is good when a complete request has
     /// been parsed, bad if the data is invalid, indeterminate when more data is
@@ -49,13 +49,16 @@ public:
     ResultType parse(Request& req, InputIterator begin, InputIterator end) {
         while (begin != end) {
             ResultType result = consume(req, *begin++);
-            if (result == good || result == bad) {
+            if (result == good || result == bad || result == processing_continue) {
                 return result;
             }
         }
 
         return indeterminate;
     }
+
+    // check if ack requested by client
+    bool check_if_ack_requested(Request& req);
 
 private:
     /// Handle the next character of input.
