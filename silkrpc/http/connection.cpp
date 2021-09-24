@@ -62,7 +62,6 @@ asio::awaitable<void> Connection::do_read() {
         SILKRPC_DEBUG << "Connection::do_read bytes_read: " << bytes_read << "\n";
         SILKRPC_TRACE << "Connection::do_read buffer: " << std::string_view{static_cast<const char*>(buffer_.data()), bytes_read} << "\n";
 
-
         RequestParser::ResultType result = request_parser_.parse(request_, buffer_.data(), buffer_.data() + bytes_read);
 
         if (result == RequestParser::good) {
