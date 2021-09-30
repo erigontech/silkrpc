@@ -621,7 +621,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const n
         for (size_t idx{0}; idx < transactions.size(); idx++) {
             auto ethash_hash{hash_of_transaction(transactions[idx])};
 
-            SILKRPC_TRACE << "tx " << idx << ") hash: " << silkworm::to_bytes32(ethash_hash.bytes) << "\n";
+            SILKRPC_TRACE << "tx " << idx << ") hash: " << silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength}) << "\n";
             if (std::memcmp(transaction_hash.bytes, ethash_hash.bytes, silkworm::kHashLength) == 0) {
                 tx_index = idx;
                 break;
@@ -1125,7 +1125,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
                     const auto tx_hash{hash_of_transaction(block_with_hash.block.transactions[log.tx_index])};
                     log.block_number = block_to_match;
                     log.block_hash = block_with_hash.hash;
-                    log.tx_hash = silkworm::to_bytes32(tx_hash.bytes);
+                    log.tx_hash = silkworm::to_bytes32({tx_hash.bytes, silkworm::kHashLength});
                 }
                 logs.insert(logs.end(), filtered_block_logs.begin(), filtered_block_logs.end());
             }

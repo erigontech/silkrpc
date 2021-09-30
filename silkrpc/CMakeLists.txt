@@ -158,7 +158,7 @@ target_link_libraries(silkrpc
     protobuf::libprotobuf
     silkinterfaces
     silkworm_core
-    silkworm_db)
+    silkworm_node)
 
 add_executable(silkrpcdaemon main.cpp)
 target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
@@ -174,4 +174,4 @@ target_link_libraries(silkrpcdaemon
     silkrpc
     silkinterfaces
     silkworm_core
-    silkworm_db)
+    silkworm_node)

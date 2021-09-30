@@ -27,7 +27,6 @@
 #include <asio/awaitable.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
-#include <silkworm/state/buffer.hpp>
 #include <silkworm/types/block.hpp>
 
 #include <silkrpc/core/blocks.hpp>
