@@ -21,6 +21,7 @@
 #include <string>
 
 #include <silkrpc/common/util.hpp>
+#include <silkworm/common/endian.hpp>
 #include <silkrpc/core/blocks.hpp>
 
 namespace silkrpc {
@@ -37,7 +38,7 @@ std::ostream& operator<<(std::ostream& out, const Block& b) {
     out << " transactions_root: " << b.block.header.transactions_root;
     out << " receipts_root: " << b.block.header.receipts_root;
     out << " logs_bloom: " << silkworm::to_hex(silkworm::full_view(b.block.header.logs_bloom));
-    out << " difficulty: " << silkworm::to_hex(silkworm::rlp::big_endian(b.block.header.difficulty));
+    out << " difficulty: " << silkworm::to_hex(silkworm::endian::to_big_compact(b.block.header.difficulty));
     out << " number: " << b.block.header.number;
     out << " gas_limit: " << b.block.header.gas_limit;
     out << " gas_used: " << b.block.header.gas_used;
@@ -48,7 +49,7 @@ std::ostream& operator<<(std::ostream& out, const Block& b) {
     out << " #transactions: " << b.block.transactions.size();
     out << " #ommers: " << b.block.ommers.size();
     out << " hash: " << b.hash;
-    out << " total_difficulty: " << silkworm::to_hex(silkworm::rlp::big_endian(b.total_difficulty));
+    out << " total_difficulty: " << silkworm::to_hex(silkworm::endian::to_big_compact(b.total_difficulty));
     out << " full_tx: " << b.full_tx;
     return out;
 }
