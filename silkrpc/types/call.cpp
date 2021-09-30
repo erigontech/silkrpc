@@ -18,6 +18,7 @@
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkworm/common/endian.hpp>
 
 namespace silkrpc {
 
@@ -25,8 +26,8 @@ std::ostream& operator<<(std::ostream& out, const Call& call) {
     out << "from: " << call.from.value_or(evmc::address{}) << " "
     << "to: " << call.to.value_or(evmc::address{}) << " "
     << "gas: " << call.gas.value_or(0) << " "
-    << "gas_price: " << silkworm::to_hex(silkworm::rlp::big_endian(call.gas_price.value_or(intx::uint256{}))) << " "
-    << "value: " << silkworm::to_hex(silkworm::rlp::big_endian(call.value.value_or(intx::uint256{}))) << " "
+    << "gas_price: " << silkworm::to_hex(silkworm::endian::to_big_compact(call.gas_price.value_or(intx::uint256{}))) << " "
+    << "value: " << silkworm::to_hex(silkworm::endian::to_big_compact(call.value.value_or(intx::uint256{}))) << " "
     << "data: " << silkworm::to_hex(call.data.value_or(silkworm::Bytes{}));
     return out;
 }
