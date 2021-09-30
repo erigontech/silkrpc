@@ -307,7 +307,7 @@ asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc
 
         receipts[i].from = senders[i];
         receipts[i].to = transactions[i].to;
-        receipts[i].type = transactions[i].type;
+        receipts[i].type = static_cast<char>(transactions[i].type);
 
         // The derived fields of receipt are taken from block and transaction
         for (size_t j{0}; j < receipts[i].logs.size(); j++) {
@@ -345,7 +345,7 @@ asio::awaitable<Transactions> read_transactions(const DatabaseReader& reader, ui
             SILKRPC_ERROR << "invalid RLP decoding for transaction index " << i << "\n";
             return false;
         }
-        SILKRPC_TRACE << "index: " << i << " tx_hash: " << silkworm::to_hex(hash_of(v).bytes) << "\n";
+        SILKRPC_TRACE << "index: " << i << " tx_hash: " << silkworm::to_hex({hash_of(v).bytes, silkworm::kHashLength}) << "\n";
         txns.emplace(txns.end(), std::move(tx));
         i++;
         return i < txn_count;
