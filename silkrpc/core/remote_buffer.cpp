@@ -17,6 +17,7 @@
 #include "remote_buffer.hpp"
 
 #include <future>
+#include <utility>
 
 #include <asio/co_spawn.hpp>
 #include <asio/use_future.hpp>
@@ -26,15 +27,21 @@
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 
-namespace silkrpc {
+namespace silkrpc::state {
+
+static std::unordered_map<evmc::bytes32, silkworm::Bytes> code;
 
 asio::awaitable<std::optional<silkworm::Account>> AsyncRemoteBuffer::read_account(const evmc::address& address) const noexcept {
     co_return co_await state_reader_.read_account(address, block_number_ + 1);
 }
 
-asio::awaitable<silkworm::Bytes> AsyncRemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
+asio::awaitable<silkworm::ByteView> AsyncRemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
     const auto optional_code{co_await state_reader_.read_code(code_hash)};
-    co_return optional_code ? *optional_code : silkworm::Bytes{};
+    if (optional_code) {
+       std::move(code[code_hash] = *optional_code);
+       co_return code[code_hash]; // NOLINT(runtime/arrays)
+    }
+    co_return silkworm::ByteView{};
 }
 
 asio::awaitable<evmc::bytes32> AsyncRemoteBuffer::read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept {
@@ -79,11 +86,10 @@ std::optional<silkworm::Account> RemoteBuffer::read_account(const evmc::address&
     return optional_account;
 }
 
-silkworm::Bytes RemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
+silkworm::ByteView RemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_code code_hash=" << code_hash << " start\n";
-    std::future<silkworm::Bytes> result{asio::co_spawn(io_context_, async_buffer_.read_code(code_hash), asio::use_future)};
-    const auto code{result.get()};
-    SILKRPC_DEBUG << "RemoteBuffer::read_code code=" << silkworm::to_hex(code) << " end\n";
+    std::future<silkworm::ByteView> result{asio::co_spawn(io_context_, async_buffer_.read_code(code_hash), asio::use_future)};
+    auto code{result.get()};
     return code;
 }
 
@@ -139,4 +145,4 @@ std::optional<evmc::bytes32> RemoteBuffer::canonical_hash(uint64_t block_number)
     return std::nullopt;
 }
 
-} // namespace silkrpc
+} // namespace silkrpc::state
