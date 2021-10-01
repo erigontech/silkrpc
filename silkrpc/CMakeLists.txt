@@ -160,18 +160,11 @@ target_link_libraries(silkrpc
     silkworm_core
     silkworm_node)
 
+
 add_executable(silkrpcdaemon main.cpp)
 target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(silkrpcdaemon
-    tcmalloc
-    absl::btree
-    absl::flags_parse
-    absl::flat_hash_map
-    absl::flat_hash_set
-    gRPC::grpc++
-    intx::intx
-    protobuf::libprotobuf
     silkrpc
+    absl::flags_parse
     silkinterfaces
-    silkworm_core
-    silkworm_node)
+    tcmalloc)
