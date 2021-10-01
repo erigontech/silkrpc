@@ -32,7 +32,7 @@ endif()
 
 add_executable(kv_seek_async_asio kv_seek_async_asio.cpp)
 target_include_directories(kv_seek_async_asio PRIVATE ${CMAKE_SOURCE_DIR})
-target_link_libraries(kv_seek_async_asio absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkworm_core silkworm_node silkrpc)
+target_link_libraries(kv_seek_async_asio absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkrpc)
 
 add_executable(kv_seek_async_callback kv_seek_async_callback.cpp)
 target_include_directories(kv_seek_async_callback PRIVATE ${CMAKE_SOURCE_DIR})
