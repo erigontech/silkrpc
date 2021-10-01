@@ -29,6 +29,7 @@
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/types/block.hpp>
 #include <silkrpc/types/chain_config.hpp>
 #include <silkrpc/types/receipt.hpp>
 
@@ -46,6 +47,8 @@ asio::awaitable<uint64_t> read_chain_id(const DatabaseReader& reader);
 asio::awaitable<evmc::bytes32> read_canonical_block_hash(const DatabaseReader& reader, uint64_t block_number);
 
 asio::awaitable<intx::uint256> read_total_difficulty(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
+
+asio::awaitable<silkworm::BlockWithHash> read_block_by_number_or_hash(const DatabaseReader& reader, const silkrpc::BlockNumberOrHash& bnoh);
 
 asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const DatabaseReader& reader, const evmc::bytes32& block_hash);
 

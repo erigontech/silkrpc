@@ -39,19 +39,19 @@
 
 namespace silkrpc {
 
-template<typename Executor, typename UnaryClient, typename Reply>
+template<typename Executor, typename UnaryClient, typename StubInterface, typename Request, typename Reply>
 struct unary_awaitable;
 
-template<typename Executor, typename UnaryClient>
-struct unary_awaitable<Executor, UnaryClient, void>;
+template<typename Executor, typename UnaryClient, typename StubInterface, typename Request>
+struct unary_awaitable<Executor, UnaryClient, StubInterface, Request, void>;
 
-template<typename Executor, typename UnaryClient, template<class, class, class> typename AsyncReplyOperation, typename Reply>
+template<typename Executor, typename UnaryClient, template<class, class, class> typename AsyncReplyOperation, typename StubInterface, typename Request, typename Reply>
 class initiate_unary_async {
 public:
     typedef Executor executor_type;
 
-    explicit initiate_unary_async(unary_awaitable<Executor, UnaryClient, Reply>* self)
-    : self_(self) {}
+    explicit initiate_unary_async(unary_awaitable<Executor, UnaryClient, StubInterface, Request, Reply>* self, const Request& request)
+    : self_(self), request_(request) {}
 
     executor_type get_executor() const noexcept { return self_->executor_; }
 
@@ -62,7 +62,7 @@ public:
         typename OP::ptr p = {asio::detail::addressof(handler2.value), OP::ptr::allocate(handler2.value), 0};
         wrapper_ = new OP(handler2.value, self_->executor_);
 
-        self_->client_.async_call([this](const grpc::Status& status, const Reply& reply) {
+        self_->client_.async_call(request_, [this](const grpc::Status& status, const Reply& reply) {
             using OP = AsyncReplyOperation<WaitHandler, Executor, Reply>;
             auto async_reply_op = static_cast<OP*>(wrapper_);
             if (status.ok()) {
@@ -74,17 +74,18 @@ public:
     }
 
 private:
-    unary_awaitable<Executor, UnaryClient, Reply>* self_;
+    unary_awaitable<Executor, UnaryClient, StubInterface, Request, Reply>* self_;
+    const Request& request_;
     void* wrapper_;
 };
 
-template<typename Executor, typename UnaryClient, template<class, class, class> typename AsyncReplyOperation>
-class initiate_unary_async<Executor, UnaryClient, AsyncReplyOperation, void> {
+template<typename Executor, typename UnaryClient, template<class, class, class> typename AsyncReplyOperation, typename StubInterface, typename Request>
+class initiate_unary_async<Executor, UnaryClient, AsyncReplyOperation, StubInterface, Request, void> {
 public:
     typedef Executor executor_type;
 
-    explicit initiate_unary_async(unary_awaitable<Executor, UnaryClient, void>* self)
-    : self_(self) {}
+    explicit initiate_unary_async(unary_awaitable<Executor, UnaryClient, StubInterface, Request, void>* self, const Request& request)
+    : self_(self), request_(request) {}
 
     executor_type get_executor() const noexcept { return self_->executor_; }
 
@@ -95,7 +96,7 @@ public:
         typename OP::ptr p = {asio::detail::addressof(handler2.value), OP::ptr::allocate(handler2.value), 0};
         wrapper_ = new OP(handler2.value, self_->executor_);
 
-        self_->client_.async_call([this](const grpc::Status& status) {
+        self_->client_.async_call(request_, [this](const grpc::Status& status) {
             using OP = AsyncReplyOperation<WaitHandler, Executor, void>;
             auto async_reply_op = static_cast<OP*>(wrapper_);
             if (status.ok()) {
@@ -107,36 +108,39 @@ public:
     }
 
 private:
-    unary_awaitable<Executor, UnaryClient, void>* self_;
+    unary_awaitable<Executor, UnaryClient, StubInterface, Request, void>* self_;
+    const Request& request_;
     void* wrapper_;
 };
 
-template<typename Executor, typename UnaryClient, typename Reply>
+template<typename Executor, typename UnaryClient, typename StubInterface, typename Request, typename Reply>
 struct unary_awaitable {
     typedef Executor executor_type;
 
-    explicit unary_awaitable(const Executor& executor, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : executor_(executor), client_{channel, queue} {}
+    explicit unary_awaitable(const Executor& executor, std::unique_ptr<StubInterface>& stub, grpc::CompletionQueue* queue)
+    : executor_(executor), client_{stub, queue} {}
 
     template<typename WaitHandler>
-    auto async_call(WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, Reply)>(initiate_unary_async<Executor, UnaryClient, async_reply_operation, Reply>{this}, handler);
+    auto async_call(const Request& request, WaitHandler&& handler) {
+        return asio::async_initiate<WaitHandler, void(asio::error_code, Reply)>(
+            initiate_unary_async<Executor, UnaryClient, async_reply_operation, StubInterface, Request, Reply>{this, request}, handler);
     }
 
     const Executor& executor_;
     UnaryClient client_;
 };
 
-template<typename Executor, typename UnaryClient>
-struct unary_awaitable<Executor, UnaryClient, void> {
+template<typename Executor, typename UnaryClient, typename StubInterface, typename Request>
+struct unary_awaitable<Executor, UnaryClient, StubInterface, Request, void> {
     typedef Executor executor_type;
 
-    explicit unary_awaitable(const Executor& executor, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : executor_(executor), client_{channel, queue} {}
+    explicit unary_awaitable(const Executor& executor, std::unique_ptr<StubInterface>& stub, grpc::CompletionQueue* queue)
+    : executor_(executor), client_{stub, queue} {}
 
     template<typename WaitHandler>
-    auto async_call(WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code)>(initiate_unary_async<Executor, UnaryClient, async_reply_operation, void>{this}, handler);
+    auto async_call(const Request& request, WaitHandler&& handler) {
+        return asio::async_initiate<WaitHandler, void(asio::error_code)>(
+            initiate_unary_async<Executor, UnaryClient, async_reply_operation, StubInterface, Request, void>{this, request}, handler);
     }
 
     const Executor& executor_;

@@ -23,7 +23,7 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
 #include <grpcpp/impl/codegen/stub_options.h>
-#include <silkworm/common/magic_enum.hpp>
+#include <magic_enum.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/async_completion_handler.hpp>
@@ -31,20 +31,19 @@
 namespace silkrpc {
 
 template<
-    typename Stub,
-    std::unique_ptr<Stub>(*NewStub)(const std::shared_ptr<grpc::ChannelInterface>&, const grpc::StubOptions&),
+    typename StubInterface,
     typename Request,
     typename Reply,
-    std::unique_ptr<grpc::ClientAsyncResponseReader<Reply>>(Stub::*PrepareAsync)(grpc::ClientContext*, const Request&, grpc::CompletionQueue*)
+    std::unique_ptr<grpc::ClientAsyncResponseReaderInterface<Reply>>(StubInterface::*PrepareAsync)(grpc::ClientContext*, const Request&, grpc::CompletionQueue*)
 >
 class AsyncUnaryClient final : public AsyncCompletionHandler {
-    using AsyncResponseReaderPtr = std::unique_ptr<grpc::ClientAsyncResponseReader<Reply>>;
+    using AsyncResponseReaderPtr = std::unique_ptr<grpc::ClientAsyncResponseReaderInterface<Reply>>;
 
     enum CallStatus { CALL_IDLE, CALL_STARTED, CALL_ENDED };
 
 public:
-    explicit AsyncUnaryClient(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : queue_(queue), stub_{NewStub(channel, grpc::StubOptions())} {
+    explicit AsyncUnaryClient(std::unique_ptr<StubInterface>& stub, grpc::CompletionQueue* queue)
+    : stub_(stub), queue_(queue) {
         SILKRPC_TRACE << "AsyncUnaryClient::ctor " << this << " state: " << magic_enum::enum_name(state_) << "\n";
     }
 
@@ -52,11 +51,10 @@ public:
         SILKRPC_TRACE << "AsyncUnaryClient::dtor " << this << " state: " << magic_enum::enum_name(state_) << "\n";
     }
 
-    void async_call(std::function<void(const grpc::Status&, const Reply&)> completed) {
+    void async_call(const Request& request, std::function<void(const grpc::Status&, const Reply&)> completed) {
         SILKRPC_TRACE << "AsyncUnaryClient::async_call " << this << " state: " << magic_enum::enum_name(state_) << " start\n";
         completed_ = completed;
-        grpc::ClientContext context;
-        client_ = (stub_.get()->*PrepareAsync)(&context, Request{}, queue_);
+        client_ = (stub_.get()->*PrepareAsync)(&context_, request, queue_);
         state_ = CALL_STARTED;
         client_->StartCall();
         client_->Finish(&reply_, &result_, AsyncCompletionHandler::tag(this));
@@ -81,7 +79,8 @@ public:
 
 private:
     grpc::CompletionQueue* queue_;
-    std::unique_ptr<Stub> stub_;
+    std::unique_ptr<StubInterface>& stub_;
+    grpc::ClientContext context_;
     AsyncResponseReaderPtr client_;
     Reply reply_;
     grpc::Status result_;

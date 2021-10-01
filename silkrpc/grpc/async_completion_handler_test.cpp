@@ -22,5 +22,14 @@ namespace silkrpc {
 
 using Catch::Matchers::Message;
 
+TEST_CASE("idempotent tag/detag", "[silkrpc][grpc][async_completion_handler]") {
+    class ACH : public AsyncCompletionHandler {
+        void completed(bool ok) override {};
+    };
+    ACH handler;
+    AsyncCompletionHandler* handler_ptr = &handler;
+    CHECK(AsyncCompletionHandler::detag(AsyncCompletionHandler::tag(handler_ptr)) == handler_ptr);
+}
+
 } // namespace silkrpc
 

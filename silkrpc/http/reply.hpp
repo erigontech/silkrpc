@@ -23,6 +23,7 @@ namespace silkrpc::http {
 struct Reply {
     /// The status of the reply.
     enum StatusType {
+        processing_continue = 100,
         ok = 200,
         created = 201,
         accepted = 202,
@@ -54,6 +55,12 @@ struct Reply {
 
     /// Get a stock reply.
     static Reply stock_reply(StatusType status);
+
+    // reset Reply data
+    void reset() {
+        headers.resize(0);
+        content.resize(0);
+    }
 };
 
 } // namespace silkrpc::http

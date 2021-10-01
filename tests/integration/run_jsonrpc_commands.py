@@ -6,6 +6,7 @@ import shlex
 import subprocess
 import sys
 import getopt
+import jsondiff
 
 
 def run_shell_command(command: str, expected_response: str, exit_on_fail) -> int:
@@ -18,17 +19,19 @@ def run_shell_command(command: str, expected_response: str, exit_on_fail) -> int
     process.stdout = process.stdout.strip('\n')
     response = json.loads(process.stdout)
     if "result" in expected_response and expected_response["result"] is not None and response != expected_response:
-        print("--> KO: unexpected result for command: {0}\nexpected: {1}\nreceived: {2}".format(command, expected_response, response))
+        response_diff = jsondiff.diff(expected_response, response)
+        print("--> KO: unexpected result for command: {0}\n--> DIFF expected-received: {1}".format(command, response_diff))
         if exit_on_fail:
             sys.exit(1)
     elif "error" in expected_response and expected_response["error"] is not None and response != expected_response:
-        print("--> KO: unexpected error for command: {0}\nexpected: {1}\nreceived: {2}".format(command, expected_response, response))
+        response_diff = jsondiff.diff(expected_response, response)
+        print("--> KO: unexpected error for command: {0}\n--> DIFF expected-received: {1}".format(command, response_diff))
         if exit_on_fail:
             sys.exit(1)
 
 def run_tests(json_filename, verbose, silk, exit_on_fail, req_test):
     """ Run integration tests. """
-    with open(json_filename) as json_file:
+    with open(json_filename, encoding='utf8') as json_file:
         jsonrpc_commands = json.load(json_file)
         test_number = 0
         for json_rpc in jsonrpc_commands:
@@ -64,7 +67,6 @@ def usage(argv):
     print("-t test_number (-1 all test)")
     print("-r connect to rpcdaemon [ default connect to silk ] ")
     print("-v verbose")
-
 
 
 #

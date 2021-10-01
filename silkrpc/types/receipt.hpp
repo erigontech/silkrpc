@@ -21,12 +21,11 @@
 #include <vector>
 
 #include <evmc/evmc.hpp>
-
+#include <intx/intx.hpp>
 #include <silkworm/types/bloom.hpp>
 
+#include <silkrpc/types/log.hpp>
 #include <silkrpc/types/transaction.hpp>
-
-#include "log.hpp"
 
 namespace silkrpc {
 
@@ -47,6 +46,7 @@ struct Receipt {
     std::optional<evmc::address> from;
     std::optional<evmc::address> to;
     std::optional<uint8_t> type{std::nullopt};  // EIP-2718
+    intx::uint256 effective_gas_price{0};
 };
 
 std::ostream& operator<<(std::ostream& out, const Receipt& r);

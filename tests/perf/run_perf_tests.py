@@ -37,6 +37,7 @@ def usage(argv):
     print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
     print("")
     print("-h                      print this help")
+    print("-D                      perf command")
     print("-y                      test type (i.e eth_call, eth_logs)                                                     [default: " + DEFAULT_TEST_TYPE + "]")
     print("-d rpcDaemonAddress     address of daemon eg (10.1.1.20)                                                       [default: " + DEFAULT_RPCDAEMON_ADDRESS +"]")
     print("-p vegetaPatternTarFile path to the request file for Vegeta attack                                             [default: " + DEFAULT_VEGETA_PATTERN_TAR_FILE +"]")
@@ -48,6 +49,7 @@ def usage(argv):
     print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10)       [default: " + DEFAULT_TEST_SEQUENCE + "]")
     print("-n numContexts          number of Silkrpc execution contexts (i.e. 1+1 asio+grpc threads)                      [default: " + str(DEFAULT_SILKRPC_NUM_CONTEXTS) + "]")
     print("-m mode                 tests type silkrpc(1), rpcdaemon(2) and both (3) (i.e. 3)                              [default: " + str(DEFAULT_TEST_MODE) + "]")
+    sys.exit(-1)
 
 
 class Config:
@@ -68,22 +70,23 @@ class Config:
         self.rpc_daemon_address = DEFAULT_RPCDAEMON_ADDRESS
         self.test_mode = DEFAULT_TEST_MODE
         self.test_type = DEFAULT_TEST_TYPE
+        self.user_perf_command = ""
 
         try:
             local_config = 0
-            opts, _ = getopt.getopt(argv[1:], "hm:d:p:c:a:g:s:r:t:n:y:")
+            opts, _ = getopt.getopt(argv[1:], "D:hm:d:p:c:a:g:s:r:t:n:y:")
 
             for option, optarg in opts:
                 if option in ("-h", "--help"):
                     usage(argv)
-                    sys.exit(-1)
                 elif option == "-m":
                     self.test_mode = optarg
+                elif option == "-D":
+                    self.user_perf_command = optarg
                 elif option == "-d":
                     if local_config == 1:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
                         usage(argv)
-                        sys.exit(-1)
                     local_config = 2
                     self.rpc_daemon_address = optarg
                 elif option == "-p":
@@ -94,21 +97,18 @@ class Config:
                     if local_config == 2:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
                         usage(argv)
-                        sys.exit(-1)
                     local_config = 1
                     self.erigon_addr = optarg
                 elif option == "-g":
                     if local_config == 2:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
                         usage(argv)
-                        sys.exit(-1)
                     local_config = 1
                     self.erigon_builddir = optarg
                 elif option == "-s":
                     if local_config == 2:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
                         usage(argv)
-                        sys.exit(-1)
                     local_config = 1
                     self.silkrpc_build_dir = optarg
                 elif option == "-r":
@@ -121,17 +121,14 @@ class Config:
                     if local_config == 2:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
                         usage(argv)
-                        sys.exit(-1)
                     local_config = 1
                     on_core = self.daemon_vegeta_on_core.split(':')
                     if on_core[0] == "-":
                         print ("ERROR: incompatible option -n with default core configuration ")
                         usage(argv)
-                        sys.exit(-1)
                     self.silkrpc_num_contexts = optarg
                 else:
                     usage(argv)
-                    sys.exit(-1)
         except getopt.GetoptError as err:
             # print help information and exit:
             print(err)
@@ -151,7 +148,7 @@ class PerfTest:
         self.stop_silk_daemon()
         self.stop_rpc_daemon()
         print("\nSetup temporary daemon to verify configuration is OK")
-        self.start_silk_daemon()
+        self.start_silk_daemon(0)
         self.stop_silk_daemon()
         self.start_rpc_daemon()
         self.stop_rpc_daemon()
@@ -165,6 +162,8 @@ class PerfTest:
         cmd = "/bin/rm -f " +  " /tmp/" + VEGETA_TAR_FILE_NAME
         os.system(cmd)
         cmd = "/bin/rm -f -rf /tmp/" + VEGETA_PATTERN_DIRNAME
+        os.system(cmd)
+        cmd = "/bin/rm -f perf.data.old perf.data"
         os.system(cmd)
 
     def copy_pattern_file(self):
@@ -232,7 +231,7 @@ class PerfTest:
         print("RpcDaemon stopped")
         os.system("sleep 3")
 
-    def start_silk_daemon(self):
+    def start_silk_daemon(self, start_test):
         """ Starts SILKRPC daemon
         """
         if self.config.rpc_daemon_address != "localhost":
@@ -241,11 +240,15 @@ class PerfTest:
             return
         self.rpc_daemon = 1
         on_core = self.config.daemon_vegeta_on_core.split(':')
-        if on_core[0] == "-":
-            cmd = self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c &"
+        if self.config.user_perf_command != "" and start_test == 1:
+            perf_cmd = self.config.user_perf_command
         else:
-            cmd = "taskset -c " + on_core[0] + " "\
-                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c --numContexts "\
+            perf_cmd = ""
+        if on_core[0] == "-":
+            cmd = perf_cmd + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c &"
+        else:
+            cmd = perf_cmd + "taskset -c " + on_core[0] + " "\
+                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c  --numWorkers 12 --numContexts "\
                     + str(self.config.silkrpc_num_contexts) + " &"
         print("SilkDaemon starting ...: ", cmd)
         status = os.system(cmd)
@@ -266,7 +269,7 @@ class PerfTest:
         if self.config.test_mode == "2":
             return
         self.silk_daemon = 0
-        os.system("kill $(ps aux | grep 'silk' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
+        os.system("kill -2 $(ps aux | grep 'silk' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
         print("SilkDaemon stopped")
         os.system("sleep 3")
 
@@ -302,7 +305,7 @@ class PerfTest:
         """ Processes the report file generated by vegeta and reads latency data
         """
         test_report_filename = VEGETA_REPORT
-        file = open(test_report_filename)
+        file = open(test_report_filename, encoding='utf8')
         try:
             file_raws = file.readlines()
             newline = file_raws[2].replace('\n', ' ')
@@ -341,7 +344,7 @@ class TestReport:
         """ Writes on CVS file the header
         """
         csv_filename = "/tmp/" + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')+"_perf.csv"
-        self.csv_file = open(csv_filename, 'w', newline='')
+        self.csv_file = open(csv_filename, 'w', newline='', encoding='utf8')
         self.writer = csv.writer(self.csv_file)
 
         print("Creating report file: "+csv_filename+"\n")
@@ -412,8 +415,8 @@ def main(argv):
     current_sequence = str(config.test_sequence).split(',')
 
 
-    if (config.test_mode == "1" or config.test_mode == "3"):
-        perf_test.start_silk_daemon()
+    if config.test_mode in ("1", "3"):
+        perf_test.start_silk_daemon(1)
         test_number = 1
         for test in current_sequence:
             for test_rep in range(0, config.repetitions):
@@ -430,7 +433,7 @@ def main(argv):
         if config.test_mode == "3":
             print("--------------------------------------------------------------------------------------------\n")
 
-    if (config.test_mode == "2" or config.test_mode == "3"):
+    if config.test_mode in ("2", "3"):
         perf_test.start_rpc_daemon()
 
         test_number = 1

@@ -19,22 +19,23 @@ namespace silkrpc::http {
 
 namespace status_strings {
 
-const std::string ok = "HTTP/1.0 200 OK\r\n";                                       // NOLINT(runtime/string)
-const std::string created = "HTTP/1.0 201 Created\r\n";                             // NOLINT(runtime/string)
-const std::string accepted = "HTTP/1.0 202 Accepted\r\n";                           // NOLINT(runtime/string)
-const std::string no_content = "HTTP/1.0 204 No Content\r\n";                       // NOLINT(runtime/string)
-const std::string multiple_choices = "HTTP/1.0 300 Multiple Choices\r\n";           // NOLINT(runtime/string)
-const std::string moved_permanently = "HTTP/1.0 301 Moved Permanently\r\n";         // NOLINT(runtime/string)
-const std::string moved_temporarily = "HTTP/1.0 302 Moved Temporarily\r\n";         // NOLINT(runtime/string)
-const std::string not_modified = "HTTP/1.0 304 Not Modified\r\n";                   // NOLINT(runtime/string)
-const std::string bad_request = "HTTP/1.0 400 Bad Request\r\n";                     // NOLINT(runtime/string)
-const std::string unauthorized = "HTTP/1.0 401 Unauthorized\r\n";                   // NOLINT(runtime/string)
-const std::string forbidden = "HTTP/1.0 403 Forbidden\r\n";                         // NOLINT(runtime/string)
-const std::string not_found = "HTTP/1.0 404 Not Found\r\n";                         // NOLINT(runtime/string)
-const std::string internal_server_error = "HTTP/1.0 500 Internal Server Error\r\n"; // NOLINT(runtime/string)
-const std::string not_implemented = "HTTP/1.0 501 Not Implemented\r\n";             // NOLINT(runtime/string)
-const std::string bad_gateway = "HTTP/1.0 502 Bad Gateway\r\n";                     // NOLINT(runtime/string)
-const std::string service_unavailable = "HTTP/1.0 503 Service Unavailable\r\n";     // NOLINT(runtime/string)
+const std::string ok = "HTTP/1.1 200 OK\r\n";                                       // NOLINT(runtime/string)
+const std::string created = "HTTP/1.1 201 Created\r\n";                             // NOLINT(runtime/string)
+const std::string accepted = "HTTP/1.1 202 Accepted\r\n";                           // NOLINT(runtime/string)
+const std::string no_content = "HTTP/1.1 204 No Content\r\n";                       // NOLINT(runtime/string)
+const std::string multiple_choices = "HTTP/1.1 300 Multiple Choices\r\n";           // NOLINT(runtime/string)
+const std::string moved_permanently = "HTTP/1.1 301 Moved Permanently\r\n";         // NOLINT(runtime/string)
+const std::string moved_temporarily = "HTTP/1.1 302 Moved Temporarily\r\n";         // NOLINT(runtime/string)
+const std::string not_modified = "HTTP/1.1 304 Not Modified\r\n";                   // NOLINT(runtime/string)
+const std::string bad_request = "HTTP/1.1 400 Bad Request\r\n";                     // NOLINT(runtime/string)
+const std::string unauthorized = "HTTP/1.1 401 Unauthorized\r\n";                   // NOLINT(runtime/string)
+const std::string forbidden = "HTTP/1.1 403 Forbidden\r\n";                         // NOLINT(runtime/string)
+const std::string not_found = "HTTP/1.1 404 Not Found\r\n";                         // NOLINT(runtime/string)
+const std::string internal_server_error = "HTTP/1.1 500 Internal Server Error\r\n"; // NOLINT(runtime/string)
+const std::string not_implemented = "HTTP/1.1 501 Not Implemented\r\n";             // NOLINT(runtime/string)
+const std::string bad_gateway = "HTTP/1.1 502 Bad Gateway\r\n";                     // NOLINT(runtime/string)
+const std::string service_unavailable = "HTTP/1.1 503 Service Unavailable\r\n";     // NOLINT(runtime/string)
+const std::string processing_continue = "HTTP/1.1 100 Continue\r\n";                // NOLINT(runtime/string)
 
 asio::const_buffer to_buffer(Reply::StatusType status) {
     switch (status) {
@@ -70,6 +71,8 @@ asio::const_buffer to_buffer(Reply::StatusType status) {
             return asio::buffer(bad_gateway);
         case Reply::service_unavailable:
             return asio::buffer(service_unavailable);
+        case Reply::processing_continue:
+            return asio::buffer(processing_continue);
         default:
             return asio::buffer(internal_server_error);
     }
@@ -87,6 +90,7 @@ const char lf[] = { '\n' };
 
 std::vector<asio::const_buffer> Reply::to_buffers() {
     std::vector<asio::const_buffer> buffers;
+    buffers.reserve(1+headers.size()*4+2);
     buffers.push_back(status_strings::to_buffer(status));
     for (std::size_t i = 0; i < headers.size(); ++i) {
         Header& h = headers[i];
@@ -104,6 +108,7 @@ std::vector<asio::const_buffer> Reply::to_buffers() {
 namespace stock_replies {
 
 const char ok[] = "";
+const char processing_continue[] = "";
 const char created[] =
     "<html>"
     "<head><title>Created</title></head>"
@@ -182,6 +187,8 @@ const char service_unavailable[] =
 
 std::string to_string(Reply::StatusType status) {
     switch (status) {
+        case Reply::processing_continue:
+            return processing_continue;
         case Reply::ok:
             return ok;
         case Reply::created:
@@ -225,9 +232,12 @@ Reply Reply::stock_reply(Reply::StatusType status) {
     Reply rep;
     rep.status = status;
     rep.content = stock_replies::to_string(status);
-    rep.headers.reserve(2);
-    rep.headers.emplace_back(Header{"Content-Length", std::to_string(rep.content.size())});
-    rep.headers.emplace_back(Header{"Content-Type", "text/html"});
+
+    if (status != processing_continue) {
+       rep.headers.reserve(2);
+       rep.headers.emplace_back(Header{"Content-Length", std::to_string(rep.content.size())});
+       rep.headers.emplace_back(Header{"Content-Type", "text/html"});
+    }
     return rep;
 }
 

@@ -22,5 +22,16 @@ namespace silkrpc {
 
 using Catch::Matchers::Message;
 
+TEST_CASE("check reply reset method", "[silkrpc][http][reply]") {
+    silkrpc::http::Reply reply {
+        silkrpc::http::Reply::StatusType::ok,
+        {{"v", "1"}},
+        "5678"
+    };
+    reply.reset();
+    CHECK(reply.content == "");
+    CHECK(reply.headers.size() == 0);
+}
+
 } // namespace silkrpc
 

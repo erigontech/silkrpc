@@ -87,67 +87,37 @@ class ETHBACKEND final {
      public:
       virtual ~experimental_async_interface() {}
       virtual void Etherbase(::grpc::ClientContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Etherbase(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::EtherbaseReply* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Etherbase(::grpc::ClientContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void Etherbase(::grpc::ClientContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void Etherbase(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::EtherbaseReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void Etherbase(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::EtherbaseReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       virtual void NetVersion(::grpc::ClientContext* context, const ::remote::NetVersionRequest* request, ::remote::NetVersionReply* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void NetVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::NetVersionReply* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void NetVersion(::grpc::ClientContext* context, const ::remote::NetVersionRequest* request, ::remote::NetVersionReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void NetVersion(::grpc::ClientContext* context, const ::remote::NetVersionRequest* request, ::remote::NetVersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void NetVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::NetVersionReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void NetVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::NetVersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       // Version returns the service version number
       virtual void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       // ProtocolVersion returns the Ethereum protocol version number (e.g. 66 for ETH66).
       virtual void ProtocolVersion(::grpc::ClientContext* context, const ::remote::ProtocolVersionRequest* request, ::remote::ProtocolVersionReply* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void ProtocolVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::ProtocolVersionReply* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void ProtocolVersion(::grpc::ClientContext* context, const ::remote::ProtocolVersionRequest* request, ::remote::ProtocolVersionReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void ProtocolVersion(::grpc::ClientContext* context, const ::remote::ProtocolVersionRequest* request, ::remote::ProtocolVersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void ProtocolVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::ProtocolVersionReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void ProtocolVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::ProtocolVersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       // ClientVersion returns the Ethereum client version string using node name convention (e.g. TurboGeth/v2021.03.2-alpha/Linux).
       virtual void ClientVersion(::grpc::ClientContext* context, const ::remote::ClientVersionRequest* request, ::remote::ClientVersionReply* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void ClientVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::ClientVersionReply* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void ClientVersion(::grpc::ClientContext* context, const ::remote::ClientVersionRequest* request, ::remote::ClientVersionReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void ClientVersion(::grpc::ClientContext* context, const ::remote::ClientVersionRequest* request, ::remote::ClientVersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void ClientVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::ClientVersionReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void ClientVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::ClientVersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Subscribe(::grpc::ClientContext* context, ::remote::SubscribeRequest* request, ::grpc::ClientReadReactor< ::remote::SubscribeReply>* reactor) = 0;
@@ -228,64 +198,34 @@ class ETHBACKEND final {
       public StubInterface::experimental_async_interface {
      public:
       void Etherbase(::grpc::ClientContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response, std::function<void(::grpc::Status)>) override;
-      void Etherbase(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::EtherbaseReply* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Etherbase(::grpc::ClientContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void Etherbase(::grpc::ClientContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void Etherbase(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::EtherbaseReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void Etherbase(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::EtherbaseReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void NetVersion(::grpc::ClientContext* context, const ::remote::NetVersionRequest* request, ::remote::NetVersionReply* response, std::function<void(::grpc::Status)>) override;
-      void NetVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::NetVersionReply* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void NetVersion(::grpc::ClientContext* context, const ::remote::NetVersionRequest* request, ::remote::NetVersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void NetVersion(::grpc::ClientContext* context, const ::remote::NetVersionRequest* request, ::remote::NetVersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void NetVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::NetVersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void NetVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::NetVersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, std::function<void(::grpc::Status)>) override;
-      void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void ProtocolVersion(::grpc::ClientContext* context, const ::remote::ProtocolVersionRequest* request, ::remote::ProtocolVersionReply* response, std::function<void(::grpc::Status)>) override;
-      void ProtocolVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::ProtocolVersionReply* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void ProtocolVersion(::grpc::ClientContext* context, const ::remote::ProtocolVersionRequest* request, ::remote::ProtocolVersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void ProtocolVersion(::grpc::ClientContext* context, const ::remote::ProtocolVersionRequest* request, ::remote::ProtocolVersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void ProtocolVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::ProtocolVersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void ProtocolVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::ProtocolVersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void ClientVersion(::grpc::ClientContext* context, const ::remote::ClientVersionRequest* request, ::remote::ClientVersionReply* response, std::function<void(::grpc::Status)>) override;
-      void ClientVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::ClientVersionReply* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void ClientVersion(::grpc::ClientContext* context, const ::remote::ClientVersionRequest* request, ::remote::ClientVersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void ClientVersion(::grpc::ClientContext* context, const ::remote::ClientVersionRequest* request, ::remote::ClientVersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void ClientVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::ClientVersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void ClientVersion(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::ClientVersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Subscribe(::grpc::ClientContext* context, ::remote::SubscribeRequest* request, ::grpc::ClientReadReactor< ::remote::SubscribeReply>* reactor) override;
@@ -472,7 +412,7 @@ class ETHBACKEND final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(0,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::remote::EtherbaseRequest, ::remote::EtherbaseReply>(
+          new ::grpc::internal::CallbackUnaryHandler< ::remote::EtherbaseRequest, ::remote::EtherbaseReply>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -487,7 +427,7 @@ class ETHBACKEND final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(0);
     #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::remote::EtherbaseRequest, ::remote::EtherbaseReply>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::remote::EtherbaseRequest, ::remote::EtherbaseReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_Etherbase() override {
@@ -519,7 +459,7 @@ class ETHBACKEND final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(1,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::remote::NetVersionRequest, ::remote::NetVersionReply>(
+          new ::grpc::internal::CallbackUnaryHandler< ::remote::NetVersionRequest, ::remote::NetVersionReply>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -534,7 +474,7 @@ class ETHBACKEND final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(1);
     #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::remote::NetVersionRequest, ::remote::NetVersionReply>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::remote::NetVersionRequest, ::remote::NetVersionReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_NetVersion() override {
@@ -566,7 +506,7 @@ class ETHBACKEND final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(2,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::VersionReply>(
+          new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::VersionReply>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -581,7 +521,7 @@ class ETHBACKEND final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(2);
     #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::VersionReply>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::VersionReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_Version() override {
@@ -613,7 +553,7 @@ class ETHBACKEND final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(3,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::remote::ProtocolVersionRequest, ::remote::ProtocolVersionReply>(
+          new ::grpc::internal::CallbackUnaryHandler< ::remote::ProtocolVersionRequest, ::remote::ProtocolVersionReply>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -628,7 +568,7 @@ class ETHBACKEND final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(3);
     #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::remote::ProtocolVersionRequest, ::remote::ProtocolVersionReply>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::remote::ProtocolVersionRequest, ::remote::ProtocolVersionReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_ProtocolVersion() override {
@@ -660,7 +600,7 @@ class ETHBACKEND final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(4,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::remote::ClientVersionRequest, ::remote::ClientVersionReply>(
+          new ::grpc::internal::CallbackUnaryHandler< ::remote::ClientVersionRequest, ::remote::ClientVersionReply>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -675,7 +615,7 @@ class ETHBACKEND final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(4);
     #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::remote::ClientVersionRequest, ::remote::ClientVersionReply>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::remote::ClientVersionRequest, ::remote::ClientVersionReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_ClientVersion() override {
@@ -707,7 +647,7 @@ class ETHBACKEND final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(5,
-          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::remote::SubscribeRequest, ::remote::SubscribeReply>(
+          new ::grpc::internal::CallbackServerStreamingHandler< ::remote::SubscribeRequest, ::remote::SubscribeReply>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -972,7 +912,7 @@ class ETHBACKEND final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(0,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1010,7 +950,7 @@ class ETHBACKEND final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(1,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1048,7 +988,7 @@ class ETHBACKEND final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(2,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1086,7 +1026,7 @@ class ETHBACKEND final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(3,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1124,7 +1064,7 @@ class ETHBACKEND final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(4,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1162,7 +1102,7 @@ class ETHBACKEND final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(5,
-          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -1197,8 +1137,8 @@ class ETHBACKEND final {
       ::grpc::Service::MarkMethodStreamed(0,
         new ::grpc::internal::StreamedUnaryHandler<
           ::remote::EtherbaseRequest, ::remote::EtherbaseReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerUnaryStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
                      ::remote::EtherbaseRequest, ::remote::EtherbaseReply>* streamer) {
                        return this->StreamedEtherbase(context,
                          streamer);
@@ -1224,8 +1164,8 @@ class ETHBACKEND final {
       ::grpc::Service::MarkMethodStreamed(1,
         new ::grpc::internal::StreamedUnaryHandler<
           ::remote::NetVersionRequest, ::remote::NetVersionReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerUnaryStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
                      ::remote::NetVersionRequest, ::remote::NetVersionReply>* streamer) {
                        return this->StreamedNetVersion(context,
                          streamer);
@@ -1251,8 +1191,8 @@ class ETHBACKEND final {
       ::grpc::Service::MarkMethodStreamed(2,
         new ::grpc::internal::StreamedUnaryHandler<
           ::google::protobuf::Empty, ::types::VersionReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerUnaryStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
                      ::google::protobuf::Empty, ::types::VersionReply>* streamer) {
                        return this->StreamedVersion(context,
                          streamer);
@@ -1278,8 +1218,8 @@ class ETHBACKEND final {
       ::grpc::Service::MarkMethodStreamed(3,
         new ::grpc::internal::StreamedUnaryHandler<
           ::remote::ProtocolVersionRequest, ::remote::ProtocolVersionReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerUnaryStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
                      ::remote::ProtocolVersionRequest, ::remote::ProtocolVersionReply>* streamer) {
                        return this->StreamedProtocolVersion(context,
                          streamer);
@@ -1305,8 +1245,8 @@ class ETHBACKEND final {
       ::grpc::Service::MarkMethodStreamed(4,
         new ::grpc::internal::StreamedUnaryHandler<
           ::remote::ClientVersionRequest, ::remote::ClientVersionReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerUnaryStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
                      ::remote::ClientVersionRequest, ::remote::ClientVersionReply>* streamer) {
                        return this->StreamedClientVersion(context,
                          streamer);
@@ -1333,8 +1273,8 @@ class ETHBACKEND final {
       ::grpc::Service::MarkMethodStreamed(5,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::remote::SubscribeRequest, ::remote::SubscribeReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerSplitStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerSplitStreamer<
                      ::remote::SubscribeRequest, ::remote::SubscribeReply>* streamer) {
                        return this->StreamedSubscribe(context,
                          streamer);

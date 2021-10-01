@@ -29,7 +29,7 @@
 
 ABSL_FLAG(std::string, table, "", "database table name");
 ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
-ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location as string <address>:<port>");
+ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "server location as string <address>:<port>");
 
 std::ostream& operator<<(std::ostream& out, const grpc::Status& status) {
     out << "ok=" << std::boolalpha << status.ok();

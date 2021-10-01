@@ -23,6 +23,7 @@
 
 #include <asio/awaitable.hpp>
 #include <asio/thread_pool.hpp>
+#include <silkworm/execution/evm.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/state/buffer.hpp>
@@ -39,8 +40,10 @@ struct ExecutionResult {
     int64_t error_code;
     uint64_t gas_left;
     silkworm::Bytes data;
+    std::optional<std::string> pre_check_error{std::nullopt};
 };
 
+template<typename WorldState = silkworm::IntraBlockState, typename VM = silkworm::EVM>
 class EVMExecutor {
 public:
     static std::string get_error_message(int64_t error_code, const silkworm::Bytes& error_data);
@@ -52,9 +55,11 @@ public:
     EVMExecutor(const EVMExecutor&) = delete;
     EVMExecutor& operator=(const EVMExecutor&) = delete;
 
-    asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, uint64_t gas);
+    asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn);
 
 private:
+    std::optional<std::string> pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0);
+
     const Context& context_;
     const core::rawdb::DatabaseReader& db_reader_;
     const silkworm::ChainConfig& config_;

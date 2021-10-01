@@ -27,7 +27,7 @@
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 
-ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location as string <address>:<port>");
+ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "server location as string <address>:<port>");
 
 std::ostream& operator<<(std::ostream& out, const grpc::Status& status) {
     out << "status=" << (status.ok() ? "OK" : "KO");

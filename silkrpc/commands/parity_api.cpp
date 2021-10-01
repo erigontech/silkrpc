@@ -56,6 +56,11 @@ asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohm
         auto receipts{co_await core::get_receipts(tx_database, block_hash, block_number)};
         SILKRPC_INFO << "#receipts: " << receipts.size() << "\n";
 
+        const auto block{block_with_hash.block};
+        for (size_t i{0}; i < block.transactions.size(); i++) {
+            receipts[i].effective_gas_price = block.transactions[i].effective_gas_price(block.header.base_fee_per_gas.value_or(0));
+        }
+
         reply = make_json_content(request["id"], receipts);
     } catch (const std::invalid_argument& iv) {
         SILKRPC_DEBUG << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";

@@ -61,14 +61,21 @@ asio::awaitable<void> Connection::do_read() {
         std::size_t bytes_read = co_await socket_.async_read_some(asio::buffer(buffer_), asio::use_awaitable);
         SILKRPC_DEBUG << "Connection::do_read bytes_read: " << bytes_read << "\n";
         SILKRPC_TRACE << "Connection::do_read buffer: " << std::string_view{static_cast<const char*>(buffer_.data()), bytes_read} << "\n";
+
         RequestParser::ResultType result = request_parser_.parse(request_, buffer_.data(), buffer_.data() + bytes_read);
 
         if (result == RequestParser::good) {
             co_await request_handler_.handle_request(request_, reply_);
             co_await do_write();
+            clean();
         } else if (result == RequestParser::bad) {
             reply_ = Reply::stock_reply(Reply::bad_request);
             co_await do_write();
+            clean();
+        } else if (result == RequestParser::processing_continue) {
+            reply_ = Reply::stock_reply(Reply::processing_continue);
+            co_await do_write();
+            reply_.reset();
         }
 
         // Read next chunck (result == RequestParser::indeterminate) or next request
@@ -98,6 +105,12 @@ asio::awaitable<void> Connection::do_write() {
     } catch (const std::exception& e) {
         std::rethrow_exception(std::make_exception_ptr(e));
     }
+}
+
+void Connection::clean() {
+    request_.reset();
+    request_parser_.reset();
+    reply_.reset();
 }
 
 } // namespace silkrpc::http

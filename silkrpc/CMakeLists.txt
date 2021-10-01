@@ -37,10 +37,22 @@ set(BACKEND_PROTO_SOURCE "${PROTO_GENERATED_SRC_DIR}/remote/ethbackend.pb.cc")
 set(BACKEND_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/ethbackend.pb.h")
 set(BACKEND_GRPC_SOURCE "${PROTO_GENERATED_SRC_DIR}/remote/ethbackend.grpc.pb.cc")
 set(BACKEND_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/ethbackend.grpc.pb.h")
+set(BACKEND_MOCK_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/ethbackend_mock.grpc.pb.h")
 set(KV_PROTO_SOURCE "${PROTO_GENERATED_SRC_DIR}/remote/kv.pb.cc")
 set(KV_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/kv.pb.h")
 set(KV_GRPC_SOURCE "${PROTO_GENERATED_SRC_DIR}/remote/kv.grpc.pb.cc")
 set(KV_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/kv.grpc.pb.h")
+set(KV_MOCK_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/kv_mock.grpc.pb.h")
+set(P2PSENTRY_PROTO_SOURCE "${PROTO_GENERATED_SRC_DIR}/p2psentry/sentry.pb.cc")
+set(P2PSENTRY_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/p2psentry/sentry.pb.h")
+set(P2PSENTRY_GRPC_SOURCE "${PROTO_GENERATED_SRC_DIR}/p2psentry/sentry.grpc.pb.cc")
+set(P2PSENTRY_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/p2psentry/sentry.grpc.pb.h")
+set(P2PSENTRY_MOCK_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/p2psentry/sentry_mock.grpc.pb.h")
+set(TXPOOL_PROTO_SOURCE "${PROTO_GENERATED_SRC_DIR}/txpool/txpool.pb.cc")
+set(TXPOOL_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/txpool/txpool.pb.h")
+set(TXPOOL_GRPC_SOURCE "${PROTO_GENERATED_SRC_DIR}/txpool/txpool.grpc.pb.cc")
+set(TXPOOL_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/txpool/txpool.grpc.pb.h")
+set(TXPOOL_MOCK_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/txpool/txpool_mock.grpc.pb.h")
 set(TYPES_PROTO_SOURCE "${PROTO_GENERATED_SRC_DIR}/types/types.pb.cc")
 set(TYPES_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/types/types.pb.h")
 
@@ -50,13 +62,17 @@ add_custom_command(
     OUTPUT "${TYPES_PROTO_HEADER}" "${TYPES_PROTO_SOURCE}"
       "${BACKEND_PROTO_HEADER}" "${BACKEND_PROTO_SOURCE}" "${BACKEND_GRPC_HEADER}" "${BACKEND_GRPC_SOURCE}"
       "${KV_PROTO_SOURCE}" "${KV_PROTO_HEADER}" "${KV_GRPC_SOURCE}" "${KV_GRPC_HEADER}"
+      "${P2PSENTRY_PROTO_SOURCE}" "${P2PSENTRY_PROTO_HEADER}" "${P2PSENTRY_GRPC_SOURCE}" "${P2PSENTRY_GRPC_HEADER}"
+      "${TXPOOL_PROTO_SOURCE}" "${TXPOOL_PROTO_HEADER}" "${TXPOOL_GRPC_SOURCE}" "${TXPOOL_GRPC_HEADER}"
     COMMAND ${PROTOBUF_PROTOC}
-    ARGS --grpc_out "${PROTO_GENERATED_SRC_DIR}"
+    ARGS --grpc_out generate_mock_code=true:"${PROTO_GENERATED_SRC_DIR}"
       --cpp_out "${PROTO_GENERATED_SRC_DIR}"
       --proto_path "${IF_PROTO_PATH}"
       --plugin=protoc-gen-grpc="${GRPC_CPP_PLUGIN_EXECUTABLE}"
       "${IF_PROTO_PATH}/**/ethbackend.proto"
       "${IF_PROTO_PATH}/**/kv.proto"
+      "${IF_PROTO_PATH}/**/sentry.proto"
+      "${IF_PROTO_PATH}/**/txpool.proto"
       "${IF_PROTO_PATH}/**/types.proto"
     COMMENT "Running C++ gRPC compiler on ${IF_PROTO_PATH}"
 )
@@ -65,7 +81,9 @@ add_custom_command(
 add_library(silkinterfaces
     ${TYPES_PROTO_HEADER} ${TYPES_PROTO_SOURCE}
     ${BACKEND_PROTO_HEADER} ${BACKEND_PROTO_SOURCE} ${BACKEND_GRPC_HEADER} ${BACKEND_GRPC_SOURCE}
-    ${KV_PROTO_HEADER} ${KV_PROTO_SOURCE} ${KV_GRPC_HEADER} ${KV_GRPC_SOURCE})
+    ${KV_PROTO_HEADER} ${KV_PROTO_SOURCE} ${KV_GRPC_HEADER} ${KV_GRPC_SOURCE}
+    ${P2PSENTRY_PROTO_HEADER} ${P2PSENTRY_PROTO_SOURCE} ${P2PSENTRY_GRPC_HEADER} ${P2PSENTRY_GRPC_SOURCE}
+    ${TXPOOL_PROTO_HEADER} ${TXPOOL_PROTO_SOURCE} ${TXPOOL_GRPC_HEADER} ${TXPOOL_GRPC_SOURCE})
 target_include_directories(silkinterfaces PUBLIC ${PROTO_GENERATED_SRC_DIR})
 target_link_libraries(silkinterfaces
     tcmalloc
@@ -82,9 +100,33 @@ add_custom_command(
     COMMAND ${CMAKE_COMMAND} -E copy
         ${BACKEND_PROTO_HEADER}
         ${BACKEND_GRPC_HEADER}
+        ${BACKEND_MOCK_GRPC_HEADER}
         ${KV_PROTO_HEADER}
         ${KV_GRPC_HEADER}
+        ${KV_MOCK_GRPC_HEADER}
         ${REMOTE_IF_GENERATED_HEADER_DIR}
+)
+
+set(P2PSENTRY_IF_GENERATED_HEADER_DIR ${IF_GENERATED_HEADER_DIR}/p2psentry)
+file(MAKE_DIRECTORY ${P2PSENTRY_IF_GENERATED_HEADER_DIR})
+add_custom_command(
+    TARGET silkinterfaces POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${P2PSENTRY_PROTO_HEADER}
+        ${P2PSENTRY_GRPC_HEADER}
+        ${P2PSENTRY_MOCK_GRPC_HEADER}
+        ${P2PSENTRY_IF_GENERATED_HEADER_DIR}
+)
+
+set(TXPOOL_IF_GENERATED_HEADER_DIR ${IF_GENERATED_HEADER_DIR}/txpool)
+file(MAKE_DIRECTORY ${TXPOOL_IF_GENERATED_HEADER_DIR})
+add_custom_command(
+    TARGET silkinterfaces POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        ${TXPOOL_PROTO_HEADER}
+        ${TXPOOL_GRPC_HEADER}
+        ${TXPOOL_MOCK_GRPC_HEADER}
+        ${TXPOOL_IF_GENERATED_HEADER_DIR}
 )
 
 set(TYPES_IF_GENERATED_HEADER_DIR ${IF_GENERATED_HEADER_DIR}/types)
