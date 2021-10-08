@@ -35,7 +35,7 @@ namespace silkrpc {
 using Logger = silkworm::log_;
 using LogLevel = silkworm::LogLevel;
 
-#define LOG(level_) if ((level_) < silkworm::log_verbosity_) {} else silkworm::log_(level_) // NOLINT
+#define LOG(level_) if ((level_) < silkworm::log_verbosity_) {} else silkworm::log_(level_) << " " // NOLINT
 
 // LogTrace, LogDebug, LogInfo, LogWarn, LogError, LogCritical, LogNone
 #define SILKRPC_TRACE LOG(LogLevel::Trace)
@@ -47,6 +47,10 @@ using LogLevel = silkworm::LogLevel;
 #define SILKRPC_LOG   LOG(LogLevel::None)
 
 #define SILKRPC_LOG_VERBOSITY(level_) (silkworm::log_verbosity_ = (level_))
+
+#define SILKRPC_LOG_THREAD(log_thread_) (silkworm::log_thread_enabled_ = (log_thread_))
+
+#define SILKRPC_LOG_STREAMS(stream1_, stream2_) silkworm::log_set_streams_((stream1_), (stream2_))
 
 } // namespace silkrpc
 

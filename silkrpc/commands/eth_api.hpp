@@ -23,16 +23,18 @@
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
+#include <asio/thread_pool.hpp>
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
 #include <silkworm/types/receipt.hpp>
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/croaring/roaring.hh> // NOLINT(build/include_order)
+#include <silkrpc/croaring/roaring.hh>
 #include <silkrpc/json/types.hpp>
-#include <silkrpc/ethdb/kv/database.hpp>
-#include <silkrpc/ethdb/kv/transaction.hpp>
-#include <silkrpc/ethdb/kv/transaction_database.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
+#include <silkrpc/ethdb/database.hpp>
+#include <silkrpc/ethdb/transaction.hpp>
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/receipt.hpp>
 
@@ -42,7 +44,8 @@ namespace silkrpc::commands {
 
 class EthereumRpcApi {
 public:
-    explicit EthereumRpcApi(std::unique_ptr<ethdb::kv::Database>& database) : database_(database) {}
+    explicit EthereumRpcApi(Context& context, asio::thread_pool& workers)
+    : context_(context), database_(context.database), backend_(context.backend), workers_{workers} {}
     virtual ~EthereumRpcApi() {}
 
     EthereumRpcApi(const EthereumRpcApi&) = delete;
@@ -50,24 +53,54 @@ public:
 
 protected:
     asio::awaitable<void> handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_eth_call(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_chain_id(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_protocol_version(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_syncing(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_gas_price(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_block_by_hash(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_block_by_number(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_eth_get_block_transaction_count_by_number(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply);
-
     asio::awaitable<void> handle_eth_get_block_transaction_count_by_hash(const nlohmann::json& request, nlohmann::json& reply);
-
-    asio::awaitable<Roaring> get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end);
-    asio::awaitable<Roaring> get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end);
-    asio::awaitable<Receipts> get_receipts(core::rawdb::DatabaseReader& db_reader, uint64_t number, evmc::bytes32 hash);
+    asio::awaitable<void> handle_eth_get_block_transaction_count_by_number(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_uncle_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_uncle_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_uncle_count_by_block_hash(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_uncle_count_by_block_number(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_transaction_by_hash(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_transaction_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_transaction_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_transaction_receipt(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_estimate_gas(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_balance(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_code(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_transaction_count(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_storage_at(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_call(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_new_filter(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_new_block_filter(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_new_pending_transaction_filter(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_filter_changes(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_uninstall_filter(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_send_raw_transaction(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_send_transaction(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_sign_transaction(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_proof(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_mining(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_coinbase(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_hashrate(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_submit_hashrate(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_work(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_submit_work(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_subscribe(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_unsubscribe(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<roaring::Roaring> get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end);
+    asio::awaitable<roaring::Roaring> get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end);
     std::vector<Log> filter_logs(std::vector<Log>& logs, const Filter& filter);
 
-private:
-    std::unique_ptr<ethdb::kv::Database>& database_;
+    Context& context_;
+    std::unique_ptr<ethdb::Database>& database_;
+    std::unique_ptr<ethbackend::BackEnd>& backend_;
+    asio::thread_pool& workers_;
 
     friend class silkrpc::http::RequestHandler;
 };

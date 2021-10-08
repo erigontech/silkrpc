@@ -30,7 +30,9 @@
 
 #include <asio/awaitable.hpp>
 #include <asio/ip/tcp.hpp>
+#include <asio/thread_pool.hpp>
 
+#include <silkrpc/context_pool.hpp>
 #include "reply.hpp"
 #include "request.hpp"
 #include "request_handler.hpp"
@@ -46,17 +48,20 @@ public:
     Connection(const Connection&) = delete;
     Connection& operator=(const Connection&) = delete;
 
-    /// Construct a connection with the given socket.
-    explicit Connection(asio::ip::tcp::socket socket,
-        ConnectionManager& manager, RequestHandler& handler);
+    /// Construct a connection running within the given execution context.
+    explicit Connection(Context& context, asio::thread_pool& workers);
+
+    ~Connection();
+
+    asio::ip::tcp::socket& socket() { return socket_; }
 
     /// Start the first asynchronous operation for the connection.
     asio::awaitable<void> start();
 
-    /// Stop all asynchronous operations associated with the connection.
-    void stop();
-
 private:
+    // reset connection data
+    void clean();
+
     /// Perform an asynchronous read operation.
     asio::awaitable<void> do_read();
 
@@ -66,11 +71,8 @@ private:
     /// Socket for the connection.
     asio::ip::tcp::socket socket_;
 
-    /// The manager for this connection.
-    ConnectionManager& connection_manager_;
-
     /// The handler used to process the incoming request.
-    RequestHandler& request_handler_;
+    RequestHandler request_handler_;
 
     /// Buffer for incoming data.
     std::array<char, 8192> buffer_;

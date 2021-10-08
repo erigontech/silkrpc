@@ -14,24 +14,25 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_KV_REMOTE_RemoteDatabase_H_
-#define SILKRPC_KV_REMOTE_RemoteDatabase_H_
+#ifndef SILKRPC_ETHDB_KV_REMOTE_DATABASE_HPP_
+#define SILKRPC_ETHDB_KV_REMOTE_DATABASE_HPP_
 
+#include <cstddef>
 #include <memory>
+#include <vector>
 
 #include <asio/io_context.hpp>
-#include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/ethdb/kv/database.hpp>
+#include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/kv/remote_transaction.hpp>
 
 namespace silkrpc::ethdb::kv {
 
-class RemoteDatabase :public Database {
+class RemoteDatabase: public Database {
 public:
-    RemoteDatabase(asio::io_context& context, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
-    : context_(context), channel_(channel), queue_(queue) {
+    RemoteDatabase(asio::io_context& io_context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
+    : io_context_(io_context), channel_(channel), queue_(queue) {
         SILKRPC_TRACE << "RemoteDatabase::ctor " << this << "\n";
     }
 
@@ -42,20 +43,20 @@ public:
     RemoteDatabase(const RemoteDatabase&) = delete;
     RemoteDatabase& operator=(const RemoteDatabase&) = delete;
 
-    virtual asio::awaitable<std::unique_ptr<Transaction>> begin() override {
+    asio::awaitable<std::unique_ptr<Transaction>> begin() override {
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " start\n";
-        auto txn = std::make_unique<RemoteTransaction>(context_, channel_, queue_);
+        auto txn = std::make_unique<RemoteTransaction>(io_context_, channel_, queue_);
         co_await txn->open();
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " txn: " << txn.get() << " end\n";
         co_return txn;
     }
 
 private:
-    asio::io_context& context_;
-    std::shared_ptr<::grpc::Channel> channel_;
-    ::grpc::CompletionQueue* queue_;
+    asio::io_context& io_context_;
+    std::shared_ptr<grpc::Channel> channel_;
+    grpc::CompletionQueue* queue_;
 };
 
 } // namespace silkrpc::ethdb::kv
 
-#endif  // SILKRPC_KV_REMOTE_RemoteDatabase_H_
+#endif  // SILKRPC_ETHDB_KV_REMOTE_DATABASE_HPP_

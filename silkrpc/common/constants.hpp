@@ -18,29 +18,8 @@
 #define SILKRPC_COMMON_CONSTANTS_HPP_
 
 #include <chrono>
-#include <string>
 
-#include <boost/format.hpp>
-
-namespace silkrpc::common {
-
-constexpr const char* kOsName{
-#ifdef _WIN32
-    "Windows 32-bit"
-#elif _WIN64
-    "Windows 64-bit"
-#elif __APPLE__ || __MACH__
-    "Mac OSX"
-#elif __linux__
-    "Linux"
-#elif __FreeBSD__
-    "FreeBSD"
-#elif __unix || __unix__
-    "Unix"
-#else
-    "Other"
-#endif
-};
+namespace silkrpc {
 
 constexpr const char* kAddressPortSeparator{":"};
 
@@ -49,12 +28,6 @@ constexpr const char* kDefaultLocal{"localhost:8545"};
 constexpr const char* kDefaultTarget{"localhost:9090"};
 constexpr const std::chrono::milliseconds kDefaultTimeout{10000};
 
-constexpr const char* kNodeName{"TurboGeth"};
-constexpr const char* kVersion{"2021.03.2-alpha"};
-const std::string kEthereumNodeName = boost::str(boost::format("%1%/v%2%/%3%") % kNodeName % kVersion % kOsName); // NOLINT
-
-constexpr uint64_t kETH66{66};
-
-}  // namespace silkrpc::common
+} // namespace silkrpc
 
 #endif  // SILKRPC_COMMON_CONSTANTS_HPP_

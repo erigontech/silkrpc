@@ -18,7 +18,6 @@
 #define SILKRPC_COMMANDS_WEB3_API_HPP_
 
 #include <memory>
-#include <vector>
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
@@ -27,7 +26,9 @@
 
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/json/types.hpp>
-#include <silkrpc/ethdb/kv/database.hpp>
+#include <silkrpc/context_pool.hpp>
+#include <silkrpc/ethdb/database.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
@@ -35,7 +36,7 @@ namespace silkrpc::commands {
 
 class Web3RpcApi {
 public:
-    explicit Web3RpcApi(std::unique_ptr<ethdb::kv::Database>& database) : database_(database) {}
+    explicit Web3RpcApi(Context& context) : database_(context.database), backend_(context.backend) {}
     virtual ~Web3RpcApi() {}
 
     Web3RpcApi(const Web3RpcApi&) = delete;
@@ -46,7 +47,8 @@ protected:
     asio::awaitable<void> handle_web3_sha3(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
-    std::unique_ptr<ethdb::kv::Database>& database_;
+    std::unique_ptr<ethdb::Database>& database_;
+    std::unique_ptr<ethbackend::BackEnd>& backend_;
 
     friend class silkrpc::http::RequestHandler;
 };

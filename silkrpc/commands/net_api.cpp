@@ -16,6 +16,8 @@
 
 #include "net_api.hpp"
 
+#include <string>
+
 #include <silkrpc/json/types.hpp>
 
 namespace silkrpc::commands {
@@ -23,19 +25,29 @@ namespace silkrpc::commands {
 // https://eth.wiki/json-rpc/API#net_listening
 asio::awaitable<void> NetRpcApi::handle_net_listening(const nlohmann::json& request, nlohmann::json& reply) {
     reply = make_json_content(request["id"], true);
+    // TODO(canepat): needs p2pSentry integration in TG Core (accumulate listening from multiple sentries)
     co_return;
 }
 
 // https://eth.wiki/json-rpc/API#net_peercount
 asio::awaitable<void> NetRpcApi::handle_net_peer_count(const nlohmann::json& request, nlohmann::json& reply) {
-    reply = make_json_content(request["id"], "0x" + to_hex_no_leading_zeros(25));
+    reply = make_json_content(request["id"], to_quantity(25));
+    // TODO(canepat): needs p2pSentry integration in TG Core (accumulate peer counts from multiple sentries)
     co_return;
 }
 
 // https://eth.wiki/json-rpc/API#net_version
 asio::awaitable<void> NetRpcApi::handle_net_version(const nlohmann::json& request, nlohmann::json& reply) {
-    reply = make_json_content(request["id"], 5);
-    co_return;
+    try {
+        const auto net_version = co_await backend_->net_version();
+        reply = make_json_content(request["id"], std::to_string(net_version));
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], -32000, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
 }
 
 } // namespace silkrpc::commands

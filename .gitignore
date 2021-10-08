@@ -1,9 +1,7 @@
-build
-build_gcc_debug
-build_gcc_release
-build_clang_debug
-build_clang_release
+build*/
+cmake-*
 perf.data*
+.idea
 .vscode
 .vs
 *.code-workspace

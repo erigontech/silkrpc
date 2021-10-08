@@ -21,7 +21,6 @@
 //
 
 #include "request_parser.hpp"
-#include "request.hpp"
 
 #include <algorithm>
 
@@ -209,20 +208,29 @@ RequestParser::ResultType RequestParser::consume(Request& req, char input) {
         case expecting_newline_3:
             if (input == '\n') {
                 state_ = content_start;
+                if (req.content_length == 0) {
+                    const auto it = std::find_if(req.headers.begin(), req.headers.end(), [&](const Header& h){
+                        return h.name == "Content-Length";
+                    });
+                    if (it == req.headers.end()) {
+                        return bad;
+                    }
+                    req.content_length = std::atoi((*it).value.c_str());
+                }
+                if (req.content_length == 0) {
+                   return good;
+                }
+
+                // Currently just support Expect as last header
+                const auto h = req.headers.back();
+                if (h.name == "Expect" && h.value == "100-continue") {
+                   return processing_continue;
+                }
                 return indeterminate;
             } else {
                 return bad;
             }
         case content_start:
-            if (req.content_length == 0) {
-                const auto it = std::find_if(req.headers.begin(), req.headers.end(), [&](const Header& h){
-                    return h.name == "Content-Length";
-                });
-                if (it == req.headers.end()) {
-                    return bad;
-                }
-                req.content_length = std::atoi((*it).value.c_str());
-            }
             req.content.push_back(input);
             if (req.content.length() < req.content_length) {
                 return indeterminate;
@@ -234,15 +242,15 @@ RequestParser::ResultType RequestParser::consume(Request& req, char input) {
     }
 }
 
-bool RequestParser::is_char(int c) {
+inline bool RequestParser::is_char(int c) {
     return c >= 0 && c <= 127;
 }
 
-bool RequestParser::is_ctl(int c) {
+inline bool RequestParser::is_ctl(int c) {
     return (c >= 0 && c <= 31) || (c == 127);
 }
 
-bool RequestParser::is_tspecial(int c) {
+inline bool RequestParser::is_tspecial(int c) {
     switch (c) {
         case '(': case ')': case '<': case '>': case '@':
         case ',': case ';': case ':': case '\\': case '"':
@@ -254,7 +262,7 @@ bool RequestParser::is_tspecial(int c) {
     }
 }
 
-bool RequestParser::is_digit(int c) {
+inline bool RequestParser::is_digit(int c) {
     return c >= '0' && c <= '9';
 }
 

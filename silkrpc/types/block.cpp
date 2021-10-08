@@ -17,8 +17,12 @@
 #include "block.hpp"
 
 #include <iomanip>
+#include <limits>
+#include <string>
 
 #include <silkrpc/common/util.hpp>
+#include <silkworm/common/endian.hpp>
+#include <silkrpc/core/blocks.hpp>
 
 namespace silkrpc {
 
@@ -34,7 +38,7 @@ std::ostream& operator<<(std::ostream& out, const Block& b) {
     out << " transactions_root: " << b.block.header.transactions_root;
     out << " receipts_root: " << b.block.header.receipts_root;
     out << " logs_bloom: " << silkworm::to_hex(silkworm::full_view(b.block.header.logs_bloom));
-    out << " difficulty: " << silkworm::to_hex(silkworm::rlp::big_endian(b.block.header.difficulty));
+    out << " difficulty: " << silkworm::to_hex(silkworm::endian::to_big_compact(b.block.header.difficulty));
     out << " number: " << b.block.header.number;
     out << " gas_limit: " << b.block.header.gas_limit;
     out << " gas_used: " << b.block.header.gas_used;
@@ -45,9 +49,59 @@ std::ostream& operator<<(std::ostream& out, const Block& b) {
     out << " #transactions: " << b.block.transactions.size();
     out << " #ommers: " << b.block.ommers.size();
     out << " hash: " << b.hash;
-    out << " total_difficulty: " << silkworm::to_hex(silkworm::rlp::big_endian(b.total_difficulty));
+    out << " total_difficulty: " << silkworm::to_hex(silkworm::endian::to_big_compact(b.total_difficulty));
     out << " full_tx: " << b.full_tx;
     return out;
+}
+
+uint64_t Block::get_block_size() const {
+   silkworm::rlp::Header rlp_head{true, 0};
+   rlp_head.payload_length = silkworm::rlp::length(block.header);
+   rlp_head.payload_length += silkworm::rlp::length(block.transactions);
+   rlp_head.payload_length += silkworm::rlp::length(block.ommers);
+   rlp_head.payload_length += silkworm::rlp::length_of_length(rlp_head.payload_length);
+   return rlp_head.payload_length;
+}
+
+std::ostream& operator<<(std::ostream& out, const BlockNumberOrHash& bnoh) {
+    if (bnoh.is_number()) {
+        out << "0x" << std::hex << bnoh.number();
+    } else if (bnoh.is_hash()) {
+        out << "0x" << bnoh.hash();
+    } else if (bnoh.is_tag()) {
+        out << bnoh.tag();
+    } else {
+        out << "empty";
+    }
+    return out;
+}
+
+void BlockNumberOrHash::build(const std::string& bnoh) {
+    value_ = uint64_t{0};
+    if (bnoh == core::kEarliestBlockId) {
+        value_ = core::kEarliestBlockNumber;
+    } else if (bnoh == core::kLatestBlockId || bnoh == core::kPendingBlockId) {
+        value_ = bnoh;
+    } else if (bnoh.find("0x") == 0 || bnoh.find("0X") == 0) {
+        if (bnoh.length() == 66) {
+            const auto b32_bytes = silkworm::from_hex(bnoh);
+            const auto b32 = silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
+            value_ = b32;
+        } else {
+            set_number(bnoh, 16);
+        }
+    } else {
+        set_number(bnoh, 10);
+    }
+}
+
+void BlockNumberOrHash::set_number(const std::string& input, int base) {
+    char* end;
+    errno = 0;
+    auto value = strtoul(input.c_str(), &end, base);
+    if (errno == 0 && *end == '\0' && end != input.c_str() && value <= std::numeric_limits<uint64_t>::max()) {
+        value_ = value;
+    }
 }
 
 } // namespace silkrpc

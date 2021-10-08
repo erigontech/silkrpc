@@ -25,9 +25,9 @@
 
 #include <tuple>
 
-namespace silkrpc::http {
+#include "request.hpp"
 
-struct Request;
+namespace silkrpc::http {
 
 /// Parser for incoming requests.
 class RequestParser {
@@ -39,23 +39,26 @@ public:
     void reset();
 
     /// Result of parse.
-    enum ResultType { good, bad, indeterminate };
+    enum ResultType { good, bad, indeterminate, processing_continue };
 
     /// Parse some data. The enum return value is good when a complete request has
     /// been parsed, bad if the data is invalid, indeterminate when more data is
     /// required. The InputIterator return value indicates how much of the input
     /// has been consumed.
     template <typename InputIterator>
-    std::tuple<ResultType, InputIterator> parse(Request& req, InputIterator begin, InputIterator end) {
+    ResultType parse(Request& req, InputIterator begin, InputIterator end) {
         while (begin != end) {
             ResultType result = consume(req, *begin++);
-            if (result == good || result == bad) {
-                return std::make_tuple(result, begin);
+            if (result == good || result == bad || result == processing_continue) {
+                return result;
             }
         }
 
-        return std::make_tuple(indeterminate, begin);
+        return indeterminate;
     }
+
+    // check if ack requested by client
+    bool check_if_ack_requested(Request& req);
 
 private:
     /// Handle the next character of input.

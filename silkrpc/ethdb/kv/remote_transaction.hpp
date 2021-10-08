@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_KV_REMOTE_TRANSACTION_HPP
-#define SILKRPC_KV_REMOTE_TRANSACTION_HPP
+#ifndef SILKRPC_ETHDB_KV_REMOTE_TRANSACTION_HPP_
+#define SILKRPC_ETHDB_KV_REMOTE_TRANSACTION_HPP_
 
 #include <map>
 #include <memory>
@@ -27,16 +27,15 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/awaitables.hpp>
-#include <silkrpc/ethdb/kv/cursor.hpp>
-#include <silkrpc/ethdb/kv/remote_cursor.hpp>
+#include <silkrpc/ethdb/cursor.hpp>
 #include <silkrpc/ethdb/kv/streaming_client.hpp>
-#include <silkrpc/ethdb/kv/transaction.hpp>
+#include <silkrpc/ethdb/transaction.hpp>
 
 namespace silkrpc::ethdb::kv {
 
 class RemoteTransaction : public Transaction {
 public:
-    explicit RemoteTransaction(asio::io_context& context, std::shared_ptr<::grpc::Channel> channel, ::grpc::CompletionQueue* queue)
+    explicit RemoteTransaction(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
     : context_(context), client_{channel, queue}, kv_awaitable_{context_, client_} {
         SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " start\n";
         SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " end\n";
@@ -49,21 +48,21 @@ public:
 
     asio::awaitable<void> open() override;
 
-    std::unique_ptr<Cursor> cursor() override {
-        return std::make_unique<RemoteCursor>(kv_awaitable_);
-    }
-
     asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) override;
+
+    asio::awaitable<std::shared_ptr<CursorDupSort>> cursor_dup_sort(const std::string& table) override;
 
     asio::awaitable<void> close() override;
 
 private:
+    asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table);
+
     asio::io_context& context_;
     StreamingClient client_;
     KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
-    std::map<std::string, std::shared_ptr<Cursor>> cursors_;
+    std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
 };
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_KV_REMOTE_TRANSACTION_HPP
+#endif // SILKRPC_ETHDB_KV_REMOTE_TRANSACTION_HPP_

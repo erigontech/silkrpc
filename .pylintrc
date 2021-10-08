@@ -23,3 +23,6 @@ max-args=15
 
 # Maximum number of characters on a single line.
 max-line-length=200
+
+max-branches=25
+max-statements=80

@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_CONFIG_HPP
-#define SILKRPC_CONFIG_HPP
+#ifndef SILKRPC_CONFIG_HPP_
+#define SILKRPC_CONFIG_HPP_
 
 #if __has_include(<coroutine>)
 # define ASIO_HAS_CO_AWAIT
@@ -33,4 +33,4 @@ namespace std {
 } // namespace std
 #endif // __has_include(<coroutine>)
 
-#endif // SILKRPC_CONFIG_HPP
+#endif // SILKRPC_CONFIG_HPP_

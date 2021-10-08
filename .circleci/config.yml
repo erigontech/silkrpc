@@ -30,14 +30,10 @@ commands:
           name: "Install Linters"
           command: |
             sudo apt-get install -y python3-pip
-            sudo pip3 install cpplint
-            sudo pip3 install pylint
+            sudo pip3 install -r requirements.txt
       - run:
-          name: "Run CppLint"
-          command: cpplint silkrpc/**/*.hpp silkrpc/**/*.cpp
-      - run:
-          name: "Run PyLint"
-          command: pylint tests/
+          name: "Run CppLint and PyLint"
+          command: ./run_linter.sh
 
   build:
     steps:
@@ -57,7 +53,7 @@ commands:
       - run:
           name: "Cmake"
           working_directory: ~/build
-          command: cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+          command: cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_FILE -DSILKRPC_CLANG_COVERAGE=$CLANG_COVERAGE
       - save_cache:
           name: "Save Hunter cache"
           key: *hunter-cache-key
@@ -78,9 +74,11 @@ jobs:
   linux-gcc-10:
     environment:
       BUILD_TYPE: Debug
+      TOOLCHAIN_FILE: silkworm/cmake/toolchain.cmake
       CLANG_COVERAGE: OFF
     machine:
       image: ubuntu-2004:202101-01
+    resource_class: large
     steps:
       - run:
           name: "Install GCC 10"
@@ -99,10 +97,21 @@ jobs:
   linux-clang-coverage:
     environment:
       BUILD_TYPE: Debug
+      TOOLCHAIN_FILE: cmake/clang-libcxx20-fpic.cmake
       CLANG_COVERAGE: ON
-    docker:
-      - image: ethereum/cpp-build-env:14-clang-10
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: large
     steps:
+      - run:
+          name: "Install Clang 10"
+          command: |
+            sudo apt update
+            sudo apt -y install clang-10
+            sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-10 50
+            sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-10 50
+            clang-10 --version
+            clang++-10 --version
       - run:
           name: "Install LLVM C++ Standard Library" # for C++ standard headers clang does not have
           command: |
@@ -117,28 +126,28 @@ jobs:
           working_directory: ~/build
           command: |
             cmd/unit_test
-#            mv default.profraw unit_test.profraw
-#      - run:
-#          name: "Coverage"
-#          working_directory: ~/build
-#          command: |
-#            llvm-profdata merge *.profraw -o profdata
-#            llvm-cov export -instr-profile profdata -format=lcov cmd/unit_test -object cmd/consensus > silkrpc.lcov
-#      - run:
-#          name: "Upload to Codecov"
-#          command: |
-#            sudo pip3 install --upgrade --quiet --no-cache-dir codecov
+            mv default.profraw unit_test.profraw
+      - run:
+          name: "Coverage"
+          working_directory: ~/build
+          command: |
+            llvm-profdata merge *.profraw -o profdata
+            llvm-cov export -instr-profile profdata -format=lcov cmd/unit_test > silkrpc.lcov
+      - run:
+          name: "Upload to Codecov"
+          command: |
+            sudo pip3 install --upgrade --quiet --no-cache-dir codecov
 
-#            counter=1
-#            until codecov --required --file ~/build/silkrpc.lcov -X gcov || [ $counter = 5 ]; do
-#              counter=$((counter+1))
-#              sleep 1
-#              echo "Try #$counter..."
-#            done
+            counter=1
+            until codecov --required --file ~/build/silkrpc.lcov -X gcov || [ $counter = 5 ]; do
+              counter=$((counter+1))
+              sleep 1
+              echo "Try #$counter..."
+            done
 
 workflows:
   version: 2
   silkworm:
     jobs:
       - linux-gcc-10
-      #- linux-clang-coverage
+      - linux-clang-coverage

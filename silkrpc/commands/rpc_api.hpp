@@ -19,19 +19,26 @@
 
 #include <memory>
 
+#include <asio/thread_pool.hpp>
+
+#include <silkrpc/commands/debug_api.hpp>
 #include <silkrpc/commands/eth_api.hpp>
 #include <silkrpc/commands/net_api.hpp>
+#include <silkrpc/commands/parity_api.hpp>
+#include <silkrpc/commands/tg_api.hpp>
+#include <silkrpc/commands/trace_api.hpp>
 #include <silkrpc/commands/web3_api.hpp>
-#include <silkrpc/ethdb/kv/database.hpp>
+#include <silkrpc/context_pool.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
-class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi {
+class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, TurboGethRpcApi, TraceRpcApi {
 public:
-    explicit RpcApi(std::unique_ptr<ethdb::kv::Database>& database)
-    : EthereumRpcApi{database}, NetRpcApi{}, Web3RpcApi{database} {}
+    explicit RpcApi(Context& context, asio::thread_pool& workers) :
+        EthereumRpcApi{context, workers}, NetRpcApi{context.backend}, Web3RpcApi{context}, DebugRpcApi{context.database},
+        ParityRpcApi{context.database}, TurboGethRpcApi{context.database}, TraceRpcApi{context.database} {}
     virtual ~RpcApi() {}
 
     RpcApi(const RpcApi&) = delete;

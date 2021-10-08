@@ -25,7 +25,7 @@
 
 #include <silkrpc/common/log.hpp>
 
-namespace silkrpc::grpc {
+namespace silkrpc {
 
 class AsyncCompletionHandler {
 public:
@@ -34,10 +34,8 @@ public:
     static auto detag(void* tag) { return static_cast<AsyncCompletionHandler*>(tag); }
 
     virtual void completed(bool ok) = 0;
-
-    virtual void try_cancel() = 0;
 };
 
-} // namespace silkrpc::grpc
+} // namespace silkrpc
 
 #endif  // SILKRPC_GRPC_ASYNC_COMPLETION_HANDLER_HPP_

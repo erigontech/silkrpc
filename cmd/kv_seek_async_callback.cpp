@@ -29,12 +29,12 @@
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/ethdb/kv/remote/kv.grpc.pb.h>
+#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 ABSL_FLAG(std::string, table, "", "database table name");
 ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
-ABSL_FLAG(std::string, target, silkrpc::common::kDefaultTarget, "server location as string <address>:<port>");
-ABSL_FLAG(uint32_t, timeout, silkrpc::common::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
+ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "server location as string <address>:<port>");
+ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 
 class GrpcKvCallbackReactor final : public grpc::experimental::ClientBidiReactor<remote::Cursor, remote::Pair> {
 public:
@@ -44,7 +44,7 @@ public:
         StartCall();
     }
 
-    void read_start(std::function<void(bool,remote::Pair)> read_completed) {
+    void read_start(std::function<void(bool, remote::Pair)> read_completed) {
         read_completed_ = read_completed;
         StartRead(&pair_);
     }
@@ -61,11 +61,12 @@ public:
     void OnWriteDone(bool ok) override {
         write_completed_(ok);
     }
+
 private:
     remote::KV::Stub& stub_;
     grpc::ClientContext context_;
     remote::Pair pair_;
-    std::function<void(bool,remote::Pair)> read_completed_;
+    std::function<void(bool, remote::Pair)> read_completed_;
     std::function<void(bool)> write_completed_;
 };
 

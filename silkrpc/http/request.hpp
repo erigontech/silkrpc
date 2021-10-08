@@ -39,6 +39,14 @@ struct Request {
     std::vector<Header> headers;
     uint32_t content_length{0};
     std::string content;
+
+    void reset() {
+        method.resize(0);
+        uri.resize(0);
+        headers.resize(0);
+        content.resize(0);
+        content_length = 0;
+    }
 };
 
 } // namespace silkrpc::http
