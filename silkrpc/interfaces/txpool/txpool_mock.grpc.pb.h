@@ -24,9 +24,15 @@ class MockTxpoolStub : public Txpool::StubInterface {
   MOCK_METHOD3(Transactions, ::grpc::Status(::grpc::ClientContext* context, const ::txpool::TransactionsRequest& request, ::txpool::TransactionsReply* response));
   MOCK_METHOD3(AsyncTransactionsRaw, ::grpc::ClientAsyncResponseReaderInterface< ::txpool::TransactionsReply>*(::grpc::ClientContext* context, const ::txpool::TransactionsRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(PrepareAsyncTransactionsRaw, ::grpc::ClientAsyncResponseReaderInterface< ::txpool::TransactionsReply>*(::grpc::ClientContext* context, const ::txpool::TransactionsRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(All, ::grpc::Status(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::txpool::AllReply* response));
+  MOCK_METHOD3(AsyncAllRaw, ::grpc::ClientAsyncResponseReaderInterface< ::txpool::AllReply>*(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PrepareAsyncAllRaw, ::grpc::ClientAsyncResponseReaderInterface< ::txpool::AllReply>*(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD2(OnAddRaw, ::grpc::ClientReaderInterface< ::txpool::OnAddReply>*(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request));
   MOCK_METHOD4(AsyncOnAddRaw, ::grpc::ClientAsyncReaderInterface< ::txpool::OnAddReply>*(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request, ::grpc::CompletionQueue* cq, void* tag));
   MOCK_METHOD3(PrepareAsyncOnAddRaw, ::grpc::ClientAsyncReaderInterface< ::txpool::OnAddReply>*(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(Status, ::grpc::Status(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::txpool::StatusReply* response));
+  MOCK_METHOD3(AsyncStatusRaw, ::grpc::ClientAsyncResponseReaderInterface< ::txpool::StatusReply>*(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PrepareAsyncStatusRaw, ::grpc::ClientAsyncResponseReaderInterface< ::txpool::StatusReply>*(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::grpc::CompletionQueue* cq));
 };
 
 } // namespace txpool
