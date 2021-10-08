@@ -38,8 +38,8 @@ asio::awaitable<std::optional<silkworm::Account>> AsyncRemoteBuffer::read_accoun
 asio::awaitable<silkworm::ByteView> AsyncRemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
     const auto optional_code{co_await state_reader_.read_code(code_hash)};
     if (optional_code) {
-       std::move(code[code_hash] = *optional_code);
-       co_return code[code_hash]; // NOLINT(runtime/arrays)
+        std::move(code[code_hash] = *optional_code);
+        co_return code[code_hash]; // NOLINT(runtime/arrays)
     }
     co_return silkworm::ByteView{};
 }
@@ -89,7 +89,7 @@ std::optional<silkworm::Account> RemoteBuffer::read_account(const evmc::address&
 silkworm::ByteView RemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_code code_hash=" << code_hash << " start\n";
     std::future<silkworm::ByteView> result{asio::co_spawn(io_context_, async_buffer_.read_code(code_hash), asio::use_future)};
-    auto code{result.get()};
+    const auto code{result.get()};
     return code;
 }
 
