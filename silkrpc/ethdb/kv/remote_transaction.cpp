@@ -21,7 +21,7 @@
 namespace silkrpc::ethdb::kv {
 
 asio::awaitable<void> RemoteTransaction::open() {
-    co_await kv_awaitable_.async_start(asio::use_awaitable);
+    tx_id_ = co_await kv_awaitable_.async_start(asio::use_awaitable);
     co_return;
 }
 

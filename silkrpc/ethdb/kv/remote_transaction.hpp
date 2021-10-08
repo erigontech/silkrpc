@@ -56,6 +56,7 @@ public:
 
 private:
     asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table);
+    uint64_t tx_id_;
 
     asio::io_context& context_;
     StreamingClient client_;
