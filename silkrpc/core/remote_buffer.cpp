@@ -17,6 +17,7 @@
 #include "remote_buffer.hpp"
 
 #include <future>
+#include <unordered_map>
 #include <utility>
 
 #include <asio/co_spawn.hpp>
@@ -38,7 +39,7 @@ asio::awaitable<std::optional<silkworm::Account>> AsyncRemoteBuffer::read_accoun
 asio::awaitable<silkworm::ByteView> AsyncRemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
     const auto optional_code{co_await state_reader_.read_code(code_hash)};
     if (optional_code) {
-        std::move(code[code_hash] = *optional_code);
+        code[code_hash] = std::move(*optional_code);
         co_return code[code_hash]; // NOLINT(runtime/arrays)
     }
     co_return silkworm::ByteView{};
