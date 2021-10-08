@@ -35,7 +35,7 @@ namespace silkrpc {
 using Logger = silkworm::log_;
 using LogLevel = silkworm::LogLevel;
 
-#define LOG(level_) if ((level_) < silkworm::log_verbosity_) {} else silkworm::log_(level_) // NOLINT
+#define LOG(level_) if ((level_) < silkworm::log_verbosity_) {} else silkworm::log_(level_) << " " // NOLINT
 
 // LogTrace, LogDebug, LogInfo, LogWarn, LogError, LogCritical, LogNone
 #define SILKRPC_TRACE LOG(LogLevel::Trace)
