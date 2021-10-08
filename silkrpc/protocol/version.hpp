@@ -36,7 +36,7 @@ struct ProtocolVersion {
     uint32_t patch;
 };
 
-constexpr auto KV_SERVICE_API_VERSION = ProtocolVersion{3, 0, 0};
+constexpr auto KV_SERVICE_API_VERSION = ProtocolVersion{4, 0, 0};
 constexpr auto ETHBACKEND_SERVICE_API_VERSION = ProtocolVersion{2, 1, 0};
 
 std::ostream& operator<<(std::ostream& out, const ProtocolVersion& v) {

@@ -152,7 +152,7 @@ TEST_CASE("KV protocol version major mismatch", "[silkrpc][protocol][wait_for_kv
     CHECK(version_result1.compatible == false);
     CHECK(version_result1.result.find("incompatible") != std::string::npos);
 
-    reply.set_major(4);
+    reply.set_major(5);
     EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockKVStub*>(stub.get()), Version(_, _, _)).WillOnce(
         DoAll(SetArgPointee<2>(reply), Return(grpc::Status::OK)));
     const auto version_result2{wait_for_kv_protocol_check(stub)};
@@ -176,7 +176,7 @@ TEST_CASE("KV protocol version minor mismatch", "[silkrpc][protocol][wait_for_kv
 TEST_CASE("KV protocol version match", "[silkrpc][protocol][wait_for_kv_protocol_check]") {
     std::unique_ptr<::remote::KV::StubInterface> stub{std::make_unique<::remote::FixIssue24351_MockKVStub>()};
     types::VersionReply reply;
-    reply.set_major(3);
+    reply.set_major(4);
     reply.set_minor(0);
 
     EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockKVStub*>(stub.get()), Version(_, _, _)).WillOnce(
@@ -190,7 +190,7 @@ TEST_CASE("KV protocol version with server stub", "[silkrpc][protocol][wait_for_
     class TestService : public ::remote::KV::Service {
     public:
         ::grpc::Status Version(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response) override {
-            response->set_major(3);
+            response->set_major(4);
             response->set_minor(0);
             response->set_patch(0);
             return ::grpc::Status::OK;
