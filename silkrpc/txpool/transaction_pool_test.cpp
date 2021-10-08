@@ -16,8 +16,11 @@
 
 #include "transaction_pool.hpp"
 
+#include <functional>
 #include <memory>
 #include <thread>
+#include <type_traits>
+#include <utility>
 
 #include <asio/io_context.hpp>
 #include <asio/co_spawn.hpp>
@@ -69,25 +72,10 @@ using testing::_;
 TEST_CASE("create AddClient", "[silkrpc][txpool][transaction_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    uint64_t g_fixture_slowdown_factor = 1;
-    uint64_t g_poller_slowdown_factor = 1;
-
-    auto grpc_test_slowdown_factor = [&]() {
-        return 4/*grpc_test_sanitizer_slowdown_factor()*/ * g_fixture_slowdown_factor * g_poller_slowdown_factor;
-    };
-
-    auto grpc_timeout_milliseconds_to_deadline = [&](int64_t time_ms) {
-        return gpr_time_add(
-            gpr_now(GPR_CLOCK_MONOTONIC),
-            gpr_time_from_micros(
-                grpc_test_slowdown_factor() * static_cast<int64_t>(1e3) * time_ms,
-                GPR_TIMESPAN));
-    };
-
-    class MockClientAsyncAddReader : public grpc::ClientAsyncResponseReaderInterface<::txpool::AddReply> {
+    class MockClientAsyncAddReader final : public grpc::ClientAsyncResponseReaderInterface<::txpool::AddReply> {
     public:
-        MockClientAsyncAddReader(::txpool::AddReply msg, ::grpc::Status status) : msg_(msg), status_(status) {}
-        ~MockClientAsyncAddReader() = default;
+        MockClientAsyncAddReader(::txpool::AddReply msg, ::grpc::Status status) : msg_(std::move(msg)), status_(std::move(status)) {}
+        ~MockClientAsyncAddReader() final = default;
         void StartCall() override {};
         void ReadInitialMetadata(void* tag) override {};
         void Finish(::txpool::AddReply* msg, ::grpc::Status* status, void* tag) override {
@@ -182,7 +170,15 @@ public:
     }
 };
 
-asio::awaitable<bool> test_transaction_pool(::txpool::Txpool::Service* service, const silkworm::ByteView& rlp_tx) {
+template<auto mf, typename T>
+auto make_method_proxy(T&& obj) {
+    return [&obj](auto&&... args) {
+        return (std::forward<T>(obj).*mf)(std::forward<decltype(args)>(args)...);
+    };
+}
+
+template<auto mf, typename R, typename ...Args>
+asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... args) {
     std::ostringstream server_address;
     server_address << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
     grpc::ServerBuilder builder;
@@ -197,7 +193,8 @@ asio::awaitable<bool> test_transaction_pool(::txpool::Txpool::Service* service, 
     auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
     const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
     txpool::TransactionPool transaction_pool{io_context, channel, &queue};
-    const auto result = co_await transaction_pool.add_transaction(rlp_tx);
+    auto method_proxy{make_method_proxy<mf, silkrpc::txpool::TransactionPool>(std::move(transaction_pool))};
+    const auto result = co_await method_proxy(args...);
     server_ptr->Shutdown();
     io_context.stop();
     completion_runner.stop();
@@ -210,13 +207,15 @@ asio::awaitable<bool> test_transaction_pool(::txpool::Txpool::Service* service, 
     co_return result;
 }
 
+auto test_add_transaction = test_comethod<&txpool::TransactionPool::add_transaction, bool, silkworm::ByteView>;
+
 TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     SECTION("call add_transaction and check import success") {
         TestSuccessTxpoolService service;
         asio::io_context io_context;
-        auto success{asio::co_spawn(io_context, test_transaction_pool(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        auto success{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
         CHECK(success.get() == true);
     }
@@ -224,7 +223,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
     SECTION("call add_transaction and check import failure [unexpected import size]") {
         EmptyTxpoolService service;
         asio::io_context io_context;
-        auto success{asio::co_spawn(io_context, test_transaction_pool(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        auto success{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
         CHECK(success.get() == false);
     }
@@ -232,7 +231,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
     SECTION("call add_transaction and check import failure [import error]") {
         TestFailureErrorTxpoolService service;
         asio::io_context io_context;
-        auto success{asio::co_spawn(io_context, test_transaction_pool(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        auto success{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
         CHECK(success.get() == false);
     }
@@ -240,7 +239,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
     SECTION("call add_transaction and check import failure [import no error]") {
         TestFailureNoErrorTxpoolService service;
         asio::io_context io_context;
-        auto success{asio::co_spawn(io_context, test_transaction_pool(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        auto success{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
         CHECK(success.get() == false);
     }
