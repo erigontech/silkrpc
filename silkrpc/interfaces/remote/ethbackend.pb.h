@@ -49,7 +49,7 @@ struct TableStruct_remote_2fethbackend_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxiliaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[10]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[12]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -69,6 +69,12 @@ extern EtherbaseReplyDefaultTypeInternal _EtherbaseReply_default_instance_;
 class EtherbaseRequest;
 class EtherbaseRequestDefaultTypeInternal;
 extern EtherbaseRequestDefaultTypeInternal _EtherbaseRequest_default_instance_;
+class NetPeerCountReply;
+class NetPeerCountReplyDefaultTypeInternal;
+extern NetPeerCountReplyDefaultTypeInternal _NetPeerCountReply_default_instance_;
+class NetPeerCountRequest;
+class NetPeerCountRequestDefaultTypeInternal;
+extern NetPeerCountRequestDefaultTypeInternal _NetPeerCountRequest_default_instance_;
 class NetVersionReply;
 class NetVersionReplyDefaultTypeInternal;
 extern NetVersionReplyDefaultTypeInternal _NetVersionReply_default_instance_;
@@ -93,6 +99,8 @@ template<> ::remote::ClientVersionReply* Arena::CreateMaybeMessage<::remote::Cli
 template<> ::remote::ClientVersionRequest* Arena::CreateMaybeMessage<::remote::ClientVersionRequest>(Arena*);
 template<> ::remote::EtherbaseReply* Arena::CreateMaybeMessage<::remote::EtherbaseReply>(Arena*);
 template<> ::remote::EtherbaseRequest* Arena::CreateMaybeMessage<::remote::EtherbaseRequest>(Arena*);
+template<> ::remote::NetPeerCountReply* Arena::CreateMaybeMessage<::remote::NetPeerCountReply>(Arena*);
+template<> ::remote::NetPeerCountRequest* Arena::CreateMaybeMessage<::remote::NetPeerCountRequest>(Arena*);
 template<> ::remote::NetVersionReply* Arena::CreateMaybeMessage<::remote::NetVersionReply>(Arena*);
 template<> ::remote::NetVersionRequest* Arena::CreateMaybeMessage<::remote::NetVersionRequest>(Arena*);
 template<> ::remote::ProtocolVersionReply* Arena::CreateMaybeMessage<::remote::ProtocolVersionReply>(Arena*);
@@ -657,6 +665,265 @@ class NetVersionReply PROTOBUF_FINAL :
 };
 // -------------------------------------------------------------------
 
+class NetPeerCountRequest PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:remote.NetPeerCountRequest) */ {
+ public:
+  inline NetPeerCountRequest() : NetPeerCountRequest(nullptr) {}
+  virtual ~NetPeerCountRequest();
+
+  NetPeerCountRequest(const NetPeerCountRequest& from);
+  NetPeerCountRequest(NetPeerCountRequest&& from) noexcept
+    : NetPeerCountRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline NetPeerCountRequest& operator=(const NetPeerCountRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline NetPeerCountRequest& operator=(NetPeerCountRequest&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const NetPeerCountRequest& default_instance();
+
+  static inline const NetPeerCountRequest* internal_default_instance() {
+    return reinterpret_cast<const NetPeerCountRequest*>(
+               &_NetPeerCountRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    4;
+
+  friend void swap(NetPeerCountRequest& a, NetPeerCountRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(NetPeerCountRequest* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(NetPeerCountRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline NetPeerCountRequest* New() const final {
+    return CreateMaybeMessage<NetPeerCountRequest>(nullptr);
+  }
+
+  NetPeerCountRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<NetPeerCountRequest>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const NetPeerCountRequest& from);
+  void MergeFrom(const NetPeerCountRequest& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(NetPeerCountRequest* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "remote.NetPeerCountRequest";
+  }
+  protected:
+  explicit NetPeerCountRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_remote_2fethbackend_2eproto);
+    return ::descriptor_table_remote_2fethbackend_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:remote.NetPeerCountRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_remote_2fethbackend_2eproto;
+};
+// -------------------------------------------------------------------
+
+class NetPeerCountReply PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:remote.NetPeerCountReply) */ {
+ public:
+  inline NetPeerCountReply() : NetPeerCountReply(nullptr) {}
+  virtual ~NetPeerCountReply();
+
+  NetPeerCountReply(const NetPeerCountReply& from);
+  NetPeerCountReply(NetPeerCountReply&& from) noexcept
+    : NetPeerCountReply() {
+    *this = ::std::move(from);
+  }
+
+  inline NetPeerCountReply& operator=(const NetPeerCountReply& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline NetPeerCountReply& operator=(NetPeerCountReply&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const NetPeerCountReply& default_instance();
+
+  static inline const NetPeerCountReply* internal_default_instance() {
+    return reinterpret_cast<const NetPeerCountReply*>(
+               &_NetPeerCountReply_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    5;
+
+  friend void swap(NetPeerCountReply& a, NetPeerCountReply& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(NetPeerCountReply* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(NetPeerCountReply* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline NetPeerCountReply* New() const final {
+    return CreateMaybeMessage<NetPeerCountReply>(nullptr);
+  }
+
+  NetPeerCountReply* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<NetPeerCountReply>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const NetPeerCountReply& from);
+  void MergeFrom(const NetPeerCountReply& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(NetPeerCountReply* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "remote.NetPeerCountReply";
+  }
+  protected:
+  explicit NetPeerCountReply(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_remote_2fethbackend_2eproto);
+    return ::descriptor_table_remote_2fethbackend_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kCountFieldNumber = 1,
+  };
+  // uint64 count = 1;
+  void clear_count();
+  ::PROTOBUF_NAMESPACE_ID::uint64 count() const;
+  void set_count(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint64 _internal_count() const;
+  void _internal_set_count(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:remote.NetPeerCountReply)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::uint64 count_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_remote_2fethbackend_2eproto;
+};
+// -------------------------------------------------------------------
+
 class ProtocolVersionRequest PROTOBUF_FINAL :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:remote.ProtocolVersionRequest) */ {
  public:
@@ -698,7 +965,7 @@ class ProtocolVersionRequest PROTOBUF_FINAL :
                &_ProtocolVersionRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    4;
+    6;
 
   friend void swap(ProtocolVersionRequest& a, ProtocolVersionRequest& b) {
     a.Swap(&b);
@@ -821,7 +1088,7 @@ class ProtocolVersionReply PROTOBUF_FINAL :
                &_ProtocolVersionReply_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    5;
+    7;
 
   friend void swap(ProtocolVersionReply& a, ProtocolVersionReply& b) {
     a.Swap(&b);
@@ -957,7 +1224,7 @@ class ClientVersionRequest PROTOBUF_FINAL :
                &_ClientVersionRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    6;
+    8;
 
   friend void swap(ClientVersionRequest& a, ClientVersionRequest& b) {
     a.Swap(&b);
@@ -1080,7 +1347,7 @@ class ClientVersionReply PROTOBUF_FINAL :
                &_ClientVersionReply_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    7;
+    9;
 
   friend void swap(ClientVersionReply& a, ClientVersionReply& b) {
     a.Swap(&b);
@@ -1223,7 +1490,7 @@ class SubscribeRequest PROTOBUF_FINAL :
                &_SubscribeRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    8;
+    10;
 
   friend void swap(SubscribeRequest& a, SubscribeRequest& b) {
     a.Swap(&b);
@@ -1359,7 +1626,7 @@ class SubscribeReply PROTOBUF_FINAL :
                &_SubscribeReply_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    9;
+    11;
 
   friend void swap(SubscribeReply& a, SubscribeReply& b) {
     a.Swap(&b);
@@ -1592,6 +1859,34 @@ inline void NetVersionReply::set_id(::PROTOBUF_NAMESPACE_ID::uint64 value) {
 
 // -------------------------------------------------------------------
 
+// NetPeerCountRequest
+
+// -------------------------------------------------------------------
+
+// NetPeerCountReply
+
+// uint64 count = 1;
+inline void NetPeerCountReply::clear_count() {
+  count_ = PROTOBUF_ULONGLONG(0);
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 NetPeerCountReply::_internal_count() const {
+  return count_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 NetPeerCountReply::count() const {
+  // @@protoc_insertion_point(field_get:remote.NetPeerCountReply.count)
+  return _internal_count();
+}
+inline void NetPeerCountReply::_internal_set_count(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  
+  count_ = value;
+}
+inline void NetPeerCountReply::set_count(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  _internal_set_count(value);
+  // @@protoc_insertion_point(field_set:remote.NetPeerCountReply.count)
+}
+
+// -------------------------------------------------------------------
+
 // ProtocolVersionRequest
 
 // -------------------------------------------------------------------
@@ -1799,6 +2094,10 @@ inline void SubscribeReply::set_allocated_data(std::string* data) {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

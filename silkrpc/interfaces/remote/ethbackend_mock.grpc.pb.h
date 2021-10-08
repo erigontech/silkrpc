@@ -18,6 +18,9 @@ class MockETHBACKENDStub : public ETHBACKEND::StubInterface {
   MOCK_METHOD3(NetVersion, ::grpc::Status(::grpc::ClientContext* context, const ::remote::NetVersionRequest& request, ::remote::NetVersionReply* response));
   MOCK_METHOD3(AsyncNetVersionRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::NetVersionReply>*(::grpc::ClientContext* context, const ::remote::NetVersionRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(PrepareAsyncNetVersionRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::NetVersionReply>*(::grpc::ClientContext* context, const ::remote::NetVersionRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(NetPeerCount, ::grpc::Status(::grpc::ClientContext* context, const ::remote::NetPeerCountRequest& request, ::remote::NetPeerCountReply* response));
+  MOCK_METHOD3(AsyncNetPeerCountRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::NetPeerCountReply>*(::grpc::ClientContext* context, const ::remote::NetPeerCountRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PrepareAsyncNetPeerCountRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::NetPeerCountReply>*(::grpc::ClientContext* context, const ::remote::NetPeerCountRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(Version, ::grpc::Status(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::types::VersionReply* response));
   MOCK_METHOD3(AsyncVersionRaw, ::grpc::ClientAsyncResponseReaderInterface< ::types::VersionReply>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(PrepareAsyncVersionRaw, ::grpc::ClientAsyncResponseReaderInterface< ::types::VersionReply>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
