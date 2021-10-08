@@ -26,7 +26,7 @@ namespace silkrpc {
 
 using Catch::Matchers::Message;
 
-using evmc::literals::operator""_bytes32;
+using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
 TEST_CASE("byte view from string", "[silkrpc][common][util]") {
     CHECK(silkworm::byte_view_of_string("").empty());
@@ -46,19 +46,25 @@ TEST_CASE("calculate hash of transaction", "[silkrpc][common][util]") {
     CHECK(silkworm::to_bytes32(silkworm::ByteView{eth_hash.bytes, silkworm::kHashLength}) == 0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32);
 }
 
-TEST_CASE("print empty ByteView", "[silkrpc][common][util]") {
-    silkworm::ByteView bv{};
-    CHECK_NOTHROW(silkworm::null_stream() << bv);
+TEST_CASE("print ByteView", "[silkrpc][common][util]") {
+    silkworm::ByteView bv1{};
+    CHECK_NOTHROW(silkworm::null_stream() << bv1);
+    silkworm::ByteView bv2{*silkworm::from_hex("0x0608")};
+    CHECK_NOTHROW(silkworm::null_stream() << bv2);
 }
 
 TEST_CASE("print empty address", "[silkrpc][common][util]") {
-    evmc::address addr{};
-    CHECK_NOTHROW(silkworm::null_stream() << addr);
+    evmc::address addr1{};
+    CHECK_NOTHROW(silkworm::null_stream() << addr1);
+    evmc::address addr2{0xa872626373628737383927236382161739290870_address};
+    CHECK_NOTHROW(silkworm::null_stream() << addr2);
 }
 
-TEST_CASE("print empty bytes32", "[silkrpc][common][util]") {
-    evmc::bytes32 b32{};
-    CHECK_NOTHROW(silkworm::null_stream() << b32);
+TEST_CASE("print bytes32", "[silkrpc][common][util]") {
+    evmc::bytes32 b32_1{};
+    CHECK_NOTHROW(silkworm::null_stream() << b32_1);
+    evmc::bytes32 b32_2{0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32};
+    CHECK_NOTHROW(silkworm::null_stream() << b32_2);
 }
 
 TEST_CASE("print empty const_buffer", "[silkrpc][common][util]") {
