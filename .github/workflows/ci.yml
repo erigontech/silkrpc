@@ -53,12 +53,9 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get install -y python3-pip
-          sudo pip3 install cpplint
-          sudo pip3 install pylint
+          sudo pip3 install -r requirements.txt
       - name: Lint
         if: matrix.os == 'ubuntu-latest'
-        run: |
-          cpplint silkrpc/**/*.hpp silkrpc/**/*.cpp
-          pylint tests/
+        run: ./run_linter.sh
       # - name: Unit Test
       #   run: cmd/unit_test
