@@ -85,7 +85,7 @@ public:
                 auto start_op = static_cast<op*>(wrapper_);
                 start_op->complete(this, make_error_code(status.error_code(), status.error_message()), 0);
                 return;
-            } 
+            }
             self_->client_.read_start([this](const grpc::Status& status, remote::Pair open_pair) {
                 auto txid = open_pair.txid();
 
