@@ -26,7 +26,6 @@
 #include <silkworm/execution/evm.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
-#include <silkworm/state/buffer.hpp>
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 
@@ -64,7 +63,7 @@ private:
     const core::rawdb::DatabaseReader& db_reader_;
     const silkworm::ChainConfig& config_;
     asio::thread_pool& workers_;
-    RemoteBuffer buffer_;
+    state::RemoteBuffer buffer_;
 };
 
 } // namespace silkrpc

@@ -46,7 +46,7 @@ TEST_CASE("print empty transaction", "[silkrpc][types][transaction]") {
 TEST_CASE("print type-2 transaction", "[silkrpc][types][transaction]") {
     // https://etherscan.io/tx/0x4b408a48f927f03a63502fb63f7d42c5c4783737ebe8d084cef157575d40f344
     Transaction txn{
-        2,                                                   // type
+        silkworm::Transaction::Type::kEip1559,               // type
         371,                                                 // nonce
         1 * kGiga,                                           // max_priority_fee_per_gas
         217'914'097'876,                                     // max_fee_per_gas
@@ -71,7 +71,7 @@ TEST_CASE("print type-2 transaction", "[silkrpc][types][transaction]") {
 TEST_CASE("create legacy transaction", "[silkrpc][types][transaction]") {
     // https://etherscan.io/tx/0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060
     Transaction txn{
-        std::nullopt,                                        // type
+        silkworm::Transaction::Type::kLegacy,                // type
         0,                                                   // nonce
         50'000 * kGiga,                                      // max_priority_fee_per_gas
         50'000 * kGiga,                                      // max_fee_per_gas

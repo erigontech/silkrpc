@@ -28,12 +28,12 @@
 #include <asio/io_context.hpp>
 #include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>
-#include <silkworm/state/buffer.hpp>
 
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/core/state_reader.hpp>
+#include <silkworm/state/state.hpp>
 
-namespace silkrpc {
+namespace silkrpc::state {
 
 class AsyncRemoteBuffer {
 public:
@@ -42,7 +42,7 @@ public:
 
     asio::awaitable<std::optional<silkworm::Account>> read_account(const evmc::address& address) const noexcept;
 
-    asio::awaitable<silkworm::Bytes> read_code(const evmc::bytes32& code_hash) const noexcept;
+    asio::awaitable<silkworm::ByteView> read_code(const evmc::bytes32& code_hash) const noexcept;
 
     asio::awaitable<evmc::bytes32> read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept;
 
@@ -67,14 +67,14 @@ private:
     StateReader state_reader_;
 };
 
-class RemoteBuffer : public silkworm::StateBuffer {
+class RemoteBuffer : public silkworm::State {
 public:
     explicit RemoteBuffer(asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, uint64_t block_number)
     : io_context_(io_context), async_buffer_{io_context, db_reader, block_number} {}
 
     std::optional<silkworm::Account> read_account(const evmc::address& address) const noexcept override;
 
-    silkworm::Bytes read_code(const evmc::bytes32& code_hash) const noexcept override;
+    silkworm::ByteView read_code(const evmc::bytes32& code_hash) const noexcept override;
 
     evmc::bytes32 read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept override;
 
@@ -129,6 +129,6 @@ private:
 
 std::ostream& operator<<(std::ostream& out, const RemoteBuffer& s);
 
-} // namespace silkrpc
+} // namespace silkrpc::state
 
 #endif  // SILKRPC_CORE_REMOTE_BUFFER_HPP_

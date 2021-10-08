@@ -30,7 +30,7 @@
 namespace silkrpc {
 
 using Catch::Matchers::Message;
-using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
+using evmc::literals::operator""_address;
 
 TEST_CASE("EVMexecutor") {
     class StubDatabase : public core::rawdb::DatabaseReader {
