@@ -84,32 +84,56 @@ class Txpool final {
       virtual ~experimental_async_interface() {}
       // Version returns the service version number
       virtual void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
       // preserves incoming order, changes amount, unknown hashes will be omitted
       virtual void FindUnknown(::grpc::ClientContext* context, const ::txpool::TxHashes* request, ::txpool::TxHashes* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void FindUnknown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TxHashes* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void FindUnknown(::grpc::ClientContext* context, const ::txpool::TxHashes* request, ::txpool::TxHashes* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void FindUnknown(::grpc::ClientContext* context, const ::txpool::TxHashes* request, ::txpool::TxHashes* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void FindUnknown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TxHashes* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void FindUnknown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TxHashes* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
       // Expecting signed transactions. Preserves incoming order and amount
       // Adding txs as local (use P2P to add remote txs)
       virtual void Add(::grpc::ClientContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Add(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::AddReply* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Add(::grpc::ClientContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void Add(::grpc::ClientContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void Add(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::AddReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void Add(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::AddReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
       // preserves incoming order and amount, if some transaction doesn't exists in pool - returns nil in this slot
       virtual void Transactions(::grpc::ClientContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Transactions(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TransactionsReply* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Transactions(::grpc::ClientContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void Transactions(::grpc::ClientContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void Transactions(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TransactionsReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void Transactions(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TransactionsReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
       // subscribe to new transactions add event
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
@@ -182,28 +206,52 @@ class Txpool final {
       public StubInterface::experimental_async_interface {
      public:
       void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, std::function<void(::grpc::Status)>) override;
+      void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
       void FindUnknown(::grpc::ClientContext* context, const ::txpool::TxHashes* request, ::txpool::TxHashes* response, std::function<void(::grpc::Status)>) override;
+      void FindUnknown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TxHashes* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void FindUnknown(::grpc::ClientContext* context, const ::txpool::TxHashes* request, ::txpool::TxHashes* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void FindUnknown(::grpc::ClientContext* context, const ::txpool::TxHashes* request, ::txpool::TxHashes* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void FindUnknown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TxHashes* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void FindUnknown(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TxHashes* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
       void Add(::grpc::ClientContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response, std::function<void(::grpc::Status)>) override;
+      void Add(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::AddReply* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Add(::grpc::ClientContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void Add(::grpc::ClientContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void Add(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::AddReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void Add(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::AddReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
       void Transactions(::grpc::ClientContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response, std::function<void(::grpc::Status)>) override;
+      void Transactions(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TransactionsReply* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Transactions(::grpc::ClientContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response, ::grpc::ClientUnaryReactor* reactor) override;
       #else
       void Transactions(::grpc::ClientContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void Transactions(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TransactionsReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void Transactions(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TransactionsReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void OnAdd(::grpc::ClientContext* context, ::txpool::OnAddRequest* request, ::grpc::ClientReadReactor< ::txpool::OnAddReply>* reactor) override;
@@ -369,7 +417,7 @@ class Txpool final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(0,
-          new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::VersionReply>(
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::VersionReply>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -384,7 +432,7 @@ class Txpool final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(0);
     #endif
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::VersionReply>*>(handler)
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::VersionReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_Version() override {
@@ -416,7 +464,7 @@ class Txpool final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(1,
-          new ::grpc::internal::CallbackUnaryHandler< ::txpool::TxHashes, ::txpool::TxHashes>(
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::txpool::TxHashes, ::txpool::TxHashes>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -431,7 +479,7 @@ class Txpool final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(1);
     #endif
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::txpool::TxHashes, ::txpool::TxHashes>*>(handler)
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::txpool::TxHashes, ::txpool::TxHashes>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_FindUnknown() override {
@@ -463,7 +511,7 @@ class Txpool final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(2,
-          new ::grpc::internal::CallbackUnaryHandler< ::txpool::AddRequest, ::txpool::AddReply>(
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::txpool::AddRequest, ::txpool::AddReply>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -478,7 +526,7 @@ class Txpool final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(2);
     #endif
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::txpool::AddRequest, ::txpool::AddReply>*>(handler)
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::txpool::AddRequest, ::txpool::AddReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_Add() override {
@@ -510,7 +558,7 @@ class Txpool final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(3,
-          new ::grpc::internal::CallbackUnaryHandler< ::txpool::TransactionsRequest, ::txpool::TransactionsReply>(
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::txpool::TransactionsRequest, ::txpool::TransactionsReply>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -525,7 +573,7 @@ class Txpool final {
     #else
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(3);
     #endif
-      static_cast<::grpc::internal::CallbackUnaryHandler< ::txpool::TransactionsRequest, ::txpool::TransactionsReply>*>(handler)
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::txpool::TransactionsRequest, ::txpool::TransactionsReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
     ~ExperimentalWithCallbackMethod_Transactions() override {
@@ -557,7 +605,7 @@ class Txpool final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(4,
-          new ::grpc::internal::CallbackServerStreamingHandler< ::txpool::OnAddRequest, ::txpool::OnAddReply>(
+          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::txpool::OnAddRequest, ::txpool::OnAddReply>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -785,7 +833,7 @@ class Txpool final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(0,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -823,7 +871,7 @@ class Txpool final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(1,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -861,7 +909,7 @@ class Txpool final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(2,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -899,7 +947,7 @@ class Txpool final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(3,
-          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -937,7 +985,7 @@ class Txpool final {
       ::grpc::Service::experimental().
     #endif
         MarkMethodRawCallback(4,
-          new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
@@ -972,8 +1020,8 @@ class Txpool final {
       ::grpc::Service::MarkMethodStreamed(0,
         new ::grpc::internal::StreamedUnaryHandler<
           ::google::protobuf::Empty, ::types::VersionReply>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerUnaryStreamer<
                      ::google::protobuf::Empty, ::types::VersionReply>* streamer) {
                        return this->StreamedVersion(context,
                          streamer);
@@ -999,8 +1047,8 @@ class Txpool final {
       ::grpc::Service::MarkMethodStreamed(1,
         new ::grpc::internal::StreamedUnaryHandler<
           ::txpool::TxHashes, ::txpool::TxHashes>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerUnaryStreamer<
                      ::txpool::TxHashes, ::txpool::TxHashes>* streamer) {
                        return this->StreamedFindUnknown(context,
                          streamer);
@@ -1026,8 +1074,8 @@ class Txpool final {
       ::grpc::Service::MarkMethodStreamed(2,
         new ::grpc::internal::StreamedUnaryHandler<
           ::txpool::AddRequest, ::txpool::AddReply>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerUnaryStreamer<
                      ::txpool::AddRequest, ::txpool::AddReply>* streamer) {
                        return this->StreamedAdd(context,
                          streamer);
@@ -1053,8 +1101,8 @@ class Txpool final {
       ::grpc::Service::MarkMethodStreamed(3,
         new ::grpc::internal::StreamedUnaryHandler<
           ::txpool::TransactionsRequest, ::txpool::TransactionsReply>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerUnaryStreamer<
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerUnaryStreamer<
                      ::txpool::TransactionsRequest, ::txpool::TransactionsReply>* streamer) {
                        return this->StreamedTransactions(context,
                          streamer);
@@ -1081,8 +1129,8 @@ class Txpool final {
       ::grpc::Service::MarkMethodStreamed(4,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::txpool::OnAddRequest, ::txpool::OnAddReply>(
-            [this](::grpc::ServerContext* context,
-                   ::grpc::ServerSplitStreamer<
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerSplitStreamer<
                      ::txpool::OnAddRequest, ::txpool::OnAddReply>* streamer) {
                        return this->StreamedOnAdd(context,
                          streamer);

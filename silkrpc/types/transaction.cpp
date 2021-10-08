@@ -19,6 +19,7 @@
 #include <iomanip>
 
 #include <silkrpc/common/util.hpp>
+#include <silkworm/common/endian.hpp>
 
 namespace silkrpc {
 
@@ -30,9 +31,9 @@ std::ostream& operator<<(std::ostream& out, const Transaction& t) {
     out << " #access_list: " << t.access_list.size();
     out << " block_hash: " << t.block_hash;
     out << " block_number: " << t.block_number;
-    out << " block_base_fee_per_gas: " << silkworm::to_hex(silkworm::rlp::big_endian(t.block_base_fee_per_gas.value_or(0)));
+    out << " block_base_fee_per_gas: " << silkworm::to_hex(silkworm::endian::to_big_compact(t.block_base_fee_per_gas.value_or(0)));
     if (t.chain_id) {
-        out << " chain_id: " << silkworm::to_hex(silkworm::rlp::big_endian(*t.chain_id));
+        out << " chain_id: " << silkworm::to_hex(silkworm::endian::to_big_compact(*t.chain_id));
     } else {
         out << " chain_id: null";
     }
@@ -43,14 +44,14 @@ std::ostream& operator<<(std::ostream& out, const Transaction& t) {
         out << " from: null";
     }
     out << " nonce: " << t.nonce;
-    out << " max_priority_fee_per_gas: " << silkworm::to_hex(silkworm::rlp::big_endian(t.max_priority_fee_per_gas));
-    out << " max_fee_per_gas: " << silkworm::to_hex(silkworm::rlp::big_endian(t.max_fee_per_gas));
-    out << " gas_price: " << silkworm::to_hex(silkworm::rlp::big_endian(t.effective_gas_price()));
+    out << " max_priority_fee_per_gas: " << silkworm::to_hex(silkworm::endian::to_big_compact(t.max_priority_fee_per_gas));
+    out << " max_fee_per_gas: " << silkworm::to_hex(silkworm::endian::to_big_compact(t.max_fee_per_gas));
+    out << " gas_price: " << silkworm::to_hex(silkworm::endian::to_big_compact(t.effective_gas_price()));
     out << " gas_limit: " << t.gas_limit;
     out << " odd_y_parity: " << t.odd_y_parity;
 
-    out << " r: " << silkworm::to_hex(silkworm::rlp::big_endian(t.r));
-    out << " s: " << silkworm::to_hex(silkworm::rlp::big_endian(t.s));
+    out << " r: " << silkworm::to_hex(silkworm::endian::to_big_compact(t.r));
+    out << " s: " << silkworm::to_hex(silkworm::endian::to_big_compact(t.s));
 
     if (t.to) {
         out << " to: " << silkworm::to_hex(*t.to);
@@ -58,12 +59,8 @@ std::ostream& operator<<(std::ostream& out, const Transaction& t) {
         out << " to: null";
     }
     out << " transaction_index: " << t.transaction_index;
-    if (t.type) {
-        out << " type: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(*t.type);
-    } else {
-        out << " type: null";
-    }
-    out << " value: " << silkworm::to_hex(silkworm::rlp::big_endian(t.value));
+    out << " type: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(t.type);
+    out << " value: " << silkworm::to_hex(silkworm::endian::to_big_compact(t.value));
 
     return out;
 }
