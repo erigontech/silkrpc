@@ -36,7 +36,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
     class MockDatabaseReader : public core::rawdb::DatabaseReader {
     public:
         MockDatabaseReader() = default;
-        MockDatabaseReader(const silkworm::Bytes& value) : value_(value) {}
+        explicit MockDatabaseReader(const silkworm::Bytes& value) : value_(value) {}
 
         asio::awaitable<KeyValue> get(const std::string& table, const silkworm::ByteView& key) const override {
             co_return KeyValue{};
