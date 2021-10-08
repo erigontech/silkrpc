@@ -43,7 +43,7 @@
 namespace silkrpc::ethdb::kv {
 
 template <typename Handler, typename IoExecutor>
-using async_start = async_noreply_operation<Handler, IoExecutor>;
+using async_start = async_reply_operation<Handler, IoExecutor, uint64_t>;
 
 template <typename Handler, typename IoExecutor>
 using async_open_cursor = async_reply_operation<Handler, IoExecutor, uint32_t>;
@@ -81,12 +81,21 @@ public:
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
         self_->client_.start_call([this](const grpc::Status& status) {
-            auto start_op = static_cast<op*>(wrapper_);
-            if (status.ok()) {
-                start_op->complete(this, {});
-            } else {
-                start_op->complete(this, make_error_code(status.error_code(), status.error_message()));
-            }
+            if (!status.ok()) {
+                auto start_op = static_cast<op*>(wrapper_);
+                start_op->complete(this, make_error_code(status.error_code(), status.error_message()), 0);
+                return;
+            } 
+            self_->client_.read_start([this](const grpc::Status& status, remote::Pair open_pair) {
+                auto txid = open_pair.txid();
+
+                auto start_op = static_cast<op*>(wrapper_);
+                if (status.ok()) {
+                    start_op->complete(this, {}, txid);
+                } else {
+                    start_op->complete(this, make_error_code(status.error_code(), status.error_message()), 0);
+                }
+            });
         });
     }
 
@@ -365,7 +374,7 @@ struct KvAsioAwaitable {
 
     template<typename WaitHandler>
     auto async_start(WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code)>(initiate_async_start{this}, handler);
+        return asio::async_initiate<WaitHandler, void(asio::error_code, uint64_t)>(initiate_async_start{this}, handler);
     }
 
     template<typename WaitHandler>
