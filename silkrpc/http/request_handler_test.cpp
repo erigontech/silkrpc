@@ -149,8 +149,8 @@ TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request
         1,
         3,
         {{"v", "1"}},
-        69,
-        "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"eth_getBlockByNumber\", \"params\":[]\"}"
+        70,
+        "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"eth_getBlockByNumber\",\"params\":\[]}"
     };
     silkrpc::http::Reply reply {};
 
@@ -165,14 +165,14 @@ TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request
         }, asio::use_future)};
         result.get();
     } catch (...) {
-        CHECK(reply.content == "{\"error\":{\"code\":100,\"message\":\"invalid getBlockByNumber params: \"},\"id\":3,\"jsonrpc\":\"2.0\"}\n");
-        CHECK(reply.status == 200);
-        CHECK(reply.headers.size() == 2);
-        CHECK(reply.headers[0].name == "Content-Length");
-        CHECK(reply.headers[0].value == "92");
-        CHECK(reply.headers[1].name == "Content-Type");
-        CHECK(reply.headers[1].value == "application/json");
     }
+    CHECK(reply.content == "{\"error\":{\"code\":100,\"message\":\"invalid getBlockByNumber params: []\"},\"id\":3,\"jsonrpc\":\"2.0\"}\n");
+    CHECK(reply.status == 200);
+    CHECK(reply.headers.size() == 2);
+    CHECK(reply.headers[0].name == "Content-Length");
+    CHECK(reply.headers[0].value == "94");
+    CHECK(reply.headers[1].name == "Content-Type");
+    CHECK(reply.headers[1].value == "application/json");
     cp.stop();
     context_pool_thread.join();
 }
