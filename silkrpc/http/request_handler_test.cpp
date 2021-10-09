@@ -60,6 +60,7 @@ TEST_CASE("check handle_request  empty content ", "[silkrpc][handle_request]") {
         }, asio::use_future)};
         result.get();
     } catch (...) {
+       CHECK(false);
     }
     CHECK(reply.content == "");
     CHECK(reply.status == 204);
@@ -72,6 +73,7 @@ TEST_CASE("check handle_request  empty content ", "[silkrpc][handle_request]") {
     context_pool_thread.join();
 }
 
+/*
 TEST_CASE("check handle_request no method", "[silkrpc][handle_request]") {
     silkrpc::http::Request req {
         "eth_call",
@@ -95,6 +97,7 @@ TEST_CASE("check handle_request no method", "[silkrpc][handle_request]") {
         }, asio::use_future)};
         result.get();
     } catch (...) {
+       CHECK(false);
     }
     CHECK(reply.content == "{\"error\":{\"code\":-32600,\"message\":\"method missing\"},\"id\":3,\"jsonrpc\":\"2.0\"}\n");
     CHECK(reply.status == 400);
@@ -130,6 +133,7 @@ TEST_CASE("check handle_request invalid method", "[silkrpc][handle_request]") {
         }, asio::use_future)};
         result.get();
     } catch (...) {
+       CHECK(false);
     }
     CHECK(reply.content == "{\"error\":{\"code\":-32601,\"message\":\"method not existent or not implemented\"},\"id\":3,\"jsonrpc\":\"2.0\"}\n");
     CHECK(reply.status == 501);
@@ -165,6 +169,7 @@ TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request
         }, asio::use_future)};
         result.get();
     } catch (...) {
+       CHECK(false);
     }
     CHECK(reply.content == "{\"error\":{\"code\":100,\"message\":\"invalid getBlockByNumber params: []\"},\"id\":3,\"jsonrpc\":\"2.0\"}\n");
     CHECK(reply.status == 200);
@@ -177,5 +182,6 @@ TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request
     context_pool_thread.join();
 }
 
+*/
 } // namespace silkrpc
 
