@@ -149,8 +149,8 @@ TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request
         1,
         3,
         {{"v", "1"}},
-        24,
-        "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"eth_getBlockByNumber\"}"
+        69,
+        "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"eth_getBlockByNumber\", \"params\":[]\"}"
     };
     silkrpc::http::Reply reply {};
 
