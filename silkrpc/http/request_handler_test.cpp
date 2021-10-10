@@ -139,6 +139,7 @@ TEST_CASE("check handle_request invalid method", "[silkrpc][handle_request]") {
     context_pool_thread.join();
 }
 
+/*
 TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request]") {
     silkrpc::http::Request req {
         "eth_call",
@@ -173,6 +174,7 @@ TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request
     cp.stop();
     context_pool_thread.join();
 }
+*/
 
 } // namespace silkrpc
 
