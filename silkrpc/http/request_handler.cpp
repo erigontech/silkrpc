@@ -35,7 +35,6 @@
 namespace silkrpc::http {
 
 std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = {
-/*
     {method::k_web3_clientVersion, &commands::RpcApi::handle_web3_client_version},
     {method::k_web3_sha3, &commands::RpcApi::handle_web3_sha3},
     {method::k_net_listening, &commands::RpcApi::handle_net_listening},
@@ -104,8 +103,6 @@ std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = 
     {method::k_tg_forks, &commands::RpcApi::handle_tg_forks},
     {method::k_tg_issuance, &commands::RpcApi::handle_tg_issuance},
     {method::k_parity_getBlockReceipts, &commands::RpcApi::handle_parity_get_block_receipts},
-*/
-
 };
 
 asio::awaitable<void> RequestHandler::handle_request(const Request& request, Reply& reply) {
@@ -113,7 +110,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
     auto start = clock_time::now();
 
     auto request_id{0};
-    //try {
+    try {
         if (request.content.empty()) {
             reply.content = "";
             reply.status = Reply::no_content;
@@ -153,7 +150,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
 
         reply.content = reply_json.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace) + "\n";
         reply.status = Reply::ok;
-/*
+
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply.content = make_json_error(request_id, 100, e.what()).dump() + "\n";
@@ -163,7 +160,7 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
         reply.content = make_json_error(request_id, 100, "unexpected exception").dump() + "\n";
         reply.status = Reply::internal_server_error;
     }
-*/
+
 
     reply.headers.reserve(2);
     reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
