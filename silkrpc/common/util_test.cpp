@@ -77,5 +77,25 @@ TEST_CASE("print empty vector of const_buffer", "[silkrpc][common][util]") {
     CHECK_NOTHROW(silkworm::null_stream() << v);
 }
 
+TEST_CASE("print Account", "[silkrpc][common][util]") {
+    silkworm::Account account{};
+    CHECK_NOTHROW(silkworm::null_stream() << account);
+}
+
+TEST_CASE("base64 encode", "[silkrpc][common][util]") {
+    uint8_t plain[] = "deadbeaf";
+    auto encoded = base64_encode(plain, sizeof(plain), false);
+    CHECK(encoded == "ZGVhZGJlYWYA");
+
+    encoded = base64_encode(plain, sizeof(plain), true);
+    CHECK(encoded == "ZGVhZGJlYWYA");
+}
+
+TEST_CASE("to_dec", "[silkrpc][common][util]") {
+    intx::uint256 number{0x189128};
+    auto encoded = to_dec(number);
+    CHECK(encoded == "1610024");
+}
+
 } // namespace silkrpc
 

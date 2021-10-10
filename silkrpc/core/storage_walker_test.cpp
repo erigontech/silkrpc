@@ -262,4 +262,29 @@ TEST_CASE("Storage walker") {
     }
 }
 
+TEST_CASE("make key for address and location") {
+    evmc::address address = 0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address;
+    evmc::bytes32 location = 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32;
+
+    auto key = make_key(address, location);
+    CHECK(silkworm::to_hex(key) == "79a4d418f7887dd4d5123a41b6c8c186686ae8cb56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421");
+}
+
+TEST_CASE("make key for address, incarnation and location") {
+    evmc::address address = 0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address;
+    evmc::bytes32 location = 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32;
+    uint64_t incarnation = 1;
+
+    auto key = make_key(address, incarnation, location);
+    CHECK(silkworm::to_hex(key) == "79a4d418f7887dd4d5123a41b6c8c186686ae8cb000000000000000156e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421");
+}
+
+TEST_CASE("make key for block number and address") {
+    evmc::address address = 0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address;
+    uint64_t block_number = 0x56e81;
+
+    auto key = make_key(block_number, address);
+    CHECK(silkworm::to_hex(key) == "0000000000056e8179a4d418f7887dd4d5123a41b6c8c186686ae8cb");
+}
+
 }  // namespace silkrpc
