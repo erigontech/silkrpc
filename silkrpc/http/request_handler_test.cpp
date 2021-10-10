@@ -47,10 +47,11 @@ TEST_CASE("check handle_request  empty content ", "[silkrpc][handle_request]") {
         ""
     };
     silkrpc::http::Reply reply {};
+
+/*
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     asio::thread_pool workers{1};
-
     try {
         silkrpc::http::RequestHandler h{cp.get_context(), workers};
         auto result{asio::co_spawn(cp.get_io_context(), h.handle_request(req, reply), asio::use_future)};
@@ -68,6 +69,7 @@ TEST_CASE("check handle_request  empty content ", "[silkrpc][handle_request]") {
     CHECK(reply.headers[1].value == "application/json");
     cp.stop();
     context_pool_thread.join();
+*/
 }
 
 TEST_CASE("check handle_request no method", "[silkrpc][handle_request]") {
@@ -82,6 +84,7 @@ TEST_CASE("check handle_request no method", "[silkrpc][handle_request]") {
     };
     silkrpc::http::Reply reply {};
 
+/*
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     asio::thread_pool workers{1};
@@ -102,6 +105,7 @@ TEST_CASE("check handle_request no method", "[silkrpc][handle_request]") {
     CHECK(reply.headers[1].value == "application/json");
     cp.stop();
     context_pool_thread.join();
+*/
 }
 
 TEST_CASE("check handle_request invalid method", "[silkrpc][handle_request]") {
@@ -116,11 +120,11 @@ TEST_CASE("check handle_request invalid method", "[silkrpc][handle_request]") {
     };
     silkrpc::http::Reply reply {};
 
+/*
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     asio::thread_pool workers{1};
 
-    silkrpc::http::RequestHandler h{cp.get_context(), workers};
     try {
         silkrpc::http::RequestHandler h{cp.get_context(), workers};
         auto result{asio::co_spawn(cp.get_io_context(), h.handle_request(req, reply), asio::use_future)};
@@ -137,9 +141,9 @@ TEST_CASE("check handle_request invalid method", "[silkrpc][handle_request]") {
     CHECK(reply.headers[1].value == "application/json");
     cp.stop();
     context_pool_thread.join();
+*/
 }
 
-/*
 TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request]") {
     silkrpc::http::Request req {
         "eth_call",
@@ -152,6 +156,7 @@ TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request
     };
     silkrpc::http::Reply reply {};
 
+/*
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     asio::thread_pool workers{1};
@@ -173,8 +178,8 @@ TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request
     CHECK(reply.headers[1].value == "application/json");
     cp.stop();
     context_pool_thread.join();
-}
 */
+}
 
 } // namespace silkrpc
 
