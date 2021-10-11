@@ -75,10 +75,7 @@ ProtocolVersionResult wait_for_protocol_check(const std::unique_ptr<StubInterfac
     }
 }
 
-template<typename F, typename StubInterface>
-concept CanCreateStub = std::is_invocable_r_v<std::unique_ptr<StubInterface>, F, std::shared_ptr<grpc::ChannelInterface>&, grpc::StubOptions&>;
-
-template<auto Func, typename StubInterface> requires CanCreateStub<decltype(Func), StubInterface>
+template<auto Func, typename StubInterface>
 struct NewStubFactory final {
     auto operator()(const std::shared_ptr<grpc::ChannelInterface>& channel, const grpc::StubOptions& options = grpc::StubOptions()) -> std::unique_ptr<StubInterface> {
         return std::invoke(Func, channel, options);
