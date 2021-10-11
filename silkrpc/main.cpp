@@ -140,6 +140,11 @@ int main(int argc, char* argv[]) {
             throw std::runtime_error{ethbackend_protocol_check.result};
         }
         SILKRPC_LOG << ethbackend_protocol_check.result << "\n";
+        const auto txpool_protocol_check{silkrpc::wait_for_txpool_protocol_check(core_service_channel)};
+        if (!txpool_protocol_check.compatible) {
+            throw std::runtime_error{txpool_protocol_check.result};
+        }
+        SILKRPC_LOG << txpool_protocol_check.result << "\n";
 
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{numContexts, create_channel};
