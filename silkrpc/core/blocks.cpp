@@ -28,7 +28,8 @@ asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const co
     } else if (block_id == kLatestBlockId || block_id == kPendingBlockId) {
         block_number = co_await get_latest_block_number(reader);
     } else {
-        block_number = std::stol(block_id, 0, 16);
+        std::size_t base = (block_id.find("0x") == 0 || block_id.find("0X") == 0) ? 16 : 10;
+        block_number = std::stol(block_id, 0, base);
     }
     SILKRPC_DEBUG << "get_block_number block_number: " << block_number << "\n";
     co_return block_number;
