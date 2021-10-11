@@ -26,6 +26,7 @@
 #include <asio/co_spawn.hpp>
 #include <asio/use_future.hpp>
 #include <catch2/catch.hpp>
+#include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/base.hpp>
@@ -68,6 +69,8 @@ using testing::AtLeast;
 using testing::MockFunction;
 using testing::Return;
 using testing::_;
+
+using evmc::literals::operator""_bytes32;
 
 TEST_CASE("create AddClient", "[silkrpc][txpool][transaction_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -143,29 +146,7 @@ public:
     ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
         return ::grpc::Status::OK;
     }
-};
-
-class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
-public:
-    ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
-        response->add_imported(::txpool::ImportResult::SUCCESS);
-        return ::grpc::Status::OK;
-    }
-};
-
-class TestFailureErrorTxpoolService : public ::txpool::Txpool::Service {
-public:
-    ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
-        response->add_imported(::txpool::ImportResult::INVALID);
-        response->add_errors("invalid transaction");
-        return ::grpc::Status::OK;
-    }
-};
-
-class TestFailureNoErrorTxpoolService : public ::txpool::Txpool::Service {
-public:
-    ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
-        response->add_imported(::txpool::ImportResult::INTERNAL_ERROR);
+    ::grpc::Status Transactions(::grpc::ServerContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response) override {
         return ::grpc::Status::OK;
     }
 };
@@ -208,11 +189,19 @@ asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... arg
 }
 
 auto test_add_transaction = test_comethod<&txpool::TransactionPool::add_transaction, bool, silkworm::ByteView>;
+auto test_get_transaction = test_comethod<&txpool::TransactionPool::get_transaction, std::optional<silkworm::Bytes>, evmc::bytes32>;
 
 TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     SECTION("call add_transaction and check import success") {
+        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
+        public:
+            ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
+                response->add_imported(::txpool::ImportResult::SUCCESS);
+                return ::grpc::Status::OK;
+            }
+        };
         TestSuccessTxpoolService service;
         asio::io_context io_context;
         auto success{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
@@ -229,6 +218,14 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
     }
 
     SECTION("call add_transaction and check import failure [import error]") {
+        class TestFailureErrorTxpoolService : public ::txpool::Txpool::Service {
+        public:
+            ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
+                response->add_imported(::txpool::ImportResult::INVALID);
+                response->add_errors("invalid transaction");
+                return ::grpc::Status::OK;
+            }
+        };
         TestFailureErrorTxpoolService service;
         asio::io_context io_context;
         auto success{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
@@ -237,11 +234,59 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
     }
 
     SECTION("call add_transaction and check import failure [import no error]") {
+        class TestFailureNoErrorTxpoolService : public ::txpool::Txpool::Service {
+        public:
+            ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
+                response->add_imported(::txpool::ImportResult::INTERNAL_ERROR);
+                return ::grpc::Status::OK;
+            }
+        };
         TestFailureNoErrorTxpoolService service;
         asio::io_context io_context;
         auto success{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
         CHECK(success.get() == false);
+    }
+
+    SECTION("call get_transaction and check result") {
+        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
+        public:
+            ::grpc::Status Transactions(::grpc::ServerContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response) override {
+                response->add_rlptxs("0804");
+                return ::grpc::Status::OK;
+            }
+        };
+        TestSuccessTxpoolService service;
+        asio::io_context io_context;
+        const auto tx_hash{0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32};
+        auto tx_rlp{asio::co_spawn(io_context, test_get_transaction(&service, tx_hash), asio::use_future)};
+        io_context.run();
+        CHECK(tx_rlp.get() == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
+    }
+
+    SECTION("call get_transaction and check result is null [rlptxs size is 0]") {
+        EmptyTxpoolService service;
+        asio::io_context io_context;
+        auto tx_rlp{asio::co_spawn(io_context, test_get_transaction(&service, evmc::bytes32{}), asio::use_future)};
+        io_context.run();
+        CHECK(tx_rlp.get() == std::nullopt);
+    }
+
+    SECTION("call get_transaction and check result is null [rlptxs size is greater than 1]") {
+        class TestTooManyRlpTxsTxpoolService : public ::txpool::Txpool::Service {
+        public:
+            ::grpc::Status Transactions(::grpc::ServerContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response) override {
+                response->add_rlptxs("0804");
+                response->add_rlptxs("0905");
+                return ::grpc::Status::OK;
+            }
+        };
+        TestTooManyRlpTxsTxpoolService service;
+        asio::io_context io_context;
+        const auto tx_hash{0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32};
+        auto tx_rlp{asio::co_spawn(io_context, test_get_transaction(&service, tx_hash), asio::use_future)};
+        io_context.run();
+        CHECK(tx_rlp.get() == std::nullopt);
     }
 }
 
