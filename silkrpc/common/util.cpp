@@ -46,16 +46,6 @@ std::string base64_encode(const uint8_t* bytes_to_encode, size_t len, bool url) 
     size_t len_encoded = (len +2) / 3 * 4;
 
     unsigned char trailing_char = url ? '.' : '=';
-
- //
- // Choose set of base64 characters. They differ
- // for the last two positions, depending on the url
- // parameter.
- // A bool (as is the parameter url) is guaranteed
- // to evaluate to either 0 or 1 in C++ therefore,
- // the correct character set is chosen by subscripting
- // base64_chars with url.
- //
     const char* base64_chars_ = kBase64Chars[url ? 1 : 0];
 
     std::string ret;
@@ -66,15 +56,15 @@ std::string base64_encode(const uint8_t* bytes_to_encode, size_t len, bool url) 
         ret.push_back(base64_chars_[(bytes_to_encode[pos + 0] & 0xfc) >> 2]);
 
         if (pos + 1 < len) {
-           ret.push_back(base64_chars_[((bytes_to_encode[pos + 0] & 0x03) << 4) + ((bytes_to_encode[pos + 1] & 0xf0) >> 4)]);
+            ret.push_back(base64_chars_[((bytes_to_encode[pos + 0] & 0x03) << 4) + ((bytes_to_encode[pos + 1] & 0xf0) >> 4)]);
 
-           if (pos + 2 < len) {
-              ret.push_back(base64_chars_[((bytes_to_encode[pos + 1] & 0x0f) << 2) + ((bytes_to_encode[pos + 2] & 0xc0) >> 6)]);
-              ret.push_back(base64_chars_[  bytes_to_encode[pos + 2] & 0x3f]);
-           } else {
-              ret.push_back(base64_chars_[(bytes_to_encode[pos + 1] & 0x0f) << 2]);
-              ret.push_back(trailing_char);
-           }
+            if (pos + 2 < len) {
+                ret.push_back(base64_chars_[((bytes_to_encode[pos + 1] & 0x0f) << 2) + ((bytes_to_encode[pos + 2] & 0xc0) >> 6)]);
+                ret.push_back(base64_chars_[  bytes_to_encode[pos + 2] & 0x3f]);
+            } else {
+                ret.push_back(base64_chars_[(bytes_to_encode[pos + 1] & 0x0f) << 2]);
+                ret.push_back(trailing_char);
+            }
         } else {
             ret.push_back(base64_chars_[(bytes_to_encode[pos + 0] & 0x03) << 4]);
             ret.push_back(trailing_char);

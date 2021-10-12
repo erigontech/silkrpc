@@ -16,8 +16,9 @@
 
 #include "dump_account.hpp"
 
-#include <silkrpc/common/log.hpp>
 #include <silkworm/common/util.hpp>
+
+#include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/json/types.hpp>
 

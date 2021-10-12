@@ -16,12 +16,12 @@
 
 #include "dump_account.hpp"
 
-#include <sstream>
 #include <catch2/catch.hpp>
-#include <silkworm/common/util.hpp>
+#include <nlohmann/json.hpp>
 #include <evmc/evmc.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkworm/common/util.hpp>
 
 namespace silkrpc {
 
@@ -48,12 +48,13 @@ TEST_CASE("Empty DumpAccounts") {
     }
 
     SECTION("json") {
-        nlohmann::json json;
-        to_json(json, da);
+        nlohmann::json json = da;
 
-        std::stringstream ss;
-        ss << json;
-        CHECK(ss.str() == "{\"accounts\":{},\"next\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAA=\",\"root\":\"0x0000000000000000000000000000000000000000000000000000000000000000\"}");
+        CHECK(json == R"({
+            "accounts": {},
+            "next": "AAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            "root": "0x0000000000000000000000000000000000000000000000000000000000000000"
+            })"_json);
     }
 }
 
@@ -71,12 +72,13 @@ TEST_CASE("Filled DumpAccounts") {
     }
 
     SECTION("json") {
-        nlohmann::json json;
-        to_json(json, da);
+        nlohmann::json json = da;
 
-        std::stringstream ss;
-        ss << json;
-        CHECK(ss.str() == "{\"accounts\":{},\"next\":\"eaTUGPeIfdTVEjpBtsjBhmhq6Ms=\",\"root\":\"0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6\"}");
+        CHECK(json == R"({
+            "accounts": {},
+            "next": "eaTUGPeIfdTVEjpBtsjBhmhq6Ms=",
+            "root": "0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
+        })"_json);
     }
 }
 
@@ -109,4 +111,3 @@ TEST_CASE("Filled DumpAccount") {
 }
 
 } // namespace silkrpc
-

@@ -42,13 +42,6 @@ silkworm::Bytes make_key(const evmc::address& address, const evmc::bytes32& loca
     return res;
 }
 
-silkworm::Bytes make_key(uint64_t block_number, const evmc::address& address) {
-    silkworm::Bytes res(8 + silkworm::kAddressLength, '\0');
-    boost::endian::store_big_u64(&res[0], block_number);
-    std::memcpy(&res[8], address.bytes, silkworm::kAddressLength);
-    return res;
-}
-
 silkworm::Bytes make_key(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) {
     silkworm::Bytes res(silkworm::kAddressLength + silkworm::kHashLength + 8, '\0');
     std::memcpy(&res[0], address.bytes, silkworm::kAddressLength);

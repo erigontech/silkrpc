@@ -56,7 +56,6 @@ asio::awaitable<void> DebugRpcApi::handle_debug_account_range(const nlohmann::js
     const auto exclude_code = params[3].get<bool>();
     const auto exclude_storage = params[4].get<bool>();
 
-    // silkworm::ByteView start_key(start_key_array.data(), start_key_array.size());
     silkworm::Bytes start_key(start_key_array.data(), start_key_array.size());
     const auto start_address = silkworm::to_address(start_key);
 

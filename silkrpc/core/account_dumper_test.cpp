@@ -44,8 +44,7 @@ static const evmc::bytes32 zero_hash = 0x000000000000000000000000000000000000000
 
 class DummyCursor : public silkrpc::ethdb::CursorDupSort {
 public:
-    explicit DummyCursor(const nlohmann::json& json) :
-        json_{json} {};
+    explicit DummyCursor(const nlohmann::json& json) : json_{json} {};
 
     uint32_t cursor_id() const {
         return 0;
@@ -139,8 +138,7 @@ private:
 
 class DummyTransaction: public silkrpc::ethdb::Transaction {
 public:
-    explicit DummyTransaction(const nlohmann::json& json) :
-        json_{json} {};
+    explicit DummyTransaction(const nlohmann::json& json) : json_{json} {};
 
     asio::awaitable<void> open() {
         co_return;
@@ -170,8 +168,7 @@ private:
 
 class DummyDatabase: public silkrpc::ethdb::Database {
 public:
-    explicit DummyDatabase(const nlohmann::json& json) :
-        json_{json} {};
+    explicit DummyDatabase(const nlohmann::json& json) : json_{json} {};
 
     asio::awaitable<std::unique_ptr<silkrpc::ethdb::Transaction>> begin() {
         auto txn = std::make_unique<DummyTransaction>(json_);

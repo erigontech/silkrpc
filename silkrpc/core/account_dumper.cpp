@@ -84,7 +84,8 @@ asio::awaitable<DumpAccounts> AccountDumper::dump_accounts(const BlockNumberOrHa
 }
 
 asio::awaitable<void> AccountDumper::load_accounts(ethdb::TransactionDatabase& tx_database,
-        const std::vector<silkrpc::KeyValue>& collected_data, DumpAccounts& dump_accounts, bool exclude_code) {
+    const std::vector<silkrpc::KeyValue>& collected_data, DumpAccounts& dump_accounts, bool exclude_code) {
+
     StateReader state_reader{tx_database};
     for (auto kv : collected_data) {
         const auto address = silkworm::to_address(kv.key);
