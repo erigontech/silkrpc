@@ -25,27 +25,44 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/async_completion_handler.hpp>
 #include <silkrpc/interfaces/remote/kv.grpc.pb.h>
+#include <silkrpc/ethdb/kv/streaming_client_if.hpp>
 
 namespace silkrpc::ethdb::kv {
 
+class StreamingClient : public AsyncCompletionHandler  {
+
+public:
+    StreamingClient () {}
+
+    virtual ~StreamingClient() {}
+
+    virtual void start_call(std::function<void(const grpc::Status&)> start_completed) = 0;
+
+    virtual void end_call(std::function<void(const grpc::Status&)> end_completed) = 0;
+
+    virtual void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) = 0;
+
+    virtual void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) = 0;
+};
+
 typedef std::unique_ptr<grpc::ClientAsyncReaderWriterInterface<::remote::Cursor, ::remote::Pair>> ClientAsyncReaderWriterPtr;
 
-class StreamingClient final : public AsyncCompletionHandler {
+class StreamingClientImpl final : public StreamingClient {
     enum CallStatus { CALL_IDLE, CALL_STARTED, READ_STARTED, WRITE_STARTED, DONE_STARTED, CALL_ENDED };
 
 public:
-    explicit StreamingClient(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
+    explicit StreamingClientImpl(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
     : stub_{remote::KV::NewStub(channel)}, stream_{stub_->PrepareAsyncTx(&context_, queue)} {
         SILKRPC_TRACE << "StreamingClient::ctor " << this << " start\n";
         status_ = CALL_IDLE;
         SILKRPC_TRACE << "StreamingClient::ctor " << this << " status: " << status_ << " end\n";
     }
 
-    ~StreamingClient() {
+    ~StreamingClientImpl() {
         SILKRPC_TRACE << "StreamingClient::dtor " << this << " status: " << status_ << "\n";
     }
 
-    void start_call(std::function<void(const grpc::Status&)> start_completed) {
+    void start_call(std::function<void(const grpc::Status&)> start_completed) override {
         SILKRPC_TRACE << "StreamingClient::start_call " << this << " status: " << status_ << " start\n";
         start_completed_ = start_completed;
         status_ = CALL_STARTED;
@@ -53,7 +70,7 @@ public:
         SILKRPC_TRACE << "StreamingClient::start_call " << this << " status: " << status_ << " end\n";
     }
 
-    void end_call(std::function<void(const grpc::Status&)> end_completed) {
+    void end_call(std::function<void(const grpc::Status&)> end_completed) override {
         SILKRPC_TRACE << "StreamingClient::end_call " << this << " status: " << status_ << " start\n";
         end_completed_ = end_completed;
         status_ = DONE_STARTED;
@@ -61,7 +78,7 @@ public:
         SILKRPC_TRACE << "StreamingClient::end_call " << this << " status: " << status_ << " end\n";
     }
 
-    void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) {
+    void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed)  override {
         SILKRPC_TRACE << "StreamingClient::read_start " << this << " status: " << status_ << " start\n";
         read_completed_ = read_completed;
         status_ = READ_STARTED;
@@ -71,7 +88,7 @@ public:
         SILKRPC_TRACE << "StreamingClient::read_start " << this << " status: " << status_ << " end\n";
     }
 
-    void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) {
+    void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
         SILKRPC_TRACE << "StreamingClient::write_start " << this << " stream: " << stream_.get() << " status: " << status_ << " start\n";
         write_completed_ = write_completed;
         status_ = WRITE_STARTED;
