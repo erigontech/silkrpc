@@ -25,23 +25,16 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/async_completion_handler.hpp>
 #include <silkrpc/interfaces/remote/kv.grpc.pb.h>
-#include <silkrpc/ethdb/kv/streaming_client_if.hpp>
 
 namespace silkrpc::ethdb::kv {
 
 class StreamingClient : public AsyncCompletionHandler  {
-
 public:
-    StreamingClient () {}
-
+    StreamingClient() {}
     virtual ~StreamingClient() {}
-
     virtual void start_call(std::function<void(const grpc::Status&)> start_completed) = 0;
-
     virtual void end_call(std::function<void(const grpc::Status&)> end_completed) = 0;
-
     virtual void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) = 0;
-
     virtual void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) = 0;
 };
 
