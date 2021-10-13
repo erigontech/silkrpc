@@ -17,11 +17,11 @@
 #include "dump_account.hpp"
 
 #include <catch2/catch.hpp>
-#include <nlohmann/json.hpp>
 #include <evmc/evmc.hpp>
+#include <nlohmann/json.hpp>
+#include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/log.hpp>
-#include <silkworm/common/util.hpp>
 
 namespace silkrpc {
 
@@ -54,7 +54,7 @@ TEST_CASE("Empty DumpAccounts") {
             "accounts": {},
             "next": "AAAAAAAAAAAAAAAAAAAAAAAAAAA=",
             "root": "0x0000000000000000000000000000000000000000000000000000000000000000"
-            })"_json);
+        })"_json);
     }
 }
 
