@@ -32,7 +32,7 @@
 #include <silkrpc/context_pool.hpp>
 #include <silkworm/common/util.hpp>
 
-namespace silkrpc{
+namespace silkrpc {
 
 using Catch::Matchers::Message;
 

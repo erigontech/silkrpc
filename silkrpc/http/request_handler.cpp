@@ -150,7 +150,6 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
 
         reply.content = reply_json.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace) + "\n";
         reply.status = Reply::ok;
-
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply.content = make_json_error(request_id, 100, e.what()).dump() + "\n";
