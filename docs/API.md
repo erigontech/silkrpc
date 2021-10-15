@@ -70,7 +70,6 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 |                                            |              |                                            |
 | debug_accountRange                         | Yes          |                                            |
 | debug_getModifiedAccountsByNumber          | -            | not yet implemented                        |
-| debug_accountRange                         | -            | not yet implemented                        |
 | debug_getModifiedAccountsByNumber          | Yes          |                                            |
 | debug_getModifiedAccountsByHash            | -            | not yet implemented                        |
 | debug_storageRangeAt                       | -            | not yet implemented                        |
