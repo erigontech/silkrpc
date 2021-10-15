@@ -60,6 +60,23 @@ TEST_CASE("parse", "[silkrpc][http][request_parser]") {
     SECTION("bad requests") {
         std::vector<std::string> bad_requests{
             "(",")","<",">","@",",",";",":","\\","\"","/","[","]","?","=","{","}"," ","\t", // special character strings
+            "P@",
+            "POST \t",
+            "POST / *",
+            "POST / H*",
+            "POST / HT*",
+            "POST / HTT*",
+            "POST / HTTP*",
+            "POST / HTTP/*",
+            "POST / HTTP/1*",
+            "POST / HTTP/1.*",
+            "POST / HTTP/1.1*",
+            "POST / HTTP/1.1\r*",
+            "POST / HTTP/1.1\r\n\r\n",
+            "POST / HTTP/1.1\r\nHost*",
+            "POST / HTTP/1.1\r\nHost:*",
+            "POST / HTTP/1.1\r\nHost: localhost:8545*",
+            "POST / HTTP/1.1\r\nHost: localhost:8545 *",
             "POST / HTTP/1.1\r\nHost: localhost:8545\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\nContent-Type: application/json\r\nContent-Length: 0\r\n{", // missing \r\n
         };
         for (const auto& s : bad_requests) {
@@ -75,6 +92,10 @@ TEST_CASE("parse", "[silkrpc][http][request_parser]") {
             "POST / HTTP/1.1\r\nHost: localhost:8545\r\nUser-Agent: curl/7.68.0\r\nAccept: */*",
             "POST / HTTP/1.1\r\nHost: localhost:8545\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\nContent-Type: application/json"
             "POST / HTTP/1.1\r\nHost: localhost:8545\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\nContent-Type: application/json\r\nContent-Length: 0",
+            "POST / HTTP/11.1\r\nHost: localhost:8545",
+            "POST / HTTP/1.10\r\nHost: localhost:8545",
+            "POST / HTTP/1.1\r\nHost: localhost:8545 \r\nUser-Agent: curl/7.68.0",
+            "POST / HTTP/1.1\r\nHost: localhost:8545  \r\nUser-Agent: curl/7.68.0",
         };
         for (const auto& s : incomplete_requests) {
             const auto result{parser.parse(req, s.data(), s.data() + s.size())};
@@ -84,6 +105,7 @@ TEST_CASE("parse", "[silkrpc][http][request_parser]") {
 
     SECTION("good requests") {
         std::vector<std::string> good_requests{
+            "POST / HTTP/1.1\r\nContent-Length: 0\r\n\r\n",
             "POST / HTTP/1.1\r\nHost: localhost:8545\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\nContent-Type: application/json\r\nContent-Length: 0\r\n\r\n",
         };
         for (const auto& s : good_requests) {
