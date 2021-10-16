@@ -18,9 +18,9 @@
 #define SILKRPC_TXPOOL_TRANSACTION_POOL_HPP_
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include <silkrpc/config.hpp>
 
@@ -55,13 +55,28 @@ using AddAwaitable = unary_awaitable<
     ::txpool::AddReply
 >;
 
+using TransactionsClient = AsyncUnaryClient<
+    ::txpool::Txpool::StubInterface,
+    ::txpool::TransactionsRequest,
+    ::txpool::TransactionsReply,
+    &::txpool::Txpool::StubInterface::PrepareAsyncTransactions
+>;
+
+using TransactionsAwaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    TransactionsClient,
+    ::txpool::Txpool::StubInterface,
+    ::txpool::TransactionsRequest,
+    ::txpool::TransactionsReply
+>;
+
 class TransactionPool final {
 public:
     explicit TransactionPool(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
     : TransactionPool(context.get_executor(), ::txpool::Txpool::NewStub(channel, grpc::StubOptions()), queue) {}
 
     explicit TransactionPool(asio::io_context::executor_type executor, std::unique_ptr<::txpool::Txpool::StubInterface> stub, grpc::CompletionQueue* queue)
-    : stub_(std::move(stub)), add_awaitable_{executor, stub_, queue} {
+    : stub_(std::move(stub)), add_awaitable_{executor, stub_, queue}, transactions_awaitable_{executor, stub_, queue} {
         SILKRPC_TRACE << "TransactionPool::ctor " << this << "\n";
     }
 
@@ -97,9 +112,37 @@ public:
         co_return result;
     }
 
+    asio::awaitable<std::optional<silkworm::Bytes>> get_transaction(const evmc::bytes32& tx_hash) {
+        const auto start_time = clock_time::now();
+        SILKRPC_DEBUG << "TransactionPool::get_transaction tx_hash=" << tx_hash << "\n";
+        auto hi = new ::types::H128{};
+        auto lo = new ::types::H128{};
+        hi->set_hi(evmc::load64be(tx_hash.bytes + 0));
+        hi->set_lo(evmc::load64be(tx_hash.bytes + 8));
+        lo->set_hi(evmc::load64be(tx_hash.bytes + 16));
+        lo->set_lo(evmc::load64be(tx_hash.bytes + 24));
+        ::txpool::TransactionsRequest request;
+        ::types::H256* hash_h256{request.add_hashes()};
+        hash_h256->set_allocated_hi(hi);  // take ownership
+        hash_h256->set_allocated_lo(lo);  // take ownership
+        const auto reply = co_await transactions_awaitable_.async_call(request, asio::use_awaitable);
+        const auto rlptxs_size = reply.rlptxs_size();
+        SILKRPC_DEBUG << "TransactionPool::get_transaction rlptxs_size=" << rlptxs_size << "\n";
+        if (rlptxs_size == 1) {
+            const auto rlptx = reply.rlptxs(0);
+            SILKRPC_DEBUG << "TransactionPool::get_transaction t=" << clock_time::since(start_time) << "\n";
+            co_return silkworm::Bytes{rlptx.begin(), rlptx.end()};
+        } else {
+            SILKRPC_WARN << "TransactionPool::get_transaction unexpected rlptxs_size=" << rlptxs_size << "\n";
+            SILKRPC_DEBUG << "TransactionPool::get_transaction t=" << clock_time::since(start_time) << "\n";
+            co_return std::nullopt;
+        }
+    }
+
 private:
     std::unique_ptr<::txpool::Txpool::StubInterface> stub_;
     AddAwaitable add_awaitable_;
+    TransactionsAwaitable transactions_awaitable_;
 };
 
 } // namespace silkrpc::txpool

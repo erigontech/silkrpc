@@ -33,6 +33,8 @@ namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
+const int16_t kAccountRangeMaxResults = 256;
+
 class DebugRpcApi {
 public:
     explicit DebugRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}

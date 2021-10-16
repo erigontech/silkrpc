@@ -29,6 +29,7 @@
 #include <silkworm/common/base.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/transaction.hpp>
+#include <silkworm/core/silkworm/types/account.hpp>
 
 namespace silkrpc {
 
@@ -36,6 +37,9 @@ struct KeyValue {
     silkworm::Bytes key;
     silkworm::Bytes value;
 };
+
+std::string base64_encode(const uint8_t* bytes_to_encode, size_t len, bool url);
+std::string to_dec(intx::uint256 number);
 
 } // namespace silkrpc
 
@@ -48,6 +52,15 @@ inline ByteView byte_view_of_string(const std::string& s) {
 inline Bytes bytes_of_string(const std::string& s) {
     return Bytes(s.begin(), s.end());
 }
+
+inline ByteView full_view(const ethash::hash256& hash) { return {hash.bytes, kHashLength}; }
+
+inline std::ostream& operator<<(std::ostream& out, const Bytes& bytes) {
+    out << silkworm::to_hex(bytes);
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const Account& account);
 
 } // namespace silkworm
 
@@ -78,6 +91,14 @@ inline std::ostream& operator<<(std::ostream& out, const evmc::bytes32& b32) {
     out << silkworm::to_hex(b32);
     return out;
 }
+
+namespace intx {
+template <unsigned N>
+inline std::ostream& operator<<(std::ostream& out, const uint<N>& value) {
+    out << "0x" << intx::hex(value);
+    return out;
+}
+} // namespace intx
 
 inline std::ostream& operator<<(std::ostream& out, const asio::const_buffer& buffer) {
     out << std::string{static_cast<const char*>(buffer.data()), buffer.size()};

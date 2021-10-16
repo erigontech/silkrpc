@@ -30,6 +30,8 @@
 #include <silkrpc/interfaces/remote/ethbackend_mock_fix24351.grpc.pb.h>
 #include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 #include <silkrpc/interfaces/remote/kv_mock_fix24351.grpc.pb.h>
+#include <silkrpc/interfaces/txpool/txpool.grpc.pb.h>
+#include <silkrpc/interfaces/txpool/txpool_mock_fix24351.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
 
 namespace silkrpc {
@@ -104,6 +106,7 @@ TEST_CASE("ETHBACKEND protocol version match", "[silkrpc][protocol][wait_for_eth
         DoAll(SetArgPointee<2>(reply), Return(grpc::Status::OK)));
     const auto version_result{wait_for_ethbackend_protocol_check(stub)};
     CHECK(version_result.compatible == true);
+    CHECK(version_result.result.find("incompatible") == std::string::npos);
     CHECK(version_result.result.find("compatible") != std::string::npos);
 }
 
@@ -128,6 +131,7 @@ TEST_CASE("ETHBACKEND protocol version with server stub", "[silkrpc][protocol][w
     const auto version_result{wait_for_ethbackend_protocol_check(channel)};
     server_ptr->Shutdown();
     CHECK(version_result.compatible == true);
+    CHECK(version_result.result.find("incompatible") == std::string::npos);
     CHECK(version_result.result.find("compatible") != std::string::npos);
 }
 
@@ -183,6 +187,7 @@ TEST_CASE("KV protocol version match", "[silkrpc][protocol][wait_for_kv_protocol
         DoAll(SetArgPointee<2>(reply), Return(grpc::Status::OK)));
     const auto version_result{wait_for_kv_protocol_check(stub)};
     CHECK(version_result.compatible == true);
+    CHECK(version_result.result.find("incompatible") == std::string::npos);
     CHECK(version_result.result.find("compatible") != std::string::npos);
 }
 
@@ -207,6 +212,88 @@ TEST_CASE("KV protocol version with server stub", "[silkrpc][protocol][wait_for_
     const auto version_result{wait_for_kv_protocol_check(channel)};
     server_ptr->Shutdown();
     CHECK(version_result.compatible == true);
+    CHECK(version_result.result.find("incompatible") == std::string::npos);
+    CHECK(version_result.result.find("compatible") != std::string::npos);
+}
+
+TEST_CASE("TXPOOL protocol version error", "[silkrpc][protocol][wait_for_txpool_protocol_check]") {
+    std::unique_ptr<::txpool::Txpool::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockTxpoolStub>()};
+
+    EXPECT_CALL(*dynamic_cast<::txpool::FixIssue24351_MockTxpoolStub*>(stub.get()), Version(_, _, _)).WillOnce(
+        Return(grpc::Status::CANCELLED));
+    const auto version_result{wait_for_txpool_protocol_check(stub)};
+    CHECK(version_result.compatible == false);
+    CHECK(version_result.result.find("incompatible") != std::string::npos);
+}
+
+TEST_CASE("TXPOOL protocol version major mismatch", "[silkrpc][protocol][wait_for_txpool_protocol_check]") {
+    std::unique_ptr<::txpool::Txpool::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockTxpoolStub>()};
+    types::VersionReply reply;
+
+    reply.set_major(0);
+    EXPECT_CALL(*dynamic_cast<::txpool::FixIssue24351_MockTxpoolStub*>(stub.get()), Version(_, _, _)).WillOnce(
+        DoAll(SetArgPointee<2>(reply), Return(grpc::Status::OK)));
+    const auto version_result1{wait_for_txpool_protocol_check(stub)};
+    CHECK(version_result1.compatible == false);
+    CHECK(version_result1.result.find("incompatible") != std::string::npos);
+
+    reply.set_major(2);
+    EXPECT_CALL(*dynamic_cast<::txpool::FixIssue24351_MockTxpoolStub*>(stub.get()), Version(_, _, _)).WillOnce(
+        DoAll(SetArgPointee<2>(reply), Return(grpc::Status::OK)));
+    const auto version_result2{wait_for_txpool_protocol_check(stub)};
+    CHECK(version_result2.compatible == false);
+    CHECK(version_result2.result.find("incompatible") != std::string::npos);
+}
+
+TEST_CASE("TXPOOL protocol version minor mismatch", "[silkrpc][protocol][wait_for_txpool_protocol_check]") {
+    std::unique_ptr<::txpool::Txpool::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockTxpoolStub>()};
+    types::VersionReply reply;
+    reply.set_major(1);
+
+    reply.set_minor(1);
+    EXPECT_CALL(*dynamic_cast<::txpool::FixIssue24351_MockTxpoolStub*>(stub.get()), Version(_, _, _)).WillOnce(
+        DoAll(SetArgPointee<2>(reply), Return(grpc::Status::OK)));
+    const auto version_result{wait_for_txpool_protocol_check(stub)};
+    CHECK(version_result.compatible == false);
+    CHECK(version_result.result.find("incompatible") != std::string::npos);
+}
+
+TEST_CASE("TXPOOL protocol version match", "[silkrpc][protocol][wait_for_txpool_protocol_check]") {
+    std::unique_ptr<::txpool::Txpool::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockTxpoolStub>()};
+    types::VersionReply reply;
+    reply.set_major(1);
+    reply.set_minor(0);
+
+    EXPECT_CALL(*dynamic_cast<::txpool::FixIssue24351_MockTxpoolStub*>(stub.get()), Version(_, _, _)).WillOnce(
+        DoAll(SetArgPointee<2>(reply), Return(grpc::Status::OK)));
+    const auto version_result{wait_for_txpool_protocol_check(stub)};
+    CHECK(version_result.compatible == true);
+    CHECK(version_result.result.find("incompatible") == std::string::npos);
+    CHECK(version_result.result.find("compatible") != std::string::npos);
+}
+
+TEST_CASE("TXPOOL protocol version with server stub", "[silkrpc][protocol][wait_for_txpool_protocol_check]") {
+    class TestService : public ::txpool::Txpool::Service {
+    public:
+        ::grpc::Status Version(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response) override {
+            response->set_major(1);
+            response->set_minor(0);
+            response->set_patch(0);
+            return ::grpc::Status::OK;
+        }
+    };
+    TestService service;
+    std::ostringstream server_address;
+    server_address << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
+    grpc::ServerBuilder builder;
+    builder.AddListeningPort(server_address.str(), grpc::InsecureServerCredentials());
+    builder.RegisterService(&service);
+    const auto server_ptr = builder.BuildAndStart();
+    const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
+    const auto version_result{wait_for_txpool_protocol_check(channel)};
+    server_ptr->Shutdown();
+    CHECK(version_result.compatible == true);
+    CHECK(version_result.result.find("incompatible") == std::string::npos);
     CHECK(version_result.result.find("compatible") != std::string::npos);
 }
 
