@@ -1233,5 +1233,21 @@
                 "next": "eaTXW9ALGEPsUpIhfnHazl5adDk="
               }
         }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"debug_getModifiedAccountsByNumber",
+            "params":[
+                "5415090",
+                "5415091"
+             ],
+            "id":1
+        },
+        "response": {
+            "jsonrpc":"2.0",
+            "id":1,
+            "result":null
+        }
     }
 ]
