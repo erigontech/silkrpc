@@ -44,7 +44,7 @@ namespace silkrpc::commands {
 asio::awaitable<void> DebugRpcApi::handle_debug_account_range(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 5) {
-        auto error_msg = "invalid debug_accountrange params: " + params.dump();
+        auto error_msg = "invalid debug_accountRange params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
@@ -92,7 +92,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_account_range(const nlohmann::js
 asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() == 0 || params.size() > 2) {
-        auto error_msg = "invalid getBlockByNumber params: " + params.dump();
+        auto error_msg = "invalid debug_getModifiedAccountsByNumber params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
