@@ -126,6 +126,7 @@ TEST_CASE("parse", "[silkrpc][http][request_parser]") {
         std::vector<std::string> good_requests{
             "POST / HTTP/1.1\r\nContent-Length: 0\r\n\r\n",
             "POST / HTTP/1.1\r\nHost: localhost:8545\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\nContent-Type: application/json\r\nContent-Length: 0\r\n\r\n",
+            "POST / HTTP/1.1\r\nHost: localhost:8545 \r\nUser-Agent: curl/7.68.0 \r\nAccept: */* \r\nContent-Type: application/json \r\nContent-Length: 0\r\n\r\n",
         };
         for (const auto& s : good_requests) {
             silkrpc::http::RequestParser parser;
