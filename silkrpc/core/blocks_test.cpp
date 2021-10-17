@@ -16,6 +16,8 @@
 
 #include "blocks.hpp"
 
+#include <memory>
+
 #include <asio/co_spawn.hpp>
 #include <asio/thread_pool.hpp>
 #include <asio/use_future.hpp>
