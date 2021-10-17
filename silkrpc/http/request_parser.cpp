@@ -239,8 +239,6 @@ RequestParser::ResultType RequestParser::consume(Request& req, char input) {
             } else {
                 return good;
             }
-        default:
-            return bad;
     }
 }
 
