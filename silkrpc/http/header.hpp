@@ -24,6 +24,7 @@ namespace silkrpc::http {
 struct Header {
     std::string name;
     std::string value;
+    bool operator==(const Header&) const = default;
 };
 
 } // namespace silkrpc::http

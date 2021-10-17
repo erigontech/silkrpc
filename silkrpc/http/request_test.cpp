@@ -18,27 +18,35 @@
 
 #include <catch2/catch.hpp>
 
-namespace silkrpc {
+namespace silkrpc::http {
 
 using Catch::Matchers::Message;
 
-TEST_CASE("check reset method", "[silkrpc][request]") {
-    silkrpc::http::Request req {
+TEST_CASE("check reset method", "[silkrpc][http][request]") {
+    silkrpc::http::Request req{
         "eth_call",
-        "",
+        "http://localhost:8545",
         1,
-        3,
-        {{"v", "1"}},
-        4,
-        "5678",
+        1,
+        {{"Accept", "*/*"}},
+        15,
+        "{\"json\": \"2.0\"}",
     };
+    CHECK(req.method == "eth_call");
+    CHECK(req.uri == "http://localhost:8545");
+    CHECK(req.http_version_major == 1);
+    CHECK(req.http_version_minor == 1);
+    CHECK(req.headers == std::vector<Header>{{"Accept", "*/*"}});
+    CHECK(req.content == "{\"json\": \"2.0\"}");
+    CHECK(req.content_length == 15);
     req.reset();
     CHECK(req.method == "");
     CHECK(req.uri == "");
+    CHECK(req.http_version_major == 0);
+    CHECK(req.http_version_minor == 0);
+    CHECK(req.headers == std::vector<Header>{});
     CHECK(req.content == "");
     CHECK(req.content_length == 0);
-    CHECK(req.headers.size() == 0);
 }
 
-} // namespace silkrpc
-
+} // namespace silkrpc::http

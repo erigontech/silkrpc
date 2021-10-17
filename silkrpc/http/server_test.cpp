@@ -17,10 +17,26 @@
 #include "server.hpp"
 
 #include <catch2/catch.hpp>
+#include <grpcpp/grpcpp.h>
 
-namespace silkrpc {
+namespace silkrpc::http {
 
 using Catch::Matchers::Message;
 
-} // namespace silkrpc
+ChannelFactory create_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
 
+TEST_CASE("creation", "[silkrpc][http][server]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("localhost successful") {
+        ContextPool context_pool{1, create_channel};
+        auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+        // Uncommenting the following line you got: error: cmd/unit_test: Failed to load coverage: Malformed coverage data
+        //Server server{"localhost", "8545", context_pool, 1};
+        //server.stop();
+        context_pool.stop();
+        CHECK_NOTHROW(context_pool_thread.join());
+    }
+}
+
+} // namespace silkrpc::http
