@@ -32,7 +32,6 @@
 #include <silkrpc/ethdb/transaction.hpp>
 #include <silkworm/rlp/encode.hpp>
 
-
 namespace silkrpc {
 
 using evmc::literals::operator""_address;

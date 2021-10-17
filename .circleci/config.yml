@@ -78,7 +78,7 @@ jobs:
       CLANG_COVERAGE: OFF
     machine:
       image: ubuntu-2004:202101-01
-    resource_class: large
+    resource_class: xlarge
     steps:
       - run:
           name: "Install GCC 10"
