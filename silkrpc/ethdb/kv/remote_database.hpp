@@ -45,7 +45,8 @@ public:
 
     asio::awaitable<std::unique_ptr<Transaction>> begin() override {
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " start\n";
-        auto txn = std::make_unique<RemoteTransaction>(io_context_, channel_, queue_);
+        auto client = std::make_unique<StreamingClientImpl>(channel_, queue_);
+        auto txn = std::make_unique<RemoteTransaction>(io_context_, std::move(client));
         co_await txn->open();
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " txn: " << txn.get() << " end\n";
         co_return txn;

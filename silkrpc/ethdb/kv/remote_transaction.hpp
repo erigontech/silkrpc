@@ -35,8 +35,8 @@ namespace silkrpc::ethdb::kv {
 
 class RemoteTransaction : public Transaction {
 public:
-    explicit RemoteTransaction(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : context_(context), client_{channel, queue}, kv_awaitable_{context_, client_} {
+    explicit RemoteTransaction(asio::io_context& context, std::unique_ptr<StreamingClient>&& client)
+    : context_(context), client_(std::move(client)), kv_awaitable_{context_, *client_} {
         SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " start\n";
         SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " end\n";
     }
@@ -59,7 +59,7 @@ private:
     uint64_t tx_id_;
 
     asio::io_context& context_;
-    StreamingClientImpl client_;
+    std::unique_ptr<StreamingClient> client_;
     KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
     std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
 };
