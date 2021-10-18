@@ -99,7 +99,7 @@ TEST_CASE("open") {
         result.get();
        } catch (const std::system_error& e) {
             CHECK(e.code().value() == 1);
-       } 
+       }
        cp.stop();
        context_pool_thread.join();
     }
@@ -132,7 +132,7 @@ TEST_CASE("open") {
         result.get();
        } catch (const std::system_error& e) {
             CHECK(e.code().value() == 1);
-       } 
+       }
        cp.stop();
        context_pool_thread.join();
     }
@@ -224,7 +224,7 @@ TEST_CASE("close") {
         result.get();
        } catch (const std::system_error& e) {
             CHECK(e.code().value() == 1);
-       } 
+       }
        cp.stop();
        context_pool_thread.join();
     }
@@ -257,7 +257,7 @@ TEST_CASE("close") {
         result.get();
        } catch (const std::system_error& e) {
             CHECK(e.code().value() == 1);
-       } 
+       }
        cp.stop();
        context_pool_thread.join();
     }
@@ -357,7 +357,7 @@ TEST_CASE("close") {
         auto cursor = result.get();
        } catch (const std::system_error& e) {
             CHECK(e.code().value() == 1);
-       } 
+       }
        cp.stop();
        context_pool_thread.join();
     }
@@ -388,7 +388,7 @@ TEST_CASE("close") {
         auto cursor = result.get();
        } catch (const std::system_error& e) {
             CHECK(e.code().value() == 1);
-       } 
+       }
        cp.stop();
        context_pool_thread.join();
     }
@@ -487,7 +487,7 @@ TEST_CASE("close") {
         auto cursor = result.get();
        } catch (const std::system_error& e) {
             CHECK(e.code().value() == 1);
-       } 
+       }
        cp.stop();
        context_pool_thread.join();
     }
@@ -518,7 +518,7 @@ TEST_CASE("close") {
         auto cursor = result.get();
        } catch (const std::system_error& e) {
             CHECK(e.code().value() == 1);
-       } 
+       }
        cp.stop();
        context_pool_thread.join();
     }
