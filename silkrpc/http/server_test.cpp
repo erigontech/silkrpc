@@ -23,10 +23,10 @@ namespace silkrpc::http {
 
 using Catch::Matchers::Message;
 
-ChannelFactory create_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
-
-TEST_CASE("creation", "[silkrpc][http][server]") {
+TEST_CASE("server creation", "[silkrpc][http][server]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    ChannelFactory create_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
 
     SECTION("localhost successful") {
         ContextPool context_pool{1, create_channel};
