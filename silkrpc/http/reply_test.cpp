@@ -18,20 +18,22 @@
 
 #include <catch2/catch.hpp>
 
-namespace silkrpc {
+namespace silkrpc::http {
 
 using Catch::Matchers::Message;
 
 TEST_CASE("check reply reset method", "[silkrpc][http][reply]") {
-    silkrpc::http::Reply reply {
-        silkrpc::http::Reply::StatusType::ok,
-        {{"v", "1"}},
-        "5678"
+    Reply reply{
+        Reply::StatusType::ok,
+        std::vector<Header>{{"Accept", "*/*"}},
+        "{\"json\": \"2.0\"}",
     };
+    CHECK(reply.status == Reply::StatusType::ok);
+    CHECK(reply.headers == std::vector<Header>{{"Accept", "*/*"}});
+    CHECK(reply.content == "{\"json\": \"2.0\"}");
     reply.reset();
+    CHECK(reply.headers == std::vector<Header>{});
     CHECK(reply.content == "");
-    CHECK(reply.headers.size() == 0);
 }
 
-} // namespace silkrpc
-
+} // namespace silkrpc::http

@@ -18,9 +18,21 @@
 
 #include <catch2/catch.hpp>
 
-namespace silkrpc {
+namespace silkrpc::http::mime_types {
 
 using Catch::Matchers::Message;
 
-} // namespace silkrpc
+TEST_CASE("check known extensions", "[silkrpc][http][mime_types]") {
+    CHECK(extension_to_type("gif")  == "image/gif");
+    CHECK(extension_to_type("htm")  == "text/html");
+    CHECK(extension_to_type("html") == "text/html");
+    CHECK(extension_to_type("jpg")  == "image/jpeg");
+    CHECK(extension_to_type("png")  == "image/png");
+}
+
+TEST_CASE("check unknown extension", "[silkrpc][http][mime_types]") {
+    CHECK(extension_to_type("foo") == "text/plain");
+}
+
+} // namespace silkrpc::http::mime_types
 

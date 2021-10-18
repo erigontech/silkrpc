@@ -23,7 +23,7 @@ namespace silkrpc::http {
 using Catch::Matchers::Message;
 
 TEST_CASE("check reset method", "[silkrpc][http][request]") {
-    silkrpc::http::Request req{
+    Request req{
         "eth_call",
         "http://localhost:8545",
         1,
