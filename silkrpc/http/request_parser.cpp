@@ -210,7 +210,7 @@ RequestParser::ResultType RequestParser::consume(Request& req, char input) {
                 state_ = content_start;
                 // Look for Expect header to handle continuation request
                 const auto it = std::find_if(req.headers.begin(), req.headers.end(), [&](const Header& h){
-                    return h.name == "Expect" && h.value == "100-continue";
+                    return h == kExpectRequestHeader;
                 });
                 if (it != req.headers.end()) {
                    return processing_continue;
@@ -240,6 +240,7 @@ RequestParser::ResultType RequestParser::consume(Request& req, char input) {
                 return good;
             }
     }
+    return bad;
 }
 
 inline bool RequestParser::is_char(int c) {

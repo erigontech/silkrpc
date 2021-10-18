@@ -24,8 +24,13 @@ namespace silkrpc::http {
 struct Header {
     std::string name;
     std::string value;
-    bool operator==(const Header&) const = default;
 };
+
+const static Header kExpectRequestHeader{"Expect", "100-continue"};
+
+inline bool operator==(const Header& lhs, const Header& rhs) {
+    return lhs.name == rhs.name && lhs.value == rhs.value;
+}
 
 } // namespace silkrpc::http
 
