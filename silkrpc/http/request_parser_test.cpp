@@ -62,9 +62,8 @@ TEST_CASE("parse", "[silkrpc][http][request_parser]") {
 
     SECTION("continue requests") {
         std::vector<std::string> continue_requests{
-            "POST / HTTP/1.1\r\nContent-Length: 0\r\nExpect: 100-continue\r\n\r\n",
-            "POST / HTTP/1.1\r\nExpect: 100-continue\r\n\r\n",
-            "POST / HTTP/1.1\r\nExpect: 100-continue\r\nContent-Length: 0\r\n\r\n",
+            "POST / HTTP/1.1\r\nContent-Length: 15\r\nExpect: 100-continue\r\n\r\n{\"json\": \"2.0\"}",
+            "POST / HTTP/1.1\r\nExpect: 100-continue\r\nContent-Length: 15\r\n\r\n{\"json\": \"2.0\"}",
         };
         for (const auto& s : continue_requests) {
             silkrpc::http::RequestParser parser;
@@ -94,6 +93,7 @@ TEST_CASE("parse", "[silkrpc][http][request_parser]") {
             "POST / HTTP/1.1\r\nHost: localhost:8545\r*",
             "POST / HTTP/1.1\r\nHost: localhost:8545\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\nContent-Type: application/json\r\nContent-Length: 0\r\n\r\t", // invalid char instead of \n
             "POST / HTTP/1.1\r\nHost: localhost:8545\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\nContent-Type: application/json\r\nContent-Length: 0\r\n{", // missing \r\n
+            "POST / HTTP/1.1\r\nExpect: 100-continue\r\n\r\n",
         };
         for (const auto& s : bad_requests) {
             silkrpc::http::RequestParser parser;
@@ -126,6 +126,7 @@ TEST_CASE("parse", "[silkrpc][http][request_parser]") {
     SECTION("good requests") {
         std::vector<std::string> good_requests{
             "POST / HTTP/1.1\r\nContent-Length: 0\r\n\r\n",
+            "POST / HTTP/1.1\r\nExpect: 100-continue\r\nContent-Length: 0\r\n\r\n",
             "POST / HTTP/1.1\r\nHost: localhost:8545\r\nUser-Agent: curl/7.68.0\r\nAccept: */*\r\nContent-Type: application/json\r\nContent-Length: 0\r\n\r\n",
             "POST / HTTP/1.1\r\nHost: localhost:8545 \r\nUser-Agent: curl/7.68.0 \r\nAccept: */* \r\nContent-Type: application/json \r\nContent-Length: 0\r\n\r\n",
             "POST / HTTP/1.1\r\nHost: localhost:8545\r\n User-Agent: curl/7.68.0\r\n Accept: */*\r\n Content-Type: application/json\r\nContent-Length: 0\r\n\r\n",
