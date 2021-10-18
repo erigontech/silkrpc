@@ -18,9 +18,14 @@
 
 #include <catch2/catch.hpp>
 
-namespace silkrpc {
+namespace silkrpc::http {
 
 using Catch::Matchers::Message;
 
-} // namespace silkrpc
+TEST_CASE("header comparison", "[silkrpc][http][header]") {
+    Header h1{"Accept", "*/*"};
+    Header h2{"Accept", "*/*"};
+    CHECK(h1 == h2);
+}
 
+} // namespace silkrpc::http

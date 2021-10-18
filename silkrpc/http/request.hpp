@@ -43,9 +43,11 @@ struct Request {
     void reset() {
         method.resize(0);
         uri.resize(0);
+        http_version_major = 0;
+        http_version_minor = 0;
         headers.resize(0);
-        content.resize(0);
         content_length = 0;
+        content.resize(0);
     }
 };
 
