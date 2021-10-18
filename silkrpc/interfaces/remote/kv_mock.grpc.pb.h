@@ -18,9 +18,9 @@ class MockKVStub : public KV::StubInterface {
   MOCK_METHOD1(TxRaw, ::grpc::ClientReaderWriterInterface< ::remote::Cursor, ::remote::Pair>*(::grpc::ClientContext* context));
   MOCK_METHOD3(AsyncTxRaw, ::grpc::ClientAsyncReaderWriterInterface<::remote::Cursor, ::remote::Pair>*(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag));
   MOCK_METHOD2(PrepareAsyncTxRaw, ::grpc::ClientAsyncReaderWriterInterface<::remote::Cursor, ::remote::Pair>*(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq));
-  MOCK_METHOD2(ReceiveStateChangesRaw, ::grpc::ClientReaderInterface< ::remote::StateChange>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request));
-  MOCK_METHOD4(AsyncReceiveStateChangesRaw, ::grpc::ClientAsyncReaderInterface< ::remote::StateChange>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq, void* tag));
-  MOCK_METHOD3(PrepareAsyncReceiveStateChangesRaw, ::grpc::ClientAsyncReaderInterface< ::remote::StateChange>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD2(StateChangesRaw, ::grpc::ClientReaderInterface< ::remote::StateChangeBatch>*(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request));
+  MOCK_METHOD4(AsyncStateChangesRaw, ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>*(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq, void* tag));
+  MOCK_METHOD3(PrepareAsyncStateChangesRaw, ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>*(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq));
 };
 
 } // namespace remote

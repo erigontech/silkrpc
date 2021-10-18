@@ -56,9 +56,10 @@ public:
 
 private:
     asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table);
+    uint64_t tx_id_;
 
     asio::io_context& context_;
-    StreamingClient client_;
+    StreamingClientImpl client_;
     KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
     std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
 };
