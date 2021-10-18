@@ -160,7 +160,6 @@ asio::awaitable<void> RequestHandler::handle_request(const Request& request, Rep
         reply.status = Reply::internal_server_error;
     }
 
-
     reply.headers.reserve(2);
     reply.headers.emplace_back(Header{"Content-Length", std::to_string(reply.content.size())});
     reply.headers.emplace_back(Header{"Content-Type", "application/json"});
