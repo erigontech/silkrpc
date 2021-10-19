@@ -16,6 +16,8 @@
 
 #include "remote_transaction.hpp"
 
+#include <future>
+
 #include <asio/co_spawn.hpp>
 #include <asio/use_future.hpp>
 #include <asio/io_context.hpp>
@@ -28,7 +30,7 @@ namespace silkrpc::ethdb::kv {
 
 using Catch::Matchers::Message;
 
-TEST_CASE("open") {
+TEST_CASE("open", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
         class MockStreamingClient : public StreamingClient {
         public:
@@ -130,7 +132,7 @@ TEST_CASE("open") {
     }
 }
 
-TEST_CASE("close") {
+TEST_CASE("close", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success open and no cursor in table") {
         class MockStreamingClient : public StreamingClient {
         public:
@@ -266,7 +268,7 @@ TEST_CASE("close") {
     }
 }
 
-TEST_CASE("cursor") {
+TEST_CASE("cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
         class MockStreamingClient : public StreamingClient {
         public:
@@ -391,7 +393,7 @@ TEST_CASE("cursor") {
     }
 }
 
-TEST_CASE("cursor_dup_sort") {
+TEST_CASE("cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
         class MockStreamingClient : public StreamingClient {
         public:
