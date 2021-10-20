@@ -30,7 +30,7 @@ namespace silkrpc::ethdb::kv {
 
 using Catch::Matchers::Message;
 
-TEST_CASE("open", "[silkrpc][ethdb][kv][remote_transaction]") {
+TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
@@ -132,7 +132,7 @@ TEST_CASE("open", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 }
 
-TEST_CASE("close", "[silkrpc][ethdb][kv][remote_transaction]") {
+TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success open and no cursor in table") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
@@ -157,10 +157,12 @@ TEST_CASE("close", "[silkrpc][ethdb][kv][remote_transaction]") {
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
         try {
             auto result1{asio::co_spawn(io_context, remote_tx.open(), asio::use_future)};
-            auto result2{asio::co_spawn(io_context, remote_tx.close(), asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_tx.tx_id() == 4);
+            auto result2{asio::co_spawn(io_context, remote_tx.close(), asio::use_future)};
+            io_context.reset();
+            io_context.run();
             result2.get();
             CHECK(true);
         } catch (...) {
@@ -220,12 +222,16 @@ TEST_CASE("close", "[silkrpc][ethdb][kv][remote_transaction]") {
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
         try {
             auto result1{asio::co_spawn(io_context, remote_tx.open(), asio::use_future)};
-            auto result2{asio::co_spawn(io_context, remote_tx.cursor("table1"), asio::use_future)};
-            auto result3{asio::co_spawn(io_context, remote_tx.close(), asio::use_future)};
             io_context.run();
             result1.get();
+            auto result2{asio::co_spawn(io_context, remote_tx.cursor("table1"), asio::use_future)};
+            io_context.reset();
+            io_context.run();
             auto cursor = result2.get();
             CHECK(cursor != nullptr);
+            auto result3{asio::co_spawn(io_context, remote_tx.close(), asio::use_future)};
+            io_context.reset();
+            io_context.run();
             result3.get();
             CHECK(cursor->cursor_id() == 0);
         } catch (...) {
@@ -268,7 +274,7 @@ TEST_CASE("close", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 }
 
-TEST_CASE("cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
+TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
@@ -321,11 +327,13 @@ TEST_CASE("cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
         try {
             auto result1{asio::co_spawn(io_context, remote_tx.cursor("table1"), asio::use_future)};
-            auto result2{asio::co_spawn(io_context, remote_tx.cursor("table2"), asio::use_future)};
             io_context.run();
             auto cursor1 = result1.get();
-            auto cursor2 = result2.get();
             CHECK(cursor1->cursor_id() == 0x23);
+            auto result2{asio::co_spawn(io_context, remote_tx.cursor("table2"), asio::use_future)};
+            io_context.reset();
+            io_context.run();
+            auto cursor2 = result2.get();
             CHECK(cursor2->cursor_id() == 0x23);
         } catch (...) {
             CHECK(false);
@@ -393,7 +401,7 @@ TEST_CASE("cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 }
 
-TEST_CASE("cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
+TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
@@ -446,11 +454,13 @@ TEST_CASE("cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
         try {
             auto result1{asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), asio::use_future)};
-            auto result2{asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), asio::use_future)};
             io_context.run();
             auto cursor1 = result1.get();
-            auto cursor2 = result2.get();
             CHECK(cursor1->cursor_id() == 0x23);
+            auto result2{asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), asio::use_future)};
+            io_context.reset();
+            io_context.run();
+            auto cursor2 = result2.get();
             CHECK(cursor2->cursor_id() == 0x23);
         } catch (...) {
             CHECK(false);
