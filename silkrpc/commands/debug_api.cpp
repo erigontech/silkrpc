@@ -111,42 +111,12 @@ asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_number(
         ethdb::TransactionDatabase tx_database{*tx};
         auto start_block_number = co_await silkrpc::core::get_block_number(start_block_id, tx_database);
         auto end_block_number = co_await silkrpc::core::get_block_number(end_block_id, tx_database);
-        auto last_block_number = co_await silkrpc::core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
 
-        SILKRPC_INFO << "start_block_number: " << start_block_number << " end_block_number: " << end_block_number << " last_block_number: " << last_block_number << "\n";
-
-        if (start_block_number > last_block_number) {
-            std::stringstream msg;
-            msg << "start block " << start_block_number << " is later than the latest block";
-            reply = make_json_error(request["id"], 100, msg.str());
-        } else if (start_block_number > end_block_number) {
-            std::stringstream msg;
-            msg << "end block " << start_block_number << " must be less than or equal to end block " << end_block_number;
-            reply = make_json_error(request["id"], 100, msg.str());
-        } else {
-            std::set<silkworm::Bytes> addresses;
-            core::rawdb::Walker walker = [&](const silkworm::Bytes& key, const silkworm::Bytes& value) {
-                auto block_number = std::stol(silkworm::to_hex(key), 0, 16);
-                if (block_number <= end_block_number) {
-                    auto address = value.substr(0, silkworm::kAddressLength);
-
-                    SILKRPC_TRACE << "Walker: processing block " << block_number << " address 0x" << silkworm::to_hex(address) << "\n";
-                    addresses.insert(address);
-                }
-                return block_number <= end_block_number;
-            };
-
-            const auto key = silkworm::db::block_key(start_block_number);
-            SILKRPC_TRACE << "Ready to walk starting from key: " << silkworm::to_hex(key) << "\n";
-
-            co_await tx_database.walk(db::table::kPlainAccountChangeSet, key, 0, walker);
-            nlohmann::json result;
-            for (auto item : addresses) {
-                auto address = "0x" + silkworm::to_hex(item);
-                result.push_back(address);
-            }
-            reply = make_json_content(request["id"], result);
-        }
+        auto addresses = co_await get_modified_accounts(tx_database, start_block_number, end_block_number);
+        reply = make_json_content(request["id"], addresses);
+    } catch (const IllegalArgumentException& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], -32000, e.what());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -183,42 +153,14 @@ asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_hash(co
 
         const auto start_block_number = co_await silkrpc::core::rawdb::read_header_number(tx_database, start_hash);
         const auto end_block_number = co_await silkrpc::core::rawdb::read_header_number(tx_database, end_hash);
-        auto last_block_number = co_await silkrpc::core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
-
-        SILKRPC_INFO << "start_block_number: " << start_block_number << " end_block_number: " << end_block_number << " last_block_number: " << last_block_number << "\n";
-
-        if (start_block_number > last_block_number) {
-            std::stringstream msg;
-            msg << "start block " << start_block_number << " is later than the latest block";
-            reply = make_json_error(request["id"], 100, msg.str());
-        } else if (start_block_number > end_block_number) {
-            std::stringstream msg;
-            msg << "end block " << start_block_number << " must be less than or equal to end block " << end_block_number;
-            reply = make_json_error(request["id"], 100, msg.str());
-        } else {
-            std::set<silkworm::Bytes> addresses;
-            core::rawdb::Walker walker = [&](const silkworm::Bytes& key, const silkworm::Bytes& value) {
-                auto block_number = std::stol(silkworm::to_hex(key), 0, 16);
-                if (block_number <= end_block_number) {
-                    auto address = value.substr(0, silkworm::kAddressLength);
-
-                    SILKRPC_TRACE << "Walker: processing block " << block_number << " address 0x" << silkworm::to_hex(address) << "\n";
-                    addresses.insert(address);
-                }
-                return block_number <= end_block_number;
-            };
-
-            const auto key = silkworm::db::block_key(start_block_number);
-            SILKRPC_TRACE << "Ready to walk starting from key: " << silkworm::to_hex(key) << "\n";
-
-            co_await tx_database.walk(db::table::kPlainAccountChangeSet, key, 0, walker);
-            nlohmann::json result;
-            for (auto item : addresses) {
-                auto address = "0x" + silkworm::to_hex(item);
-                result.push_back(address);
-            }
-            reply = make_json_content(request["id"], result);
-        }
+        auto addresses = co_await get_modified_accounts(tx_database, start_block_number, end_block_number);
+        reply = make_json_content(request["id"], addresses);
+    } catch (const IllegalArgumentException& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], -32000, e.what());
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
@@ -286,6 +228,40 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json&
 
     co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
+}
+
+asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::TransactionDatabase& tx_database, uint64_t start_block_number, uint64_t end_block_number) {
+    auto last_block_number = co_await silkrpc::core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
+
+    SILKRPC_DEBUG << "last_block_number: " << last_block_number
+        << " start_block_number: " << start_block_number
+        << " end_block_number: " << end_block_number
+        << "\n";
+
+    std::set<evmc::address> addresses;
+    if (start_block_number > last_block_number) {
+        std::stringstream msg;
+        msg << "start block (" << start_block_number << ") is later than the latest block (" << last_block_number << ")";
+        throw IllegalArgumentException(msg.str());
+    } else if (start_block_number <= end_block_number) {
+        core::rawdb::Walker walker = [&](const silkworm::Bytes& key, const silkworm::Bytes& value) {
+            auto block_number = std::stol(silkworm::to_hex(key), 0, 16);
+            if (block_number <= end_block_number) {
+                auto address = silkworm::to_address(value.substr(0, silkworm::kAddressLength));
+
+                SILKRPC_TRACE << "Walker: processing block " << block_number << " address 0x" << silkworm::to_hex(address) << "\n";
+                addresses.insert(address);
+            }
+            return block_number <= end_block_number;
+        };
+
+        const auto key = silkworm::db::block_key(start_block_number);
+        SILKRPC_TRACE << "Ready to walk starting from key: " << silkworm::to_hex(key) << "\n";
+
+        co_await tx_database.walk(db::table::kPlainAccountChangeSet, key, 0, walker);
+    }
+
+    co_return addresses;
 }
 
 } // namespace silkrpc::commands

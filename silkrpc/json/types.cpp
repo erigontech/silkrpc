@@ -458,6 +458,13 @@ void to_json(nlohmann::json& json, const RevertError& error) {
     json = {{"code", error.code}, {"message", error.message}, {"data", "0x" + silkworm::to_hex(error.data)}};
 }
 
+void to_json(nlohmann::json& json, const std::set<evmc::address>& addresses) {
+    for (auto item : addresses) {
+        auto address = "0x" + silkworm::to_hex(item);
+        json.push_back(address);
+    }
+}
+
 nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result) {
     return {{"jsonrpc", "2.0"}, {"id", id}, {"result", result}};
 }

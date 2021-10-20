@@ -538,6 +538,21 @@ TEST_CASE("serialize error", "[silkrpc][to_json]") {
     })"_json);
 }
 
+TEST_CASE("serialize std::set<evmc::address>", "[silkrpc][to_json]") {
+    std::set<evmc::address> set;
+
+    SECTION("empty set") {
+        nlohmann::json j = set;
+        CHECK(j == R"([])"_json);
+    }
+
+    SECTION("filled set") {
+        set.insert(0x07aaec0b237ccf56b03a7c43c1c7a783da560642_address);
+        nlohmann::json j = set;
+        CHECK(j == R"(["0x07aaec0b237ccf56b03a7c43c1c7a783da560642"])"_json);
+    }
+}
+
 TEST_CASE("serialize empty log", "[silkrpc][to_json]") {
     Log l{{}, {}, {}};
     nlohmann::json j = l;

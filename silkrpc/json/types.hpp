@@ -18,6 +18,7 @@
 #define SILKRPC_JSON_TYPES_HPP_
 
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -78,6 +79,8 @@ void to_json(nlohmann::json& json, const Issuance& issuance);
 
 void to_json(nlohmann::json& json, const Error& error);
 void to_json(nlohmann::json& json, const RevertError& error);
+
+void to_json(nlohmann::json& json, const std::set<evmc::address>& addresses);
 
 std::string to_hex_no_leading_zeros(uint64_t number);
 std::string to_hex_no_leading_zeros(silkworm::ByteView bytes);
