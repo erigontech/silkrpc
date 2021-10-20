@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "streaming_client.hpp"
+#include "tx_streaming_client.hpp"
 
 #include <catch2/catch.hpp>
 

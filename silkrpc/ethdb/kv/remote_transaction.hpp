@@ -31,7 +31,7 @@
 #include <silkrpc/ethdb/cursor.hpp>
 #include <silkrpc/ethdb/kv/awaitables.hpp>
 #include <silkrpc/ethdb/kv/remote_cursor.hpp>
-#include <silkrpc/ethdb/kv/streaming_client.hpp>
+#include <silkrpc/ethdb/kv/tx_streaming_client.hpp>
 #include <silkrpc/ethdb/transaction.hpp>
 
 namespace silkrpc::ethdb::kv {
@@ -40,7 +40,7 @@ namespace silkrpc::ethdb::kv {
 
 template<typename Client>
 class RemoteTransaction : public Transaction {
-    static_assert(std::is_base_of<StreamingClient, Client>::value && !std::is_same<StreamingClient, Client>::value);
+    static_assert(std::is_base_of<AsyncTxStreamingClient, Client>::value && !std::is_same<AsyncTxStreamingClient, Client>::value);
 public:
     explicit RemoteTransaction(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
     : context_(context), client_{channel, queue}, kv_awaitable_{context_, client_} {

@@ -14,34 +14,22 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_KV_STREAMING_CLIENT_HPP_
-#define SILKRPC_ETHDB_KV_STREAMING_CLIENT_HPP_
+#ifndef SILKRPC_ETHDB_KV_TX_STREAMING_CLIENT_HPP_
+#define SILKRPC_ETHDB_KV_TX_STREAMING_CLIENT_HPP_
 
 #include <functional>
 #include <memory>
 
-#include <grpcpp/grpcpp.h>
-
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/grpc/async_completion_handler.hpp>
+#include <silkrpc/grpc/async_streaming_client.hpp>
 #include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 namespace silkrpc::ethdb::kv {
 
-class StreamingClient : public AsyncCompletionHandler  {
-public:
-    virtual void start_call(std::function<void(const grpc::Status&)> start_completed) = 0;
+using ClientAsyncReaderWriterPtr = std::unique_ptr<grpc::ClientAsyncReaderWriterInterface<remote::Cursor, remote::Pair>>;
+using AsyncTxStreamingClient = AsyncStreamingClient<remote::Cursor, remote::Pair>;
 
-    virtual void end_call(std::function<void(const grpc::Status&)> end_completed) = 0;
-
-    virtual void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) = 0;
-
-    virtual void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) = 0;
-};
-
-using ClientAsyncReaderWriterPtr = std::unique_ptr<grpc::ClientAsyncReaderWriterInterface<::remote::Cursor, ::remote::Pair>>;
-
-class TxStreamingClient final : public StreamingClient {
+class TxStreamingClient final : public AsyncTxStreamingClient {
     enum CallStatus { CALL_IDLE, CALL_STARTED, READ_STARTED, WRITE_STARTED, DONE_STARTED, CALL_ENDED };
 
 public:
@@ -72,7 +60,7 @@ public:
         SILKRPC_TRACE << "TxStreamingClient::end_call " << this << " status: " << status_ << " end\n";
     }
 
-    void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed)  override {
+    void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed)  override {
         SILKRPC_TRACE << "TxStreamingClient::read_start " << this << " status: " << status_ << " start\n";
         read_completed_ = read_completed;
         status_ = READ_STARTED;
@@ -136,7 +124,7 @@ private:
     std::unique_ptr<remote::KV::Stub> stub_;
     grpc::ClientContext context_;
     ClientAsyncReaderWriterPtr stream_;
-    ::remote::Pair pair_;
+    remote::Pair pair_;
     grpc::Status result_;
     CallStatus status_;
     bool finishing_{false};
@@ -148,4 +136,4 @@ private:
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_ETHDB_KV_STREAMING_CLIENT_HPP_
+#endif // SILKRPC_ETHDB_KV_TX_STREAMING_CLIENT_HPP_

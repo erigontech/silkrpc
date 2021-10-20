@@ -102,7 +102,7 @@ public:
     : BackEnd(context.get_executor(), ::remote::ETHBACKEND::NewStub(channel, grpc::StubOptions()), queue) {}
 
     explicit BackEnd(asio::io_context::executor_type executor, std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub, grpc::CompletionQueue* queue)
-    : stub_(std::move(stub)), eb_awaitable_{executor, stub_, queue}, pv_awaitable_{executor, stub_, queue}, nv_awaitable_{executor, stub_, queue}, cv_awaitable_{executor, stub_, queue} {
+    : executor_(executor), stub_(std::move(stub)), queue_(queue) {
         SILKRPC_TRACE << "BackEnd::ctor " << this << "\n";
     }
 
@@ -112,7 +112,8 @@ public:
 
     asio::awaitable<evmc::address> etherbase() {
         const auto start_time = clock_time::now();
-        const auto reply = co_await eb_awaitable_.async_call(::remote::EtherbaseRequest{}, asio::use_awaitable);
+        EtherbaseAwaitable eb_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await eb_awaitable.async_call(::remote::EtherbaseRequest{}, asio::use_awaitable);
         evmc::address evmc_address;
         if (reply.has_address()) {
             const auto h160_address = reply.address();
@@ -124,7 +125,8 @@ public:
 
     asio::awaitable<uint64_t> protocol_version() {
         const auto start_time = clock_time::now();
-        const auto reply = co_await pv_awaitable_.async_call(::remote::ProtocolVersionRequest{}, asio::use_awaitable);
+        ProtocolVersionAwaitable pv_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await pv_awaitable.async_call(::remote::ProtocolVersionRequest{}, asio::use_awaitable);
         const auto pv = reply.id();
         SILKRPC_DEBUG << "BackEnd::protocol_version version=" << pv << " t=" << clock_time::since(start_time) << "\n";
         co_return pv;
@@ -132,7 +134,8 @@ public:
 
     asio::awaitable<uint64_t> net_version() {
         const auto start_time = clock_time::now();
-        const auto reply = co_await nv_awaitable_.async_call(::remote::NetVersionRequest{}, asio::use_awaitable);
+        NetVersionAwaitable nv_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await nv_awaitable.async_call(::remote::NetVersionRequest{}, asio::use_awaitable);
         const auto nv = reply.id();
         SILKRPC_DEBUG << "BackEnd::net_version version=" << nv << " t=" << clock_time::since(start_time) << "\n";
         co_return nv;
@@ -140,7 +143,8 @@ public:
 
     asio::awaitable<std::string> client_version() {
         const auto start_time = clock_time::now();
-        const auto reply = co_await cv_awaitable_.async_call(::remote::ClientVersionRequest{}, asio::use_awaitable);
+        ClientVersionAwaitable cv_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await cv_awaitable.async_call(::remote::ClientVersionRequest{}, asio::use_awaitable);
         const auto cv = reply.nodename();
         SILKRPC_DEBUG << "BackEnd::client_version version=" << cv << " t=" << clock_time::since(start_time) << "\n";
         co_return cv;
@@ -158,11 +162,9 @@ private:
         return address;
     }
 
+    asio::io_context::executor_type executor_;
     std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub_;
-    EtherbaseAwaitable eb_awaitable_;
-    ProtocolVersionAwaitable pv_awaitable_;
-    NetVersionAwaitable nv_awaitable_;
-    ClientVersionAwaitable cv_awaitable_;
+    grpc::CompletionQueue* queue_;
 };
 
 } // namespace silkrpc::ethbackend

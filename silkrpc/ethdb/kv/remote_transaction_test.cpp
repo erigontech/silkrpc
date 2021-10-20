@@ -23,7 +23,7 @@
 #include <asio/io_context.hpp>
 #include <catch2/catch.hpp>
 
-#include <silkrpc/ethdb/kv/streaming_client.hpp>
+#include <silkrpc/ethdb/kv/tx_streaming_client.hpp>
 #include <silkrpc/ethdb/kv/remote_cursor.hpp>
 
 namespace silkrpc::ethdb::kv {
@@ -32,7 +32,7 @@ using Catch::Matchers::Message;
 
 TEST_CASE("open", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
@@ -68,7 +68,7 @@ TEST_CASE("open", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 
     SECTION("fail start_call") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
@@ -100,7 +100,7 @@ TEST_CASE("open", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 
     SECTION("fail read_start") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
@@ -134,7 +134,7 @@ TEST_CASE("open", "[silkrpc][ethdb][kv][remote_transaction]") {
 
 TEST_CASE("close", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success open and no cursor in table") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
@@ -169,7 +169,7 @@ TEST_CASE("close", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 
     SECTION("success no open and no cursor in table") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
@@ -195,7 +195,7 @@ TEST_CASE("close", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 
     SECTION("success with cursor in table") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
@@ -234,7 +234,7 @@ TEST_CASE("close", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 
     SECTION("fail end_call") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
@@ -270,7 +270,7 @@ TEST_CASE("close", "[silkrpc][ethdb][kv][remote_transaction]") {
 
 TEST_CASE("cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
@@ -300,7 +300,7 @@ TEST_CASE("cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 
     SECTION("success 2 cursor") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
@@ -333,7 +333,7 @@ TEST_CASE("cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 
     SECTION("fail write_start") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
@@ -363,7 +363,7 @@ TEST_CASE("cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 
     SECTION("fail read_start") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
@@ -395,7 +395,7 @@ TEST_CASE("cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
 
 TEST_CASE("cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
@@ -425,7 +425,7 @@ TEST_CASE("cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 
     SECTION("success 2 cursor") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
@@ -458,7 +458,7 @@ TEST_CASE("cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 
     SECTION("fail write_start") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
@@ -488,7 +488,7 @@ TEST_CASE("cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
     }
 
     SECTION("fail read_start") {
-        class MockStreamingClient : public StreamingClient {
+        class MockStreamingClient : public AsyncTxStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
