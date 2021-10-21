@@ -36,7 +36,7 @@
 
 namespace silkrpc::ethdb::kv {
 
-// TODO: concept to force Client implements StreamingClient
+// TODO(canepat): concept to force Client implements StreamingClient
 
 template<typename Client>
 class RemoteTransaction : public Transaction {

@@ -27,9 +27,11 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/kv/remote_transaction.hpp>
+#include <silkrpc/ethdb/kv/tx_streaming_client.hpp>
 
 namespace silkrpc::ethdb::kv {
 
+template<typename Client = TxStreamingClient>
 class RemoteDatabase: public Database {
 public:
     RemoteDatabase(asio::io_context& io_context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
@@ -46,7 +48,7 @@ public:
 
     asio::awaitable<std::unique_ptr<Transaction>> begin() override {
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " start\n";
-        auto txn = std::make_unique<RemoteTransaction<TxStreamingClient>>(io_context_, channel_, queue_);
+        auto txn = std::make_unique<RemoteTransaction<Client>>(io_context_, channel_, queue_);
         co_await txn->open();
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " txn: " << txn.get() << " end\n";
         co_return txn;

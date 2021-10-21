@@ -17,6 +17,7 @@
 #include "remote_transaction.hpp"
 
 #include <future>
+#include <system_error>
 
 #include <asio/co_spawn.hpp>
 #include <asio/use_future.hpp>
@@ -24,7 +25,6 @@
 #include <catch2/catch.hpp>
 
 #include <silkrpc/ethdb/kv/tx_streaming_client.hpp>
-#include <silkrpc/ethdb/kv/remote_cursor.hpp>
 
 namespace silkrpc::ethdb::kv {
 
