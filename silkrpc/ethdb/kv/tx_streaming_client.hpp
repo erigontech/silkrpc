@@ -33,8 +33,8 @@ class TxStreamingClient final : public AsyncTxStreamingClient {
     enum CallStatus { CALL_IDLE, CALL_STARTED, READ_STARTED, WRITE_STARTED, DONE_STARTED, CALL_ENDED };
 
 public:
-    explicit TxStreamingClient(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : stub_{remote::KV::NewStub(channel)}, stream_{stub_->PrepareAsyncTx(&context_, queue)} {
+    explicit TxStreamingClient(std::unique_ptr<remote::KV::StubInterface>& stub, grpc::CompletionQueue* queue)
+    : stub_(stub), stream_{stub_->PrepareAsyncTx(&context_, queue)} {
         SILKRPC_TRACE << "TxStreamingClient::ctor " << this << " start\n";
         status_ = CALL_IDLE;
         SILKRPC_TRACE << "TxStreamingClient::ctor " << this << " status: " << status_ << " end\n";
@@ -121,7 +121,7 @@ public:
     }
 
 private:
-    std::unique_ptr<remote::KV::Stub> stub_;
+    std::unique_ptr<remote::KV::StubInterface>& stub_;
     grpc::ClientContext context_;
     ClientAsyncReaderWriterPtr stream_;
     remote::Pair pair_;

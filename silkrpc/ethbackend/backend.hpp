@@ -99,7 +99,7 @@ using ClientVersionAwaitable = unary_awaitable<
 class BackEnd final {
 public:
     explicit BackEnd(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : BackEnd(context.get_executor(), ::remote::ETHBACKEND::NewStub(channel, grpc::StubOptions()), queue) {}
+    : BackEnd(context.get_executor(), ::remote::ETHBACKEND::NewStub(channel), queue) {}
 
     explicit BackEnd(asio::io_context::executor_type executor, std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub, grpc::CompletionQueue* queue)
     : executor_(executor), stub_(std::move(stub)), queue_(queue) {

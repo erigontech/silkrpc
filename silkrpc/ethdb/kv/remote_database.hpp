@@ -35,7 +35,7 @@ template<typename Client = TxStreamingClient>
 class RemoteDatabase: public Database {
 public:
     RemoteDatabase(asio::io_context& io_context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : io_context_(io_context), channel_(channel), queue_(queue) {
+    : io_context_(io_context), stub_{remote::KV::NewStub(channel)}, queue_(queue) {
         SILKRPC_TRACE << "RemoteDatabase::ctor " << this << "\n";
     }
 
@@ -48,7 +48,7 @@ public:
 
     asio::awaitable<std::unique_ptr<Transaction>> begin() override {
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " start\n";
-        auto txn = std::make_unique<RemoteTransaction<Client>>(io_context_, channel_, queue_);
+        auto txn = std::make_unique<RemoteTransaction<Client>>(io_context_, stub_, queue_);
         co_await txn->open();
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " txn: " << txn.get() << " end\n";
         co_return txn;
@@ -56,7 +56,7 @@ public:
 
 private:
     asio::io_context& io_context_;
-    std::shared_ptr<grpc::Channel> channel_;
+    std::unique_ptr<remote::KV::StubInterface> stub_;
     grpc::CompletionQueue* queue_;
 };
 

@@ -34,7 +34,7 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
     SECTION("success") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
                 auto result = std::async([&]() {
                     std::this_thread::yield();
@@ -54,8 +54,9 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result{asio::co_spawn(io_context, remote_tx.open(), asio::use_future)};
             io_context.run();
@@ -70,7 +71,7 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
     SECTION("fail start_call") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
                 start_completed(::grpc::Status::CANCELLED);
             }
@@ -87,8 +88,9 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result{asio::co_spawn(io_context, remote_tx.open(), asio::use_future)};
             io_context.run();
@@ -102,7 +104,7 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
     SECTION("fail read_start") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
                 start_completed(::grpc::Status::OK);
             }
@@ -119,8 +121,9 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result{asio::co_spawn(io_context, remote_tx.open(), asio::use_future)};
             io_context.run();
@@ -136,7 +139,7 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
     SECTION("success open and no cursor in table") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
                 start_completed(::grpc::Status::OK);
             }
@@ -153,8 +156,9 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result1{asio::co_spawn(io_context, remote_tx.open(), asio::use_future)};
             io_context.run();
@@ -173,7 +177,7 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
     SECTION("success no open and no cursor in table") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {
                 end_completed(::grpc::Status::OK);
@@ -184,8 +188,9 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result{asio::co_spawn(io_context, remote_tx.close(), asio::use_future)};
             io_context.run();
@@ -199,7 +204,7 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
     SECTION("success with cursor in table") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
                 start_completed(::grpc::Status::OK);
             }
@@ -218,8 +223,9 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result1{asio::co_spawn(io_context, remote_tx.open(), asio::use_future)};
             io_context.run();
@@ -242,7 +248,7 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
     SECTION("fail end_call") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
                 start_completed(::grpc::Status::OK);
             }
@@ -261,8 +267,9 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result{asio::co_spawn(io_context, remote_tx.close(), asio::use_future)};
             io_context.run();
@@ -278,7 +285,7 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
     SECTION("success") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
             void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
@@ -293,8 +300,9 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result{asio::co_spawn(io_context, remote_tx.cursor("table1"), asio::use_future)};
             io_context.run();
@@ -308,7 +316,7 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
     SECTION("success 2 cursor") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
             void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
@@ -323,8 +331,9 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result1{asio::co_spawn(io_context, remote_tx.cursor("table1"), asio::use_future)};
             io_context.run();
@@ -343,7 +352,7 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
     SECTION("fail write_start") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
             void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
@@ -358,8 +367,9 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result{asio::co_spawn(io_context, remote_tx.cursor("table1"), asio::use_future)};
             io_context.run();
@@ -373,7 +383,7 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
     SECTION("fail read_start") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
             void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
@@ -388,8 +398,9 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result{asio::co_spawn(io_context, remote_tx.cursor("table1"), asio::use_future)};
             io_context.run();
@@ -405,7 +416,7 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
     SECTION("success") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
             void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
@@ -420,8 +431,9 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result{asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), asio::use_future)};
             io_context.run();
@@ -435,7 +447,7 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
     SECTION("success 2 cursor") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
             void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
@@ -450,8 +462,9 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result1{asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), asio::use_future)};
             io_context.run();
@@ -470,7 +483,7 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
     SECTION("fail write_start") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
             void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
@@ -485,8 +498,9 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result{asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), asio::use_future)};
             io_context.run();
@@ -500,7 +514,7 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
     SECTION("fail read_start") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
             void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
@@ -515,8 +529,9 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+        std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
-        RemoteTransaction<MockStreamingClient> remote_tx(io_context, channel, &queue);
+        RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
             auto result{asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), asio::use_future)};
             io_context.run();

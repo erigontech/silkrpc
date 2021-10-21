@@ -34,7 +34,7 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
     SECTION("success") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
                 auto result = std::async([&]() {
                     start_completed(::grpc::Status::OK);
@@ -69,7 +69,7 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
     SECTION("start_call failure") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
                 auto result = std::async([&]() {
                     start_completed(::grpc::Status::CANCELLED);
@@ -104,7 +104,7 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
     SECTION("read_start failure") {
         class MockStreamingClient : public AsyncTxStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {
                 auto result = std::async([&]() {
                     start_completed(::grpc::Status::OK);
