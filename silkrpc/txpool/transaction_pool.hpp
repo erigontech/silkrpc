@@ -76,7 +76,7 @@ public:
     : TransactionPool(context.get_executor(), ::txpool::Txpool::NewStub(channel, grpc::StubOptions()), queue) {}
 
     explicit TransactionPool(asio::io_context::executor_type executor, std::unique_ptr<::txpool::Txpool::StubInterface> stub, grpc::CompletionQueue* queue)
-    : stub_(std::move(stub)), add_awaitable_{executor, stub_, queue}, transactions_awaitable_{executor, stub_, queue} {
+    : executor_(executor), stub_(std::move(stub)), queue_(queue) {
         SILKRPC_TRACE << "TransactionPool::ctor " << this << "\n";
     }
 
@@ -89,7 +89,8 @@ public:
         SILKRPC_DEBUG << "TransactionPool::add_transaction rlp_tx=" << rlp_tx << "\n";
         ::txpool::AddRequest request;
         request.add_rlptxs(rlp_tx.data(), rlp_tx.size());
-        const auto reply = co_await add_awaitable_.async_call(request, asio::use_awaitable);
+        AddAwaitable add_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await add_awaitable.async_call(request, asio::use_awaitable);
         const auto imported_size = reply.imported_size();
         const auto errors_size = reply.errors_size();
         SILKRPC_DEBUG << "TransactionPool::add_transaction imported_size=" << imported_size << " errors_size=" << errors_size << "\n";
@@ -125,7 +126,8 @@ public:
         ::types::H256* hash_h256{request.add_hashes()};
         hash_h256->set_allocated_hi(hi);  // take ownership
         hash_h256->set_allocated_lo(lo);  // take ownership
-        const auto reply = co_await transactions_awaitable_.async_call(request, asio::use_awaitable);
+        TransactionsAwaitable transactions_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await transactions_awaitable.async_call(request, asio::use_awaitable);
         const auto rlptxs_size = reply.rlptxs_size();
         SILKRPC_DEBUG << "TransactionPool::get_transaction rlptxs_size=" << rlptxs_size << "\n";
         if (rlptxs_size == 1) {
@@ -140,9 +142,9 @@ public:
     }
 
 private:
+    asio::io_context::executor_type executor_;
     std::unique_ptr<::txpool::Txpool::StubInterface> stub_;
-    AddAwaitable add_awaitable_;
-    TransactionsAwaitable transactions_awaitable_;
+    grpc::CompletionQueue* queue_;
 };
 
 } // namespace silkrpc::txpool

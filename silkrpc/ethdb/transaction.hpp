@@ -39,6 +39,8 @@ public:
 
     virtual ~Transaction() = default;
 
+    virtual uint64_t tx_id() const = 0;
+
     virtual asio::awaitable<void> open() = 0;
 
     virtual asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) = 0;

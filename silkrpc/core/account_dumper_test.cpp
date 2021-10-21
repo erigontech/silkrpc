@@ -43,13 +43,13 @@ static const evmc::bytes32 zero_hash = 0x000000000000000000000000000000000000000
 
 class DummyCursor : public silkrpc::ethdb::CursorDupSort {
 public:
-    explicit DummyCursor(const nlohmann::json& json) : json_{json} {};
+    explicit DummyCursor(const nlohmann::json& json) : json_{json} {}
 
-    uint32_t cursor_id() const {
+    uint32_t cursor_id() const override {
         return 0;
     }
 
-    asio::awaitable<void> open_cursor(const std::string& table_name) {
+    asio::awaitable<void> open_cursor(const std::string& table_name) override {
         table_name_ = table_name;
         table_ = json_.value(table_name_, empty);
         itr_ = table_.end();
@@ -57,12 +57,12 @@ public:
         co_return;
     }
 
-    asio::awaitable<void> close_cursor() {
+    asio::awaitable<void> close_cursor() override {
         table_name_ = "";
         co_return;
     }
 
-    asio::awaitable<KeyValue> seek(const silkworm::ByteView& key) {
+    asio::awaitable<KeyValue> seek(const silkworm::ByteView& key) override {
         const auto key_ = silkworm::to_hex(key);
 
         KeyValue out;
@@ -83,7 +83,7 @@ public:
         co_return out;
     }
 
-    asio::awaitable<KeyValue> seek_exact(const silkworm::ByteView& key) {
+    asio::awaitable<KeyValue> seek_exact(const silkworm::ByteView& key) override {
         const nlohmann::json table = json_.value(table_name_, empty);
         const auto& entry = table.value(silkworm::to_hex(key), "");
         auto value{*silkworm::from_hex(entry)};
@@ -93,7 +93,7 @@ public:
         co_return kv;
     }
 
-    asio::awaitable<KeyValue> next() {
+    asio::awaitable<KeyValue> next() override {
         KeyValue out;
 
         if (++itr_ != table_.end()) {
@@ -105,7 +105,7 @@ public:
         co_return out;
     }
 
-    asio::awaitable<silkworm::Bytes> seek_both(const silkworm::ByteView& key, const silkworm::ByteView& value) {
+    asio::awaitable<silkworm::Bytes> seek_both(const silkworm::ByteView& key, const silkworm::ByteView& value) override {
         silkworm::Bytes key_{key};
         key_ += value;
 
@@ -116,7 +116,7 @@ public:
         co_return out;
     }
 
-    asio::awaitable<KeyValue> seek_both_exact(const silkworm::ByteView& key, const silkworm::ByteView& value) {
+    asio::awaitable<KeyValue> seek_both_exact(const silkworm::ByteView& key, const silkworm::ByteView& value) override {
         silkworm::Bytes key_{key};
         key_ += value;
 
@@ -137,27 +137,29 @@ private:
 
 class DummyTransaction: public silkrpc::ethdb::Transaction {
 public:
-    explicit DummyTransaction(const nlohmann::json& json) : json_{json} {};
+    explicit DummyTransaction(const nlohmann::json& json) : json_{json} {}
 
-    asio::awaitable<void> open() {
+    uint64_t tx_id() const override { return 0; }
+
+    asio::awaitable<void> open() override {
         co_return;
     }
 
-    asio::awaitable<std::shared_ptr<silkrpc::ethdb::Cursor>> cursor(const std::string& table) {
+    asio::awaitable<std::shared_ptr<silkrpc::ethdb::Cursor>> cursor(const std::string& table) override {
         auto cursor = std::make_unique<DummyCursor>(json_);
         co_await cursor->open_cursor(table);
 
         co_return cursor;
     }
 
-    asio::awaitable<std::shared_ptr<silkrpc::ethdb::CursorDupSort>> cursor_dup_sort(const std::string& table) {
+    asio::awaitable<std::shared_ptr<silkrpc::ethdb::CursorDupSort>> cursor_dup_sort(const std::string& table) override {
         auto cursor = std::make_unique<DummyCursor>(json_);
         co_await cursor->open_cursor(table);
 
         co_return cursor;
     }
 
-    asio::awaitable<void> close() {
+    asio::awaitable<void> close() override {
         co_return;
     }
 
@@ -167,9 +169,9 @@ private:
 
 class DummyDatabase: public silkrpc::ethdb::Database {
 public:
-    explicit DummyDatabase(const nlohmann::json& json) : json_{json} {};
+    explicit DummyDatabase(const nlohmann::json& json) : json_{json} {}
 
-    asio::awaitable<std::unique_ptr<silkrpc::ethdb::Transaction>> begin() {
+    asio::awaitable<std::unique_ptr<silkrpc::ethdb::Transaction>> begin() override {
         auto txn = std::make_unique<DummyTransaction>(json_);
         co_return txn;
     }

@@ -85,7 +85,7 @@ asio::awaitable<void> RemoteCursor::close_cursor() {
     const auto cursor_id = cursor_id_;
     if (cursor_id_ != 0) {
         SILKRPC_DEBUG << "RemoteCursor::close_cursor closing cursor: " << cursor_id_ << "\n";
-        co_await kv_awaitable_.async_close_cursor(cursor_id_, asio::use_awaitable); // Can we shoot and forget?
+        co_await kv_awaitable_.async_close_cursor(cursor_id_, asio::use_awaitable); // Can we shoot and forget? Or avoid and delegate to CORE service cleanup?
         SILKRPC_DEBUG << "RemoteCursor::close_cursor cursor: " << cursor_id_ << "\n";
         cursor_id_ = 0;
     }
