@@ -29,9 +29,9 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getTransactionByHash                   | Yes          | partially implemented                      |
 | eth_getRawTransactionByHash                | No           |                                            |
 | eth_getTransactionByBlockHashAndIndex      | Yes          |                                            |
-| eth_getRawTransactionByBlockHashAndIndex   | Yes          |                                            |
+| eth_getRawTransactionByBlockHashAndIndex   | No           |                                            |
 | eth_getTransactionByBlockNumberAndIndex    | Yes          |                                            |
-| eth_getRawTransactionByBlockNumberAndIndex | Yes          |                                            |
+| eth_getRawTransactionByBlockNumberAndIndex | No           |                                            |
 | eth_getTransactionReceipt                  | Yes          | partially implemented                      |
 | eth_getBlockReceipts                       | Yes          | same as parity_getBlockReceipts            |
 |                                            |              |                                            |

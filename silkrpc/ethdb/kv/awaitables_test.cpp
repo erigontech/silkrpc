@@ -19,15 +19,14 @@
 #include <catch2/catch.hpp>
 #include <silkrpc/config.hpp>
 #include <asio/use_awaitable.hpp>
-#include <silkrpc/ethdb/kv/streaming_client.hpp>
-
 #include <asio/co_spawn.hpp>
 #include <asio/thread_pool.hpp>
 #include <asio/use_future.hpp>
+#include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/context_pool.hpp>
-#include <silkworm/common/util.hpp>
+#include <silkrpc/ethdb/kv/awaitables.hpp>
 
 namespace silkrpc::ethdb::kv {
 
@@ -35,7 +34,7 @@ using Catch::Matchers::Message;
 
 class AwaitableWrap {
 public:
-   AwaitableWrap(asio::io_context& context, StreamingClient& client) : kv_awaitable_{context, client} {} // tipo interfaccia
+   AwaitableWrap(asio::io_context& context, AsyncTxStreamingClient& client) : kv_awaitable_{context, client} {} // tipo interfaccia
    virtual ~AwaitableWrap() {}
    asio::awaitable<int64_t> async_start() {
       int64_t tx_id = co_await kv_awaitable_.async_start(asio::use_awaitable);
@@ -81,7 +80,7 @@ private:
 
 TEST_CASE("async_start") {
     SECTION("success with sync call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {
              start_completed(::grpc::Status::OK);
           }
@@ -112,7 +111,7 @@ TEST_CASE("async_start") {
     }
 
     SECTION("success with async call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {
             auto result = std::async([&]() {
                std::this_thread::yield();
@@ -149,7 +148,7 @@ TEST_CASE("async_start") {
     }
 
     SECTION("start_call fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {
               start_completed(::grpc::Status::CANCELLED);
           }
@@ -174,7 +173,7 @@ TEST_CASE("async_start") {
     }
 
     SECTION("read_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {
              start_completed(::grpc::Status::OK);
           }
@@ -204,7 +203,7 @@ TEST_CASE("async_start") {
 
 TEST_CASE("open_cursor") {
     SECTION("success with sync call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
@@ -235,7 +234,7 @@ TEST_CASE("open_cursor") {
     }
 
     SECTION("success with async call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
@@ -270,7 +269,7 @@ TEST_CASE("open_cursor") {
     }
 
     SECTION("read_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -298,7 +297,7 @@ TEST_CASE("open_cursor") {
     }
 
     SECTION("write_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
@@ -325,7 +324,7 @@ TEST_CASE("open_cursor") {
 
 TEST_CASE("async_seek") {
     SECTION("success with sync call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -357,7 +356,7 @@ TEST_CASE("async_seek") {
     }
 
     SECTION("success with async call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -393,7 +392,7 @@ TEST_CASE("async_seek") {
     }
 
     SECTION("read_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::CANCELLED); }
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -422,7 +421,7 @@ TEST_CASE("async_seek") {
     }
 
     SECTION("write_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::OK);}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
@@ -450,7 +449,7 @@ TEST_CASE("async_seek") {
 
 TEST_CASE("async_seek_exact") {
     SECTION("success with sync call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -482,7 +481,7 @@ TEST_CASE("async_seek_exact") {
     }
 
     SECTION("success with async call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -518,7 +517,7 @@ TEST_CASE("async_seek_exact") {
     }
 
     SECTION("read_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::CANCELLED); }
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -547,7 +546,7 @@ TEST_CASE("async_seek_exact") {
     }
 
     SECTION("write_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::OK);}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
@@ -575,7 +574,7 @@ TEST_CASE("async_seek_exact") {
 
 TEST_CASE("async_seek_both") {
     SECTION("success with sync call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -610,7 +609,7 @@ TEST_CASE("async_seek_both") {
     }
 
     SECTION("success with async call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -649,7 +648,7 @@ TEST_CASE("async_seek_both") {
     }
 
     SECTION("read_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::CANCELLED); }
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -679,7 +678,7 @@ TEST_CASE("async_seek_both") {
     }
 
     SECTION("write_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::OK);}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
@@ -708,7 +707,7 @@ TEST_CASE("async_seek_both") {
 
 TEST_CASE("async_seek_both_exact") {
     SECTION("success with sync call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -743,7 +742,7 @@ TEST_CASE("async_seek_both_exact") {
     }
 
     SECTION("success with async call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -782,7 +781,7 @@ TEST_CASE("async_seek_both_exact") {
     }
 
     SECTION("read_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::CANCELLED); }
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -812,7 +811,7 @@ TEST_CASE("async_seek_both_exact") {
     }
 
     SECTION("write_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::OK);}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
@@ -841,7 +840,7 @@ TEST_CASE("async_seek_both_exact") {
 
 TEST_CASE("async_seek_next") {
     SECTION("success with sync call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -871,7 +870,7 @@ TEST_CASE("async_seek_next") {
     }
 
     SECTION("success with async call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -905,7 +904,7 @@ TEST_CASE("async_seek_next") {
     }
 
     SECTION("read_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::CANCELLED); }
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -933,7 +932,7 @@ TEST_CASE("async_seek_next") {
     }
 
     SECTION("write_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::OK);}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
@@ -960,7 +959,7 @@ TEST_CASE("async_seek_next") {
 
 TEST_CASE("async_close_cursor") {
     SECTION("success with sync call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -991,7 +990,7 @@ TEST_CASE("async_close_cursor") {
     }
 
     SECTION("success with async call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -1026,7 +1025,7 @@ TEST_CASE("async_close_cursor") {
     }
 
     SECTION("read_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::CANCELLED); }
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
@@ -1054,7 +1053,7 @@ TEST_CASE("async_close_cursor") {
     }
 
     SECTION("write_start fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::OK);}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
@@ -1081,7 +1080,7 @@ TEST_CASE("async_close_cursor") {
 
 TEST_CASE("async_end") {
     SECTION("success with sync call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {
                end_completed(::grpc::Status::OK);
@@ -1107,7 +1106,7 @@ TEST_CASE("async_end") {
     }
 
     SECTION("success with async call") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {
                auto result = std::async([&]() {
@@ -1136,7 +1135,7 @@ TEST_CASE("async_end") {
     }
 
     SECTION("end_call fails ") {
-       class MockStreamingClient : public StreamingClient {
+       class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::CANCELLED); }
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {
                end_completed(::grpc::Status::CANCELLED);

@@ -34,7 +34,7 @@
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/ethdb/kv/streaming_client.hpp>
+#include <silkrpc/ethdb/kv/tx_streaming_client.hpp>
 #include <silkrpc/grpc/awaitables.hpp>
 #include <silkrpc/grpc/async_operation.hpp>
 #include <silkrpc/grpc/error.hpp>
@@ -369,7 +369,7 @@ template<typename Executor>
 struct KvAsioAwaitable {
     typedef Executor executor_type;
 
-    explicit KvAsioAwaitable(asio::io_context& context, StreamingClient& client)
+    explicit KvAsioAwaitable(asio::io_context& context, AsyncTxStreamingClient& client)
     : context_(context), client_(client) {}
 
     template<typename WaitHandler>
@@ -418,7 +418,7 @@ struct KvAsioAwaitable {
     }
 
     asio::io_context& context_;
-    StreamingClient& client_;
+    AsyncTxStreamingClient& client_;
 };
 
 } // namespace silkrpc::ethdb::kv

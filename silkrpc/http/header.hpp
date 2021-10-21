@@ -26,6 +26,12 @@ struct Header {
     std::string value;
 };
 
+const static Header kExpectRequestHeader{"Expect", "100-continue"};
+
+inline bool operator==(const Header& lhs, const Header& rhs) {
+    return lhs.name == rhs.name && lhs.value == rhs.value;
+}
+
 } // namespace silkrpc::http
 
 #endif // SILKRPC_HTTP_HEADER_HPP_

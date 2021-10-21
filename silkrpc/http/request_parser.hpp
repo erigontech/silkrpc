@@ -57,9 +57,6 @@ public:
         return indeterminate;
     }
 
-    // check if ack requested by client
-    bool check_if_ack_requested(Request& req);
-
 private:
     /// Handle the next character of input.
     ResultType consume(Request& req, char input);
