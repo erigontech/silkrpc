@@ -21,7 +21,6 @@
 #include <exception>
 #include <iostream>
 #include <string>
-#include <ostream>
 
 #include <boost/endian/conversion.hpp>
 #include <evmc/evmc.hpp>
@@ -1174,7 +1173,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
     silkworm::ByteView tmp_encoded_tx{*bytes_list};
     silkworm::ByteView encoded_tx{*bytes_list};
 
-    silkworm::rlp::DecodingResult err{silkworm::rlp::decode<silkworm::Transaction>(tmp_encoded_tx, to)}; 
+    silkworm::rlp::DecodingResult err{silkworm::rlp::decode<silkworm::Transaction>(tmp_encoded_tx, to)};
     if (err != silkworm::rlp::DecodingResult::kOk) {
         auto error_msg = decodingResult_to_string(err);
         reply = make_json_error(request["id"], -32000, error_msg);
@@ -1191,9 +1190,6 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-
-        
-
         reply = make_json_content(request["id"], to_quantity(0));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
