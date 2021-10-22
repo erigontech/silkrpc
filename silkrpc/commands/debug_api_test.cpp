@@ -16,6 +16,7 @@
 
 #include "debug_api.hpp"
 
+#include <stdexcept>
 #include <string>
 
 #include <asio/co_spawn.hpp>
@@ -380,7 +381,7 @@ TEST_CASE("get_modified_accounts") {
 
     SECTION("start > last block") {
         auto result = asio::co_spawn(pool, get_modified_accounts(tx_database, 0x52a061, 0x52a061), asio::use_future);
-        CHECK_THROWS_AS(result.get(), IllegalArgumentException);
+        CHECK_THROWS_AS(result.get(), std::invalid_argument);
     }
 }
 #endif

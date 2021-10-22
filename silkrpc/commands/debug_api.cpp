@@ -17,6 +17,7 @@
 #include "debug_api.hpp"
 
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <sstream>
 #include <vector>
@@ -114,7 +115,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_number(
 
         auto addresses = co_await get_modified_accounts(tx_database, start_block_number, end_block_number);
         reply = make_json_content(request["id"], addresses);
-    } catch (const IllegalArgumentException& e) {
+    } catch (const std::invalid_argument& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());
     } catch (const std::exception& e) {
@@ -155,7 +156,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_hash(co
         const auto end_block_number = co_await silkrpc::core::rawdb::read_header_number(tx_database, end_hash);
         auto addresses = co_await get_modified_accounts(tx_database, start_block_number, end_block_number);
         reply = make_json_content(request["id"], addresses);
-    } catch (const IllegalArgumentException& e) {
+    } catch (const std::invalid_argument& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());
     } catch (const std::exception& e) {
@@ -242,7 +243,7 @@ asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::Transactio
     if (start_block_number > last_block_number) {
         std::stringstream msg;
         msg << "start block (" << start_block_number << ") is later than the latest block (" << last_block_number << ")";
-        throw IllegalArgumentException(msg.str());
+        throw std::invalid_argument(msg.str());
     } else if (start_block_number <= end_block_number) {
         core::rawdb::Walker walker = [&](const silkworm::Bytes& key, const silkworm::Bytes& value) {
             auto block_number = std::stol(silkworm::to_hex(key), 0, 16);

@@ -41,11 +41,6 @@ struct KeyValue {
 std::string base64_encode(const uint8_t* bytes_to_encode, size_t len, bool url);
 std::string to_dec(intx::uint256 number);
 
-class IllegalArgumentException : public std::runtime_error {
-  public:
-    using std::runtime_error::runtime_error;
-};
-
 } // namespace silkrpc
 
 namespace silkworm {
