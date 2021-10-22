@@ -71,7 +71,6 @@ using TransactionsAwaitable = unary_awaitable<
 >;
 
 class TransactionPool final {
-
 public:
     typedef struct {
        bool completed_succesfully;
@@ -104,7 +103,7 @@ public:
         if (imported_size == 1) {
             const auto import_result = reply.imported(0);
             SILKRPC_DEBUG << "TransactionPool::add_transaction import_result=" << import_result << "\n";
-            if (import_result != ::txpool::ImportResult::SUCCESS) { 
+            if (import_result != ::txpool::ImportResult::SUCCESS) {
                 result.completed_succesfully = false;
                 if (errors_size >= 1) {
                    const auto import_error = reply.errors(0);
