@@ -66,6 +66,7 @@ def usage(argv):
     print("-c runs all tests even if one test fails [ default exit at first test fail ]")
     print("-t test_number (-1 all test)")
     print("-r connect to rpcdaemon [ default connect to silk ] ")
+    print("-l number of loops")
     print("-v verbose")
 
 
@@ -77,11 +78,12 @@ def main(argv):
     """
     exit_on_fail = 1
     silk = 1
+    loop_number = 1
     verbose = 0
     req_test = -1
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -94,6 +96,8 @@ def main(argv):
                 verbose = 1
             elif option == "-t":
                 req_test = int(optarg)
+            elif option == "-l":
+                loop_number = int(optarg)
             else:
                 usage(argv)
                 sys.exit(-1)
@@ -104,7 +108,8 @@ def main(argv):
         usage(argv)
         sys.exit(-1)
 
-    run_tests('./jsonrpc_commands_goerli.json', verbose, silk, exit_on_fail, req_test)
+    for test_rep in range(0, loop_number):
+       run_tests('./jsonrpc_commands_goerli.json', verbose, silk, exit_on_fail, req_test)
 
 #
 # module as main
