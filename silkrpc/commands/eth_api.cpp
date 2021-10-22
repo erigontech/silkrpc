@@ -1181,10 +1181,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
         co_return;
     }
 
-    const auto ret = co_await tx_pool_->add_transaction(encoded_tx);
-    if (!ret) {
-        auto error_msg = " tx pool failed: ";
-        reply = make_json_error(request["id"], -32000, error_msg);
+    const auto result = co_await tx_pool_->add_transaction(encoded_tx);
+    if (!result.completed_succesfully) {
+        reply = make_json_error(request["id"], -32000, result.error_descr);
         co_return;
     }
 
