@@ -71,7 +71,13 @@ using TransactionsAwaitable = unary_awaitable<
 >;
 
 class TransactionPool final {
+
 public:
+    typedef struct {
+       bool completed_succesfully;
+       std::string error_descr;
+    } OperationResult;
+
     explicit TransactionPool(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
     : TransactionPool(context.get_executor(), ::txpool::Txpool::NewStub(channel, grpc::StubOptions()), queue) {}
 
@@ -84,7 +90,7 @@ public:
         SILKRPC_TRACE << "TransactionPool::dtor " << this << "\n";
     }
 
-    asio::awaitable<bool> add_transaction(const silkworm::ByteView& rlp_tx) {
+    asio::awaitable<OperationResult> add_transaction(const silkworm::ByteView& rlp_tx) {
         const auto start_time = clock_time::now();
         SILKRPC_DEBUG << "TransactionPool::add_transaction rlp_tx=" << rlp_tx << "\n";
         ::txpool::AddRequest request;
@@ -93,23 +99,29 @@ public:
         const auto imported_size = reply.imported_size();
         const auto errors_size = reply.errors_size();
         SILKRPC_DEBUG << "TransactionPool::add_transaction imported_size=" << imported_size << " errors_size=" << errors_size << "\n";
-        bool result{false};
+        OperationResult result{true, ""};
+
         if (imported_size == 1) {
             const auto import_result = reply.imported(0);
             SILKRPC_DEBUG << "TransactionPool::add_transaction import_result=" << import_result << "\n";
-            if (import_result == ::txpool::ImportResult::SUCCESS) {
-                result = true;
-            } else if (errors_size >= 1) {
-                const auto import_error = reply.errors(0);
-                SILKRPC_WARN << "TransactionPool::add_transaction import_result=" << import_result << " error=" << import_error << "\n";
-            } else {
-                SILKRPC_WARN << "TransactionPool::add_transaction import_result=" << import_result << ", no error received\n";
-            }
+            if (import_result != ::txpool::ImportResult::SUCCESS) { 
+                result.completed_succesfully = false;
+                if (errors_size >= 1) {
+                   const auto import_error = reply.errors(0);
+                   result.error_descr = import_error;
+                   SILKRPC_WARN << "TransactionPool::add_transaction import_result=" << import_result << " error=" << import_error << "\n";
+                } else {
+                   result.error_descr = "no specific error";
+                   SILKRPC_WARN << "TransactionPool::add_transaction import_result=" << import_result << ", no error received\n";
+                }
+           }
         } else {
+            result.completed_succesfully = false;
+            result.error_descr = "unexpected imported size";
             SILKRPC_WARN << "TransactionPool::add_transaction unexpected imported_size=" << imported_size << "\n";
         }
         SILKRPC_DEBUG << "TransactionPool::add_transaction t=" << clock_time::since(start_time) << "\n";
-        co_return result;
+        co_return std::move(result);
     }
 
     asio::awaitable<std::optional<silkworm::Bytes>> get_transaction(const evmc::bytes32& tx_hash) {
