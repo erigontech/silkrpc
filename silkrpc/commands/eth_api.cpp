@@ -21,6 +21,7 @@
 #include <exception>
 #include <iostream>
 #include <string>
+#include <ostream>
 
 #include <boost/endian/conversion.hpp>
 #include <evmc/evmc.hpp>
@@ -28,6 +29,9 @@
 #include <silkworm/common/util.hpp>
 #include <silkworm/db/util.hpp>
 #include <silkworm/types/receipt.hpp>
+#include <silkworm/common/base.hpp>
+#include <silkworm/types/transaction.hpp>
+
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
@@ -50,6 +54,8 @@
 #include <silkrpc/types/transaction.hpp>
 
 namespace silkrpc::commands {
+
+std::string decodingResult_to_string(silkworm::rlp::DecodingResult decode_result);
 
 // https://eth.wiki/json-rpc/API#eth_blocknumber
 asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
@@ -1150,10 +1156,44 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
 
 // https://eth.wiki/json-rpc/API#eth_sendrawtransaction
 asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 1) {
+        auto error_msg = "invalid eth_sendRawTransaction params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    Transaction to;
+    const auto encoded_tx_string = params[0].get<std::string>();
+    const auto bytes_list = silkworm::from_hex(encoded_tx_string);
+    if (bytes_list == std::nullopt) {
+        auto error_msg = "cannot unmarshal hex string ";
+        reply = make_json_error(request["id"], -32602, error_msg);
+        co_return;
+    }
+    silkworm::ByteView tmp_encoded_tx{*bytes_list};
+    silkworm::ByteView encoded_tx{*bytes_list};
+
+    silkworm::rlp::DecodingResult err{silkworm::rlp::decode<silkworm::Transaction>(tmp_encoded_tx, to)}; 
+    if (err != silkworm::rlp::DecodingResult::kOk) {
+        auto error_msg = decodingResult_to_string(err);
+        reply = make_json_error(request["id"], -32000, error_msg);
+        co_return;
+    }
+
+    const auto ret = co_await tx_pool_->add_transaction(encoded_tx);
+    if (!ret) {
+        auto error_msg = " tx pool failed: ";
+        reply = make_json_error(request["id"], -32000, error_msg);
+        co_return;
+    }
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+
+        
 
         reply = make_json_content(request["id"], to_quantity(0));
     } catch (const std::exception& e) {
@@ -1467,6 +1507,36 @@ std::vector<Log> EthereumRpcApi::filter_logs(std::vector<Log>& logs, const Filte
         }
     }
     return filtered_logs;
+}
+
+
+std::string decodingResult_to_string(silkworm::rlp::DecodingResult decode_result) {
+   switch (decode_result) {
+      case silkworm::rlp::DecodingResult::kOverflow:
+         return "rlp: uint overflow";
+      case silkworm::rlp::DecodingResult::kLeadingZero:
+         return "rlp: leading Zero";
+      case silkworm::rlp::DecodingResult::kInputTooShort:
+         return "rlp: element is larger than containing list";
+      case silkworm::rlp::DecodingResult::kNonCanonicalSingleByte:
+         return "rlp: non-canonical integer format";
+      case silkworm::rlp::DecodingResult::kNonCanonicalSize:
+         return "rlp: non-canonical size information";
+      case silkworm::rlp::DecodingResult::kUnexpectedLength:
+         return "rlp: unexpected Length";
+      case silkworm::rlp::DecodingResult::kUnexpectedString:
+         return "rlp: unexpected String";
+      case silkworm::rlp::DecodingResult::kUnexpectedList:
+         return "rlp: element is larger than containing list";
+      case silkworm::rlp::DecodingResult::kListLengthMismatch:
+         return "rlp: list Length Mismatch";
+      case silkworm::rlp::DecodingResult::kInvalidVInSignature:         // v != 27 && v != 28 && v < 35, see EIP-155
+         return "rlp: invalid V in signature";
+      case silkworm::rlp::DecodingResult::kUnsupportedTransactionType:
+         return "rlp: unknown tx type prefix";
+      default:
+         return "unknownError";
+   }
 }
 
 } // namespace silkrpc::commands
