@@ -208,6 +208,7 @@ RequestParser::ResultType RequestParser::consume(Request& req, char input) {
         case expecting_newline_3:
             if (input == '\n') {
                 state_ = content_start;
+                // Look for Content-Length header to get content size
                 if (req.content_length == 0) {
                     const auto it = std::find_if(req.headers.begin(), req.headers.end(), [&](const Header& h){
                         return h.name == "Content-Length";
@@ -218,13 +219,14 @@ RequestParser::ResultType RequestParser::consume(Request& req, char input) {
                     req.content_length = std::atoi((*it).value.c_str());
                 }
                 if (req.content_length == 0) {
-                   return good;
+                    return good;
                 }
-
-                // Currently just support Expect as last header
-                const auto h = req.headers.back();
-                if (h.name == "Expect" && h.value == "100-continue") {
-                   return processing_continue;
+                // Look for Expect header to handle continuation request
+                const auto it = std::find_if(req.headers.begin(), req.headers.end(), [&](const Header& h){
+                    return h == kExpectRequestHeader;
+                });
+                if (it != req.headers.end()) {
+                    return processing_continue;
                 }
                 return indeterminate;
             } else {
@@ -237,9 +239,8 @@ RequestParser::ResultType RequestParser::consume(Request& req, char input) {
             } else {
                 return good;
             }
-        default:
-            return bad;
     }
+    return bad;
 }
 
 inline bool RequestParser::is_char(int c) {

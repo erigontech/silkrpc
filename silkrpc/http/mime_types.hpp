@@ -13,13 +13,11 @@
 
 #include <string>
 
-namespace silkrpc::http {
-namespace mime_types {
+namespace silkrpc::http::mime_types {
 
 /// Convert a file extension into a MIME type.
 std::string extension_to_type(const std::string& extension);
 
-} // namespace mime_types
-} // namespace silkrpc::http
+} // namespace silkrpc::http::mime_types
 
 #endif // SILKRPC_HTTP_MIME_TYPES_HPP_
