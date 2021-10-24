@@ -460,9 +460,8 @@ void to_json(nlohmann::json& json, const RevertError& error) {
 
 void to_json(nlohmann::json& json, const std::set<evmc::address>& addresses) {
     json = nlohmann::json::array();
-    for (auto item : addresses) {
-        const auto& address = "0x" + silkworm::to_hex(item);
-        json.push_back(address);
+    for (const auto& address : addresses) {
+        json.push_back("0x" + silkworm::to_hex(address));
     }
 }
 
