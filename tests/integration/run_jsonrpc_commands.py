@@ -109,7 +109,8 @@ def main(argv):
         sys.exit(-1)
 
     for test_rep in range(0, loop_number):
-       run_tests('./jsonrpc_commands_goerli.json', verbose, silk, exit_on_fail, req_test)
+        print("Test iteration: ",test_rep)
+        run_tests('./jsonrpc_commands_goerli.json', verbose, silk, exit_on_fail, req_test)
 
 #
 # module as main
