@@ -55,6 +55,8 @@
 namespace silkrpc::commands {
 
 std::string decodingResult_to_string(silkworm::rlp::DecodingResult decode_result);
+bool checkTxFeeLessCap(intx::uint256 max_fee_per_gas, uint64_t gas_limit);
+bool isProtected(silkworm::Transaction& txn);
 
 // https://eth.wiki/json-rpc/API#eth_blocknumber
 asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
@@ -1180,6 +1182,18 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
         co_return;
     }
 
+    if (!checkTxFeeLessCap(to.max_fee_per_gas, to.gas_limit)) {
+        auto error_msg = "tx fee exceeds the configured cap";
+        reply = make_json_error(request["id"], -32000, error_msg);
+        co_return;
+    }
+
+    if (isProtected(to)) {
+        auto error_msg = "only replay-protected (EIP-155) transactions allowed over RPC";
+        reply = make_json_error(request["id"], -32000, error_msg);
+        co_return;
+    }
+
     const auto result = co_await tx_pool_->add_transaction(encoded_tx);
     if (!result.completed_succesfully) {
         reply = make_json_error(request["id"], -32000, result.error_descr);
@@ -1201,6 +1215,27 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
 
     co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
+}
+
+// checkTxFee is an internal function used to check whether the fee of
+// the given transaction is _reasonable_(under the cap).
+bool checkTxFeeLessCap(intx::uint256 max_fee_per_gas, uint64_t gas_limit) {
+        const float ether = 1000000000000000000;
+        const float cap = 1; // TBD
+
+        // Short circuit if there is no cap for transaction fee at all.
+        if (cap == 0) {
+           return true;
+        }
+        float feeEth = ((uint64_t)max_fee_per_gas * gas_limit) / ether;
+        if (feeEth > cap) {
+           return false;
+        }
+        return true;
+}
+
+bool isProtected(silkworm::Transaction& txn) {
+        return false;
 }
 
 // https://eth.wiki/json-rpc/API#eth_sendtransaction
