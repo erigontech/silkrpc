@@ -53,6 +53,7 @@ static silkworm::Bytes kHeader{*silkworm::from_hex("f9025ca0209f062567c161c5f71b
     "ddcab467d5db31d063f2d58f266fa86c4502aa169d17762090e92b821843de69b41adbb5d86f5d114ba7f01a000000000000000000000"
     "00000000000000000000000000000000000000000000880000000000000000")};
 static silkworm::Bytes kBody{*silkworm::from_hex("c68369e45a03c0")};
+static silkworm::Bytes kInvalidJsonChainConfig{*silkworm::from_hex("000102")};
 
 class MockDatabaseReader : public DatabaseReader {
 public:
@@ -92,6 +93,42 @@ TEST_CASE("read_header_number") {
         auto result = asio::co_spawn(pool, read_header_number(db_reader, block_hash), asio::use_future);
         const auto header_number = result.get();
         CHECK(header_number == 4'000'000);
+    }
+
+    SECTION("non-existent hash") {
+        EXPECT_CALL(db_reader, get(db::table::kHeaderNumbers, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+        const auto block_hash{0x0000000000000000000000000000000000000000000000000000000000000000_bytes32};
+        auto result = asio::co_spawn(pool, read_header_number(db_reader, block_hash), asio::use_future);
+        CHECK_THROWS_MATCHES(result.get(), std::invalid_argument, Message("empty block number value in read_header_number"));
+    }
+}
+
+TEST_CASE("read_chain_config") {
+    asio::thread_pool pool{1};
+    MockDatabaseReader db_reader;
+
+    SECTION("empty chain data") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<silkworm::Bytes> { co_return kHash; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kConfig, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+        auto result = asio::co_spawn(pool, read_chain_config(db_reader), asio::use_future);
+        CHECK_THROWS_MATCHES(result.get(), std::invalid_argument, Message("empty chain config data in read_chain_config"));
+    }
+
+    SECTION("invalid JSON chain data") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<silkworm::Bytes> { co_return kHash; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kConfig, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kInvalidJsonChainConfig}; }
+        ));
+        auto result = asio::co_spawn(pool, read_chain_config(db_reader), asio::use_future);
+        CHECK_THROWS_AS(result.get(), nlohmann::json::parse_error);
     }
 }
 
