@@ -30,6 +30,7 @@
 #include <silkworm/types/receipt.hpp>
 #include <silkworm/common/base.hpp>
 #include <silkworm/types/transaction.hpp>
+#include <silkworm/core/silkworm/execution/address.hpp>
 
 
 #include <silkrpc/common/constants.hpp>
@@ -1164,7 +1165,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
-    Transaction to;
+    Transaction txn;
     const auto encoded_tx_string = params[0].get<std::string>();
     const auto bytes_list = silkworm::from_hex(encoded_tx_string);
     if (bytes_list == std::nullopt) {
@@ -1175,20 +1176,20 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
     silkworm::ByteView tmp_encoded_tx{*bytes_list};
     silkworm::ByteView encoded_tx{*bytes_list};
 
-    silkworm::rlp::DecodingResult err{silkworm::rlp::decode<silkworm::Transaction>(tmp_encoded_tx, to)};
+    silkworm::rlp::DecodingResult err{silkworm::rlp::decode<silkworm::Transaction>(tmp_encoded_tx, txn)};
     if (err != silkworm::rlp::DecodingResult::kOk) {
         auto error_msg = decodingResult_to_string(err);
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
     }
 
-    if (!checkTxFeeLessCap(to.max_fee_per_gas, to.gas_limit)) {
+    if (!checkTxFeeLessCap(txn.max_fee_per_gas, txn.gas_limit)) {
         auto error_msg = "tx fee exceeds the configured cap";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
     }
 
-    if (isProtected(to)) {
+    if (!isProtected(txn)) {
         auto error_msg = "only replay-protected (EIP-155) transactions allowed over RPC";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
@@ -1200,42 +1201,47 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
         co_return;
     }
 
-    auto tx = co_await database_->begin();
+    txn.recover_sender();
 
-    try {
-        ethdb::TransactionDatabase tx_database{*tx};
-        reply = make_json_content(request["id"], to_quantity(0));
-    } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
-    } catch (...) {
-        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, "unexpected exception");
+    auto ethash_hash{hash_of_transaction(txn)};
+    auto hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
+    if (txn.to == std::nullopt) {
+       auto contract_address = silkworm::create_address(*txn.from, txn.nonce);
+       SILKRPC_DEBUG << "Submitted contract creation hash: " << hash << " from: " << *txn.from <<  " nonce: " << txn.nonce << " contract: " << contract_address <<
+                         " value: " << txn.value << "\n";
+    } else {
+       SILKRPC_DEBUG << "Submitted transaction hash: " << hash << " from: " << *txn.from <<  " nonce: " << txn.nonce << " recipient: " << *txn.to << " value: " << txn.value << "\n";
     }
 
-    co_await tx->close(); // RAII not (yet) available with coroutines
+    reply = make_json_content(request["id"], hash);
+
     co_return;
 }
 
 // checkTxFee is an internal function used to check whether the fee of
 // the given transaction is _reasonable_(under the cap).
 bool checkTxFeeLessCap(intx::uint256 max_fee_per_gas, uint64_t gas_limit) {
-        const float ether = 1000000000000000000;
-        const float cap = 1; // TBD
+     const float ether = 1000000000000000000;
+     const float cap = 1; // TBD
 
-        // Short circuit if there is no cap for transaction fee at all.
-        if (cap == 0) {
-           return true;
-        }
-        float feeEth = ((uint64_t)max_fee_per_gas * gas_limit) / ether;
-        if (feeEth > cap) {
-           return false;
-        }
+     // Short circuit if there is no cap for transaction fee at all.
+     if (cap == 0) {
         return true;
+     }
+     float feeEth = ((uint64_t)max_fee_per_gas * gas_limit) / ether;
+     if (feeEth > cap) {
+        return false;
+     }
+     return true;
 }
 
 bool isProtected(silkworm::Transaction& txn) {
+     if (txn.type != silkworm::Transaction::Type::kLegacy)
         return false;
+     intx::uint256 v = txn.v();
+     if (v != 27 && v != 28 && v != 0 && v != 1)
+        return true;
+     return false;
 }
 
 // https://eth.wiki/json-rpc/API#eth_sendtransaction
