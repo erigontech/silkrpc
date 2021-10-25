@@ -18,6 +18,7 @@
 #define SILKRPC_COMMANDS_DEBUG_API_HPP_
 
 #include <memory>
+#include <set>
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
@@ -28,6 +29,7 @@
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/database.hpp>
+#include <silkrpc/ethdb/transaction_database.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
@@ -56,6 +58,8 @@ private:
 
     friend class silkrpc::http::RequestHandler;
 };
+
+asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::TransactionDatabase& tx_database, uint64_t start_block_number, uint64_t end_block_number);
 
 } // namespace silkrpc::commands
 
