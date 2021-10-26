@@ -54,6 +54,25 @@ static silkworm::Bytes kHeader{*silkworm::from_hex("f9025ca0209f062567c161c5f71b
     "00000000000000000000000000000000000000000000880000000000000000")};
 static silkworm::Bytes kBody{*silkworm::from_hex("c68369e45a03c0")};
 static silkworm::Bytes kInvalidJsonChainConfig{*silkworm::from_hex("000102")};
+static silkworm::Bytes kMissingChainIdConfig{*silkworm::from_hex("7b226265726c696e426c6f636b223a31323234343030302c"
+    "2262797a616e7469756d426c6f636b223a343337303030302c22636f6e7374616e74696e6f706c65426c6f636b223a373238303030302"
+    "c2264616f466f726b426c6f636b223a313932303030302c22656970313530426c6f636b223a323436333030302c22656970313535426c"
+    "6f636b223a323637353030302c22657468617368223a7b7d2c22686f6d657374656164426c6f636b223a313135303030302c226973746"
+    "16e62756c426c6f636b223a393036393030302c226c6f6e646f6e426c6f636b223a31323936353030302c226d756972476c6163696572"
+    "426c6f636b223a393230303030302c2270657465727362757267426c6f636b223a373238303030307d")};
+static silkworm::Bytes kInvalidChainIdConfig{*silkworm::from_hex("7b226265726c696e426c6f636b223a31323234343030302c"
+    "2262797a616e7469756d426c6f636b223a343337303030302c22636861696e4964223a22666f6f222c22636f6e7374616e74696e6f706"
+    "c65426c6f636b223a373238303030302c2264616f466f726b426c6f636b223a313932303030302c22656970313530426c6f636b223a32"
+    "3436333030302c22656970313535426c6f636b223a323637353030302c22657468617368223a7b7d2c22686f6d657374656164426c6f6"
+    "36b223a313135303030302c22697374616e62756c426c6f636b223a393036393030302c226c6f6e646f6e426c6f636b223a3132393635"
+    "3030302c226d756972476c6163696572426c6f636b223a393230303030302c2270657465727362757267426c6f636b223a37323830303"
+    "0307d")};
+static silkworm::Bytes kChainConfig{*silkworm::from_hex("7b226265726c696e426c6f636b223a31323234343030302c2262797a6"
+    "16e7469756d426c6f636b223a343337303030302c22636861696e4964223a312c22636f6e7374616e74696e6f706c65426c6f636b223a"
+    "373238303030302c2264616f466f726b426c6f636b223a313932303030302c22656970313530426c6f636b223a323436333030302c226"
+    "56970313535426c6f636b223a323637353030302c22657468617368223a7b7d2c22686f6d657374656164426c6f636b223a3131353030"
+    "30302c22697374616e62756c426c6f636b223a393036393030302c226c6f6e646f6e426c6f636b223a31323936353030302c226d75697"
+    "2476c6163696572426c6f636b223a393230303030302c2270657465727362757267426c6f636b223a373238303030307d")};
 
 class MockDatabaseReader : public DatabaseReader {
 public:
@@ -129,6 +148,72 @@ TEST_CASE("read_chain_config") {
         ));
         auto result = asio::co_spawn(pool, read_chain_config(db_reader), asio::use_future);
         CHECK_THROWS_AS(result.get(), nlohmann::json::parse_error);
+    }
+
+    SECTION("valid JSON chain data") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<silkworm::Bytes> { co_return kHash; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kConfig, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kChainConfig}; }
+        ));
+        auto result = asio::co_spawn(pool, read_chain_config(db_reader), asio::use_future);
+        const auto chain_config = result.get();
+        CHECK(chain_config.genesis_hash == 0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32);
+        CHECK(chain_config.config == R"({
+            "berlinBlock":12244000,
+            "byzantiumBlock":4370000,
+            "chainId":1,
+            "constantinopleBlock":7280000,
+            "daoForkBlock":1920000,
+            "eip150Block":2463000,
+            "eip155Block":2675000,
+            "ethash":{},
+            "homesteadBlock":1150000,
+            "istanbulBlock":9069000,
+            "londonBlock":12965000,
+            "muirGlacierBlock":9200000,
+            "petersburgBlock":7280000
+        })"_json);
+    }
+}
+
+TEST_CASE("read_chain_id") {
+    asio::thread_pool pool{1};
+    MockDatabaseReader db_reader;
+
+    SECTION("missing chain identifier") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<silkworm::Bytes> { co_return kHash; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kConfig, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kMissingChainIdConfig}; }
+        ));
+        auto result = asio::co_spawn(pool, read_chain_id(db_reader), asio::use_future);
+        CHECK_THROWS_AS(result.get(), std::runtime_error);
+    }
+
+    SECTION("invalid chain identifier") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<silkworm::Bytes> { co_return kHash; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kConfig, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kInvalidChainIdConfig}; }
+        ));
+        auto result = asio::co_spawn(pool, read_chain_id(db_reader), asio::use_future);
+        CHECK_THROWS_AS(result.get(), nlohmann::json::type_error);
+    }
+
+    SECTION("valid chain identifier") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<silkworm::Bytes> { co_return kHash; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kConfig, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kChainConfig}; }
+        ));
+        auto result = asio::co_spawn(pool, read_chain_id(db_reader), asio::use_future);
+        const auto chain_id = result.get();
+        CHECK(chain_id == 1);
     }
 }
 

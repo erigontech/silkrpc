@@ -68,6 +68,9 @@ asio::awaitable<ChainConfig> read_chain_config(const DatabaseReader& reader) {
 
 asio::awaitable<uint64_t> read_chain_id(const DatabaseReader& reader) {
     const auto chain_info = co_await read_chain_config(reader);
+    if (chain_info.config.count("chainId") == 0) {
+        throw std::runtime_error{"missing chainId in chain config"};
+    }
     co_return chain_info.config["chainId"].get<uint64_t>();
 }
 
