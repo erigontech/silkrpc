@@ -261,6 +261,42 @@ TEST_CASE("read_canonical_block_hash") {
     }
 }
 
+TEST_CASE("read_total_difficulty") {
+    asio::thread_pool pool{1};
+    MockDatabaseReader db_reader;
+
+    SECTION("empty RLP buffer") {
+        EXPECT_CALL(db_reader, get(db::table::kDifficulty, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+        evmc::bytes32 block_hash{0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8_bytes32};
+        uint64_t block_number{4'000'000};
+        auto result = asio::co_spawn(pool, read_total_difficulty(db_reader, block_hash, block_number), asio::use_future);
+        CHECK_THROWS_AS(result.get(), std::invalid_argument);
+    }
+
+    SECTION("invalid RLP buffer") {
+        EXPECT_CALL(db_reader, get(db::table::kDifficulty, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("000102")}; }
+        ));
+        evmc::bytes32 block_hash{0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8_bytes32};
+        uint64_t block_number{4'000'000};
+        auto result = asio::co_spawn(pool, read_total_difficulty(db_reader, block_hash, block_number), asio::use_future);
+        CHECK_THROWS_AS(result.get(), std::runtime_error);
+    }
+
+    SECTION("valid total difficulty") {
+        EXPECT_CALL(db_reader, get(db::table::kDifficulty, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("8360c7cc")}; }
+        ));
+        evmc::bytes32 block_hash{0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8_bytes32};
+        uint64_t block_number{4'306'300};
+        auto result = asio::co_spawn(pool, read_total_difficulty(db_reader, block_hash, block_number), asio::use_future);
+        const auto total_difficulty = result.get();
+        CHECK(total_difficulty == 6'342'604 /*0x60c7cc*/);
+    }
+}
+
 TEST_CASE("read_block_by_number_or_hash") {
     asio::thread_pool pool{1};
     MockDatabaseReader db_reader;

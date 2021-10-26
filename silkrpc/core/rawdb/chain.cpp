@@ -88,6 +88,7 @@ asio::awaitable<evmc::bytes32> read_canonical_block_hash(const DatabaseReader& r
 
 asio::awaitable<intx::uint256> read_total_difficulty(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
+    SILKRPC_TRACE << "rawdb::read_total_difficulty block_key: " << silkworm::to_hex(block_key) << "\n";
     const auto kv_pair{co_await reader.get(silkrpc::db::table::kDifficulty, block_key)};
     silkworm::ByteView value{kv_pair.value};
     if (value.empty()) {
@@ -98,6 +99,7 @@ asio::awaitable<intx::uint256> read_total_difficulty(const DatabaseReader& reade
     if (decoding_result != silkworm::rlp::DecodingResult::kOk) {
         throw std::runtime_error{"cannot RLP-decode total difficulty value in read_total_difficulty"};
     }
+    SILKRPC_DEBUG << "rawdb::read_total_difficulty canonical total difficulty: " << total_difficulty << "\n";
     co_return total_difficulty;
 }
 
