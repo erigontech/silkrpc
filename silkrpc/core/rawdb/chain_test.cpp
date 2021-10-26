@@ -84,20 +84,20 @@ public:
 };
 
 void check_expected_block_with_hash(const silkworm::BlockWithHash& bwh) {
-    CHECK(bwh.block.header.parent_hash == silkworm::to_bytes32(*silkworm::from_hex("209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7")));
-    CHECK(bwh.block.header.ommers_hash == silkworm::to_bytes32(*silkworm::from_hex("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347")));
+    CHECK(bwh.block.header.parent_hash == 0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7_bytes32);
+    CHECK(bwh.block.header.ommers_hash == 0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347_bytes32);
     CHECK(bwh.block.header.beneficiary == silkworm::to_address(*silkworm::from_hex("0000000000000000000000000000000000000000")));
-    CHECK(bwh.block.header.state_root == silkworm::to_bytes32(*silkworm::from_hex("e7536c5b61ed0e0ab7f3ce7f085806d40f716689c0c086676757de401b595658")));
-    CHECK(bwh.block.header.transactions_root == silkworm::to_bytes32(*silkworm::from_hex("40be247314d834a319556d1dcf458e8707cc1aa4a416b6118474ce0c96fccb1a")));
-    CHECK(bwh.block.header.receipts_root == silkworm::to_bytes32(*silkworm::from_hex("7862fe11d10a9b237ffe9cb660f31e4bc4be66836c9bfc17310d47c60d75671f")));
+    CHECK(bwh.block.header.state_root == 0xe7536c5b61ed0e0ab7f3ce7f085806d40f716689c0c086676757de401b595658_bytes32);
+    CHECK(bwh.block.header.transactions_root == 0x40be247314d834a319556d1dcf458e8707cc1aa4a416b6118474ce0c96fccb1a_bytes32);
+    CHECK(bwh.block.header.receipts_root == 0x7862fe11d10a9b237ffe9cb660f31e4bc4be66836c9bfc17310d47c60d75671f_bytes32);
     CHECK(bwh.block.header.number == 4000000);
     CHECK(bwh.block.header.gas_limit == 8000000);
     CHECK(bwh.block.header.gas_used == 1996875);
     CHECK(bwh.block.header.timestamp == 1609072811);
     CHECK(bwh.block.header.extra_data == *silkworm::from_hex("d88301091a846765746888676f312e31352e36856c696e757800000000000000be009d0049d6f0ee8ca6764a1d3e"
         "b519bd4d046e167ddcab467d5db31d063f2d58f266fa86c4502aa169d17762090e92b821843de69b41adbb5d86f5d114ba7f01"));
-    CHECK(bwh.block.header.mix_hash == silkworm::to_bytes32(*silkworm::from_hex("0000000000000000000000000000000000000000000000000000000000000000")));
-    CHECK(bwh.hash == silkworm::to_bytes32(*silkworm::from_hex("439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff")));
+    CHECK(bwh.block.header.mix_hash == 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32);
+    CHECK(bwh.hash == 0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32);
 }
 
 TEST_CASE("read_header_number") {
@@ -214,6 +214,50 @@ TEST_CASE("read_chain_id") {
         auto result = asio::co_spawn(pool, read_chain_id(db_reader), asio::use_future);
         const auto chain_id = result.get();
         CHECK(chain_id == 1);
+    }
+}
+
+TEST_CASE("read_canonical_block_hash") {
+    asio::thread_pool pool{1};
+    MockDatabaseReader db_reader;
+
+    SECTION("empty hash bytes") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<silkworm::Bytes> { co_return silkworm::Bytes{}; }
+        ));
+        uint64_t block_number{4'000'000};
+        auto result = asio::co_spawn(pool, read_canonical_block_hash(db_reader, block_number), asio::use_future);
+        CHECK_THROWS_AS(result.get(), std::invalid_argument);
+    }
+
+    SECTION("shorter hash bytes") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<silkworm::Bytes> { co_return *silkworm::from_hex("9816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff"); }
+        ));
+        uint64_t block_number{4'000'000};
+        auto result = asio::co_spawn(pool, read_canonical_block_hash(db_reader, block_number), asio::use_future);
+        const auto block_hash = result.get();
+        CHECK(block_hash == 0x009816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32);
+    }
+
+    SECTION("longer hash bytes") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<silkworm::Bytes> { co_return *silkworm::from_hex("439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dffabcdef"); }
+        ));
+        uint64_t block_number{4'000'000};
+        auto result = asio::co_spawn(pool, read_canonical_block_hash(db_reader, block_number), asio::use_future);
+        const auto block_hash = result.get();
+        CHECK(block_hash == 0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32);
+    }
+
+    SECTION("valid canonical hash") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<silkworm::Bytes> { co_return kHash; }
+        ));
+        uint64_t block_number{4'000'000};
+        auto result = asio::co_spawn(pool, read_canonical_block_hash(db_reader, block_number), asio::use_future);
+        const auto block_hash = result.get();
+        CHECK(block_hash == 0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32);
     }
 }
 
