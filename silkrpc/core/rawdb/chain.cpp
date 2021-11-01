@@ -128,12 +128,12 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const DatabaseRead
 
 asio::awaitable<silkworm::BlockWithHash> read_block_by_transaction_hash(const DatabaseReader& reader, const evmc::bytes32& transaction_hash) {
     const silkworm::ByteView tx_hash{transaction_hash.bytes, silkworm::kHashLength};
-
-    auto bytes = co_await reader.get_one(silkrpc::db::table::kTxLookup, tx_hash);
-    if (bytes.empty()) {
+    auto block_number_bytes = co_await reader.get_one(silkrpc::db::table::kTxLookup, tx_hash);
+    if (block_number_bytes.empty()) {
         throw std::invalid_argument{"empty block number value in read_block_by_transaction_hash"};
     }
-    auto block_number = std::stoul(silkworm::to_hex(bytes), 0, 16);
+    SILKRPC_TRACE << "Block number bytes " << silkworm::to_hex(block_number_bytes) << " for transaction hash " << transaction_hash << "\n";
+    auto block_number = std::stoul(silkworm::to_hex(block_number_bytes), 0, 16);
     SILKRPC_TRACE << "Block number " << block_number << " for transaction hash " << transaction_hash << "\n";
     co_return co_await core::rawdb::read_block_by_number(reader, block_number);
 }
