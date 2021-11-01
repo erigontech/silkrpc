@@ -553,7 +553,7 @@ TEST_CASE("read_block_by_transaction_hash") {
             []() -> asio::awaitable<silkworm::Bytes> { co_return *silkworm::from_hex("01FFFFFFFFFFFFFFFF"); }
         ));
         auto result = asio::co_spawn(pool, read_block_by_transaction_hash(db_reader, transaction_hash), asio::use_future);
-        CHECK_THROWS_MATCHES(result.get(), std::out_of_range, Message("stoul: out of range"));
+        CHECK_THROWS_AS(result.get(), std::out_of_range);
     }
 
     SECTION("block canonical hash not found") {
