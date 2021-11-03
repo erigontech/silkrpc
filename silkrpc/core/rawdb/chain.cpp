@@ -187,9 +187,9 @@ asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& reader, con
 
         silkworm::BlockBody body{transactions, stored_body.ommers};
         co_return body;
-    } catch (silkworm::rlp::DecodingResult error) {
-        SILKRPC_ERROR << "RLP decoding error for block body #" << block_number << " [" << static_cast<int>(error) << "]\n";
-        throw std::runtime_error{"RLP decoding error for block body [" + std::to_string(static_cast<int>(error)) + "]"};
+    } catch (silkworm::rlp::DecodingError error) {
+        SILKRPC_ERROR << "RLP decoding error for block body #" << block_number << " [" << error.what() << "]\n";
+        throw std::runtime_error{"RLP decoding error for block body [" + std::string(error.what()) + "]"};
     }
 }
 

@@ -424,7 +424,7 @@ TEST_CASE("read_block_by_hash") {
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{0x00, 0x01}}; }
         ));
         auto result = asio::co_spawn(pool, read_block_by_hash(db_reader, block_hash), asio::use_future);
-        CHECK_THROWS_AS(result.get(), silkworm::rlp::DecodingError);
+        CHECK_THROWS_AS(result.get(), std::runtime_error);
     }
 
     SECTION("block found and matching") {
@@ -511,7 +511,7 @@ TEST_CASE("read_block_by_number") {
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{0x00, 0x01}}; }
         ));
         auto result = asio::co_spawn(pool, read_block_by_number(db_reader, block_number), asio::use_future);
-        CHECK_THROWS_MATCHES(result.get(), silkworm::rlp::DecodingError, Message("Decoding error : kUnexpectedString"));
+        CHECK_THROWS_AS(result.get(), std::runtime_error);
     }
 
     SECTION("block found and matching") {
@@ -619,6 +619,91 @@ TEST_CASE("read_block_by_transaction_hash") {
             []() -> asio::awaitable<void> { co_return; }
         ));
         auto result = asio::co_spawn(pool, read_block_by_transaction_hash(db_reader, transaction_hash), asio::use_future);
+        const silkworm::BlockWithHash bwh = result.get();
+        check_expected_block_with_hash(bwh);
+    }
+}
+
+TEST_CASE("read_block") {
+    asio::thread_pool pool{1};
+    MockDatabaseReader db_reader;
+
+    SECTION("block header not found") {
+        const auto block_hash{0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32};
+        const uint64_t block_number{4'000'000};
+        EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+        auto result = asio::co_spawn(pool, read_block(db_reader, block_hash, block_number), asio::use_future);
+        CHECK_THROWS_MATCHES(result.get(), std::runtime_error, Message("empty block header RLP in read_header"));
+    }
+
+    SECTION("invalid block header") {
+        const auto block_hash{0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32};
+        const uint64_t block_number{4'000'000};
+        EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{0x00, 0x01}}; }
+        ));
+        auto result = asio::co_spawn(pool, read_block(db_reader, block_hash, block_number), asio::use_future);
+        CHECK_THROWS_MATCHES(result.get(), std::runtime_error, Message("invalid RLP decoding for block header"));
+    }
+
+    SECTION("block body not found") {
+        const auto block_hash{0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32};
+        const uint64_t block_number{4'000'000};
+        EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+        auto result = asio::co_spawn(pool, read_block(db_reader, block_hash, block_number), asio::use_future);
+        CHECK_THROWS_MATCHES(result.get(), std::runtime_error, Message("empty block body RLP in read_body"));
+    }
+
+    SECTION("invalid block body") {
+        const auto block_hash{0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32};
+        const uint64_t block_number{4'000'000};
+        EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{0x00, 0x01}}; }
+        ));
+        auto result = asio::co_spawn(pool, read_block(db_reader, block_hash, block_number), asio::use_future);
+        CHECK_THROWS_AS(result.get(), std::runtime_error);
+    }
+
+    SECTION("empty block") {
+        const auto block_hash{0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32};
+        const uint64_t block_number{4'000'000};
+        EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("c68369000003c0")}; }
+        ));
+        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<void> { co_return; }
+        ));
+        auto result = asio::co_spawn(pool, read_block(db_reader, block_hash, block_number), asio::use_future);
+        const silkworm::BlockWithHash bwh = result.get();
+        CHECK(bwh.block.transactions.size() == 0);
+    }
+
+    SECTION("block found and matching") {
+        const auto block_hash{0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32};
+        const uint64_t block_number{4'000'000};
+        EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kBody}; }
+        ));
+        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<void> { co_return; }
+        ));
+        auto result = asio::co_spawn(pool, read_block(db_reader, block_hash, block_number), asio::use_future);
         const silkworm::BlockWithHash bwh = result.get();
         check_expected_block_with_hash(bwh);
     }
