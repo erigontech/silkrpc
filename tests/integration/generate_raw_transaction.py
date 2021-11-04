@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+""" Creates a Raw transaction """
+
 import sys
 import getopt
 from web3 import Web3
@@ -7,9 +10,8 @@ w3 = Web3(Web3.HTTPProvider('https://goerli.infura.io/v3/06ffc77ca4534edb8448303
 def usage(argv):
     """ print usage string
     """
-    print("Usage: " + argv[0] + " -k <key-file> -p <password> -f <from account address> -t <to account address>")
-    
-   
+    print("Usage: " + argv[0] +
+          " -k <key-file> -p <password> -f <from account address> -t <to account address>")
 #
 # main
 #
@@ -23,13 +25,13 @@ def main(argv):
                 usage(argv)
                 sys.exit(-1)
             elif option == "-k":
-                keyFile = optarg
+                key_file = optarg
             elif option == "-p":
                 password = optarg
             elif option == "-f":
-                fromAccount = optarg
+                from_account = optarg
             elif option == "-t":
-                toAccount = optarg
+                to_account = optarg
             elif option == "-h":
                 usage(argv)
             else:
@@ -42,16 +44,16 @@ def main(argv):
         usage(argv)
         sys.exit(-1)
 
-    with open(keyFile) as keyfile:
-       encrypted_key = keyfile.read()
-       private_key = w3.eth.account.decrypt(encrypted_key, password)
+    with open(key_file, encoding="utf8") as key_file:
+        encrypted_key = key_file.read()
+        private_key = w3.eth.account.decrypt(encrypted_key, password)
 
     signed_txn = w3.eth.account.signTransaction(dict(
-        nonce=w3.eth.getTransactionCount(fromAccount),
-        gasPrice = w3.eth.gasPrice, 
+        nonce=w3.eth.getTransactionCount(from_account),
+        gasPrice = w3.eth.gasPrice,
         gas = 100000,
         chainId=5,
-        to=toAccount,
+        to=to_account,
         value=w3.toWei(0,'ether')),
         private_key)
 
@@ -63,10 +65,3 @@ def main(argv):
 if __name__ == "__main__":
     main(sys.argv)
     sys.exit(0)
-
-
-
-
-
-
-
