@@ -88,7 +88,7 @@ TEST_CASE("TxStreamingClient::start_call", "[silkrpc][ethdb][kv][tx_streaming_cl
 
         EXPECT_CALL(
             *dynamic_cast<remote::FixIssue24351_MockKVStub*>(stub.get()),
-            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_OK);
+            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_OK));
         grpc::CompletionQueue queue;
         TxStreamingClient client{stub, &queue};
 
