@@ -26,7 +26,7 @@ struct Header {
     std::string value;
 };
 
-const static Header kExpectRequestHeader{"Expect", "100-continue"};
+static const Header kExpectRequestHeader{"Expect", "100-continue"};
 
 inline bool operator==(const Header& lhs, const Header& rhs) {
     return lhs.name == rhs.name && lhs.value == rhs.value;
