@@ -149,7 +149,6 @@ endif()
 add_library(silkrpc ${SILKRPC_SRC})
 target_include_directories(silkrpc PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(silkrpc
-    tcmalloc
     absl::flat_hash_map
     absl::flat_hash_set
     absl::btree
@@ -158,7 +157,8 @@ target_link_libraries(silkrpc
     protobuf::libprotobuf
     silkinterfaces
     silkworm_core
-    silkworm_node)
+    silkworm_node
+    /usr/local/lib/libmimalloc.so)
 
 add_executable(silkrpcdaemon main.cpp)
 target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
@@ -166,4 +166,4 @@ target_link_libraries(silkrpcdaemon
     silkrpc
     absl::flags_parse
     silkinterfaces
-    tcmalloc)
+    /usr/local/lib/libmimalloc.so)
