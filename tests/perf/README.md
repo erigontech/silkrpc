@@ -7,7 +7,7 @@ ulimit -c 3000000
 # to increase max file descriptors
 ulimit -n 64000
 # to increase port list (sudo su) 
-echo 10000 61000 > /proc/sys/net/ipv4/ip_local_port_range
+echo 5000 65000 > /proc/sys/net/ipv4/ip_local_port_range
 
 ## Software Versions
 In order to reproduce the environment used in last performance testing session, pick the following source code versions:
