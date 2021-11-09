@@ -47,6 +47,9 @@ commands:
           command: |
             sudo apt-get update
             sudo apt-get install -y google-perftools libgoogle-perftools-dev
+      - run:
+          name: "Install mimalloc"
+          command: |
             git clone https://github.com/microsoft/mimalloc
             cd mimalloc
             mkdir -p out/release
