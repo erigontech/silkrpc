@@ -86,7 +86,7 @@ public:
                 start_op->complete(this, make_error_code(status.error_code(), status.error_message()), 0);
                 return;
             }
-            self_->client_.read_start([this](const grpc::Status& status, remote::Pair open_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, const remote::Pair& open_pair) {
                 auto txid = open_pair.txid();
 
                 auto start_op = static_cast<op*>(wrapper_);
@@ -130,7 +130,7 @@ public:
                 open_cursor_op->complete(this, make_error_code(status.error_code(), status.error_message()), 0);
                 return;
             }
-            self_->client_.read_start([this](const grpc::Status& status, remote::Pair open_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, const remote::Pair& open_pair) {
                 auto cursor_id = open_pair.cursorid();
 
                 auto open_cursor_op = static_cast<op*>(wrapper_);
@@ -176,7 +176,7 @@ public:
                 seek_op->complete(this, make_error_code(status.error_code(), status.error_message()), {});
                 return;
             }
-            self_->client_.read_start([this](const grpc::Status& status, remote::Pair seek_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, const remote::Pair& seek_pair) {
                 typedef silkrpc::ethdb::kv::async_seek<WaitHandler, Executor> op;
                 auto seek_op = static_cast<op*>(wrapper_);
                 if (status.ok()) {
@@ -224,7 +224,7 @@ public:
                 seek_op->complete(this, make_error_code(status.error_code(), status.error_message()), {});
                 return;
             }
-            self_->client_.read_start([this](const grpc::Status& status, remote::Pair seek_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, const remote::Pair& seek_pair) {
                 auto seek_op = static_cast<op*>(wrapper_);
                 if (status.ok()) {
                     seek_op->complete(this, {}, seek_pair);
@@ -270,7 +270,7 @@ public:
                 next_op->complete(this, make_error_code(status.error_code(), status.error_message()), {});
                 return;
             }
-            self_->client_.read_start([this](const grpc::Status& status, remote::Pair next_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, const remote::Pair& next_pair) {
                 auto next_op = static_cast<op*>(wrapper_);
                 if (status.ok()) {
                     next_op->complete(this, {}, next_pair);
@@ -314,7 +314,7 @@ public:
                 close_cursor_op->complete(this, make_error_code(status.error_code(), status.error_message()), 0);
                 return;
             }
-            self_->client_.read_start([this](const grpc::Status& status, remote::Pair close_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, const remote::Pair & close_pair) {
                 auto cursor_id = close_pair.cursorid();
 
                 auto close_cursor_op = static_cast<op*>(wrapper_);
