@@ -85,7 +85,7 @@ TEST_CASE("async_start") {
              start_completed(::grpc::Status::OK);
           }
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair pair;
                pair.set_txid(4);
                read_completed(::grpc::Status::OK, pair);
@@ -119,7 +119,7 @@ TEST_CASE("async_start") {
             });
           }
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
             auto result = std::async([&]() {
                std::this_thread::yield();
                ::remote::Pair pair;
@@ -153,7 +153,7 @@ TEST_CASE("async_start") {
               start_completed(::grpc::Status::CANCELLED);
           }
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
           void completed(bool ok) override {}
       };
@@ -178,7 +178,7 @@ TEST_CASE("async_start") {
              start_completed(::grpc::Status::OK);
           }
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
              ::remote::Pair pair;
              read_completed(::grpc::Status::CANCELLED, pair);
           }
@@ -206,7 +206,7 @@ TEST_CASE("open_cursor") {
        class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair pair;
                pair.set_cursorid(0x23);
                read_completed(::grpc::Status::OK, pair);
@@ -237,7 +237,7 @@ TEST_CASE("open_cursor") {
        class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                auto result = std::async([&]() {
                   ::remote::Pair pair;
                   pair.set_cursorid(0x47);
@@ -275,7 +275,7 @@ TEST_CASE("open_cursor") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair pair;
                read_completed(::grpc::Status::CANCELLED, pair);
           }
@@ -300,7 +300,7 @@ TEST_CASE("open_cursor") {
        class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
@@ -330,7 +330,7 @@ TEST_CASE("async_seek") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair seek_pair;
                seek_pair.set_k("KEY1");
                read_completed(::grpc::Status::OK, seek_pair);
@@ -364,14 +364,15 @@ TEST_CASE("async_seek") {
                   write_completed(::grpc::Status::OK);
                });
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                auto result = std::async([&]() {
-                  ::remote::Pair seek_pair;
                   seek_pair.set_k("KEY1");
                   read_completed(::grpc::Status::OK, seek_pair);
                });
           }
           void completed(bool ok) override { }
+       private:
+           ::remote::Pair seek_pair;
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -398,7 +399,7 @@ TEST_CASE("async_seek") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair pair;
                read_completed(::grpc::Status::CANCELLED, pair);
           }
@@ -424,7 +425,7 @@ TEST_CASE("async_seek") {
        class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::OK);}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
@@ -455,7 +456,7 @@ TEST_CASE("async_seek_exact") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair seek_pair;
                seek_pair.set_k("KEY1");
                read_completed(::grpc::Status::OK, seek_pair);
@@ -489,14 +490,15 @@ TEST_CASE("async_seek_exact") {
                   write_completed(::grpc::Status::OK);
                });
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                auto result = std::async([&]() {
-                  ::remote::Pair seek_pair;
                   seek_pair.set_k("KEY1");
                   read_completed(::grpc::Status::OK, seek_pair);
                });
           }
           void completed(bool ok) override { }
+        private:
+          ::remote::Pair seek_pair;
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -523,7 +525,7 @@ TEST_CASE("async_seek_exact") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair pair;
                read_completed(::grpc::Status::CANCELLED, pair);
           }
@@ -549,7 +551,7 @@ TEST_CASE("async_seek_exact") {
        class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::OK);}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
@@ -580,7 +582,7 @@ TEST_CASE("async_seek_both") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair seek_pair;
                seek_pair.set_k("KEY1");
                seek_pair.set_v("VALUE112");
@@ -617,15 +619,17 @@ TEST_CASE("async_seek_both") {
                   write_completed(::grpc::Status::OK);
                });
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                auto result = std::async([&]() {
-                  ::remote::Pair seek_pair;
                   seek_pair.set_k("KEY1");
                   seek_pair.set_v("VALUE123");
                   read_completed(::grpc::Status::OK, seek_pair);
                });
           }
           void completed(bool ok) override { }
+
+          private:
+              ::remote::Pair seek_pair;
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -654,7 +658,7 @@ TEST_CASE("async_seek_both") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair pair;
                read_completed(::grpc::Status::CANCELLED, pair);
           }
@@ -681,7 +685,7 @@ TEST_CASE("async_seek_both") {
        class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::OK);}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
@@ -713,7 +717,7 @@ TEST_CASE("async_seek_both_exact") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair seek_pair;
                seek_pair.set_k("KEY1");
                seek_pair.set_v("VALUE112");
@@ -750,15 +754,17 @@ TEST_CASE("async_seek_both_exact") {
                   write_completed(::grpc::Status::OK);
                });
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                auto result = std::async([&]() {
-                  ::remote::Pair seek_pair;
                   seek_pair.set_k("KEY1");
                   seek_pair.set_v("VALUE123");
                   read_completed(::grpc::Status::OK, seek_pair);
                });
           }
           void completed(bool ok) override { }
+
+        private:
+          ::remote::Pair seek_pair;
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -787,7 +793,7 @@ TEST_CASE("async_seek_both_exact") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair pair;
                read_completed(::grpc::Status::CANCELLED, pair);
           }
@@ -814,7 +820,7 @@ TEST_CASE("async_seek_both_exact") {
        class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::OK);}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
@@ -846,7 +852,7 @@ TEST_CASE("async_seek_next") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair next_pair;
                read_completed(::grpc::Status::OK, next_pair);
           }
@@ -878,7 +884,7 @@ TEST_CASE("async_seek_next") {
                   write_completed(::grpc::Status::OK);
                });
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                auto result = std::async([&]() {
                   ::remote::Pair next_pair;
                   read_completed(::grpc::Status::OK, next_pair);
@@ -910,7 +916,7 @@ TEST_CASE("async_seek_next") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair next_pair;
                read_completed(::grpc::Status::CANCELLED, next_pair);
           }
@@ -935,7 +941,7 @@ TEST_CASE("async_seek_next") {
        class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::OK);}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
@@ -965,7 +971,7 @@ TEST_CASE("async_close_cursor") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair close_pair;
                close_pair.set_cursorid(2);
                read_completed(::grpc::Status::OK, close_pair);
@@ -998,7 +1004,7 @@ TEST_CASE("async_close_cursor") {
                   write_completed(::grpc::Status::OK);
                });
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                auto result = std::async([&]() {
                   ::remote::Pair close_pair;
                   close_pair.set_cursorid(2);
@@ -1031,7 +1037,7 @@ TEST_CASE("async_close_cursor") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::OK);
           }
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                ::remote::Pair close_pair;
                read_completed(::grpc::Status::CANCELLED, close_pair);
           }
@@ -1056,7 +1062,7 @@ TEST_CASE("async_close_cursor") {
        class MockStreamingClient : public AsyncTxStreamingClient {
           void start_call(std::function<void(const grpc::Status&)> start_completed) override { start_completed(::grpc::Status::OK);}
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
@@ -1086,7 +1092,7 @@ TEST_CASE("async_end") {
                end_completed(::grpc::Status::OK);
           }
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
           void completed(bool ok) override { }
       };
 
@@ -1114,7 +1120,7 @@ TEST_CASE("async_end") {
                });
           }
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
           void completed(bool ok) override { }
       };
 
@@ -1141,7 +1147,7 @@ TEST_CASE("async_end") {
                end_completed(::grpc::Status::CANCELLED);
           }
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-          void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
+          void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
           void completed(bool ok) override {}
       };
 
