@@ -88,8 +88,7 @@ TEST_CASE("TxStreamingClient::start_call", "[silkrpc][ethdb][kv][tx_streaming_cl
 
         EXPECT_CALL(
             *dynamic_cast<remote::FixIssue24351_MockKVStub*>(stub.get()),
-            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_OK)
-        );
+            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_OK));
         grpc::CompletionQueue queue;
         TxStreamingClient client{stub, &queue};
 
@@ -104,8 +103,7 @@ TEST_CASE("TxStreamingClient::start_call", "[silkrpc][ethdb][kv][tx_streaming_cl
 
         EXPECT_CALL(
             *dynamic_cast<remote::FixIssue24351_MockKVStub*>(stub.get()),
-            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_KO)
-        );
+            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_KO));
         grpc::CompletionQueue queue;
         TxStreamingClient client{stub, &queue};
 
@@ -123,8 +121,7 @@ TEST_CASE("TxStreamingClient::read_start", "[silkrpc][ethdb][kv][tx_streaming_cl
 
         EXPECT_CALL(
             *dynamic_cast<remote::FixIssue24351_MockKVStub*>(stub.get()),
-            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_OK)
-        );
+            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_OK));
         grpc::CompletionQueue queue;
         TxStreamingClient client{stub, &queue};
 
@@ -147,8 +144,7 @@ TEST_CASE("TxStreamingClient::read_start", "[silkrpc][ethdb][kv][tx_streaming_cl
 
         EXPECT_CALL(
             *dynamic_cast<remote::FixIssue24351_MockKVStub*>(stub.get()),
-            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_KO)
-        );
+            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_KO));
         grpc::CompletionQueue queue;
         TxStreamingClient client{stub, &queue};
 
@@ -171,8 +167,7 @@ TEST_CASE("TxStreamingClient::write_start", "[silkrpc][ethdb][kv][tx_streaming_c
 
         EXPECT_CALL(
             *dynamic_cast<remote::FixIssue24351_MockKVStub*>(stub.get()),
-            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_OK)
-        );
+            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_OK));
         grpc::CompletionQueue queue;
         TxStreamingClient client{stub, &queue};
 
@@ -195,8 +190,7 @@ TEST_CASE("TxStreamingClient::write_start", "[silkrpc][ethdb][kv][tx_streaming_c
 
         EXPECT_CALL(
             *dynamic_cast<remote::FixIssue24351_MockKVStub*>(stub.get()),
-            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_KO)
-        );
+            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_KO));
         grpc::CompletionQueue queue;
         TxStreamingClient client{stub, &queue};
 
@@ -222,8 +216,7 @@ TEST_CASE("TxStreamingClient::end_call", "[silkrpc][ethdb][kv][tx_streaming_clie
 
         EXPECT_CALL(
             *dynamic_cast<remote::FixIssue24351_MockKVStub*>(stub.get()),
-            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_OK)
-        );
+            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_OK));
         grpc::CompletionQueue queue;
         TxStreamingClient client{stub, &queue};
 
@@ -244,8 +237,7 @@ TEST_CASE("TxStreamingClient::end_call", "[silkrpc][ethdb][kv][tx_streaming_clie
 
         EXPECT_CALL(
             *dynamic_cast<remote::FixIssue24351_MockKVStub*>(stub.get()),
-            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_KO)
-        );
+            PrepareAsyncTxRaw(_, _)).WillOnce(Return(new MockClientAsyncRW_KO));
         grpc::CompletionQueue queue;
         TxStreamingClient client{stub, &queue};
 
