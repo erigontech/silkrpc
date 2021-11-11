@@ -41,6 +41,7 @@ namespace silkrpc::ethdb::kv {
 template<typename Client>
 class RemoteTransaction : public Transaction {
     static_assert(std::is_base_of<AsyncTxStreamingClient, Client>::value && !std::is_same<AsyncTxStreamingClient, Client>::value);
+
 public:
     explicit RemoteTransaction(asio::io_context& context, std::unique_ptr<remote::KV::StubInterface>& stub, grpc::CompletionQueue* queue)
     : context_(context), client_{stub, queue}, kv_awaitable_{context_, client_} {
