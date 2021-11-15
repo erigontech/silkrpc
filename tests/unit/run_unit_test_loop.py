@@ -26,7 +26,7 @@ class UnitTest:
     def execute(self, num_iterations: int, test_name: str = None) -> None:
         """ Execute the unit tests `num_iterations` times """
         cmd = self.build_dir + "cmd/unit_test"
-        if test_name != None:
+        if test_name is not None:
             cmd = cmd + " \"" + test_name + "\""
         print(cmd + "\n")
 
@@ -79,8 +79,8 @@ def main(argv):
         UnitTest("GCC_RELEASE", SILKRPC_GCC_RELEASE_BUILDDIR),
     ]
 
-    for t in unit_tests:
-        t.execute(iterations, test_name)
+    for test in unit_tests:
+        test.execute(iterations, test_name)
 
 
 #
