@@ -215,7 +215,7 @@ TEST_CASE("Account walker") {
 
     int16_t max_result = 1;
     std::vector<silkrpc::KeyValue> collected_data;
-    AccountWalker::Collector collector = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
+    AccountWalker::Collector collector = [&](const silkworm::ByteView k, const silkworm::ByteView v) {
         if (collected_data.size() >= max_result) {
             return false;
         }
@@ -224,7 +224,9 @@ TEST_CASE("Account walker") {
             return true;
         }
 
-        silkrpc::KeyValue kv{k, v};
+        silkrpc::KeyValue kv;
+        kv.key = k;
+        kv.value = v;
         collected_data.push_back(kv);
         return true;
     };

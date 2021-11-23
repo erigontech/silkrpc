@@ -1,5 +1,5 @@
 /*
-   Copyright 2020 The Silkrpc Authors
+   Copyright 2021 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ namespace silkrpc {
 
 class AccountWalker {
 public:
-    using Collector = std::function<bool(const silkworm::Bytes&, const silkworm::Bytes&)>;
+    using Collector = std::function<bool(silkworm::ByteView, silkworm::ByteView)>;
 
     explicit AccountWalker(silkrpc::ethdb::Transaction& transaction) : transaction_(transaction) {}
 
@@ -49,8 +49,8 @@ public:
 
 private:
     asio::awaitable<KeyValue> next(silkrpc::ethdb::Cursor& cursor, uint64_t len);
-    asio::awaitable<KeyValue> seek(silkrpc::ethdb::Cursor& cursor, const silkworm::ByteView& key, uint64_t len);
-    asio::awaitable<silkrpc::ethdb::SplittedKeyValue> next(silkrpc::ethdb::SplitCursor& cursor, uint64_t number);
+    asio::awaitable<KeyValue> seek(silkrpc::ethdb::Cursor& cursor, const silkworm::ByteView key, uint64_t len);
+    asio::awaitable<silkrpc::ethdb::SplittedKeyValue> next(silkrpc::ethdb::SplitCursor& cursor, uint64_t number, uint64_t block, silkworm::Bytes addr);
     asio::awaitable<silkrpc::ethdb::SplittedKeyValue> seek(silkrpc::ethdb::SplitCursor& cursor, uint64_t number);
 
     silkrpc::ethdb::Transaction& transaction_;

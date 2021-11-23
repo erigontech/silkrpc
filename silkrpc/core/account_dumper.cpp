@@ -37,7 +37,7 @@
 
 namespace silkrpc {
 
-asio::awaitable<DumpAccounts> AccountDumper::dump_accounts(const BlockNumberOrHash& bnoh, const evmc::address& start_adress, int16_t max_result, bool exclude_code, bool exclude_storage) {
+asio::awaitable<DumpAccounts> AccountDumper::dump_accounts(const BlockNumberOrHash& bnoh, const evmc::address& start_address, int16_t max_result, bool exclude_code, bool exclude_storage) {
     DumpAccounts dump_accounts;
     ethdb::TransactionDatabase tx_database{transaction_};
 
@@ -48,7 +48,7 @@ asio::awaitable<DumpAccounts> AccountDumper::dump_accounts(const BlockNumberOrHa
 
     std::vector<silkrpc::KeyValue> collected_data;
 
-    AccountWalker::Collector collector = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
+    AccountWalker::Collector collector = [&](silkworm::ByteView k, silkworm::ByteView v) {
         if (max_result > 0 && collected_data.size() >= max_result) {
             dump_accounts.next = silkworm::to_address(k);
             return false;
@@ -58,22 +58,17 @@ asio::awaitable<DumpAccounts> AccountDumper::dump_accounts(const BlockNumberOrHa
             return true;
         }
 
-        SILKRPC_TRACE << "Collecting key: 0x" << silkworm::to_hex(k)
-            << " value: " << silkworm::to_hex(v)
-            << "\n";
+        SILKRPC_TRACE << "Collecting key: 0x" << silkworm::to_hex(k) << " value: " << silkworm::to_hex(v) << "\n";
 
-
-        silkrpc::KeyValue kv{k, v};
+        silkrpc::KeyValue kv;
+        kv.key = k;
+        kv.value = v;
         collected_data.push_back(kv);
         return true;
     };
 
     AccountWalker walker{transaction_};
-    SILKRPC_TRACE << "Ready to walk accounts: block_number " << std::dec << block_number
-        << " start_adress 0x" << silkworm::to_hex(start_adress)
-        << "\n";
-
-    co_await walker.walk_of_accounts(block_number + 1, start_adress, collector);
+    co_await walker.walk_of_accounts(block_number + 1, start_address, collector);
 
     co_await load_accounts(tx_database, collected_data, dump_accounts, exclude_code);
     if (!exclude_storage) {
@@ -101,10 +96,7 @@ asio::awaitable<void> AccountDumper::load_accounts(ethdb::TransactionDatabase& t
 
         if (account.incarnation > 0 && account.code_hash == silkworm::kEmptyHash) {
             const auto storage_key{silkworm::db::storage_prefix(silkworm::full_view(address), account.incarnation)};
-            SILKRPC_TRACE << "Filling code_hash: address 0x" << silkworm::to_hex(address)
-                << " incarnation: " << account.incarnation
-                << " storage_key: " << silkworm::to_hex(storage_key)
-                << "\n";
+            SILKRPC_TRACE << "Filling code_hash: address 0x" << silkworm::to_hex(address) << " incarnation: " << account.incarnation << " storage_key: " << silkworm::to_hex(storage_key) << "\n"; // NOLINT
             auto code_hash{co_await tx_database.get_one(silkrpc::db::table::kPlainContractCode, storage_key)};
             if (code_hash.length() == silkworm::kHashLength) {
                 std::memcpy(dump_account.code_hash.bytes, code_hash.data(), silkworm::kHashLength);
@@ -128,11 +120,8 @@ asio::awaitable<void> AccountDumper::load_storage(uint64_t block_number, DumpAcc
         auto& account = itr->second;
 
         std::map<silkworm::Bytes, silkworm::Bytes> collected_entries;
-        StorageWalker::Collector collector = [&](const evmc::address& address, const silkworm::Bytes& loc, const silkworm::Bytes& data) {
-            SILKRPC_TRACE << "Collecting address 0x" << silkworm::to_hex(address)
-                << " loc 0x" << silkworm::to_hex(loc)
-                << " data 0x" << silkworm::to_hex(data)
-                << "\n";
+        StorageWalker::AccountCollector collector = [&](const evmc::address& address, silkworm::ByteView loc, silkworm::ByteView data) {
+            SILKRPC_TRACE << "Collecting address 0x" << silkworm::to_hex(address) << " loc 0x" << silkworm::to_hex(loc) << " data 0x" << silkworm::to_hex(data) << "\n";
 
             if (!account.storage.has_value()) {
                 account.storage = Storage{};
@@ -146,11 +135,7 @@ asio::awaitable<void> AccountDumper::load_storage(uint64_t block_number, DumpAcc
             return true;
         };
 
-        SILKRPC_TRACE << "Ready to walk storages: address 0x" << silkworm::to_hex(address)
-            << " incarnation 0x" << account.incarnation
-            << " start_location 0x" << silkworm::to_hex(start_location)
-            << " block_number " << block_number
-            << "\n";
+        SILKRPC_TRACE << "Ready to walk storages: address 0x" << silkworm::to_hex(address) << " incarnation 0x" << account.incarnation << " start_location 0x" << silkworm::to_hex(start_location) << " block_number " << block_number << "\n"; // NOLINT
 
         co_await storage_walker.walk_of_storages(block_number, address, start_location, account.incarnation, collector);
 
