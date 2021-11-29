@@ -40,7 +40,7 @@ struct Context {
     std::unique_ptr<CompletionRunner> grpc_runner;
     std::unique_ptr<ethdb::Database> database;
     std::unique_ptr<ethbackend::BackEnd> backend;
-    std::unique_ptr<silkrpc::txpool::TransactionPool> tx_pool;
+    std::unique_ptr<txpool::TransactionPool> tx_pool;
 };
 
 std::ostream& operator<<(std::ostream& out, const Context& c);

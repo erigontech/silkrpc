@@ -206,7 +206,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         asio::io_context io_context;
         auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
-        CHECK(result.get().completed_succesfully == true);
+        CHECK(result.get().success == true);
     }
 
     SECTION("call add_transaction and check import failure [unexpected import size]") {
@@ -214,7 +214,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         asio::io_context io_context;
         auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
-        CHECK(result.get().completed_succesfully == false);
+        CHECK(result.get().success == false);
     }
 
     SECTION("call add_transaction and check import failure [import error]") {
@@ -230,7 +230,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         asio::io_context io_context;
         auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
-        CHECK(result.get().completed_succesfully == false);
+        CHECK(result.get().success == false);
     }
 
     SECTION("call add_transaction and check import failure [import no error]") {
@@ -245,7 +245,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         asio::io_context io_context;
         auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
-        CHECK(result.get().completed_succesfully == false);
+        CHECK(result.get().success == false);
     }
 
     SECTION("call get_transaction and check result") {

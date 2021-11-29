@@ -70,9 +70,6 @@ public:
     }
 
     asio::awaitable<void> close() override {
-        //for (const auto& [table, cursor] : cursors_) {
-        //    co_await cursor->close_cursor();
-        // }
         cursors_.clear();
         co_await kv_awaitable_.async_end(asio::use_awaitable);
         co_return;

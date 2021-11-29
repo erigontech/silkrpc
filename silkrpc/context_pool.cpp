@@ -49,7 +49,7 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) :
         auto grpc_runner = std::make_unique<CompletionRunner>(*grpc_queue, *io_context);
         auto database = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
         auto backend = std::make_unique<ethbackend::BackEnd>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
-        auto tx_pool = std::make_unique<silkrpc::txpool::TransactionPool>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
+        auto tx_pool = std::make_unique<txpool::TransactionPool>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
         contexts_.push_back({io_context, std::move(grpc_queue), std::move(grpc_runner), std::move(database), std::move(backend), std::move(tx_pool)});
         SILKRPC_DEBUG << "ContextPool::ContextPool context[" << i << "] " << contexts_[i] << "\n";
         work_.push_back(asio::require(io_context->get_executor(), asio::execution::outstanding_work.tracked));

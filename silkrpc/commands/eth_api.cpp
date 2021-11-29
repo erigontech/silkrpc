@@ -24,13 +24,13 @@
 
 #include <boost/endian/conversion.hpp>
 #include <evmc/evmc.hpp>
-#include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
-#include <silkworm/db/util.hpp>
-#include <silkworm/types/receipt.hpp>
 #include <silkworm/common/base.hpp>
-#include <silkworm/types/transaction.hpp>
 #include <silkworm/core/silkworm/execution/address.hpp>
+#include <silkworm/db/util.hpp>
+#include <silkworm/chain/config.hpp>
+#include <silkworm/types/receipt.hpp>
+#include <silkworm/types/transaction.hpp>
 
 
 #include <silkrpc/common/constants.hpp>
@@ -55,9 +55,10 @@
 
 namespace silkrpc::commands {
 
-std::string decodingResult_to_string(silkworm::rlp::DecodingResult decode_result);
-bool checkTxFeeLessCap(intx::uint256 max_fee_per_gas, uint64_t gas_limit);
-bool isProtected(silkworm::Transaction& txn);
+bool check_tx_fee_less_cap(intx::uint256 max_fee_per_gas, uint64_t gas_limit);
+bool is_replay_protected(const silkworm::Transaction& txn);
+std::string decoding_result_to_string(silkworm::rlp::DecodingResult decode_result);
+
 
 // https://eth.wiki/json-rpc/API#eth_blocknumber
 asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
@@ -1165,83 +1166,68 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
-    Transaction txn;
     const auto encoded_tx_string = params[0].get<std::string>();
-    const auto bytes_list = silkworm::from_hex(encoded_tx_string);
-    if (bytes_list == std::nullopt) {
-        auto error_msg = "cannot unmarshal hex string ";
+    const auto encoded_tx_bytes = silkworm::from_hex(encoded_tx_string);
+    if (!encoded_tx_bytes.has_value()) {
+        auto error_msg = "invalid eth_sendRawTransaction encoded tx: " + encoded_tx_string;
+        SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32602, error_msg);
         co_return;
     }
-    silkworm::ByteView tmp_encoded_tx{*bytes_list};
-    silkworm::ByteView encoded_tx{*bytes_list};
+    silkworm::ByteView tmp_encoded_tx{*encoded_tx_bytes};
 
-    silkworm::rlp::DecodingResult err{silkworm::rlp::decode<silkworm::Transaction>(tmp_encoded_tx, txn)};
+    Transaction txn;
+    auto err{silkworm::rlp::decode<silkworm::Transaction>(tmp_encoded_tx, txn)};
     if (err != silkworm::rlp::DecodingResult::kOk) {
-        auto error_msg = decodingResult_to_string(err);
+        auto error_msg = decoding_result_to_string(err);
+        SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
     }
 
-    if (!checkTxFeeLessCap(txn.max_fee_per_gas, txn.gas_limit)) {
+    if (!check_tx_fee_less_cap(txn.max_fee_per_gas, txn.gas_limit)) {
         auto error_msg = "tx fee exceeds the configured cap";
+        SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
     }
 
-    if (!isProtected(txn)) {
+    if (!is_replay_protected(txn)) {
         auto error_msg = "only replay-protected (EIP-155) transactions allowed over RPC";
+        SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
     }
 
+    silkworm::ByteView encoded_tx{*encoded_tx_bytes};
     const auto result = co_await tx_pool_->add_transaction(encoded_tx);
-    if (!result.completed_succesfully) {
+    if (!result.success) {
+        SILKRPC_ERROR << "cannot add transaction: " << result.error_descr << "\n";
         reply = make_json_error(request["id"], -32000, result.error_descr);
         co_return;
     }
 
     txn.recover_sender();
+    if (!txn.from.has_value()) {
+        auto error_msg = "cannot decoded from\n";
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], -32000, error_msg);
+        co_return;
+    }
 
     auto ethash_hash{hash_of_transaction(txn)};
     auto hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
-    if (txn.to == std::nullopt) {
-       auto contract_address = silkworm::create_address(*txn.from, txn.nonce);
-       SILKRPC_DEBUG << "Submitted contract creation hash: " << hash << " from: " << *txn.from <<  " nonce: " << txn.nonce << " contract: " << contract_address <<
+    if (!txn.to.has_value()) {
+        auto contract_address = silkworm::create_address(*txn.from, txn.nonce);
+        SILKRPC_DEBUG << "Submitted contract creation hash: " << hash << " from: " << *txn.from <<  " nonce: " << txn.nonce << " contract: " << contract_address <<
                          " value: " << txn.value << "\n";
     } else {
-       SILKRPC_DEBUG << "Submitted transaction hash: " << hash << " from: " << *txn.from <<  " nonce: " << txn.nonce << " recipient: " << *txn.to << " value: " << txn.value << "\n";
+        SILKRPC_DEBUG << "Submitted transaction hash: " << hash << " from: " << *txn.from <<  " nonce: " << txn.nonce << " recipient: " << *txn.to << " value: " << txn.value << "\n";
     }
 
     reply = make_json_content(request["id"], hash);
 
     co_return;
-}
-
-// checkTxFee is an internal function used to check whether the fee of
-// the given transaction is _reasonable_(under the cap).
-bool checkTxFeeLessCap(intx::uint256 max_fee_per_gas, uint64_t gas_limit) {
-     const float ether = 1000000000000000000;
-     const float cap = 1; // TBD
-
-     // Short circuit if there is no cap for transaction fee at all.
-     if (cap == 0) {
-        return true;
-     }
-     float feeEth = ((uint64_t)max_fee_per_gas * gas_limit) / ether;
-     if (feeEth > cap) {
-        return false;
-     }
-     return true;
-}
-
-bool isProtected(silkworm::Transaction& txn) {
-     if (txn.type != silkworm::Transaction::Type::kLegacy)
-        return false;
-     intx::uint256 v = txn.v();
-     if (v != 27 && v != 28 && v != 0 && v != 1)
-        return true;
-     return false;
 }
 
 // https://eth.wiki/json-rpc/API#eth_sendtransaction
@@ -1543,36 +1529,6 @@ std::vector<Log> EthereumRpcApi::filter_logs(std::vector<Log>& logs, const Filte
         }
     }
     return filtered_logs;
-}
-
-
-std::string decodingResult_to_string(silkworm::rlp::DecodingResult decode_result) {
-   switch (decode_result) {
-      case silkworm::rlp::DecodingResult::kOverflow:
-         return "rlp: uint overflow";
-      case silkworm::rlp::DecodingResult::kLeadingZero:
-         return "rlp: leading Zero";
-      case silkworm::rlp::DecodingResult::kInputTooShort:
-         return "rlp: element is larger than containing list";
-      case silkworm::rlp::DecodingResult::kNonCanonicalSingleByte:
-         return "rlp: non-canonical integer format";
-      case silkworm::rlp::DecodingResult::kNonCanonicalSize:
-         return "rlp: non-canonical size information";
-      case silkworm::rlp::DecodingResult::kUnexpectedLength:
-         return "rlp: unexpected Length";
-      case silkworm::rlp::DecodingResult::kUnexpectedString:
-         return "rlp: unexpected String";
-      case silkworm::rlp::DecodingResult::kUnexpectedList:
-         return "rlp: element is larger than containing list";
-      case silkworm::rlp::DecodingResult::kListLengthMismatch:
-         return "rlp: list Length Mismatch";
-      case silkworm::rlp::DecodingResult::kInvalidVInSignature:         // v != 27 && v != 28 && v < 35, see EIP-155
-         return "rlp: invalid V in signature";
-      case silkworm::rlp::DecodingResult::kUnsupportedTransactionType:
-         return "rlp: unknown tx type prefix";
-      default:
-         return "unknownError";
-   }
 }
 
 } // namespace silkrpc::commands

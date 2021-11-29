@@ -73,8 +73,8 @@ using TransactionsAwaitable = unary_awaitable<
 class TransactionPool final {
 public:
     typedef struct {
-       bool completed_succesfully;
-       std::string error_descr;
+        bool success;
+        std::string error_descr;
     } OperationResult;
 
     explicit TransactionPool(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
@@ -105,18 +105,18 @@ public:
             const auto import_result = reply.imported(0);
             SILKRPC_DEBUG << "TransactionPool::add_transaction import_result=" << import_result << "\n";
             if (import_result != ::txpool::ImportResult::SUCCESS) {
-                result.completed_succesfully = false;
+                result.success = false;
                 if (errors_size >= 1) {
-                   const auto import_error = reply.errors(0);
-                   result.error_descr = import_error;
-                   SILKRPC_WARN << "TransactionPool::add_transaction import_result=" << import_result << " error=" << import_error << "\n";
+                    const auto import_error = reply.errors(0);
+                    result.error_descr = import_error;
+                    SILKRPC_WARN << "TransactionPool::add_transaction import_result=" << import_result << " error=" << import_error << "\n";
                 } else {
-                   result.error_descr = "no specific error";
-                   SILKRPC_WARN << "TransactionPool::add_transaction import_result=" << import_result << ", no error received\n";
+                    result.error_descr = "no specific error";
+                    SILKRPC_WARN << "TransactionPool::add_transaction import_result=" << import_result << ", no error received\n";
                 }
            }
         } else {
-            result.completed_succesfully = false;
+            result.success = false;
             result.error_descr = "unexpected imported size";
             SILKRPC_WARN << "TransactionPool::add_transaction unexpected imported_size=" << imported_size << "\n";
         }
