@@ -52,7 +52,7 @@ asio::awaitable<void> AccountWalker::walk_of_accounts(uint64_t block_number, con
 
     auto acs_cursor = co_await transaction_.cursor_dup_sort(db::table::kPlainAccountChangeSet);
 
-    SILKRPC_TRACE << "AccountWalker : ready to start" << " addr " <<  silkworm::to_hex(s_kv.key1) << "\n";
+    // SILKRPC_TRACE << "AccountWalker : ready to start" << " addr " <<  silkworm::to_hex(s_kv.key1) << "\n";
 
     auto count{1};
     auto go_on = true;
@@ -68,7 +68,7 @@ asio::awaitable<void> AccountWalker::walk_of_accounts(uint64_t block_number, con
         if (cmp < 0) {
             go_on = collector(ps_kv.key, ps_kv.value);
 
-            SILKRPC_TRACE << "ITERATE *****  WALKER CALLED : key 0x" << silkworm::to_hex(ps_kv.key) << " value: 0x" << silkworm::to_hex(ps_kv.value) << "\n";
+            // SILKRPC_TRACE << "ITERATE *****  WALKER CALLED : key 0x" << silkworm::to_hex(ps_kv.key) << " value: 0x" << silkworm::to_hex(ps_kv.value) << "\n";
         } else {
             SILKRPC_TRACE << "ITERATE *****  building roaring64 from " << silkworm::to_hex(s_kv.value) << "\n";
 
@@ -118,7 +118,7 @@ asio::awaitable<void> AccountWalker::walk_of_accounts(uint64_t block_number, con
 
 asio::awaitable<KeyValue> AccountWalker::next(silkrpc::ethdb::Cursor& cursor, uint64_t len) {
     auto kv = co_await cursor.next();
-    SILKRPC_TRACE << "Curson on PlainState NEXT: key 0x" << silkworm::to_hex(kv.key) << " value 0x" << silkworm::to_hex(kv.value) << "\n";
+    // SILKRPC_TRACE << "Curson on PlainState NEXT: key 0x" << silkworm::to_hex(kv.key) << " value 0x" << silkworm::to_hex(kv.value) << "\n";
 
     while (!kv.key.empty() && kv.key.size() > len) {
         kv = co_await cursor.next();
@@ -129,7 +129,7 @@ asio::awaitable<KeyValue> AccountWalker::next(silkrpc::ethdb::Cursor& cursor, ui
 
 asio::awaitable<KeyValue> AccountWalker::seek(silkrpc::ethdb::Cursor& cursor, silkworm::ByteView key, uint64_t len) {
     auto kv = co_await cursor.seek(key);
-    SILKRPC_TRACE << "Curson on PlainState SEEK: key 0x" << silkworm::to_hex(kv.key) << " value 0x" << silkworm::to_hex(kv.value) << "\n";
+    // SILKRPC_TRACE << "Curson on PlainState SEEK: key 0x" << silkworm::to_hex(kv.key) << " value 0x" << silkworm::to_hex(kv.value) << "\n";
 
     if (kv.key.size() > len) {
         co_return co_await next(cursor, len);
@@ -142,7 +142,7 @@ asio::awaitable<silkrpc::ethdb::SplittedKeyValue> AccountWalker::next(silkrpc::e
     auto tmp_addr = addr;
     while (!addr.empty() && (tmp_addr == addr || block < number)) {
         skv = co_await cursor.next();
-        SILKRPC_TRACE << "Curson on AccountHistory NEXT: key1 0x" << silkworm::to_hex(skv.key1) << " key2 0x " << silkworm::to_hex(skv.key2) << " v " << silkworm::to_hex(skv.value) << "\n";
+        // SILKRPC_TRACE << "Curson on AccountHistory NEXT: key1 0x" << silkworm::to_hex(skv.key1) << " key2 0x " << silkworm::to_hex(skv.key2) << " v " << silkworm::to_hex(skv.value) << "\n";
 
         if (skv.key1.empty()) {
             break;
@@ -155,14 +155,14 @@ asio::awaitable<silkrpc::ethdb::SplittedKeyValue> AccountWalker::next(silkrpc::e
 
 asio::awaitable<silkrpc::ethdb::SplittedKeyValue> AccountWalker::seek(silkrpc::ethdb::SplitCursor& cursor, uint64_t number) {
     auto kv = co_await cursor.seek();
-    SILKRPC_TRACE << "Curson on AccountHistory SEEK: addr 0x" << silkworm::to_hex(kv.key1) << " block " << silkworm::to_hex(kv.key2) << " v " << silkworm::to_hex(kv.value) << "\n";
+    // SILKRPC_TRACE << "Curson on AccountHistory SEEK: addr 0x" << silkworm::to_hex(kv.key1) << " block " << silkworm::to_hex(kv.key2) << " v " << silkworm::to_hex(kv.value) << "\n";
 
     if (kv.key1.empty()) {
         co_return kv;
     }
 
     uint64_t block = silkworm::endian::load_big_u64(kv.key2.data());
-    SILKRPC_TRACE << "Curson on AccountHistory NEXT:" << " addr 0x" <<  silkworm::to_hex(kv.key1) << " block " << std::dec << block << " v " << silkworm::to_hex(kv.value) << "\n";
+    // SILKRPC_TRACE << "Curson on AccountHistory NEXT:" << " addr 0x" <<  silkworm::to_hex(kv.key1) << " block " << std::dec << block << " v " << silkworm::to_hex(kv.value) << "\n";
 
     while (block < number) {
         kv = co_await cursor.next();
@@ -170,7 +170,7 @@ asio::awaitable<silkrpc::ethdb::SplittedKeyValue> AccountWalker::seek(silkrpc::e
             break;
         }
         block = silkworm::endian::load_big_u64(kv.key2.data());
-        SILKRPC_TRACE << "Curson on AccountHistory NEXT: addr 0x" <<  silkworm::to_hex(kv.key1) <<" block " << std::dec << block << " v " << silkworm::to_hex(kv.value) << "\n";
+        // SILKRPC_TRACE << "Curson on AccountHistory NEXT: addr 0x" <<  silkworm::to_hex(kv.key1) <<" block " << std::dec << block << " v " << silkworm::to_hex(kv.value) << "\n";
     }
 
     co_return kv;

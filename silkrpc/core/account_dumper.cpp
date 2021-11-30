@@ -58,7 +58,7 @@ asio::awaitable<DumpAccounts> AccountDumper::dump_accounts(const BlockNumberOrHa
             return true;
         }
 
-        SILKRPC_TRACE << "Collecting key: 0x" << silkworm::to_hex(k) << " value: " << silkworm::to_hex(v) << "\n";
+        // SILKRPC_TRACE << "Collecting key: 0x" << silkworm::to_hex(k) << " value: " << silkworm::to_hex(v) << "\n";
 
         silkrpc::KeyValue kv;
         kv.key = k;
@@ -96,7 +96,7 @@ asio::awaitable<void> AccountDumper::load_accounts(ethdb::TransactionDatabase& t
 
         if (account.incarnation > 0 && account.code_hash == silkworm::kEmptyHash) {
             const auto storage_key{silkworm::db::storage_prefix(silkworm::full_view(address), account.incarnation)};
-            SILKRPC_TRACE << "Filling code_hash: address 0x" << silkworm::to_hex(address) << " incarnation: " << account.incarnation << " storage_key: " << silkworm::to_hex(storage_key) << "\n"; // NOLINT
+            // SILKRPC_TRACE << "Filling code_hash: address 0x" << silkworm::to_hex(address) << " incarnation: " << account.incarnation << " storage_key: " << silkworm::to_hex(storage_key) << "\n"; // NOLINT
             auto code_hash{co_await tx_database.get_one(silkrpc::db::table::kPlainContractCode, storage_key)};
             if (code_hash.length() == silkworm::kHashLength) {
                 std::memcpy(dump_account.code_hash.bytes, code_hash.data(), silkworm::kHashLength);
