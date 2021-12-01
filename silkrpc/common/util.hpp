@@ -112,4 +112,11 @@ inline std::ostream& operator<<(std::ostream& out, const std::vector<asio::const
     return out;
 }
 
+namespace silkrpc::commands {
+
+bool check_tx_fee_less_cap(intx::uint256 max_fee_per_gas, uint64_t gas_limit);
+bool is_replay_protected(const silkworm::Transaction& txn);
+std::string decoding_result_to_string(silkworm::rlp::DecodingResult decode_result);
+
+} // namespace silkrpc::commands
 #endif // SILKRPC_COMMON_UTIL_HPP_

@@ -55,11 +55,6 @@
 
 namespace silkrpc::commands {
 
-bool check_tx_fee_less_cap(intx::uint256 max_fee_per_gas, uint64_t gas_limit);
-bool is_replay_protected(const silkworm::Transaction& txn);
-std::string decoding_result_to_string(silkworm::rlp::DecodingResult decode_result);
-
-
 // https://eth.wiki/json-rpc/API#eth_blocknumber
 asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
@@ -1209,7 +1204,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
 
     txn.recover_sender();
     if (!txn.from.has_value()) {
-        auto error_msg = "cannot decoded from\n";
+        auto error_msg = "cannot recover sender";
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
