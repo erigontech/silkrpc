@@ -86,7 +86,6 @@ add_library(silkinterfaces
     ${TXPOOL_PROTO_HEADER} ${TXPOOL_PROTO_SOURCE} ${TXPOOL_GRPC_HEADER} ${TXPOOL_GRPC_SOURCE})
 target_include_directories(silkinterfaces PUBLIC ${PROTO_GENERATED_SRC_DIR})
 target_link_libraries(silkinterfaces
-    tcmalloc
     gRPC::grpc++
     protobuf::libprotobuf)
 
