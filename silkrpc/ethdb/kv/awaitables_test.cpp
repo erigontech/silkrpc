@@ -886,11 +886,13 @@ TEST_CASE("async_seek_next") {
           }
           void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                auto result = std::async([&]() {
-                  ::remote::Pair next_pair;
                   read_completed(::grpc::Status::OK, next_pair);
                });
           }
           void completed(bool ok) override { }
+
+        private:
+          ::remote::Pair next_pair;
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -1006,12 +1008,13 @@ TEST_CASE("async_close_cursor") {
           }
           void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                auto result = std::async([&]() {
-                  ::remote::Pair close_pair;
                   close_pair.set_cursorid(2);
                   read_completed(::grpc::Status::OK, close_pair);
                });
           }
           void completed(bool ok) override { }
+       private:
+           ::remote::Pair close_pair;
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
