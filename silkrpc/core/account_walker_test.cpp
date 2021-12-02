@@ -183,7 +183,7 @@ private:
     const nlohmann::json& json_;
 };
 
-TEST_CASE("Account walker") {
+TEST_CASE("AccountWalker::walk_of_accounts") {
     asio::thread_pool pool{1};
     nlohmann::json json;
 
