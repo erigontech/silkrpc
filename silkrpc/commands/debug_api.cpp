@@ -22,7 +22,13 @@
 #include <sstream>
 #include <vector>
 
+#include <chrono>
+#include <ctime>
+
 #include <silkworm/common/util.hpp>
+#include <silkworm/core/silkworm/common/endian.hpp>
+#include <silkworm/core/silkworm/consensus/ethash/engine.hpp>
+#include <silkworm/core/silkworm/state/intra_block_state.hpp>
 #include <silkworm/node/silkworm/db/util.hpp>
 
 #include <silkrpc/common/constants.hpp>
@@ -33,6 +39,7 @@
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/core/state_reader.hpp>
+#include <silkrpc/core/storage_walker.hpp>
 #include <silkrpc/ethdb/tables.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/json/types.hpp>
@@ -73,8 +80,12 @@ asio::awaitable<void> DebugRpcApi::handle_debug_account_range(const nlohmann::js
     auto tx = co_await database_->begin();
 
     try {
+        auto start = std::chrono::system_clock::now();
         AccountDumper dumper{*tx};
         DumpAccounts dump_accounts = co_await dumper.dump_accounts(block_number_or_hash, start_address, max_result, exclude_code, exclude_storage);
+        auto end = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end - start;
+        SILKRPC_DEBUG << "dump_accounts: elapsed " << elapsed_seconds.count() << " sec\n";
 
         reply = make_json_content(request["id"], dump_accounts);
     } catch (const std::exception& e) {
@@ -173,12 +184,69 @@ asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_hash(co
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_storagerangeat
 asio::awaitable<void> DebugRpcApi::handle_debug_storage_range_at(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() == 0 || params.size() > 5) {
+        auto error_msg = "invalid debug_storageRangeAt params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+
+    auto block_hash = params[0].get<evmc::bytes32>();
+    auto tx_index = params[1].get<std::uint64_t>();
+    auto address = params[2].get<evmc::address>();
+    auto start_key = params[3].get<evmc::bytes32>();
+    auto max_result = params[4].get<std::uint64_t>();
+
+    SILKRPC_DEBUG << "block_hash: 0x" << silkworm::to_hex(block_hash)
+        << " tx_index: " << tx_index
+        << " address: 0x" << silkworm::to_hex(address)
+        << " start_key: 0x" << silkworm::to_hex(start_key)
+        << " max_result: " << max_result
+        << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_error(request["id"], 500, "not yet implemented");
+        const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
+        auto block_number = block_with_hash.block.header.number - 1;
+
+        nlohmann::json storage({});
+        silkworm::Bytes next_key;
+        std::uint16_t count{0};
+
+        silkrpc::StorageWalker::StorageCollector collector = [&](const silkworm::ByteView key, silkworm::ByteView sec_key, silkworm::ByteView value) {
+            SILKRPC_TRACE << "StorageCollector: suitable for result"
+                <<  " key: 0x" << silkworm::to_hex(key)
+                <<  " sec_key: 0x" << silkworm::to_hex(sec_key)
+                <<  " value: " << silkworm::to_hex(value)
+                << "\n";
+
+            auto val = silkworm::to_hex(value);
+            val.insert(0, 64 - val.length(), '0');
+            if (count < max_result) {
+                storage["0x" + silkworm::to_hex(sec_key)] = {{"key", "0x" + silkworm::to_hex(key)}, {"value", "0x" + val}};
+            } else {
+                next_key = key;
+            }
+
+            return count++ < max_result;
+        };
+        StorageWalker storage_walker{*tx};
+        co_await storage_walker.storage_range_at(block_number, address, start_key, max_result, collector);
+
+        nlohmann::json result = {{"storage", storage}};
+        if (next_key.length() > 0) {
+            result["nextKey"] = "0x" + silkworm::to_hex(next_key);
+        } else {
+            result["nextKey"] = nlohmann::json();
+        }
+
+        reply = make_json_content(request["id"], result);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
