@@ -69,34 +69,17 @@ asio::awaitable<silkrpc::ethdb::SplittedKeyValue> next(silkrpc::ethdb::SplitCurs
         co_return kv;
     }
     uint64_t block = silkworm::endian::load_big_u64(kv.key3.data());
-    SILKRPC_DEBUG << "Curson on StorageHistory NEXT"
-        << " addr 0x" <<  silkworm::to_hex(kv.key1)
-        << " loc " << silkworm::to_hex(kv.key2)
-        << " tsEnc " << silkworm::to_hex(kv.key3)
-        << " v " << silkworm::to_hex(kv.value)
-        << "\n";
-
     while (block < number) {
         kv = co_await cursor.next();
         if (kv.key2.empty()) {
             break;
         }
         block = silkworm::endian::load_big_u64(kv.key3.data());
-        SILKRPC_DEBUG << "Curson on StorageHistory NEXT"
-            << " addr 0x" <<  silkworm::to_hex(kv.key1)
-            << " loc " << silkworm::to_hex(kv.key2)
-            << " tsEnc " << silkworm::to_hex(kv.key3)
-            << " v " << silkworm::to_hex(kv.value)
-            << "\n";
     }
     co_return kv;
 }
 
 asio::awaitable<silkrpc::ethdb::SplittedKeyValue> next(silkrpc::ethdb::SplitCursor& cursor, uint64_t number, uint64_t block, silkworm::Bytes loc) {
-    // SILKRPC_DEBUG << "Curson on StorageHistory NEXT: number " <<  number
-    //     << " block " << block
-    //     << " loc " << silkworm::to_hex(loc) << "\n";
-
     silkrpc::ethdb::SplittedKeyValue skv;
     auto tmp_loc = loc;
     while (!loc.empty() && (tmp_loc == loc || block < number)) {
@@ -104,10 +87,6 @@ asio::awaitable<silkrpc::ethdb::SplittedKeyValue> next(silkrpc::ethdb::SplitCurs
         if (skv.key2.empty()) {
             break;
         }
-        // SILKRPC_DEBUG << "Curson on StorageHistory NEXT: addr 0x" <<  silkworm::to_hex(skv.key1)
-        //     << " loc " << silkworm::to_hex(skv.key2)
-        //     << " tsEnc " << silkworm::to_hex(skv.key3)
-        //     << " v " << silkworm::to_hex(skv.value) << "\n";
 
         loc = skv.key2;
         block = silkworm::endian::load_big_u64(skv.key3.data());
@@ -127,13 +106,6 @@ asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_number, con
         silkworm::kAddressLength + 8,
         silkworm::kAddressLength + 8 + silkworm::kHashLength};
 
-    // SILKRPC_DEBUG << "Curson on PlainState: ps_key 0x" <<  silkworm::to_hex(ps_key)
-    //     << " key len " <<  ps_key.length()
-    //     << " match_bits " << 8 * (silkworm::kAddressLength + 8)
-    //     << " part1_end " << silkworm::kAddressLength
-    //     << " part2_start " << silkworm::kAddressLength + 8
-    //     << " part3_start " << silkworm::kAddressLength + 8 + silkworm::kHashLength << "\n";
-
     auto sh_key{make_key(start_address, location_hash)};
     auto sh_cursor = co_await transaction_.cursor(db::table::kStorageHistory);
     silkrpc::ethdb::SplitCursor sh_split_cursor{*sh_cursor,
@@ -143,27 +115,11 @@ asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_number, con
         silkworm::kAddressLength,
         silkworm::kAddressLength + silkworm::kHashLength};
 
-    // SILKRPC_DEBUG << "Curson on StorageHistory: sh_key 0x" <<  silkworm::to_hex(sh_key)
-    //     << " key len " <<  sh_key.length()
-    //     << " match_bits " << 8 * silkworm::kAddressLength
-    //     << " part1_end " << silkworm::kAddressLength
-    //     << " part2_start " << silkworm::kAddressLength
-    //     << " part3_start " << silkworm::kAddressLength + silkworm::kHashLength << "\n";
-
     auto ps_skv = co_await ps_split_cursor.seek();
-    // SILKRPC_DEBUG << "Curson on PlainState SEEK: addr 0x" <<  silkworm::to_hex(ps_skv.key1)
-    //     << " loc " << silkworm::to_hex(ps_skv.key2)
-    //     << " kk " << silkworm::to_hex(ps_skv.key3)
-    //     << " v " << silkworm::to_hex(ps_skv.value)<< "\n";
-
     auto sh_skv = co_await sh_split_cursor.seek();
     auto h_loc = sh_skv.key2;
 
     uint64_t block = silkworm::endian::load_big_u64(sh_skv.key3.data());
-    // SILKRPC_DEBUG << "Curson on StorageHistory SEEK: addr 0x" <<  silkworm::to_hex(sh_skv.key1)
-    //     << " hLoc " << silkworm::to_hex(h_loc)
-    //     << " tsEnc " << silkworm::to_hex(sh_skv.key3)
-    //     << " v " << silkworm::to_hex(sh_skv.value) << "\n";
 
     auto cs_cursor = co_await transaction_.cursor_dup_sort(db::table::kPlainStorageChangeSet);
 
@@ -171,90 +127,46 @@ asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_number, con
         sh_skv = co_await next(sh_split_cursor, block_number);
     }
 
-    SILKRPC_DEBUG << "StorageWalker: ready to start: h_loc " <<  silkworm::to_hex(h_loc) << "\n";
-
     auto go_on = true;
     while (go_on) {
         if (ps_skv.key1.empty() && sh_skv.key1.empty()) {
-            SILKRPC_DEBUG << "Both keys1 are empty: break loop\n";
             break;
         }
         auto cmp = ps_skv.key1.compare(sh_skv.key1);
-        SILKRPC_DEBUG << "ITERATE **  KeyCmp: addr 0x" << silkworm::to_hex(ps_skv.key1)
-            << " hAddr 0x" << silkworm::to_hex(sh_skv.key1)
-            << " cmp " << cmp << "\n";
-
         if (cmp == 0) {
             if (ps_skv.key2.empty() && h_loc.empty()) {
-                SILKRPC_DEBUG << "Both keys2 are empty: break loop\n";
                 break;
             }
             auto cmp = ps_skv.key2.compare(h_loc);
-            SILKRPC_DEBUG << "ITERATE **  KeyCmp: loc 0x" << silkworm::to_hex(ps_skv.key2)
-                << " hLoc 0x" << silkworm::to_hex(h_loc)
-                << " cmp " << cmp << "\n";
         }
         if (cmp < 0) {
             auto address = silkworm::to_address(ps_skv.key1);
             go_on = collector(address, ps_skv.key2, ps_skv.value);
-            SILKRPC_DEBUG << "ITERATE **  COLLECTOR CALLED: address 0x" << silkworm::to_hex(address)
-                << " loc 0x" << silkworm::to_hex(ps_skv.key2)
-                << " data 0x" << silkworm::to_hex(ps_skv.value)
-                << " go_on " << go_on
-                << "\n";
         } else {
-            SILKRPC_DEBUG << "ITERATE ** building roaring64 from " << silkworm::to_hex(sh_skv.value) <<  "\n";
             const auto bitmap = silkworm::db::bitmap::read(sh_skv.value);
-
             const auto found = silkworm::db::bitmap::seek(bitmap, block_number);
-            SILKRPC_DEBUG << "ITERATE ** SeekInBitmap64: looking for block number " <<  block_number << " found block number " <<  found.value_or(0) << "\n";
             if (found) {
                 auto dup_key{silkworm::db::storage_change_key(found.value(), start_address, incarnation)};
 
-                SILKRPC_DEBUG << "Curson on StorageHistory: dup_key 0x" <<  silkworm::to_hex(dup_key) << " key len " <<  dup_key.length() << " hLoc " << silkworm::to_hex(h_loc) << "\n";
-
                 auto data = co_await cs_cursor->seek_both(dup_key, h_loc);
-                SILKRPC_DEBUG << "Curson on StorageHistory"
-                    << " found data 0x" <<  silkworm::to_hex(data)
-                    << "\n";
-
                 if (data.length() > silkworm::kHashLength) { // Skip deleted entries
                     data = data.substr(silkworm::kHashLength);
                     auto address = silkworm::to_address(ps_skv.key1);
                     go_on = collector(address, ps_skv.key2, data);
-                    SILKRPC_DEBUG << "ITERATE **  COLLECTOR CALLED: address 0x" << silkworm::to_hex(address)
-                        << " loc 0x" << silkworm::to_hex(h_loc)
-                        << " data 0x" << silkworm::to_hex(data)
-                        << " go_on " << go_on << "\n";
                 }
             } else if (cmp == 0) {
                 auto address = silkworm::to_address(ps_skv.key1);
                 go_on = collector(address, ps_skv.key2, ps_skv.value);
-                SILKRPC_DEBUG << "ITERATE **  COLLECTOR CALLED: address 0x" << silkworm::to_hex(address)
-                    << " loc 0x" << silkworm::to_hex(ps_skv.key2)
-                    << " data 0x" << silkworm::to_hex(ps_skv.value)
-                    << " go_on " << go_on
-                    << "\n";
             }
         }
         if (go_on) {
             if (cmp <= 0) {
                 ps_skv = co_await ps_split_cursor.next();
-                SILKRPC_DEBUG << "Curson on PlainState NEXT"
-                    << " addr 0x" <<  silkworm::to_hex(ps_skv.key1)
-                    << " loc " << silkworm::to_hex(ps_skv.key2)
-                    << " kk " << silkworm::to_hex(ps_skv.key3)
-                    << " v " << silkworm::to_hex(ps_skv.value)
-                    << "\n";
             }
             if (cmp >= 0) {
                 auto block = silkworm::endian::load_big_u64(sh_skv.key3.data());
                 sh_skv = co_await next(sh_split_cursor, block_number, block, h_loc);
                 h_loc = sh_skv.key2;
-
-                SILKRPC_DEBUG << "StorageWalker : hLoc new value"
-                    << " h_loc " <<  silkworm::to_hex(h_loc)
-                    << "\n";
             }
         }
     }
@@ -264,42 +176,18 @@ asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_number, con
 
 asio::awaitable<void> StorageWalker::storage_range_at(uint64_t block_number, const evmc::address& address,
         const evmc::bytes32& start_location, int16_t max_result, StorageCollector& collector) {
-    SILKRPC_DEBUG << "storage_range_at:"
-        << " address: " << silkworm::to_hex(address)
-        << " start_location: " << silkworm::to_hex(start_location)
-        << " block_number: " << block_number
-        << "\n";
-
     ethdb::TransactionDatabase tx_database{transaction_};
     auto account_data = co_await tx_database.get_one(db::table::kPlainState, silkworm::full_view(address));
-    SILKRPC_DEBUG << "storage_range_at:"
-        << " accData: " << silkworm::to_hex(account_data)
-        << "\n";
 
     auto [account, err] = silkworm::decode_account_from_storage(account_data);
     silkworm::rlp::err_handler(err);
-    SILKRPC_DEBUG << "storage_range_at:"
-        << " account: " << account
-        << "\n";
 
     std::set<StorageItem> storage;
     AccountCollector walker = [&](const evmc::address& addr, const silkworm::ByteView loc, const silkworm::ByteView data) {
-        SILKRPC_DEBUG << "Collecting address 0x" << silkworm::to_hex(addr)
-            << " loc 0x" << silkworm::to_hex(loc)
-            << " data 0x" << silkworm::to_hex(data)
-            << "\n";
-
         if (addr != address) {
-            SILKRPC_DEBUG << "Exiting as addresses differ"
-                << " kAddr: 0x" << silkworm::to_hex(addr)
-                << " address: 0x" << silkworm::to_hex(address)
-                << "\n";
             return false;
         }
         if (data.size() == 0) {
-            SILKRPC_DEBUG << "Exiting as data is empty"
-                << " kAddr: 0x" << silkworm::to_hex(addr)
-                << "\n";
             return true;
         }
 
@@ -314,26 +202,13 @@ asio::awaitable<void> StorageWalker::storage_range_at(uint64_t block_number, con
             return true;
         }
 
-        SILKRPC_DEBUG << "Inserting new item in map"
-            << " key: 0x" << silkworm::to_hex(storage_item.key)
-            << " sec_key 0x" << silkworm::to_hex(storage_item.sec_key)
-            << " value 0x" << silkworm::to_hex(storage_item.value)
-            << "\n";
         storage.insert(storage_item);
-
         return storage.size() <= max_result;
     };
-
-    SILKRPC_DEBUG << "Ready to walk storages: address 0x" << silkworm::to_hex(address)
-        << " incarnation 0x" << account.incarnation
-        << " start_location 0x" << silkworm::to_hex(start_location)
-        << " block_number " << block_number + 1
-        << "\n";
 
     StorageWalker storage_walker{transaction_};
     co_await storage_walker.walk_of_storages(block_number + 1, address, start_location, account.incarnation, walker);
 
-    SILKRPC_DEBUG << "Walk storages ended: len storage " << storage.size() << "\n";
     for (auto item : storage) {
         collector(item.key, item.sec_key, item.value);
     }

@@ -58,8 +58,6 @@ asio::awaitable<DumpAccounts> AccountDumper::dump_accounts(const BlockNumberOrHa
             return true;
         }
 
-        // SILKRPC_TRACE << "Collecting key: 0x" << silkworm::to_hex(k) << " value: " << silkworm::to_hex(v) << "\n";
-
         silkrpc::KeyValue kv;
         kv.key = k;
         kv.value = v;
@@ -96,7 +94,6 @@ asio::awaitable<void> AccountDumper::load_accounts(ethdb::TransactionDatabase& t
 
         if (account.incarnation > 0 && account.code_hash == silkworm::kEmptyHash) {
             const auto storage_key{silkworm::db::storage_prefix(silkworm::full_view(address), account.incarnation)};
-            // SILKRPC_TRACE << "Filling code_hash: address 0x" << silkworm::to_hex(address) << " incarnation: " << account.incarnation << " storage_key: " << silkworm::to_hex(storage_key) << "\n"; // NOLINT
             auto code_hash{co_await tx_database.get_one(silkrpc::db::table::kPlainContractCode, storage_key)};
             if (code_hash.length() == silkworm::kHashLength) {
                 std::memcpy(dump_account.code_hash.bytes, code_hash.data(), silkworm::kHashLength);
@@ -121,8 +118,6 @@ asio::awaitable<void> AccountDumper::load_storage(uint64_t block_number, DumpAcc
 
         std::map<silkworm::Bytes, silkworm::Bytes> collected_entries;
         StorageWalker::AccountCollector collector = [&](const evmc::address& address, silkworm::ByteView loc, silkworm::ByteView data) {
-            SILKRPC_TRACE << "Collecting address 0x" << silkworm::to_hex(address) << " loc 0x" << silkworm::to_hex(loc) << " data 0x" << silkworm::to_hex(data) << "\n";
-
             if (!account.storage.has_value()) {
                 account.storage = Storage{};
             }
@@ -134,8 +129,6 @@ asio::awaitable<void> AccountDumper::load_storage(uint64_t block_number, DumpAcc
 
             return true;
         };
-
-        SILKRPC_TRACE << "Ready to walk storages: address 0x" << silkworm::to_hex(address) << " incarnation 0x" << account.incarnation << " start_location 0x" << silkworm::to_hex(start_location) << " block_number " << block_number << "\n"; // NOLINT
 
         co_await storage_walker.walk_of_storages(block_number, address, start_location, account.incarnation, collector);
 
