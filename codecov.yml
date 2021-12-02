@@ -5,15 +5,11 @@ coverage:
   status:
     project:
       default: false # disable the default status that measures entire project
-      tests:
-        paths:
-          - "tests/"
-        target: 100%
       source:
         paths:
           - "silkrpc/"
-        target: 97%
-        threshold: 0.0002
+        target: auto # use the coverage from the base commit (pull request base or parent commit) coverage to compare aganist
+        threshold: 0.001 # allow the coverage to drop by x% still posting a success status
     patch:
       default:
         target: 80% # new contributions should have coverage at least equal to target
