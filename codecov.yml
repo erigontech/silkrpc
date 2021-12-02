@@ -1,3 +1,23 @@
+codecov:
+  require_ci_to_pass: yes
+
+coverage:
+  status:
+    project:
+      default: false # disable the default status that measures entire project
+      tests:
+        paths:
+          - "tests/"
+        target: 100%
+      source:
+        paths:
+          - "silkrpc/"
+        target: 97%
+        threshold: 0.0002
+    patch:
+      default:
+        target: 80% # new contributions should have coverage at least equal to target
+
 ignore:
   - "**/*_test.cpp"
   - "cmd"
