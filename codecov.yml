@@ -1,3 +1,19 @@
+codecov:
+  require_ci_to_pass: yes
+
+coverage:
+  status:
+    project:
+      default: false # disable the default status that measures entire project
+      source:
+        paths:
+          - "silkrpc/"
+        target: auto # use the coverage from the base commit (pull request base or parent commit) coverage to compare aganist
+        threshold: 0.001 # allow the coverage to drop by x% still posting a success status
+    patch:
+      default:
+        target: 95% # new contributions should have coverage at least equal to target
+
 ignore:
   - "**/*_test.cpp"
   - "cmd"
