@@ -103,7 +103,7 @@ TEST_CASE("check_tx_fee_less_cap(cap=0) returns true", "[silkrpc][common][util]"
     intx::uint256 max_fee_per_gas{silkworm::kEther * 1};
     uint64_t gas_limit{20};
     auto check = check_tx_fee_less_cap(0, max_fee_per_gas, gas_limit);
-    CHECK(check == false);
+    CHECK(check == true);
 }
 
 TEST_CASE("check_tx_fee_less_cap returns true", "[silkrpc][common][util]") {
