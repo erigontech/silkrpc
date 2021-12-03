@@ -27,6 +27,8 @@ namespace silkrpc {
 using Catch::Matchers::Message;
 
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
+using silkworm::kGiga;
+
 
 TEST_CASE("byte view from string", "[silkrpc][common][util]") {
     CHECK(silkworm::byte_view_of_string("").empty());
@@ -96,6 +98,81 @@ TEST_CASE("to_dec", "[silkrpc][common][util]") {
     auto encoded = to_dec(number);
     CHECK(encoded == "1610024");
 }
+
+TEST_CASE("check_tx_fee_less_cap returns true", "[silkrpc][common][util]") {
+    intx::uint256 max_fee_per_gas{silkworm::kEther * 1};
+    uint64_t gas_limit{20};
+    auto check = check_tx_fee_less_cap(max_fee_per_gas, gas_limit);
+    CHECK(check == false);
+}
+
+TEST_CASE("check_tx_fee_less_cap returns false", "[silkrpc][common][util]") {
+    intx::uint256 max_fee_per_gas{silkworm::kEther/10};
+    uint64_t gas_limit{8};
+    auto check = check_tx_fee_less_cap(max_fee_per_gas, gas_limit);
+    CHECK(check == true);
+}
+
+TEST_CASE("is_replay_protected(tx legacy) returns true", "[silkrpc][common][util]") {
+    const silkworm::Transaction txn{
+        silkworm::Transaction::Type::kLegacy,               // type
+        0,                                                  // nonce
+        50'000 * kGiga,                                     // max_priority_fee_per_gas
+        50'000 * kGiga,                                     // max_fee_per_gas
+        21'000,                                             // gas_limit
+        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address, // to
+        31337,                                              // value
+        {},                                                 // data
+        true,                                               // odd_y_parity
+        std::nullopt,                                       // chain_id
+        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
+        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
+    };
+
+    auto check = is_replay_protected(txn);
+    CHECK(check == false);
+}
+
+TEST_CASE("is_replay_protected(v) returns true", "[silkrpc][common][util]") {
+    const silkworm::Transaction txn{
+        silkworm::Transaction::Type::kEip2930,              // type
+        0,                                                  // nonce
+        50'000 * kGiga,                                     // max_priority_fee_per_gas
+        50'000 * kGiga,                                     // max_fee_per_gas
+        21'000,                                             // gas_limit
+        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address, // to
+        31337,                                              // value
+        {},                                                 // data
+        false,                                              // odd_y_parity
+        32,                                                 // chain_id
+        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
+        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
+    };
+
+    auto check = is_replay_protected(txn);
+    CHECK(check == false);
+}
+
+TEST_CASE("is_replay_protected returns false", "[silkrpc][common][util]") {
+    const silkworm::Transaction txn{
+        silkworm::Transaction::Type::kEip2930,              // type
+        0,                                                  // nonce
+        50'000 * kGiga,                                     // max_priority_fee_per_gas
+        50'000 * kGiga,                                     // max_fee_per_gas
+        21'000,                                             // gas_limit
+        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address, // to
+        31337,                                              // value
+        {},                                                 // data
+        true,                                               // odd_y_parity
+        std::nullopt,                                       // chain_id
+        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
+        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
+    };
+
+    auto check = is_replay_protected(txn);
+    CHECK(check == false);
+}
+
 
 } // namespace silkrpc
 
