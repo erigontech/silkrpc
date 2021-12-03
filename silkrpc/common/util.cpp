@@ -131,10 +131,6 @@ std::string to_dec(intx::uint256 number) {
     return std::string{p};
 }
 
-} // namespace silkrpc
-
-
-namespace silkrpc::commands {
 
 // checkTxFee used to check whether the fee of
 // the given transaction is _reasonable_(under the cap).
@@ -192,4 +188,4 @@ std::string decoding_result_to_string(silkworm::rlp::DecodingResult decode_resul
             return "unknownError";
    }
 }
-} // namespace silkrpc::commands
+} // namespace silkrpc
