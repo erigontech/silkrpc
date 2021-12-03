@@ -134,9 +134,8 @@ std::string to_dec(intx::uint256 number) {
 
 // checkTxFee used to check whether the fee of
 // the given transaction is _reasonable_(under the cap).
-bool check_tx_fee_less_cap(intx::uint256 max_fee_per_gas, uint64_t gas_limit) {
+bool check_tx_fee_less_cap(const float cap, intx::uint256 max_fee_per_gas, uint64_t gas_limit) {
      const float ether = silkworm::kEther;
-     const float cap = 1; // TBD
 
      // Short circuit if there is no cap for transaction fee at all.
      if (cap == 0) {

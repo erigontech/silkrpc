@@ -1180,7 +1180,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
         co_return;
     }
 
-    if (!silkrpc::check_tx_fee_less_cap(txn.max_fee_per_gas, txn.gas_limit)) {
+    const float cap = 1; // TBD
+
+    if (!silkrpc::check_tx_fee_less_cap(cap, txn.max_fee_per_gas, txn.gas_limit)) {
         auto error_msg = "tx fee exceeds the configured cap";
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);

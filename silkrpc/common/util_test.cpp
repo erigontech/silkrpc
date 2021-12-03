@@ -99,17 +99,24 @@ TEST_CASE("to_dec", "[silkrpc][common][util]") {
     CHECK(encoded == "1610024");
 }
 
+TEST_CASE("check_tx_fee_less_cap(cap=0) returns true", "[silkrpc][common][util]") {
+    intx::uint256 max_fee_per_gas{silkworm::kEther * 1};
+    uint64_t gas_limit{20};
+    auto check = check_tx_fee_less_cap(0, max_fee_per_gas, gas_limit);
+    CHECK(check == false);
+}
+
 TEST_CASE("check_tx_fee_less_cap returns true", "[silkrpc][common][util]") {
     intx::uint256 max_fee_per_gas{silkworm::kEther * 1};
     uint64_t gas_limit{20};
-    auto check = check_tx_fee_less_cap(max_fee_per_gas, gas_limit);
+    auto check = check_tx_fee_less_cap(1, max_fee_per_gas, gas_limit);
     CHECK(check == false);
 }
 
 TEST_CASE("check_tx_fee_less_cap returns false", "[silkrpc][common][util]") {
     intx::uint256 max_fee_per_gas{silkworm::kEther/10};
     uint64_t gas_limit{8};
-    auto check = check_tx_fee_less_cap(max_fee_per_gas, gas_limit);
+    auto check = check_tx_fee_less_cap(1, max_fee_per_gas, gas_limit);
     CHECK(check == true);
 }
 
@@ -197,6 +204,8 @@ TEST_CASE("decoding_result_to_string(kUnsupportedTransactionType)", "[silkrpc][c
     CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kUnsupportedTransactionType) == "rlp: unknown tx type prefix");
 }
 
-
+TEST_CASE("decoding_result_to_string(kOk)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kOk) == "unknownError");
+}
 } // namespace silkrpc
 
