@@ -133,26 +133,6 @@ TEST_CASE("is_replay_protected(tx legacy) returns true", "[silkrpc][common][util
     CHECK(check == false);
 }
 
-TEST_CASE("is_replay_protected(v) returns true", "[silkrpc][common][util]") {
-    const silkworm::Transaction txn{
-        silkworm::Transaction::Type::kEip2930,              // type
-        0,                                                  // nonce
-        50'000 * kGiga,                                     // max_priority_fee_per_gas
-        50'000 * kGiga,                                     // max_fee_per_gas
-        21'000,                                             // gas_limit
-        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address, // to
-        31337,                                              // value
-        {},                                                 // data
-        false,                                              // odd_y_parity
-        32,                                                 // chain_id
-        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
-        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
-    };
-
-    auto check = is_replay_protected(txn);
-    CHECK(check == false);
-}
-
 TEST_CASE("is_replay_protected returns false", "[silkrpc][common][util]") {
     const silkworm::Transaction txn{
         silkworm::Transaction::Type::kEip2930,              // type
@@ -171,6 +151,50 @@ TEST_CASE("is_replay_protected returns false", "[silkrpc][common][util]") {
 
     auto check = is_replay_protected(txn);
     CHECK(check == false);
+}
+
+TEST_CASE("decoding_result_to_string(kOverflow)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kOverflow) == "rlp: uint overflow");
+}
+
+TEST_CASE("decoding_result_to_string(kLeadingZero)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kLeadingZero) == "rlp: leading Zero");
+}
+
+TEST_CASE("decoding_result_to_string(kInputTooShort)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kInputTooShort) == "rlp: element is larger than containing list");
+}
+
+TEST_CASE("decoding_result_to_string(kNonCanonicalSingleByte)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kNonCanonicalSingleByte) == "rlp: non-canonical integer format");
+}
+
+TEST_CASE("decoding_result_to_string(kNonCanonicalSize)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kNonCanonicalSize) == "rlp: non-canonical size information");
+}
+
+TEST_CASE("decoding_result_to_string(kUnexpectedLength)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kUnexpectedLength) == "rlp: unexpected Length");
+}
+
+TEST_CASE("decoding_result_to_string(kUnexpectedString)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kUnexpectedString) == "rlp: unexpected String");
+}
+
+TEST_CASE("decoding_result_to_string(kUnexpectedList)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kUnexpectedList) == "rlp: element is larger than containing list");
+}
+
+TEST_CASE("decoding_result_to_string(kListLengthMismatch)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kListLengthMismatch) == "rlp: list Length Mismatch");
+}
+
+TEST_CASE("decoding_result_to_string(kInvalidVInSignature)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kInvalidVInSignature) == "rlp: invalid V in signature");
+}
+
+TEST_CASE("decoding_result_to_string(kUnsupportedTransactionType)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kUnsupportedTransactionType) == "rlp: unknown tx type prefix");
 }
 
 
