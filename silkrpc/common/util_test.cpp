@@ -46,6 +46,11 @@ TEST_CASE("calculate hash of transaction", "[silkrpc][common][util]") {
     CHECK(silkworm::to_bytes32(silkworm::ByteView{eth_hash.bytes, silkworm::kHashLength}) == 0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32);
 }
 
+TEST_CASE("print Bytes", "[silkrpc][common][util]") {
+    silkworm::Bytes bt1{};
+    CHECK_NOTHROW(silkworm::null_stream() << bt1);
+}
+
 TEST_CASE("print ByteView", "[silkrpc][common][util]") {
     silkworm::ByteView bv1{};
     CHECK_NOTHROW(silkworm::null_stream() << bv1);
