@@ -209,6 +209,28 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         CHECK(result.get().success == true);
     }
 
+    SECTION("call add_transaction success") {
+        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
+        public:
+            ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
+                response->add_imported(::txpool::ImportResult::SUCCESS);
+                return ::grpc::Status::OK;
+            }
+        };
+        TestSuccessTxpoolService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x02}), asio::use_future)};
+        io_context.run();
+        CHECK(result.get().success == true);
+    }
+
+    SECTION("call add_transaction and check import failure [unexpected import size]") {
+        EmptyTxpoolService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        io_context.run();
+    }
+
     SECTION("call add_transaction and check import failure [unexpected import size]") {
         EmptyTxpoolService service;
         asio::io_context io_context;
