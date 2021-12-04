@@ -99,7 +99,7 @@ public:
         const auto imported_size = reply.imported_size();
         const auto errors_size = reply.errors_size();
         SILKRPC_DEBUG << "TransactionPool::add_transaction imported_size=" << imported_size << " errors_size=" << errors_size << "\n";
-        OperationResult result{true, ""};
+        OperationResult result;
 
         if (imported_size == 1) {
             const auto import_result = reply.imported(0);
@@ -114,6 +114,8 @@ public:
                     result.error_descr = "no specific error";
                     SILKRPC_WARN << "TransactionPool::add_transaction import_result=" << import_result << ", no error received\n";
                 }
+           } else {
+            result.success = true;
            }
         } else {
             result.success = false;
@@ -121,7 +123,8 @@ public:
             SILKRPC_WARN << "TransactionPool::add_transaction unexpected imported_size=" << imported_size << "\n";
         }
         SILKRPC_DEBUG << "TransactionPool::add_transaction t=" << clock_time::since(start_time) << "\n";
-        co_return std::move(result);
+        co_return result;
+        //co_return std::move(result);
     }
 
     asio::awaitable<std::optional<silkworm::Bytes>> get_transaction(const evmc::bytes32& tx_hash) {
