@@ -24,11 +24,11 @@
 
 #include <boost/endian/conversion.hpp>
 #include <evmc/evmc.hpp>
+#include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/common/base.hpp>
 #include <silkworm/execution/address.hpp>
 #include <silkworm/db/util.hpp>
-#include <silkworm/chain/config.hpp>
 #include <silkworm/types/receipt.hpp>
 #include <silkworm/types/transaction.hpp>
 
