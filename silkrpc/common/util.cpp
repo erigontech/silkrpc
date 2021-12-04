@@ -132,31 +132,31 @@ std::string to_dec(intx::uint256 number) {
 }
 
 
-// checkTxFee used to check whether the fee of
-// the given transaction is _reasonable_(under the cap).
-bool check_tx_fee_less_cap(const float cap, intx::uint256 max_fee_per_gas, uint64_t gas_limit) {
-     const float ether = silkworm::kEther;
+// check whether the fee of the given transaction is reasonable (under the cap)
+bool check_tx_fee_less_cap(float cap, intx::uint256 max_fee_per_gas, uint64_t gas_limit) {
+    // Short circuit if there is no cap for transaction fee at all
+    if (cap == 0) {
+        return true;
+    }
 
-     // Short circuit if there is no cap for transaction fee at all.
-     if (cap == 0) {
-         return true;
-     }
-     float fee_eth = ((uint64_t)max_fee_per_gas * gas_limit) / ether;
-     if (fee_eth > cap) {
-         return false;
-     }
-     return true;
+    const float ether = silkworm::kEther;
+
+    float fee_eth = ((uint64_t)max_fee_per_gas * gas_limit) / ether;
+    if (fee_eth > cap) {
+        return false;
+    }
+    return true;
 }
 
 bool is_replay_protected(const silkworm::Transaction& txn) {
-     if (txn.type != silkworm::Transaction::Type::kLegacy) {
-         return false;
-     }
-     intx::uint256 v = txn.v();
-     if (v != 27 && v != 28 && v != 0 && v != 1) {
-         return true;
-     }
-     return false;
+    if (txn.type != silkworm::Transaction::Type::kLegacy) {
+        return false;
+    }
+    intx::uint256 v = txn.v();
+    if (v != 27 && v != 28 && v != 0 && v != 1) {
+        return true;
+    }
+    return false;
 }
 
 std::string decoding_result_to_string(silkworm::rlp::DecodingResult decode_result) {
@@ -179,12 +179,13 @@ std::string decoding_result_to_string(silkworm::rlp::DecodingResult decode_resul
             return "rlp: element is larger than containing list";
         case silkworm::rlp::DecodingResult::kListLengthMismatch:
             return "rlp: list Length Mismatch";
-        case silkworm::rlp::DecodingResult::kInvalidVInSignature:         // v != 27 && v != 28 && v < 35, see EIP-155
+        case silkworm::rlp::DecodingResult::kInvalidVInSignature: // v != 27 && v != 28 && v < 35, see EIP-155
             return "rlp: invalid V in signature";
         case silkworm::rlp::DecodingResult::kUnsupportedTransactionType:
             return "rlp: unknown tx type prefix";
         default:
             return "unknownError";
-   }
+    }
 }
+
 } // namespace silkrpc
