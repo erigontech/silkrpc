@@ -124,7 +124,6 @@ public:
         }
         SILKRPC_DEBUG << "TransactionPool::add_transaction t=" << clock_time::since(start_time) << "\n";
         co_return result;
-        //co_return std::move(result);
     }
 
     asio::awaitable<std::optional<silkworm::Bytes>> get_transaction(const evmc::bytes32& tx_hash) {
