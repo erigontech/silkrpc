@@ -32,7 +32,6 @@
 #include <silkworm/types/receipt.hpp>
 #include <silkworm/types/transaction.hpp>
 
-
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
