@@ -174,7 +174,7 @@ asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... arg
     auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
     const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
     txpool::TransactionPool transaction_pool{io_context, channel, &queue};
-    auto method_proxy{make_method_proxy<mf, silkrpc::txpool::TransactionPool>(std::move(transaction_pool))};
+    auto method_proxy{make_method_proxy<mf, txpool::TransactionPool>(std::move(transaction_pool))};
     const auto result = co_await method_proxy(args...);
     server_ptr->Shutdown();
     io_context.stop();
@@ -188,7 +188,7 @@ asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... arg
     co_return result;
 }
 
-auto test_add_transaction = test_comethod<&txpool::TransactionPool::add_transaction, silkrpc::txpool::TransactionPool::OperationResult, silkworm::ByteView>;
+auto test_add_transaction = test_comethod<&txpool::TransactionPool::add_transaction, txpool::TransactionPool::OperationResult, silkworm::ByteView>;
 auto test_get_transaction = test_comethod<&txpool::TransactionPool::get_transaction, std::optional<silkworm::Bytes>, evmc::bytes32>;
 
 TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
