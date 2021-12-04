@@ -122,7 +122,7 @@ TEST_CASE("check_tx_fee_less_cap returns false", "[silkrpc][common][util]") {
 
 TEST_CASE("is_replay_protected(tx legacy) returns true", "[silkrpc][common][util]") {
     const silkworm::Transaction txn{
-        silkworm::Transaction::Type::kLegacy,               // type
+        silkworm::Transaction::Type::kEip2930,
         0,                                                  // nonce
         50'000 * kGiga,                                     // max_priority_fee_per_gas
         50'000 * kGiga,                                     // max_fee_per_gas
@@ -140,9 +140,30 @@ TEST_CASE("is_replay_protected(tx legacy) returns true", "[silkrpc][common][util
     CHECK(check == false);
 }
 
+TEST_CASE("is_replay_protected returns true", "[silkrpc][common][util]") {
+    silkworm::Transaction txn{
+        silkworm::Transaction::Type::kLegacy,               // type
+        0,
+        20000000000,
+        20000000000,
+        uint64_t{0},
+        0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+        intx::uint256{8},
+        *silkworm::from_hex("001122aabbcc"),
+        false,
+        intx::uint256{9},
+        intx::uint256{18},
+        intx::uint256{36},
+        std::vector<silkworm::AccessListEntry>{},
+        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address
+    };
+    auto check = is_replay_protected(txn);
+    CHECK(check == true);
+}
+
 TEST_CASE("is_replay_protected returns false", "[silkrpc][common][util]") {
     const silkworm::Transaction txn{
-        silkworm::Transaction::Type::kEip2930,              // type
+        silkworm::Transaction::Type::kLegacy,               // type
         0,                                                  // nonce
         50'000 * kGiga,                                     // max_priority_fee_per_gas
         50'000 * kGiga,                                     // max_fee_per_gas
