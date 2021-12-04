@@ -1169,8 +1169,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
         co_return;
     }
 
+    silkworm::ByteView encoded_tx_view{*encoded_tx_bytes};
     Transaction txn;
-    auto err{silkworm::rlp::decode<silkworm::Transaction>(silkworm::ByteView{*encoded_tx_bytes}, txn)};
+    auto err{silkworm::rlp::decode<silkworm::Transaction>(encoded_tx_view, txn)};
     if (err != silkworm::rlp::DecodingResult::kOk) {
         auto error_msg = silkrpc::decoding_result_to_string(err);
         SILKRPC_ERROR << error_msg << "\n";
