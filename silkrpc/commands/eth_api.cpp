@@ -1168,10 +1168,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
         reply = make_json_error(request["id"], -32602, error_msg);
         co_return;
     }
-    silkworm::ByteView tmp_encoded_tx{*encoded_tx_bytes};
 
     Transaction txn;
-    auto err{silkworm::rlp::decode<silkworm::Transaction>(tmp_encoded_tx, txn)};
+    auto err{silkworm::rlp::decode<silkworm::Transaction>(silkworm::ByteView{*encoded_tx_bytes}, txn)};
     if (err != silkworm::rlp::DecodingResult::kOk) {
         auto error_msg = silkrpc::decoding_result_to_string(err);
         SILKRPC_ERROR << error_msg << "\n";
@@ -1181,14 +1180,14 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
 
     const float cap = 1; // TBD
 
-    if (!silkrpc::check_tx_fee_less_cap(cap, txn.max_fee_per_gas, txn.gas_limit)) {
+    if (!check_tx_fee_less_cap(cap, txn.max_fee_per_gas, txn.gas_limit)) {
         auto error_msg = "tx fee exceeds the configured cap";
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
     }
 
-    if (!silkrpc::is_replay_protected(txn)) {
+    if (!is_replay_protected(txn)) {
         auto error_msg = "only replay-protected (EIP-155) transactions allowed over RPC";
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
@@ -1215,10 +1214,10 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
     auto hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
     if (!txn.to.has_value()) {
         auto contract_address = silkworm::create_address(*txn.from, txn.nonce);
-        SILKRPC_DEBUG << "Submitted contract creation hash: " << hash << " from: " << *txn.from <<  " nonce: " << txn.nonce << " contract: " << contract_address <<
+        SILKRPC_DEBUG << "submitted contract creation hash: " << hash << " from: " << *txn.from <<  " nonce: " << txn.nonce << " contract: " << contract_address <<
                          " value: " << txn.value << "\n";
     } else {
-        SILKRPC_DEBUG << "Submitted transaction hash: " << hash << " from: " << *txn.from <<  " nonce: " << txn.nonce << " recipient: " << *txn.to << " value: " << txn.value << "\n";
+        SILKRPC_DEBUG << "submitted transaction hash: " << hash << " from: " << *txn.from <<  " nonce: " << txn.nonce << " recipient: " << *txn.to << " value: " << txn.value << "\n";
     }
 
     reply = make_json_content(request["id"], hash);
