@@ -41,6 +41,7 @@ public:
     explicit EthereumRpcApiTest(Context& context, asio::thread_pool& workers) : commands::EthereumRpcApi{context, workers} {}
 
     using commands::EthereumRpcApi::handle_eth_block_number;
+    using commands::EthereumRpcApi::handle_eth_send_raw_transaction;
 };
 
 typedef asio::awaitable<void> (EthereumRpcApiTest::*HandleTestMethod)(const nlohmann::json&, nlohmann::json&);
@@ -65,12 +66,14 @@ void test_eth_api(HandleTestMethod test_handle_method, const nlohmann::json& req
 
 TEST_CASE("handle_eth_block_number succeeds if request well-formed", "[silkrpc][eth_api]") {
     nlohmann::json reply;
-    /*test_eth_api(&EthereumRpcApiTest::handle_eth_block_number, R"({
+    /*
+     test_eth_api(&EthereumRpcApiTest::handle_eth_block_number, R"({
         "jsonrpc":"2.0",
         "id":1,
         "method":"eth_blockNumber",
         "params":[]
-    })"_json, reply);*/
+    })"_json, reply);
+   */
 }
 
 TEST_CASE("handle_eth_block_number fails if request empty", "[silkrpc][eth_api]") {
@@ -78,5 +81,31 @@ TEST_CASE("handle_eth_block_number fails if request empty", "[silkrpc][eth_api]"
     //test_eth_api(&EthereumRpcApiTest::handle_eth_block_number, R"({})"_json, reply);
 }
 
-} // namespace silkrpc
+TEST_CASE("handle_eth_send_raw_transaction fails rlp parsing", "[silkrpc][eth_api]") {
+/*
+    nlohmann::json reply;
+    test_eth_api(&EthereumRpcApiTest::handle_eth_send_raw_transaction, R"({
+        "jsonrpc": "2.0", 
+        "id":1,
+        "method": "eth_sendRawTransaction", 
+        "params": ["0xd46ed67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f0724456"]     
+     })"_json, reply);
+     //CHECK (reply.content == "rlp: element is larger than containing list");
+*/
+}
 
+TEST_CASE("handle_eth_send_raw_transaction fails wrong number digit", "[silkrpc][eth_api]") {
+/*
+    nlohmann::json reply;
+    test_eth_api(&EthereumRpcApiTest::handle_eth_send_raw_transaction, R"({
+        "jsonrpc": "2.0", 
+        "id":1,
+        "method": "eth_sendRawTransaction", 
+        "params": ["0xd46ed67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f072445"]     
+     })"_json, reply);
+     //CHECK (reply.content == "cannot unmarshal hex string");
+
+*/
+}
+
+} // namespace silkrpc

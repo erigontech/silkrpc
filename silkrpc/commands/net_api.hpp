@@ -25,8 +25,11 @@
 #include <asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/json/types.hpp>
 #include <silkrpc/context_pool.hpp>
+
+#include <silkrpc/json/types.hpp>
+
+#include <silkrpc/types/log.hpp>
 #include <silkrpc/ethbackend/backend.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
