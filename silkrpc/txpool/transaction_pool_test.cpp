@@ -174,7 +174,7 @@ asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... arg
     auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
     const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
     txpool::TransactionPool transaction_pool{io_context, channel, &queue};
-    auto method_proxy{make_method_proxy<mf, silkrpc::txpool::TransactionPool>(std::move(transaction_pool))};
+    auto method_proxy{make_method_proxy<mf, txpool::TransactionPool>(std::move(transaction_pool))};
     const auto result = co_await method_proxy(args...);
     server_ptr->Shutdown();
     io_context.stop();
@@ -188,7 +188,7 @@ asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... arg
     co_return result;
 }
 
-auto test_add_transaction = test_comethod<&txpool::TransactionPool::add_transaction, bool, silkworm::ByteView>;
+auto test_add_transaction = test_comethod<&txpool::TransactionPool::add_transaction, txpool::TransactionPool::OperationResult, silkworm::ByteView>;
 auto test_get_transaction = test_comethod<&txpool::TransactionPool::get_transaction, std::optional<silkworm::Bytes>, evmc::bytes32>;
 
 TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
@@ -204,17 +204,39 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         };
         TestSuccessTxpoolService service;
         asio::io_context io_context;
-        auto success{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
-        CHECK(success.get() == true);
+        CHECK(result.get().success == true);
+    }
+
+    SECTION("call add_transaction success") {
+        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
+        public:
+            ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
+                response->add_imported(::txpool::ImportResult::SUCCESS);
+                return ::grpc::Status::OK;
+            }
+        };
+        TestSuccessTxpoolService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x02}), asio::use_future)};
+        io_context.run();
+        CHECK(result.get().success == true);
     }
 
     SECTION("call add_transaction and check import failure [unexpected import size]") {
         EmptyTxpoolService service;
         asio::io_context io_context;
-        auto success{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
-        CHECK(success.get() == false);
+    }
+
+    SECTION("call add_transaction and check import failure [unexpected import size]") {
+        EmptyTxpoolService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        io_context.run();
+        CHECK(result.get().success == false);
     }
 
     SECTION("call add_transaction and check import failure [import error]") {
@@ -228,9 +250,9 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         };
         TestFailureErrorTxpoolService service;
         asio::io_context io_context;
-        auto success{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
-        CHECK(success.get() == false);
+        CHECK(result.get().success == false);
     }
 
     SECTION("call add_transaction and check import failure [import no error]") {
@@ -243,9 +265,9 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         };
         TestFailureNoErrorTxpoolService service;
         asio::io_context io_context;
-        auto success{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
         io_context.run();
-        CHECK(success.get() == false);
+        CHECK(result.get().success == false);
     }
 
     SECTION("call get_transaction and check result") {
