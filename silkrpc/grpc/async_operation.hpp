@@ -76,8 +76,8 @@ public:
         // to ensure that any owning sub-object remains valid until after we have
         // deallocated the memory here.
 
-        asio::detail::move_binder2<Handler, asio::error_code, Reply>
-                          handler{0, ASIO_MOVE_CAST(Handler)(h->handler_), error, ASIO_MOVE_CAST(Reply)(reply)};
+        asio::detail::move_binder2<Handler, asio::error_code, Reply> handler{
+            0, ASIO_MOVE_CAST(Handler)(h->handler_), error, ASIO_MOVE_CAST(Reply)(reply)};
         p.h = asio::detail::addressof(handler.handler_);
         p.reset();
 
