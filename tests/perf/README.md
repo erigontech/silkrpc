@@ -6,8 +6,13 @@ These are the instructions to execute the performance comparison tests between S
 ulimit -c 3000000
 # to increase max file descriptors
 ulimit -n 64000
-# to increase port list (sudo su) 
-echo 5000 65000 > /proc/sys/net/ipv4/ip_local_port_range
+# to increase port list
+# 
+sudo sysctl -w "net.ipv4.ip_local_port_range=5000 65000"
+writes in /etc/sysctl.conf net.ipv4.ip_local_port_range=5000 65000  (to be permanently)
+# to see current value
+cat /proc/sys/net/ipv4/ip_local_port_range
+
 
 ## Software Versions
 In order to reproduce the environment used in last performance testing session, pick the following source code versions:
