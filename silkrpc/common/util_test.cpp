@@ -49,7 +49,7 @@ TEST_CASE("calculate hash of transaction", "[silkrpc][common][util]") {
 }
 
 TEST_CASE("print Bytes", "[silkrpc][common][util]") {
-    silkworm::Bytes bt1{};
+    const silkworm::Bytes bt1{};
     CHECK_NOTHROW(silkworm::null_stream() << bt1);
 }
 
@@ -80,7 +80,11 @@ TEST_CASE("print empty const_buffer", "[silkrpc][common][util]") {
 }
 
 TEST_CASE("print empty vector of const_buffer", "[silkrpc][common][util]") {
-    std::vector<asio::const_buffer> v{};
+    std::vector<asio::const_buffer> v;
+    asio::const_buffer cb1{};
+    asio::const_buffer cb2{};
+    v.push_back(cb1);
+    v.push_back(cb2);
     CHECK_NOTHROW(silkworm::null_stream() << v);
 }
 
