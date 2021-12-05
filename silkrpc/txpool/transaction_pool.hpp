@@ -100,7 +100,6 @@ public:
         const auto errors_size = reply.errors_size();
         SILKRPC_DEBUG << "TransactionPool::add_transaction imported_size=" << imported_size << " errors_size=" << errors_size << "\n";
         OperationResult result;
-
         if (imported_size == 1) {
             const auto import_result = reply.imported(0);
             SILKRPC_DEBUG << "TransactionPool::add_transaction import_result=" << import_result << "\n";
@@ -114,9 +113,9 @@ public:
                     result.error_descr = "no specific error";
                     SILKRPC_WARN << "TransactionPool::add_transaction import_result=" << import_result << ", no error received\n";
                 }
-           } else {
-            result.success = true;
-           }
+            } else {
+                result.success = true;
+            }
         } else {
             result.success = false;
             result.error_descr = "unexpected imported size";
