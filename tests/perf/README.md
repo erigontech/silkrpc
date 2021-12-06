@@ -1,13 +1,22 @@
 # Performance Tests
 These are the instructions to execute the performance comparison tests between Silkrpc and Erigon RPCDaemon.
 
-# Configuration
-# to increase core dump size 
+## Configuration
+The following system configuration steps shall be performed:
+
+* increase core dump size 
+```
 ulimit -c 3000000
-# to increase max file descriptors
+```
+* increase max file descriptors
+```
 ulimit -n 64000
-# to increase port list (sudo su) 
-echo 10000 61000 > /proc/sys/net/ipv4/ip_local_port_range
+```
+* check current IP local port range and increase it (writing permanently in /etc/sysctl.conf)
+```
+cat /proc/sys/net/ipv4/ip_local_port_range
+sudo sysctl -w "net.ipv4.ip_local_port_range=5000 65000"
+```
 
 ## Software Versions
 In order to reproduce the environment used in last performance testing session, pick the following source code versions:

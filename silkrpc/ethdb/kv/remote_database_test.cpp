@@ -41,7 +41,7 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
                 });
             }
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
                     pair.set_txid(4);
@@ -76,7 +76,7 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
                 });
             }
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
                     pair.set_txid(4);
@@ -111,7 +111,7 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
                 });
             }
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     read_completed(::grpc::Status::CANCELLED, {});
                 });

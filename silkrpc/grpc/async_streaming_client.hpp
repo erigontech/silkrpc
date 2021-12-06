@@ -32,7 +32,7 @@ public:
 
     virtual void end_call(std::function<void(const grpc::Status&)> end_completed) = 0;
 
-    virtual void read_start(std::function<void(const grpc::Status&, Response)> read_completed) = 0;
+    virtual void read_start(std::function<void(const grpc::Status&, const Response &)> read_completed) = 0;
 
     virtual void write_start(const Request& request, std::function<void(const grpc::Status&)> write_completed) = 0;
 };

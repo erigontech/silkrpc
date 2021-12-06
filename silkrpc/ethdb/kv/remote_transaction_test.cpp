@@ -42,7 +42,7 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
                 });
             }
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     ::remote::Pair pair;
                     pair.set_txid(4);
@@ -76,7 +76,7 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
                 start_completed(::grpc::Status::CANCELLED);
             }
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     ::remote::Pair pair;
                     pair.set_txid(4);
@@ -109,7 +109,7 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
                 start_completed(::grpc::Status::OK);
             }
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     ::remote::Pair pair;
                     pair.set_txid(4);
@@ -146,7 +146,7 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {
                 end_completed(::grpc::Status::OK);
             }
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                 ::remote::Pair pair;
                 pair.set_txid(4);
                 read_completed(::grpc::Status::OK, pair);
@@ -182,7 +182,7 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {
                 end_completed(::grpc::Status::OK);
             }
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {}
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
             void completed(bool ok) override {}
         };
@@ -211,7 +211,7 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {
                 end_completed(::grpc::Status::OK);
             }
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                 ::remote::Pair pair;
                 pair.set_txid(4);
                 read_completed(::grpc::Status::OK, pair);
@@ -255,7 +255,7 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {
                 end_completed(::grpc::Status::CANCELLED);
             }
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                 ::remote::Pair pair;
                 pair.set_txid(4);
                 read_completed(::grpc::Status::OK, pair);
@@ -288,7 +288,7 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
             MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair &)> read_completed) override {
                ::remote::Pair pair;
                pair.set_cursorid(0x23);
                read_completed(::grpc::Status::OK, pair);
@@ -319,7 +319,7 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
             MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair &)> read_completed) override {
                 ::remote::Pair pair;
                 pair.set_cursorid(0x23);
                 read_completed(::grpc::Status::OK, pair);
@@ -355,7 +355,7 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
             MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                 ::remote::Pair pair;
                 pair.set_cursorid(0x23);
                 read_completed(::grpc::Status::OK, pair);
@@ -386,7 +386,7 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
             MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                 ::remote::Pair pair;
                 pair.set_cursorid(0x23);
                 read_completed(::grpc::Status::CANCELLED, pair);
@@ -419,7 +419,7 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
             MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                 ::remote::Pair pair;
                 pair.set_cursorid(0x23);
                 read_completed(::grpc::Status::OK, pair);
@@ -450,7 +450,7 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
             MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                 ::remote::Pair pair;
                 pair.set_cursorid(0x23);
                 read_completed(::grpc::Status::OK, pair);
@@ -486,7 +486,7 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
             MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                 ::remote::Pair pair;
                 pair.set_cursorid(0x23);
                 read_completed(::grpc::Status::OK, pair);
@@ -517,7 +517,7 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
             MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
             void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
             void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, ::remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {
                 ::remote::Pair pair;
                 pair.set_cursorid(0x23);
                 read_completed(::grpc::Status::CANCELLED, pair);

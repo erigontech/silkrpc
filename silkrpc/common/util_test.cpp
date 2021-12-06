@@ -48,6 +48,11 @@ TEST_CASE("calculate hash of transaction", "[silkrpc][common][util]") {
     CHECK(silkworm::to_bytes32(silkworm::ByteView{eth_hash.bytes, silkworm::kHashLength}) == 0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32);
 }
 
+TEST_CASE("print Bytes", "[silkrpc][common][util]") {
+    const silkworm::Bytes bt1{};
+    CHECK_NOTHROW(silkworm::null_stream() << bt1);
+}
+
 TEST_CASE("print ByteView", "[silkrpc][common][util]") {
     silkworm::ByteView bv1{};
     CHECK_NOTHROW(silkworm::null_stream() << bv1);
@@ -75,7 +80,11 @@ TEST_CASE("print empty const_buffer", "[silkrpc][common][util]") {
 }
 
 TEST_CASE("print empty vector of const_buffer", "[silkrpc][common][util]") {
-    std::vector<asio::const_buffer> v{};
+    std::vector<asio::const_buffer> v;
+    asio::const_buffer cb1{};
+    asio::const_buffer cb2{};
+    v.push_back(cb1);
+    v.push_back(cb2);
     CHECK_NOTHROW(silkworm::null_stream() << v);
 }
 

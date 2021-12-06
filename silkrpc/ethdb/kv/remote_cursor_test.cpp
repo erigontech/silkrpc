@@ -34,7 +34,7 @@ public:
 
     void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
 
-    void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {}
+    void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {}
 
     void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
 
@@ -46,7 +46,7 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
                     pair.set_cursorid(3);
@@ -77,7 +77,7 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
                     pair.set_cursorid(3);
@@ -108,7 +108,7 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     read_completed(grpc::Status::CANCELLED, {});
                 });
@@ -141,7 +141,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
                 read_completed(grpc::Status::OK, pair);
@@ -175,7 +175,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
                     pair.set_cursorid(3);
@@ -211,7 +211,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
                 read_completed(grpc::Status::OK, pair);
@@ -247,7 +247,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
                     pair.set_cursorid(3);
@@ -285,7 +285,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
                     pair.set_cursorid(3);
@@ -324,7 +324,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     read_completed(grpc::Status::CANCELLED, {});
                 });
@@ -363,7 +363,7 @@ TEST_CASE("RemoteCursor::seek", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
                 pair.set_k("6080");
@@ -407,7 +407,7 @@ TEST_CASE("RemoteCursor::seek_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
                 pair.set_v("6080");
@@ -450,7 +450,7 @@ TEST_CASE("RemoteCursor::next", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
                 pair.set_k("0001");
@@ -494,7 +494,7 @@ TEST_CASE("RemoteCursor::seek_both", "[silkrpc][ethdb][kv][remote_cursor]") {
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
                 pair.set_v("6080");
@@ -536,7 +536,7 @@ TEST_CASE("RemoteCursor::seek_both_exact", "[silkrpc][ethdb][kv][remote_cursor]"
         class MockStreamingClient : public MockBaseStreamingClient {
         public:
             MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
-            void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed) override {
+            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
                 pair.set_v("6080");
