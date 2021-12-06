@@ -1,5 +1,5 @@
 /*
-   Copyright 2020 The Silkrpc Authors
+   Copyright 2021 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -41,7 +41,8 @@ silkworm::Bytes make_key(const evmc::address& address, uint64_t incarnation, con
 
 class StorageWalker {
 public:
-    using Collector = std::function<bool(const evmc::address&, const silkworm::Bytes&, const silkworm::Bytes&)>;
+    using AccountCollector = std::function<bool(const evmc::address&, silkworm::ByteView, silkworm::ByteView)>;
+    using StorageCollector = std::function<bool(const silkworm::ByteView, silkworm::ByteView, silkworm::ByteView)>;
 
     explicit StorageWalker(silkrpc::ethdb::Transaction& transaction) : transaction_(transaction) {}
 
@@ -49,7 +50,10 @@ public:
     StorageWalker& operator=(const StorageWalker&) = delete;
 
     asio::awaitable<void> walk_of_storages(uint64_t block_number,
-        const evmc::address& start_address, const evmc::bytes32& start_location, uint64_t incarnation, Collector& collector);
+        const evmc::address& start_address, const evmc::bytes32& start_location, uint64_t incarnation, AccountCollector& collector);
+
+    asio::awaitable<void> storage_range_at(uint64_t block_number,
+        const evmc::address& start_address, const evmc::bytes32& start_location, int16_t max_result, StorageCollector& collector);
 
 private:
     silkrpc::ethdb::Transaction& transaction_;

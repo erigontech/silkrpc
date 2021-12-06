@@ -25,6 +25,7 @@ find_program(PROTOBUF_PROTOC protoc REQUIRED)
 # Find gRPC installation
 find_package(gRPC CONFIG REQUIRED)
 find_program(GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin REQUIRED)
+find_package(mimalloc 1.4 REQUIRED)
 
 # Define gRPC proto files
 set(IF_PROTO_PATH "${CMAKE_SOURCE_DIR}/interfaces")
@@ -86,7 +87,6 @@ add_library(silkinterfaces
     ${TXPOOL_PROTO_HEADER} ${TXPOOL_PROTO_SOURCE} ${TXPOOL_GRPC_HEADER} ${TXPOOL_GRPC_SOURCE})
 target_include_directories(silkinterfaces PUBLIC ${PROTO_GENERATED_SRC_DIR})
 target_link_libraries(silkinterfaces
-    tcmalloc
     gRPC::grpc++
     protobuf::libprotobuf)
 
@@ -149,7 +149,6 @@ endif()
 add_library(silkrpc ${SILKRPC_SRC})
 target_include_directories(silkrpc PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(silkrpc
-    tcmalloc
     absl::flat_hash_map
     absl::flat_hash_set
     absl::btree
@@ -158,7 +157,8 @@ target_link_libraries(silkrpc
     protobuf::libprotobuf
     silkinterfaces
     silkworm_core
-    silkworm_node)
+    silkworm_node
+    mimalloc)
 
 add_executable(silkrpcdaemon main.cpp)
 target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
@@ -166,4 +166,4 @@ target_link_libraries(silkrpcdaemon
     silkrpc
     absl::flags_parse
     silkinterfaces
-    tcmalloc)
+    mimalloc)

@@ -60,7 +60,7 @@ public:
         SILKRPC_TRACE << "TxStreamingClient::end_call " << this << " status: " << status_ << " end\n";
     }
 
-    void read_start(std::function<void(const grpc::Status&, remote::Pair)> read_completed)  override {
+    void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed)  override {
         SILKRPC_TRACE << "TxStreamingClient::read_start " << this << " status: " << status_ << " start\n";
         read_completed_ = read_completed;
         status_ = READ_STARTED;
@@ -129,7 +129,7 @@ private:
     CallStatus status_;
     bool finishing_{false};
     std::function<void(const grpc::Status&)> start_completed_;
-    std::function<void(const grpc::Status&, remote::Pair)> read_completed_;
+    std::function<void(const grpc::Status&, const remote::Pair&)> read_completed_;
     std::function<void(const grpc::Status&)> write_completed_;
     std::function<void(const grpc::Status&)> end_completed_;
 };

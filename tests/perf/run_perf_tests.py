@@ -11,7 +11,7 @@ import getopt
 import multiprocessing
 from datetime import datetime
 
-DEFAULT_TEST_SEQUENCE = "50:30,200:30,200:60,400:30,600:60"
+DEFAULT_TEST_SEQUENCE = "50:30,200:30,500:30,700:30,1000:30,1500:30,1700:30,2000:30"
 DEFAULT_REPETITIONS = 10
 DEFAULT_VEGETA_PATTERN_TAR_FILE = "./vegeta/erigon_stress_test_eth_getLogs_goerly_001.tar"
 DEFAULT_DAEMON_VEGETA_ON_CORE = "-:-"
@@ -229,7 +229,7 @@ class PerfTest:
         self.rpc_daemon = 0
         os.system("kill -9 $(ps aux | grep 'rpcdaemon' | grep -v 'grep' | awk '{print $2}') 2> /dev/null ")
         print("RpcDaemon stopped")
-        os.system("sleep 3")
+        os.system("sleep 5")
 
     def start_silk_daemon(self, start_test):
         """ Starts SILKRPC daemon
@@ -245,7 +245,7 @@ class PerfTest:
         else:
             perf_cmd = ""
         if on_core[0] == "-":
-            cmd = perf_cmd + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c &"
+            cmd = perf_cmd + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c --numWorkers 256 &"
         else:
             cmd = perf_cmd + "taskset -c " + on_core[0] + " "\
                 + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --local localhost:51515 --logLevel c  --numWorkers 12 --numContexts "\
@@ -425,7 +425,7 @@ def main(argv):
                 test_name = "[{:d}.{:2d}] "
                 test_name_formatted = test_name.format(test_number, test_rep+1)
                 perf_test.execute(test_name_formatted, "silkrpc", qps, time)
-                os.system("sleep 1")
+                os.system("sleep 5")
             test_number = test_number + 1
             print("")
 
@@ -443,7 +443,7 @@ def main(argv):
                 time = test.split(':')[1]
                 test_name = "[{:d}.{:2d}] "
                 test_name_formatted = test_name.format(test_number, test_rep+1)
-                perf_test.execute(test_name_formatted, "rpcdameon", qps, time)
+                perf_test.execute(test_name_formatted, "rpcdaemon", qps, time)
                 os.system("sleep 1")
             test_number = test_number + 1
             print("")

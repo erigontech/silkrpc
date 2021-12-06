@@ -37,6 +37,7 @@
 #include <silkrpc/ethdb/transaction.hpp>
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/receipt.hpp>
+#include <silkrpc/txpool/transaction_pool.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
@@ -45,7 +46,7 @@ namespace silkrpc::commands {
 class EthereumRpcApi {
 public:
     explicit EthereumRpcApi(Context& context, asio::thread_pool& workers)
-    : context_(context), database_(context.database), backend_(context.backend), workers_{workers} {}
+    : context_(context), database_(context.database), backend_(context.backend), workers_{workers}, tx_pool_{context.tx_pool} {}
     virtual ~EthereumRpcApi() {}
 
     EthereumRpcApi(const EthereumRpcApi&) = delete;
@@ -100,6 +101,7 @@ protected:
     Context& context_;
     std::unique_ptr<ethdb::Database>& database_;
     std::unique_ptr<ethbackend::BackEnd>& backend_;
+    std::unique_ptr<txpool::TransactionPool>& tx_pool_;
     asio::thread_pool& workers_;
 
     friend class silkrpc::http::RequestHandler;

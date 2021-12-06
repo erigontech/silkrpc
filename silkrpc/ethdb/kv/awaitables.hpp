@@ -49,10 +49,10 @@ template <typename Handler, typename IoExecutor>
 using async_open_cursor = async_reply_operation<Handler, IoExecutor, uint32_t>;
 
 template <typename Handler, typename IoExecutor>
-using async_next = async_reply_operation<Handler, IoExecutor, remote::Pair>;
+using async_next = async_reply_operation<Handler, IoExecutor, const remote::Pair&>;
 
 template <typename Handler, typename IoExecutor>
-using async_seek = async_reply_operation<Handler, IoExecutor, remote::Pair>;
+using async_seek = async_reply_operation<Handler, IoExecutor, const remote::Pair&>;
 
 template <typename Handler, typename IoExecutor>
 using async_close_cursor = async_reply_operation<Handler, IoExecutor, uint32_t>;
@@ -86,7 +86,7 @@ public:
                 start_op->complete(this, make_error_code(status.error_code(), status.error_message()), 0);
                 return;
             }
-            self_->client_.read_start([this](const grpc::Status& status, remote::Pair open_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, const remote::Pair& open_pair) {
                 auto txid = open_pair.txid();
 
                 auto start_op = static_cast<op*>(wrapper_);
@@ -130,7 +130,7 @@ public:
                 open_cursor_op->complete(this, make_error_code(status.error_code(), status.error_message()), 0);
                 return;
             }
-            self_->client_.read_start([this](const grpc::Status& status, remote::Pair open_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, const remote::Pair& open_pair) {
                 auto cursor_id = open_pair.cursorid();
 
                 auto open_cursor_op = static_cast<op*>(wrapper_);
@@ -176,7 +176,7 @@ public:
                 seek_op->complete(this, make_error_code(status.error_code(), status.error_message()), {});
                 return;
             }
-            self_->client_.read_start([this](const grpc::Status& status, remote::Pair seek_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, const remote::Pair& seek_pair) {
                 typedef silkrpc::ethdb::kv::async_seek<WaitHandler, Executor> op;
                 auto seek_op = static_cast<op*>(wrapper_);
                 if (status.ok()) {
@@ -224,7 +224,7 @@ public:
                 seek_op->complete(this, make_error_code(status.error_code(), status.error_message()), {});
                 return;
             }
-            self_->client_.read_start([this](const grpc::Status& status, remote::Pair seek_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, const remote::Pair& seek_pair) {
                 auto seek_op = static_cast<op*>(wrapper_);
                 if (status.ok()) {
                     seek_op->complete(this, {}, seek_pair);
@@ -270,7 +270,7 @@ public:
                 next_op->complete(this, make_error_code(status.error_code(), status.error_message()), {});
                 return;
             }
-            self_->client_.read_start([this](const grpc::Status& status, remote::Pair next_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, const remote::Pair& next_pair) {
                 auto next_op = static_cast<op*>(wrapper_);
                 if (status.ok()) {
                     next_op->complete(this, {}, next_pair);
@@ -314,7 +314,7 @@ public:
                 close_cursor_op->complete(this, make_error_code(status.error_code(), status.error_message()), 0);
                 return;
             }
-            self_->client_.read_start([this](const grpc::Status& status, remote::Pair close_pair) {
+            self_->client_.read_start([this](const grpc::Status& status, const remote::Pair & close_pair) {
                 auto cursor_id = close_pair.cursorid();
 
                 auto close_cursor_op = static_cast<op*>(wrapper_);
@@ -384,27 +384,27 @@ struct KvAsioAwaitable {
 
     template<typename WaitHandler>
     auto async_seek(uint32_t cursor_id, const silkworm::ByteView& key, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::Pair)>(initiate_async_seek{this, cursor_id, key, false}, handler);
+        return asio::async_initiate<WaitHandler, void(asio::error_code, const remote::Pair&)>(initiate_async_seek{this, cursor_id, key, false}, handler);
     }
 
     template<typename WaitHandler>
     auto async_seek_exact(uint32_t cursor_id, const silkworm::ByteView& key, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::Pair)>(initiate_async_seek{this, cursor_id, key, true}, handler);
+        return asio::async_initiate<WaitHandler, void(asio::error_code, const remote::Pair&)>(initiate_async_seek{this, cursor_id, key, true}, handler);
     }
 
     template<typename WaitHandler>
     auto async_seek_both(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::Pair)>(initiate_async_seek_both{this, cursor_id, key, value, false}, handler);
+        return asio::async_initiate<WaitHandler, void(asio::error_code, const remote::Pair&)>(initiate_async_seek_both{this, cursor_id, key, value, false}, handler);
     }
 
     template<typename WaitHandler>
     auto async_seek_both_exact(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::Pair)>(initiate_async_seek_both{this, cursor_id, key, value, true}, handler);
+        return asio::async_initiate<WaitHandler, void(asio::error_code, const remote::Pair&)>(initiate_async_seek_both{this, cursor_id, key, value, true}, handler);
     }
 
     template<typename WaitHandler>
     auto async_next(uint32_t cursor_id, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, remote::Pair)>(initiate_async_next{this, cursor_id}, handler);
+        return asio::async_initiate<WaitHandler, void(asio::error_code, const remote::Pair&)>(initiate_async_next{this, cursor_id}, handler);
     }
 
     template<typename WaitHandler>

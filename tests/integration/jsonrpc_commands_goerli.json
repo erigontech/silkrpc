@@ -1231,7 +1231,7 @@
                   }
                 },
                 "next": "eaTXW9ALGEPsUpIhfnHazl5adDk="
-              }
+            }
         }
     },
     {
@@ -1264,6 +1264,95 @@
             "jsonrpc":"2.0",
             "id":1,
             "result":null
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_sendRawTransaction",
+            "params":[
+               "0xf863808459682f07825208943d504cb2b11a45e7d1f9646ede40c60d52deec2580802da0e06b96410c954281132f2b403c0d25e0b04dd83f4ac5dffef07eb800c01718b7a07dc8bc872a54a40547c033b78081fd417e64bb96cae12ed5ad50b82f951636dd"
+            ],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "error":{
+                "code":-32000,
+                "message":"already known"
+            }
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_sendRawTransaction",
+            "params":[
+               "0xd46ed67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f0724456"
+            ],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "error":{
+                "code":-32000,
+                "message":"rlp: element is larger than containing list"
+            }
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_sendRawTransaction",
+            "params":[
+               "0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f07244567"
+            ],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "error":{
+                "code":-32602,
+                "message":"invalid eth_sendRawTransaction encoded tx: 0xd46e8dd67c5d32be8d46e8dd67c5d32be8058bb8eb970870f072445675058bb8eb970870f07244567"
+            }
+        }
+    },    
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"debug_storageRangeAt",
+            "params":[
+                "0x342f2e967a85f511e958230d307be93cb92432fff33b81b263d7952a151e9c66", 
+                100,
+                "0x149Ca2e8576336B48743D4D7c54159D37Cb43F76",
+                "0x0000000000000000000000000000000000000000000000000000000000000000",
+                3
+             ],
+            "id":1
+        },
+        "response": {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "result": {
+              "nextKey": "0x0353061a88c0592f32d7468be32ff6e5e91e49a3ea3ffb3c4fbe417c36501ba2",
+              "storage": {
+                "0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563": {
+                  "key": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                  "value": "0x4e46540000000000000000000000000000000000000000000000000000000006"
+                },
+                "0xa66cc928b5edb82af9bd49922954155ab7b0942694bea4ce44661d9a8736c688": {
+                  "key": "0x0000000000000000000000000000000000000000000000000000000000000007",
+                  "value": "0x0000000000000000000000000000000000000000000000000000000000000011"
+                },
+                "0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6": {
+                  "key": "0x0000000000000000000000000000000000000000000000000000000000000001",
+                  "value": "0x4e46540000000000000000000000000000000000000000000000000000000006"
+                }
+              }
+            }
         }
     }
 ]

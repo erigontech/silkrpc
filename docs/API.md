@@ -40,7 +40,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getCode                                | Yes          |                                            |
 | eth_getTransactionCount                    | Yes          |                                            |
 | eth_getStorageAt                           | Yes          |                                            |
-| eth_call                                   | Yes          | not yet tested for performance             |
+| eth_call                                   | Yes          |                                            |
 |                                            |              |                                            |
 | eth_newFilter                              | -            | not yet implemented                        |
 | eth_newBlockFilter                         | -            | not yet implemented                        |
@@ -50,7 +50,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getLogs                                | Yes          |                                            |
 |                                            |              |                                            |
 | eth_accounts                               | No           | deprecated                                 |
-| eth_sendRawTransaction                     | -            | not yet implemented, remote only           |
+| eth_sendRawTransaction                     | Yes          | remote only                                |
 | eth_sendTransaction                        | -            | not yet implemented                        |
 | eth_sign                                   | No           | deprecated                                 |
 | eth_signTransaction                        | -            | deprecated                                 |
@@ -71,7 +71,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | debug_accountRange                         | Yes          |                                            |
 | debug_getModifiedAccountsByHash            | Yes          |                                            |
 | debug_getModifiedAccountsByNumber          | Yes          |                                            |
-| debug_storageRangeAt                       | -            | not yet implemented                        |
+| debug_storageRangeAt                       | Yes          |                                            |
 | debug_traceTransaction                     | -            | not yet implemented                        |
 | debug_traceCall                            | -            | not yet implemented                        |
 |                                            |              |                                            |

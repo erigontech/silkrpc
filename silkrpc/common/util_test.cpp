@@ -27,6 +27,8 @@ namespace silkrpc {
 using Catch::Matchers::Message;
 
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
+using silkworm::kGiga;
+
 
 TEST_CASE("byte view from string", "[silkrpc][common][util]") {
     CHECK(silkworm::byte_view_of_string("").empty());
@@ -44,6 +46,11 @@ TEST_CASE("calculate hash of byte array", "[silkrpc][common][util]") {
 TEST_CASE("calculate hash of transaction", "[silkrpc][common][util]") {
     const auto eth_hash{hash_of_transaction(silkworm::Transaction{})};
     CHECK(silkworm::to_bytes32(silkworm::ByteView{eth_hash.bytes, silkworm::kHashLength}) == 0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32);
+}
+
+TEST_CASE("print Bytes", "[silkrpc][common][util]") {
+    const silkworm::Bytes bt1{};
+    CHECK_NOTHROW(silkworm::null_stream() << bt1);
 }
 
 TEST_CASE("print ByteView", "[silkrpc][common][util]") {
@@ -73,7 +80,11 @@ TEST_CASE("print empty const_buffer", "[silkrpc][common][util]") {
 }
 
 TEST_CASE("print empty vector of const_buffer", "[silkrpc][common][util]") {
-    std::vector<asio::const_buffer> v{};
+    std::vector<asio::const_buffer> v;
+    asio::const_buffer cb1{};
+    asio::const_buffer cb2{};
+    v.push_back(cb1);
+    v.push_back(cb2);
     CHECK_NOTHROW(silkworm::null_stream() << v);
 }
 
@@ -97,5 +108,134 @@ TEST_CASE("to_dec", "[silkrpc][common][util]") {
     CHECK(encoded == "1610024");
 }
 
+TEST_CASE("check_tx_fee_less_cap(cap=0) returns true", "[silkrpc][common][util]") {
+    intx::uint256 max_fee_per_gas{silkworm::kEther * 1};
+    uint64_t gas_limit{20};
+    auto check = check_tx_fee_less_cap(0, max_fee_per_gas, gas_limit);
+    CHECK(check == true);
+}
+
+TEST_CASE("check_tx_fee_less_cap returns true", "[silkrpc][common][util]") {
+    intx::uint256 max_fee_per_gas{silkworm::kEther * 1};
+    uint64_t gas_limit{20};
+    auto check = check_tx_fee_less_cap(1, max_fee_per_gas, gas_limit);
+    CHECK(check == false);
+}
+
+TEST_CASE("check_tx_fee_less_cap returns false", "[silkrpc][common][util]") {
+    intx::uint256 max_fee_per_gas{silkworm::kEther/10};
+    uint64_t gas_limit{8};
+    auto check = check_tx_fee_less_cap(1, max_fee_per_gas, gas_limit);
+    CHECK(check == true);
+}
+
+TEST_CASE("is_replay_protected(tx legacy) returns true", "[silkrpc][common][util]") {
+    const silkworm::Transaction txn{
+        silkworm::Transaction::Type::kEip2930,
+        0,                                                  // nonce
+        50'000 * kGiga,                                     // max_priority_fee_per_gas
+        50'000 * kGiga,                                     // max_fee_per_gas
+        21'000,                                             // gas_limit
+        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address, // to
+        31337,                                              // value
+        {},                                                 // data
+        true,                                               // odd_y_parity
+        std::nullopt,                                       // chain_id
+        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
+        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
+    };
+
+    auto check = is_replay_protected(txn);
+    CHECK(check == false);
+}
+
+TEST_CASE("is_replay_protected returns true", "[silkrpc][common][util]") {
+    silkworm::Transaction txn{
+        silkworm::Transaction::Type::kLegacy,               // type
+        0,
+        20000000000,
+        20000000000,
+        uint64_t{0},
+        0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+        intx::uint256{8},
+        *silkworm::from_hex("001122aabbcc"),
+        false,
+        intx::uint256{9},
+        intx::uint256{18},
+        intx::uint256{36},
+        std::vector<silkworm::AccessListEntry>{},
+        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address
+    };
+    auto check = is_replay_protected(txn);
+    CHECK(check == true);
+}
+
+TEST_CASE("is_replay_protected returns false", "[silkrpc][common][util]") {
+    const silkworm::Transaction txn{
+        silkworm::Transaction::Type::kLegacy,               // type
+        0,                                                  // nonce
+        50'000 * kGiga,                                     // max_priority_fee_per_gas
+        50'000 * kGiga,                                     // max_fee_per_gas
+        21'000,                                             // gas_limit
+        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address, // to
+        31337,                                              // value
+        {},                                                 // data
+        true,                                               // odd_y_parity
+        std::nullopt,                                       // chain_id
+        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
+        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
+    };
+
+    auto check = is_replay_protected(txn);
+    CHECK(check == false);
+}
+
+TEST_CASE("decoding_result_to_string(kOverflow)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kOverflow) == "rlp: uint overflow");
+}
+
+TEST_CASE("decoding_result_to_string(kLeadingZero)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kLeadingZero) == "rlp: leading Zero");
+}
+
+TEST_CASE("decoding_result_to_string(kInputTooShort)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kInputTooShort) == "rlp: element is larger than containing list");
+}
+
+TEST_CASE("decoding_result_to_string(kNonCanonicalSingleByte)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kNonCanonicalSingleByte) == "rlp: non-canonical integer format");
+}
+
+TEST_CASE("decoding_result_to_string(kNonCanonicalSize)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kNonCanonicalSize) == "rlp: non-canonical size information");
+}
+
+TEST_CASE("decoding_result_to_string(kUnexpectedLength)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kUnexpectedLength) == "rlp: unexpected Length");
+}
+
+TEST_CASE("decoding_result_to_string(kUnexpectedString)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kUnexpectedString) == "rlp: unexpected String");
+}
+
+TEST_CASE("decoding_result_to_string(kUnexpectedList)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kUnexpectedList) == "rlp: element is larger than containing list");
+}
+
+TEST_CASE("decoding_result_to_string(kListLengthMismatch)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kListLengthMismatch) == "rlp: list Length Mismatch");
+}
+
+TEST_CASE("decoding_result_to_string(kInvalidVInSignature)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kInvalidVInSignature) == "rlp: invalid V in signature");
+}
+
+TEST_CASE("decoding_result_to_string(kUnsupportedTransactionType)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kUnsupportedTransactionType) == "rlp: unknown tx type prefix");
+}
+
+TEST_CASE("decoding_result_to_string(kOk)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::rlp::DecodingResult::kOk) == "unknownError");
+}
 } // namespace silkrpc
 
