@@ -37,7 +37,7 @@ public:
     BlockCache(int capacity, bool shared_cache) : block_cache_(capacity), shared_cache_(shared_cache) {}
 
 public:
-    boost::optional <silkworm::BlockWithHash> get const evmc::bytes32 &key) {
+    boost::optional <silkworm::BlockWithHash> get(const evmc::bytes32 &key) {
        if (shared_cache_)
            mtx_.lock();
        auto block =  block_cache_.get(key);
