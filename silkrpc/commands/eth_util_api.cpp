@@ -14,11 +14,8 @@
     limitations under the License.
 */
 
-#include <silkrpc/commands/eth_util_api.hpp>
-
 #include <memory>
 #include <vector>
-
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
@@ -42,8 +39,7 @@
 #include <silkrpc/types/block.hpp>
 #include <silkrpc/types/chain_config.hpp>
 
-#include <silkrpc/commands/block_cache.hpp>
-
+#include <silkrpc/commands/eth_util_api.hpp>
 
 namespace silkrpc::commands::api  {
 
