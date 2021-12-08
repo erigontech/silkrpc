@@ -34,6 +34,7 @@
 namespace silkrpc::core::rawdb {
 
 using Catch::Matchers::Message;
+using testing::DoAll;
 using testing::Invoke;
 using testing::InvokeWithoutArgs;
 using testing::Return;
@@ -1111,8 +1112,8 @@ TEST_CASE("read_raw_receipts") {
     MockDatabaseReader db_reader;
 
     SECTION("empty receipts") {
-        const auto block_hash{0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32};
-        const uint64_t block_number{4'000'000};
+        const auto block_hash{silkworm::kEmptyHash};
+        const uint64_t block_number{0};
         EXPECT_CALL(db_reader, get(db::table::kBlockReceipts, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
         ));
@@ -1121,18 +1122,104 @@ TEST_CASE("read_raw_receipts") {
         CHECK(result.get().size() == 0);
     }
 
-    SECTION("some receipts") {
-        const auto block_hash{0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32};
-        const uint64_t block_number{4'000'000};
+    SECTION("one receipt") { // // https://goerli.etherscan.io/block/3529600
+        const auto block_hash{0x22de8ed177a7b8485d9e26e90dbf523f70cc4a9fa4299bc1daf68791a4386bf3_bytes32};
+        const uint64_t block_number{3'529'600};
         EXPECT_CALL(db_reader, get(db::table::kBlockReceipts, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("818400f6011a00016c51")}; }
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("818400f6011a0004a0c8")}; }
         ));
-        EXPECT_CALL(db_reader, walk(db::table::kLogs, _, _, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<void> { co_return; }
+        EXPECT_CALL(db_reader, walk(db::table::kLogs, _, _, _)).WillOnce(Invoke(
+            [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+                silkworm::Bytes key{};
+                silkworm::Bytes value{*silkworm::from_hex(
+                    "8683547753cfad258efbc52a9a1452e42ffbce9be486cb835820ddf252ad1be2c89b69c2b068fc"
+                    "378daa952ba7f163c4a11628f55a4df523b3ef5820000000000000000000000000ac399a5dfb98"
+                    "48d9e83d92d5f7dda9ba1a00132058200000000000000000000000003dd81545f3149538edcb66"
+                    "91a4ffee1898bd2ef0582000000000000000000000000000000000000000000000000000000000"
+                    "009896808354ac399a5dfb9848d9e83d92d5f7dda9ba1a0013208158209a7def6556351196c74c"
+                    "99e1cc8dcd284e9da181ea854c3e6367cc9fad882a515840000000000000000000000000f13c66"
+                    "6056048634109c1ecca6893da293c70da40000000000000000000000000214281cf15c1a66b519"
+                    "90e2e65e1f7b7c36331883540214281cf15c1a66b51990e2e65e1f7b7c363318815820be2e1f3a"
+                    "6197dfd16fa6830c4870364b618b8b288c21cbcfa4fdb5d7c6a5e45b58409f29225dee002d9875"
+                    "a2251ca89348cb8db9656b7ff556065eddb16c9f0618a100000000000000000000000000000000"
+                    "0000000000000000000000000000000083547753cfad258efbc52a9a1452e42ffbce9be486cb83"
+                    "5820ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef5820000000"
+                    "0000000000000000003dd81545f3149538edcb6691a4ffee1898bd2ef058200000000000000000"
+                    "000000000828d0386c1122e565f07dd28c7d1340ed5b3315582000000000000000000000000000"
+                    "0000000000000000000000000000000098968083543dd81545f3149538edcb6691a4ffee1898bd"
+                    "2ef08358202ed7bcf2ff03098102c7003d7ce2a633e4b49b8198b07de5383cdf4c0ab9228b5820"
+                    "000000000000000000000000f13c666056048634109c1ecca6893da293c70da458200000000000"
+                    "000000000000000214281cf15c1a66b51990e2e65e1f7b7c363318582000000000000000000000"
+                    "0000ac399a5dfb9848d9e83d92d5f7dda9ba1a00132083543dd81545f3149538edcb6691a4ffee"
+                    "1898bd2ef0835820efaf768237c22e140a862d5d375ad5c153479fac3f8bcf8b580a1651fd62c3"
+                    "ef5820000000000000000000000000f13c666056048634109c1ecca6893da293c70da458200000"
+                    "000000000000000000000214281cf15c1a66b51990e2e65e1f7b7c363318f6")};
+                w(key, value);
+                co_return;
+            }
         ));
         auto result = asio::co_spawn(pool, read_raw_receipts(db_reader, block_hash, block_number), asio::use_future);
-        //CHECK(result.get() == Receipts{Receipt{}}); // TODO(canepat): provide operator== and operator!= for Receipt type
+        //CHECK(result.get() == Receipts{Receipt{...}}); // TODO(canepat): provide operator== and operator!= for Receipt type
         CHECK(result.get().size() == Receipts{Receipt{}}.size());
+    }
+
+    SECTION("many receipts") { // https://goerli.etherscan.io/block/3529600
+        const auto block_hash{0xc9e65d063911aa583e17bbb7070893482203217caf6d9fbb50265c72e7bf73e5_bytes32};
+        const uint64_t block_number{3'529'604};
+        EXPECT_CALL(db_reader, get(db::table::kBlockReceipts, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex(
+                "828400f6011a0003be508400f6011a0008b89a")}; }
+        ));
+        EXPECT_CALL(db_reader, walk(db::table::kLogs, _, _, _)).WillOnce(DoAll(
+            Invoke([](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+                silkworm::Bytes key{};
+                silkworm::Bytes value{*silkworm::from_hex(
+                    "8383547977d4f555fbee46303682b17e72e3d94339b4418258206155cfd0fd028b0ca77e8495a6"
+                    "0cbe563e8bce8611f0aad6fedbdaafc05d44a258200000000000000000000000004ed7fae4af36"
+                    "f11ac28275a98ca1d131e91bb6cd58600000000000000000000000000000000000000000000000"
+                    "00015bb9773f49f764000000000000000000000000000000000000000000000000015c2a7b13fd"
+                    "0000000000000000000000000000000000000000000000000000000000005f7cd33d8354fa365f"
+                    "1384e4eaf6d59f353c782af3ea42feaab98258207aa1a8eb998c779420645fc14513bf058edb34"
+                    "7d95c2fc2e6845bdc22f88863158200000000000000000000000004ed7fae4af36f11ac28275a9"
+                    "8ca1d131e91bb6cd5840000000000000000000000000000000000000000000000000015c2a7b13"
+                    "fd0000000000000000000000000000000000000000000000000000000000005f7cd33d835408f0"
+                    "006e549edaef936ac2e3cb0c6f7c45ad5f968258202c7d80ba9bc6395644b4ff4a878353ac20ad"
+                    "eed6e23cead48c8cec7a58b6e7195820d76aaac3ecd5ced13bbab3b240a426352f76a6fffd583c"
+                    "3b15f4ddae2b754e4e5840000000000000000000000000000000000000000000000000015c2a7b"
+                    "13fd0000000000000000000000000000000000000000000000000000000000005f7cd33d")};
+                w(key, value);
+                co_return;
+            }),
+            Invoke([](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+                silkworm::Bytes key{};
+                silkworm::Bytes value{*silkworm::from_hex(
+                    "82835407b39f4fde4a38bace212b546dac87c58dfe3fdc815820649bbc62d0e31342afea4e5cd8"
+                    "2d4049e7e1ee912fc0889aa790803be39038c55902400000000000000000000000000000000000"
+                    "0000000000000000000000000000a0000000000000000000000000000000000000000000000000"
+                    "000000000000010000000000000000000000000000000000000000000000000000000000000001"
+                    "400000000000000000000000000000000000000000000000000000000000000180000000000000"
+                    "000000000000000000000000000000000000000000000000020000000000000000000000000000"
+                    "00000000000000000000000000000000000030a5a151a2320abaab98cfa8366fc326fb6f45cf1c"
+                    "93697191ec1370e1caca0fc6237e3bc5328755ae66bc5ddb141f0cb10000000000000000000000"
+                    "0000000000000000000000000000000000000000000000000000000000000000000000002000d7"
+                    "7be6277f1cdcfce33fdcb127b95fe91e09eec04aecc521dc94866f0055f0000000000000000000"
+                    "000000000000000000000000000000000000000000000800405973070000000000000000000000"
+                    "000000000000000000000000000000000000000000000000000000000000000000000000000000"
+                    "000000000000000060a4dcd35675e049ea5b58d9567f8029669d4cdbe72511d330d96a578e2714"
+                    "f1c9db00f6a9babc217b250fc7f217b0261506727657b420d9e05adc73675390ce2eb1e1aef3ba"
+                    "c7d1b4b424c9dc07cdcac2729eabdb81c857325e20202ea2476160000000000000000000000000"
+                    "0000000000000000000000000000000000000008ac360100000000000000000000000000000000"
+                    "00000000000000000000000000835431af35bdfa897cd42b204c003560c385d444707582582026"
+                    "725881c2a4290b02cd153d6599fd484f0d4e6062c361e740fbbe39e7ad61425820000000000000"
+                    "000000000000000000000000000000000000000000000000000258200000000000000000000000"
+                    "00000000000000000000000000000000005f7cd33d")};
+                w(key, value);
+                co_return;
+            })
+        ));
+        auto result = asio::co_spawn(pool, read_raw_receipts(db_reader, block_hash, block_number), asio::use_future);
+        //CHECK(result.get() == Receipts{Receipt{...}, Receipt{...}}); // TODO(canepat): provide operator== and operator!= for Receipt type
+        CHECK(result.get().size() == Receipts{Receipt{}, Receipt{}}.size());
     }
 }
 
