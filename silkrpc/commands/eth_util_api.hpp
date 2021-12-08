@@ -37,10 +37,11 @@
 #include <silkrpc/types/receipt.hpp>
 #include <silkrpc/types/log.hpp>
 
-
 namespace silkrpc::commands::api  {
+
 asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const silkrpc::Context &context, const silkrpc::core::rawdb::DatabaseReader& reader, uint64_t block_number);
 asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const silkrpc::Context &context, const silkrpc::core::rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash);
+
 } // namespace silkrpc::commands::api
 #endif // SILKRPC_COMMANDS_ETH_UTIL_API_HPP_
 
