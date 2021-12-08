@@ -22,7 +22,7 @@ namespace silkrpc {
 using Catch::Matchers::Message;
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
-TEST_CASE("check get hash not present(lock)", "[silkrpc][commands][block_cache]") {
+TEST_CASE("check get cache key not present(lock)", "[silkrpc][commands][block_cache]") {
     BlockCache block_cache(1, true);
     evmc::bytes32 bh1{0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32};
 
@@ -30,7 +30,7 @@ TEST_CASE("check get hash not present(lock)", "[silkrpc][commands][block_cache]"
     CHECK(!b);
 }
 
-TEST_CASE("check get hash not present(no-lock)", "[silkrpc][commands][block_cache]") {
+TEST_CASE("check get cache key not present(no-lock)", "[silkrpc][commands][block_cache]") {
     BlockCache block_cache(1, false);
     evmc::bytes32 bh1{0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32};
 
@@ -38,7 +38,7 @@ TEST_CASE("check get hash not present(no-lock)", "[silkrpc][commands][block_cach
     CHECK(!b);
 }
 
-TEST_CASE("insert block in hash(lock)", "[silkrpc][commands][block_cache]") {
+TEST_CASE("insert entry in cache(lock)", "[silkrpc][commands][block_cache]") {
     evmc::bytes32 bh1{0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32};
     BlockCache block_cache(1, true);
     auto ret_block_option = block_cache.get(bh1);
@@ -48,7 +48,7 @@ TEST_CASE("insert block in hash(lock)", "[silkrpc][commands][block_cache]") {
     block_cache.insert(bh1, block1);
 }
 
-TEST_CASE("insert block in hash(no-lock)", "[silkrpc][commands][block_cache]") {
+TEST_CASE("insert entry in cache(no-lock)", "[silkrpc][commands][block_cache]") {
     evmc::bytes32 bh1{0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32};
     BlockCache block_cache(1, false);
     auto ret_block_option = block_cache.get(bh1);
