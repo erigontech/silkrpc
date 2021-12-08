@@ -31,6 +31,7 @@
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/grpc/completion_runner.hpp>
 #include <silkrpc/txpool/transaction_pool.hpp>
+#include <silkrpc/commands/block_cache.hpp>
 
 namespace silkrpc {
 
@@ -41,6 +42,7 @@ struct Context {
     std::unique_ptr<ethdb::Database> database;
     std::unique_ptr<ethbackend::BackEnd> backend;
     std::unique_ptr<txpool::TransactionPool> tx_pool;
+    std::shared_ptr<BlockCache> block_cache;
 };
 
 std::ostream& operator<<(std::ostream& out, const Context& c);
