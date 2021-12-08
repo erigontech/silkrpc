@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_BLOCK_CACHE_HPP_
-#define SILKRPC_BLOCK_CACHE_HPP_
+#ifndef SILKRPC_COMMANDS_BLOCK_CACHE_HPP_
+#define SILKRPC_COMMANDS_BLOCK_CACHE_HPP_
 
 #include <boost/compute/detail/lru_cache.hpp>
 #include <boost/thread/mutex.hpp>
@@ -32,12 +32,12 @@
 
 namespace silkrpc {
 
-class BlockCache { 
+class BlockCache {
 public:
     BlockCache(int capacity, bool shared_cache) : block_cache_(capacity), shared_cache_(shared_cache) {}
 
 public:
-    boost::optional <silkworm::BlockWithHash> get (const evmc::bytes32 &key) {
+    boost::optional <silkworm::BlockWithHash> get const evmc::bytes32 &key) {
        if (shared_cache_)
            mtx_.lock();
        auto block =  block_cache_.get(key);
@@ -46,7 +46,7 @@ public:
        return block;
     }
 
-    void insert (const evmc::bytes32 &key, silkworm::BlockWithHash& block) {
+    void insert(const evmc::bytes32 &key, silkworm::BlockWithHash& block) {
        if (shared_cache_)
           mtx_.lock();
        block_cache_.insert(key, block);
@@ -62,4 +62,4 @@ private:
 
 } // namespace silkrpc
 
-#endif // SILKRPC_BLOCK_CACHE_HPP_
+#endif // SILKRPC_COMMANDS_BLOCK_CACHE_HPP_

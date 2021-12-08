@@ -14,8 +14,11 @@
     limitations under the License.
 */
 
+#include <silkrpc/commands/eth_util_api.hpp>
+
 #include <memory>
 #include <vector>
+
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
@@ -43,36 +46,28 @@
 
 
 namespace silkrpc::commands::api  {
-int count = 0;
 
 asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const silkrpc::Context &context, const silkrpc::core::rawdb::DatabaseReader& reader, uint64_t block_number) {
-
    const auto block_hash = co_await silkrpc::core::rawdb::read_canonical_block_hash(reader, block_number);
-
    auto option_block = context.block_cache->get(block_hash);
    if (option_block) {
-      //printf ("read_block_by_number:hit count %d \n",++count);
       co_return *option_block;
    }
-
    auto block_with_hash = co_await silkrpc::core::rawdb::read_block(reader, block_hash, block_number);
    context.block_cache->insert(block_hash, block_with_hash);
    co_return block_with_hash;
 }
 
 asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const silkrpc::Context &context, const silkrpc::core::rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash) {
-
    auto option_block = context.block_cache->get(block_hash);
    if (option_block) {
-      //printf ("read_block_by_hash:hit count %d \n",++count);
       co_return *option_block;
    }
-
    auto block_with_hash = co_await core::rawdb::read_block_by_hash(reader, block_hash);
    context.block_cache->insert(block_hash, block_with_hash);
    co_return block_with_hash;
 }
 
-}
+} // namespace silkrpc::commands::api
 
 
