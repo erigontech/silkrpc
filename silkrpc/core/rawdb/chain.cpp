@@ -236,6 +236,7 @@ asio::awaitable<Addresses> read_senders(const DatabaseReader& reader, const evmc
     const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
     const auto kv_pair = co_await reader.get(db::table::kSenders, block_key);
     const auto data = kv_pair.value;
+    SILKRPC_TRACE << "read_senders data: " << silkworm::to_hex(data) << "\n";
     Addresses senders{data.size() / silkworm::kAddressLength};
     for (size_t i{0}; i < senders.size(); i++) {
         senders[i] = silkworm::to_address(silkworm::ByteView{&data[i * silkworm::kAddressLength], silkworm::kAddressLength});
@@ -247,7 +248,7 @@ asio::awaitable<Receipts> read_raw_receipts(const DatabaseReader& reader, const 
     const auto block_key = silkworm::db::block_key(block_number);
     const auto kv_pair = co_await reader.get(db::table::kBlockReceipts, block_key);
     const auto data = kv_pair.value;
-    SILKRPC_TRACE << "data: " << silkworm::to_hex(data) << "\n";
+    SILKRPC_TRACE << "read_raw_receipts data: " << silkworm::to_hex(data) << "\n";
     if (data.empty()) {
         co_return Receipts{}; // TODO(canepat): use std::null_opt with asio::awaitable<std::optional<Receipts>>?
     }

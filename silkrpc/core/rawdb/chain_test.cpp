@@ -39,6 +39,7 @@ using testing::InvokeWithoutArgs;
 using testing::Return;
 using testing::Unused;
 using testing::_;
+using evmc::literals::operator""_address;
 using evmc::literals::operator""_bytes32;
 
 static silkworm::Bytes kNumber{*silkworm::from_hex("00000000003D0900")};
@@ -1062,14 +1063,46 @@ TEST_CASE("read_senders") {
     asio::thread_pool pool{1};
     MockDatabaseReader db_reader;
 
-    SECTION("empty senders") {
-        const auto block_hash{0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32};
-        const uint64_t block_number{4'000'000};
+    SECTION("empty senders") { // https://goerli.etherscan.io/block/20000
+        const auto block_hash{0x96908d141b3c2727342b48696f97b50845240e3ceda0c86ac3dc2e197eb9675b_bytes32};
+        const uint64_t block_number{20'000};
         EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
         ));
         auto result = asio::co_spawn(pool, read_senders(db_reader, block_hash, block_number), asio::use_future);
         CHECK(result.get() == Addresses{});
+    }
+
+    SECTION("one sender") { // https://goerli.etherscan.io/block/3529603
+        const auto block_hash{0x8059c265f40cdb2d3b3245847c21ed154eebf299fd0ff01ee3afded43cdadc45_bytes32};
+        const uint64_t block_number{3'529'603};
+        EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("70A5C9D346416f901826581d423Cd5B92d44Ff5a")};
+            }
+        ));
+        auto result = asio::co_spawn(pool, read_senders(db_reader, block_hash, block_number), asio::use_future);
+        CHECK(result.get() == Addresses{0x70A5C9D346416f901826581d423Cd5B92d44Ff5a_address});
+    }
+
+    SECTION("many senders") { // https://goerli.etherscan.io/block/3529601
+        const auto block_hash{0xc4af12a451cf621a0786b2b240fa4b479ae9110083db4df80d1527dc702e91a6_bytes32};
+        const uint64_t block_number{3'529'601};
+        EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex(
+                    "be188D6641E8b680743A4815dFA0f6208038960F"
+                    "0828D0386C1122E565f07DD28c7d1340eD5B3315"
+                    "70A5C9D346416f901826581d423Cd5B92d44Ff5a"
+                    "Dd74564BC9ff247C23f02cFbA1083c805829D981")};
+            }
+        ));
+        auto result = asio::co_spawn(pool, read_senders(db_reader, block_hash, block_number), asio::use_future);
+        CHECK(result.get() == Addresses{
+            0xbe188D6641E8b680743A4815dFA0f6208038960F_address,
+            0x0828D0386C1122E565f07DD28c7d1340eD5B3315_address,
+            0x70A5C9D346416f901826581d423Cd5B92d44Ff5a_address,
+            0xDd74564BC9ff247C23f02cFbA1083c805829D981_address});
     }
 }
 
