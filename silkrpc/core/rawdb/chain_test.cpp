@@ -1130,7 +1130,7 @@ TEST_CASE("read_raw_receipts") {
         ));
         EXPECT_CALL(db_reader, walk(db::table::kLogs, _, _, _)).WillOnce(Invoke(
             [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
-                silkworm::Bytes key{};
+                silkworm::Bytes key{*silkworm::from_hex("000000000035db8000000000")};
                 silkworm::Bytes value{*silkworm::from_hex(
                     "8683547753cfad258efbc52a9a1452e42ffbce9be486cb835820ddf252ad1be2c89b69c2b068fc"
                     "378daa952ba7f163c4a11628f55a4df523b3ef5820000000000000000000000000ac399a5dfb98"
@@ -1172,7 +1172,7 @@ TEST_CASE("read_raw_receipts") {
         ));
         EXPECT_CALL(db_reader, walk(db::table::kLogs, _, _, _)).WillOnce(DoAll(
             Invoke([](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
-                silkworm::Bytes key{};
+                silkworm::Bytes key{*silkworm::from_hex("000000000035db8400000000")};
                 silkworm::Bytes value{*silkworm::from_hex(
                     "8383547977d4f555fbee46303682b17e72e3d94339b4418258206155cfd0fd028b0ca77e8495a6"
                     "0cbe563e8bce8611f0aad6fedbdaafc05d44a258200000000000000000000000004ed7fae4af36"
@@ -1191,7 +1191,7 @@ TEST_CASE("read_raw_receipts") {
                 co_return;
             }),
             Invoke([](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
-                silkworm::Bytes key{};
+                silkworm::Bytes key{*silkworm::from_hex("000000000035db8400000001")};
                 silkworm::Bytes value{*silkworm::from_hex(
                     "82835407b39f4fde4a38bace212b546dac87c58dfe3fdc815820649bbc62d0e31342afea4e5cd8"
                     "2d4049e7e1ee912fc0889aa790803be39038c55902400000000000000000000000000000000000"
@@ -1220,6 +1220,49 @@ TEST_CASE("read_raw_receipts") {
         auto result = asio::co_spawn(pool, read_raw_receipts(db_reader, block_hash, block_number), asio::use_future);
         //CHECK(result.get() == Receipts{Receipt{...}, Receipt{...}}); // TODO(canepat): provide operator== and operator!= for Receipt type
         CHECK(result.get().size() == Receipts{Receipt{}, Receipt{}}.size());
+    }
+
+    SECTION("invalid receipt log") { // // https://goerli.etherscan.io/block/3529600
+        const auto block_hash{0x22de8ed177a7b8485d9e26e90dbf523f70cc4a9fa4299bc1daf68791a4386bf3_bytes32};
+        const uint64_t block_number{3'529'600};
+        EXPECT_CALL(db_reader, get(db::table::kBlockReceipts, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("818400f6011a0004a0c8")}; }
+        ));
+        EXPECT_CALL(db_reader, walk(db::table::kLogs, _, _, _)).WillOnce(Invoke(
+            [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+                silkworm::Bytes key{};
+                silkworm::Bytes value{*silkworm::from_hex(
+                    "8683547753cfad258efbc52a9a1452e42ffbce9be486cb835820ddf252ad1be2c89b69c2b068fc"
+                    "378daa952ba7f163c4a11628f55a4df523b3ef5820000000000000000000000000ac399a5dfb98"
+                    "48d9e83d92d5f7dda9ba1a00132058200000000000000000000000003dd81545f3149538edcb66"
+                    "91a4ffee1898bd2ef0582000000000000000000000000000000000000000000000000000000000"
+                    "009896808354ac399a5dfb9848d9e83d92d5f7dda9ba1a0013208158209a7def6556351196c74c"
+                    "99e1cc8dcd284e9da181ea854c3e6367cc9fad882a515840000000000000000000000000f13c66"
+                    "6056048634109c1ecca6893da293c70da40000000000000000000000000214281cf15c1a66b519"
+                    "90e2e65e1f7b7c36331883540214281cf15c1a66b51990e2e65e1f7b7c363318815820be2e1f3a"
+                    "6197dfd16fa6830c4870364b618b8b288c21cbcfa4fdb5d7c6a5e45b58409f29225dee002d9875"
+                    "a2251ca89348cb8db9656b7ff556065eddb16c9f0618a100000000000000000000000000000000"
+                    "0000000000000000000000000000000083547753cfad258efbc52a9a1452e42ffbce9be486cb83"
+                    "5820ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef5820000000"
+                    "0000000000000000003dd81545f3149538edcb6691a4ffee1898bd2ef058200000000000000000"
+                    "000000000828d0386c1122e565f07dd28c7d1340ed5b3315582000000000000000000000000000"
+                    "0000000000000000000000000000000098968083543dd81545f3149538edcb6691a4ffee1898bd"
+                    "2ef08358202ed7bcf2ff03098102c7003d7ce2a633e4b49b8198b07de5383cdf4c0ab9228b5820"
+                    "000000000000000000000000f13c666056048634109c1ecca6893da293c70da458200000000000"
+                    "000000000000000214281cf15c1a66b51990e2e65e1f7b7c363318582000000000000000000000"
+                    "0000ac399a5dfb9848d9e83d92d5f7dda9ba1a00132083543dd81545f3149538edcb6691a4ffee"
+                    "1898bd2ef0835820efaf768237c22e140a862d5d375ad5c153479fac3f8bcf8b580a1651fd62c3"
+                    "ef5820000000000000000000000000f13c666056048634109c1ecca6893da293c70da458200000"
+                    "000000000000000000000214281cf15c1a66b51990e2e65e1f7b7c363318f6")};
+                w(key, value);
+                co_return;
+            }
+        ));
+        auto result = asio::co_spawn(pool, read_raw_receipts(db_reader, block_hash, block_number), asio::use_future);
+        // TODO(canepat): this case should fail instead of providing 1 receipt with 0 logs
+        const Receipts receipts = result.get();
+        CHECK(receipts.size() == 1);
+        CHECK(receipts[0].logs.size() == 0);
     }
 }
 

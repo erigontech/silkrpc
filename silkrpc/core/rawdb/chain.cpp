@@ -262,6 +262,9 @@ asio::awaitable<Receipts> read_raw_receipts(const DatabaseReader& reader, const 
     auto log_key = silkworm::db::log_key(block_number, 0);
     SILKRPC_DEBUG << "log_key: " << silkworm::to_hex(log_key) << "\n";
     Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
+        if (k.size() != sizeof(uint64_t) + sizeof(uint32_t)) {
+            return false;
+        }
         auto tx_id = boost::endian::load_big_u32(&k[sizeof(uint64_t)]);
         const bool decoding_ok{cbor_decode(v, receipts[tx_id].logs)};
         if (!decoding_ok) {
