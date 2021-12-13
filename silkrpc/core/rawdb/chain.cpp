@@ -287,10 +287,10 @@ asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc
     // Add derived fields to the receipts
     auto transactions = body.transactions;
     if (body.transactions.size() != receipts.size()) {
-        throw std::runtime_error{"invalid receipt count in read_receipts"};
+        throw std::runtime_error{"#transactions and #receipts do not match in read_receipts"};
     }
     if (senders.size() != receipts.size()) {
-        throw std::runtime_error{"invalid sender count in read_receipts"};
+        throw std::runtime_error{"#senders and #receipts do not match in in read_receipts"};
     }
     size_t log_index{0};
     for (size_t i{0}; i < receipts.size(); i++) {

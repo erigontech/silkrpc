@@ -1064,7 +1064,7 @@ TEST_CASE("read_senders") {
     asio::thread_pool pool{1};
     MockDatabaseReader db_reader;
 
-    SECTION("empty senders") { // https://goerli.etherscan.io/block/20000
+    SECTION("zero senders") { // https://goerli.etherscan.io/block/20000
         const auto block_hash{0x96908d141b3c2727342b48696f97b50845240e3ceda0c86ac3dc2e197eb9675b_bytes32};
         const uint64_t block_number{20'000};
         EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
@@ -1111,7 +1111,7 @@ TEST_CASE("read_raw_receipts") {
     asio::thread_pool pool{1};
     MockDatabaseReader db_reader;
 
-    SECTION("empty receipts") {
+    SECTION("zero receipts") {
         const auto block_hash{silkworm::kEmptyHash};
         const uint64_t block_number{0};
         EXPECT_CALL(db_reader, get(db::table::kBlockReceipts, _)).WillOnce(InvokeWithoutArgs(
@@ -1122,7 +1122,7 @@ TEST_CASE("read_raw_receipts") {
         CHECK(result.get().size() == 0);
     }
 
-    SECTION("one receipt") { // // https://goerli.etherscan.io/block/3529600
+    SECTION("one receipt") { // https://goerli.etherscan.io/block/3529600
         const auto block_hash{0x22de8ed177a7b8485d9e26e90dbf523f70cc4a9fa4299bc1daf68791a4386bf3_bytes32};
         const uint64_t block_number{3'529'600};
         EXPECT_CALL(db_reader, get(db::table::kBlockReceipts, _)).WillOnce(InvokeWithoutArgs(
@@ -1222,7 +1222,7 @@ TEST_CASE("read_raw_receipts") {
         CHECK(result.get().size() == Receipts{Receipt{}, Receipt{}}.size());
     }
 
-    SECTION("invalid receipt log") { // // https://goerli.etherscan.io/block/3529600
+    SECTION("invalid receipt log") { // https://goerli.etherscan.io/block/3529600
         const auto block_hash{0x22de8ed177a7b8485d9e26e90dbf523f70cc4a9fa4299bc1daf68791a4386bf3_bytes32};
         const uint64_t block_number{3'529'600};
         EXPECT_CALL(db_reader, get(db::table::kBlockReceipts, _)).WillOnce(InvokeWithoutArgs(
@@ -1263,6 +1263,183 @@ TEST_CASE("read_raw_receipts") {
         const Receipts receipts = result.get();
         CHECK(receipts.size() == 1);
         CHECK(receipts[0].logs.size() == 0);
+    }
+}
+
+TEST_CASE("read_receipts") {
+    asio::thread_pool pool{1};
+    MockDatabaseReader db_reader;
+
+    SECTION("zero receipts w/ zero transactions and zero senders") {
+        const auto block_hash{silkworm::kEmptyHash};
+        const uint64_t block_number{0};
+        EXPECT_CALL(db_reader, get(db::table::kBlockReceipts, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kBody}; }
+        ));
+        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<void> { co_return; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+        auto result = asio::co_spawn(pool, read_receipts(db_reader, block_hash, block_number), asio::use_future);
+        //CHECK(result.get() == Receipts{}); // TODO(canepat): provide operator== and operator!= for Receipt type
+        CHECK(result.get().size() == 0);
+    }
+
+    SECTION("zero receipts w/ non-zero transactions and zero senders") {
+        const auto block_hash{silkworm::kEmptyHash};
+        const uint64_t block_number{0};
+        EXPECT_CALL(db_reader, get(db::table::kBlockReceipts, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kNotEmptyBody}; }
+        ));
+        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(Invoke(
+            [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+                silkworm::Bytes key{};
+                silkworm::Bytes value{*silkworm::from_hex("f8ac8301942e8477359400834c4b40945f62669ba0c6cf41cc162d8157ed71a0b9d6dbaf80b844f2"
+                    "f0387700000000000000000000000000000000000000000000000000000000000158b09f0270fc889c577c1c64db7c819f921d"
+                    "1b6e8c7e5d3f2ff34f162cf4b324cc052ea0d5494ad16e2233197daa9d54cbbcb1ee534cf9f675fa587c264a4ce01e7d3d23a0"
+                    "1421bcf57f4b39eb84a35042dc4675ae167f3e2f50e808252afa23e62e692355")};
+                w(key, value);
+                co_return;
+            }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+        auto result = asio::co_spawn(pool, read_receipts(db_reader, block_hash, block_number), asio::use_future);
+        CHECK_THROWS_MATCHES(result.get(), std::runtime_error, Message("#transactions and #receipts do not match in read_receipts"));
+    }
+
+    SECTION("zero receipts w/ zero transactions and non-zero senders") {
+        const auto block_hash{silkworm::kEmptyHash};
+        const uint64_t block_number{0};
+        EXPECT_CALL(db_reader, get(db::table::kBlockReceipts, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kBody}; }
+        ));
+        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<void> { co_return; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex(
+                    "be188D6641E8b680743A4815dFA0f6208038960F"
+                    "0828D0386C1122E565f07DD28c7d1340eD5B3315"
+                    "70A5C9D346416f901826581d423Cd5B92d44Ff5a"
+                    "Dd74564BC9ff247C23f02cFbA1083c805829D981")};
+            }
+        ));
+        auto result = asio::co_spawn(pool, read_receipts(db_reader, block_hash, block_number), asio::use_future);
+        CHECK_THROWS_MATCHES(result.get(), std::runtime_error, Message("#senders and #receipts do not match in in read_receipts"));
+    }
+
+    SECTION("zero receipts w/ non-zero transactions and non-zero senders") {
+        const auto block_hash{silkworm::kEmptyHash};
+        const uint64_t block_number{0};
+        EXPECT_CALL(db_reader, get(db::table::kBlockReceipts, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kNotEmptyBody}; }
+        ));
+        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(Invoke(
+            [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+                silkworm::Bytes key{};
+                silkworm::Bytes value{*silkworm::from_hex("f8ac8301942e8477359400834c4b40945f62669ba0c6cf41cc162d8157ed71a0b9d6dbaf80b844f2"
+                    "f0387700000000000000000000000000000000000000000000000000000000000158b09f0270fc889c577c1c64db7c819f921d"
+                    "1b6e8c7e5d3f2ff34f162cf4b324cc052ea0d5494ad16e2233197daa9d54cbbcb1ee534cf9f675fa587c264a4ce01e7d3d23a0"
+                    "1421bcf57f4b39eb84a35042dc4675ae167f3e2f50e808252afa23e62e692355")};
+                w(key, value);
+                co_return;
+            }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex(
+                    "be188D6641E8b680743A4815dFA0f6208038960F"
+                    "0828D0386C1122E565f07DD28c7d1340eD5B3315"
+                    "70A5C9D346416f901826581d423Cd5B92d44Ff5a"
+                    "Dd74564BC9ff247C23f02cFbA1083c805829D981")};
+            }
+        ));
+        auto result = asio::co_spawn(pool, read_receipts(db_reader, block_hash, block_number), asio::use_future);
+        CHECK_THROWS_MATCHES(result.get(), std::runtime_error, Message("#transactions and #receipts do not match in read_receipts"));
+    }
+
+    SECTION("one receipt") { // https://goerli.etherscan.io/block/3529600
+        const auto block_hash{silkworm::kEmptyHash};
+        const uint64_t block_number{0};
+        EXPECT_CALL(db_reader, get(db::table::kBlockReceipts, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("818400f6011a0004a0c8")}; }
+        ));
+        EXPECT_CALL(db_reader, walk(db::table::kLogs, _, _, _)).WillOnce(Invoke(
+            [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+                silkworm::Bytes key{*silkworm::from_hex("000000000035db8000000000")};
+                silkworm::Bytes value{*silkworm::from_hex(
+                    "8683547753cfad258efbc52a9a1452e42ffbce9be486cb835820ddf252ad1be2c89b69c2b068fc"
+                    "378daa952ba7f163c4a11628f55a4df523b3ef5820000000000000000000000000ac399a5dfb98"
+                    "48d9e83d92d5f7dda9ba1a00132058200000000000000000000000003dd81545f3149538edcb66"
+                    "91a4ffee1898bd2ef0582000000000000000000000000000000000000000000000000000000000"
+                    "009896808354ac399a5dfb9848d9e83d92d5f7dda9ba1a0013208158209a7def6556351196c74c"
+                    "99e1cc8dcd284e9da181ea854c3e6367cc9fad882a515840000000000000000000000000f13c66"
+                    "6056048634109c1ecca6893da293c70da40000000000000000000000000214281cf15c1a66b519"
+                    "90e2e65e1f7b7c36331883540214281cf15c1a66b51990e2e65e1f7b7c363318815820be2e1f3a"
+                    "6197dfd16fa6830c4870364b618b8b288c21cbcfa4fdb5d7c6a5e45b58409f29225dee002d9875"
+                    "a2251ca89348cb8db9656b7ff556065eddb16c9f0618a100000000000000000000000000000000"
+                    "0000000000000000000000000000000083547753cfad258efbc52a9a1452e42ffbce9be486cb83"
+                    "5820ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef5820000000"
+                    "0000000000000000003dd81545f3149538edcb6691a4ffee1898bd2ef058200000000000000000"
+                    "000000000828d0386c1122e565f07dd28c7d1340ed5b3315582000000000000000000000000000"
+                    "0000000000000000000000000000000098968083543dd81545f3149538edcb6691a4ffee1898bd"
+                    "2ef08358202ed7bcf2ff03098102c7003d7ce2a633e4b49b8198b07de5383cdf4c0ab9228b5820"
+                    "000000000000000000000000f13c666056048634109c1ecca6893da293c70da458200000000000"
+                    "000000000000000214281cf15c1a66b51990e2e65e1f7b7c363318582000000000000000000000"
+                    "0000ac399a5dfb9848d9e83d92d5f7dda9ba1a00132083543dd81545f3149538edcb6691a4ffee"
+                    "1898bd2ef0835820efaf768237c22e140a862d5d375ad5c153479fac3f8bcf8b580a1651fd62c3"
+                    "ef5820000000000000000000000000f13c666056048634109c1ecca6893da293c70da458200000"
+                    "000000000000000000000214281cf15c1a66b51990e2e65e1f7b7c363318f6")};
+                w(key, value);
+                co_return;
+            }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("c68341b57401c0")}; }
+        ));
+        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(Invoke(
+            [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+                silkworm::Bytes key{};
+                silkworm::Bytes value{*silkworm::from_hex(
+                    "f9018e83065a0c85012a05f200830f4240943dd81545f3149538edcb6691a4ffee1898bd2ef080b90124cf10"
+                    "c9690000000000000000000000000214281cf15c1a66b51990e2e65e1f7b7c36331800000000000000000000"
+                    "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+                    "00000000000000989680000000000000000000000000ac399a5dfb9848d9e83d92d5f7dda9ba1a0013200000"
+                    "0000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000"
+                    "00000000000000000000000000000000004182f27f9a01e210e2f3214b036e30229b2ac43e1cf2325bf270ee"
+                    "a067e4f8a58a02154776f0dae16f76d1bfc82b9a9d2022039cfb09598954d05b46fc793e731a1c0000000000"
+                    "00000000000000000000000000000000000000000000000000001ca0a54794fbc1edb3a2a0d3109091984eeb"
+                    "5985b058220fee572147dd99e66b9f34a07dcddb68e3665b6693141c8bd60a12727d29012b7cd6ea452d418c"
+                    "43e84d67dc")};
+                w(key, value);
+                co_return;
+            }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("0828D0386C1122E565f07DD28c7d1340eD5B3315")};
+            }
+        ));
+        auto result = asio::co_spawn(pool, read_receipts(db_reader, block_hash, block_number), asio::use_future);
+        //CHECK(result.get() == Receipts{...}); // TODO(canepat): provide operator== and operator!= for Receipt type
+        CHECK(result.get().size() == 1);
     }
 }
 
