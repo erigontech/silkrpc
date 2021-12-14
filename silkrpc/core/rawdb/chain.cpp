@@ -286,6 +286,7 @@ asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc
 
     // Add derived fields to the receipts
     auto transactions = body.transactions;
+    SILKRPC_DEBUG << "#transactions=" << body.transactions.size() << " #receipts=" << receipts.size() << "\n";
     if (body.transactions.size() != receipts.size()) {
         throw std::runtime_error{"#transactions and #receipts do not match in read_receipts"};
     }
@@ -343,7 +344,7 @@ asio::awaitable<Transactions> read_transactions(const DatabaseReader& reader, ui
 
     silkworm::Bytes txn_id_key(8, '\0');
     boost::endian::store_big_u64(&txn_id_key[0], base_txn_id); // tx_id_key.data()?
-    SILKRPC_DEBUG << "txn_id_key: " << silkworm::to_hex(txn_id_key) << "\n";
+    SILKRPC_DEBUG << "txn_count: " << txn_count << " txn_id_key: " << silkworm::to_hex(txn_id_key) << "\n";
     size_t i{0};
     Walker walker = [&](const silkworm::Bytes&, const silkworm::Bytes& v) {
         SILKRPC_TRACE << "v: " << silkworm::to_hex(v) << "\n";

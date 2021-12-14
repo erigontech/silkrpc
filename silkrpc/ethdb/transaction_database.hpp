@@ -43,7 +43,6 @@ public:
 
     asio::awaitable<void> for_prefix(const std::string& table, const silkworm::ByteView& prefix, core::rawdb::Walker w) const override;
 
-    void close();
 private:
     Transaction& tx_;
 };
