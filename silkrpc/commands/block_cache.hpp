@@ -18,7 +18,7 @@
 #define SILKRPC_COMMANDS_BLOCK_CACHE_HPP_
 
 #include <boost/compute/detail/lru_cache.hpp>
-#include <boost/thread/mutex.hpp>
+#include <mutex>
 
 #include <evmc/evmc.hpp>
 #include <silkworm/chain/config.hpp>
@@ -29,7 +29,6 @@
 #include <silkworm/types/receipt.hpp>
 #include <silkworm/types/transaction.hpp>
 
-
 namespace silkrpc {
 
 class BlockCache {
@@ -38,25 +37,24 @@ public:
 
 public:
     boost::optional <silkworm::BlockWithHash> get(const evmc::bytes32 &key) {
-       if (shared_cache_)
-           mtx_.lock();
-       auto block =  block_cache_.get(key);
-       if (shared_cache_)
-           mtx_.unlock();
-       return block;
+       if (shared_cache_) {
+          const std::lock_guard<std::mutex> lock(access_);
+          return block_cache_.get(key);
+       }
+       return block_cache_.get(key);
     }
 
     void insert(const evmc::bytes32 &key, silkworm::BlockWithHash& block) {
-       if (shared_cache_)
-          mtx_.lock();
+       if (shared_cache_) {
+          const std::lock_guard<std::mutex> lock(access_);
+          return block_cache_.insert(key, block);
+       }
        block_cache_.insert(key, block);
-       if (shared_cache_)
-          mtx_.unlock();
     }
 
 private:
+    mutable std::mutex access_;
     boost::compute::detail::lru_cache<evmc::bytes32, silkworm::BlockWithHash> block_cache_;
-    boost::mutex mtx_;
     bool shared_cache_;
 };
 
