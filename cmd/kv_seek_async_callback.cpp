@@ -118,56 +118,65 @@ int main(int argc, char* argv[]) {
 
     GrpcKvCallbackReactor reactor{*stub, std::chrono::milliseconds{timeout}};
 
-    auto open_message = remote::Cursor{};
-    open_message.set_op(remote::Op::OPEN);
-    open_message.set_bucketname(table_name);
-    reactor.write_start(&open_message, [&](bool ok) {
+    std::cout << "KV Tx START\n";
+    reactor.read_start([&](bool ok, remote::Pair txid_pair) {
         if (!ok) {
-            std::cout << "error writing OPEN gRPC" << std::flush;
+            std::cout << "KV Tx error reading TXID" << std::flush;
             return;
         }
-        std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n";
-        reactor.read_start([&](bool ok, remote::Pair open_pair) {
+        const auto tx_id = txid_pair.cursorid();
+        std::cout << "KV Tx START <- txid: " << tx_id << "\n";
+        auto open_message = remote::Cursor{};
+        open_message.set_op(remote::Op::OPEN);
+        open_message.set_bucketname(table_name);
+        reactor.write_start(&open_message, [&](bool ok) {
             if (!ok) {
-                std::cout << "error reading OPEN gRPC" << std::flush;
+                std::cout << "error writing OPEN gRPC" << std::flush;
                 return;
             }
-            const auto cursor_id = open_pair.cursorid();
-            std::cout << "KV Tx OPEN <- cursor: " << cursor_id << "\n";
-            auto seek_message = remote::Cursor{};
-            seek_message.set_op(remote::Op::SEEK);
-            seek_message.set_cursor(cursor_id);
-            seek_message.set_k(seek_key_bytes.c_str(), seek_key_bytes.length());
-            reactor.write_start(&seek_message, [&, cursor_id](bool ok) {
+            std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n";
+            reactor.read_start([&](bool ok, remote::Pair open_pair) {
                 if (!ok) {
-                    std::cout << "error writing SEEK gRPC" << std::flush;
+                    std::cout << "error reading OPEN gRPC" << std::flush;
                     return;
                 }
-                std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key_bytes << "\n";
-                reactor.read_start([&, cursor_id](bool ok, remote::Pair seek_pair) {
+                const auto cursor_id = open_pair.cursorid();
+                std::cout << "KV Tx OPEN <- cursor: " << cursor_id << "\n";
+                auto seek_message = remote::Cursor{};
+                seek_message.set_op(remote::Op::SEEK);
+                seek_message.set_cursor(cursor_id);
+                seek_message.set_k(seek_key_bytes.c_str(), seek_key_bytes.length());
+                reactor.write_start(&seek_message, [&, cursor_id](bool ok) {
                     if (!ok) {
-                        std::cout << "error reading SEEK gRPC" << std::flush;
+                        std::cout << "error writing SEEK gRPC" << std::flush;
                         return;
                     }
-                    const auto& key_bytes = silkworm::byte_view_of_string(seek_pair.k());
-                    const auto& value_bytes = silkworm::byte_view_of_string(seek_pair.v());
-                    std::cout << "KV Tx SEEK <- key: " << key_bytes << " value: " << value_bytes << std::endl;
-                    auto close_message = remote::Cursor{};
-                    close_message.set_op(remote::Op::CLOSE);
-                    close_message.set_cursor(cursor_id);
-                    reactor.write_start(&close_message, [&, cursor_id](bool ok) {
+                    std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key_bytes << "\n";
+                    reactor.read_start([&, cursor_id](bool ok, remote::Pair seek_pair) {
                         if (!ok) {
-                            std::cout << "error writing CLOSE gRPC" << std::flush;
+                            std::cout << "error reading SEEK gRPC" << std::flush;
                             return;
                         }
-                        std::cout << "KV Tx CLOSE -> cursor: " << cursor_id << "\n";
-                        reactor.read_start([&](bool ok, remote::Pair close_pair) {
+                        const auto& key_bytes = silkworm::byte_view_of_string(seek_pair.k());
+                        const auto& value_bytes = silkworm::byte_view_of_string(seek_pair.v());
+                        std::cout << "KV Tx SEEK <- key: " << key_bytes << " value: " << value_bytes << std::endl;
+                        auto close_message = remote::Cursor{};
+                        close_message.set_op(remote::Op::CLOSE);
+                        close_message.set_cursor(cursor_id);
+                        reactor.write_start(&close_message, [&, cursor_id](bool ok) {
                             if (!ok) {
-                                std::cout << "error reading CLOSE gRPC" << std::flush;
+                                std::cout << "error writing CLOSE gRPC" << std::flush;
                                 return;
                             }
-                            std::cout << "KV Tx CLOSE <- cursor: " << close_pair.cursorid() << "\n";
-                            context.stop();
+                            std::cout << "KV Tx CLOSE -> cursor: " << cursor_id << "\n";
+                            reactor.read_start([&](bool ok, remote::Pair close_pair) {
+                                if (!ok) {
+                                    std::cout << "error reading CLOSE gRPC" << std::flush;
+                                    return;
+                                }
+                                std::cout << "KV Tx CLOSE <- cursor: " << close_pair.cursorid() << "\n";
+                                context.stop();
+                            });
                         });
                     });
                 });

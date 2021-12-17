@@ -87,12 +87,23 @@ int main(int argc, char* argv[]) {
     void* CLOSE_TAG  = reinterpret_cast<void *>(3);
     void* FINISH_TAG = reinterpret_cast<void *>(4);
 
-    // 1) StartCall + Next
+    // 1) StartCall
+    std::cout << "KV Tx START\n";
+    // 1.1) StartCall + Next
     reader_writer->StartCall(START_TAG);
     bool has_event = queue.Next(&got_tag, &ok);
     if (!has_event || got_tag != START_TAG) {
         return -1;
     }
+    // 1.2) Read + Next
+    auto txid_pair = remote::Pair{};
+    reader_writer->Read(&txid_pair, START_TAG);
+    has_event = queue.Next(&got_tag, &ok);
+    if (!has_event || got_tag != START_TAG) {
+        return -1;
+    }
+    const auto tx_id = txid_pair.cursorid();
+    std::cout << "KV Tx START <- txid: " << tx_id << "\n";
 
     // 2) Open cursor
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n";
