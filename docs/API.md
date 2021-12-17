@@ -53,7 +53,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_sendRawTransaction                     | Yes          | remote only                                |
 | eth_sendTransaction                        | -            | not yet implemented                        |
 | eth_sign                                   | No           | deprecated                                 |
-| eth_signTransaction                        | -            | not yet implemented                        |
+| eth_signTransaction                        | -            | deprecated                                 |
 | eth_signTypedData                          | -            | ????                                       |
 |                                            |              |                                            |
 | eth_getProof                               | -            | not yet implemented                        |

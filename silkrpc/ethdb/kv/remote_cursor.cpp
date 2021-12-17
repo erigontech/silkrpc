@@ -56,7 +56,7 @@ asio::awaitable<KeyValue> RemoteCursor::next() {
     auto next_pair = co_await kv_awaitable_.async_next(cursor_id_, asio::use_awaitable);
     const auto k = silkworm::bytes_of_string(next_pair.k());
     const auto v = silkworm::bytes_of_string(next_pair.v());
-    SILKRPC_DEBUG << "RemoteCursor::next c=" << cursor_id_ << " t=" << clock_time::since(start_time) << "\n";
+    SILKRPC_DEBUG << "RemoteCursor::next k: " << k << " v: " << v << " c=" << cursor_id_ << " t=" << clock_time::since(start_time) << "\n";
     co_return KeyValue{k, v};
 }
 

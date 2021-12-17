@@ -29,8 +29,16 @@ Building SilkRPC daemon requires
 * Build system: [CMake](http://cmake.org) >= 3.18.4
 * GNU Multiple Precision arithmetic library: [GMP](http://gmplib.org) >= 6.2.0
     * `sudo apt-get install libgmp3-dev` or `brew install gmp`
-* Google TCMalloc library: [gperftools](https://github.com/gperftools/gperftools) >= 2.7.1
-    * `sudo apt-get install google-perftools libgoogle-perftools-dev`
+* Microsoft mimalloc library: [mimalloc](https://github.com/microsoft/mimalloc) >= 1.7.0
+    ```
+    git clone https://github.com/microsoft/mimalloc
+    cd mimalloc
+    mkdir -p out/release
+    cd out/release
+    cmake ../..
+    make
+    sudo make install
+    ```
 * [Python 3.x](https://www.python.org/downloads/) interpreter >= 3.8.2
     * `sudo apt-get install python3`
 * some additional Python modules
