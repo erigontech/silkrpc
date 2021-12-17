@@ -74,12 +74,24 @@ int main(int argc, char* argv[]) {
     const auto channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
     const auto stub = remote::KV::NewStub(channel);
     const auto reader_writer = stub->Tx(&context);
+    std::cout << "KV Tx START\n";
+
+    // Read TX identifier
+    auto txid_pair = remote::Pair{};
+    auto success = reader_writer->Read(&txid_pair);
+    if (!success) {
+        std::cerr << "KV stream closed receiving TXID\n";
+        std::cout << "KV Tx STATUS: " << reader_writer->Finish() << "\n";
+        return -1;
+    }
+    const auto tx_id = txid_pair.cursorid();
+    std::cout << "KV Tx START <- txid: " << tx_id << "\n";
 
     // Open cursor
     auto open_message = remote::Cursor{};
     open_message.set_op(remote::Op::OPEN);
     open_message.set_bucketname(table_name);
-    auto success = reader_writer->Write(open_message);
+    success = reader_writer->Write(open_message);
     if (!success) {
         std::cerr << "KV stream closed sending OPEN operation req\n";
         std::cout << "KV Tx STATUS: " << reader_writer->Finish() << "\n";
