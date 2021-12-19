@@ -1288,21 +1288,17 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_proof(const nlohmann::json&
 
 // https://eth.wiki/json-rpc/API#eth_mining
 asio::awaitable<void> EthereumRpcApi::handle_eth_mining(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
-
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
-
-        reply = make_json_content(request["id"], to_quantity(0));
+        const auto mining_result = co_await miner_->get_mining();
+        reply = make_json_content(request["id"], mining_result.enabled && mining_result.running);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
+        reply = make_json_error(request["id"], -32000, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
 
-    co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
 }
 
@@ -1324,81 +1320,98 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_coinbase(const nlohmann::json& 
 
 // https://eth.wiki/json-rpc/API#eth_hashrate
 asio::awaitable<void> EthereumRpcApi::handle_eth_hashrate(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
-
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
-
-        reply = make_json_content(request["id"], to_quantity(0));
+        const auto hash_rate = co_await miner_->get_hash_rate();
+        reply = make_json_content(request["id"], to_quantity(hash_rate));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
+        reply = make_json_error(request["id"], -32000, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
 
-    co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
 }
 
 // https://eth.wiki/json-rpc/API#eth_submithashrate
 asio::awaitable<void> EthereumRpcApi::handle_eth_submit_hashrate(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
+    const auto params = request["params"];
+    if (params.size() != 2) {
+        const auto error_msg = "invalid eth_submitHashrate params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
 
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
-
-        reply = make_json_content(request["id"], to_quantity(0));
+        const auto hash_rate = params[0].get<intx::uint256>();
+        const auto id = params[1].get<evmc::bytes32>();
+        const auto success = co_await miner_->submit_hash_rate(hash_rate, id);
+        reply = make_json_content(request["id"], success);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
+        reply = make_json_error(request["id"], -32000, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
 
-    co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
 }
 
 // https://eth.wiki/json-rpc/API#eth_getwork
 asio::awaitable<void> EthereumRpcApi::handle_eth_get_work(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
-
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
-
-        reply = make_json_content(request["id"], to_quantity(0));
+        const auto work = co_await miner_->get_work();
+        const std::vector<std::string> current_work{
+            silkworm::to_hex(work.header_hash),
+            silkworm::to_hex(work.seed_hash),
+            silkworm::to_hex(work.target),
+            silkworm::to_hex(work.block_number)
+        };
+        reply = make_json_content(request["id"], current_work);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
+        reply = make_json_error(request["id"], -32000, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
 
-    co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
 }
 
 // https://eth.wiki/json-rpc/API#eth_submitwork
 asio::awaitable<void> EthereumRpcApi::handle_eth_submit_work(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
+    const auto params = request["params"];
+    if (params.size() != 3) {
+        const auto error_msg = "invalid eth_submitWork params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
 
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
-
-        reply = make_json_content(request["id"], to_quantity(0));
+        const auto block_nonce = silkworm::from_hex(params[0].get<std::string>());
+        if (!block_nonce.has_value()) {
+            const auto error_msg = "invalid eth_submitWork params: " + params.dump();
+            SILKRPC_ERROR << error_msg << "\n";
+            reply = make_json_error(request["id"], 100, error_msg);
+            co_return;
+        }
+        const auto pow_hash = params[1].get<evmc::bytes32>();
+        const auto digest = params[2].get<evmc::bytes32>();
+        const auto success = co_await miner_->submit_work(block_nonce.value(), pow_hash, digest);
+        reply = make_json_content(request["id"], success);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
+        reply = make_json_error(request["id"], -32000, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
 
-    co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
 }
 

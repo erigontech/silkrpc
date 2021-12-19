@@ -30,6 +30,7 @@
 #include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/grpc/completion_runner.hpp>
+#include <silkrpc/txpool/miner.hpp>
 #include <silkrpc/txpool/transaction_pool.hpp>
 
 namespace silkrpc {
@@ -40,6 +41,7 @@ struct Context {
     std::unique_ptr<CompletionRunner> grpc_runner;
     std::unique_ptr<ethdb::Database> database;
     std::unique_ptr<ethbackend::BackEnd> backend;
+    std::unique_ptr<txpool::Miner> miner;
     std::unique_ptr<txpool::TransactionPool> tx_pool;
 };
 

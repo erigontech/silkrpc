@@ -1323,6 +1323,93 @@
     {
         "request": {
             "jsonrpc":"2.0",
+            "method":"eth_mining",
+            "params":[],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "error":{
+                "code":-32000,
+                "message":"not supported, consensus engine is not ethash"
+            }
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_hashrate",
+            "params":[],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "error":{
+                "code":-32000,
+                "message":"method HashRate not implemented"
+            }
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_submitHashrate",
+            "params":[
+                "0x0000000000000000000000000000000000000000000000000000000000500000",
+                "0x59daa26581d0acd1fce254fb7e85952f4c09d0915afd33d3886cd914bc7d283c"
+            ],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "error":{
+                "code":-32000,
+                "message":"not supported, consensus engine is not ethash"
+            }
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_getWork",
+            "params":[],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "error":{
+                "code":-32000,
+                "message":"not supported, consensus engine is not ethash"
+            }
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_submitWork",
+            "params":[
+                "0x0000000000000001",
+                "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+                "0xD1FE5700000000000000000000000000D1FE5700000000000000000000000000"
+            ],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "error":{
+                "code":-32000,
+                "message":"not supported, consensus engine is not ethash"
+            }
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
             "method":"debug_storageRangeAt",
             "params":[
                 "0x342f2e967a85f511e958230d307be93cb92432fff33b81b263d7952a151e9c66", 

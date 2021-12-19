@@ -48,6 +48,12 @@ void from_json(const nlohmann::json& json, bytes32& b32);
 
 } // namespace evmc
 
+namespace intx {
+
+void from_json(const nlohmann::json& json, uint256& ui256);
+
+} // namespace intx
+
 namespace silkworm {
 
 void to_json(nlohmann::json& json, const BlockHeader& ommer);

@@ -46,7 +46,7 @@ namespace silkrpc::commands {
 class EthereumRpcApi {
 public:
     explicit EthereumRpcApi(Context& context, asio::thread_pool& workers)
-    : context_(context), database_(context.database), backend_(context.backend), workers_{workers}, tx_pool_{context.tx_pool} {}
+    : context_(context), database_(context.database), backend_(context.backend), miner_{context.miner}, tx_pool_{context.tx_pool}, workers_{workers} {}
     virtual ~EthereumRpcApi() {}
 
     EthereumRpcApi(const EthereumRpcApi&) = delete;
@@ -101,6 +101,7 @@ protected:
     Context& context_;
     std::unique_ptr<ethdb::Database>& database_;
     std::unique_ptr<ethbackend::BackEnd>& backend_;
+    std::unique_ptr<txpool::Miner>& miner_;
     std::unique_ptr<txpool::TransactionPool>& tx_pool_;
     asio::thread_pool& workers_;
 
