@@ -45,6 +45,6 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const silkrpc::Conte
    co_return block_with_hash;
 }
 
-} // namespace silkrpc::commands::api
+} // namespace silkrpc::core
 
 
