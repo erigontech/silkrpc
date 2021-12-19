@@ -12,7 +12,7 @@ coverage:
         threshold: 0.001 # allow the coverage to drop by x% still posting a success status
     patch:
       default:
-        target: 95% # new contributions should have coverage at least equal to target
+        target: 80% # new contributions should have coverage at least equal to target
 
 ignore:
   - "**/*_test.cpp"

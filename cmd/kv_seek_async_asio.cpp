@@ -41,7 +41,7 @@ int kv_seek_async(std::string table_name, std::string target, const silkworm::By
     const auto stub = remote::KV::NewStub(channel);
 
     // Prepare RPC call context and stream
-    context.set_initial_metadata_corked(true); // Initial metadata coalasced with first write message
+    context.set_initial_metadata_corked(false); // Initial metadata NOT coalasced with first write message (=default)
     context.set_deadline(std::chrono::system_clock::system_clock::now() + std::chrono::milliseconds{timeout});
     const auto reader_writer = stub->PrepareAsyncTx(&context, &queue);
 
@@ -51,8 +51,23 @@ int kv_seek_async(std::string table_name, std::string target, const silkworm::By
     void* CLOSE_TAG  = reinterpret_cast<void *>(3);
     void* FINISH_TAG = reinterpret_cast<void *>(4);
 
-    // 1) StartCall (+ Next if initial metadata not coalesced)
+    // 1) StartCall
+    std::cout << "KV Tx START\n";
+    // 1.1) StartCall (+ Next if initial metadata not coalesced)
     reader_writer->StartCall(START_TAG);
+    bool has_event = queue.Next(&got_tag, &ok);
+    if (!has_event || got_tag != START_TAG) {
+        return -1;
+    }
+    // 1.2) Read + Next
+    auto txid_pair = remote::Pair{};
+    reader_writer->Read(&txid_pair, START_TAG);
+    has_event = queue.Next(&got_tag, &ok);
+    if (!has_event || got_tag != START_TAG) {
+        return -1;
+    }
+    const auto tx_id = txid_pair.cursorid();
+    std::cout << "KV Tx START <- txid: " << tx_id << "\n";
 
     // 2) Open cursor
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n";
@@ -61,7 +76,7 @@ int kv_seek_async(std::string table_name, std::string target, const silkworm::By
     open_message.set_op(remote::Op::OPEN);
     open_message.set_bucketname(table_name);
     reader_writer->Write(open_message, OPEN_TAG);
-    bool has_event = queue.Next(&got_tag, &ok);
+    has_event = queue.Next(&got_tag, &ok);
     if (!has_event || got_tag != OPEN_TAG) {
         return -1;
     }
