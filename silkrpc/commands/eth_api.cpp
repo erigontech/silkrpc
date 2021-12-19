@@ -35,6 +35,7 @@
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/commands/eth_util_api.hpp>
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/evm_executor.hpp>
 #include <silkrpc/core/gas_price_oracle.hpp>
@@ -51,7 +52,6 @@
 #include <silkrpc/types/call.hpp>
 #include <silkrpc/types/filter.hpp>
 #include <silkrpc/types/transaction.hpp>
-#include <silkrpc/commands/eth_util_api.hpp>
 
 namespace silkrpc::commands {
 
