@@ -15,8 +15,8 @@
 */
 
 
-#ifndef SILKRPC_CORE_ETH_UTIL_API_HPP_
-#define SILKRPC_CORE_ETH_UTIL_API_HPP_
+#ifndef SILKRPC_CORE_CACHED_CHAIN_HPP_
+#define SILKRPC_CORE_CACHED_CHAIN_HPP_
 
 #include <silkrpc/config.hpp>
 
@@ -31,5 +31,5 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const Context &con
 asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const Context &context, const rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash);
 
 } // namespace silkrpc::core
-#endif // SILKRPC_CORE_ETH_UTIL_API_HPP_
+#endif // SILKRPC_CORE_CACHED_CHAIN_HPP_
 
