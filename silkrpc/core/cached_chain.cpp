@@ -24,8 +24,8 @@
 
 namespace silkrpc::core  {
 
-asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const Context &context, const silkrpc::core::rawdb::DatabaseReader& reader, uint64_t block_number) {
-   const auto block_hash = co_await silkrpc::core::rawdb::read_canonical_block_hash(reader, block_number);
+asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const Context &context, const rawdb::DatabaseReader& reader, uint64_t block_number) {
+   const auto block_hash = co_await rawdb::read_canonical_block_hash(reader, block_number);
    auto option_block = context.block_cache->get(block_hash);
    if (option_block) {
       co_return *option_block;
@@ -35,7 +35,7 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const Context &con
    co_return block_with_hash;
 }
 
-asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const Context &context, const silkrpc::core::rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash) {
+asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const Context &context, const rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash) {
    auto option_block = context.block_cache->get(block_hash);
    if (option_block) {
       co_return *option_block;
