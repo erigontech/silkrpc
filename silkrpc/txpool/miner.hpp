@@ -19,6 +19,7 @@
 
 #include <ostream>
 #include <memory>
+#include <utility>
 
 #include <silkrpc/config.hpp>
 

@@ -16,8 +16,6 @@
 
 #include "miner.hpp"
 
-#include "miner.hpp"
-
 #include <functional>
 #include <memory>
 #include <thread>
