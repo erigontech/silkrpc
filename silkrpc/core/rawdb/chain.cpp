@@ -19,6 +19,7 @@
 #include <iterator>
 #include <iostream>
 #include <iomanip>
+#include <string>
 #include <utility>
 
 #include <boost/endian/conversion.hpp>

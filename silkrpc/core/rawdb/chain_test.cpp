@@ -137,8 +137,7 @@ void check_expected_transaction(const Transaction& transaction) {
     CHECK(transaction.block_base_fee_per_gas == std::nullopt);
     CHECK(transaction.chain_id == 5);
     CHECK(transaction.data == *silkworm::from_hex(
-        "f2f0387700000000000000000000000000000000000000000000000000000000000158b09f0270fc889c577c1c64db7c819f921d1b6e8c7e5d3f2ff34f162cf4b324cc05"
-    ));
+        "f2f0387700000000000000000000000000000000000000000000000000000000000158b09f0270fc889c577c1c64db7c819f921d1b6e8c7e5d3f2ff34f162cf4b324cc05"));
     CHECK(transaction.from == std::nullopt);
     //CHECK(transaction.nonce == 103470);
     CHECK(transaction.max_priority_fee_per_gas == 0x77359400);
@@ -147,7 +146,6 @@ void check_expected_transaction(const Transaction& transaction) {
     CHECK(transaction.gas_limit == 5000000);
     CHECK(transaction.transaction_index == 0);
     CHECK(transaction.type == Transaction::Type::kLegacy);
-    
 }
 
 TEST_CASE("read_header_number") {
