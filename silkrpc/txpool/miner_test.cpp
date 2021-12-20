@@ -156,61 +156,65 @@ public:
     }
 };
 
-template<auto method, typename T>
-auto make_method_proxy(T&& obj) {
-    return [&obj](auto&&... args) {
-        return (std::forward<T>(obj).*method)(std::forward<decltype(args)>(args)...);
-    };
-}
-
-template<auto method, typename R, typename ...Args>
-asio::awaitable<R> test_comethod(::txpool::Mining::Service* service, Args... args) {
-    std::ostringstream server_address;
-    server_address << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
-    grpc::ServerBuilder builder;
-    builder.AddListeningPort(server_address.str(), grpc::InsecureServerCredentials());
-    builder.RegisterService(service);
-    const auto server_ptr = builder.BuildAndStart();
-    asio::io_context io_context;
-    asio::io_context::work work{io_context};
-    grpc::CompletionQueue queue;
-    CompletionRunner completion_runner{queue, io_context};
-    auto io_context_thread = std::thread([&]() { io_context.run(); });
-    auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
-    const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
-    txpool::Miner miner{io_context, channel, &queue};
-    auto method_proxy{make_method_proxy<method, txpool::Miner>(std::move(miner))};
-    try {
-        const auto result = co_await method_proxy(args...);
-        server_ptr->Shutdown();
-        io_context.stop();
-        completion_runner.stop();
-        if (io_context_thread.joinable()) {
-            io_context_thread.join();
-        }
-        if (completion_runner_thread.joinable()) {
-            completion_runner_thread.join();
-        }
-        co_return result;
-    } catch (...) {
-        server_ptr->Shutdown();
-        io_context.stop();
-        completion_runner.stop();
-        if (io_context_thread.joinable()) {
-            io_context_thread.join();
-        }
-        if (completion_runner_thread.joinable()) {
-            completion_runner_thread.join();
-        }
-        throw;
+class ClientServerTestBox {
+public:
+    explicit ClientServerTestBox(grpc::Service* service) : completion_runner_{queue_, io_context_} {
+        server_address_ << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
+        grpc::ServerBuilder builder;
+        builder.AddListeningPort(server_address_.str(), grpc::InsecureServerCredentials());
+        builder.RegisterService(service);
+        server_ = builder.BuildAndStart();
+        io_context_thread_ = std::thread([&]() { io_context_.run(); });
+        completion_runner_thread_ = std::thread([&]() { completion_runner_.run(); });
     }
+
+    template<auto method, typename T>
+    auto make_method_proxy(T&& obj) {
+        return [&obj](auto&&... args) {
+            return (std::forward<T>(obj).*method)(std::forward<decltype(args)>(args)...);
+        };
+    }
+
+    ~ClientServerTestBox() {
+        server_->Shutdown();
+        io_context_.stop();
+        completion_runner_.stop();
+        if (io_context_thread_.joinable()) {
+            io_context_thread_.join();
+        }
+        if (completion_runner_thread_.joinable()) {
+            completion_runner_thread_.join();
+        }
+    }
+
+    asio::io_context& io_context() { return io_context_; }
+    std::shared_ptr<grpc::Channel> channel() { return grpc::CreateChannel(server_address_.str(), grpc::InsecureChannelCredentials()); }
+    grpc::CompletionQueue* queue() { return &queue_; }
+
+private:
+    asio::io_context io_context_;
+    asio::io_context::work work_{io_context_};
+    grpc::CompletionQueue queue_;
+    CompletionRunner completion_runner_;
+    std::ostringstream server_address_;
+    std::unique_ptr<grpc::Server> server_;
+    std::thread io_context_thread_;
+    std::thread completion_runner_thread_;
+};
+
+template<typename T, auto method, typename R, typename ...Args>
+asio::awaitable<R> test_comethod(::txpool::Mining::Service* service, Args... args) {
+    ClientServerTestBox test_box{service};
+    T target{test_box.io_context(), test_box.channel(), test_box.queue()};
+    auto method_proxy{test_box.make_method_proxy<method, T>(std::move(target))};
+    co_return co_await method_proxy(args...);
 }
 
-auto test_get_work = test_comethod<&txpool::Miner::get_work, txpool::WorkResult>;
-auto test_submit_work = test_comethod<&txpool::Miner::submit_work, bool, silkworm::Bytes, evmc::bytes32, evmc::bytes32>;
-auto test_get_hashrate = test_comethod<&txpool::Miner::get_hash_rate, uint64_t>;
-auto test_submit_hashrate = test_comethod<&txpool::Miner::submit_hash_rate, bool, intx::uint256, evmc::bytes32>;
-auto test_get_mining = test_comethod<&txpool::Miner::get_mining, txpool::MiningResult>;
+auto test_get_work = test_comethod<txpool::Miner, &txpool::Miner::get_work, txpool::WorkResult>;
+auto test_submit_work = test_comethod<txpool::Miner, &txpool::Miner::submit_work, bool, silkworm::Bytes, evmc::bytes32, evmc::bytes32>;
+auto test_get_hashrate = test_comethod<txpool::Miner, &txpool::Miner::get_hash_rate, uint64_t>;
+auto test_submit_hashrate = test_comethod<txpool::Miner, &txpool::Miner::submit_hash_rate, bool, intx::uint256, evmc::bytes32>;
+auto test_get_mining = test_comethod<txpool::Miner, &txpool::Miner::get_mining, txpool::MiningResult>;
 
 TEST_CASE("Miner::get_work", "[silkrpc][txpool][miner]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
