@@ -19,7 +19,7 @@
 
 
 #include <silkrpc/context_pool.hpp>
-#include <silkrpc/core/eth_util_api.hpp>
+#include <silkrpc/core/cached_chain.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 
 namespace silkrpc::core  {

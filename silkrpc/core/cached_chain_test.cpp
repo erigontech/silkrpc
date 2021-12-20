@@ -38,7 +38,7 @@
 #include <silkrpc/types/block.hpp>
 #include <silkrpc/types/chain_config.hpp>
 
-#include "eth_util_api.hpp"
+#include "cached_chain.hpp"
 
 
 #include <catch2/catch.hpp>
