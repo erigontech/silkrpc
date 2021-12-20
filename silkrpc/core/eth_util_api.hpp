@@ -22,25 +22,13 @@
 
 #include <asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
-#include <intx/intx.hpp>
-#include <nlohmann/json.hpp>
-
-#include <silkworm/chain/config.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/common/base.hpp>
-#include <silkworm/types/block.hpp>
-#include <silkworm/types/transaction.hpp>
 
 #include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/types/block.hpp>
-#include <silkrpc/types/chain_config.hpp>
-#include <silkrpc/types/receipt.hpp>
-#include <silkrpc/types/log.hpp>
 
 namespace silkrpc::core  {
 
-asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const silkrpc::Context &context, const silkrpc::core::rawdb::DatabaseReader& reader, uint64_t block_number);
-asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const silkrpc::Context &context, const silkrpc::core::rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash);
+asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const Context &context, const rawdb::DatabaseReader& reader, uint64_t block_number);
+asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const Context &context, const rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash);
 
 } // namespace silkrpc::core
 #endif // SILKRPC_CORE_ETH_UTIL_API_HPP_

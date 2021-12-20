@@ -24,23 +24,23 @@
 
 namespace silkrpc::core  {
 
-asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const silkrpc::Context &context, const silkrpc::core::rawdb::DatabaseReader& reader, uint64_t block_number) {
+asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const Context &context, const silkrpc::core::rawdb::DatabaseReader& reader, uint64_t block_number) {
    const auto block_hash = co_await silkrpc::core::rawdb::read_canonical_block_hash(reader, block_number);
    auto option_block = context.block_cache->get(block_hash);
    if (option_block) {
       co_return *option_block;
    }
-   auto block_with_hash = co_await silkrpc::core::rawdb::read_block(reader, block_hash, block_number);
+   auto block_with_hash = co_await rawdb::read_block(reader, block_hash, block_number);
    context.block_cache->insert(block_hash, block_with_hash);
    co_return block_with_hash;
 }
 
-asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const silkrpc::Context &context, const silkrpc::core::rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash) {
+asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const Context &context, const silkrpc::core::rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash) {
    auto option_block = context.block_cache->get(block_hash);
    if (option_block) {
       co_return *option_block;
    }
-   auto block_with_hash = co_await core::rawdb::read_block_by_hash(reader, block_hash);
+   auto block_with_hash = co_await rawdb::read_block_by_hash(reader, block_hash);
    context.block_cache->insert(block_hash, block_with_hash);
    co_return block_with_hash;
 }
