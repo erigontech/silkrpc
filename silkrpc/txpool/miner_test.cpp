@@ -85,7 +85,7 @@ TEST_CASE("create GetWorkClient", "[silkrpc][txpool][miner]") {
         grpc::Status status_;
     };
 
-    SECTION("start async GetWork call, get status OK and matching work") {
+    SECTION("start async GetWork call, get status OK and non-empty work") {
         std::unique_ptr<::txpool::Mining::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockMiningStub>()};
         grpc::CompletionQueue queue;
         txpool::GetWorkClient client{stub, &queue};
@@ -105,38 +105,35 @@ TEST_CASE("create GetWorkClient", "[silkrpc][txpool][miner]") {
         client.completed(true);
     }
 
-    /*SECTION("start async Add call, get status OK and import failure") {
-        std::unique_ptr<::txpool::Txpool::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockTxpoolStub>()};
+    SECTION("start async GetWork call, get status OK and empty work") {
+        std::unique_ptr<::txpool::Mining::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockMiningStub>()};
         grpc::CompletionQueue queue;
-        txpool::AddClient client{stub, &queue};
+        txpool::GetWorkClient client{stub, &queue};
 
-        ::txpool::AddReply reply;
-        reply.add_imported(::txpool::ImportResult::INVALID);
-        reply.add_errors("empty txn is invalid");
-        MockClientAsyncAddReader mock_reader{reply, ::grpc::Status::OK};
-        EXPECT_CALL(*dynamic_cast<::txpool::FixIssue24351_MockTxpoolStub*>(stub.get()), PrepareAsyncAddRaw(_, _, _)).WillOnce(Return(&mock_reader));
+        MockClientAsyncGetWorkReader mock_reader{::txpool::GetWorkReply{}, ::grpc::Status::OK};
+        EXPECT_CALL(*dynamic_cast<::txpool::FixIssue24351_MockMiningStub*>(stub.get()), PrepareAsyncGetWorkRaw(_, _, _)).WillOnce(Return(&mock_reader));
 
-        MockFunction<void(::grpc::Status, ::txpool::AddReply)> mock_callback;
-        EXPECT_CALL(mock_callback, Call(grpc::Status::OK, reply));
+        MockFunction<void(::grpc::Status, ::txpool::GetWorkReply)> mock_callback;
+        EXPECT_CALL(mock_callback, Call(grpc::Status::OK, ::txpool::GetWorkReply{}));
 
-        client.async_call(::txpool::AddRequest{}, mock_callback.AsStdFunction());
+        client.async_call(::txpool::GetWorkRequest{}, mock_callback.AsStdFunction());
         client.completed(true);
     }
 
     SECTION("start async Add call and get status KO") {
-        std::unique_ptr<::txpool::Txpool::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockTxpoolStub>()};
+        std::unique_ptr<::txpool::Mining::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockMiningStub>()};
         grpc::CompletionQueue queue;
-        txpool::AddClient client{stub, &queue};
+        txpool::GetWorkClient client{stub, &queue};
 
-        MockClientAsyncAddReader mock_reader{::txpool::AddReply{}, ::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"}};
-        EXPECT_CALL(*dynamic_cast<::txpool::FixIssue24351_MockTxpoolStub*>(stub.get()), PrepareAsyncAddRaw(_, _, _)).WillOnce(Return(&mock_reader));
+        MockClientAsyncGetWorkReader mock_reader{::txpool::GetWorkReply{}, ::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"}};
+        EXPECT_CALL(*dynamic_cast<::txpool::FixIssue24351_MockMiningStub*>(stub.get()), PrepareAsyncGetWorkRaw(_, _, _)).WillOnce(Return(&mock_reader));
 
-        MockFunction<void(::grpc::Status, ::txpool::AddReply)> mock_callback;
-        EXPECT_CALL(mock_callback, Call(::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"}, ::txpool::AddReply{}));
+        MockFunction<void(::grpc::Status, ::txpool::GetWorkReply)> mock_callback;
+        EXPECT_CALL(mock_callback, Call(::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"}, ::txpool::GetWorkReply{}));
 
-        client.async_call(::txpool::AddRequest{}, mock_callback.AsStdFunction());
+        client.async_call(::txpool::GetWorkRequest{}, mock_callback.AsStdFunction());
         client.completed(false);
-    }*/
+    }
 }
 
 } // namespace silkrpc::txpool
