@@ -18,6 +18,7 @@
 
 #include <functional>
 #include <memory>
+#include <system_error>
 #include <thread>
 #include <type_traits>
 #include <utility>
@@ -120,7 +121,7 @@ TEST_CASE("create GetWorkClient", "[silkrpc][txpool][miner]") {
         client.completed(true);
     }
 
-    SECTION("start async Add call and get status KO") {
+    SECTION("start async GetWork call and get status KO") {
         std::unique_ptr<::txpool::Mining::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockMiningStub>()};
         grpc::CompletionQueue queue;
         txpool::GetWorkClient client{stub, &queue};
@@ -133,6 +134,133 @@ TEST_CASE("create GetWorkClient", "[silkrpc][txpool][miner]") {
 
         client.async_call(::txpool::GetWorkRequest{}, mock_callback.AsStdFunction());
         client.completed(false);
+    }
+}
+
+class EmptyMiningService : public ::txpool::Mining::Service {
+public:
+    ::grpc::Status GetWork(::grpc::ServerContext* context, const ::txpool::GetWorkRequest* request, ::txpool::GetWorkReply* response) override {
+        return ::grpc::Status::OK;
+    }
+    ::grpc::Status SubmitWork(::grpc::ServerContext* context, const ::txpool::SubmitWorkRequest* request, ::txpool::SubmitWorkReply* response) override {
+        return ::grpc::Status::OK;
+    }
+    ::grpc::Status HashRate(::grpc::ServerContext* context, const ::txpool::HashRateRequest* request, ::txpool::HashRateReply* response) override {
+        return ::grpc::Status::OK;
+    }
+    ::grpc::Status SubmitHashRate(::grpc::ServerContext* context, const ::txpool::SubmitHashRateRequest* request, ::txpool::SubmitHashRateReply* response) override {
+        return ::grpc::Status::OK;
+    }
+    ::grpc::Status Mining(::grpc::ServerContext* context, const ::txpool::MiningRequest* request, ::txpool::MiningReply* response) override {
+        return ::grpc::Status::OK;
+    }
+};
+
+template<auto method, typename T>
+auto make_method_proxy(T&& obj) {
+    return [&obj](auto&&... args) {
+        return (std::forward<T>(obj).*method)(std::forward<decltype(args)>(args)...);
+    };
+}
+
+template<auto method, typename R, typename ...Args>
+asio::awaitable<R> test_comethod(::txpool::Mining::Service* service, Args... args) {
+    std::ostringstream server_address;
+    server_address << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
+    grpc::ServerBuilder builder;
+    builder.AddListeningPort(server_address.str(), grpc::InsecureServerCredentials());
+    builder.RegisterService(service);
+    const auto server_ptr = builder.BuildAndStart();
+    asio::io_context io_context;
+    asio::io_context::work work{io_context};
+    grpc::CompletionQueue queue;
+    CompletionRunner completion_runner{queue, io_context};
+    auto io_context_thread = std::thread([&]() { io_context.run(); });
+    auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
+    const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
+    txpool::Miner miner{io_context, channel, &queue};
+    auto method_proxy{make_method_proxy<method, txpool::Miner>(std::move(miner))};
+    try {
+        const auto result = co_await method_proxy(args...);
+        server_ptr->Shutdown();
+        io_context.stop();
+        completion_runner.stop();
+        if (io_context_thread.joinable()) {
+            io_context_thread.join();
+        }
+        if (completion_runner_thread.joinable()) {
+            completion_runner_thread.join();
+        }
+        co_return result;
+    } catch (...) {
+        server_ptr->Shutdown();
+        io_context.stop();
+        completion_runner.stop();
+        if (io_context_thread.joinable()) {
+            io_context_thread.join();
+        }
+        if (completion_runner_thread.joinable()) {
+            completion_runner_thread.join();
+        }
+        throw;
+    }
+}
+
+auto test_get_work = test_comethod<&txpool::Miner::get_work, txpool::WorkResult>;
+auto test_submit_work = test_comethod<&txpool::Miner::submit_work, bool, silkworm::Bytes, evmc::bytes32, evmc::bytes32>;
+auto test_get_hashrate = test_comethod<&txpool::Miner::get_hash_rate, uint64_t>;
+auto test_submit_hashrate = test_comethod<&txpool::Miner::submit_hash_rate, bool, intx::uint256, evmc::bytes32>;
+auto test_get_mining = test_comethod<&txpool::Miner::get_mining, txpool::MiningResult>;
+
+TEST_CASE("Miner::get_work", "[silkrpc][txpool][miner]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("call get_work and get result") {
+        class TestSuccessMiningService : public ::txpool::Mining::Service {
+        public:
+            ::grpc::Status GetWork(::grpc::ServerContext* context, const ::txpool::GetWorkRequest* request, ::txpool::GetWorkReply* response) override {
+                response->set_headerhash("0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7");
+                response->set_seedhash("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
+                response->set_target("0xe7536c5b61ed0e0ab7f3ce7f085806d40f716689c0c086676757de401b595658");
+                response->set_blocknumber("0x00000000");
+                return ::grpc::Status::OK;
+            }
+        };
+        TestSuccessMiningService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_get_work(&service), asio::use_future)};
+        io_context.run();
+        const auto work_result = result.get();
+        CHECK(work_result.header_hash == 0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7_bytes32);
+        CHECK(work_result.seed_hash == 0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347_bytes32);
+        CHECK(work_result.target == 0xe7536c5b61ed0e0ab7f3ce7f085806d40f716689c0c086676757de401b595658_bytes32);
+        CHECK(work_result.block_number == *silkworm::from_hex("0x00000000"));
+    }
+
+    SECTION("call get_work and get empty result") {
+        EmptyMiningService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_get_work(&service), asio::use_future)};
+        io_context.run();
+        const auto work_result = result.get();
+        CHECK(!work_result.header_hash);
+        CHECK(!work_result.seed_hash);
+        CHECK(!work_result.target);
+        CHECK(work_result.block_number == *silkworm::from_hex("0x"));
+    }
+
+    SECTION("call get_work and get failure") {
+        class TestFailureMiningService : public ::txpool::Mining::Service {
+        public:
+            ::grpc::Status GetWork(::grpc::ServerContext* context, const ::txpool::GetWorkRequest* request, ::txpool::GetWorkReply* response) override {
+                return ::grpc::Status::CANCELLED;
+            }
+        };
+        TestFailureMiningService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_get_work(&service), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(result.get(), std::system_error);
     }
 }
 
