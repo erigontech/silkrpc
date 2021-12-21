@@ -67,7 +67,6 @@ public:
 private:
     // The pool of contexts
     std::vector<Context> contexts_;
-    std::vector<grpc::CompletionQueue> queues_;
 
     // The work-tracking executors that keep the io_contexts running
     std::list<asio::execution::any_executor<>> work_;
