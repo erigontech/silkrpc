@@ -308,4 +308,87 @@ TEST_CASE("Miner::get_hashrate", "[silkrpc][txpool][miner]") {
     }
 }
 
+TEST_CASE("Miner::get_mining", "[silkrpc][txpool][miner]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    class TestSuccessMiningService : public ::txpool::Mining::Service {
+    public:
+        explicit TestSuccessMiningService(bool enabled, bool running) : enabled_(enabled), running_(running) {}
+
+        ::grpc::Status Mining(::grpc::ServerContext* context, const ::txpool::MiningRequest* request, ::txpool::MiningReply* response) override {
+            response->set_enabled(enabled_);
+            response->set_running(running_);
+            return ::grpc::Status::OK;
+        }
+
+    private:
+        bool enabled_;
+        bool running_;
+    };
+
+    SECTION("call get_mining and get result for enabled and running") {
+        TestSuccessMiningService service{true, true};
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        io_context.run();
+        const auto mining_result = result.get();
+        CHECK(mining_result.enabled);
+        CHECK(mining_result.running);
+    }
+
+    SECTION("call get_mining and get result for enabled and running") {
+        TestSuccessMiningService service{true, true};
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        io_context.run();
+        const auto mining_result = result.get();
+        CHECK(mining_result.enabled);
+        CHECK(mining_result.running);
+    }
+
+    SECTION("call get_mining and get result for enabled and not running") {
+        TestSuccessMiningService service{true, false};
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        io_context.run();
+        const auto mining_result = result.get();
+        CHECK(mining_result.enabled);
+        CHECK(!mining_result.running);
+    }
+
+    SECTION("call get_mining and get result for not enabled and not running") {
+        TestSuccessMiningService service{false, false};
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        io_context.run();
+        const auto mining_result = result.get();
+        CHECK(!mining_result.enabled);
+        CHECK(!mining_result.running);
+    }
+
+    SECTION("call get_mining and get empty result") {
+        EmptyMiningService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        io_context.run();
+        const auto mining_result = result.get();
+        CHECK(!mining_result.enabled);
+        CHECK(!mining_result.running);
+    }
+
+    SECTION("call get_mining and get failure") {
+        class TestFailureMiningService : public ::txpool::Mining::Service {
+        public:
+            ::grpc::Status Mining(::grpc::ServerContext* context, const ::txpool::MiningRequest* request, ::txpool::MiningReply* response) override {
+                return ::grpc::Status::CANCELLED;
+            }
+        };
+        TestFailureMiningService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(result.get(), std::system_error);
+    }
+}
+
 } // namespace silkrpc::txpool
