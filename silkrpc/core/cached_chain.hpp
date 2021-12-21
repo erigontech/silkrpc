@@ -27,8 +27,8 @@
 
 namespace silkrpc::core  {
 
-asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const Context &context, const rawdb::DatabaseReader& reader, uint64_t block_number);
-asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const Context &context, const rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash);
+asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const std::shared_ptr<BlockCache> cache, const rawdb::DatabaseReader& reader, uint64_t block_number);
+asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const std::shared_ptr<BlockCache> cache, const rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash);
 
 } // namespace silkrpc::core
 #endif // SILKRPC_CORE_CACHED_CHAIN_HPP_
