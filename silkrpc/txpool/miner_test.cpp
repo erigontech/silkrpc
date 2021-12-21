@@ -169,9 +169,11 @@ public:
     }
 
     template<auto method, typename T>
-    auto make_method_proxy(T&& obj) {
-        return [&obj](auto&&... args) {
-            return (std::forward<T>(obj).*method)(std::forward<decltype(args)>(args)...);
+    auto make_method_proxy() {
+        const auto channel = grpc::CreateChannel(server_address_.str(), grpc::InsecureChannelCredentials());
+        std::unique_ptr<T> target{std::make_unique<T>(io_context_, channel, &queue_)};
+        return [target = std::move(target)](auto&&... args) {
+            return (target.get()->*method)(std::forward<decltype(args)>(args)...);
         };
     }
 
@@ -187,10 +189,6 @@ public:
         }
     }
 
-    asio::io_context& io_context() { return io_context_; }
-    std::shared_ptr<grpc::Channel> channel() { return grpc::CreateChannel(server_address_.str(), grpc::InsecureChannelCredentials()); }
-    grpc::CompletionQueue* queue() { return &queue_; }
-
 private:
     asio::io_context io_context_;
     asio::io_context::work work_{io_context_};
@@ -205,8 +203,7 @@ private:
 template<typename T, auto method, typename R, typename ...Args>
 asio::awaitable<R> test_comethod(::txpool::Mining::Service* service, Args... args) {
     ClientServerTestBox test_box{service};
-    T target{test_box.io_context(), test_box.channel(), test_box.queue()};
-    auto method_proxy{test_box.make_method_proxy<method, T>(std::move(target))};
+    auto method_proxy{test_box.make_method_proxy<method, T>()};
     co_return co_await method_proxy(args...);
 }
 
