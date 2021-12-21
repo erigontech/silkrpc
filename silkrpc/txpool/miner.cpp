@@ -82,7 +82,7 @@ asio::awaitable<uint64_t> Miner::get_hash_rate() {
     const auto reply = co_await hashrate_awaitable.async_call(::txpool::HashRateRequest{}, asio::use_awaitable);
     const auto hashrate = reply.hashrate();
     SILKRPC_DEBUG << "Miner::hash_rate hashrate=" << hashrate << " t=" << clock_time::since(start_time) << "\n";
-    co_return 0;
+    co_return hashrate;
 }
 
 asio::awaitable<MiningResult> Miner::get_mining() {

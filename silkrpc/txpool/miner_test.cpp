@@ -265,4 +265,47 @@ TEST_CASE("Miner::get_work", "[silkrpc][txpool][miner]") {
     }
 }
 
+TEST_CASE("Miner::get_hashrate", "[silkrpc][txpool][miner]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("call get_hashrate and get result") {
+        class TestSuccessMiningService : public ::txpool::Mining::Service {
+        public:
+            ::grpc::Status HashRate(::grpc::ServerContext* context, const ::txpool::HashRateRequest* request, ::txpool::HashRateReply* response) override {
+                response->set_hashrate(1234567);
+                return ::grpc::Status::OK;
+            }
+        };
+        TestSuccessMiningService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_get_hashrate(&service), asio::use_future)};
+        io_context.run();
+        const auto hash_rate = result.get();
+        CHECK(hash_rate == 1234567);
+    }
+
+    SECTION("call get_hashrate and get empty result") {
+        EmptyMiningService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_get_hashrate(&service), asio::use_future)};
+        io_context.run();
+        const auto hash_rate = result.get();
+        CHECK(hash_rate == 0);
+    }
+
+    SECTION("call get_hashrate and get failure") {
+        class TestFailureMiningService : public ::txpool::Mining::Service {
+        public:
+            ::grpc::Status HashRate(::grpc::ServerContext* context, const ::txpool::HashRateRequest* request, ::txpool::HashRateReply* response) override {
+                return ::grpc::Status::CANCELLED;
+            }
+        };
+        TestFailureMiningService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_get_hashrate(&service), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(result.get(), std::system_error);
+    }
+}
+
 } // namespace silkrpc::txpool
