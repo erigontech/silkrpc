@@ -14,10 +14,6 @@
     limitations under the License.
 */
 
-#include <memory>
-#include <vector>
-
-
 #include <silkrpc/context_pool.hpp>
 #include <silkrpc/core/cached_chain.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
