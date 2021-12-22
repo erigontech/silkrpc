@@ -36,20 +36,20 @@ class BlockCache {
 public:
     explicit BlockCache(int capacity, bool shared_cache = true) : block_cache_(capacity), shared_cache_(shared_cache) {}
 
-    boost::optional <silkworm::BlockWithHash> get(const evmc::bytes32 &key) {
-       if (shared_cache_) {
-          const std::lock_guard<std::mutex> lock(access_);
-          return block_cache_.get(key);
-       }
-       return block_cache_.get(key);
+    boost::optional <silkworm::BlockWithHash> get(const evmc::bytes32& key) {
+        if (shared_cache_) {
+            const std::lock_guard<std::mutex> lock(access_);
+            return block_cache_.get(key);
+        }
+        return block_cache_.get(key);
     }
 
     void insert(const evmc::bytes32 &key, const silkworm::BlockWithHash& block) {
-       if (shared_cache_) {
-          const std::lock_guard<std::mutex> lock(access_);
-          return block_cache_.insert(key, block);
-       }
-       block_cache_.insert(key, block);
+        if (shared_cache_) {
+            const std::lock_guard<std::mutex> lock(access_);
+            return block_cache_.insert(key, block);
+        }
+        block_cache_.insert(key, block);
     }
 
 private:
