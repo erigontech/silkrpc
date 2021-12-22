@@ -67,6 +67,13 @@ using ClientVersionClient = AsyncUnaryClient<
     &::remote::ETHBACKEND::StubInterface::PrepareAsyncClientVersion
 >;
 
+using NetPeerCountClient = AsyncUnaryClient<
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::NetPeerCountRequest,
+    ::remote::NetPeerCountReply,
+    &::remote::ETHBACKEND::StubInterface::PrepareAsyncNetPeerCount
+>;
+
 using EtherbaseAwaitable = unary_awaitable<
     asio::io_context::executor_type,
     EtherbaseClient,
@@ -74,6 +81,7 @@ using EtherbaseAwaitable = unary_awaitable<
     ::remote::EtherbaseRequest,
     ::remote::EtherbaseReply
 >;
+
 using ProtocolVersionAwaitable = unary_awaitable<
     asio::io_context::executor_type,
     ProtocolVersionClient,
@@ -81,6 +89,7 @@ using ProtocolVersionAwaitable = unary_awaitable<
     ::remote::ProtocolVersionRequest,
     ::remote::ProtocolVersionReply
 >;
+
 using NetVersionAwaitable = unary_awaitable<
     asio::io_context::executor_type,
     NetVersionClient,
@@ -88,12 +97,21 @@ using NetVersionAwaitable = unary_awaitable<
     ::remote::NetVersionRequest,
     ::remote::NetVersionReply
 >;
+
 using ClientVersionAwaitable = unary_awaitable<
     asio::io_context::executor_type,
     ClientVersionClient,
     ::remote::ETHBACKEND::StubInterface,
     ::remote::ClientVersionRequest,
     ::remote::ClientVersionReply
+>;
+
+using NetPeerCountAwaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    NetPeerCountClient,
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::NetPeerCountRequest,
+    ::remote::NetPeerCountReply
 >;
 
 class BackEnd final {
@@ -148,6 +166,15 @@ public:
         const auto cv = reply.nodename();
         SILKRPC_DEBUG << "BackEnd::client_version version=" << cv << " t=" << clock_time::since(start_time) << "\n";
         co_return cv;
+    }
+
+    asio::awaitable<uint64_t> net_peer_count() {
+        const auto start_time = clock_time::now();
+        NetPeerCountAwaitable npc_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await npc_awaitable.async_call(::remote::NetPeerCountRequest{}, asio::use_awaitable);
+        const auto count = reply.count();
+        SILKRPC_DEBUG << "BackEnd::net_peer_count count=" << count << " t=" << clock_time::since(start_time) << "\n";
+        co_return count;
     }
 
 private:

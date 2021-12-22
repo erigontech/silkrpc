@@ -17,7 +17,9 @@
 #include "backend.hpp"
 
 #include <string>
+#include <system_error>
 #include <thread>
+#include <utility>
 
 #include <asio/io_context.hpp>
 #include <asio/co_spawn.hpp>
@@ -50,6 +52,28 @@ public:
     ::grpc::Status ClientVersion(::grpc::ServerContext *context, const ::remote::ClientVersionRequest *request, ::remote::ClientVersionReply *response) override {
         return ::grpc::Status::OK;
     }
+    ::grpc::Status NetPeerCount(::grpc::ServerContext* context, const ::remote::NetPeerCountRequest* request, ::remote::NetPeerCountReply* response) override {
+        return ::grpc::Status::OK;
+    }
+};
+
+class FailureBackEndService : public ::remote::ETHBACKEND::Service {
+public:
+    ::grpc::Status Etherbase(::grpc::ServerContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response) override {
+        return ::grpc::Status::CANCELLED;
+    }
+    ::grpc::Status ProtocolVersion(::grpc::ServerContext* context, const ::remote::ProtocolVersionRequest* request, ::remote::ProtocolVersionReply* response) override {
+        return ::grpc::Status::CANCELLED;
+    }
+    ::grpc::Status NetVersion(::grpc::ServerContext* context, const ::remote::NetVersionRequest* request, ::remote::NetVersionReply* response) override {
+        return ::grpc::Status::CANCELLED;
+    }
+    ::grpc::Status ClientVersion(::grpc::ServerContext *context, const ::remote::ClientVersionRequest *request, ::remote::ClientVersionReply *response) override {
+        return ::grpc::Status::CANCELLED;
+    }
+    ::grpc::Status NetPeerCount(::grpc::ServerContext* context, const ::remote::NetPeerCountRequest* request, ::remote::NetPeerCountReply* response) override {
+        return ::grpc::Status::CANCELLED;
+    }
 };
 
 class TestBackEndService : public ::remote::ETHBACKEND::Service {
@@ -75,107 +99,206 @@ public:
         response->set_nodename("erigon");
         return ::grpc::Status::OK;
     }
+    ::grpc::Status NetPeerCount(::grpc::ServerContext* context, const ::remote::NetPeerCountRequest* request, ::remote::NetPeerCountReply* response) override {
+        response->set_count(20);
+        return ::grpc::Status::OK;
+    }
 };
 
-template<typename R, asio::awaitable<R>(ethbackend::BackEnd::*Method)()>
-asio::awaitable<R> test_backend(::remote::ETHBACKEND::Service* service) {
-    std::ostringstream server_address;
-    server_address << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
-    grpc::ServerBuilder builder;
-    builder.AddListeningPort(server_address.str(), grpc::InsecureServerCredentials());
-    builder.RegisterService(service);
-    const auto server_ptr = builder.BuildAndStart();
-    asio::io_context io_context;
-    asio::io_context::work work{io_context};
-    grpc::CompletionQueue queue;
-    CompletionRunner completion_runner{queue, io_context};
-    auto io_context_thread = std::thread([&]() { io_context.run(); });
-    auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
-    const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
-    ethbackend::BackEnd backend{io_context, channel, &queue};
-    const auto result = co_await (backend.*Method)();
-    server_ptr->Shutdown();
-    io_context.stop();
-    completion_runner.stop();
-    if (io_context_thread.joinable()) {
-        io_context_thread.join();
+class ClientServerTestBox {
+public:
+    explicit ClientServerTestBox(grpc::Service* service) : completion_runner_{queue_, io_context_} {
+        server_address_ << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
+        grpc::ServerBuilder builder;
+        builder.AddListeningPort(server_address_.str(), grpc::InsecureServerCredentials());
+        builder.RegisterService(service);
+        server_ = builder.BuildAndStart();
+        io_context_thread_ = std::thread([&]() { io_context_.run(); });
+        completion_runner_thread_ = std::thread([&]() { completion_runner_.run(); });
     }
-    if (completion_runner_thread.joinable()) {
-        completion_runner_thread.join();
+
+    template<auto method, typename T>
+    auto make_method_proxy() {
+        const auto channel = grpc::CreateChannel(server_address_.str(), grpc::InsecureChannelCredentials());
+        std::unique_ptr<T> target{std::make_unique<T>(io_context_, channel, &queue_)};
+        return [target = std::move(target)](auto&&... args) {
+            return (target.get()->*method)(std::forward<decltype(args)>(args)...);
+        };
     }
-    co_return result;
+
+    ~ClientServerTestBox() {
+        server_->Shutdown();
+        io_context_.stop();
+        completion_runner_.stop();
+        if (io_context_thread_.joinable()) {
+            io_context_thread_.join();
+        }
+        if (completion_runner_thread_.joinable()) {
+            completion_runner_thread_.join();
+        }
+    }
+
+private:
+    asio::io_context io_context_;
+    asio::io_context::work work_{io_context_};
+    grpc::CompletionQueue queue_;
+    CompletionRunner completion_runner_;
+    std::ostringstream server_address_;
+    std::unique_ptr<grpc::Server> server_;
+    std::thread io_context_thread_;
+    std::thread completion_runner_thread_;
+};
+
+template<typename T, auto method, typename R, typename ...Args>
+asio::awaitable<R> test_comethod(::remote::ETHBACKEND::Service* service, Args... args) {
+    ClientServerTestBox test_box{service};
+    auto method_proxy{test_box.make_method_proxy<method, T>()};
+    co_return co_await method_proxy(args...);
 }
 
-auto backend_etherbase = test_backend<evmc::address, &ethbackend::BackEnd::etherbase>;
-auto backend_protocol_version = test_backend<uint64_t , &ethbackend::BackEnd::protocol_version>;
-auto backend_net_version = test_backend<uint64_t, &ethbackend::BackEnd::net_version>;
-auto backend_client_version = test_backend<std::string, &ethbackend::BackEnd::client_version>;
+auto test_etherbase = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::etherbase, evmc::address>;
+auto test_protocol_version = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::protocol_version, uint64_t>;
+auto test_net_version = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::net_version, uint64_t>;
+auto test_client_version = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::client_version, std::string>;
+auto test_net_peer_count = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::net_peer_count, uint64_t>;
 
-TEST_CASE("create BackEnd", "[silkrpc][ethbackend][backend]") {
+TEST_CASE("BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    SECTION("call etherbase and check address") {
+    SECTION("call etherbase and get address") {
         TestBackEndService service;
         asio::io_context io_context;
-        auto etherbase{asio::co_spawn(io_context, backend_etherbase(&service), asio::use_future)};
+        auto etherbase{asio::co_spawn(io_context, test_etherbase(&service), asio::use_future)};
         io_context.run();
         CHECK(etherbase.get() == 0x000000000000007f0000000000000000000000ff_address);
     }
 
-    SECTION("call etherbase and check empty address") {
+    SECTION("call etherbase and get empty address") {
         EmptyBackEndService service;
         asio::io_context io_context;
-        auto etherbase{asio::co_spawn(io_context, backend_etherbase(&service), asio::use_future)};
+        auto etherbase{asio::co_spawn(io_context, test_etherbase(&service), asio::use_future)};
         io_context.run();
         CHECK(etherbase.get() == evmc::address{});
     }
 
-    SECTION("call protocol_version and check version") {
+    SECTION("call etherbase and get error") {
+        FailureBackEndService service;
+        asio::io_context io_context;
+        auto etherbase{asio::co_spawn(io_context, test_etherbase(&service), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(etherbase.get(), std::system_error);
+    }
+}
+
+TEST_CASE("BackEnd::protocol_version", "[silkrpc][ethbackend][backend]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("call protocol_version and get version") {
         TestBackEndService service;
         asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, backend_protocol_version(&service), asio::use_future)};
+        auto version{asio::co_spawn(io_context, test_protocol_version(&service), asio::use_future)};
         io_context.run();
         CHECK(version.get() == 15);
     }
 
-    SECTION("call protocol_version and check empty version") {
+    SECTION("call protocol_version and get empty version") {
         EmptyBackEndService service;
         asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, backend_protocol_version(&service), asio::use_future)};
+        auto version{asio::co_spawn(io_context, test_protocol_version(&service), asio::use_future)};
         io_context.run();
         CHECK(version.get() == 0);
     }
 
-    SECTION("call net_version and check version") {
+    SECTION("call protocol_version and get error") {
+        FailureBackEndService service;
+        asio::io_context io_context;
+        auto version{asio::co_spawn(io_context, test_protocol_version(&service), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(version.get(), std::system_error);
+    }
+}
+
+TEST_CASE("BackEnd::net_version", "[silkrpc][ethbackend][backend]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("call net_version and get version") {
         TestBackEndService service;
         asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, backend_net_version(&service), asio::use_future)};
+        auto version{asio::co_spawn(io_context, test_net_version(&service), asio::use_future)};
         io_context.run();
         CHECK(version.get() == 66);
     }
 
-    SECTION("call net_version and check empty version") {
+    SECTION("call net_version and get empty version") {
         EmptyBackEndService service;
         asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, backend_net_version(&service), asio::use_future)};
+        auto version{asio::co_spawn(io_context, test_net_version(&service), asio::use_future)};
         io_context.run();
         CHECK(version.get() == 0);
     }
 
-    SECTION("call client_version and check version") {
+    SECTION("call net_version and get error") {
+        FailureBackEndService service;
+        asio::io_context io_context;
+        auto version{asio::co_spawn(io_context, test_net_version(&service), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(version.get(), std::system_error);
+    }
+}
+
+TEST_CASE("BackEnd::client_version", "[silkrpc][ethbackend][backend]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("call client_version and get version") {
         TestBackEndService service;
         asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, backend_client_version(&service), asio::use_future)};
+        auto version{asio::co_spawn(io_context, test_client_version(&service), asio::use_future)};
         io_context.run();
         CHECK(version.get() == "erigon");
     }
 
-    SECTION("call client_version and check empty version") {
+    SECTION("call client_version and get empty version") {
         EmptyBackEndService service;
         asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, backend_client_version(&service), asio::use_future)};
+        auto version{asio::co_spawn(io_context, test_client_version(&service), asio::use_future)};
         io_context.run();
         CHECK(version.get() == "");
+    }
+
+    SECTION("call client_version and get error") {
+        FailureBackEndService service;
+        asio::io_context io_context;
+        auto version{asio::co_spawn(io_context, test_client_version(&service), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(version.get(), std::system_error);
+    }
+}
+
+TEST_CASE("BackEnd::net_peer_count", "[silkrpc][ethbackend][backend]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("call net_peer_count and get peer count") {
+        TestBackEndService service;
+        asio::io_context io_context;
+        auto peer_count{asio::co_spawn(io_context, test_net_peer_count(&service), asio::use_future)};
+        io_context.run();
+        CHECK(peer_count.get() == 20);
+    }
+
+    SECTION("call net_peer_count and get empty peer count") {
+        EmptyBackEndService service;
+        asio::io_context io_context;
+        auto peer_count{asio::co_spawn(io_context, test_net_peer_count(&service), asio::use_future)};
+        io_context.run();
+        CHECK(peer_count.get() == 0);
+    }
+
+    SECTION("call net_peer_count and get error") {
+        FailureBackEndService service;
+        asio::io_context io_context;
+        auto peer_count{asio::co_spawn(io_context, test_net_peer_count(&service), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(peer_count.get(), std::system_error);
     }
 }
 
