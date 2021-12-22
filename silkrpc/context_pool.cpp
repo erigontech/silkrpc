@@ -32,7 +32,8 @@ std::ostream& operator<<(std::ostream& out, const Context& c) {
         << " database: " << &*c.database
         << " backend: " << &*c.backend
         << " miner: " << &*c.miner
-        << " txpool: " << &*c.tx_pool;
+        << " txpool: " << &*c.tx_pool
+        << " cache: " << &*c.block_cache;
     return out;
 }
 
@@ -41,6 +42,8 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) :
         throw std::logic_error("ContextPool::ContextPool pool_size is 0");
     }
     SILKRPC_INFO << "ContextPool::ContextPool creating pool with size: " << pool_size << "\n";
+
+    auto block_cache = std::make_shared<silkrpc::BlockCache>(1024);
 
     // Create all the io_contexts and give them work to do so that their event loop will not exit until they are explicitly stopped.
     for (std::size_t i{0}; i < pool_size; ++i) {
@@ -59,7 +62,8 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) :
             std::move(database),
             std::move(backend),
             std::move(miner),
-            std::move(tx_pool)
+            std::move(tx_pool),
+            block_cache
         });
         SILKRPC_DEBUG << "ContextPool::ContextPool context[" << i << "] " << contexts_[i] << "\n";
         work_.push_back(asio::require(io_context->get_executor(), asio::execution::outstanding_work.tracked));
