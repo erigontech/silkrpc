@@ -18,8 +18,6 @@
 #ifndef SILKRPC_CORE_CACHED_CHAIN_HPP_
 #define SILKRPC_CORE_CACHED_CHAIN_HPP_
 
-#include <memory>
-
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
