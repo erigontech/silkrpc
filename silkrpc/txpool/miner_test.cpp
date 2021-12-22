@@ -238,7 +238,7 @@ TEST_CASE("Miner::get_work", "[silkrpc][txpool][miner]") {
         CHECK(work_result.block_number == *silkworm::from_hex("0x00000000"));
     }
 
-    SECTION("call get_work and get empty result") {
+    SECTION("call get_work and get default empty result") {
         EmptyMiningService service;
         asio::io_context io_context;
         auto result{asio::co_spawn(io_context, test_get_work(&service), asio::use_future)};
@@ -284,7 +284,7 @@ TEST_CASE("Miner::get_hashrate", "[silkrpc][txpool][miner]") {
         CHECK(hash_rate == 1234567);
     }
 
-    SECTION("call get_hashrate and get empty result") {
+    SECTION("call get_hashrate and get default empty result") {
         EmptyMiningService service;
         asio::io_context io_context;
         auto result{asio::co_spawn(io_context, test_get_hashrate(&service), asio::use_future)};
@@ -337,7 +337,7 @@ TEST_CASE("Miner::get_mining", "[silkrpc][txpool][miner]") {
     }
 
     SECTION("call get_mining and get result for enabled and running") {
-        TestSuccessMiningService service{true, true};
+        TestSuccessMiningService service{/*enabled=*/true, /*running=*/true};
         asio::io_context io_context;
         auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
         io_context.run();
@@ -347,7 +347,7 @@ TEST_CASE("Miner::get_mining", "[silkrpc][txpool][miner]") {
     }
 
     SECTION("call get_mining and get result for enabled and not running") {
-        TestSuccessMiningService service{true, false};
+        TestSuccessMiningService service{/*enabled=*/true, /*running=*/false};
         asio::io_context io_context;
         auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
         io_context.run();
@@ -357,7 +357,7 @@ TEST_CASE("Miner::get_mining", "[silkrpc][txpool][miner]") {
     }
 
     SECTION("call get_mining and get result for not enabled and not running") {
-        TestSuccessMiningService service{false, false};
+        TestSuccessMiningService service{/*enabled=*/false, /*running=*/false};
         asio::io_context io_context;
         auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
         io_context.run();
@@ -366,7 +366,7 @@ TEST_CASE("Miner::get_mining", "[silkrpc][txpool][miner]") {
         CHECK(!mining_result.running);
     }
 
-    SECTION("call get_mining and get empty result") {
+    SECTION("call get_mining and get default empty result") {
         EmptyMiningService service;
         asio::io_context io_context;
         auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
@@ -386,6 +386,76 @@ TEST_CASE("Miner::get_mining", "[silkrpc][txpool][miner]") {
         TestFailureMiningService service;
         asio::io_context io_context;
         auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(result.get(), std::system_error);
+    }
+}
+
+TEST_CASE("Miner::submit_work", "[silkrpc][txpool][miner]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    class TestSuccessMiningService : public ::txpool::Mining::Service {
+    public:
+        explicit TestSuccessMiningService(bool ok) : ok_(ok) {}
+
+        ::grpc::Status SubmitWork(::grpc::ServerContext* context, const ::txpool::SubmitWorkRequest* request, ::txpool::SubmitWorkReply* response) override {
+            response->set_ok(ok_);
+            return ::grpc::Status::OK;
+        }
+
+    private:
+        bool ok_;
+    };
+
+    SECTION("call submit_work and get OK result") {
+        TestSuccessMiningService service{/*ok=*/true};
+        silkworm::Bytes block_nonce{}; // don't care
+        evmc::bytes32 pow_hash{silkworm::kEmptyHash}; // don't care
+        evmc::bytes32 digest{silkworm::kEmptyHash}; // don't care
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_submit_work(&service, block_nonce, pow_hash, digest), asio::use_future)};
+        io_context.run();
+        const auto ok = result.get();
+        CHECK(ok);
+    }
+
+    SECTION("call submit_work and get KO result") {
+        TestSuccessMiningService service{/*ok=*/false};
+        silkworm::Bytes block_nonce{}; // don't care
+        evmc::bytes32 pow_hash{silkworm::kEmptyHash}; // don't care
+        evmc::bytes32 digest{silkworm::kEmptyHash}; // don't care
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_submit_work(&service, block_nonce, pow_hash, digest), asio::use_future)};
+        io_context.run();
+        const auto ok = result.get();
+        CHECK(!ok);
+    }
+
+    SECTION("call submit_work and get default empty result") {
+        EmptyMiningService service;
+        silkworm::Bytes block_nonce{}; // don't care
+        evmc::bytes32 pow_hash{silkworm::kEmptyHash}; // don't care
+        evmc::bytes32 digest{silkworm::kEmptyHash}; // don't care
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_submit_work(&service, block_nonce, pow_hash, digest), asio::use_future)};
+        io_context.run();
+        const auto ok = result.get();
+        CHECK(!ok);
+    }
+
+    SECTION("call submit_work and get failure") {
+        class TestFailureMiningService : public ::txpool::Mining::Service {
+        public:
+            ::grpc::Status HashRate(::grpc::ServerContext* context, const ::txpool::HashRateRequest* request, ::txpool::HashRateReply* response) override {
+                return ::grpc::Status::CANCELLED;
+            }
+        };
+        TestFailureMiningService service;
+        silkworm::Bytes block_nonce{}; // don't care
+        evmc::bytes32 pow_hash{silkworm::kEmptyHash}; // don't care
+        evmc::bytes32 digest{silkworm::kEmptyHash}; // don't care
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_submit_work(&service, block_nonce, pow_hash, digest), asio::use_future)};
         io_context.run();
         CHECK_THROWS_AS(result.get(), std::system_error);
     }
