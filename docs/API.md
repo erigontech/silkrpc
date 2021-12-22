@@ -7,9 +7,9 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | web3_clientVersion                         | Yes          |                                            |
 | web3_sha3                                  | Yes          |                                            |
 |                                            |              |                                            |
-| net_listening                              | Yes          | hard-coded (needs p2pSentry integration)   |
-| net_peerCount                              | Yes          | hard-coded (needs p2pSentry integration)   |
-| net_version                                | Yes          |                                            | 
+| net_listening                              | Yes          | hard-coded (needs ethbackend integration)  |
+| net_peerCount                              | Yes          | hard-coded (needs ethbackend integration)  |
+| net_version                                | Yes          |                                            |
 |                                            |              |                                            |
 | eth_blockNumber                            | Yes          |                                            |
 | eth_chainId                                | Yes          |                                            |
@@ -58,12 +58,12 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 |                                            |              |                                            |
 | eth_getProof                               | -            | not yet implemented                        |
 |                                            |              |                                            |
-| eth_mining                                 | -            | not yet implemented                        |
+| eth_mining                                 | Yes          |                                            |
 | eth_coinbase                               | Yes          |                                            |
-| eth_hashrate                               | -            | not yet implemented                        |
-| eth_submitHashrate                         | -            | not yet implemented                        |
-| eth_getWork                                | -            | not yet implemented                        |
-| eth_submitWork                             | -            | not yet implemented                        |
+| eth_hashrate                               | Yes          |                                            |
+| eth_submitHashrate                         | Yes          |                                            |
+| eth_getWork                                | Yes          |                                            |
+| eth_submitWork                             | Yes          |                                            |
 |                                            |              |                                            |
 | eth_subscribe                              | -            | not yet implemented                        |
 | eth_unsubscribe                            | -            | not yet implemented                        |

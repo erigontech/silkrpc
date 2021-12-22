@@ -27,6 +27,7 @@
 
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkrpc/interfaces/remote/kv.grpc.pb.h>
+#include <silkrpc/interfaces/txpool/mining.grpc.pb.h>
 #include <silkrpc/interfaces/txpool/txpool.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
 
@@ -40,6 +41,7 @@ struct ProtocolVersion {
 
 constexpr auto KV_SERVICE_API_VERSION = ProtocolVersion{4, 0, 0};
 constexpr auto ETHBACKEND_SERVICE_API_VERSION = ProtocolVersion{2, 1, 0};
+constexpr auto MINING_SERVICE_API_VERSION = ProtocolVersion{1, 0, 0};
 constexpr auto TXPOOL_SERVICE_API_VERSION = ProtocolVersion{1, 0, 0};
 
 std::ostream& operator<<(std::ostream& out, const ProtocolVersion& v) {
@@ -98,6 +100,15 @@ ProtocolVersionResult wait_for_ethbackend_protocol_check(const std::unique_ptr<:
 ProtocolVersionResult wait_for_ethbackend_protocol_check(const std::shared_ptr<grpc::Channel>& channel) {
     NewStubFactory<::remote::ETHBACKEND::NewStub, ::remote::ETHBACKEND::StubInterface> new_stub_factory;
     return wait_for_protocol_check(new_stub_factory(channel), ETHBACKEND_SERVICE_API_VERSION, "ETHBACKEND");
+}
+
+ProtocolVersionResult wait_for_mining_protocol_check(const std::unique_ptr<::txpool::Mining::StubInterface>& stub) {
+    return wait_for_protocol_check(stub, MINING_SERVICE_API_VERSION, "MINING");
+}
+
+ProtocolVersionResult wait_for_mining_protocol_check(const std::shared_ptr<grpc::Channel>& channel) {
+    NewStubFactory<::txpool::Mining::NewStub, ::txpool::Mining::StubInterface> new_stub_factory;
+    return wait_for_protocol_check(new_stub_factory(channel), MINING_SERVICE_API_VERSION, "MINING");
 }
 
 ProtocolVersionResult wait_for_txpool_protocol_check(const std::unique_ptr<::txpool::Txpool::StubInterface>& stub) {

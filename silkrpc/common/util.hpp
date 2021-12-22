@@ -58,6 +58,11 @@ inline Bytes bytes_of_string(const std::string& s) {
 
 inline ByteView full_view(const ethash::hash256& hash) { return {hash.bytes, kHashLength}; }
 
+inline evmc::bytes32 bytes32_from_hex(const std::string& s) {
+    const auto b32_bytes = silkworm::from_hex(s);
+    return silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
+}
+
 inline std::ostream& operator<<(std::ostream& out, const Bytes& bytes) {
     out << silkworm::to_hex(bytes);
     return out;

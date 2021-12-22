@@ -31,6 +31,7 @@
 #include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/grpc/completion_runner.hpp>
+#include <silkrpc/txpool/miner.hpp>
 #include <silkrpc/txpool/transaction_pool.hpp>
 
 namespace silkrpc {
@@ -41,6 +42,7 @@ struct Context {
     std::unique_ptr<CompletionRunner> grpc_runner;
     std::unique_ptr<ethdb::Database> database;
     std::unique_ptr<ethbackend::BackEnd> backend;
+    std::unique_ptr<txpool::Miner> miner;
     std::unique_ptr<txpool::TransactionPool> tx_pool;
     std::shared_ptr<BlockCache> block_cache;
 };
@@ -67,7 +69,6 @@ public:
 private:
     // The pool of contexts
     std::vector<Context> contexts_;
-    std::vector<grpc::CompletionQueue> queues_;
 
     // The work-tracking executors that keep the io_contexts running
     std::list<asio::execution::any_executor<>> work_;
