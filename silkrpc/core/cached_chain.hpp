@@ -14,7 +14,6 @@
     limitations under the License.
 */
 
-
 #ifndef SILKRPC_CORE_CACHED_CHAIN_HPP_
 #define SILKRPC_CORE_CACHED_CHAIN_HPP_
 
@@ -32,5 +31,5 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_number(BlockCache& cache,
 asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(BlockCache& cache, const rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash);
 
 } // namespace silkrpc::core
-#endif // SILKRPC_CORE_CACHED_CHAIN_HPP_
 
+#endif // SILKRPC_CORE_CACHED_CHAIN_HPP_
