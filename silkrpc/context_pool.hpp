@@ -27,6 +27,7 @@
 #include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
+#include <silkrpc/common/block_cache.hpp>
 #include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/grpc/completion_runner.hpp>
@@ -41,6 +42,7 @@ struct Context {
     std::unique_ptr<ethdb::Database> database;
     std::unique_ptr<ethbackend::BackEnd> backend;
     std::unique_ptr<txpool::TransactionPool> tx_pool;
+    std::shared_ptr<BlockCache> block_cache;
 };
 
 std::ostream& operator<<(std::ostream& out, const Context& c);
