@@ -23,6 +23,7 @@
 #include <asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 
+#include <silkrpc/common/block_cache.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 
 namespace silkrpc::core  {
