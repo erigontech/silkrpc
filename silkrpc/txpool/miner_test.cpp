@@ -461,4 +461,70 @@ TEST_CASE("Miner::submit_work", "[silkrpc][txpool][miner]") {
     }
 }
 
+TEST_CASE("Miner::submit_hash_rate", "[silkrpc][txpool][miner]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    class TestSuccessMiningService : public ::txpool::Mining::Service {
+    public:
+        explicit TestSuccessMiningService(bool ok) : ok_(ok) {}
+
+        ::grpc::Status SubmitHashRate(::grpc::ServerContext* context, const ::txpool::SubmitHashRateRequest* request, ::txpool::SubmitHashRateReply* response) override {
+            response->set_ok(ok_);
+            return ::grpc::Status::OK;
+        }
+
+    private:
+        bool ok_;
+    };
+
+    SECTION("call submit_hash_rate and get OK result") {
+        TestSuccessMiningService service{/*ok=*/true};
+        intx::uint256 rate{}; // don't care
+        evmc::bytes32 id{silkworm::kEmptyHash}; // don't care
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_submit_hashrate(&service, rate, id), asio::use_future)};
+        io_context.run();
+        const auto ok = result.get();
+        CHECK(ok);
+    }
+
+    SECTION("call submit_hash_rate and get KO result") {
+        TestSuccessMiningService service{/*ok=*/false};
+        intx::uint256 rate{}; // don't care
+        evmc::bytes32 id{silkworm::kEmptyHash}; // don't care
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_submit_hashrate(&service, rate, id), asio::use_future)};
+        io_context.run();
+        const auto ok = result.get();
+        CHECK(!ok);
+    }
+
+    SECTION("call submit_hash_rate and get default empty result") {
+        EmptyMiningService service;
+        intx::uint256 rate{}; // don't care
+        evmc::bytes32 id{silkworm::kEmptyHash}; // don't care
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_submit_hashrate(&service, rate, id), asio::use_future)};
+        io_context.run();
+        const auto ok = result.get();
+        CHECK(!ok);
+    }
+
+    SECTION("call submit_hash_rate and get failure") {
+        class TestFailureMiningService : public ::txpool::Mining::Service {
+        public:
+            ::grpc::Status SubmitHashRate(::grpc::ServerContext* context, const ::txpool::SubmitHashRateRequest* request, ::txpool::SubmitHashRateReply* response) override {
+                return ::grpc::Status::CANCELLED;
+            }
+        };
+        TestFailureMiningService service;
+        intx::uint256 rate{}; // don't care
+        evmc::bytes32 id{silkworm::kEmptyHash}; // don't care
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_submit_hashrate(&service, rate, id), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(result.get(), std::system_error);
+    }
+}
+
 } // namespace silkrpc::txpool
