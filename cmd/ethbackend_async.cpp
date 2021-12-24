@@ -14,42 +14,17 @@
    limitations under the License.
 */
 
-#include <iomanip>
 #include <iostream>
 
-#include <absl/flags/flag.h>
-#include <absl/flags/parse.h>
-#include <absl/flags/usage.h>
 #include <grpcpp/grpcpp.h>
-
 #include <silkworm/common/util.hpp>
+
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/grpc/util.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 
-ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "server location as string <address>:<port>");
-
-std::ostream& operator<<(std::ostream& out, const grpc::Status& status) {
-    out << "status=" << (status.ok() ? "OK" : "KO");
-    if (!status.ok()) {
-        out << " error_code=" << status.error_code()
-            << " error_message=" << status.error_message()
-            << " error_details=" << status.error_details();
-    }
-    return out;
-}
-
-int main(int argc, char* argv[]) {
-    absl::SetProgramUsageMessage("Query Erigon/Silkworm ETHBACKEND remote interface");
-    absl::ParseCommandLine(argc, argv);
-
-    auto target{absl::GetFlag(FLAGS_target)};
-    if (target.empty() || target.find(":") == std::string::npos) {
-        std::cerr << "Parameter target is invalid: [" << target << "]\n";
-        std::cerr << "Use --target flag to specify the location of Erigon running instance\n";
-        return -1;
-    }
-
+int ethbackend_async(const std::string& target) {
     // Create ETHBACKEND stub using insecure channel to target
     grpc::CompletionQueue queue;
     grpc::Status status;

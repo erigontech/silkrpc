@@ -70,7 +70,7 @@ std::optional<uint64_t> get_latest_block(asio::io_context& io_context, silkrpc::
 }
 
 int main(int argc, char* argv[]) {
-    absl::SetProgramUsageMessage("Seek Turbo-Geth/Silkworm Key-Value (KV) remote interface to database");
+    absl::SetProgramUsageMessage("Seek Erigon/Silkworm Key-Value (KV) remote interface to database");
     absl::ParseCommandLine(argc, argv);
 
     SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));

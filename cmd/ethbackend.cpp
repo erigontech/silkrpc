@@ -18,31 +18,28 @@
 #include <iostream>
 #include <string>
 
-#include <absl/flags/flag.h>
-#include <absl/flags/parse.h>
-#include <absl/flags/usage.h>
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
-#include <cmd/ethbackend.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/grpc/util.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
 
-ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "server location as string <address>:<port>");
-
-int main(int argc, char* argv[]) {
-    absl::SetProgramUsageMessage("Query Erigon/Silkworm ETHBACKEND remote interface");
-    absl::ParseCommandLine(argc, argv);
-
-    auto target{absl::GetFlag(FLAGS_target)};
-    if (target.empty() || target.find(":") == std::string::npos) {
-        std::cerr << "Parameter target is invalid: [" << target << "]\n";
-        std::cerr << "Use --target flag to specify the location of Erigon running instance\n";
-        return -1;
+inline std::ostream& operator<<(std::ostream& out, const types::H160& address) {
+    out << "address=" << address.has_hi();
+    if (address.has_hi()) {
+        auto hi_half = address.hi();
+        out << std::hex << hi_half.hi() << hi_half.lo();
+    } else {
+        auto lo_half = address.lo();
+        out << std::hex << lo_half;
     }
+    return out;
+}
 
+int ethbackend(const std::string& target) {
     // Create ETHBACKEND stub using insecure channel to target
     grpc::Status status;
 

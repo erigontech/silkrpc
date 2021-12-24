@@ -18,55 +18,14 @@
 #include <iomanip>
 #include <iostream>
 
-#include <absl/flags/flag.h>
-#include <absl/flags/parse.h>
-#include <absl/flags/usage.h>
 #include <grpcpp/grpcpp.h>
-
 #include <silkworm/common/util.hpp>
+
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 
-ABSL_FLAG(std::string, table, "", "database table name");
-ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
-ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "server location as string <address>:<port>");
-ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
-
-int main(int argc, char* argv[]) {
-    absl::SetProgramUsageMessage("Seek Turbo-Geth/Silkworm Key-Value (KV) remote interface to database");
-    absl::ParseCommandLine(argc, argv);
-
-    auto table_name{absl::GetFlag(FLAGS_table)};
-    if (table_name.empty()) {
-        std::cerr << "Parameter table is invalid: [" << table_name << "]\n";
-        std::cerr << "Use --table flag to specify the name of Turbo-Geth database table\n";
-        return -1;
-    }
-
-    auto seek_key{absl::GetFlag(FLAGS_seekkey)};
-    const auto seek_key_bytes_optional = silkworm::from_hex(seek_key);
-    if (seek_key.empty() || !seek_key_bytes_optional.has_value()) {
-        std::cerr << "Parameter seek key is invalid: [" << seek_key << "]\n";
-        std::cerr << "Use --seekkey flag to specify the seek key in Turbo-Geth database table\n";
-        return -1;
-    }
-    const auto seek_key_bytes = seek_key_bytes_optional.value();
-
-    auto target{absl::GetFlag(FLAGS_target)};
-    if (target.empty() || target.find(":") == std::string::npos) {
-        std::cerr << "Parameter target is invalid: [" << target << "]\n";
-        std::cerr << "Use --target flag to specify the location of Turbo-Geth running instance\n";
-        return -1;
-    }
-
-    auto timeout{absl::GetFlag(FLAGS_timeout)};
-    if (timeout < 0) {
-        std::cerr << "Parameter timeout is invalid: [" << timeout << "]\n";
-        std::cerr << "Use --timeout flag to specify the timeout in msecs for Turbo-Geth KV gRPC calls\n";
-        return -1;
-    }
-
+int kv_seek_async(const std::string& target, const std::string& table_name, const silkworm::Bytes& key, uint32_t timeout) {
     // Create KV stub using insecure channel to target
     grpc::ClientContext context;
     grpc::CompletionQueue queue;
@@ -127,12 +86,12 @@ int main(int argc, char* argv[]) {
     std::cout << "KV Tx OPEN <- cursor: " << cursor_id << "\n";
 
     // 3) Seek given key in given table
-    std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " seek_key: " << seek_key_bytes << "\n";
+    std::cout << "KV Tx SEEK -> cursor: " << cursor_id << " key: " << key << "\n";
     // 3.1) Write + Next
     auto seek_message = remote::Cursor{};
     seek_message.set_op(remote::Op::SEEK);
     seek_message.set_cursor(cursor_id);
-    seek_message.set_k(seek_key_bytes.c_str(), seek_key_bytes.length());
+    seek_message.set_k(key.c_str(), key.length());
     reader_writer->Write(seek_message, SEEK_TAG);
     has_event = queue.Next(&got_tag, &ok);
     if (!has_event || got_tag != SEEK_TAG) {
