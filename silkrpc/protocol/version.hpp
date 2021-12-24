@@ -40,7 +40,7 @@ struct ProtocolVersion {
 };
 
 constexpr auto KV_SERVICE_API_VERSION = ProtocolVersion{4, 0, 0};
-constexpr auto ETHBACKEND_SERVICE_API_VERSION = ProtocolVersion{2, 1, 0};
+constexpr auto ETHBACKEND_SERVICE_API_VERSION = ProtocolVersion{2, 2, 0};
 constexpr auto MINING_SERVICE_API_VERSION = ProtocolVersion{1, 0, 0};
 constexpr auto TXPOOL_SERVICE_API_VERSION = ProtocolVersion{1, 0, 0};
 
