@@ -45,6 +45,9 @@ class MockSentryStub : public Sentry::StubInterface {
   MOCK_METHOD2(PeersRaw, ::grpc::ClientReaderInterface< ::sentry::PeersReply>*(::grpc::ClientContext* context, const ::sentry::PeersRequest& request));
   MOCK_METHOD4(AsyncPeersRaw, ::grpc::ClientAsyncReaderInterface< ::sentry::PeersReply>*(::grpc::ClientContext* context, const ::sentry::PeersRequest& request, ::grpc::CompletionQueue* cq, void* tag));
   MOCK_METHOD3(PrepareAsyncPeersRaw, ::grpc::ClientAsyncReaderInterface< ::sentry::PeersReply>*(::grpc::ClientContext* context, const ::sentry::PeersRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(NodeInfo, ::grpc::Status(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::types::NodeInfoReply* response));
+  MOCK_METHOD3(AsyncNodeInfoRaw, ::grpc::ClientAsyncResponseReaderInterface< ::types::NodeInfoReply>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PrepareAsyncNodeInfoRaw, ::grpc::ClientAsyncResponseReaderInterface< ::types::NodeInfoReply>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
 };
 
 } // namespace sentry
