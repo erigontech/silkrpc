@@ -280,4 +280,8 @@ int main(int argc, char* argv[]) {
     if (tool == "kv_seek") {
         return kv_seek(argc, argv);
     }
+
+    std::cerr << "Unknown tool " << tool <<  " specified as first argument\n\n";
+    std::cerr << absl::ProgramUsageMessage();
+    return -1;
 }

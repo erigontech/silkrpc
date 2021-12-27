@@ -34,15 +34,14 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/ethdb/database.hpp>
-#include "request_handler.hpp"
 
 namespace silkrpc::http {
 
 Connection::Connection(Context& context, asio::thread_pool& workers) : socket_{*context.io_context}, request_handler_{context, workers} {
-    request_.content.reserve(1024);
-    request_.headers.reserve(8);
-    request_.method.reserve(64);
-    request_.uri.reserve(64);
+    request_.content.reserve(kRequestContentInitialCapacity);
+    request_.headers.reserve(kRequestHeadersInitialCapacity);
+    request_.method.reserve(kRequestMethodInitialCapacity);
+    request_.uri.reserve(kRequestUriInitialCapacity);
     SILKRPC_DEBUG << "Connection::Connection socket " << &socket_ << " created\n";
 }
 
