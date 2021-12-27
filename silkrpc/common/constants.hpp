@@ -18,6 +18,7 @@
 #define SILKRPC_COMMON_CONSTANTS_HPP_
 
 #include <chrono>
+#include <cstddef>
 
 namespace silkrpc {
 
@@ -27,6 +28,13 @@ constexpr const char* kEmptyChainData{""};
 constexpr const char* kDefaultLocal{"localhost:8545"};
 constexpr const char* kDefaultTarget{"localhost:9090"};
 constexpr const std::chrono::milliseconds kDefaultTimeout{10000};
+
+constexpr const std::size_t kHttpIncomingBufferSize{8192};
+
+constexpr const std::size_t kRequestContentInitialCapacity{1024};
+constexpr const std::size_t kRequestHeadersInitialCapacity{8};
+constexpr const std::size_t kRequestMethodInitialCapacity{64};
+constexpr const std::size_t kRequestUriInitialCapacity{64};
 
 } // namespace silkrpc
 
