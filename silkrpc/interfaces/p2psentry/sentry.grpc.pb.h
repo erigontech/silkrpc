@@ -124,6 +124,14 @@ class Sentry final {
     std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::sentry::PeersReply>> PrepareAsyncPeers(::grpc::ClientContext* context, const ::sentry::PeersRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::sentry::PeersReply>>(PrepareAsyncPeersRaw(context, request, cq));
     }
+    // NodeInfo returns a collection of metadata known about the host.
+    virtual ::grpc::Status NodeInfo(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::types::NodeInfoReply* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::types::NodeInfoReply>> AsyncNodeInfo(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::types::NodeInfoReply>>(AsyncNodeInfoRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::types::NodeInfoReply>> PrepareAsyncNodeInfo(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::types::NodeInfoReply>>(PrepareAsyncNodeInfoRaw(context, request, cq));
+    }
     class experimental_async_interface {
      public:
       virtual ~experimental_async_interface() {}
@@ -252,6 +260,19 @@ class Sentry final {
       #else
       virtual void Peers(::grpc::ClientContext* context, ::sentry::PeersRequest* request, ::grpc::experimental::ClientReadReactor< ::sentry::PeersReply>* reactor) = 0;
       #endif
+      // NodeInfo returns a collection of metadata known about the host.
+      virtual void NodeInfo(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::NodeInfoReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void NodeInfo(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::NodeInfoReply* response, std::function<void(::grpc::Status)>) = 0;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void NodeInfo(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::NodeInfoReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void NodeInfo(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::NodeInfoReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void NodeInfo(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::NodeInfoReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void NodeInfo(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::NodeInfoReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
     };
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     typedef class experimental_async_interface async_interface;
@@ -285,6 +306,8 @@ class Sentry final {
     virtual ::grpc::ClientReaderInterface< ::sentry::PeersReply>* PeersRaw(::grpc::ClientContext* context, const ::sentry::PeersRequest& request) = 0;
     virtual ::grpc::ClientAsyncReaderInterface< ::sentry::PeersReply>* AsyncPeersRaw(::grpc::ClientContext* context, const ::sentry::PeersRequest& request, ::grpc::CompletionQueue* cq, void* tag) = 0;
     virtual ::grpc::ClientAsyncReaderInterface< ::sentry::PeersReply>* PrepareAsyncPeersRaw(::grpc::ClientContext* context, const ::sentry::PeersRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::types::NodeInfoReply>* AsyncNodeInfoRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::types::NodeInfoReply>* PrepareAsyncNodeInfoRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -369,6 +392,13 @@ class Sentry final {
     }
     std::unique_ptr< ::grpc::ClientAsyncReader< ::sentry::PeersReply>> PrepareAsyncPeers(::grpc::ClientContext* context, const ::sentry::PeersRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReader< ::sentry::PeersReply>>(PrepareAsyncPeersRaw(context, request, cq));
+    }
+    ::grpc::Status NodeInfo(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::types::NodeInfoReply* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::types::NodeInfoReply>> AsyncNodeInfo(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::types::NodeInfoReply>>(AsyncNodeInfoRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::types::NodeInfoReply>> PrepareAsyncNodeInfo(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::types::NodeInfoReply>>(PrepareAsyncNodeInfoRaw(context, request, cq));
     }
     class experimental_async final :
       public StubInterface::experimental_async_interface {
@@ -491,6 +521,18 @@ class Sentry final {
       #else
       void Peers(::grpc::ClientContext* context, ::sentry::PeersRequest* request, ::grpc::experimental::ClientReadReactor< ::sentry::PeersReply>* reactor) override;
       #endif
+      void NodeInfo(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::NodeInfoReply* response, std::function<void(::grpc::Status)>) override;
+      void NodeInfo(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::NodeInfoReply* response, std::function<void(::grpc::Status)>) override;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void NodeInfo(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::NodeInfoReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void NodeInfo(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::NodeInfoReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void NodeInfo(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::NodeInfoReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void NodeInfo(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::NodeInfoReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
      private:
       friend class Stub;
       explicit experimental_async(Stub* stub): stub_(stub) { }
@@ -526,6 +568,8 @@ class Sentry final {
     ::grpc::ClientReader< ::sentry::PeersReply>* PeersRaw(::grpc::ClientContext* context, const ::sentry::PeersRequest& request) override;
     ::grpc::ClientAsyncReader< ::sentry::PeersReply>* AsyncPeersRaw(::grpc::ClientContext* context, const ::sentry::PeersRequest& request, ::grpc::CompletionQueue* cq, void* tag) override;
     ::grpc::ClientAsyncReader< ::sentry::PeersReply>* PrepareAsyncPeersRaw(::grpc::ClientContext* context, const ::sentry::PeersRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::types::NodeInfoReply>* AsyncNodeInfoRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::types::NodeInfoReply>* PrepareAsyncNodeInfoRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_SetStatus_;
     const ::grpc::internal::RpcMethod rpcmethod_PenalizePeer_;
     const ::grpc::internal::RpcMethod rpcmethod_PeerMinBlock_;
@@ -537,6 +581,7 @@ class Sentry final {
     const ::grpc::internal::RpcMethod rpcmethod_Messages_;
     const ::grpc::internal::RpcMethod rpcmethod_PeerCount_;
     const ::grpc::internal::RpcMethod rpcmethod_Peers_;
+    const ::grpc::internal::RpcMethod rpcmethod_NodeInfo_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -562,6 +607,8 @@ class Sentry final {
     virtual ::grpc::Status PeerCount(::grpc::ServerContext* context, const ::sentry::PeerCountRequest* request, ::sentry::PeerCountReply* response);
     // Notifications about connected (after sub-protocol handshake) or lost peer
     virtual ::grpc::Status Peers(::grpc::ServerContext* context, const ::sentry::PeersRequest* request, ::grpc::ServerWriter< ::sentry::PeersReply>* writer);
+    // NodeInfo returns a collection of metadata known about the host.
+    virtual ::grpc::Status NodeInfo(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::types::NodeInfoReply* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_SetStatus : public BaseClass {
@@ -783,7 +830,27 @@ class Sentry final {
       ::grpc::Service::RequestAsyncServerStreaming(10, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_SetStatus<WithAsyncMethod_PenalizePeer<WithAsyncMethod_PeerMinBlock<WithAsyncMethod_HandShake<WithAsyncMethod_SendMessageByMinBlock<WithAsyncMethod_SendMessageById<WithAsyncMethod_SendMessageToRandomPeers<WithAsyncMethod_SendMessageToAll<WithAsyncMethod_Messages<WithAsyncMethod_PeerCount<WithAsyncMethod_Peers<Service > > > > > > > > > > > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_NodeInfo : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_NodeInfo() {
+      ::grpc::Service::MarkMethodAsync(11);
+    }
+    ~WithAsyncMethod_NodeInfo() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status NodeInfo(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::types::NodeInfoReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestNodeInfo(::grpc::ServerContext* context, ::google::protobuf::Empty* request, ::grpc::ServerAsyncResponseWriter< ::types::NodeInfoReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_SetStatus<WithAsyncMethod_PenalizePeer<WithAsyncMethod_PeerMinBlock<WithAsyncMethod_HandShake<WithAsyncMethod_SendMessageByMinBlock<WithAsyncMethod_SendMessageById<WithAsyncMethod_SendMessageToRandomPeers<WithAsyncMethod_SendMessageToAll<WithAsyncMethod_Messages<WithAsyncMethod_PeerCount<WithAsyncMethod_Peers<WithAsyncMethod_NodeInfo<Service > > > > > > > > > > > > AsyncService;
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_SetStatus : public BaseClass {
    private:
@@ -1283,11 +1350,58 @@ class Sentry final {
     #endif
       { return nullptr; }
   };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_NodeInfo : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithCallbackMethod_NodeInfo() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(11,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::NodeInfoReply>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::google::protobuf::Empty* request, ::types::NodeInfoReply* response) { return this->NodeInfo(context, request, response); }));}
+    void SetMessageAllocatorFor_NodeInfo(
+        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::types::NodeInfoReply>* allocator) {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(11);
+    #else
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(11);
+    #endif
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::NodeInfoReply>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_NodeInfo() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status NodeInfo(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::types::NodeInfoReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* NodeInfo(
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::types::NodeInfoReply* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* NodeInfo(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::types::NodeInfoReply* /*response*/)
+    #endif
+      { return nullptr; }
+  };
   #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-  typedef ExperimentalWithCallbackMethod_SetStatus<ExperimentalWithCallbackMethod_PenalizePeer<ExperimentalWithCallbackMethod_PeerMinBlock<ExperimentalWithCallbackMethod_HandShake<ExperimentalWithCallbackMethod_SendMessageByMinBlock<ExperimentalWithCallbackMethod_SendMessageById<ExperimentalWithCallbackMethod_SendMessageToRandomPeers<ExperimentalWithCallbackMethod_SendMessageToAll<ExperimentalWithCallbackMethod_Messages<ExperimentalWithCallbackMethod_PeerCount<ExperimentalWithCallbackMethod_Peers<Service > > > > > > > > > > > CallbackService;
+  typedef ExperimentalWithCallbackMethod_SetStatus<ExperimentalWithCallbackMethod_PenalizePeer<ExperimentalWithCallbackMethod_PeerMinBlock<ExperimentalWithCallbackMethod_HandShake<ExperimentalWithCallbackMethod_SendMessageByMinBlock<ExperimentalWithCallbackMethod_SendMessageById<ExperimentalWithCallbackMethod_SendMessageToRandomPeers<ExperimentalWithCallbackMethod_SendMessageToAll<ExperimentalWithCallbackMethod_Messages<ExperimentalWithCallbackMethod_PeerCount<ExperimentalWithCallbackMethod_Peers<ExperimentalWithCallbackMethod_NodeInfo<Service > > > > > > > > > > > > CallbackService;
   #endif
 
-  typedef ExperimentalWithCallbackMethod_SetStatus<ExperimentalWithCallbackMethod_PenalizePeer<ExperimentalWithCallbackMethod_PeerMinBlock<ExperimentalWithCallbackMethod_HandShake<ExperimentalWithCallbackMethod_SendMessageByMinBlock<ExperimentalWithCallbackMethod_SendMessageById<ExperimentalWithCallbackMethod_SendMessageToRandomPeers<ExperimentalWithCallbackMethod_SendMessageToAll<ExperimentalWithCallbackMethod_Messages<ExperimentalWithCallbackMethod_PeerCount<ExperimentalWithCallbackMethod_Peers<Service > > > > > > > > > > > ExperimentalCallbackService;
+  typedef ExperimentalWithCallbackMethod_SetStatus<ExperimentalWithCallbackMethod_PenalizePeer<ExperimentalWithCallbackMethod_PeerMinBlock<ExperimentalWithCallbackMethod_HandShake<ExperimentalWithCallbackMethod_SendMessageByMinBlock<ExperimentalWithCallbackMethod_SendMessageById<ExperimentalWithCallbackMethod_SendMessageToRandomPeers<ExperimentalWithCallbackMethod_SendMessageToAll<ExperimentalWithCallbackMethod_Messages<ExperimentalWithCallbackMethod_PeerCount<ExperimentalWithCallbackMethod_Peers<ExperimentalWithCallbackMethod_NodeInfo<Service > > > > > > > > > > > > ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_SetStatus : public BaseClass {
    private:
@@ -1471,6 +1585,23 @@ class Sentry final {
     }
     // disable synchronous version of this method
     ::grpc::Status Peers(::grpc::ServerContext* /*context*/, const ::sentry::PeersRequest* /*request*/, ::grpc::ServerWriter< ::sentry::PeersReply>* /*writer*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_NodeInfo : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_NodeInfo() {
+      ::grpc::Service::MarkMethodGeneric(11);
+    }
+    ~WithGenericMethod_NodeInfo() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status NodeInfo(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::types::NodeInfoReply* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -1693,6 +1824,26 @@ class Sentry final {
     }
     void RequestPeers(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncServerStreaming(10, context, request, writer, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_NodeInfo : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_NodeInfo() {
+      ::grpc::Service::MarkMethodRaw(11);
+    }
+    ~WithRawMethod_NodeInfo() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status NodeInfo(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::types::NodeInfoReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestNodeInfo(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -2114,6 +2265,44 @@ class Sentry final {
       { return nullptr; }
   };
   template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_NodeInfo : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithRawCallbackMethod_NodeInfo() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(11,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->NodeInfo(context, request, response); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_NodeInfo() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status NodeInfo(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::types::NodeInfoReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* NodeInfo(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* NodeInfo(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_SetStatus : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
@@ -2356,7 +2545,34 @@ class Sentry final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedPeerCount(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::sentry::PeerCountRequest,::sentry::PeerCountReply>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_SetStatus<WithStreamedUnaryMethod_PenalizePeer<WithStreamedUnaryMethod_PeerMinBlock<WithStreamedUnaryMethod_HandShake<WithStreamedUnaryMethod_SendMessageByMinBlock<WithStreamedUnaryMethod_SendMessageById<WithStreamedUnaryMethod_SendMessageToRandomPeers<WithStreamedUnaryMethod_SendMessageToAll<WithStreamedUnaryMethod_PeerCount<Service > > > > > > > > > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_NodeInfo : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_NodeInfo() {
+      ::grpc::Service::MarkMethodStreamed(11,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::google::protobuf::Empty, ::types::NodeInfoReply>(
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerUnaryStreamer<
+                     ::google::protobuf::Empty, ::types::NodeInfoReply>* streamer) {
+                       return this->StreamedNodeInfo(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_NodeInfo() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status NodeInfo(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::types::NodeInfoReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedNodeInfo(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::google::protobuf::Empty,::types::NodeInfoReply>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_SetStatus<WithStreamedUnaryMethod_PenalizePeer<WithStreamedUnaryMethod_PeerMinBlock<WithStreamedUnaryMethod_HandShake<WithStreamedUnaryMethod_SendMessageByMinBlock<WithStreamedUnaryMethod_SendMessageById<WithStreamedUnaryMethod_SendMessageToRandomPeers<WithStreamedUnaryMethod_SendMessageToAll<WithStreamedUnaryMethod_PeerCount<WithStreamedUnaryMethod_NodeInfo<Service > > > > > > > > > > StreamedUnaryService;
   template <class BaseClass>
   class WithSplitStreamingMethod_Messages : public BaseClass {
    private:
@@ -2412,7 +2628,7 @@ class Sentry final {
     virtual ::grpc::Status StreamedPeers(::grpc::ServerContext* context, ::grpc::ServerSplitStreamer< ::sentry::PeersRequest,::sentry::PeersReply>* server_split_streamer) = 0;
   };
   typedef WithSplitStreamingMethod_Messages<WithSplitStreamingMethod_Peers<Service > > SplitStreamedService;
-  typedef WithStreamedUnaryMethod_SetStatus<WithStreamedUnaryMethod_PenalizePeer<WithStreamedUnaryMethod_PeerMinBlock<WithStreamedUnaryMethod_HandShake<WithStreamedUnaryMethod_SendMessageByMinBlock<WithStreamedUnaryMethod_SendMessageById<WithStreamedUnaryMethod_SendMessageToRandomPeers<WithStreamedUnaryMethod_SendMessageToAll<WithSplitStreamingMethod_Messages<WithStreamedUnaryMethod_PeerCount<WithSplitStreamingMethod_Peers<Service > > > > > > > > > > > StreamedService;
+  typedef WithStreamedUnaryMethod_SetStatus<WithStreamedUnaryMethod_PenalizePeer<WithStreamedUnaryMethod_PeerMinBlock<WithStreamedUnaryMethod_HandShake<WithStreamedUnaryMethod_SendMessageByMinBlock<WithStreamedUnaryMethod_SendMessageById<WithStreamedUnaryMethod_SendMessageToRandomPeers<WithStreamedUnaryMethod_SendMessageToAll<WithSplitStreamingMethod_Messages<WithStreamedUnaryMethod_PeerCount<WithSplitStreamingMethod_Peers<WithStreamedUnaryMethod_NodeInfo<Service > > > > > > > > > > > > StreamedService;
 };
 
 }  // namespace sentry
