@@ -240,7 +240,7 @@ asio::awaitable<Addresses> read_senders(const DatabaseReader& reader, const evmc
     SILKRPC_TRACE << "read_senders data: " << silkworm::to_hex(data) << "\n";
     Addresses senders{data.size() / silkworm::kAddressLength};
     for (size_t i{0}; i < senders.size(); i++) {
-        senders[i] = silkworm::to_address(silkworm::ByteView{&data[i * silkworm::kAddressLength], silkworm::kAddressLength});
+        senders[i] = silkworm::to_evmc_address(silkworm::ByteView{&data[i * silkworm::kAddressLength], silkworm::kAddressLength});
     }
     co_return senders;
 }

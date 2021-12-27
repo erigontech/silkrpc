@@ -22,6 +22,7 @@
 
 #include <silkrpc/common/util.hpp>
 #include <silkworm/common/endian.hpp>
+#include <silkworm/core/silkworm/rlp/encode_vector.hpp>
 #include <silkrpc/core/blocks.hpp>
 
 namespace silkrpc {

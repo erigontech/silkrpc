@@ -89,7 +89,7 @@ void to_json(nlohmann::json& json, const address& addr) {
 
 void from_json(const nlohmann::json& json, address& addr) {
     const auto address_bytes = silkworm::from_hex(json.get<std::string>());
-    addr = silkworm::to_address(address_bytes.value_or(silkworm::Bytes{}));
+    addr = silkworm::to_evmc_address(address_bytes.value_or(silkworm::Bytes{}));
 }
 
 void to_json(nlohmann::json& json, const bytes32& b32) {
@@ -293,7 +293,7 @@ void from_json(const nlohmann::json& json, Log& log) {
             throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Log CBOR: binary expected in [0]"};
         }
         auto address_bytes = json[0].get_binary();
-        log.address = silkworm::to_address(silkworm::Bytes{address_bytes.begin(), address_bytes.end()});
+        log.address = silkworm::to_evmc_address(silkworm::Bytes{address_bytes.begin(), address_bytes.end()});
         if (!json[1].is_array()) {
             throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Log CBOR: array expected in [1]"};
         }

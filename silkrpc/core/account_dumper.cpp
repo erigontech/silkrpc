@@ -50,7 +50,7 @@ asio::awaitable<DumpAccounts> AccountDumper::dump_accounts(const BlockNumberOrHa
 
     AccountWalker::Collector collector = [&](silkworm::ByteView k, silkworm::ByteView v) {
         if (max_result > 0 && collected_data.size() >= max_result) {
-            dump_accounts.next = silkworm::to_address(k);
+            dump_accounts.next = silkworm::to_evmc_address(k);
             return false;
         }
 
@@ -81,10 +81,10 @@ asio::awaitable<void> AccountDumper::load_accounts(ethdb::TransactionDatabase& t
 
     StateReader state_reader{tx_database};
     for (auto kv : collected_data) {
-        const auto address = silkworm::to_address(kv.key);
+        const auto address = silkworm::to_evmc_address(kv.key);
 
         auto [account, err]{silkworm::decode_account_from_storage(kv.value)};
-        silkworm::rlp::err_handler(err);
+        silkworm::rlp::success_or_throw(err);
 
         DumpAccount dump_account;
         dump_account.balance = account.balance;

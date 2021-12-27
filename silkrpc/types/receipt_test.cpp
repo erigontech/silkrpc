@@ -40,7 +40,7 @@ TEST_CASE("create empty receipt", "[silkrpc][types][receipt]") {
 
 TEST_CASE("print empty receipt", "[silkrpc][types][receipt]") {
     Receipt r{};
-    CHECK_NOTHROW(silkworm::null_stream() << r);
+    CHECK_NOTHROW(silkrpc::null_stream() << r);
 }
 
 TEST_CASE("print receipt", "[silkrpc][types][receipt]") {
@@ -54,7 +54,7 @@ TEST_CASE("print receipt", "[silkrpc][types][receipt]") {
     r.from = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address;
     r.to = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address;
     r.type = 2;
-    CHECK_NOTHROW(silkworm::null_stream() << r);
+    CHECK_NOTHROW(silkrpc::null_stream() << r);
 }
 
 TEST_CASE("bloom from empty logs", "[silkrpc][types][receipt]") {

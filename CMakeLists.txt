@@ -14,7 +14,7 @@
    limitations under the License.
 ]]
 
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.16)
 
 # Check that submodules initialization has been done
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/silkworm/.git)
@@ -23,13 +23,13 @@ endif()
 
 # Use default toolchain file if not specified on the command line
 if(NOT CMAKE_TOOLCHAIN_FILE)
-  set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/silkworm/cmake/toolchain.cmake CACHE FILEPATH "" FORCE)
+  set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/silkworm/cmake/toolchain/cxx17.cmake CACHE FILEPATH "" FORCE)
 endif()
 
 include(silkworm/evmone/cmake/cable/HunterGate.cmake)
 HunterGate(
-  URL "https://github.com/cpp-pm/hunter/archive/v0.23.293.tar.gz"
-  SHA1 "e8e5470652db77149d9b38656db2a6c0b7642693"
+  URL "https://github.com/cpp-pm/hunter/archive/v0.23.317.tar.gz"
+  SHA1 "fbdd94b1966d351384e27b02c8d134915b1131d6"
   FILEPATH "${CMAKE_SOURCE_DIR}/cmake/Hunter/config.cmake"
 )
 

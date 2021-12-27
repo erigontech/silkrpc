@@ -35,7 +35,7 @@ TEST_CASE("create empty log", "[silkrpc][types][log]") {
 
 TEST_CASE("print empty log", "[silkrpc][types][log]") {
     Log l{};
-    CHECK_NOTHROW(silkworm::null_stream() << l);
+    CHECK_NOTHROW(silkrpc::null_stream() << l);
 }
 
 } // namespace silkrpc
