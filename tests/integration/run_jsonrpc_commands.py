@@ -9,23 +9,23 @@ import getopt
 import jsondiff
 
 
-def run_shell_command(command: str, expected_response: str, exit_on_fail) -> int:
-    """ Run the specified command as shell. """
+def run_shell_command(command: str, expected_response: str, exit_on_fail):
+    """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
     command_and_args = shlex.split(command)
-    process = subprocess.run(command_and_args, stdout=subprocess.PIPE,
-                             universal_newlines=True, check=True)
+    process = subprocess.run(command_and_args, stdout=subprocess.PIPE, universal_newlines=True, check=True)
     if process.returncode != 0:
         sys.exit(process.returncode)
     process.stdout = process.stdout.strip('\n')
     response = json.loads(process.stdout)
-    if "result" in expected_response and expected_response["result"] is not None and response != expected_response:
+    if response != expected_response:
+        if "result" in response and "result" in expected_response and expected_response["result"] is None:
+            # response and expected_response are different but don't care
+            return
+        if "error" in response and "error" in expected_response and expected_response["error"] is None:
+            # response and expected_response are different but don't care
+            return
         response_diff = jsondiff.diff(expected_response, response)
         print("--> KO: unexpected result for command: {0}\n--> DIFF expected-received: {1}".format(command, response_diff))
-        if exit_on_fail:
-            sys.exit(1)
-    elif "error" in expected_response and expected_response["error"] is not None and response != expected_response:
-        response_diff = jsondiff.diff(expected_response, response)
-        print("--> KO: unexpected error for command: {0}\n--> DIFF expected-received: {1}".format(command, response_diff))
         if exit_on_fail:
             sys.exit(1)
 

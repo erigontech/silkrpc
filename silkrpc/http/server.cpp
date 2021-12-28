@@ -22,6 +22,7 @@
 
 #include "server.hpp"
 
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
@@ -30,19 +31,74 @@
 #include <asio/dispatch.hpp>
 #include <asio/use_awaitable.hpp>
 
+#include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/http/connection.hpp>
+#include <silkrpc/http/methods.hpp>
 
 namespace silkrpc::http {
 
-Server::Server(const std::string& address, const std::string& port, ContextPool& context_pool, std::size_t num_workers)
+std::tuple<std::string, std::string> Server::parse_endpoint(const std::string& tcp_end_point) {
+    const auto host = tcp_end_point.substr(0, tcp_end_point.find(kAddressPortSeparator));
+    const auto port = tcp_end_point.substr(tcp_end_point.find(kAddressPortSeparator) + 1, std::string::npos);
+    return {host, port};
+}
+
+std::vector<std::string> Server::parse_api_spec(const std::string& api_spec) {
+    std::vector<std::string> api_namespaces;
+
+    auto start = 0u;
+    auto end = api_spec.find(kApiSpecSeparator);
+    while (end != std::string::npos) {
+        api_namespaces.push_back(api_spec.substr(start, end - start));
+        start = end + std::strlen(kApiSpecSeparator);
+        end = api_spec.find(kApiSpecSeparator, start);
+    }
+    api_namespaces.push_back(api_spec.substr(start, end));
+
+    return api_namespaces;
+}
+
+void Server::build_handlers(const std::string& api_spec) {
+    const auto api_namespaces{parse_api_spec(api_spec)};
+
+    if (any_of_equal(api_namespaces, kDebugApiNamespace)) {
+        RequestHandler::add_debug_handlers();
+    }
+    if (any_of_equal(api_namespaces, kEthApiNamespace)) {
+        RequestHandler::add_eth_handlers();
+    }
+    if (any_of_equal(api_namespaces, kNetApiNamespace)) {
+        RequestHandler::add_net_handlers();
+    }
+    if (any_of_equal(api_namespaces, kParityApiNamespace)) {
+        RequestHandler::add_parity_handlers();
+    }
+    if (any_of_equal(api_namespaces, kTgApiNamespace)) {
+        RequestHandler::add_tg_handlers();
+    }
+    if (any_of_equal(api_namespaces, kTraceApiNamespace)) {
+        RequestHandler::add_trace_handlers();
+    }
+    if (any_of_equal(api_namespaces, kWeb3ApiNamespace)) {
+        RequestHandler::add_web3_handlers();
+    }
+}
+
+Server::Server(const std::string& end_point, const std::string& api_spec, ContextPool& context_pool, std::size_t num_workers)
 : context_pool_(context_pool), acceptor_{context_pool.get_io_context()}, workers_{num_workers} {
+    const auto [host, port] = parse_endpoint(end_point);
+
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
     asio::ip::tcp::resolver resolver{acceptor_.get_executor()};
-    asio::ip::tcp::endpoint endpoint = *resolver.resolve(address, port).begin();
+    asio::ip::tcp::endpoint endpoint = *resolver.resolve(host, port).begin();
     acceptor_.open(endpoint.protocol());
     acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));
     acceptor_.bind(endpoint);
+
+    // Activate JSON RPC API handlers based on the API namespace specification
+    build_handlers(api_spec);
 }
 
 void Server::start() {

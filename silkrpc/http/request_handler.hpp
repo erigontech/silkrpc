@@ -42,6 +42,14 @@ struct Request;
 
 class RequestHandler {
 public:
+    static void add_debug_handlers();
+    static void add_eth_handlers();
+    static void add_net_handlers();
+    static void add_parity_handlers();
+    static void add_tg_handlers();
+    static void add_trace_handlers();
+    static void add_web3_handlers();
+
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 

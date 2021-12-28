@@ -17,6 +17,7 @@
 #ifndef SILKRPC_COMMON_UTIL_HPP_
 #define SILKRPC_COMMON_UTIL_HPP_
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -80,6 +81,16 @@ inline auto hash_of_transaction(const silkworm::Transaction& txn) {
     silkworm::Bytes txn_rlp{};
     silkworm::rlp::encode(txn_rlp, txn, /*for_signing=*/false, /*wrap_eip2718_as_array=*/false);
     return ethash::keccak256(txn_rlp.data(), txn_rlp.length());
+}
+
+template<typename InputIterator, typename V>
+constexpr bool any_of_equal(InputIterator first, InputIterator last, const V& value) {
+    return std::find(first, last, value) != last;
+}
+
+template<typename Range, typename V>
+constexpr bool any_of_equal(const Range& r, const V& value) {
+    return any_of_equal(std::begin(r), std::end(r), value);
 }
 
 inline std::ostream& operator<<(std::ostream& out, const silkworm::ByteView& bytes) {
