@@ -24,6 +24,7 @@
 #include <silkworm/node/silkworm/db/bitmap.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/core/state_reader.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
@@ -36,7 +37,7 @@ namespace silkrpc {
 asio::awaitable<void> AccountWalker::walk_of_accounts(uint64_t block_number, const evmc::address& start_address, Collector& collector) {
     auto ps_cursor = co_await transaction_.cursor(db::table::kPlainState);
 
-    auto start_key = silkworm::full_view(start_address);
+    auto start_key = full_view(start_address);
     auto ps_kv = co_await seek(*ps_cursor, start_key, silkworm::kAddressLength);
     if (ps_kv.key.empty()) {
         co_return;

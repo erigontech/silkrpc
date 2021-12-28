@@ -23,6 +23,7 @@
 #include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/types/log.hpp>
 
 namespace silkrpc {
@@ -90,7 +91,7 @@ TEST_CASE("bloom from more than one log", "[silkrpc][types][receipt]") {
         },
     };
     silkworm::Bloom bloom{bloom_from_logs(logs)};
-    CHECK(silkworm::to_hex(silkworm::full_view(bloom)) ==
+    CHECK(silkworm::to_hex(full_view(bloom)) ==
         "000000000000000000810000000000000000000000000000000000020000000000000000000000000000008000"
         "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         "000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000"

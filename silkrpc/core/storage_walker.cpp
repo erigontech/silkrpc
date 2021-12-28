@@ -28,6 +28,7 @@
 #include <silkworm/node/silkworm/db/util.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/core/state_reader.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
@@ -177,7 +178,7 @@ asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_number, con
 asio::awaitable<void> StorageWalker::storage_range_at(uint64_t block_number, const evmc::address& address,
         const evmc::bytes32& start_location, int16_t max_result, StorageCollector& collector) {
     ethdb::TransactionDatabase tx_database{transaction_};
-    auto account_data = co_await tx_database.get_one(db::table::kPlainState, silkworm::full_view(address));
+    auto account_data = co_await tx_database.get_one(db::table::kPlainState, full_view(address));
 
     auto [account, err] = silkworm::decode_account_from_storage(account_data);
     silkworm::rlp::success_or_throw(err);
@@ -195,7 +196,7 @@ asio::awaitable<void> StorageWalker::storage_range_at(uint64_t block_number, con
 
         StorageItem storage_item;
         storage_item.key = loc;
-        storage_item.sec_key = silkworm::full_view(hash);
+        storage_item.sec_key = full_view(hash);
         storage_item.value = data;
 
         if (storage.find(storage_item) != storage.end()) {

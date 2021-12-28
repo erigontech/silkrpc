@@ -26,6 +26,7 @@
 #include <silkworm/node/silkworm/db/util.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/core/account_walker.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/core/state_reader.hpp>
@@ -93,7 +94,7 @@ asio::awaitable<void> AccountDumper::load_accounts(ethdb::TransactionDatabase& t
         dump_account.incarnation = account.incarnation;
 
         if (account.incarnation > 0 && account.code_hash == silkworm::kEmptyHash) {
-            const auto storage_key{silkworm::db::storage_prefix(silkworm::full_view(address), account.incarnation)};
+            const auto storage_key{silkworm::db::storage_prefix(full_view(address), account.incarnation)};
             auto code_hash{co_await tx_database.get_one(silkrpc::db::table::kPlainContractCode, storage_key)};
             if (code_hash.length() == silkworm::kHashLength) {
                 std::memcpy(dump_account.code_hash.bytes, code_hash.data(), silkworm::kHashLength);
@@ -124,7 +125,7 @@ asio::awaitable<void> AccountDumper::load_storage(uint64_t block_number, DumpAcc
             auto& storage = *account.storage;
             storage["0x" + silkworm::to_hex(loc)] = silkworm::to_hex(data);
             auto hash = hash_of(loc);
-            auto key = silkworm::full_view(hash);
+            auto key = full_view(hash);
             collected_entries[silkworm::Bytes{key}] = data;
 
             return true;

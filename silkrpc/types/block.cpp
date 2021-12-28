@@ -38,7 +38,7 @@ std::ostream& operator<<(std::ostream& out, const Block& b) {
     out << " state_root: " << b.block.header.state_root;
     out << " transactions_root: " << b.block.header.transactions_root;
     out << " receipts_root: " << b.block.header.receipts_root;
-    out << " logs_bloom: " << silkworm::to_hex(silkworm::full_view(b.block.header.logs_bloom));
+    out << " logs_bloom: " << silkworm::to_hex(full_view(b.block.header.logs_bloom));
     out << " difficulty: " << silkworm::to_hex(silkworm::endian::to_big_compact(b.block.header.difficulty));
     out << " number: " << b.block.header.number;
     out << " gas_limit: " << b.block.header.gas_limit;

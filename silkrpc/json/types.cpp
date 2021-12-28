@@ -119,7 +119,7 @@ void to_json(nlohmann::json& json, const BlockHeader& header) {
     json["parentHash"] = header.parent_hash;
     json["nonce"] = "0x" + silkworm::to_hex({header.nonce.data(), header.nonce.size()});
     json["sha3Uncles"] = header.ommers_hash;
-    json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(header.logs_bloom));
+    json["logsBloom"] = "0x" + silkworm::to_hex(silkrpc::full_view(header.logs_bloom));
     json["transactionsRoot"] = header.transactions_root;
     json["stateRoot"] = header.state_root;
     json["receiptsRoot"] = header.receipts_root;
@@ -188,7 +188,7 @@ void to_json(nlohmann::json& json, const Block& b) {
     json["parentHash"] = b.block.header.parent_hash;
     json["nonce"] = "0x" + silkworm::to_hex({b.block.header.nonce.data(), b.block.header.nonce.size()});
     json["sha3Uncles"] = b.block.header.ommers_hash;
-    json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(b.block.header.logs_bloom));
+    json["logsBloom"] = "0x" + silkworm::to_hex(full_view(b.block.header.logs_bloom));
     json["transactionsRoot"] = b.block.header.transactions_root;
     json["stateRoot"] = b.block.header.state_root;
     json["receiptsRoot"] = b.block.header.receipts_root;
@@ -336,7 +336,7 @@ void to_json(nlohmann::json& json, const Receipt& receipt) {
         json["contractAddress"] = nlohmann::json{};
     }
     json["logs"] = receipt.logs;
-    json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(receipt.bloom));
+    json["logsBloom"] = "0x" + silkworm::to_hex(full_view(receipt.bloom));
     json["status"] = silkrpc::to_quantity(receipt.success ? 1 : 0);
 }
 
