@@ -63,7 +63,7 @@ commands:
       - run:
           name: "Cmake"
           working_directory: ~/build
-          command: cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_FILE -DSILKRPC_CLANG_COVERAGE=$CLANG_COVERAGE
+          command: cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=silkworm/cmake/toolchain/cxx17.cmake -DSILKRPC_CLANG_COVERAGE=$CLANG_COVERAGE
       - save_cache:
           name: "Save Hunter cache"
           key: *hunter-cache-key
