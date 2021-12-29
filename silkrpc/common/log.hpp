@@ -17,25 +17,45 @@
 #ifndef SILKRPC_COMMON_LOG_HPP_
 #define SILKRPC_COMMON_LOG_HPP_
 
-#include <absl/strings/string_view.h>
-
+#include <mutex>
 #include <string>
 
-#include <silkworm/common/log.hpp>
-
-namespace silkworm {
-
-bool AbslParseFlag(absl::string_view text, LogLevel* level, std::string* error);
-std::string AbslUnparseFlag(LogLevel level);
-
-} // namespace silkworm
+#include <absl/strings/string_view.h>
 
 namespace silkrpc {
 
-using Logger = silkworm::log_;
-using LogLevel = silkworm::LogLevel;
+// available verbosity levels
+enum class LogLevel { Trace, Debug, Info, Warn, Error, Critical, None };
 
-#define LOG(level_) if ((level_) < silkworm::log_verbosity_) {} else silkworm::log_(level_) << " " // NOLINT
+// silence
+std::ostream& null_stream();
+
+//
+// Below are for access via macros ONLY.
+// Placing them in detail namespace prevents use of macros in nested namespace
+//
+extern LogLevel log_verbosity_;
+extern bool log_thread_enabled_;
+void log_set_streams_(std::ostream& o1, std::ostream& o2);
+class log_ {
+  public:
+    explicit log_(LogLevel level) : level_(level) { log_mtx_.lock(); }
+    ~log_() { log_mtx_.unlock(); }
+    std::ostream& header_(LogLevel);
+    template <class T>
+    std::ostream& operator<<(const T& message) {
+        return header_(level_) << message;
+    }
+
+  private:
+    LogLevel level_;
+    static std::mutex log_mtx_;
+};
+
+
+using Logger = log_;
+
+#define LOG(level_) if ((level_) < silkrpc::log_verbosity_) {} else silkrpc::log_(level_) << " " // NOLINT
 
 // LogTrace, LogDebug, LogInfo, LogWarn, LogError, LogCritical, LogNone
 #define SILKRPC_TRACE LOG(LogLevel::Trace)
@@ -46,12 +66,16 @@ using LogLevel = silkworm::LogLevel;
 #define SILKRPC_CRIT  LOG(LogLevel::Critical)
 #define SILKRPC_LOG   LOG(LogLevel::None)
 
-#define SILKRPC_LOG_VERBOSITY(level_) (silkworm::log_verbosity_ = (level_))
+#define SILKRPC_LOG_VERBOSITY(level_) (silkrpc::log_verbosity_ = (level_))
 
-#define SILKRPC_LOG_THREAD(log_thread_) (silkworm::log_thread_enabled_ = (log_thread_))
+#define SILKRPC_LOG_THREAD(log_thread_) (silkrpc::log_thread_enabled_ = (log_thread_))
 
-#define SILKRPC_LOG_STREAMS(stream1_, stream2_) silkworm::log_set_streams_((stream1_), (stream2_))
+#define SILKRPC_LOG_STREAMS(stream1_, stream2_) silkrpc::log_set_streams_((stream1_), (stream2_))
+
+bool AbslParseFlag(absl::string_view text, LogLevel* level, std::string* error);
+std::string AbslUnparseFlag(LogLevel level);
 
 } // namespace silkrpc
+
 
 #endif  // SILKRPC_COMMON_LOG_HPP_

@@ -36,7 +36,7 @@ std::ostream& operator<<(std::ostream& out, const Receipt& r) {
     }
     out << " gas_used: " << r.gas_used;
     out << " #logs: " << r.logs.size();
-    auto bloom_view = silkworm::full_view(r.bloom);
+    auto bloom_view = full_view(r.bloom);
     out << " bloom: " << silkworm::to_hex(bloom_view);
     out << " success: " << r.success;
     if (r.to) {
@@ -59,12 +59,12 @@ silkworm::Bloom bloom_from_logs(const Logs& logs) {
     SILKRPC_TRACE << "bloom_from_logs #logs: " << logs.size() << "\n";
     silkworm::Bloom bloom{};
     for (auto const& log : logs) {
-        silkworm::m3_2048(bloom, silkworm::full_view(log.address));
+        silkworm::m3_2048(bloom, full_view(log.address));
         for (const auto& topic : log.topics) {
-            silkworm::m3_2048(bloom, silkworm::full_view(topic));
+            silkworm::m3_2048(bloom, full_view(topic));
         }
     }
-    SILKRPC_TRACE << "bloom_from_logs bloom: " << silkworm::to_hex(silkworm::full_view(bloom)) << "\n";
+    SILKRPC_TRACE << "bloom_from_logs bloom: " << silkworm::to_hex(full_view(bloom)) << "\n";
     return bloom;
 }
 
