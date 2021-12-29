@@ -40,7 +40,7 @@ TEST_CASE("create empty transaction", "[silkrpc][types][transaction]") {
 
 TEST_CASE("print empty transaction", "[silkrpc][types][transaction]") {
     Transaction txn{};
-    CHECK_NOTHROW(silkrpc::null_stream() << txn);
+    CHECK_NOTHROW(null_stream() << txn);
 }
 
 TEST_CASE("print type-2 transaction", "[silkrpc][types][transaction]") {
@@ -65,7 +65,7 @@ TEST_CASE("print type-2 transaction", "[silkrpc][types][transaction]") {
         110'045'619'790,  // block_base_fee_per_gas
         144,              // transaction index
     };
-    CHECK_NOTHROW(silkrpc::null_stream() << txn);
+    CHECK_NOTHROW(null_stream() << txn);
 }
 
 TEST_CASE("create legacy transaction", "[silkrpc][types][transaction]") {

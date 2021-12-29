@@ -14,17 +14,15 @@
    limitations under the License.
 */
 
-#include <thread>
-
-#include <absl/time/clock.h>
-
-
 #include "log.hpp"
-#include "tee.hpp"
-
-#include <absl/strings/str_cat.h>
 
 #include <string>
+#include <thread>
+
+#include <absl/strings/str_cat.h>
+#include <absl/time/clock.h>
+
+#include <silkrpc/common/tee.hpp>
 
 namespace silkrpc {
 

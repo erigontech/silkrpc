@@ -46,7 +46,7 @@ using testing::_;
 
 TEST_CASE("write protocol version to ostream", "[silkrpc][protocol][version]") {
     const ProtocolVersion v{1, 0, 0};
-    CHECK_NOTHROW(silkrpc::null_stream() << v);
+    CHECK_NOTHROW(null_stream() << v);
 }
 
 TEST_CASE("ETHBACKEND protocol version error", "[silkrpc][protocol][wait_for_ethbackend_protocol_check]") {

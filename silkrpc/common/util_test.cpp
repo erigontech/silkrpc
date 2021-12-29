@@ -50,33 +50,33 @@ TEST_CASE("calculate hash of transaction", "[silkrpc][common][util]") {
 
 TEST_CASE("print Bytes", "[silkrpc][common][util]") {
     const silkworm::Bytes bt1{};
-    CHECK_NOTHROW(silkrpc::null_stream() << bt1);
+    CHECK_NOTHROW(null_stream() << bt1);
 }
 
 TEST_CASE("print ByteView", "[silkrpc][common][util]") {
     silkworm::ByteView bv1{};
-    CHECK_NOTHROW(silkrpc::null_stream() << bv1);
+    CHECK_NOTHROW(null_stream() << bv1);
     silkworm::ByteView bv2{*silkworm::from_hex("0x0608")};
-    CHECK_NOTHROW(silkrpc::null_stream() << bv2);
+    CHECK_NOTHROW(null_stream() << bv2);
 }
 
 TEST_CASE("print empty address", "[silkrpc][common][util]") {
     evmc::address addr1{};
-    CHECK_NOTHROW(silkrpc::null_stream() << addr1);
+    CHECK_NOTHROW(null_stream() << addr1);
     evmc::address addr2{0xa872626373628737383927236382161739290870_address};
-    CHECK_NOTHROW(silkrpc::null_stream() << addr2);
+    CHECK_NOTHROW(null_stream() << addr2);
 }
 
 TEST_CASE("print bytes32", "[silkrpc][common][util]") {
     evmc::bytes32 b32_1{};
-    CHECK_NOTHROW(silkrpc::null_stream() << b32_1);
+    CHECK_NOTHROW(null_stream() << b32_1);
     evmc::bytes32 b32_2{0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32};
-    CHECK_NOTHROW(silkrpc::null_stream() << b32_2);
+    CHECK_NOTHROW(null_stream() << b32_2);
 }
 
 TEST_CASE("print empty const_buffer", "[silkrpc][common][util]") {
     asio::const_buffer cb{};
-    CHECK_NOTHROW(silkrpc::null_stream() << cb);
+    CHECK_NOTHROW(null_stream() << cb);
 }
 
 TEST_CASE("print empty vector of const_buffer", "[silkrpc][common][util]") {
@@ -85,12 +85,12 @@ TEST_CASE("print empty vector of const_buffer", "[silkrpc][common][util]") {
     asio::const_buffer cb2{};
     v.push_back(cb1);
     v.push_back(cb2);
-    CHECK_NOTHROW(silkrpc::null_stream() << v);
+    CHECK_NOTHROW(null_stream() << v);
 }
 
 TEST_CASE("print Account", "[silkrpc][common][util]") {
     silkworm::Account account{};
-    CHECK_NOTHROW(silkrpc::null_stream() << account);
+    CHECK_NOTHROW(null_stream() << account);
 }
 
 TEST_CASE("base64 encode", "[silkrpc][common][util]") {

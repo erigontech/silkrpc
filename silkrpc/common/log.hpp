@@ -17,10 +17,10 @@
 #ifndef SILKRPC_COMMON_LOG_HPP_
 #define SILKRPC_COMMON_LOG_HPP_
 
-#include <absl/strings/string_view.h>
-
-#include <string>
 #include <mutex>
+#include <string>
+
+#include <absl/strings/string_view.h>
 
 namespace silkrpc {
 
@@ -54,7 +54,6 @@ class log_ {
 
 
 using Logger = log_;
-using LogLevel = LogLevel;
 
 #define LOG(level_) if ((level_) < silkrpc::log_verbosity_) {} else silkrpc::log_(level_) << " " // NOLINT
 
@@ -73,8 +72,8 @@ using LogLevel = LogLevel;
 
 #define SILKRPC_LOG_STREAMS(stream1_, stream2_) silkrpc::log_set_streams_((stream1_), (stream2_))
 
-bool AbslParseFlag(absl::string_view text, silkrpc::LogLevel* level, std::string* error);
-std::string AbslUnparseFlag(silkrpc::LogLevel level);
+bool AbslParseFlag(absl::string_view text, LogLevel* level, std::string* error);
+std::string AbslUnparseFlag(LogLevel level);
 
 } // namespace silkrpc
 

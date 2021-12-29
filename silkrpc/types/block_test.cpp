@@ -272,7 +272,7 @@ TEST_CASE("check size of EIP-2718 block from RLP", "[silkrpc][types][block]") {
     CHECK(view.empty());
 
     CHECK(rpc_block_with_hash.get_block_size() == rlp_bytes.size());
-    CHECK_NOTHROW(silkrpc::null_stream() << rpc_block_with_hash);
+    CHECK_NOTHROW(null_stream() << rpc_block_with_hash);
 }
 
 } // namespace silkrpc

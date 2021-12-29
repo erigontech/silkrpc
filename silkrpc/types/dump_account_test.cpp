@@ -44,7 +44,7 @@ TEST_CASE("Empty DumpAccounts") {
     }
 
     SECTION("print") {
-        CHECK_NOTHROW(silkrpc::null_stream() << da);
+        CHECK_NOTHROW(null_stream() << da);
     }
 
     SECTION("json") {
@@ -68,7 +68,7 @@ TEST_CASE("Filled DumpAccounts") {
     }
 
     SECTION("print") {
-        CHECK_NOTHROW(silkrpc::null_stream() << da);
+        CHECK_NOTHROW(null_stream() << da);
     }
 
     SECTION("json") {
