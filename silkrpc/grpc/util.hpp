@@ -1,5 +1,5 @@
 /*
-    Copyright 2020 The Silkrpc Authors
+    Copyright 2020-2021 The Silkrpc Authors
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,29 +14,14 @@
     limitations under the License.
 */
 
-#ifndef CMD_ETHBACKEND_HPP_
-#define CMD_ETHBACKEND_HPP_
+#ifndef SILKRPC_GRPC_UTIL_HPP_
+#define SILKRPC_GRPC_UTIL_HPP_
 
-#include <iomanip>
-#include <iostream>
+#include <ostream>
 
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/interfaces/types/types.pb.h>
-
-std::ostream& operator<<(std::ostream& out, const types::H160& address) {
-    out << "address=" << address.has_hi();
-    if (address.has_hi()) {
-        auto hi_half = address.hi();
-        out << std::hex << hi_half.hi() << hi_half.lo();
-    } else {
-        auto lo_half = address.lo();
-        out << std::hex << lo_half;
-    }
-    return out;
-}
-
-std::ostream& operator<<(std::ostream& out, const grpc::Status& status) {
+inline std::ostream& operator<<(std::ostream& out, const grpc::Status& status) {
     out << "status=" << (status.ok() ? "OK" : "KO");
     if (!status.ok()) {
         out << " error_code=" << status.error_code()
@@ -46,4 +31,4 @@ std::ostream& operator<<(std::ostream& out, const grpc::Status& status) {
     return out;
 }
 
-#endif // CMD_ETHBACKEND_HPP_
+#endif // SILKRPC_GRPC_UTIL_HPP_
