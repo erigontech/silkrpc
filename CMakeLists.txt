@@ -23,7 +23,7 @@ endif()
 
 # Use default toolchain file if not specified on the command line
 if(NOT CMAKE_TOOLCHAIN_FILE)
-  set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/silkworm/cmake/toolchain/cxx17.cmake CACHE FILEPATH "" FORCE)
+  set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/silkworm/cmake/toolchain/cxx20.cmake CACHE FILEPATH "" FORCE)
 endif()
 
 include(silkworm/evmone/cmake/cable/HunterGate.cmake)

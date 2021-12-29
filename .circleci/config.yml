@@ -84,7 +84,7 @@ jobs:
   linux-gcc-10:
     environment:
       BUILD_TYPE: Debug
-      TOOLCHAIN_FILE: silkworm/cmake/toolchain/cxx17.cmake
+      TOOLCHAIN_FILE: silkworm/cmake/toolchain/cxx20.cmake
       CLANG_COVERAGE: OFF
     machine:
       image: ubuntu-2004:202101-01
