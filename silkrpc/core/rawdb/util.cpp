@@ -15,9 +15,9 @@
 */
 
 #include "util.hpp"
+
 #include <cstdlib>
 #include <cstring>
-
 
 #include <boost/endian/conversion.hpp>
 #include <intx/int128.hpp>
