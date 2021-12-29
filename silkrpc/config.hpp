@@ -18,9 +18,15 @@
 #define SILKRPC_CONFIG_HPP_
 
 #if __has_include(<coroutine>)
-# define ASIO_HAS_CO_AWAIT
-# define ASIO_HAS_STD_COROUTINE
-# define SILKRPC_HAS_COROUTINES
+# ifndef ASIO_HAS_CO_AWAIT
+#  define ASIO_HAS_CO_AWAIT
+# endif // ASIO_HAS_CO_AWAIT
+# ifndef ASIO_HAS_STD_COROUTINE
+#  define ASIO_HAS_STD_COROUTINE
+# endif // ASIO_HAS_STD_COROUTINE
+# ifndef SILKRPC_HAS_COROUTINES
+#  define SILKRPC_HAS_COROUTINES
+# endif // SILKRPC_HAS_COROUTINES
 # include <coroutine>
 #elif __has_include(<experimental/coroutine>)
 # define SILKRPC_HAS_EXPERIMENTAL_COROUTINES
