@@ -63,7 +63,7 @@ commands:
       - run:
           name: "Cmake"
           working_directory: ~/build
-          command: cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=silkworm/cmake/toolchain/cxx17.cmake -DSILKRPC_CLANG_COVERAGE=$CLANG_COVERAGE
+          command: cmake ../project -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN_FILE -DSILKRPC_CLANG_COVERAGE=$CLANG_COVERAGE
       - save_cache:
           name: "Save Hunter cache"
           key: *hunter-cache-key
@@ -84,7 +84,7 @@ jobs:
   linux-gcc-10:
     environment:
       BUILD_TYPE: Debug
-      TOOLCHAIN_FILE: silkworm/cmake/toolchain.cmake
+      TOOLCHAIN_FILE: silkworm/cmake/toolchain/cxx17.cmake
       CLANG_COVERAGE: OFF
     machine:
       image: ubuntu-2004:202101-01
