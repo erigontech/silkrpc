@@ -240,7 +240,7 @@ asio::awaitable<Addresses> read_senders(const DatabaseReader& reader, const evmc
     SILKRPC_TRACE << "read_senders data: " << silkworm::to_hex(data) << "\n";
     Addresses senders{data.size() / silkworm::kAddressLength};
     for (size_t i{0}; i < senders.size(); i++) {
-        senders[i] = silkworm::to_address(silkworm::ByteView{&data[i * silkworm::kAddressLength], silkworm::kAddressLength});
+        senders[i] = silkworm::to_evmc_address(silkworm::ByteView{&data[i * silkworm::kAddressLength], silkworm::kAddressLength});
     }
     co_return senders;
 }
@@ -298,7 +298,7 @@ asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc
     for (size_t i{0}; i < receipts.size(); i++) {
         // The tx hash can be calculated by the tx content itself
         auto tx_hash{hash_of_transaction(transactions[i])};
-        receipts[i].tx_hash = silkworm::to_bytes32(silkworm::full_view(tx_hash.bytes));
+        receipts[i].tx_hash = silkworm::to_bytes32(full_view(tx_hash.bytes));
         receipts[i].tx_index = uint32_t(i);
 
         receipts[i].block_hash = block_hash;

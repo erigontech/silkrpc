@@ -64,7 +64,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_account_range(const nlohmann::js
     const auto exclude_storage = params[4].get<bool>();
 
     silkworm::Bytes start_key(start_key_array.data(), start_key_array.size());
-    const auto start_address = silkworm::to_address(start_key);
+    const auto start_address = silkworm::to_evmc_address(start_key);
 
     if (max_result > kAccountRangeMaxResults || max_result <= 0) {
         max_result = kAccountRangeMaxResults;
@@ -316,7 +316,7 @@ asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::Transactio
         core::rawdb::Walker walker = [&](const silkworm::Bytes& key, const silkworm::Bytes& value) {
             auto block_number = std::stol(silkworm::to_hex(key), 0, 16);
             if (block_number <= end_block_number) {
-                auto address = silkworm::to_address(value.substr(0, silkworm::kAddressLength));
+                auto address = silkworm::to_evmc_address(value.substr(0, silkworm::kAddressLength));
 
                 SILKRPC_TRACE << "Walker: processing block " << block_number << " address 0x" << silkworm::to_hex(address) << "\n";
                 addresses.insert(address);

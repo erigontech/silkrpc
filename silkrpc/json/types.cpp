@@ -89,7 +89,7 @@ void to_json(nlohmann::json& json, const address& addr) {
 
 void from_json(const nlohmann::json& json, address& addr) {
     const auto address_bytes = silkworm::from_hex(json.get<std::string>());
-    addr = silkworm::to_address(address_bytes.value_or(silkworm::Bytes{}));
+    addr = silkworm::to_evmc_address(address_bytes.value_or(silkworm::Bytes{}));
 }
 
 void to_json(nlohmann::json& json, const bytes32& b32) {
@@ -119,7 +119,7 @@ void to_json(nlohmann::json& json, const BlockHeader& header) {
     json["parentHash"] = header.parent_hash;
     json["nonce"] = "0x" + silkworm::to_hex({header.nonce.data(), header.nonce.size()});
     json["sha3Uncles"] = header.ommers_hash;
-    json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(header.logs_bloom));
+    json["logsBloom"] = "0x" + silkworm::to_hex(silkrpc::full_view(header.logs_bloom));
     json["transactionsRoot"] = header.transactions_root;
     json["stateRoot"] = header.state_root;
     json["receiptsRoot"] = header.receipts_root;
@@ -188,7 +188,7 @@ void to_json(nlohmann::json& json, const Block& b) {
     json["parentHash"] = b.block.header.parent_hash;
     json["nonce"] = "0x" + silkworm::to_hex({b.block.header.nonce.data(), b.block.header.nonce.size()});
     json["sha3Uncles"] = b.block.header.ommers_hash;
-    json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(b.block.header.logs_bloom));
+    json["logsBloom"] = "0x" + silkworm::to_hex(full_view(b.block.header.logs_bloom));
     json["transactionsRoot"] = b.block.header.transactions_root;
     json["stateRoot"] = b.block.header.state_root;
     json["receiptsRoot"] = b.block.header.receipts_root;
@@ -293,7 +293,7 @@ void from_json(const nlohmann::json& json, Log& log) {
             throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Log CBOR: binary expected in [0]"};
         }
         auto address_bytes = json[0].get_binary();
-        log.address = silkworm::to_address(silkworm::Bytes{address_bytes.begin(), address_bytes.end()});
+        log.address = silkworm::to_evmc_address(silkworm::Bytes{address_bytes.begin(), address_bytes.end()});
         if (!json[1].is_array()) {
             throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Log CBOR: array expected in [1]"};
         }
@@ -336,7 +336,7 @@ void to_json(nlohmann::json& json, const Receipt& receipt) {
         json["contractAddress"] = nlohmann::json{};
     }
     json["logs"] = receipt.logs;
-    json["logsBloom"] = "0x" + silkworm::to_hex(silkworm::full_view(receipt.bloom));
+    json["logsBloom"] = "0x" + silkworm::to_hex(full_view(receipt.bloom));
     json["status"] = silkrpc::to_quantity(receipt.success ? 1 : 0);
 }
 

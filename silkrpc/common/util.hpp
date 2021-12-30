@@ -31,6 +31,7 @@
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/transaction.hpp>
 #include <silkworm/core/silkworm/types/account.hpp>
+#include <silkworm/core/silkworm/types/bloom.hpp>
 
 namespace silkrpc {
 
@@ -44,6 +45,19 @@ std::string to_dec(intx::uint256 number);
 bool check_tx_fee_less_cap(float cap, intx::uint256 max_fee_per_gas, uint64_t gas_limit);
 bool is_replay_protected(const silkworm::Transaction& txn);
 std::string decoding_result_to_string(silkworm::rlp::DecodingResult decode_result);
+
+template <unsigned N>
+silkworm::ByteView full_view(const uint8_t (&bytes)[N]) {
+    return {bytes, N};
+}
+
+inline silkworm::ByteView full_view(const evmc::address& address) { return {address.bytes, silkworm::kAddressLength}; }
+
+inline silkworm::ByteView full_view(const evmc::bytes32& hash) { return {hash.bytes, silkworm::kHashLength}; }
+
+inline silkworm::ByteView full_view(const silkworm::Bloom& bloom) { return {bloom.data(), silkworm::kBloomByteLength}; }
+
+inline silkworm::ByteView full_view(const ethash::hash256& hash) { return {hash.bytes, silkworm::kHashLength}; }
 
 } // namespace silkrpc
 

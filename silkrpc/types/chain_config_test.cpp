@@ -36,7 +36,7 @@ TEST_CASE("create empty chain config", "[silkrpc][types][chain_config]") {
 
 TEST_CASE("print empty chain config", "[silkrpc][types][chain_config]") {
     ChainConfig chain_config{};
-    CHECK_NOTHROW(silkworm::null_stream() << chain_config);
+    CHECK_NOTHROW(null_stream() << chain_config);
 }
 
 TEST_CASE("cannot create forks from empty chain config", "[silkrpc][types][chain_config]") {

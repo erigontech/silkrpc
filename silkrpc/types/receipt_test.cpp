@@ -23,6 +23,7 @@
 #include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/types/log.hpp>
 
 namespace silkrpc {
@@ -40,7 +41,7 @@ TEST_CASE("create empty receipt", "[silkrpc][types][receipt]") {
 
 TEST_CASE("print empty receipt", "[silkrpc][types][receipt]") {
     Receipt r{};
-    CHECK_NOTHROW(silkworm::null_stream() << r);
+    CHECK_NOTHROW(null_stream() << r);
 }
 
 TEST_CASE("print receipt", "[silkrpc][types][receipt]") {
@@ -54,7 +55,7 @@ TEST_CASE("print receipt", "[silkrpc][types][receipt]") {
     r.from = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address;
     r.to = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address;
     r.type = 2;
-    CHECK_NOTHROW(silkworm::null_stream() << r);
+    CHECK_NOTHROW(null_stream() << r);
 }
 
 TEST_CASE("bloom from empty logs", "[silkrpc][types][receipt]") {
@@ -90,7 +91,7 @@ TEST_CASE("bloom from more than one log", "[silkrpc][types][receipt]") {
         },
     };
     silkworm::Bloom bloom{bloom_from_logs(logs)};
-    CHECK(silkworm::to_hex(silkworm::full_view(bloom)) ==
+    CHECK(silkworm::to_hex(full_view(bloom)) ==
         "000000000000000000810000000000000000000000000000000000020000000000000000000000000000008000"
         "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         "000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000"

@@ -53,7 +53,7 @@ TEST_CASE("EVMexecutor") {
 
     SECTION("failed if gas_limit < intrisicgas") {
         StubDatabase tx_database;
-        const auto chain_id = 5;
+        const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
@@ -78,7 +78,7 @@ TEST_CASE("EVMexecutor") {
 
     SECTION("failed if base_fee_per_gas > max_fee_per_gas ") {
         StubDatabase tx_database;
-        const auto chain_id = 5;
+        const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
@@ -105,7 +105,7 @@ TEST_CASE("EVMexecutor") {
 
     SECTION("failed if  max_priority_fee_per_gas > max_fee_per_gas ") {
         StubDatabase tx_database;
-        const auto chain_id = 5;
+        const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
@@ -133,7 +133,7 @@ TEST_CASE("EVMexecutor") {
 
     SECTION("failed if transaction cost greater user amount") {
         StubDatabase tx_database;
-        const auto chain_id = 5;
+        const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
@@ -161,7 +161,7 @@ TEST_CASE("EVMexecutor") {
 
     SECTION("call returns SUCCESS") {
         StubDatabase tx_database;
-        const auto chain_id = 5;
+        const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
