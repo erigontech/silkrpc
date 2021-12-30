@@ -59,6 +59,44 @@ TEST_CASE("Empty DumpAccounts") {
 }
 
 TEST_CASE("Filled DumpAccounts") {
+    DumpAccount da{10, 20, 30, 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32, 0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32};
+    DumpAccounts das{
+        0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32,
+        0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address,
+        AccountsMap{
+            {0x0000000000000000000000000000000000000000_address, da}
+        }
+    };
+
+    SECTION("check fields") {
+        CHECK(das.root == 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32);
+        CHECK(das.accounts.size() == 1);
+        CHECK(das.next == 0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address);
+    }
+
+    SECTION("print") {
+        CHECK_NOTHROW(null_stream() << das);
+    }
+
+    SECTION("json") {
+        nlohmann::json json = das;
+
+        CHECK(json == R"({
+            "accounts":{
+                "0x0000000000000000000000000000000000000000":{
+                    "balance":"10",
+                    "codeHash":"0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
+                    "nonce":20,
+                    "root":"0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
+                }
+            },
+            "next":"eaTUGPeIfdTVEjpBtsjBhmhq6Ms=",
+            "root":"0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
+        })"_json);
+    }
+}
+
+TEST_CASE("Filled zero-account DumpAccounts") {
     DumpAccounts da{0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32, 0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address};
 
     SECTION("check fields") {
@@ -94,6 +132,17 @@ TEST_CASE("Empty DumpAccount") {
         CHECK(da.code == std::nullopt);
         CHECK(da.storage == std::nullopt);
     }
+
+    SECTION("json") {
+        nlohmann::json json = da;
+
+        CHECK(json == R"({
+            "balance":"0",
+            "codeHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+            "nonce":0,
+            "root":"0x0000000000000000000000000000000000000000000000000000000000000000"
+        })"_json);
+    }
 }
 
 TEST_CASE("Filled DumpAccount") {
@@ -107,6 +156,17 @@ TEST_CASE("Filled DumpAccount") {
         CHECK(da.code_hash == 0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32);
         CHECK(da.code == std::nullopt);
         CHECK(da.storage == std::nullopt);
+    }
+
+    SECTION("json") {
+        nlohmann::json json = da;
+
+        CHECK(json == R"({
+            "balance":"10",
+            "codeHash":"0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
+            "nonce":20,
+            "root":"0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
+        })"_json);
     }
 }
 
