@@ -16,6 +16,8 @@
 
 #include "util.hpp"
 
+#include <limits>
+
 #include <catch2/catch.hpp>
 
 namespace silkrpc {
