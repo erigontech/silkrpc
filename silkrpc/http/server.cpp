@@ -59,23 +59,17 @@ void Server::build_handlers(const std::string& api_spec) {
 void Server::add_handlers(const std::string& api_namespace) {
     if (api_namespace == kDebugApiNamespace) {
         RequestHandler::add_debug_handlers();
-    }
-    else if (api_namespace == kEthApiNamespace) {
+    } else if (api_namespace == kEthApiNamespace) {
         RequestHandler::add_eth_handlers();
-    }
-    else if (api_namespace == kNetApiNamespace) {
+    } else if (api_namespace == kNetApiNamespace) {
         RequestHandler::add_net_handlers();
-    }
-    else if (api_namespace == kParityApiNamespace) {
+    } else if (api_namespace == kParityApiNamespace) {
         RequestHandler::add_parity_handlers();
-    }
-    else if (api_namespace == kTgApiNamespace) {
+    } else if (api_namespace == kTgApiNamespace) {
         RequestHandler::add_tg_handlers();
-    }
-    else if (api_namespace == kTraceApiNamespace) {
+    } else if (api_namespace == kTraceApiNamespace) {
         RequestHandler::add_trace_handlers();
-    }
-    else if (api_namespace == kWeb3ApiNamespace) {
+    } else if (api_namespace == kWeb3ApiNamespace) {
         RequestHandler::add_web3_handlers();
     } else {
         SILKRPC_WARN << "Server::add_handlers invalid namespace [" << api_namespace << "] ignored\n";
