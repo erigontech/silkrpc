@@ -16,11 +16,57 @@
 
 #include "stages.hpp"
 
+#include <string>
+
+#include <asio/co_spawn.hpp>
+#include <asio/thread_pool.hpp>
+#include <asio/use_future.hpp>
 #include <catch2/catch.hpp>
+#include <gmock/gmock.h>
 
-namespace silkrpc {
+#include <silkrpc/ethdb/tables.hpp>
 
-using Catch::Matchers::Message;
+namespace silkrpc::stages {
 
-} // namespace silkrpc
+using testing::InvokeWithoutArgs;
+using testing::_;
 
+class MockDatabaseReader : public core::rawdb::DatabaseReader {
+public:
+    MOCK_CONST_METHOD2(get, asio::awaitable<KeyValue>(const std::string&, const silkworm::ByteView&));
+    MOCK_CONST_METHOD2(get_one, asio::awaitable<silkworm::Bytes>(const std::string&, const silkworm::ByteView&));
+    MOCK_CONST_METHOD3(get_both_range, asio::awaitable<std::optional<silkworm::Bytes>>(const std::string&, const silkworm::ByteView&, const silkworm::ByteView&));
+    MOCK_CONST_METHOD4(walk, asio::awaitable<void>(const std::string&, const silkworm::ByteView&, uint32_t, core::rawdb::Walker));
+    MOCK_CONST_METHOD3(for_prefix, asio::awaitable<void>(const std::string&, const silkworm::ByteView&, core::rawdb::Walker));
+};
+
+TEST_CASE("get_sync_stage_progress", "[silkrpc][stagedsync]") {
+    asio::thread_pool pool{1};
+    MockDatabaseReader db_reader;
+
+    SECTION("empty stage key") {
+        EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+        auto result = asio::co_spawn(pool, get_sync_stage_progress(db_reader, kFinish), asio::use_future);
+        CHECK(result.get() == 0);
+    }
+
+    SECTION("invalid stage progress value") {
+        EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("FF")}; }
+        ));
+        auto result = asio::co_spawn(pool, get_sync_stage_progress(db_reader, kFinish), asio::use_future);
+        CHECK_THROWS_AS(result.get(), std::runtime_error);
+    }
+
+    SECTION("valid stage progress value") {
+        EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("00000000000000FF")}; }
+        ));
+        auto result = asio::co_spawn(pool, get_sync_stage_progress(db_reader, kFinish), asio::use_future);
+        CHECK(result.get() == 255);
+    }
+}
+
+} // namespace silkrpc::stages

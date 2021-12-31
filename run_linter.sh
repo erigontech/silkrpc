@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cpplint \
-    cmd/*.hpp cmd/*.cpp \
+    cmd/*.cpp \
     examples/*.cpp \
     silkrpc/*.hpp silkrpc/*.cpp silkrpc/**/*.hpp silkrpc/**/*.cpp silkrpc/**/**/*.hpp silkrpc/**/**/*.cpp
 

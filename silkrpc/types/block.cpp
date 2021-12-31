@@ -69,10 +69,9 @@ std::ostream& operator<<(std::ostream& out, const BlockNumberOrHash& bnoh) {
         out << "0x" << std::hex << bnoh.number();
     } else if (bnoh.is_hash()) {
         out << "0x" << bnoh.hash();
-    } else if (bnoh.is_tag()) {
-        out << bnoh.tag();
     } else {
-        out << "empty";
+        assert(bnoh.is_tag());
+        out << bnoh.tag();
     }
     return out;
 }
