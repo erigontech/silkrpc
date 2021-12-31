@@ -53,10 +53,8 @@ public:
 
 private:
     static std::tuple<std::string, std::string> parse_endpoint(const std::string& tcp_end_point);
-
-    static std::vector<std::string> parse_api_spec(const std::string& api_spec);
-
     static void build_handlers(const std::string& api_spec);
+    static void add_handlers(const std::string& api_namespace);
 
     asio::awaitable<void> run();
 

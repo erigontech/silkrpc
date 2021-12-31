@@ -45,44 +45,40 @@ std::tuple<std::string, std::string> Server::parse_endpoint(const std::string& t
     return {host, port};
 }
 
-std::vector<std::string> Server::parse_api_spec(const std::string& api_spec) {
-    std::vector<std::string> api_namespaces;
-
+void Server::build_handlers(const std::string& api_spec) {
     auto start = 0u;
     auto end = api_spec.find(kApiSpecSeparator);
     while (end != std::string::npos) {
-        api_namespaces.push_back(api_spec.substr(start, end - start));
+        add_handlers(api_spec.substr(start, end - start));
         start = end + std::strlen(kApiSpecSeparator);
         end = api_spec.find(kApiSpecSeparator, start);
     }
-    api_namespaces.push_back(api_spec.substr(start, end));
-
-    return api_namespaces;
+    add_handlers(api_spec.substr(start, end));
 }
 
-void Server::build_handlers(const std::string& api_spec) {
-    const auto api_namespaces{parse_api_spec(api_spec)};
-
-    if (any_of_equal(api_namespaces, kDebugApiNamespace)) {
+void Server::add_handlers(const std::string& api_namespace) {
+    if (api_namespace == kDebugApiNamespace) {
         RequestHandler::add_debug_handlers();
     }
-    if (any_of_equal(api_namespaces, kEthApiNamespace)) {
+    else if (api_namespace == kEthApiNamespace) {
         RequestHandler::add_eth_handlers();
     }
-    if (any_of_equal(api_namespaces, kNetApiNamespace)) {
+    else if (api_namespace == kNetApiNamespace) {
         RequestHandler::add_net_handlers();
     }
-    if (any_of_equal(api_namespaces, kParityApiNamespace)) {
+    else if (api_namespace == kParityApiNamespace) {
         RequestHandler::add_parity_handlers();
     }
-    if (any_of_equal(api_namespaces, kTgApiNamespace)) {
+    else if (api_namespace == kTgApiNamespace) {
         RequestHandler::add_tg_handlers();
     }
-    if (any_of_equal(api_namespaces, kTraceApiNamespace)) {
+    else if (api_namespace == kTraceApiNamespace) {
         RequestHandler::add_trace_handlers();
     }
-    if (any_of_equal(api_namespaces, kWeb3ApiNamespace)) {
+    else if (api_namespace == kWeb3ApiNamespace) {
         RequestHandler::add_web3_handlers();
+    } else {
+        SILKRPC_WARN << "Server::add_handlers invalid namespace [" << api_namespace << "] ignored\n";
     }
 }
 
