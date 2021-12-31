@@ -25,6 +25,7 @@
 #include <intx/intx.hpp>
 #include <nlohmann/json.hpp>
 #include <silkworm/common/util.hpp>
+#include <silkworm/db/storage.hpp>
 
 namespace silkrpc {
 
@@ -381,6 +382,147 @@ TEST_CASE("serialize EIP-2718 block", "[silkrpc][to_json]") {
             "0x554af720acf477830f996f1bc5d11e54c38aa40042aeac6f66cb66f9084a959d"
         ],
         "transactionsRoot":"0xe6e49996c7ec59f7a23d22b83239a60151512c65613bf84a0d7da336399ebc4a",
+        "uncles":[]
+    })"_json);
+}
+
+TEST_CASE("serialize block with hydrated transactions", "[silkrpc][to_json]") {
+    // 1) build block https://goerli.etherscan.io/block/3529604
+    // 1.1) value from table Header for key 000000000035db84
+    const char* header_rlp_hex{
+        "f9025ca08059c265f40cdb2d3b3245847c21ed154eebf299fd0ff01ee3afded43cdadc45a01dcc4de8dec75d7aab85b567b6ccd41ad312"
+        "451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a08add6cb86a4b4a4e5758ce21c8d156e4355917"
+        "d29eae7c19f56d4a38f384401da095e5f810e7a45d476d7416fbffbc931473cfdba2b90204e019067bcc6d136dc3a08c3d469c1fbce4e4"
+        "144d5e5f91a81baca60b1fb6b5bdcf691b9dc40a5bf21b35b9010004000000000000000000000000040010001000402000000000000000"
+        "00000008000020001000000001000000000080000000000010000000000800000000000000000000000000000000000000000000000000"
+        "10100000000000000000000008000008000000000000000000000000002000000000000000000000000000040000000000000010000000"
+        "00000000000000000000000000000000000000400000000000000000000000020180440020000000080000000000000000000000000000"
+        "00000000000000000000000000000000020000000000000000000000000000000000000000000000180000002000004010000880800000"
+        "0200400000000000018335db84837a12008308b89a845f7cd33db861476f65726c6920496e697469617469766520417574686f72697479"
+        "00000000001f3070be3668d4e3bdd1d08969becd5b06ab0ae4224873453d827a67b3a089ee03c69941418ac300e2c3ca9b5597c7a37959"
+        "32a7ff2f907db605a93a88c5b4a800a0000000000000000000000000000000000000000000000000000000000000000088000000000000"
+        "0000"};
+    silkworm::Bytes header_rlp_bytes{*silkworm::from_hex(header_rlp_hex)};
+    silkworm::ByteView header_view{header_rlp_bytes};
+    silkworm::BlockHeader header;
+    REQUIRE(silkworm::rlp::decode(header_view, header) == silkworm::rlp::DecodingResult::kOk);
+
+    // 1.2) value from table BlockBody for key 000000000035db84c9e65d063911aa583e17bbb7070893482203217caf6d9fbb50265c72e7bf73e5
+    const char* body_rlp_hex{"c68341b58302c0"};
+    silkworm::Bytes body_rlp_bytes{*silkworm::from_hex(body_rlp_hex)};
+    silkworm::ByteView body_view{body_rlp_bytes};
+    const auto body_for_storage{silkworm::db::detail::decode_stored_block_body(body_view)};
+    REQUIRE(body_for_storage.txn_count == 2);
+    REQUIRE(body_for_storage.base_txn_id == 0x41b583);
+
+    // 1.3) value from table BlockTransaction for key 000000000041b583 and 000000000041b584
+    const char* tx1_rlp_hex{
+        "f87080843b9aca00830c350094fa365f1384e4eaf6d59f353c782af3ea42feaab988015c2a7b13fd000084d0e30db02ea06b0df7c31119"
+        "b257e7faeb391984f199c8da817b14279ac09262bdf3493599a6a00c729ce28ec0030002490d6217a8b50041495925142e70fa1b77e465"
+        "eab97c4b"};
+    silkworm::Bytes tx1_rlp_bytes{*silkworm::from_hex(tx1_rlp_hex)};
+    silkworm::ByteView tx1_view{tx1_rlp_bytes};
+    silkworm::Transaction tx1;
+    REQUIRE(silkworm::rlp::decode(tx1_view, tx1) == silkworm::rlp::DecodingResult::kOk);
+    const char* tx2_rlp_hex{
+        "f901aa02843b9aca008304fa4a9431af35bdfa897cd42b204c003560c385d444707580b901449b4e463400000000000000000000000000"
+        "0000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000c081c2ac5b"
+        "ba256c88daa744c9caa7d6c99c32c1bc0c07bdca87bd2a054118c47b000000000000000000000000000000000000000000000000000000"
+        "0000000030a5a151a2320abaab98cfa8366fc326fb6f45cf1c93697191ec1370e1caca0fc6237e3bc5328755ae66bc5ddb141f0cb10000"
+        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000060a4dcd35675e049ea5b"
+        "58d9567f8029669d4cdbe72511d330d96a578e2714f1c9db00f6a9babc217b250fc7f217b0261506727657b420d9e05adc73675390ce2e"
+        "b1e1aef3bac7d1b4b424c9dc07cdcac2729eabdb81c857325e20202ea24761601ba01d8e665abc1278a9526aaf4c604f75b293e43ccf9d"
+        "c72918a633af584b73425ba07f8913ecd5db0e98d48097abefd7b2fa954d7cf1514496b870b8a1335034df4d"};
+    silkworm::Bytes tx2_rlp_bytes{*silkworm::from_hex(tx2_rlp_hex)};
+    silkworm::ByteView tx2_view{tx2_rlp_bytes};
+    silkworm::Transaction tx2;
+    REQUIRE(silkworm::rlp::decode(tx2_view, tx2) == silkworm::rlp::DecodingResult::kOk);
+
+    // 1.4) build the full block
+    silkrpc::Block rpc_block{
+        silkworm::Block{
+            std::vector<silkworm::Transaction>{tx1, tx2}, // transactions
+            std::vector<silkworm::BlockHeader>{}, // ommers
+            header // header
+        },
+        0xc9e65d063911aa583e17bbb7070893482203217caf6d9fbb50265c72e7bf73e5_bytes32,
+        intx::uint256{0x4e33ae},
+        true
+    };
+
+    nlohmann::json rpc_block_json = rpc_block;
+    CHECK(rpc_block_json == R"({
+        "difficulty":"0x1",
+        "extraData":"0x476f65726c6920496e697469617469766520417574686f7269747900000000001f3070be3)"
+                R"(668d4e3bdd1d08969becd5b06ab0ae4224873453d827a67b3a089ee03c69941418ac300e2c3c)"
+                R"(a9b5597c7a3795932a7ff2f907db605a93a88c5b4a800",
+        "gasLimit":"0x7a1200",
+        "gasUsed":"0x8b89a",
+        "hash":"0xc9e65d063911aa583e17bbb7070893482203217caf6d9fbb50265c72e7bf73e5",
+        "logsBloom":"0x040000000000000000000000000400100010004020000000000000000000000800002000)"
+                    R"(100000000100000000008000000000001000000000080000000000000000000000000000)"
+                    R"(000000000000000000000010100000000000000000000008000008000000000000000000)"
+                    R"(000000002000000000000000000000000000040000000000000010000000000000000000)"
+                    R"(000000000000000000000000004000000000000000000000000201804400200000000800)"
+                    R"(000000000000000000000000000000000000000000000000000000000002000000000000)"
+                    R"(000000000000000000000000000000000018000000200000401000088080000002004000)"
+                    R"(00000000",
+        "miner":"0x0000000000000000000000000000000000000000",
+        "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "nonce":"0x0000000000000000",
+        "number":"0x35db84",
+        "parentHash":"0x8059c265f40cdb2d3b3245847c21ed154eebf299fd0ff01ee3afded43cdadc45",
+        "receiptsRoot":"0x8c3d469c1fbce4e4144d5e5f91a81baca60b1fb6b5bdcf691b9dc40a5bf21b35",
+        "sha3Uncles":"0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+        "size":"0x485",
+        "stateRoot":"0x8add6cb86a4b4a4e5758ce21c8d156e4355917d29eae7c19f56d4a38f384401d",
+        "timestamp":"0x5f7cd33d",
+        "totalDifficulty":"0x4e33ae",
+        "transactions":[
+            {
+                "blockHash":"0xc9e65d063911aa583e17bbb7070893482203217caf6d9fbb50265c72e7bf73e5",
+                "blockNumber":"0x35db84",
+                "from":"0x4ed7fae4af36f11ac28275a98ca1d131e91bb6cd",
+                "gas":"0xc3500",
+                "gasPrice":"0x3b9aca00",
+                "hash":"0xa52100232ad8abc15bdcd95b071194d2084781f88a71974eef7292c8513a03b4",
+                "input":"0xd0e30db0",
+                "nonce":"0x0",
+                "r":"0x6b0df7c31119b257e7faeb391984f199c8da817b14279ac09262bdf3493599a6",
+                "s":"0xc729ce28ec0030002490d6217a8b50041495925142e70fa1b77e465eab97c4b",
+                "to":"0xfa365f1384e4eaf6d59f353c782af3ea42feaab9",
+                "transactionIndex":"0x0",
+                "type":"0x0",
+                "v":"0x2e",
+                "value":"0x15c2a7b13fd0000"
+            },
+            {
+                "blockHash":"0xc9e65d063911aa583e17bbb7070893482203217caf6d9fbb50265c72e7bf73e5",
+                "blockNumber":"0x35db84",
+                "from":"0xab2e6a1020c511615f82155259086717802d1474",
+                "gas":"0x4fa4a",
+                "gasPrice":"0x3b9aca00",
+                "hash":"0x81d69137fe27a549e957c2dd3d54f374a019bf12409ca44fb9e01dc82ac7e925",
+                "input":"0x9b4e463400000000000000000000000000000000000000000000000000000000000000600)"
+                    R"(0000000000000000000000000000000000000000000000000000000000000c081c2ac5bba256)"
+                    R"(c88daa744c9caa7d6c99c32c1bc0c07bdca87bd2a054118c47b0000000000000000000000000)"
+                    R"(000000000000000000000000000000000000030a5a151a2320abaab98cfa8366fc326fb6f45c)"
+                    R"(f1c93697191ec1370e1caca0fc6237e3bc5328755ae66bc5ddb141f0cb100000000000000000)"
+                    R"(0000000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(060a4dcd35675e049ea5b58d9567f8029669d4cdbe72511d330d96a578e2714f1c9db00f6a9b)"
+                    R"(abc217b250fc7f217b0261506727657b420d9e05adc73675390ce2eb1e1aef3bac7d1b4b424c)"
+                    R"(9dc07cdcac2729eabdb81c857325e20202ea2476160",
+                "nonce":"0x2",
+                "r":"0x1d8e665abc1278a9526aaf4c604f75b293e43ccf9dc72918a633af584b73425b",
+                "s":"0x7f8913ecd5db0e98d48097abefd7b2fa954d7cf1514496b870b8a1335034df4d",
+                "to":"0x31af35bdfa897cd42b204c003560c385d4447075",
+                "transactionIndex":"0x1",
+                "type":"0x0",
+                "v":"0x1b",
+                "value":"0x0"
+            }
+        ],
+        "transactionsRoot":"0x95e5f810e7a45d476d7416fbffbc931473cfdba2b90204e019067bcc6d136dc3",
         "uncles":[]
     })"_json);
 }
