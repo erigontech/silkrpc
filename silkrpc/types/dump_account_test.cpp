@@ -34,7 +34,7 @@ static const auto zero_balance = intx::uint256{0};
 using evmc::literals::operator""_address;
 using evmc::literals::operator""_bytes32;
 
-TEST_CASE("Empty DumpAccounts") {
+TEST_CASE("Empty DumpAccounts", "[silkrpc][types][dump_account]") {
     DumpAccounts da;
 
     SECTION("check fields") {
@@ -58,8 +58,14 @@ TEST_CASE("Empty DumpAccounts") {
     }
 }
 
-TEST_CASE("Filled DumpAccounts") {
-    DumpAccount da{10, 20, 30, 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32, 0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32};
+TEST_CASE("Filled DumpAccounts", "[silkrpc][types][dump_account]") {
+    DumpAccount da{
+        10,
+        20,
+        30,
+        0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32,
+        0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32
+    };
     DumpAccounts das{
         0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32,
         0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address,
@@ -96,8 +102,11 @@ TEST_CASE("Filled DumpAccounts") {
     }
 }
 
-TEST_CASE("Filled zero-account DumpAccounts") {
-    DumpAccounts da{0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32, 0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address};
+TEST_CASE("Filled zero-account DumpAccounts", "[silkrpc][types][dump_account]") {
+    DumpAccounts da{
+        0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32,
+        0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address
+    };
 
     SECTION("check fields") {
         CHECK(da.root == 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32);
@@ -120,7 +129,7 @@ TEST_CASE("Filled zero-account DumpAccounts") {
     }
 }
 
-TEST_CASE("Empty DumpAccount") {
+TEST_CASE("Empty DumpAccount", "[silkrpc][types][dump_account]") {
     DumpAccount da;
 
     SECTION("check fields") {
@@ -145,8 +154,14 @@ TEST_CASE("Empty DumpAccount") {
     }
 }
 
-TEST_CASE("Filled DumpAccount") {
-    DumpAccount da{10, 20, 30, 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32, 0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32};
+TEST_CASE("Filled externally-owned DumpAccount", "[silkrpc][types][dump_account]") {
+    DumpAccount da{
+        10,
+        20,
+        30,
+        0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32,
+        0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32
+    };
 
     SECTION("check fields") {
         CHECK(da.balance == 10);
@@ -166,6 +181,52 @@ TEST_CASE("Filled DumpAccount") {
             "codeHash":"0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
             "nonce":20,
             "root":"0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6"
+        })"_json);
+    }
+}
+
+TEST_CASE("Filled contract DumpAccount", "[silkrpc][types][dump_account]") {
+    DumpAccount da{
+        10,
+        20,
+        30,
+        0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32,
+        0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32,
+        silkworm::from_hex("0x0608"),
+        Storage{
+            {
+                "0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            }
+        }
+    };
+
+    SECTION("check fields") {
+        CHECK(da.balance == 10);
+        CHECK(da.nonce == 20);
+        CHECK(da.incarnation == 30);
+        CHECK(da.root == 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32);
+        CHECK(da.code_hash == 0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32);
+        CHECK(da.code == silkworm::Bytes{0x06, 0x08});
+        CHECK(da.storage == Storage{{
+            "0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7",
+            "0x0000000000000000000000000000000000000000000000000000000000000000"
+        }});
+    }
+
+    SECTION("json") {
+        nlohmann::json json = da;
+
+        CHECK(json == R"({
+            "balance":"10",
+            "codeHash":"0xc10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
+            "nonce":20,
+            "root":"0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6",
+            "code":"0x0608",
+            "storage":{
+                "0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7":
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            }
         })"_json);
     }
 }
