@@ -33,7 +33,7 @@ TEST_CASE("server creation", "[silkrpc][http][server]") {
         auto context_pool_thread = std::thread([&]() { context_pool.run(); });
         // Uncommenting the following lines you got stuck into llvm-cov problem:
         // error: cmd/unit_test: Failed to load coverage: Malformed coverage data
-        /*Server server{"localhost", "8545", context_pool, 1};
+        /*Server server{"localhost:12345", "eth", context_pool, 1};
         server.stop();*/
         context_pool.stop();
         CHECK_NOTHROW(context_pool_thread.join());

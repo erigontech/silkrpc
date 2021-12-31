@@ -32,7 +32,7 @@
 #include <silkrpc/context_pool.hpp>
 #include <silkworm/common/util.hpp>
 
-namespace silkrpc {
+namespace silkrpc::http {
 
 using Catch::Matchers::Message;
 
@@ -181,5 +181,5 @@ TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request
 */
 }
 
-} // namespace silkrpc
+} // namespace silkrpc::http
 

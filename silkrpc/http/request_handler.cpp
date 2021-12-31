@@ -24,86 +24,104 @@
 
 #include <iostream>
 
-#include "methods.hpp"
-#include "mime_types.hpp"
-#include "reply.hpp"
-#include "request.hpp"
-
 #include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/http/methods.hpp>
+#include <silkrpc/http/reply.hpp>
+#include <silkrpc/http/request.hpp>
 
 namespace silkrpc::http {
 
-std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_ = {
-    {method::k_web3_clientVersion, &commands::RpcApi::handle_web3_client_version},
-    {method::k_web3_sha3, &commands::RpcApi::handle_web3_sha3},
-    {method::k_net_listening, &commands::RpcApi::handle_net_listening},
-    {method::k_net_peerCount, &commands::RpcApi::handle_net_peer_count},
-    {method::k_net_version, &commands::RpcApi::handle_net_version},
-    {method::k_eth_blockNumber, &commands::RpcApi::handle_eth_block_number},
-    {method::k_eth_chainId, &commands::RpcApi::handle_eth_chain_id},
-    {method::k_eth_protocolVersion, &commands::RpcApi::handle_eth_protocol_version},
-    {method::k_eth_syncing, &commands::RpcApi::handle_eth_syncing},
-    {method::k_eth_gasPrice, &commands::RpcApi::handle_eth_gas_price},
-    {method::k_eth_getBlockByHash, &commands::RpcApi::handle_eth_get_block_by_hash},
-    {method::k_eth_getBlockByNumber, &commands::RpcApi::handle_eth_get_block_by_number},
-    {method::k_eth_getBlockTransactionCountByHash, &commands::RpcApi::handle_eth_get_block_transaction_count_by_hash},
-    {method::k_eth_getBlockTransactionCountByNumber, &commands::RpcApi::handle_eth_get_block_transaction_count_by_number},
-    {method::k_eth_getUncleByBlockHashAndIndex, &commands::RpcApi::handle_eth_get_uncle_by_block_hash_and_index},
-    {method::k_eth_getUncleByBlockNumberAndIndex, &commands::RpcApi::handle_eth_get_uncle_by_block_number_and_index},
-    {method::k_eth_getUncleCountByBlockHash, &commands::RpcApi::handle_eth_get_uncle_count_by_block_hash},
-    {method::k_eth_getUncleCountByBlockNumber, &commands::RpcApi::handle_eth_get_uncle_count_by_block_number},
-    {method::k_eth_getTransactionByHash, &commands::RpcApi::handle_eth_get_transaction_by_hash},
-    {method::k_eth_getTransactionByBlockHashAndIndex, &commands::RpcApi::handle_eth_get_transaction_by_block_hash_and_index},
-    {method::k_eth_getTransactionByBlockNumberAndIndex, &commands::RpcApi::handle_eth_get_transaction_by_block_number_and_index},
-    {method::k_eth_getTransactionReceipt, &commands::RpcApi::handle_eth_get_transaction_receipt},
-    {method::k_eth_estimateGas, &commands::RpcApi::handle_eth_estimate_gas},
-    {method::k_eth_getBalance, &commands::RpcApi::handle_eth_get_balance},
-    {method::k_eth_getCode, &commands::RpcApi::handle_eth_get_code},
-    {method::k_eth_getTransactionCount, &commands::RpcApi::handle_eth_get_transaction_count},
-    {method::k_eth_getStorageAt, &commands::RpcApi::handle_eth_get_storage_at},
-    {method::k_eth_call, &commands::RpcApi::handle_eth_call},
-    {method::k_eth_newFilter, &commands::RpcApi::handle_eth_new_filter},
-    {method::k_eth_newBlockFilter, &commands::RpcApi::handle_eth_new_block_filter},
-    {method::k_eth_newPendingTransactionFilter, &commands::RpcApi::handle_eth_new_pending_transaction_filter},
-    {method::k_eth_getFilterChanges, &commands::RpcApi::handle_eth_get_filter_changes},
-    {method::k_eth_uninstallFilter, &commands::RpcApi::handle_eth_uninstall_filter},
-    {method::k_eth_getLogs, &commands::RpcApi::handle_eth_get_logs},
-    {method::k_eth_sendRawTransaction, &commands::RpcApi::handle_eth_send_raw_transaction},
-    {method::k_eth_sendTransaction, &commands::RpcApi::handle_eth_send_transaction},
-    {method::k_eth_signTransaction, &commands::RpcApi::handle_eth_sign_transaction},
-    {method::k_eth_getProof, &commands::RpcApi::handle_eth_get_proof},
-    {method::k_eth_mining, &commands::RpcApi::handle_eth_mining},
-    {method::k_eth_coinbase, &commands::RpcApi::handle_eth_coinbase},
-    {method::k_eth_hashrate, &commands::RpcApi::handle_eth_hashrate},
-    {method::k_eth_submitHashrate, &commands::RpcApi::handle_eth_submit_hashrate},
-    {method::k_eth_getWork, &commands::RpcApi::handle_eth_get_work},
-    {method::k_eth_submitWork, &commands::RpcApi::handle_eth_submit_work},
-    {method::k_eth_subscribe, &commands::RpcApi::handle_eth_subscribe},
-    {method::k_eth_unsubscribe, &commands::RpcApi::handle_eth_unsubscribe},
-    {method::k_eth_getBlockReceipts, &commands::RpcApi::handle_parity_get_block_receipts},
-    {method::k_debug_accountRange, &commands::RpcApi::handle_debug_account_range},
-    {method::k_debug_getModifiedAccountsByNumber, &commands::RpcApi::handle_debug_get_modified_accounts_by_number},
-    {method::k_debug_getModifiedAccountsByHash, &commands::RpcApi::handle_debug_get_modified_accounts_by_hash},
-    {method::k_debug_storageRangeAt, &commands::RpcApi::handle_debug_storage_range_at},
-    {method::k_debug_traceTransaction, &commands::RpcApi::handle_debug_trace_transaction},
-    {method::k_debug_traceCall, &commands::RpcApi::handle_debug_trace_call},
-    {method::k_trace_call, &commands::RpcApi::handle_trace_call},
-    {method::k_trace_callMany, &commands::RpcApi::handle_trace_call_many},
-    {method::k_trace_rawTransaction, &commands::RpcApi::handle_trace_raw_transaction},
-    {method::k_trace_replayBlockTransactions, &commands::RpcApi::handle_trace_replay_block_transactions},
-    {method::k_trace_replayTransaction, &commands::RpcApi::handle_trace_replay_transaction},
-    {method::k_trace_block, &commands::RpcApi::handle_trace_block},
-    {method::k_trace_filter, &commands::RpcApi::handle_trace_filter},
-    {method::k_trace_get, &commands::RpcApi::handle_trace_get},
-    {method::k_trace_transaction, &commands::RpcApi::handle_trace_transaction},
-    {method::k_tg_getHeaderByHash, &commands::RpcApi::handle_tg_get_header_by_hash},
-    {method::k_tg_getHeaderByNumber, &commands::RpcApi::handle_tg_get_header_by_number},
-    {method::k_tg_getLogsByHash, &commands::RpcApi::handle_tg_get_logs_by_hash},
-    {method::k_tg_forks, &commands::RpcApi::handle_tg_forks},
-    {method::k_tg_issuance, &commands::RpcApi::handle_tg_issuance},
-    {method::k_parity_getBlockReceipts, &commands::RpcApi::handle_parity_get_block_receipts},
-};
+std::map<std::string, RequestHandler::HandleMethod> RequestHandler::handlers_;
+
+void RequestHandler::add_debug_handlers() {
+    handlers_[method::k_debug_accountRange] = &commands::RpcApi::handle_debug_account_range;
+    handlers_[method::k_debug_getModifiedAccountsByNumber] = &commands::RpcApi::handle_debug_get_modified_accounts_by_number;
+    handlers_[method::k_debug_getModifiedAccountsByHash] = &commands::RpcApi::handle_debug_get_modified_accounts_by_hash;
+    handlers_[method::k_debug_storageRangeAt] = &commands::RpcApi::handle_debug_storage_range_at;
+    handlers_[method::k_debug_traceTransaction] = &commands::RpcApi::handle_debug_trace_transaction;
+    handlers_[method::k_debug_traceCall] = &commands::RpcApi::handle_debug_trace_call;
+}
+
+void RequestHandler::add_eth_handlers() {
+    handlers_[method::k_eth_blockNumber] = &commands::RpcApi::handle_eth_block_number;
+    handlers_[method::k_eth_chainId] = &commands::RpcApi::handle_eth_chain_id;
+    handlers_[method::k_eth_protocolVersion] = &commands::RpcApi::handle_eth_protocol_version;
+    handlers_[method::k_eth_syncing] = &commands::RpcApi::handle_eth_syncing;
+    handlers_[method::k_eth_gasPrice] = &commands::RpcApi::handle_eth_gas_price;
+    handlers_[method::k_eth_getBlockByHash] = &commands::RpcApi::handle_eth_get_block_by_hash;
+    handlers_[method::k_eth_getBlockByNumber] = &commands::RpcApi::handle_eth_get_block_by_number;
+    handlers_[method::k_eth_getBlockTransactionCountByHash] = &commands::RpcApi::handle_eth_get_block_transaction_count_by_hash;
+    handlers_[method::k_eth_getBlockTransactionCountByNumber] = &commands::RpcApi::handle_eth_get_block_transaction_count_by_number;
+    handlers_[method::k_eth_getUncleByBlockHashAndIndex] = &commands::RpcApi::handle_eth_get_uncle_by_block_hash_and_index;
+    handlers_[method::k_eth_getUncleByBlockNumberAndIndex] = &commands::RpcApi::handle_eth_get_uncle_by_block_number_and_index;
+    handlers_[method::k_eth_getUncleCountByBlockHash] = &commands::RpcApi::handle_eth_get_uncle_count_by_block_hash;
+    handlers_[method::k_eth_getUncleCountByBlockNumber] = &commands::RpcApi::handle_eth_get_uncle_count_by_block_number;
+    handlers_[method::k_eth_getTransactionByHash] = &commands::RpcApi::handle_eth_get_transaction_by_hash;
+    handlers_[method::k_eth_getTransactionByBlockHashAndIndex] = &commands::RpcApi::handle_eth_get_transaction_by_block_hash_and_index;
+    handlers_[method::k_eth_getTransactionByBlockNumberAndIndex] = &commands::RpcApi::handle_eth_get_transaction_by_block_number_and_index;
+    handlers_[method::k_eth_getTransactionReceipt] = &commands::RpcApi::handle_eth_get_transaction_receipt;
+    handlers_[method::k_eth_estimateGas] = &commands::RpcApi::handle_eth_estimate_gas;
+    handlers_[method::k_eth_getBalance] = &commands::RpcApi::handle_eth_get_balance;
+    handlers_[method::k_eth_getCode] = &commands::RpcApi::handle_eth_get_code;
+    handlers_[method::k_eth_getTransactionCount] = &commands::RpcApi::handle_eth_get_transaction_count;
+    handlers_[method::k_eth_getStorageAt] = &commands::RpcApi::handle_eth_get_storage_at;
+    handlers_[method::k_eth_call] = &commands::RpcApi::handle_eth_call;
+    handlers_[method::k_eth_newFilter] = &commands::RpcApi::handle_eth_new_filter;
+    handlers_[method::k_eth_newBlockFilter] = &commands::RpcApi::handle_eth_new_block_filter;
+    handlers_[method::k_eth_newPendingTransactionFilter] = &commands::RpcApi::handle_eth_new_pending_transaction_filter;
+    handlers_[method::k_eth_getFilterChanges] = &commands::RpcApi::handle_eth_get_filter_changes;
+    handlers_[method::k_eth_uninstallFilter] = &commands::RpcApi::handle_eth_uninstall_filter;
+    handlers_[method::k_eth_getLogs] = &commands::RpcApi::handle_eth_get_logs;
+    handlers_[method::k_eth_sendRawTransaction] = &commands::RpcApi::handle_eth_send_raw_transaction;
+    handlers_[method::k_eth_sendTransaction] = &commands::RpcApi::handle_eth_send_transaction;
+    handlers_[method::k_eth_signTransaction] = &commands::RpcApi::handle_eth_sign_transaction;
+    handlers_[method::k_eth_getProof] = &commands::RpcApi::handle_eth_get_proof;
+    handlers_[method::k_eth_mining] = &commands::RpcApi::handle_eth_mining;
+    handlers_[method::k_eth_coinbase] = &commands::RpcApi::handle_eth_coinbase;
+    handlers_[method::k_eth_hashrate] = &commands::RpcApi::handle_eth_hashrate;
+    handlers_[method::k_eth_submitHashrate] = &commands::RpcApi::handle_eth_submit_hashrate;
+    handlers_[method::k_eth_getWork] = &commands::RpcApi::handle_eth_get_work;
+    handlers_[method::k_eth_submitWork] = &commands::RpcApi::handle_eth_submit_work;
+    handlers_[method::k_eth_subscribe] = &commands::RpcApi::handle_eth_subscribe;
+    handlers_[method::k_eth_unsubscribe] = &commands::RpcApi::handle_eth_unsubscribe;
+    handlers_[method::k_eth_getBlockReceipts] = &commands::RpcApi::handle_parity_get_block_receipts;
+}
+
+void RequestHandler::add_net_handlers() {
+    handlers_[method::k_net_listening] = &commands::RpcApi::handle_net_listening;
+    handlers_[method::k_net_peerCount] = &commands::RpcApi::handle_net_peer_count;
+    handlers_[method::k_net_version] = &commands::RpcApi::handle_net_version;
+}
+
+void RequestHandler::add_parity_handlers() {
+    handlers_[method::k_parity_getBlockReceipts] = &commands::RpcApi::handle_parity_get_block_receipts;
+}
+
+void RequestHandler::add_tg_handlers() {
+    handlers_[method::k_tg_getHeaderByHash] = &commands::RpcApi::handle_tg_get_header_by_hash;
+    handlers_[method::k_tg_getHeaderByNumber] = &commands::RpcApi::handle_tg_get_header_by_number;
+    handlers_[method::k_tg_getLogsByHash] = &commands::RpcApi::handle_tg_get_logs_by_hash;
+    handlers_[method::k_tg_forks] = &commands::RpcApi::handle_tg_forks;
+    handlers_[method::k_tg_issuance] = &commands::RpcApi::handle_tg_issuance;
+}
+
+void RequestHandler::add_trace_handlers() {
+    handlers_[method::k_trace_call] = &commands::RpcApi::handle_trace_call;
+    handlers_[method::k_trace_callMany] = &commands::RpcApi::handle_trace_call_many;
+    handlers_[method::k_trace_rawTransaction] = &commands::RpcApi::handle_trace_raw_transaction;
+    handlers_[method::k_trace_replayBlockTransactions] = &commands::RpcApi::handle_trace_replay_block_transactions;
+    handlers_[method::k_trace_replayTransaction] = &commands::RpcApi::handle_trace_replay_transaction;
+    handlers_[method::k_trace_block] = &commands::RpcApi::handle_trace_block;
+    handlers_[method::k_trace_filter] = &commands::RpcApi::handle_trace_filter;
+    handlers_[method::k_trace_get] = &commands::RpcApi::handle_trace_get;
+    handlers_[method::k_trace_transaction] = &commands::RpcApi::handle_trace_transaction;
+}
+
+void RequestHandler::add_web3_handlers() {
+    handlers_[method::k_web3_clientVersion] = &commands::RpcApi::handle_web3_client_version;
+    handlers_[method::k_web3_sha3] = &commands::RpcApi::handle_web3_sha3;
+}
 
 asio::awaitable<void> RequestHandler::handle_request(const Request& request, Reply& reply) {
     SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
