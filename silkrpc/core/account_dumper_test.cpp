@@ -27,6 +27,7 @@
 #include <catch2/catch.hpp>
 
 #include <silkworm/common/util.hpp>
+#include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
 #include <silkrpc/ethdb/transaction.hpp>
@@ -181,6 +182,8 @@ private:
 };
 
 TEST_CASE("account dumper") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+
     asio::thread_pool pool{1};
     nlohmann::json json;
 

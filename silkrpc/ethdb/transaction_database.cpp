@@ -44,10 +44,9 @@ asio::awaitable<std::optional<silkworm::Bytes>> TransactionDatabase::get_both_ra
     const auto value{co_await cursor->seek_both(key, subkey)};
     SILKRPC_DEBUG << "TransactionDatabase::get_both_range value: " << value << " subkey: " << subkey << "\n";
     if (value.substr(0, subkey.size()) != subkey) {
-        SILKRPC_DEBUG << "TransactionDatabase::get_both_range1 value: " << value << " subkey: " << subkey << "\n";
+        SILKRPC_DEBUG << "TransactionDatabase::get_both_range value: " << value << " subkey: " << subkey << "\n";
         co_return std::nullopt;
     }
-
     co_return value.substr(subkey.length());
 }
 

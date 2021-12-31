@@ -24,8 +24,10 @@
 
 #include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
+#include <asio/thread_pool.hpp>
 #include <nlohmann/json.hpp>
 
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/database.hpp>
@@ -39,7 +41,8 @@ const int16_t kAccountRangeMaxResults = 256;
 
 class DebugRpcApi {
 public:
-    explicit DebugRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
+    explicit DebugRpcApi(Context& context, asio::thread_pool& workers)
+    : context_(context), database_(context.database), workers_{workers}, tx_pool_{context.tx_pool} {}
     virtual ~DebugRpcApi() {}
 
     DebugRpcApi(const DebugRpcApi&) = delete;
@@ -54,7 +57,10 @@ protected:
     asio::awaitable<void> handle_debug_trace_call(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
+    Context& context_;
     std::unique_ptr<ethdb::Database>& database_;
+    std::unique_ptr<txpool::TransactionPool>& tx_pool_;
+    asio::thread_pool& workers_;
 
     friend class silkrpc::http::RequestHandler;
 };

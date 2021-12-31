@@ -23,6 +23,7 @@
 #include <silkworm/types/account.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/core/rawdb/util.hpp>
 #include <silkrpc/ethdb/tables.hpp>
 
