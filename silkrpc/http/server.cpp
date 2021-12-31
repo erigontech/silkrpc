@@ -22,6 +22,7 @@
 
 #include "server.hpp"
 
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
@@ -30,19 +31,64 @@
 #include <asio/dispatch.hpp>
 #include <asio/use_awaitable.hpp>
 
+#include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/http/connection.hpp>
+#include <silkrpc/http/methods.hpp>
 
 namespace silkrpc::http {
 
-Server::Server(const std::string& address, const std::string& port, ContextPool& context_pool, std::size_t num_workers)
+std::tuple<std::string, std::string> Server::parse_endpoint(const std::string& tcp_end_point) {
+    const auto host = tcp_end_point.substr(0, tcp_end_point.find(kAddressPortSeparator));
+    const auto port = tcp_end_point.substr(tcp_end_point.find(kAddressPortSeparator) + 1, std::string::npos);
+    return {host, port};
+}
+
+void Server::build_handlers(const std::string& api_spec) {
+    auto start = 0u;
+    auto end = api_spec.find(kApiSpecSeparator);
+    while (end != std::string::npos) {
+        add_handlers(api_spec.substr(start, end - start));
+        start = end + std::strlen(kApiSpecSeparator);
+        end = api_spec.find(kApiSpecSeparator, start);
+    }
+    add_handlers(api_spec.substr(start, end));
+}
+
+void Server::add_handlers(const std::string& api_namespace) {
+    if (api_namespace == kDebugApiNamespace) {
+        RequestHandler::add_debug_handlers();
+    } else if (api_namespace == kEthApiNamespace) {
+        RequestHandler::add_eth_handlers();
+    } else if (api_namespace == kNetApiNamespace) {
+        RequestHandler::add_net_handlers();
+    } else if (api_namespace == kParityApiNamespace) {
+        RequestHandler::add_parity_handlers();
+    } else if (api_namespace == kTgApiNamespace) {
+        RequestHandler::add_tg_handlers();
+    } else if (api_namespace == kTraceApiNamespace) {
+        RequestHandler::add_trace_handlers();
+    } else if (api_namespace == kWeb3ApiNamespace) {
+        RequestHandler::add_web3_handlers();
+    } else {
+        SILKRPC_WARN << "Server::add_handlers invalid namespace [" << api_namespace << "] ignored\n";
+    }
+}
+
+Server::Server(const std::string& end_point, const std::string& api_spec, ContextPool& context_pool, std::size_t num_workers)
 : context_pool_(context_pool), acceptor_{context_pool.get_io_context()}, workers_{num_workers} {
+    const auto [host, port] = parse_endpoint(end_point);
+
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
     asio::ip::tcp::resolver resolver{acceptor_.get_executor()};
-    asio::ip::tcp::endpoint endpoint = *resolver.resolve(address, port).begin();
+    asio::ip::tcp::endpoint endpoint = *resolver.resolve(host, port).begin();
     acceptor_.open(endpoint.protocol());
     acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));
     acceptor_.bind(endpoint);
+
+    // Activate JSON RPC API handlers based on the API namespace specification
+    build_handlers(api_spec);
 }
 
 void Server::start() {

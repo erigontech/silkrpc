@@ -67,7 +67,7 @@ ProtocolVersionResult wait_for_protocol_check(const std::unique_ptr<StubInterfac
     ProtocolVersion server_version{version_reply.major(), version_reply.minor(), version_reply.patch()};
 
     std::stringstream vv_stream;
-    vv_stream << "client: " << version << " server: " << server_version;
+    vv_stream << "client=" << version << " server=" << server_version;
     if (version.major != server_version.major) {
         return ProtocolVersionResult{false, name + " incompatible interface: " + vv_stream.str()};
     } else if (version.minor != server_version.minor) {
