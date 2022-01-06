@@ -30,7 +30,6 @@
 
 #include <asio/awaitable.hpp>
 #include <asio/ip/tcp.hpp>
-#include <asio/thread_pool.hpp>
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/context_pool.hpp>
@@ -48,7 +47,7 @@ public:
     Connection& operator=(const Connection&) = delete;
 
     /// Construct a connection running within the given execution context.
-    explicit Connection(Context& context, asio::thread_pool& workers);
+    explicit Connection(Context& context, std::unique_ptr<RequestHandler>&& request_handler);
 
     ~Connection();
 
@@ -71,7 +70,7 @@ private:
     asio::ip::tcp::socket socket_;
 
     /// The handler used to process the incoming request.
-    RequestHandler request_handler_;
+    std::unique_ptr<RequestHandler> request_handler_;
 
     /// Buffer for incoming data.
     std::array<char, kHttpIncomingBufferSize> buffer_;

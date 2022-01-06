@@ -45,39 +45,8 @@ std::tuple<std::string, std::string> Server::parse_endpoint(const std::string& t
     return {host, port};
 }
 
-void Server::build_handlers(const std::string& api_spec) {
-    auto start = 0u;
-    auto end = api_spec.find(kApiSpecSeparator);
-    while (end != std::string::npos) {
-        add_handlers(api_spec.substr(start, end - start));
-        start = end + std::strlen(kApiSpecSeparator);
-        end = api_spec.find(kApiSpecSeparator, start);
-    }
-    add_handlers(api_spec.substr(start, end));
-}
-
-void Server::add_handlers(const std::string& api_namespace) {
-    if (api_namespace == kDebugApiNamespace) {
-        RequestHandler::add_debug_handlers();
-    } else if (api_namespace == kEthApiNamespace) {
-        RequestHandler::add_eth_handlers();
-    } else if (api_namespace == kNetApiNamespace) {
-        RequestHandler::add_net_handlers();
-    } else if (api_namespace == kParityApiNamespace) {
-        RequestHandler::add_parity_handlers();
-    } else if (api_namespace == kTgApiNamespace) {
-        RequestHandler::add_tg_handlers();
-    } else if (api_namespace == kTraceApiNamespace) {
-        RequestHandler::add_trace_handlers();
-    } else if (api_namespace == kWeb3ApiNamespace) {
-        RequestHandler::add_web3_handlers();
-    } else {
-        SILKRPC_WARN << "Server::add_handlers invalid namespace [" << api_namespace << "] ignored\n";
-    }
-}
-
-Server::Server(const std::string& end_point, const std::string& api_spec, ContextPool& context_pool, std::size_t num_workers)
-: context_pool_(context_pool), acceptor_{context_pool.get_io_context()}, workers_{num_workers} {
+Server::Server(const std::string& end_point, RequestHandlerFactory& handler_factory, ContextPool& context_pool, std::size_t num_workers)
+: handler_factory_(handler_factory), context_pool_(context_pool), acceptor_{context_pool.get_io_context()}, workers_{num_workers} {
     const auto [host, port] = parse_endpoint(end_point);
 
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
@@ -86,9 +55,6 @@ Server::Server(const std::string& end_point, const std::string& api_spec, Contex
     acceptor_.open(endpoint.protocol());
     acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));
     acceptor_.bind(endpoint);
-
-    // Activate JSON RPC API handlers based on the API namespace specification
-    build_handlers(api_spec);
 }
 
 void Server::start() {
@@ -108,7 +74,9 @@ asio::awaitable<void> Server::run() {
 
             SILKRPC_DEBUG << "Server::start accepting using io_context " << io_context << "...\n" << std::flush;
 
-            auto new_connection = std::make_shared<Connection>(context, workers_);
+            //auto handler = std::make_unique<commands::RpcApiHandler>(context, workers_, handler_table_);
+            auto handler = handler_factory_.make_request_handler(context, workers_);
+            auto new_connection = std::make_shared<Connection>(context, std::move(handler));
             co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);
             if (!acceptor_.is_open()) {
                 SILKRPC_TRACE << "Server::start returning...\n";

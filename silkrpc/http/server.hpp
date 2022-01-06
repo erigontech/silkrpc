@@ -35,6 +35,7 @@
 #include <asio/thread_pool.hpp>
 
 #include <silkrpc/context_pool.hpp>
+#include <silkrpc/http/request_handler.hpp>
 
 namespace silkrpc::http {
 
@@ -45,7 +46,7 @@ public:
     Server& operator=(const Server&) = delete;
 
     // Construct the server to listen on the specified local TCP end-point
-    explicit Server(const std::string& end_point, const std::string& api_spec, ContextPool& context_pool, std::size_t num_workers);
+    explicit Server(const std::string& end_point, RequestHandlerFactory& handler_factory, ContextPool& context_pool, std::size_t num_workers);
 
     void start();
 
@@ -53,10 +54,11 @@ public:
 
 private:
     static std::tuple<std::string, std::string> parse_endpoint(const std::string& tcp_end_point);
-    static void build_handlers(const std::string& api_spec);
-    static void add_handlers(const std::string& api_namespace);
 
     asio::awaitable<void> run();
+
+    // The factory of request handlers
+    RequestHandlerFactory& handler_factory_;
 
     // The context pool used to perform asynchronous operations
     ContextPool& context_pool_;

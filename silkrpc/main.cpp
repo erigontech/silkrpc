@@ -34,6 +34,8 @@
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/context_pool.hpp>
+#include <silkrpc/commands/rpc_api_handler.hpp>
+#include <silkrpc/commands/rpc_api_table.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/http/server.hpp>
@@ -162,7 +164,9 @@ int main(int argc, char* argv[]) {
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{numContexts, create_channel};
 
-        silkrpc::http::Server http_server{local, api_spec, context_pool, numWorkers};
+        silkrpc::commands::RpcApiTable handler_table{api_spec};
+        silkrpc::commands::RpcApiHandlerFactory handler_factory{handler_table};
+        silkrpc::http::Server http_server{local, handler_factory, context_pool, numWorkers};
 
         auto& io_context = context_pool.get_io_context();
         asio::signal_set signals{io_context, SIGINT, SIGTERM};

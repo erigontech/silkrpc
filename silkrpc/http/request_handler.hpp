@@ -23,9 +23,7 @@
 #ifndef SILKRPC_HTTP_REQUEST_HANDLER_HPP_
 #define SILKRPC_HTTP_REQUEST_HANDLER_HPP_
 
-#include <map>
 #include <memory>
-#include <string>
 
 #include <silkrpc/config.hpp>
 
@@ -33,7 +31,6 @@
 #include <asio/thread_pool.hpp>
 
 #include <silkrpc/context_pool.hpp>
-#include <silkrpc/commands/rpc_api.hpp>
 
 namespace silkrpc::http {
 
@@ -42,28 +39,21 @@ struct Request;
 
 class RequestHandler {
 public:
-    static void add_debug_handlers();
-    static void add_eth_handlers();
-    static void add_net_handlers();
-    static void add_parity_handlers();
-    static void add_tg_handlers();
-    static void add_trace_handlers();
-    static void add_web3_handlers();
+    RequestHandler() = default;
+    virtual ~RequestHandler() {}
 
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
-    explicit RequestHandler(Context& context, asio::thread_pool& workers) : rpc_api_{context, workers} {}
+    virtual asio::awaitable<void> handle_request(const Request& request, Reply& reply) = 0;
+};
 
-    virtual ~RequestHandler() {}
+class RequestHandlerFactory {
+public:
+    RequestHandlerFactory() = default;
+    virtual ~RequestHandlerFactory() {}
 
-    asio::awaitable<void> handle_request(const Request& request, Reply& reply);
-
-private:
-    commands::RpcApi rpc_api_;
-
-    typedef asio::awaitable<void> (commands::RpcApi::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
-    static std::map<std::string, HandleMethod> handlers_;
+    virtual std::unique_ptr<RequestHandler> make_request_handler(Context& context, asio::thread_pool& workers) = 0;
 };
 
 } // namespace silkrpc::http
