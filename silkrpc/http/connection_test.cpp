@@ -20,7 +20,6 @@
 #include <catch2/catch.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/commands/rpc_api_handler.hpp>
 #include <silkrpc/commands/rpc_api_table.hpp>
 
 namespace silkrpc::http {
@@ -36,12 +35,11 @@ TEST_CASE("connection creation", "[silkrpc][http][connection]") {
         ContextPool context_pool{1, create_channel};
         auto context_pool_thread = std::thread([&]() { context_pool.run(); });
         asio::thread_pool workers;
-        commands::RpcApiTable handler_table{""};
-        auto handler = std::make_unique<commands::RpcApiHandler>(context_pool.get_context(), workers, handler_table);
         // Uncommenting the following lines you got stuck into llvm-cov problem:
         // error: cmd/unit_test: Failed to load coverage: Malformed coverage data
         /*
-        Connection conn{context_pool.get_context(), std::move(handler)};
+        commands::RpcApiTable handler_table{""};
+        Connection conn{context_pool.get_context(), workers, handler_table};
         */
         context_pool.stop();
         CHECK_NOTHROW(context_pool_thread.join());

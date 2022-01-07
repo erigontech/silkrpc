@@ -37,8 +37,8 @@
 
 namespace silkrpc::http {
 
-Connection::Connection(Context& context, std::unique_ptr<RequestHandler>&& request_handler)
-: socket_{*context.io_context}, request_handler_(std::move(request_handler)) {
+Connection::Connection(Context& context, asio::thread_pool& workers, commands::RpcApiTable& handler_table)
+: socket_{*context.io_context}, request_handler_{context, workers, handler_table} {
     request_.content.reserve(kRequestContentInitialCapacity);
     request_.headers.reserve(kRequestHeadersInitialCapacity);
     request_.method.reserve(kRequestMethodInitialCapacity);
@@ -65,7 +65,7 @@ asio::awaitable<void> Connection::do_read() {
         RequestParser::ResultType result = request_parser_.parse(request_, buffer_.data(), buffer_.data() + bytes_read);
 
         if (result == RequestParser::good) {
-            co_await request_handler_->handle_request(request_, reply_);
+            co_await request_handler_.handle_request(request_, reply_);
             co_await do_write();
             clean();
         } else if (result == RequestParser::bad) {

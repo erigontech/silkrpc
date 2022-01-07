@@ -1,5 +1,5 @@
 /*
-    Copyright 2020 The Silkrpc Authors
+    Copyright 2020-2021 The Silkrpc Authors
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -20,18 +20,20 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include "rpc_api_handler.hpp"
+#include "request_handler.hpp"
 
 #include <iostream>
 #include <utility>
+
+#include <nlohmann/json.hpp>
 
 #include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/http/header.hpp>
 
-namespace silkrpc::commands {
+namespace silkrpc::http {
 
-asio::awaitable<void> RpcApiHandler::handle_request(const http::Request& request, http::Reply& reply) {
+asio::awaitable<void> RequestHandler::handle_request(const http::Request& request, http::Reply& reply) {
     SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
     auto start = clock_time::now();
 
@@ -60,8 +62,8 @@ asio::awaitable<void> RpcApiHandler::handle_request(const http::Request& request
         }
 
         const auto method = request_json["method"].get<std::string>();
-        const auto handle_method = rpc_api_table_.find_handler(method);
-        if (!handle_method) {
+        const auto handle_method_opt = rpc_api_table_.find_handler(method);
+        if (!handle_method_opt) {
             reply.content = make_json_error(request_id, -32601, "method not existent or not implemented").dump() + "\n";
             reply.status = http::Reply::not_implemented;
             reply.headers.reserve(2);
@@ -70,12 +72,13 @@ asio::awaitable<void> RpcApiHandler::handle_request(const http::Request& request
             SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
             co_return;
         }
+        const auto handle_method = handle_method_opt.value();
 
         nlohmann::json reply_json;
-        co_await (rpc_api_.**handle_method)(request_json, reply_json);
-        //co_await (&rpc_api_->*handle_method.value())(request_json, reply_json);
+        co_await (rpc_api_.*handle_method)(request_json, reply_json);
 
-        reply.content = reply_json.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace) + "\n";
+        reply.content = reply_json.dump(
+            /*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace) + "\n";
         reply.status = http::Reply::ok;
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
@@ -95,8 +98,4 @@ asio::awaitable<void> RpcApiHandler::handle_request(const http::Request& request
     co_return;
 }
 
-std::unique_ptr<http::RequestHandler> RpcApiHandlerFactory::make_request_handler(Context& context, asio::thread_pool& workers) {
-    return std::make_unique<RpcApiHandler>(context, workers, rpc_api_table_);
-}
-
-} // namespace silkrpc::commands
+} // namespace silkrpc::http

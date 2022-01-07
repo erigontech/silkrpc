@@ -30,12 +30,11 @@
 #include <asio/awaitable.hpp>
 #include <asio/co_spawn.hpp>
 #include <asio/signal_set.hpp>
+#include <asio/thread_pool.hpp>
 #include <boost/process/environment.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/context_pool.hpp>
-#include <silkrpc/commands/rpc_api_handler.hpp>
-#include <silkrpc/commands/rpc_api_table.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/http/server.hpp>
@@ -43,9 +42,10 @@
 #include <silkrpc/protocol/version.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::kEmptyChainData, "chain data path as string");
-ABSL_FLAG(std::string, local, silkrpc::kDefaultLocal, "JSON RPC API local end-point as string <address>:<port>");
+ABSL_FLAG(std::string, eth1_local, silkrpc::kDefaultEth1Local, "Ethereum JSON RPC API local end-point as string <address>:<port>");
+ABSL_FLAG(std::string, eth2_local, silkrpc::kDefaultEth2Local, "Engine JSON RPC API local end-point as string <address>:<port>");
 ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "Erigon Core gRPC service location as string <address>:<port>");
-ABSL_FLAG(std::string, api_spec, silkrpc::kDefaultApiSpec, "JSON RPC API namespaces as comma-separated list of strings");
+ABSL_FLAG(std::string, api_spec, silkrpc::kDefaultEth1ApiSpec, "JSON RPC API namespaces as comma-separated list of strings");
 ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "number of running I/O contexts as 32-bit integer");
 ABSL_FLAG(uint32_t, numWorkers, std::thread::hardware_concurrency(), "number of worker threads as 32-bit integer");
 ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
@@ -55,8 +55,8 @@ int main(int argc, char* argv[]) {
     const auto pid = boost::this_process::get_id();
     const auto tid = std::this_thread::get_id();
 
-    using silkrpc::LogLevel;
     using silkrpc::kAddressPortSeparator;
+    using silkrpc::kDefaultEth2ApiSpec;
 
     absl::FlagsUsageConfig config;
     config.contains_helpshort_flags = [](absl::string_view) { return false; };
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
     config.normalize_filename = [](absl::string_view f) { return std::string{f.substr(f.rfind("/") + 1)}; };
     config.version_string = []() { return "silkrpcdaemon 0.0.8-rc\n"; };
     absl::SetFlagsUsageConfig(config);
-    absl::SetProgramUsageMessage("C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon");
+    absl::SetProgramUsageMessage("C++ implementation of Ethereum JSON RPC API service within Thorax architecture");
     absl::ParseCommandLine(argc, argv);
 
     SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
@@ -79,10 +79,17 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        auto local{absl::GetFlag(FLAGS_local)};
-        if (!local.empty() && local.find(kAddressPortSeparator) == std::string::npos) {
-            SILKRPC_ERROR << "Parameter local is invalid: [" << local << "]\n";
-            SILKRPC_ERROR << "Use --local flag to specify the local binding for HTTP JSON server\n";
+        auto eth1_local{absl::GetFlag(FLAGS_eth1_local)};
+        if (!eth1_local.empty() && eth1_local.find(kAddressPortSeparator) == std::string::npos) {
+            SILKRPC_ERROR << "Parameter eth1_local is invalid: [" << eth1_local << "]\n";
+            SILKRPC_ERROR << "Use --eth1_local flag to specify the local binding for Ethereum JSON RPC service\n";
+            return -1;
+        }
+
+        auto eth2_local{absl::GetFlag(FLAGS_eth2_local)};
+        if (!eth2_local.empty() && eth2_local.find(kAddressPortSeparator) == std::string::npos) {
+            SILKRPC_ERROR << "Parameter eth2_local is invalid: [" << eth2_local << "]\n";
+            SILKRPC_ERROR << "Use --eth2_local flag to specify the local binding for Engine JSON RPC service\n";
             return -1;
         }
 
@@ -163,10 +170,10 @@ int main(int argc, char* argv[]) {
 
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{numContexts, create_channel};
+        asio::thread_pool worker_pool{numWorkers};
 
-        silkrpc::commands::RpcApiTable handler_table{api_spec};
-        silkrpc::commands::RpcApiHandlerFactory handler_factory{handler_table};
-        silkrpc::http::Server http_server{local, handler_factory, context_pool, numWorkers};
+        silkrpc::http::Server eth_rpc_service{eth1_local, api_spec, context_pool, worker_pool};
+        silkrpc::http::Server engine_rpc_service{eth2_local, kDefaultEth2ApiSpec, context_pool, worker_pool};
 
         auto& io_context = context_pool.get_io_context();
         asio::signal_set signals{io_context, SIGINT, SIGTERM};
@@ -175,12 +182,17 @@ int main(int argc, char* argv[]) {
             std::cout << "\n";
             SILKRPC_INFO << "Signal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
             context_pool.stop();
-            http_server.stop();
+            eth_rpc_service.stop();
+            engine_rpc_service.stop();
         });
 
-        http_server.start();
+        SILKRPC_LOG << "Silkrpc starting Ethereum RPC API service at " << eth1_local << "\n";
+        eth_rpc_service.start();
 
-        SILKRPC_LOG << "Silkrpc running at " << local << " [pid=" << pid << ", main thread=" << tid << "]\n";
+        SILKRPC_LOG << "Silkrpc running Engine RPC API service at " << eth2_local << "\n";
+        engine_rpc_service.start();
+
+        SILKRPC_LOG << "Silkrpc is now running [pid=" << pid << ", main thread=" << tid << "]\n";
 
         context_pool.run();
     } catch (const std::exception& e) {

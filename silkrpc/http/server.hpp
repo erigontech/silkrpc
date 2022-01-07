@@ -23,7 +23,6 @@
 #ifndef SILKRPC_HTTP_SERVER_HPP_
 #define SILKRPC_HTTP_SERVER_HPP_
 
-#include <cstddef>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -37,6 +36,8 @@
 #include <silkrpc/context_pool.hpp>
 #include <silkrpc/http/request_handler.hpp>
 
+#include <silkrpc/commands/rpc_api_table.hpp>
+
 namespace silkrpc::http {
 
 /// The top-level class of the HTTP server.
@@ -46,7 +47,7 @@ public:
     Server& operator=(const Server&) = delete;
 
     // Construct the server to listen on the specified local TCP end-point
-    explicit Server(const std::string& end_point, RequestHandlerFactory& handler_factory, ContextPool& context_pool, std::size_t num_workers);
+    explicit Server(const std::string& end_point, const std::string& api_spec, ContextPool& context_pool, asio::thread_pool& workers);
 
     void start();
 
@@ -57,8 +58,8 @@ private:
 
     asio::awaitable<void> run();
 
-    // The factory of request handlers
-    RequestHandlerFactory& handler_factory_;
+    // The repository of API request handlers
+    commands::RpcApiTable handler_table_;
 
     // The context pool used to perform asynchronous operations
     ContextPool& context_pool_;
@@ -66,7 +67,7 @@ private:
     // The acceptor used to listen for incoming TCP connections
     asio::ip::tcp::acceptor acceptor_;
 
-    asio::thread_pool workers_;
+    asio::thread_pool& workers_;
 };
 
 } // namespace silkrpc::http
