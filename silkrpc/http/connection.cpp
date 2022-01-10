@@ -37,7 +37,8 @@
 
 namespace silkrpc::http {
 
-Connection::Connection(Context& context, asio::thread_pool& workers) : socket_{*context.io_context}, request_handler_{context, workers} {
+Connection::Connection(Context& context, asio::thread_pool& workers, commands::RpcApiTable& handler_table)
+: socket_{*context.io_context}, request_handler_{context, workers, handler_table} {
     request_.content.reserve(kRequestContentInitialCapacity);
     request_.headers.reserve(kRequestHeadersInitialCapacity);
     request_.method.reserve(kRequestMethodInitialCapacity);

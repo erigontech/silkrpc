@@ -34,6 +34,8 @@ namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
+class RpcApiTable;
+
 class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, TurboGethRpcApi, TraceRpcApi {
 public:
     explicit RpcApi(Context& context, asio::thread_pool& workers) :
@@ -44,6 +46,7 @@ public:
     RpcApi(const RpcApi&) = delete;
     RpcApi& operator=(const RpcApi&) = delete;
 
+    friend class RpcApiTable;
     friend class silkrpc::http::RequestHandler;
 };
 
