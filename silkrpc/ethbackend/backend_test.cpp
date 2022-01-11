@@ -80,9 +80,10 @@ class TestBackEndService : public ::remote::ETHBACKEND::Service {
 public:
     ::grpc::Status Etherbase(::grpc::ServerContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response) override {
         auto h128_ptr = new ::types::H128();
-        h128_ptr->set_hi(0x7F);
+        h128_ptr->set_hi(0xAAAAEEFFFFEEAAAA);
+        h128_ptr->set_lo(0x11DDBBAAAABBDD11);
         auto h160_ptr = new ::types::H160();
-        h160_ptr->set_lo(0xFF);
+        h160_ptr->set_lo(0xCCDDDDCC);
         h160_ptr->set_allocated_hi(h128_ptr);
         response->set_allocated_address(h160_ptr);
         return ::grpc::Status::OK;
@@ -170,7 +171,7 @@ TEST_CASE("BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
         asio::io_context io_context;
         auto etherbase{asio::co_spawn(io_context, test_etherbase(&service), asio::use_future)};
         io_context.run();
-        CHECK(etherbase.get() == 0x000000000000007f0000000000000000000000ff_address);
+        CHECK(etherbase.get() == 0xaaaaeeffffeeaaaa11ddbbaaaabbdd11ccddddcc_address);
     }
 
     SECTION("call etherbase and get empty address") {
