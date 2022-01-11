@@ -189,6 +189,92 @@ private:
         return address;
     }
 
+    silkworm::Bytes bytes_from_H128(types::H128& h128) {
+        silkworm::Bytes bytes(16, '\0');
+        boost::endian::store_big_u64(&bytes[0], h128.hi());
+        boost::endian::store_big_u64(&bytes[8], h128.lo());
+        return bytes;
+
+    }
+
+    types::H128 H128_from_bytes(const silkworm::Bytes& bytes) {
+        types::H128 h128;
+        h128.set_hi(boost::endian::load_big_u64(&bytes[0]));
+        h128.set_lo(boost::endian::load_big_u64(&bytes[8]));
+        return h128;
+    }
+
+    types::H160 H160_from_address(const evmc::address& address) {
+        types::H160 h160;
+        *h160.mutable_hi() = H128_from_bytes(address.bytes);
+        h160.set_lo(boost::endian::load_big_u32(address.bytes + 16));
+        return h160;
+    }
+
+    types::H256 H256_from_bytes(const silkworm::Bytes& bytes) {
+        types::H256 h256;
+        *h256.mutable_hi() = H128_from_bytes(&bytes[0]);
+        *h256.mutable_lo() = H128_from_bytes(&bytes[16]);
+        return h256;
+    }
+
+    silkworm::Bytes bytes_from_H256(types::H256& h256) {
+        silkworm::Bytes bytes(32, '\0');
+        auto hi{h256.hi()};
+        auto lo{h256.lo()};
+        std::memcpy(&bytes[0], bytes_from_H128(hi).data(), 16);
+        std::memcpy(&bytes[16], bytes_from_H128(lo).data(), 16);
+        return bytes;
+    }
+
+    types::H512 H512_from_bytes(const silkworm::Bytes& bytes) {
+        types::H512 h512;
+        *h512.mutable_hi() = H256_from_bytes(&bytes[0]);
+        *h512.mutable_lo() = H256_from_bytes(&bytes[32]);
+        return h512;
+    }
+
+    silkworm::Bytes bytes_from_H512(types::H512& h512) {
+        silkworm::Bytes bytes(64, '\0');
+        auto hi{h512.hi()};
+        auto lo{h512.lo()};
+        std::memcpy(&bytes[0], bytes_from_H256(hi).data(), 32);
+        std::memcpy(&bytes[32], bytes_from_H256(lo).data(), 32);
+        return bytes;
+    }
+
+    types::H1024 H1024_from_bytes(const silkworm::Bytes& bytes) {
+        types::H1024 h1024;
+        *h1024.mutable_hi() = H512_from_bytes(&bytes[0]);
+        *h1024.mutable_lo() = H512_from_bytes(&bytes[64]);
+        return h1024;
+    }
+
+    silkworm::Bytes bytes_from_H1024(types::H1024& h1024) {
+        silkworm::Bytes bytes(128, '\0');
+        auto hi{h1024.hi()};
+        auto lo{h1024.lo()};
+        std::memcpy(&bytes[0], bytes_from_H512(hi).data(), 64);
+        std::memcpy(&bytes[64], bytes_from_H512(lo).data(), 64);
+        return bytes;
+    }
+
+    types::H2048 H2048_from_bytes(const silkworm::Bytes& bytes) {
+        types::H2048 h2048;
+        *h2048.mutable_hi() = H1024_from_bytes(&bytes[0]);
+        *h2048.mutable_lo() = H1024_from_bytes(&bytes[128]);
+        return h2048;
+    }
+
+    silkworm::Bytes bytes_from_H2048(types::H2048& h2048) {
+        silkworm::Bytes bytes(256, '\0');
+        auto hi{h2048.hi()};
+        auto lo{h2048.lo()};
+        std::memcpy(&bytes[0], bytes_from_H1024(hi).data(), 128);
+        std::memcpy(&bytes[128], bytes_from_H1024(lo).data(), 128);
+        return bytes;
+    }
+
     asio::io_context::executor_type executor_;
     std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub_;
     grpc::CompletionQueue* queue_;
