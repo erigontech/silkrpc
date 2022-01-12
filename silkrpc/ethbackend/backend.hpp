@@ -74,6 +74,13 @@ using NetPeerCountClient = AsyncUnaryClient<
     &::remote::ETHBACKEND::StubInterface::PrepareAsyncNetPeerCount
 >;
 
+using EngineGetPayloadV1Client = AsyncUnaryClient<
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::EngineGetPayloadRequest,
+    ::types::ExecutionPayload,
+    &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineGetPayloadV1
+>;
+
 using EtherbaseAwaitable = unary_awaitable<
     asio::io_context::executor_type,
     EtherbaseClient,
@@ -112,6 +119,14 @@ using NetPeerCountAwaitable = unary_awaitable<
     ::remote::ETHBACKEND::StubInterface,
     ::remote::NetPeerCountRequest,
     ::remote::NetPeerCountReply
+>;
+
+using EngineGetPayloadV1Awaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    EngineGetPayloadV1Client,
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::EngineGetPayloadRequest,
+    ::types::ExecutionPayload
 >;
 
 class BackEnd final {
@@ -175,6 +190,14 @@ public:
         const auto count = reply.count();
         SILKRPC_DEBUG << "BackEnd::net_peer_count count=" << count << " t=" << clock_time::since(start_time) << "\n";
         co_return count;
+    }
+
+    asio::awaitable<::types::ExecutionPayload> engine_get_payload_v1(::remote::EngineGetPayloadRequest get_payload_request) {
+        const auto start_time = clock_time::now();
+        EngineGetPayloadV1Awaitable npc_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await npc_awaitable.async_call(get_payload_request, asio::use_awaitable);
+        // SILKRPC_DEBUG << "BackEnd::engine_get_payload_v1 " << " t=" << clock_time::since(start_time) << "\n";
+        co_return reply;
     }
 
 private:

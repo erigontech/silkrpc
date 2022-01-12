@@ -34,6 +34,7 @@
 #include <silkrpc/types/issuance.hpp>
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/transaction.hpp>
+#include <silkrpc/types/execution_payload.hpp>
 #include <silkrpc/types/receipt.hpp>
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
@@ -78,6 +79,9 @@ void from_json(const nlohmann::json& json, Receipt& receipt);
 
 void to_json(nlohmann::json& json, const Filter& filter);
 void from_json(const nlohmann::json& json, Filter& filter);
+
+void to_json(nlohmann::json& json, const ExecutionPayload& execution_payload);
+void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload);
 
 void to_json(nlohmann::json& json, const Forks& forks);
 
