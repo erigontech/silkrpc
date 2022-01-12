@@ -37,7 +37,7 @@ if(NOT CMAKE_CXX_COMPILER)
 endif()
 
 if(VERSION_LESS CMAKE_CXX_COMPILER "10.0.0")
-  message(FATAL_ERROR "required clang version >= 10.0.0")
+  message(FATAL_ERROR "required clang++ version >= 10.0.0")
 endif()
 
 
