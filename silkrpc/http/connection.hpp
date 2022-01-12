@@ -24,7 +24,6 @@
 #define SILKRPC_HTTP_CONNECTION_HPP_
 
 #include <array>
-#include <memory>
 
 #include <silkrpc/config.hpp>
 
@@ -32,6 +31,7 @@
 #include <asio/ip/tcp.hpp>
 #include <asio/thread_pool.hpp>
 
+#include <silkrpc/commands/rpc_api_table.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/context_pool.hpp>
 #include <silkrpc/http/reply.hpp>
@@ -42,13 +42,13 @@
 namespace silkrpc::http {
 
 /// Represents a single connection from a client.
-class Connection : public std::enable_shared_from_this<Connection> {
+class Connection {
 public:
     Connection(const Connection&) = delete;
     Connection& operator=(const Connection&) = delete;
 
     /// Construct a connection running within the given execution context.
-    explicit Connection(Context& context, asio::thread_pool& workers);
+    Connection(Context& context, asio::thread_pool& workers, commands::RpcApiTable& handler_table);
 
     ~Connection();
 

@@ -52,30 +52,27 @@ class log_ {
     static std::mutex log_mtx_;
 };
 
-
 using Logger = log_;
-
-#define LOG(level_) if ((level_) < silkrpc::log_verbosity_) {} else silkrpc::log_(level_) << " " // NOLINT
-
-// LogTrace, LogDebug, LogInfo, LogWarn, LogError, LogCritical, LogNone
-#define SILKRPC_TRACE LOG(LogLevel::Trace)
-#define SILKRPC_DEBUG LOG(LogLevel::Debug)
-#define SILKRPC_INFO  LOG(LogLevel::Info)
-#define SILKRPC_WARN  LOG(LogLevel::Warn)
-#define SILKRPC_ERROR LOG(LogLevel::Error)
-#define SILKRPC_CRIT  LOG(LogLevel::Critical)
-#define SILKRPC_LOG   LOG(LogLevel::None)
-
-#define SILKRPC_LOG_VERBOSITY(level_) (silkrpc::log_verbosity_ = (level_))
-
-#define SILKRPC_LOG_THREAD(log_thread_) (silkrpc::log_thread_enabled_ = (log_thread_))
-
-#define SILKRPC_LOG_STREAMS(stream1_, stream2_) silkrpc::log_set_streams_((stream1_), (stream2_))
 
 bool AbslParseFlag(absl::string_view text, LogLevel* level, std::string* error);
 std::string AbslUnparseFlag(LogLevel level);
 
 } // namespace silkrpc
 
+#define LOG(level_) if ((level_) < silkrpc::log_verbosity_) {} else silkrpc::log_(level_) << " " // NOLINT
+
+#define SILKRPC_TRACE LOG(silkrpc::LogLevel::Trace)
+#define SILKRPC_DEBUG LOG(silkrpc::LogLevel::Debug)
+#define SILKRPC_INFO  LOG(silkrpc::LogLevel::Info)
+#define SILKRPC_WARN  LOG(silkrpc::LogLevel::Warn)
+#define SILKRPC_ERROR LOG(silkrpc::LogLevel::Error)
+#define SILKRPC_CRIT  LOG(silkrpc::LogLevel::Critical)
+#define SILKRPC_LOG   LOG(silkrpc::LogLevel::None)
+
+#define SILKRPC_LOG_VERBOSITY(level_) (silkrpc::log_verbosity_ = (level_))
+
+#define SILKRPC_LOG_THREAD(log_thread_) (silkrpc::log_thread_enabled_ = (log_thread_))
+
+#define SILKRPC_LOG_STREAMS(stream1_, stream2_) silkrpc::log_set_streams_((stream1_), (stream2_))
 
 #endif  // SILKRPC_COMMON_LOG_HPP_

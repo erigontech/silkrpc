@@ -23,6 +23,7 @@
 namespace silkrpc {
 
 constexpr const char* kDebugApiNamespace{"debug"};
+constexpr const char* kEngineApiNamespace{"engine"};
 constexpr const char* kEthApiNamespace{"eth"};
 constexpr const char* kNetApiNamespace{"net"};
 constexpr const char* kParityApiNamespace{"parity"};
@@ -34,9 +35,11 @@ constexpr const char* kAddressPortSeparator{":"};
 constexpr const char* kApiSpecSeparator{","};
 
 constexpr const char* kEmptyChainData{""};
-constexpr const char* kDefaultLocal{"localhost:8545"};
+constexpr const char* kDefaultEth1Local{"localhost:8545"};
+constexpr const char* kDefaultEth2Local{"localhost:8550"};
 constexpr const char* kDefaultTarget{"localhost:9090"};
-constexpr const char* kDefaultApiSpec{"debug,eth,net,parity,tg,trace,web3"};
+constexpr const char* kDefaultEth1ApiSpec{"debug,eth,net,parity,tg,trace,web3"};
+constexpr const char* kDefaultEth2ApiSpec{"engine"};
 constexpr const std::chrono::milliseconds kDefaultTimeout{10000};
 
 constexpr const std::size_t kHttpIncomingBufferSize{8192};

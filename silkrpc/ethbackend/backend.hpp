@@ -208,7 +208,7 @@ private:
         evmc::address address{};
         boost::endian::store_big_u64(address.bytes +  0, hi_hi);
         boost::endian::store_big_u64(address.bytes +  8, hi_lo);
-        boost::endian::store_big_u64(address.bytes + 12, lo);
+        boost::endian::store_big_u32(address.bytes + 16, lo);
         return address;
     }
 
