@@ -35,6 +35,22 @@ HunterGate(
 
 project(silkrpc)
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if(CMAKE_C_COMPILER_VERSION VERSION_LESS 10.3.0)
+    message(FATAL_ERROR "required gcc version >= 10.3.0")
+  endif()
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.3.0)
+    message(FATAL_ERROR "required g++ version >= 10.3.0")
+  endif()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+  if(CMAKE_C_COMPILER_VERSION VERSION_LESS 10.0.0)
+    message(FATAL_ERROR "required clang version >= 10.0.0")
+  endif()
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0.0)
+    message(FATAL_ERROR "required clang++ version >= 10.0.0")
+  endif()
+endif()
+
 include(cmake/Hunter/packages.cmake)
 
 # Silkworm
