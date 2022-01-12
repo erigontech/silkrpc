@@ -28,7 +28,7 @@ if(NOT CMAKE_C_COMPILER)
   message(FATAL_ERROR "clang not found")
 endif()
 
-if(VERSION_LESS CMAKE_C_COMPILER "10.0.0")
+if(CMAKE_C_COMPILER_VERSION VERSION_LESS 10.0.0)
   message(FATAL_ERROR "required clang version >= 10.0.0")
 endif()
 
@@ -36,7 +36,7 @@ if(NOT CMAKE_CXX_COMPILER)
   message(FATAL_ERROR "clang++ not found")
 endif()
 
-if(VERSION_LESS CMAKE_CXX_COMPILER "10.0.0")
+if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.0.0)
   message(FATAL_ERROR "required clang++ version >= 10.0.0")
 endif()
 
