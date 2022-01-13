@@ -27,7 +27,7 @@ using Catch::Matchers::Message;
 
 TEST_CASE("create empty execution_payload", "[silkrpc][types][execution_payload]") {
     ExecutionPayload payload{};
-    CHECK(payload.suggestedFeeRecipient == evmc::address{});
+    CHECK(payload.suggested_fee_recipient == evmc::address{});
     CHECK(payload.transactions == std::vector<silkworm::Bytes>{});
     CHECK(payload.parent_hash == evmc::bytes32{});
     CHECK(payload.state_root == evmc::bytes32{});

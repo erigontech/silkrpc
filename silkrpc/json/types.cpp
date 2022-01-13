@@ -439,7 +439,7 @@ void to_json(nlohmann::json& json, const ExecutionPayload& execution_payload) {
         transaction_list.push_back("0x" + silkworm::to_hex(transaction));
     }
     json["parentHash"] = execution_payload.parent_hash;
-    json["suggestedFeeRecipient"] = execution_payload.suggestedFeeRecipient;
+    json["suggestedFeeRecipient"] = execution_payload.suggested_fee_recipient;
     json["stateRoot"] = execution_payload.state_root;
     json["receiptsRoot"] = execution_payload.receipts_root;
     json["logsBloom"] = "0x" + silkworm::to_hex(execution_payload.logs_bloom);
@@ -471,7 +471,7 @@ void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload) 
 
     execution_payload = ExecutionPayload {
         .parent_hash = json.at("parentHash").get<evmc::bytes32>(),
-        .suggestedFeeRecipient = json.at("suggestedFeeRecipient").get<evmc::address>(),
+        .suggested_fee_recipient = json.at("suggestedFeeRecipient").get<evmc::address>(),
         .state_root = json.at("stateRoot").get<evmc::bytes32>(),
         .receipts_root = json.at("receiptsRoot").get<evmc::bytes32>(),
         .logs_bloom = logs_bloom,

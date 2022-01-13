@@ -15,7 +15,7 @@
 */
 
 #ifndef SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
-#ifndef SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
+#define SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
 
 #include <iostream>
 #include <map>
@@ -54,4 +54,4 @@ struct ExecutionPayload {
 std::ostream& operator<<(std::ostream& out, const ExecutionPayload& p);
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_DUMP_ACCOUNT_HPP_
+#endif  // SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_

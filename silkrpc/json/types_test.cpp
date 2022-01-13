@@ -1308,7 +1308,7 @@ TEST_CASE("serialize execution_payload", "[silkrpc::json][to_json]") {
     // uint64_t are kept as hex for readability
     silkrpc::ExecutionPayload execution_payload{
         .parent_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
-        .suggestedFeeRecipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address,
+        .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address,
         .state_root = 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf45_bytes32,
         .receipts_root = 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32,
         .random = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
@@ -1359,7 +1359,7 @@ TEST_CASE("deserialize execution_payload", "[silkrpc::json][to_json]") {
     // expected deserialization result
     silkrpc::ExecutionPayload expected_payload{
         .parent_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
-        .suggestedFeeRecipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address,
+        .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address,
         .state_root = 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf45_bytes32,
         .receipts_root = 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32,
         .random = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
@@ -1372,7 +1372,7 @@ TEST_CASE("deserialize execution_payload", "[silkrpc::json][to_json]") {
     };
 
     CHECK(actual_payload.parent_hash == expected_payload.parent_hash);
-    CHECK(actual_payload.suggestedFeeRecipient == expected_payload.suggestedFeeRecipient);
+    CHECK(actual_payload.suggested_fee_recipient == expected_payload.suggested_fee_recipient);
     CHECK(actual_payload.state_root == expected_payload.state_root);
     CHECK(actual_payload.receipts_root == expected_payload.receipts_root);
     CHECK(actual_payload.random == expected_payload.random);
