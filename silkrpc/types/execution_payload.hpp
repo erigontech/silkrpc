@@ -51,7 +51,6 @@ struct ExecutionPayload {
     std::vector<silkworm::Bytes> transactions;
 };
 
-std::ostream& operator<<(std::ostream& out, const ExecutionPayload& p);
 } // namespace silkrpc
 
 #endif  // SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
