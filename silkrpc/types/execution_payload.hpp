@@ -39,7 +39,7 @@ struct ExecutionPayload {
     uint64_t timestamp;
     uint64_t gas_limit;
     uint64_t gas_used;
-    evmc::address suggestedFeeRecipient;
+    evmc::address suggested_fee_recipient;
     evmc::bytes32 state_root;
     evmc::bytes32 receipts_root;
     evmc::bytes32 parent_hash;

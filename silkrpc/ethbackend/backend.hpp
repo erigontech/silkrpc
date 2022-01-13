@@ -36,6 +36,7 @@
 #include <silkrpc/grpc/async_unary_client.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
+#include <silkrpc/types/execution_payload.hpp>
 
 namespace silkrpc::ethbackend {
 
@@ -250,6 +251,30 @@ private:
         return bytes;
     }
 
+    intx::uint256 uint256_from_H256(types::H256& h256) {
+        intx::uint256 n;
+        n[0] = h256.hi().hi();
+        n[1] = h256.hi().lo();
+        n[2] = h256.lo().hi();
+        n[3] = h256.lo().lo();
+        return n;
+    }
+
+    types::H256 H256_from_uint256(const intx::uint256& n) {
+        types::H256 h256;
+        h256.mutable_hi()->set_hi(n[0]);
+        h256.mutable_hi()->set_lo(n[1]);
+        h256.mutable_lo()->set_hi(n[2]);
+        h256.mutable_lo()->set_lo(n[3]);
+        return h256;
+    }
+
+    evmc::bytes32 bytes32_from_H256(types::H256& h256) {
+        evmc::bytes32 bytes32;
+        std::memcpy(bytes32.bytes, bytes_from_H256(h256).data(), 32);
+        return bytes32;
+    }
+
     types::H512 H512_from_bytes(const silkworm::Bytes& bytes) {
         types::H512 h512;
         *h512.mutable_hi() = H256_from_bytes(&bytes[0]);
@@ -296,6 +321,69 @@ private:
         std::memcpy(&bytes[0], bytes_from_H1024(hi).data(), 128);
         std::memcpy(&bytes[128], bytes_from_H1024(lo).data(), 128);
         return bytes;
+    }
+
+    ExecutionPayload decode_execution_payload_from_grpc_format(const types::ExecutionPayload& execution_payload_grpc) {
+        auto state_root_h256{execution_payload_grpc.stateroot()};
+        auto receipts_root_h256{execution_payload_grpc.receiptroot()};
+        auto parent_hash_h256{execution_payload_grpc.parenthash()};
+        auto random_h256{execution_payload_grpc.random()};
+        auto base_fee_h256{execution_payload_grpc.basefeepergas()};
+        auto logs_bloom_h2048{execution_payload_grpc.logsbloom()};
+        auto extra_data_string{execution_payload_grpc.extradata()}; // []byte becomes std::string in silkrpc protobuf
+        // Convert h2048 to a bloom
+        silkworm::Bloom bloom;
+        std::memcpy(&bloom[0], bytes_from_H2048(logs_bloom_h2048).data(), 256);
+        // Convert transactions in std::string to silkworm::Bytes
+        std::vector<silkworm::Bytes> transactions;
+        for (const auto& transaction_string: execution_payload_grpc.transactions()){
+            transactions.push_back(silkworm::bytes_of_string(transaction_string));
+        }
+        
+        // Assembling the execution_payload data structure
+        return ExecutionPayload{
+            .number = execution_payload_grpc.blocknumber(),
+            .timestamp = execution_payload_grpc.timestamp(),
+            .gas_limit = execution_payload_grpc.gaslimit(),
+            .gas_used = execution_payload_grpc.gasused(),
+            .suggested_fee_recipient = address_from_H160(execution_payload_grpc.coinbase()),
+            .state_root = bytes32_from_H256(state_root_h256),
+            .receipts_root = bytes32_from_H256(receipts_root_h256),
+            .parent_hash = bytes32_from_H256(parent_hash_h256),
+            .random = bytes32_from_H256(random_h256),
+            .base_fee = uint256_from_H256(base_fee_h256),
+            .logs_bloom = bloom,
+            .extra_data = silkworm::bytes_of_string(extra_data_string),
+            .transactions = transactions
+        };
+    }
+
+    types::ExecutionPayload encode_execution_payload_to_grpc_format(const ExecutionPayload& execution_payload) {
+        types::ExecutionPayload execution_payload_grpc;        
+        // Setting numerical parameters
+        execution_payload_grpc.set_blocknumber(execution_payload.number);
+        execution_payload_grpc.set_timestamp(execution_payload.timestamp);
+        execution_payload_grpc.set_gaslimit(execution_payload.gas_limit);
+        execution_payload_grpc.set_gasused(execution_payload.gas_used);
+        // Setting coinbase
+        *execution_payload_grpc.mutable_coinbase() = H160_from_address(execution_payload.suggested_fee_recipient);
+        // Hashes
+        *execution_payload_grpc.mutable_stateroot() = H256_from_bytes(execution_payload.state_root.bytes);
+        *execution_payload_grpc.mutable_receiptroot() = H256_from_bytes(execution_payload.receipts_root.bytes);
+        *execution_payload_grpc.mutable_parenthash() = H256_from_bytes(execution_payload.parent_hash.bytes);
+        *execution_payload_grpc.mutable_random() = H256_from_bytes(execution_payload.random.bytes);
+        *execution_payload_grpc.mutable_basefeepergas() = H256_from_uint256(execution_payload.base_fee);
+        // Logs Bloom
+        *execution_payload_grpc.mutable_logsbloom() = H2048_from_bytes(silkworm::Bytes(
+            execution_payload.logs_bloom.begin(), execution_payload.logs_bloom.end()
+        ));
+        // String-like parameters
+        std::string transactions_string[execution_payload.transactions.size()];
+        for (int i = 0; const auto& transaction_bytes: execution_payload.transactions) {
+            execution_payload_grpc.set_transactions(i, std::string(*transaction_bytes.begin(), *transaction_bytes.end()));
+        }
+        execution_payload_grpc.set_extradata(std::string(execution_payload.extra_data.begin(), execution_payload.extra_data.end()));
+        return execution_payload_grpc;
     }
 
     asio::io_context::executor_type executor_;
