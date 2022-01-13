@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_ENGINE_HPP_
-#define SILKRPC_TYPES_ENGINE_HPP_
+#ifndef SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
+#ifndef SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
 
 #include <iostream>
 #include <map>
