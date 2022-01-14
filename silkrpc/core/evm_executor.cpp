@@ -244,14 +244,26 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                     }
                 }
 
-                SILKRPC_DEBUG << "EVMExecutor::call execute on EVM txn: " << &txn << " g0: " << static_cast<uint64_t>(g0) << " start\n";
-                const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
-                SILKRPC_DEBUG << "EVMExecutor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
+                try {
+                   SILKRPC_DEBUG << "EVMExecutor::call execute on EVM txn: " << &txn << " g0: " << static_cast<uint64_t>(g0) << " start\n";
+                   const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
+                   SILKRPC_DEBUG << "EVMExecutor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
 
-                ExecutionResult exec_result{result.status, result.gas_left, result.data};
-                asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
-                    self.complete(exec_result);
-                });
+                   ExecutionResult exec_result{result.status, result.gas_left, result.data};
+                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                       self.complete(exec_result);
+                   });
+               } catch (const std::system_error& se) {
+                   SILKRPC_ERROR << "EVMExecutor::call exception: " << se.what() << "\n";
+                   silkworm::Bytes data{};
+                   std::string from = silkworm::to_hex(*txn.from);
+                   std::string error =  se.what();
+                   ExecutionResult exec_result{1000, txn.gas_limit, data, error};
+                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                       self.complete(exec_result);
+                   });
+                   return;
+               }
             });
         },
         asio::use_awaitable);
