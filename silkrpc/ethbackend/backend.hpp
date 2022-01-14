@@ -318,6 +318,7 @@ private:
     ExecutionPayload decode_execution_payload_from_grpc_format(const types::ExecutionPayload& execution_payload_grpc) {
         auto state_root_h256{execution_payload_grpc.stateroot()};
         auto receipts_root_h256{execution_payload_grpc.receiptroot()};
+        auto block_hash_h256{execution_payload_grpc.blockhash()};
         auto parent_hash_h256{execution_payload_grpc.parenthash()};
         auto random_h256{execution_payload_grpc.random()};
         auto base_fee_h256{execution_payload_grpc.basefeepergas()};
@@ -341,6 +342,7 @@ private:
             .suggested_fee_recipient = address_from_H160(execution_payload_grpc.coinbase()),
             .state_root = bytes32_from_H256(state_root_h256),
             .receipts_root = bytes32_from_H256(receipts_root_h256),
+            .block_hash = bytes32_from_H256(block_hash_h256),
             .parent_hash = bytes32_from_H256(parent_hash_h256),
             .random = bytes32_from_H256(random_h256),
             .base_fee = uint256_from_H256(base_fee_h256),

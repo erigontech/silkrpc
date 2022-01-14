@@ -469,20 +469,20 @@ void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload) 
         );
     }
 
-    execution_payload = ExecutionPayload {
-        .parent_hash = json.at("parentHash").get<evmc::bytes32>(),
-        .suggested_fee_recipient = json.at("suggestedFeeRecipient").get<evmc::address>(),
-        .state_root = json.at("stateRoot").get<evmc::bytes32>(),
-        .receipts_root = json.at("receiptsRoot").get<evmc::bytes32>(),
-        .logs_bloom = logs_bloom,
-        .random = json.at("random").get<evmc::bytes32>(),
+    execution_payload = ExecutionPayload{
         .number = static_cast<uint64_t>(std::stol(json.at("blockNumber").get<std::string>(), 0, 16)),
         .gas_limit = static_cast<uint64_t>(std::stol(json.at("gasLimit").get<std::string>(), 0, 16)),
         .gas_used = static_cast<uint64_t>(std::stol(json.at("gasUsed").get<std::string>(), 0, 16)),
         .timestamp = static_cast<uint64_t>(std::stol(json.at("timestamp").get<std::string>(), 0, 16)),
-        .extra_data = *silkworm::from_hex(json.at("extraData").get<std::string>()),
-        .base_fee = json.at("baseFeePerGas").get<intx::uint256>(),
+        .suggested_fee_recipient = json.at("suggestedFeeRecipient").get<evmc::address>(),
+        .state_root = json.at("stateRoot").get<evmc::bytes32>(),
+        .receipts_root = json.at("receiptsRoot").get<evmc::bytes32>(),
+        .parent_hash = json.at("parentHash").get<evmc::bytes32>(),
         .block_hash = json.at("blockHash").get<evmc::bytes32>(),
+        .random = json.at("random").get<evmc::bytes32>(),
+        .base_fee = json.at("baseFeePerGas").get<intx::uint256>(),
+        .logs_bloom = logs_bloom,
+        .extra_data = *silkworm::from_hex(json.at("extraData").get<std::string>()),
         .transactions = transactions
     };
 }

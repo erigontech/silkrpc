@@ -1358,16 +1358,17 @@ TEST_CASE("deserialize execution_payload", "[silkrpc::json][to_json]") {
     })"_json;
     // expected deserialization result
     silkrpc::ExecutionPayload expected_payload{
-        .parent_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
+        .number = 0x1,
+        .timestamp = 0x5,
+        .gas_limit = 0x1c9c380,
+        .gas_used = 0x0,
         .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address,
         .state_root = 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf45_bytes32,
         .receipts_root = 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32,
-        .random = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
-        .number = 0x1,
-        .gas_limit = 0x1c9c380,
-        .timestamp = 0x5,
-        .base_fee = 0x7,
+        .parent_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
         .block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+        .random = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
+        .base_fee = 0x7,
         .transactions = {{0xf9, 0x2e, 0xbd, 0xea, 0xb4, 0x5d, 0x36, 0x8f, 0x63, 0x54, 0xe8, 0xc5, 0xa8, 0xac, 0x58, 0x6c}},
     };
 
