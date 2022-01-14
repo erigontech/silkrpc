@@ -435,7 +435,7 @@ void from_json(const nlohmann::json& json, Filter& filter) {
 
 void to_json(nlohmann::json& json, const ExecutionPayload& execution_payload) {
     nlohmann::json transaction_list;
-    for (const auto& transaction: execution_payload.transactions) {
+    for (const auto& transaction : execution_payload.transactions) {
         transaction_list.push_back("0x" + silkworm::to_hex(transaction));
     }
     json["parentHash"] = execution_payload.parent_hash;
@@ -457,13 +457,13 @@ void to_json(nlohmann::json& json, const ExecutionPayload& execution_payload) {
 void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload) {
     // Parse logs bloom
     silkworm::Bloom logs_bloom;
-    std::memcpy(&logs_bloom[0], 
-                silkworm::from_hex(json.at("logsBloom").get<std::string>())->data(), 
+    std::memcpy(&logs_bloom[0],
+                silkworm::from_hex(json.at("logsBloom").get<std::string>())->data(),
                 silkworm::kBloomByteLength
     );
     // Parse transactions
     std::vector<silkworm::Bytes> transactions;
-    for (const auto& hex_transaction: json.at("transactions")) {
+    for (const auto& hex_transaction : json.at("transactions")) {
         transactions.push_back(
             *silkworm::from_hex(hex_transaction.get<std::string>())
         );

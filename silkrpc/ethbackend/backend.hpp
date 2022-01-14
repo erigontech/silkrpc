@@ -21,6 +21,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <silkrpc/config.hpp>
 
@@ -195,7 +196,6 @@ private:
         boost::endian::store_big_u64(&bytes[0], h128.hi());
         boost::endian::store_big_u64(&bytes[8], h128.lo());
         return bytes;
-
     }
 
     types::H128 H128_from_bytes(const silkworm::Bytes& bytes) {
@@ -242,7 +242,7 @@ private:
 
     types::H256 H256_from_uint256(const intx::uint256& n) {
         types::H256 h256;
-        types::H128 hi;       
+        types::H128 hi;
         types::H128 lo;
 
         hi.set_hi(n[0]);
@@ -328,10 +328,10 @@ private:
         std::memcpy(&bloom[0], bytes_from_H2048(logs_bloom_h2048).data(), 256);
         // Convert transactions in std::string to silkworm::Bytes
         std::vector<silkworm::Bytes> transactions;
-        for (const auto& transaction_string: execution_payload_grpc.transactions()){
+        for (const auto& transaction_string : execution_payload_grpc.transactions()) {
             transactions.push_back(silkworm::bytes_of_string(transaction_string));
         }
-        
+
         // Assembling the execution_payload data structure
         return ExecutionPayload{
             .number = execution_payload_grpc.blocknumber(),
@@ -351,7 +351,7 @@ private:
     }
 
     types::ExecutionPayload encode_execution_payload_to_grpc_format(const ExecutionPayload& execution_payload) {
-        types::ExecutionPayload execution_payload_grpc;        
+        types::ExecutionPayload execution_payload_grpc;
         // Numerical parameters
         execution_payload_grpc.set_blocknumber(execution_payload.number);
         execution_payload_grpc.set_timestamp(execution_payload.timestamp);
@@ -377,7 +377,7 @@ private:
         ))};
         execution_payload_grpc.set_allocated_logsbloom(&logs_bloom_h2048);
         // String-like parameters
-        for (const auto& transaction_bytes: execution_payload.transactions) {
+        for (const auto& transaction_bytes : execution_payload.transactions) {
             execution_payload_grpc.add_transactions(std::string(*transaction_bytes.begin(), *transaction_bytes.end()));
         }
         execution_payload_grpc.set_extradata(std::string(execution_payload.extra_data.begin(), execution_payload.extra_data.end()));

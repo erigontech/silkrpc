@@ -22,6 +22,7 @@
 #include <optional>
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
