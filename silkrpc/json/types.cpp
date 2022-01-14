@@ -471,9 +471,9 @@ void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload) 
 
     execution_payload = ExecutionPayload{
         .number = static_cast<uint64_t>(std::stol(json.at("blockNumber").get<std::string>(), 0, 16)),
+        .timestamp = static_cast<uint64_t>(std::stol(json.at("timestamp").get<std::string>(), 0, 16)),
         .gas_limit = static_cast<uint64_t>(std::stol(json.at("gasLimit").get<std::string>(), 0, 16)),
         .gas_used = static_cast<uint64_t>(std::stol(json.at("gasUsed").get<std::string>(), 0, 16)),
-        .timestamp = static_cast<uint64_t>(std::stol(json.at("timestamp").get<std::string>(), 0, 16)),
         .suggested_fee_recipient = json.at("suggestedFeeRecipient").get<evmc::address>(),
         .state_root = json.at("stateRoot").get<evmc::bytes32>(),
         .receipts_root = json.at("receiptsRoot").get<evmc::bytes32>(),
