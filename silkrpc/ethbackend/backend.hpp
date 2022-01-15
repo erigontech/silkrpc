@@ -76,6 +76,13 @@ using NetPeerCountClient = AsyncUnaryClient<
     &::remote::ETHBACKEND::StubInterface::PrepareAsyncNetPeerCount
 >;
 
+using EngineGetPayloadV1Client = AsyncUnaryClient<
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::EngineGetPayloadRequest,
+    ::types::ExecutionPayload,
+    &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineGetPayloadV1
+>;
+
 using EtherbaseAwaitable = unary_awaitable<
     asio::io_context::executor_type,
     EtherbaseClient,
@@ -114,6 +121,14 @@ using NetPeerCountAwaitable = unary_awaitable<
     ::remote::ETHBACKEND::StubInterface,
     ::remote::NetPeerCountRequest,
     ::remote::NetPeerCountReply
+>;
+
+using EngineGetPayloadV1Awaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    EngineGetPayloadV1Client,
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::EngineGetPayloadRequest,
+    ::types::ExecutionPayload
 >;
 
 class BackEnd final {
@@ -179,6 +194,15 @@ public:
         co_return count;
     }
 
+    asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id) {
+        const auto start_time = clock_time::now();
+        EngineGetPayloadV1Awaitable npc_awaitable{executor_, stub_, queue_};
+        ::remote::EngineGetPayloadRequest req;
+        req.set_payloadid(payload_id);
+        const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
+        co_return decode_execution_payload_from_grpc_format(reply);
+    }
+
 private:
     evmc::address address_from_H160(const types::H160& h160) {
         uint64_t hi_hi = h160.hi().hi();
@@ -191,38 +215,38 @@ private:
         return address;
     }
 
-    silkworm::Bytes bytes_from_H128(types::H128& h128) {
+    silkworm::Bytes bytes_from_H128(const types::H128& h128) {
         silkworm::Bytes bytes(16, '\0');
         boost::endian::store_big_u64(&bytes[0], h128.hi());
         boost::endian::store_big_u64(&bytes[8], h128.lo());
         return bytes;
     }
 
-    types::H128 H128_from_bytes(const silkworm::Bytes& bytes) {
-        types::H128 h128;
-        h128.set_hi(boost::endian::load_big_u64(&bytes[0]));
-        h128.set_lo(boost::endian::load_big_u64(&bytes[8]));
+    types::H128* H128_from_bytes(const silkworm::Bytes& bytes) {
+        auto h128{new types::H128()};
+        h128->set_hi(boost::endian::load_big_u64(&bytes[0]));
+        h128->set_lo(boost::endian::load_big_u64(&bytes[8]));
         return h128;
     }
 
-    types::H160 H160_from_address(const evmc::address& address) {
-        types::H160 h160;
+    types::H160* H160_from_address(const evmc::address& address) {
+        auto h160{new types::H160()};
         auto hi{H128_from_bytes(address.bytes)};
-        h160.set_allocated_hi(&hi); // Takes ownership of the value even if the pointer is temporary
-        h160.set_lo(boost::endian::load_big_u32(address.bytes + 16));
+        h160->set_allocated_hi(hi);
+        h160->set_lo(boost::endian::load_big_u32(address.bytes + 16));
         return h160;
     }
 
-    types::H256 H256_from_bytes(const silkworm::Bytes& bytes) {
-        types::H256 h256;
+    types::H256* H256_from_bytes(const silkworm::Bytes& bytes) {
+        auto h256{new types::H256()};
         auto hi{H128_from_bytes(&bytes[0])};
         auto lo{H128_from_bytes(&bytes[16])};
-        h256.set_allocated_hi(&hi);
-        h256.set_allocated_lo(&lo);
+        h256->set_allocated_hi(hi);
+        h256->set_allocated_lo(lo);
         return h256;
     }
 
-    silkworm::Bytes bytes_from_H256(types::H256& h256) {
+    silkworm::Bytes bytes_from_H256(const types::H256& h256) {
         silkworm::Bytes bytes(32, '\0');
         auto hi{h256.hi()};
         auto lo{h256.lo()};
@@ -231,42 +255,42 @@ private:
         return bytes;
     }
 
-    intx::uint256 uint256_from_H256(types::H256& h256) {
+    intx::uint256 uint256_from_H256(const types::H256& h256) {
         intx::uint256 n;
-        n[0] = h256.hi().hi();
-        n[1] = h256.hi().lo();
-        n[2] = h256.lo().hi();
-        n[3] = h256.lo().lo();
+        n[3] = h256.hi().hi();
+        n[2] = h256.hi().lo();
+        n[1] = h256.lo().hi();
+        n[0] = h256.lo().lo();
         return n;
     }
 
-    types::H256 H256_from_uint256(const intx::uint256& n) {
-        types::H256 h256;
-        types::H128 hi;
-        types::H128 lo;
+    types::H256* H256_from_uint256(const intx::uint256& n) {
+        auto h256{new types::H256()};
+        auto hi{new types::H128()};
+        auto lo{new types::H128()};
 
-        hi.set_hi(n[0]);
-        hi.set_lo(n[1]);
-        lo.set_hi(n[2]);
-        lo.set_lo(n[3]);
+        hi->set_hi(n[3]);
+        hi->set_lo(n[2]);
+        lo->set_hi(n[1]);
+        lo->set_lo(n[0]);
 
-        h256.set_allocated_hi(&hi);
-        h256.set_allocated_lo(&lo);
+        h256->set_allocated_hi(hi);
+        h256->set_allocated_lo(lo);
         return h256;
     }
 
-    evmc::bytes32 bytes32_from_H256(types::H256& h256) {
+    evmc::bytes32 bytes32_from_H256(const types::H256& h256) {
         evmc::bytes32 bytes32;
         std::memcpy(bytes32.bytes, bytes_from_H256(h256).data(), 32);
         return bytes32;
     }
 
-    types::H512 H512_from_bytes(const silkworm::Bytes& bytes) {
-        types::H512 h512;
+    types::H512* H512_from_bytes(const silkworm::Bytes& bytes) {
+        auto h512{new types::H512()};
         auto hi{H256_from_bytes(&bytes[0])};
         auto lo{H256_from_bytes(&bytes[32])};
-        h512.set_allocated_hi(&hi);
-        h512.set_allocated_lo(&lo);
+        h512->set_allocated_hi(hi);
+        h512->set_allocated_lo(lo);
         return h512;
     }
 
@@ -279,12 +303,12 @@ private:
         return bytes;
     }
 
-    types::H1024 H1024_from_bytes(const silkworm::Bytes& bytes) {
-        types::H1024 h1024;
+    types::H1024* H1024_from_bytes(const silkworm::Bytes& bytes) {
+        auto h1024{new types::H1024()};
         auto hi{H512_from_bytes(&bytes[0])};
         auto lo{H512_from_bytes(&bytes[64])};
-        h1024.set_allocated_hi(&hi);
-        h1024.set_allocated_lo(&lo);
+        h1024->set_allocated_hi(hi);
+        h1024->set_allocated_lo(lo);
         return h1024;
     }
 
@@ -297,12 +321,12 @@ private:
         return bytes;
     }
 
-    types::H2048 H2048_from_bytes(const silkworm::Bytes& bytes) {
-        types::H2048 h2048;
+    types::H2048* H2048_from_bytes(const silkworm::Bytes& bytes) {
+        auto h2048{new types::H2048()};
         auto hi{H1024_from_bytes(&bytes[0])};
         auto lo{H1024_from_bytes(&bytes[128])};
-        h2048.set_allocated_hi(&hi);
-        h2048.set_allocated_lo(&lo);
+        h2048->set_allocated_hi(hi);
+        h2048->set_allocated_lo(lo);
         return h2048;
     }
 
@@ -352,37 +376,30 @@ private:
         };
     }
 
-    types::ExecutionPayload encode_execution_payload_to_grpc_format(const ExecutionPayload& execution_payload) {
-        types::ExecutionPayload execution_payload_grpc;
+    types::ExecutionPayload* encode_execution_payload_to_grpc_format(const ExecutionPayload& execution_payload) {
+        auto execution_payload_grpc{new types::ExecutionPayload()};
         // Numerical parameters
-        execution_payload_grpc.set_blocknumber(execution_payload.number);
-        execution_payload_grpc.set_timestamp(execution_payload.timestamp);
-        execution_payload_grpc.set_gaslimit(execution_payload.gas_limit);
-        execution_payload_grpc.set_gasused(execution_payload.gas_used);
+        execution_payload_grpc->set_blocknumber(execution_payload.number);
+        execution_payload_grpc->set_timestamp(execution_payload.timestamp);
+        execution_payload_grpc->set_gaslimit(execution_payload.gas_limit);
+        execution_payload_grpc->set_gasused(execution_payload.gas_used);
         // coinbase
-        auto coinbase_h160{H160_from_address(execution_payload.suggested_fee_recipient)};
-        execution_payload_grpc.set_allocated_coinbase(&coinbase_h160);
+        execution_payload_grpc->set_allocated_coinbase(H160_from_address(execution_payload.suggested_fee_recipient));
         // 32-bytes parameters
-        auto state_root_h256{H256_from_bytes(execution_payload.state_root.bytes)};
-        auto receipt_root_h256{H256_from_bytes(execution_payload.receipts_root.bytes)};
-        auto parent_hash_h256{H256_from_bytes(execution_payload.parent_hash.bytes)};
-        auto random_h256{H256_from_bytes(execution_payload.random.bytes)};
-        auto base_fee_h256{H256_from_uint256(execution_payload.base_fee)};
-        execution_payload_grpc.set_allocated_stateroot(&state_root_h256);
-        execution_payload_grpc.set_allocated_receiptroot(&receipt_root_h256);
-        execution_payload_grpc.set_allocated_parenthash(&parent_hash_h256);
-        execution_payload_grpc.set_allocated_random(&random_h256);
-        execution_payload_grpc.set_allocated_basefeepergas(&base_fee_h256);
+        execution_payload_grpc->set_allocated_stateroot(H256_from_bytes(execution_payload.state_root.bytes));
+        execution_payload_grpc->set_allocated_receiptroot(H256_from_bytes(execution_payload.receipts_root.bytes));
+        execution_payload_grpc->set_allocated_parenthash(H256_from_bytes(execution_payload.parent_hash.bytes));
+        execution_payload_grpc->set_allocated_random(H256_from_bytes(execution_payload.random.bytes));
+        execution_payload_grpc->set_allocated_basefeepergas(H256_from_uint256(execution_payload.base_fee));
         // Logs Bloom
-        auto logs_bloom_h2048{H2048_from_bytes(silkworm::Bytes(
+        execution_payload_grpc->set_allocated_logsbloom(H2048_from_bytes(silkworm::Bytes(
             execution_payload.logs_bloom.begin(), execution_payload.logs_bloom.end()
-        ))};
-        execution_payload_grpc.set_allocated_logsbloom(&logs_bloom_h2048);
+        )));
         // String-like parameters
         for (const auto& transaction_bytes : execution_payload.transactions) {
-            execution_payload_grpc.add_transactions(std::string(*transaction_bytes.begin(), *transaction_bytes.end()));
+            execution_payload_grpc->add_transactions(std::string(*transaction_bytes.begin(), *transaction_bytes.end()));
         }
-        execution_payload_grpc.set_extradata(std::string(execution_payload.extra_data.begin(), execution_payload.extra_data.end()));
+        execution_payload_grpc->set_extradata(std::string(execution_payload.extra_data.begin(), execution_payload.extra_data.end()));
         return execution_payload_grpc;
     }
 
