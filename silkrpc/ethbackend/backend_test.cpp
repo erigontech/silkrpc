@@ -397,4 +397,4 @@ TEST_CASE("BackEnd::engine_get_payload_v1", "[silkrpc][ethbackend][backend]") {
     }
 }
 
-}
+} // namespace silkrpc
