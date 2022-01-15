@@ -253,11 +253,21 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                    asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
                        self.complete(exec_result);
                    });
-               } catch (const std::system_error& se) {
-                   SILKRPC_ERROR << "EVMExecutor::call exception: " << se.what() << "\n";
+            } catch (const std::exception& e) {
+                   SILKRPC_ERROR << "EVMExecutor::call exception: " << e.what() << "\n";
                    silkworm::Bytes data{};
                    std::string from = silkworm::to_hex(*txn.from);
-                   std::string error =  se.what();
+                   std::string error =  e.what();
+                   ExecutionResult exec_result{1000, txn.gas_limit, data, error};
+                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                       self.complete(exec_result);
+                   });
+                   return;
+               } catch (...) {
+                   SILKRPC_ERROR << "EVMExecutor::call unexpected exception\n";
+                   silkworm::Bytes data{};
+                   std::string from = silkworm::to_hex(*txn.from);
+                   std::string error =  "unexpected exception";
                    ExecutionResult exec_result{1000, txn.gas_limit, data, error};
                    asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
                        self.complete(exec_result);
