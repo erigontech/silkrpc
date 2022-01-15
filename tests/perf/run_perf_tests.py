@@ -326,11 +326,13 @@ class PerfTest:
             else:
                 pid = os.popen("ps aux | grep 'rpcdaemon' | grep -v 'grep' | awk '{print $2}'").read()
             if pid == "":
+                # the server is dead; kill vegeta and returns fails
                 os.system("kill -2 $(ps aux | grep 'vegeta' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
                 return 0
 
             pid = os.popen("ps aux | grep 'vegeta report' | grep -v 'grep' | awk '{print $2}'").read()
             if pid == "":
+                # the vegeta has terminate its works, generate report, returns OK
                 self.get_result(test_number, name, qps_value, time_value)
                 return 1
 
