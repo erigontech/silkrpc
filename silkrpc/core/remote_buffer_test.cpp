@@ -18,12 +18,14 @@
 
 #include <asio/co_spawn.hpp>
 #include <asio/use_future.hpp>
+#include <asio/thread_pool.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <silkworm/common/base.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+
 
 namespace silkrpc::state {
 
@@ -42,6 +44,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
             co_return KeyValue{};
         }
         asio::awaitable<silkworm::Bytes> get_one(const std::string& table, const silkworm::ByteView& key) const override {
+            printf ("get_one\n");
+    //        throw new std::exception;
             co_return value_;
         }
         asio::awaitable<std::optional<silkworm::Bytes>> get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const override {
@@ -57,6 +61,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         silkworm::Bytes value_;
     };
 
+
+/*
     SECTION("read code for empty hash") {
         asio::io_context io_context;
         MockDatabaseReader db_reader;
@@ -77,6 +83,32 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         auto future_code{asio::co_spawn(io_context, arb.read_code(code_hash), asio::use_future)};
         io_context.run();
         CHECK(future_code.get() == silkworm::ByteView{code});
+    }
+*/
+
+    SECTION("read code with error") {
+        asio::thread_pool worker;
+        asio::io_context io_context;
+
+        asio::post(worker, [&io_context]() {
+           silkworm::Bytes code{*silkworm::from_hex("0x0608")};
+           MockDatabaseReader db_reader{code};
+           const uint64_t block_number = 1'000'000;
+           const auto code_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+
+           try {
+             RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+             remoteBufferTest.read_code(code_hash);
+           } catch (const std::exception& e) {
+                printf ("catch: exception\n");
+           } catch (...) {
+                printf ("catch: generic exception\n");
+           }
+          
+        });
+        sleep(1);
+        io_context.run();
+        worker.join();
     }
 }
 
