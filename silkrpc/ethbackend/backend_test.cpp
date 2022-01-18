@@ -62,20 +62,20 @@ using evmc::literals::operator""_bytes32;
     return h256_ptr;
 }
 
-bool check_h160_equal_address(const ::types::H160& h160, evmc::address address) {
+bool h160_equal_address(const ::types::H160& h160, const evmc::address address) {
         return h160.hi().hi() == boost::endian::load_big_u64(address.bytes) &&
                h160.hi().lo() == boost::endian::load_big_u64(address.bytes + 8) &&
                h160.lo() == boost::endian::load_big_u32(address.bytes + 16);
 }
 
-bool check_h256_equal_bytes32(::types::H256 h256, evmc::bytes32 bytes32) {
+bool h256_equal_bytes32(const ::types::H256& h256, const evmc::bytes32 bytes32) {
         return h256.hi().hi() == boost::endian::load_big_u64(bytes32.bytes) &&
                h256.hi().lo() == boost::endian::load_big_u64(bytes32.bytes + 8) &&
                h256.lo().hi() == boost::endian::load_big_u64(bytes32.bytes + 16) &&
                h256.lo().lo() == boost::endian::load_big_u64(bytes32.bytes + 24);
 }
 
-bool check_h2048_equal_bloom(::types::H2048 h2048, silkworm::Bloom bloom) {
+bool h2048_equal_bloom(const ::types::H2048& h2048, const silkworm::Bloom bloom) {
         // Fragment the H2046 in 8 H256 and verify each of them
         ::types::H256 fragments[] = {h2048.hi().hi().hi(), h2048.hi().hi().lo(),
                                     h2048.hi().lo().hi(), h2048.hi().lo().lo(),
@@ -87,7 +87,7 @@ bool check_h2048_equal_bloom(::types::H2048 h2048, silkworm::Bloom bloom) {
             evmc::bytes32 bloom_segment_bytes32;
             std::memcpy(bloom_segment_bytes32.bytes, &bloom[pos], 32);
             pos += 32;
-            if (!check_h256_equal_bytes32(h256, bloom_segment_bytes32)) {
+            if (!h256_equal_bytes32(h256, bloom_segment_bytes32)) {
                 return false;
             }
         }
@@ -462,13 +462,13 @@ TEST_CASE("BackEnd::execution_payload_to_proto", "[silkrpc][ethbackend][backend]
             CHECK(proto.timestamp() == 0x5);
             CHECK(proto.gaslimit() == 0x1c9c380);
             CHECK(proto.gasused() == 0x9);
-            CHECK(check_h160_equal_address(proto.coinbase(), 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address));
-            CHECK(check_h256_equal_bytes32(proto.stateroot(), 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32));
-            CHECK(check_h256_equal_bytes32(proto.receiptroot(), 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32));
-            CHECK(check_h256_equal_bytes32(proto.parenthash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
-            CHECK(check_h256_equal_bytes32(proto.random(), 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32));
-            CHECK(check_h256_equal_bytes32(proto.basefeepergas(), 0x0000000000000000000000000000000000000000000000000000000000000007_bytes32));
-            CHECK(check_h2048_equal_bloom(proto.logsbloom(), bloom));
+            CHECK(h160_equal_address(proto.coinbase(), 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address));
+            CHECK(h256_equal_bytes32(proto.stateroot(), 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32));
+            CHECK(h256_equal_bytes32(proto.receiptroot(), 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32));
+            CHECK(h256_equal_bytes32(proto.parenthash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
+            CHECK(h256_equal_bytes32(proto.random(), 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32));
+            CHECK(h256_equal_bytes32(proto.basefeepergas(), 0x0000000000000000000000000000000000000000000000000000000000000007_bytes32));
+            CHECK(h2048_equal_bloom(proto.logsbloom(), bloom));
             CHECK(proto.transactions(0) == std::string(reinterpret_cast<char*>(&transaction[0]), 16));
     }
 }
