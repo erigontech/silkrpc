@@ -1317,7 +1317,7 @@ TEST_CASE("serialize execution_payload", "[silkrpc::json][to_json]") {
         .block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
         .random = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
         .base_fee = 0x7,
-        .transactions = {{0xf9, 0x2e, 0xbd, 0xea, 0xb4, 0x5d, 0x36, 0x8f, 0x63, 0x54, 0xe8, 0xc5, 0xa8, 0xac, 0x58, 0x6c}},
+        .transactions = {*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")},
     };
     nlohmann::json j = execution_payload;
     CHECK(j == R"({

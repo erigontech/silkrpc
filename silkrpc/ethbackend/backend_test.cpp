@@ -39,6 +39,16 @@ using Catch::Matchers::Message;
 using evmc::literals::operator""_address;
 using evmc::literals::operator""_bytes32;
 
+::types::H160* make_h160(uint64_t hi_hi, uint64_t hi_lo, uint32_t lo) {
+        auto h128_ptr{new ::types::H128()};
+        h128_ptr->set_hi(hi_hi);
+        h128_ptr->set_lo(hi_lo);
+        auto h160_ptr{new ::types::H160()};
+        h160_ptr->set_allocated_hi(h128_ptr);
+        h160_ptr->set_lo(lo);
+        return h160_ptr;
+}
+
 ::types::H256* make_h256(uint64_t hi_hi, uint64_t hi_lo, uint64_t lo_hi, uint64_t lo_lo) {
     auto h256_ptr{new ::types::H256()};
     auto hi_ptr{new ::types::H128()};
@@ -52,14 +62,37 @@ using evmc::literals::operator""_bytes32;
     return h256_ptr;
 }
 
-::types::H160* make_h160(uint64_t hi_hi, uint64_t hi_lo, uint32_t lo) {
-        auto h128_ptr{new ::types::H128()};
-        h128_ptr->set_hi(hi_hi);
-        h128_ptr->set_lo(hi_lo);
-        auto h160_ptr{new ::types::H160()};
-        h160_ptr->set_allocated_hi(h128_ptr);
-        h160_ptr->set_lo(lo);
-        return h160_ptr;
+bool check_h160_equal_address(const ::types::H160& h160, evmc::address address) {
+        return h160.hi().hi() == boost::endian::load_big_u64(address.bytes) &&
+               h160.hi().lo() == boost::endian::load_big_u64(address.bytes + 8) &&
+               h160.lo() == boost::endian::load_big_u32(address.bytes + 16);
+}
+
+bool check_h256_equal_bytes32(::types::H256 h256, evmc::bytes32 bytes32) {
+        return h256.hi().hi() == boost::endian::load_big_u64(bytes32.bytes) &&
+               h256.hi().lo() == boost::endian::load_big_u64(bytes32.bytes + 8) &&
+               h256.lo().hi() == boost::endian::load_big_u64(bytes32.bytes + 16) &&
+               h256.lo().lo() == boost::endian::load_big_u64(bytes32.bytes + 24);
+}
+
+bool check_h2048_equal_bloom(::types::H2048 h2048, silkworm::Bloom bloom) {
+        // Fragment the H2046 in 8 H256 and verify each of them
+        ::types::H256 fragments[] = {h2048.hi().hi().hi(), h2048.hi().hi().lo(),
+                                    h2048.hi().lo().hi(), h2048.hi().lo().lo(),
+                                    h2048.lo().hi().hi(), h2048.lo().hi().lo(),
+                                    h2048.lo().lo().hi(), h2048.lo().lo().lo()};
+        uint64_t pos{0};
+        for (const auto& h256 : fragments) {
+            // Take bloom segment and convert it to evmc::bytes32
+            evmc::bytes32 bloom_segment_bytes32;
+            std::memcpy(bloom_segment_bytes32.bytes, &bloom[pos], 32);
+            pos += 32;
+            if (!check_h256_equal_bytes32(h256, bloom_segment_bytes32)) {
+                return false;
+            }
+        }
+        
+        return true;
 }
 
 class EmptyBackEndService : public ::remote::ETHBACKEND::Service {
@@ -214,6 +247,7 @@ auto test_net_version = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd:
 auto test_client_version = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::client_version, std::string>;
 auto test_net_peer_count = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::net_peer_count, uint64_t>;
 auto test_engine_get_payload_v1 = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::engine_get_payload_v1, ExecutionPayload, uint64_t>;
+auto test_execution_payload_to_proto = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::execution_payload_to_proto, ::types::ExecutionPayload, ExecutionPayload>;
 
 TEST_CASE("BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -394,6 +428,48 @@ TEST_CASE("BackEnd::engine_get_payload_v1", "[silkrpc][ethbackend][backend]") {
         auto payload{asio::co_spawn(io_context, test_engine_get_payload_v1(&service, 0), asio::use_future)};
         io_context.run();
         CHECK_THROWS_AS(payload.get(), std::system_error);
+    }
+}
+
+TEST_CASE("BackEnd::execution_payload_to_proto", "[silkrpc][ethbackend][backend]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+        SECTION("call execution_payload_to_proto and get proto") {
+            TestBackEndService service;
+            asio::io_context io_context;
+            silkworm::Bloom bloom;
+            bloom[0] = 0x12;
+            auto transaction{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
+            silkrpc::ExecutionPayload execution_payload{
+                .number = 0x1,
+                .timestamp = 0x5,
+                .gas_limit = 0x1c9c380,
+                .gas_used = 0x9,
+                .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address,
+                .state_root = 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32,
+                .receipts_root = 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32,
+                .parent_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
+                .block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+                .random = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
+                .base_fee = 0x7,
+                .logs_bloom = bloom,
+                .transactions = {transaction},
+            };
+            auto reply{asio::co_spawn(io_context, test_execution_payload_to_proto(&service, execution_payload), asio::use_future)};
+            io_context.run();
+            auto proto{reply.get()};
+            CHECK(proto.blocknumber() == 0x1);
+            CHECK(proto.timestamp() == 0x5);
+            CHECK(proto.gaslimit() == 0x1c9c380);
+            CHECK(proto.gasused() == 0x9);
+            CHECK(check_h160_equal_address(proto.coinbase(), 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address));
+            CHECK(check_h256_equal_bytes32(proto.stateroot(), 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32));
+            CHECK(check_h256_equal_bytes32(proto.receiptroot(), 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32));
+            CHECK(check_h256_equal_bytes32(proto.parenthash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
+            CHECK(check_h256_equal_bytes32(proto.random(), 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32));
+            CHECK(check_h256_equal_bytes32(proto.basefeepergas(), 0x0000000000000000000000000000000000000000000000000000000000000007_bytes32));
+            CHECK(check_h2048_equal_bloom(proto.logsbloom(), bloom));
+            CHECK(proto.transactions(0) == std::string(reinterpret_cast<char*>(&transaction[0]), 16));
     }
 }
 
