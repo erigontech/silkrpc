@@ -91,7 +91,7 @@ bool check_h2048_equal_bloom(::types::H2048 h2048, silkworm::Bloom bloom) {
                 return false;
             }
         }
-        
+
         return true;
 }
 
