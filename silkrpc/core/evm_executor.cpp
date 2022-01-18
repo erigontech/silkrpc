@@ -249,8 +249,8 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 SILKRPC_DEBUG << "EVMExecutor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
 
                 ExecutionResult exec_result{result.status, result.gas_left, result.data};
-                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
-                   self.complete(exec_result);
+                asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                    self.complete(exec_result);
                 });
             });
         },
