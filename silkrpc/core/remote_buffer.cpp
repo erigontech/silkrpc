@@ -81,25 +81,49 @@ asio::awaitable<std::optional<evmc::bytes32>> AsyncRemoteBuffer::canonical_hash(
 
 std::optional<silkworm::Account> RemoteBuffer::read_account(const evmc::address& address) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_account address=" << address << " start\n";
-    std::future<std::optional<silkworm::Account>> result{asio::co_spawn(io_context_, async_buffer_.read_account(address), asio::use_future)};
-    const auto optional_account{result.get()};
-    SILKRPC_DEBUG << "RemoteBuffer::read_account account.nonce=" << (optional_account ? optional_account->nonce : 0) << " end\n";
-    return optional_account;
+    try {
+        std::future<std::optional<silkworm::Account>> result{asio::co_spawn(io_context_, async_buffer_.read_account(address), asio::use_future)};
+        const auto optional_account{result.get()};
+        SILKRPC_DEBUG << "RemoteBuffer::read_account account.nonce=" << (optional_account ? optional_account->nonce : 0) << " end\n";
+        return optional_account;
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "RemoteBuffer::read_account exception: " << e.what() << "\n";
+        return std::nullopt;
+    } catch (...) {
+        SILKRPC_ERROR << "RemoteBuffer::read_account unknown exception\n";
+        return std::nullopt;
+    }
 }
 
 silkworm::ByteView RemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_code code_hash=" << code_hash << " start\n";
-    std::future<silkworm::ByteView> result{asio::co_spawn(io_context_, async_buffer_.read_code(code_hash), asio::use_future)};
-    const auto code{result.get()};
-    return code;
+    try {
+        std::future<silkworm::ByteView> result{asio::co_spawn(io_context_, async_buffer_.read_code(code_hash), asio::use_future)};
+        const auto code{result.get()};
+        return code;
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "RemoteBuffer::read_code exception: " << e.what() << "\n";
+        return silkworm::ByteView{};
+    } catch (...) {
+        SILKRPC_ERROR << "RemoteBuffer::read_code unknown exception\n";
+        return silkworm::ByteView{};
+    }
 }
 
 evmc::bytes32 RemoteBuffer::read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_storage address=" << address << " incarnation=" << incarnation << " location=" << location << " start\n";
-    std::future<evmc::bytes32> result{asio::co_spawn(io_context_, async_buffer_.read_storage(address, incarnation, location), asio::use_future)};
-    const auto storage_value{result.get()};
-    SILKRPC_DEBUG << "RemoteBuffer::read_storage storage_value=" << storage_value << " end\n";
-    return storage_value;
+    try {
+        std::future<evmc::bytes32> result{asio::co_spawn(io_context_, async_buffer_.read_storage(address, incarnation, location), asio::use_future)};
+        const auto storage_value{result.get()};
+        SILKRPC_DEBUG << "RemoteBuffer::read_storage storage_value=" << storage_value << " end\n";
+        return storage_value;
+    } catch (const std::exception& e) {
+       SILKRPC_ERROR << "RemoteBuffer::read_storage exception: " << e.what() << "\n";
+       return evmc::bytes32{};
+    } catch (...) {
+       SILKRPC_ERROR << "RemoteBuffer::read_storage unknown exception\n";
+       return evmc::bytes32{};
+    }
 }
 
 uint64_t RemoteBuffer::previous_incarnation(const evmc::address& address) const noexcept {
