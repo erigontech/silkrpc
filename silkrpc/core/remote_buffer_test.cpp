@@ -121,7 +121,6 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         io_context.stop();
         io_context_thread.join();
     }
-
 }
 
 } // namespace silkrpc::state
