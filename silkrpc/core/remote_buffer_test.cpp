@@ -44,8 +44,31 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
             co_return KeyValue{};
         }
         asio::awaitable<silkworm::Bytes> get_one(const std::string& table, const silkworm::ByteView& key) const override {
-            printf ("get_one\n");
-    //        throw new std::exception;
+            co_return value_;
+        }
+        asio::awaitable<std::optional<silkworm::Bytes>> get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const override {
+            co_return silkworm::Bytes{};
+        }
+        asio::awaitable<void> walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, core::rawdb::Walker w) const override {
+            co_return;
+        }
+        asio::awaitable<void> for_prefix(const std::string& table, const silkworm::ByteView& prefix, core::rawdb::Walker w) const override {
+            co_return;
+        }
+    private:
+        silkworm::Bytes value_;
+    };
+
+    class MockDatabaseReaderExp : public core::rawdb::DatabaseReader {
+    public:
+        MockDatabaseReaderExp() = default;
+        explicit MockDatabaseReaderExp(const silkworm::Bytes& value) : value_(value) {}
+
+        asio::awaitable<KeyValue> get(const std::string& table, const silkworm::ByteView& key) const override {
+            co_return KeyValue{};
+        }
+        asio::awaitable<silkworm::Bytes> get_one(const std::string& table, const silkworm::ByteView& key) const override {
+            throw new std::exception;
             co_return value_;
         }
         asio::awaitable<std::optional<silkworm::Bytes>> get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const override {
@@ -62,7 +85,6 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
     };
 
 
-/*
     SECTION("read code for empty hash") {
         asio::io_context io_context;
         MockDatabaseReader db_reader;
@@ -84,32 +106,22 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         io_context.run();
         CHECK(future_code.get() == silkworm::ByteView{code});
     }
-*/
 
-    SECTION("read code with error") {
-        asio::thread_pool worker;
+    SECTION("read code with error - notp") {
         asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
-        asio::post(worker, [&io_context]() {
-           silkworm::Bytes code{*silkworm::from_hex("0x0608")};
-           MockDatabaseReader db_reader{code};
-           const uint64_t block_number = 1'000'000;
-           const auto code_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
-
-           try {
-             RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-             remoteBufferTest.read_code(code_hash);
-           } catch (const std::exception& e) {
-                printf ("catch: exception\n");
-           } catch (...) {
-                printf ("catch: generic exception\n");
-           }
-          
-        });
-        sleep(1);
-        io_context.run();
-        worker.join();
+        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
+        MockDatabaseReaderExp db_reader{code};
+        const uint64_t block_number = 1'000'000;
+        const auto code_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        remoteBufferTest.read_code(code_hash);
+        io_context.stop();
+        io_context_thread.join();
     }
+
 }
 
 } // namespace silkrpc::state
