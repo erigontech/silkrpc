@@ -1,5 +1,5 @@
 /*
-    Copyright 2020 The Silkrpc Authors
+    Copyright 2020-2021 The Silkrpc Authors
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -13,12 +13,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 */
-//
-// Copyright (c) 2003-2020 Christopher M. Kohlhoff (chris at kohlhoff dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
 
 #ifndef SILKRPC_HTTP_REQUEST_HANDLER_HPP_
 #define SILKRPC_HTTP_REQUEST_HANDLER_HPP_
@@ -34,28 +28,25 @@
 
 #include <silkrpc/context_pool.hpp>
 #include <silkrpc/commands/rpc_api.hpp>
+#include <silkrpc/commands/rpc_api_table.hpp>
+#include <silkrpc/http/reply.hpp>
+#include <silkrpc/http/request.hpp>
 
 namespace silkrpc::http {
 
-struct Reply;
-struct Request;
-
 class RequestHandler {
 public:
+    RequestHandler(Context& context, asio::thread_pool& workers, const commands::RpcApiTable& rpc_api_table)
+        : rpc_api_{context, workers}, rpc_api_table_(rpc_api_table) {}
+
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
-    explicit RequestHandler(Context& context, asio::thread_pool& workers) : rpc_api_{context, workers} {}
-
-    virtual ~RequestHandler() {}
-
-    asio::awaitable<void> handle_request(const Request& request, Reply& reply);
+    asio::awaitable<void> handle_request(const http::Request& request, http::Reply& reply);
 
 private:
     commands::RpcApi rpc_api_;
-
-    typedef asio::awaitable<void> (commands::RpcApi::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
-    static std::map<std::string, HandleMethod> handlers_;
+    const commands::RpcApiTable& rpc_api_table_;
 };
 
 } // namespace silkrpc::http

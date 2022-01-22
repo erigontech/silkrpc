@@ -17,36 +17,21 @@
 #ifndef SILKRPC_STAGEDSYNC_STAGES_HPP_
 #define SILKRPC_STAGEDSYNC_STAGES_HPP_
 
-#include <string>
-
 #include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
-
 #include <silkworm/common/base.hpp>
-#include <silkrpc/common/util.hpp>
+#include <silkworm/db/stages.hpp>
+
 #include <silkrpc/core/rawdb/accessors.hpp>
 
 namespace silkrpc::stages {
 
-using silkworm::Bytes, silkworm::bytes_of_string;
+const silkworm::Bytes kHeaders = silkworm::bytes_of_string(silkworm::db::stages::kHeadersKey);
+const silkworm::Bytes kExecution = silkworm::bytes_of_string(silkworm::db::stages::kExecutionKey);
+const silkworm::Bytes kFinish = silkworm::bytes_of_string(silkworm::db::stages::kFinishKey);
 
-/* The synchronization stages */
-const Bytes kHeaders             = bytes_of_string("Headers");             // Downloads headers, verifying their POW validity and chaining
-const Bytes kBlockHashes         = bytes_of_string("BlockHashes");         // Writes header numbers, fills blockHash => number table
-const Bytes kBodies              = bytes_of_string("Bodies");              // Downloads block bodies, TxHash and UncleHash are getting verified
-const Bytes kSenders             = bytes_of_string("Senders");             // "From" recovered from signatures, bodies re-written
-const Bytes kExecution           = bytes_of_string("Execution");           // Executing each block w/o building a trie
-const Bytes kIntermediateHashes  = bytes_of_string("IntermediateHashes");  // Generate intermediate hashes, calculate the state root hash
-const Bytes kHashState           = bytes_of_string("HashState");           // Apply Keccak256 to all the keys in the state
-const Bytes kAccountHistoryIndex = bytes_of_string("AccountHistoryIndex"); // Generating history index for accounts
-const Bytes kStorageHistoryIndex = bytes_of_string("StorageHistoryIndex"); // Generating history index for storage
-const Bytes kLogIndex            = bytes_of_string("LogIndex");            // Generating logs index (from receipts)
-const Bytes kTxLookup            = bytes_of_string("TxLookup");            // Generating transactions lookup index
-const Bytes kTxPool              = bytes_of_string("TxPool");              // Starts Backend
-const Bytes kFinish              = bytes_of_string("Finish");              // Nominal stage after all other stages
-
-asio::awaitable<uint64_t> get_sync_stage_progress(const core::rawdb::DatabaseReader& database, const Bytes& stage_key);
+asio::awaitable<uint64_t> get_sync_stage_progress(const core::rawdb::DatabaseReader& database, const silkworm::Bytes& stake_key);
 
 } // namespace silkrpc::stages
 

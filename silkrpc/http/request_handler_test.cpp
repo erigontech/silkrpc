@@ -14,25 +14,25 @@
    limitations under the License.
 */
 
+#include "request_handler.hpp"
+
 #include <memory>
 #include <thread>
 #include <vector>
-
-#include "request_handler.hpp"
 
 #include <asio/co_spawn.hpp>
 #include <asio/thread_pool.hpp>
 #include <asio/use_future.hpp>
 #include <catch2/catch.hpp>
-
-#include "request.hpp"
-#include "reply.hpp"
-#include "header.hpp"
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/context_pool.hpp>
 #include <silkworm/common/util.hpp>
 
-namespace silkrpc {
+#include <silkrpc/common/log.hpp>
+#include <silkrpc/context_pool.hpp>
+#include <silkrpc/http/request.hpp>
+#include <silkrpc/http/reply.hpp>
+#include <silkrpc/http/header.hpp>
+
+namespace silkrpc::http {
 
 using Catch::Matchers::Message;
 
@@ -181,5 +181,5 @@ TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request
 */
 }
 
-} // namespace silkrpc
+} // namespace silkrpc::http
 

@@ -18,7 +18,7 @@
 
 #include <catch2/catch.hpp>
 
-namespace silkrpc {
+namespace silkrpc::clock_time {
 
 using Catch::Matchers::Message;
 
@@ -42,5 +42,4 @@ TEST_CASE("check elapsed time", "[silkrpc][common][clock_time]") {
     CHECK(elapsed <= window);
 }
 
-} // namespace silkrpc
-
+} // namespace silkrpc::clock_time
