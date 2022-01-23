@@ -190,7 +190,6 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         io_context_thread.join();
     }
 
-
     SECTION("state_root_hash") {
         asio::io_context io_context;
         asio::io_context::work work{io_context};
@@ -202,6 +201,22 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
         auto root_hash = remoteBufferTest.state_root_hash();
         CHECK(root_hash == evmc::bytes32{});
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+    SECTION("previous_incarnation") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{code};
+        const uint64_t block_number = 1'000'000;
+        evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto prev_incarnation = remoteBufferTest.previous_incarnation(address);
+        CHECK(prev_incarnation == 0);
         io_context.stop();
         io_context_thread.join();
     }
