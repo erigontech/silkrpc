@@ -196,7 +196,7 @@ TEST_CASE("Filled contract DumpAccount", "[silkrpc][types][dump_account]") {
         Storage{
             {
                 0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7_bytes32,
-                *silkworm::from_hex("0x0000000000000000000000000000000000000000000000000000000000000000")
+                "0x" + *silkworm::from_hex("0x0000000000000000000000000000000000000000000000000000000000000000")
             }
         }
     };
@@ -210,7 +210,7 @@ TEST_CASE("Filled contract DumpAccount", "[silkrpc][types][dump_account]") {
         CHECK(da.code == silkworm::Bytes{0x06, 0x08});
         CHECK(da.storage == Storage{{
             0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7_bytes32,
-            *silkworm::from_hex("0x0000000000000000000000000000000000000000000000000000000000000000")
+            "0x" + *silkworm::from_hex("0x0000000000000000000000000000000000000000000000000000000000000000")
         }});
     }
 
