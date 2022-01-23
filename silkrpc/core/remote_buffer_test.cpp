@@ -109,7 +109,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         CHECK(future_code.get() == silkworm::ByteView{code});
     }
 
-    SECTION("read code with error") {
+    SECTION("read code with error - notp") {
         asio::io_context io_context;
         asio::io_context::work work{io_context};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
