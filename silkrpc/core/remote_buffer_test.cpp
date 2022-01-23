@@ -175,6 +175,22 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         io_context_thread.join();
     }
 
+    SECTION("canonical_hash") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{code};
+        const uint64_t block_number = 1'000'000;
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto canonical_block = remoteBufferTest.canonical_hash(block_number);
+        CHECK(canonical_block == std::nullopt);
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+
     SECTION("state_root_hash") {
         asio::io_context io_context;
         asio::io_context::work work{io_context};
