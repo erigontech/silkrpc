@@ -220,6 +220,23 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         io_context.stop();
         io_context_thread.join();
     }
+
+    SECTION("read_header") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{code};
+        const uint64_t block_number = 1'000'000;
+        const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+        evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto header = remoteBufferTest.read_header(block_number, block_hash);
+        CHECK(header == std::nullopt);
+        io_context.stop();
+        io_context_thread.join();
+    }
 }
 
 } // namespace silkrpc::state

@@ -133,10 +133,18 @@ uint64_t RemoteBuffer::previous_incarnation(const evmc::address& address) const 
 
 std::optional<silkworm::BlockHeader> RemoteBuffer::read_header(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_header block_number=" << block_number << " block_hash=" << block_hash << "\n";
-    std::future<std::optional<silkworm::BlockHeader>> result{asio::co_spawn(io_context_, async_buffer_.read_header(block_number, block_hash), asio::use_future)};
-    const auto optional_header{result.get()};
-    SILKRPC_DEBUG << "RemoteBuffer::read_header block_number=" << block_number << " block_hash=" << block_hash << "\n";
-    return optional_header;
+    try {
+       std::future<std::optional<silkworm::BlockHeader>> result{asio::co_spawn(io_context_, async_buffer_.read_header(block_number, block_hash), asio::use_future)};
+       const auto optional_header{result.get()};
+       SILKRPC_DEBUG << "RemoteBuffer::read_header block_number=" << block_number << " block_hash=" << block_hash << "\n";
+       return optional_header;
+    } catch (const std::exception& e) {
+       SILKRPC_ERROR << "RemoteBuffer::read_header exception: " << e.what() << "\n";
+       return std::nullopt;
+    } catch (...) {
+       SILKRPC_ERROR << "RemoteBuffer::read_header unknown exception\n";
+       return std::nullopt;
+    }
 }
 
 std::optional<silkworm::BlockBody> RemoteBuffer::read_body(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
