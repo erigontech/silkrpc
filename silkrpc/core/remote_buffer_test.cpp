@@ -31,6 +31,8 @@ namespace silkrpc::state {
 
 using Catch::Matchers::Message;
 using evmc::literals::operator""_bytes32;
+using evmc::literals::operator""_address;
+
 
 TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -107,7 +109,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         CHECK(future_code.get() == silkworm::ByteView{code});
     }
 
-    SECTION("read code with error - notp") {
+    SECTION("read code with error") {
         asio::io_context io_context;
         asio::io_context::work work{io_context};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
@@ -118,6 +120,37 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         const auto code_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
         RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
         remoteBufferTest.read_code(code_hash);
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+    SECTION("read storage with error") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
+        MockDatabaseReaderExp db_reader{code};
+        const uint64_t block_number = 1'000'000;
+        evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
+        const auto location{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        remoteBufferTest.read_storage(address, 0, location);
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+    SECTION("read account with error") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
+        MockDatabaseReaderExp db_reader{code};
+        const uint64_t block_number = 1'000'000;
+        evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        remoteBufferTest.read_account(address);
         io_context.stop();
         io_context_thread.join();
     }
