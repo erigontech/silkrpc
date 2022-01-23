@@ -200,12 +200,12 @@ public:
         ::remote::EngineGetPayloadRequest req;
         req.set_payloadid(payload_id);
         const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
-        co_return decode_execution_payload_from_grpc_format(reply);
+        co_return decode_execution_payload(reply);
     }
 
     // just for testing
     asio::awaitable<::types::ExecutionPayload> execution_payload_to_proto(ExecutionPayload payload) {
-        co_return encode_execution_payload_to_grpc_format(payload);
+        co_return encode_execution_payload(payload);
     }
 
 private:
@@ -344,7 +344,7 @@ private:
         return bytes;
     }
 
-    ExecutionPayload decode_execution_payload_from_grpc_format(const types::ExecutionPayload& execution_payload_grpc) {
+    ExecutionPayload decode_execution_payload(const types::ExecutionPayload& execution_payload_grpc) {
         auto state_root_h256{execution_payload_grpc.stateroot()};
         auto receipts_root_h256{execution_payload_grpc.receiptroot()};
         auto block_hash_h256{execution_payload_grpc.blockhash()};
@@ -381,7 +381,7 @@ private:
         };
     }
 
-    types::ExecutionPayload encode_execution_payload_to_grpc_format(const ExecutionPayload& execution_payload) {
+    types::ExecutionPayload encode_execution_payload(const ExecutionPayload& execution_payload) {
         types::ExecutionPayload execution_payload_grpc;
         // Numerical parameters
         execution_payload_grpc.set_blocknumber(execution_payload.number);
