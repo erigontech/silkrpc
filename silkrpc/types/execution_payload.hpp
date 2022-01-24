@@ -44,7 +44,7 @@ struct ExecutionPayload {
     std::vector<silkworm::Bytes> transactions;
 };
 
-std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload);
+// std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload);
 
 } // namespace silkrpc
 
