@@ -435,42 +435,42 @@ TEST_CASE("BackEnd::engine_get_payload_v1", "[silkrpc][ethbackend][backend]") {
 TEST_CASE("BackEnd::execution_payload_to_proto", "[silkrpc][ethbackend][backend]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-        SECTION("call execution_payload_to_proto and get proto") {
-            TestBackEndService service;
-            asio::io_context io_context;
-            silkworm::Bloom bloom;
-            bloom[0] = 0x12;
-            auto transaction{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
-            silkrpc::ExecutionPayload execution_payload{
-                .number = 0x1,
-                .timestamp = 0x5,
-                .gas_limit = 0x1c9c380,
-                .gas_used = 0x9,
-                .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address,
-                .state_root = 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32,
-                .receipts_root = 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32,
-                .parent_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
-                .block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
-                .random = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
-                .base_fee = 0x7,
-                .logs_bloom = bloom,
-                .transactions = {transaction},
-            };
-            auto reply{asio::co_spawn(io_context, test_execution_payload_to_proto(&service, execution_payload), asio::use_future)};
-            io_context.run();
-            auto proto{reply.get()};
-            CHECK(proto.blocknumber() == 0x1);
-            CHECK(proto.timestamp() == 0x5);
-            CHECK(proto.gaslimit() == 0x1c9c380);
-            CHECK(proto.gasused() == 0x9);
-            CHECK(h160_equal_address(proto.coinbase(), 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address));
-            CHECK(h256_equal_bytes32(proto.stateroot(), 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32));
-            CHECK(h256_equal_bytes32(proto.receiptroot(), 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32));
-            CHECK(h256_equal_bytes32(proto.parenthash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
-            CHECK(h256_equal_bytes32(proto.random(), 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32));
-            CHECK(h256_equal_bytes32(proto.basefeepergas(), 0x0000000000000000000000000000000000000000000000000000000000000007_bytes32));
-            CHECK(h2048_equal_bloom(proto.logsbloom(), bloom));
-            CHECK(proto.transactions(0) == std::string(reinterpret_cast<char*>(&transaction[0]), 16));
+    SECTION("call execution_payload_to_proto and get proto") {
+        TestBackEndService service;
+        asio::io_context io_context;
+        silkworm::Bloom bloom;
+        bloom[0] = 0x12;
+        auto transaction{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
+        silkrpc::ExecutionPayload execution_payload{
+            .number = 0x1,
+            .timestamp = 0x5,
+            .gas_limit = 0x1c9c380,
+            .gas_used = 0x9,
+            .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address,
+            .state_root = 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32,
+            .receipts_root = 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32,
+            .parent_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
+            .block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+            .random = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
+            .base_fee = 0x7,
+            .logs_bloom = bloom,
+            .transactions = {transaction},
+        };
+        auto reply{asio::co_spawn(io_context, test_execution_payload_to_proto(&service, execution_payload), asio::use_future)};
+        io_context.run();
+        auto proto{reply.get()};
+        CHECK(proto.blocknumber() == 0x1);
+        CHECK(proto.timestamp() == 0x5);
+        CHECK(proto.gaslimit() == 0x1c9c380);
+        CHECK(proto.gasused() == 0x9);
+        CHECK(h160_equal_address(proto.coinbase(), 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address));
+        CHECK(h256_equal_bytes32(proto.stateroot(), 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32));
+        CHECK(h256_equal_bytes32(proto.receiptroot(), 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32));
+        CHECK(h256_equal_bytes32(proto.parenthash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
+        CHECK(h256_equal_bytes32(proto.random(), 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32));
+        CHECK(h256_equal_bytes32(proto.basefeepergas(), 0x0000000000000000000000000000000000000000000000000000000000000007_bytes32));
+        CHECK(h2048_equal_bloom(proto.logsbloom(), bloom));
+        CHECK(proto.transactions(0) == std::string(reinterpret_cast<char*>(&transaction[0]), 16));
     }
 }
 
