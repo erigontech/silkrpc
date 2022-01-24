@@ -123,7 +123,7 @@ asio::awaitable<void> AccountDumper::load_storage(uint64_t block_number, DumpAcc
                 account.storage = Storage{};
             }
             auto& storage = *account.storage;
-            storage["0x" + silkworm::to_hex(loc)] = silkworm::to_hex(data);
+            storage[silkworm::to_bytes32(loc)] = data;
             auto hash = hash_of(loc);
             auto key = full_view(hash);
             collected_entries[silkworm::Bytes{key}] = data;

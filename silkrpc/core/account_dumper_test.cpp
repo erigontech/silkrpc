@@ -512,8 +512,8 @@ TEST_CASE("account dumper") {
         CHECK(account.storage.has_value());
         auto storage = account.storage.value();
         CHECK(storage.size() == 2);
-        CHECK(storage["0x0000000000000000000000000000000000000000000000000000000000000001"] == "2ac3c1d3e24b45c6c310534bc2dd84b5ed576335");
-        CHECK(storage["0x0000000000000000000000000000000000000000000000000000000000000006"] == "335a9b3f79dcfefda3295be6f7c7c47f077dbcd9");
+        CHECK(storage[0x0000000000000000000000000000000000000000000000000000000000000001_bytes32] == *silkworm::from_hex("2ac3c1d3e24b45c6c310534bc2dd84b5ed576335"));
+        CHECK(storage[0x0000000000000000000000000000000000000000000000000000000000000006_bytes32] == *silkworm::from_hex("335a9b3f79dcfefda3295be6f7c7c47f077dbcd9"));
     }
 
     SECTION("3 result, include code and storage") {
@@ -548,8 +548,8 @@ TEST_CASE("account dumper") {
         CHECK(account.storage.has_value());
         auto storage = account.storage.value();
         CHECK(storage.size() == 2);
-        CHECK(storage["0x0000000000000000000000000000000000000000000000000000000000000001"] == "2ac3c1d3e24b45c6c310534bc2dd84b5ed576335");
-        CHECK(storage["0x0000000000000000000000000000000000000000000000000000000000000006"] == "335a9b3f79dcfefda3295be6f7c7c47f077dbcd9");
+        CHECK(storage[0x0000000000000000000000000000000000000000000000000000000000000001_bytes32] == *silkworm::from_hex("2ac3c1d3e24b45c6c310534bc2dd84b5ed576335"));
+        CHECK(storage[0x0000000000000000000000000000000000000000000000000000000000000006_bytes32] == *silkworm::from_hex("335a9b3f79dcfefda3295be6f7c7c47f077dbcd9"));
 
         CHECK(da.accounts.find(address_3) != da.accounts.end());
         account = da.accounts.at(address_3);
@@ -562,11 +562,11 @@ TEST_CASE("account dumper") {
         CHECK(account.storage.has_value());
         storage = account.storage.value();
         CHECK(storage.size() == 5);
-        CHECK(storage["0x0000000000000000000000000000000000000000000000000000000000000001"] == "2ac3c1d3e24b45c6c310534bc2dd84b5ed576335");
-        CHECK(storage["0x0000000000000000000000000000000000000000000000000000000000000003"] == "1f6ea08600");
-        CHECK(storage["0x0000000000000000000000000000000000000000000000000000000000000006"] == "9d5a08e7551951a3ca73cd84a6409ef1e77f5abe");
-        CHECK(storage["0x0178b166a1bcfd299a6ce6918f016c8d0c52788988d89f65f5727c2fa97be6e9"] == "1e80355e00");
-        CHECK(storage["0xb797965b738ad51ddbf643b315d0421c26972862ca2e64304783dc8930a2b6e8"] == "ee6b2800");
+        CHECK(storage[0x0000000000000000000000000000000000000000000000000000000000000001_bytes32] == *silkworm::from_hex("2ac3c1d3e24b45c6c310534bc2dd84b5ed576335"));
+        CHECK(storage[0x0000000000000000000000000000000000000000000000000000000000000003_bytes32] == *silkworm::from_hex("1f6ea08600"));
+        CHECK(storage[0x0000000000000000000000000000000000000000000000000000000000000006_bytes32] == *silkworm::from_hex("9d5a08e7551951a3ca73cd84a6409ef1e77f5abe"));
+        CHECK(storage[0x0178b166a1bcfd299a6ce6918f016c8d0c52788988d89f65f5727c2fa97be6e9_bytes32] == *silkworm::from_hex("1e80355e00"));
+        CHECK(storage[0xb797965b738ad51ddbf643b315d0421c26972862ca2e64304783dc8930a2b6e8_bytes32] == *silkworm::from_hex("ee6b2800"));
     }
 }
 
