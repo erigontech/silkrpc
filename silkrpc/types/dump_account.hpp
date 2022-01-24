@@ -30,7 +30,7 @@
 
 namespace silkrpc {
 
-using Storage = std::map<std::string, std::string>;
+using Storage = std::map<evmc::bytes32, silkworm::Bytes>;
 
 struct DumpAccount {
     intx::uint256 balance{};
