@@ -17,6 +17,10 @@
 #ifndef SILKRPC_ETHBACKEND_BACKEND_HPP_
 #define SILKRPC_ETHBACKEND_BACKEND_HPP_
 
+#include <utility>
+#include <string>
+#include <memory>
+
 #include <asio/io_context.hpp>
 #include <asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
@@ -144,7 +148,6 @@ public:
     asio::awaitable<::types::ExecutionPayload> execution_payload_to_proto(ExecutionPayload payload);
 
 private:
-
     evmc::address address_from_H160(const types::H160& h160);
     silkworm::Bytes bytes_from_H128(const types::H128& h128);
     types::H128* H128_from_bytes(const uint8_t* bytes);

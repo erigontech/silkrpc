@@ -33,7 +33,7 @@ std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload) {
     << " logs_bloom: " << silkworm::to_hex(bloom_bytes)
     << " extra_data: " << silkworm::to_hex(payload.extra_data)
     << "#transactions: " << payload.transactions.size();
-    
+
     return out;
 }
 } // namespace silkrpc

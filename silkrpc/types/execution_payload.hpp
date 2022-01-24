@@ -17,6 +17,8 @@
 #ifndef SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
 #define SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
 
+#include <vector>
+
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 #include <silkworm/common/base.hpp>

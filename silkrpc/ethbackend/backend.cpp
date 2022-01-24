@@ -16,10 +16,7 @@
 
 #include "backend.hpp"
 
-#include <memory>
 #include <optional>
-#include <string>
-#include <utility>
 #include <vector>
 
 #include <boost/endian/conversion.hpp>
@@ -286,9 +283,10 @@ types::ExecutionPayload BackEnd::encode_execution_payload(const ExecutionPayload
     execution_payload_grpc.set_allocated_logsbloom(H2048_from_bytes(&execution_payload.logs_bloom[0]));
     // String-like parameters
     for (auto transaction_bytes : execution_payload.transactions) {
-        execution_payload_grpc.add_transactions(std::string(reinterpret_cast<char*>(&transaction_bytes[0]), transaction_bytes.size()));
+        execution_payload_grpc.add_transactions(std::string(transaction_bytes.begin(), transaction_bytes.end()));
     }
     execution_payload_grpc.set_extradata(std::string(execution_payload.extra_data.begin(), execution_payload.extra_data.end()));
     return execution_payload_grpc;
 }
-}
+
+} // namespace silkrpc::ethbackend
