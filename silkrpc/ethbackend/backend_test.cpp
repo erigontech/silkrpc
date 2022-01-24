@@ -65,15 +65,15 @@ using evmc::literals::operator""_bytes32;
 
 bool h160_equal_address(const ::types::H160& h160, const evmc::address& address) {
     return h160.hi().hi() == boost::endian::load_big_u64(address.bytes) &&
-            h160.hi().lo() == boost::endian::load_big_u64(address.bytes + 8) &&
-            h160.lo() == boost::endian::load_big_u32(address.bytes + 16);
+        h160.hi().lo() == boost::endian::load_big_u64(address.bytes + 8) &&
+        h160.lo() == boost::endian::load_big_u32(address.bytes + 16);
 }
 
 bool h256_equal_bytes32(const ::types::H256& h256, const evmc::bytes32& hash) {
     return h256.hi().hi() == boost::endian::load_big_u64(hash.bytes) &&
-            h256.hi().lo() == boost::endian::load_big_u64(hash.bytes + 8) &&
-            h256.lo().hi() == boost::endian::load_big_u64(hash.bytes + 16) &&
-            h256.lo().lo() == boost::endian::load_big_u64(hash.bytes + 24);
+        h256.hi().lo() == boost::endian::load_big_u64(hash.bytes + 8) &&
+        h256.lo().hi() == boost::endian::load_big_u64(hash.bytes + 16) &&
+        h256.lo().lo() == boost::endian::load_big_u64(hash.bytes + 24);
 }
 
 bool h2048_equal_bloom(const ::types::H2048& h2048, const silkworm::Bloom& bloom) {
