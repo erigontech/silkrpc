@@ -200,7 +200,9 @@ public:
         ::remote::EngineGetPayloadRequest req;
         req.set_payloadid(payload_id);
         const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
-        co_return decode_execution_payload(reply);
+        auto execution_payload{decode_execution_payload(reply)};
+        SILKRPC_DEBUG << "BackEnd::engine_get_payload_v1 data=" << execution_payload << " t=" << clock_time::since(start_time) << "\n";
+        co_return execution_payload;
     }
 
     // just for testing

@@ -62,21 +62,21 @@ using evmc::literals::operator""_bytes32;
     return h256_ptr;
 }
 
-bool h160_equal_address(const ::types::H160& h160, const evmc::address address) {
+bool h160_equal_address(const ::types::H160& h160, const evmc::address& address) {
         return h160.hi().hi() == boost::endian::load_big_u64(address.bytes) &&
                h160.hi().lo() == boost::endian::load_big_u64(address.bytes + 8) &&
                h160.lo() == boost::endian::load_big_u32(address.bytes + 16);
 }
 
-bool h256_equal_bytes32(const ::types::H256& h256, const evmc::bytes32 bytes32) {
-        return h256.hi().hi() == boost::endian::load_big_u64(bytes32.bytes) &&
-               h256.hi().lo() == boost::endian::load_big_u64(bytes32.bytes + 8) &&
-               h256.lo().hi() == boost::endian::load_big_u64(bytes32.bytes + 16) &&
-               h256.lo().lo() == boost::endian::load_big_u64(bytes32.bytes + 24);
+bool h256_equal_bytes32(const ::types::H256& h256, const evmc::bytes32& hash) {
+        return h256.hi().hi() == boost::endian::load_big_u64(hash.bytes) &&
+               h256.hi().lo() == boost::endian::load_big_u64(hash.bytes + 8) &&
+               h256.lo().hi() == boost::endian::load_big_u64(hash.bytes + 16) &&
+               h256.lo().lo() == boost::endian::load_big_u64(hash.bytes + 24);
 }
 
 bool h2048_equal_bloom(const ::types::H2048& h2048, const silkworm::Bloom bloom) {
-        // Fragment the H2046 in 8 H256 and verify each of them
+        // Fragment the H2048 in 8 H256 and verify each of them
         ::types::H256 fragments[] = {h2048.hi().hi().hi(), h2048.hi().hi().lo(),
                                     h2048.hi().lo().hi(), h2048.hi().lo().lo(),
                                     h2048.lo().hi().hi(), h2048.lo().hi().lo(),

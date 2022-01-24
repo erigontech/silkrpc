@@ -17,16 +17,8 @@
 #ifndef SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
 #define SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
 
-#include <iostream>
-#include <map>
-#include <optional>
-#include <stdint.h>
-#include <string>
-#include <vector>
-
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
-#include <nlohmann/json.hpp>
 #include <silkworm/common/base.hpp>
 #include <silkworm/types/bloom.hpp>
 
@@ -51,6 +43,8 @@ struct ExecutionPayload {
     silkworm::Bytes extra_data;
     std::vector<silkworm::Bytes> transactions;
 };
+
+std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload);
 
 } // namespace silkrpc
 
