@@ -30,8 +30,9 @@
 #include <evmc/evmc.hpp>
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/base.hpp>
-
 #include <silkrpc/common/clock_time.hpp>
+
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/awaitables.hpp>
 #include <silkrpc/grpc/async_unary_client.hpp>

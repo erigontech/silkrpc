@@ -28,6 +28,7 @@
 #include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
+#include <boost/endian/conversion.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/completion_runner.hpp>

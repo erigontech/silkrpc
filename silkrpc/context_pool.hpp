@@ -27,12 +27,12 @@
 #include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
+#include <silkrpc/txpool/transaction_pool.hpp>
 #include <silkrpc/common/block_cache.hpp>
 #include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/grpc/completion_runner.hpp>
 #include <silkrpc/txpool/miner.hpp>
-#include <silkrpc/txpool/transaction_pool.hpp>
 
 namespace silkrpc {
 

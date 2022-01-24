@@ -15,17 +15,25 @@
 */
 
 #include "execution_payload.hpp"
+#include <silkrpc/common/util.hpp>
 
+namespace silkrpc {
 std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload) {
-        out << "number: " << payload.number
-        << " block_hash: " << payload.block_hash
-        << " parent_hash: " << payload.parent_hash
-        << " timestamp: " << payload.timestamp
-        << " gas_limit: " << payload.gas_limit
-        << " gas_used: " << payload.gas_used
-        << " suggested_fee_recipient: " << payload.suggested_fee_recipient;
-        << " state_root: " << payload.state_root
-        << " receipts_root: " << payload.receipts_root;
-
+    auto bloom_bytes{silkworm::ByteView(&payload.logs_bloom[0], 256)};
+    out << "number: " << payload.number
+    << " block_hash: " << payload.block_hash
+    << " parent_hash: " << payload.parent_hash
+    << " timestamp: " << payload.timestamp
+    << " gas_limit: " << payload.gas_limit
+    << " gas_used: " << payload.gas_used
+    << " suggested_fee_recipient: " << payload.suggested_fee_recipient
+    << " state_root: " << payload.state_root
+    << " receipts_root: " << payload.receipts_root
+    << " random: " << payload.random
+    << " logs_bloom: " << silkworm::to_hex(bloom_bytes)
+    << " extra_data: " << silkworm::to_hex(payload.extra_data)
+    << "#transactions: " << payload.transactions.size();
+    
     return out;
 }
+} // namespace silkrpc

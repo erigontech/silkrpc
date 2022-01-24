@@ -17,22 +17,10 @@
 #ifndef SILKRPC_ETHBACKEND_BACKEND_HPP_
 #define SILKRPC_ETHBACKEND_BACKEND_HPP_
 
-#include <memory>
-#include <optional>
-#include <string>
-#include <utility>
-#include <vector>
-
-#include <silkrpc/config.hpp>
-
 #include <asio/io_context.hpp>
 #include <asio/use_awaitable.hpp>
-#include <boost/endian/conversion.hpp>
 #include <evmc/evmc.hpp>
-#include <grpcpp/grpcpp.h>
 
-#include <silkrpc/common/clock_time.hpp>
-#include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/awaitables.hpp>
 #include <silkrpc/grpc/async_unary_client.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
