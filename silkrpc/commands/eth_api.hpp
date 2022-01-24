@@ -38,7 +38,6 @@
 #include <silkrpc/ethdb/transaction.hpp>
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/receipt.hpp>
-#include <silkrpc/types/execution_payload.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
