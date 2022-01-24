@@ -76,7 +76,7 @@ bool h256_equal_bytes32(const ::types::H256& h256, const evmc::bytes32& hash) {
             h256.lo().lo() == boost::endian::load_big_u64(hash.bytes + 24);
 }
 
-bool h2048_equal_bloom(const ::types::H2048& h2048, const silkworm::Bloom bloom) {
+bool h2048_equal_bloom(const ::types::H2048& h2048, const silkworm::Bloom& bloom) {
     // Fragment the H2048 in 8 H256 and verify each of them
     ::types::H256 fragments[] = {h2048.hi().hi().hi(), h2048.hi().hi().lo(),
                                 h2048.hi().lo().hi(), h2048.hi().lo().lo(),
