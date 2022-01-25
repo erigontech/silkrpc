@@ -33,7 +33,6 @@ using Catch::Matchers::Message;
 using evmc::literals::operator""_bytes32;
 using evmc::literals::operator""_address;
 
-
 TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -87,7 +86,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
     };
 
 
-    SECTION("read code for empty hash") {
+    SECTION("read_code for empty hash") {
         asio::io_context io_context;
         MockDatabaseReader db_reader;
         const uint64_t block_number = 1'000'000;
@@ -97,7 +96,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         CHECK(future_code.get() == silkworm::ByteView{});
     }
 
-    SECTION("read code for non-empty hash") {
+    SECTION("read_code for non-empty hash") {
         asio::io_context io_context;
         silkworm::Bytes code{*silkworm::from_hex("0x0608")};
         MockDatabaseReader db_reader{code};
@@ -109,8 +108,169 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         CHECK(future_code.get() == silkworm::ByteView{code});
     }
 
+    SECTION("read_code with empty response from db") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{code};
+        const uint64_t block_number = 1'000'000;
+        const auto code_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto ret_code = remoteBufferTest.read_code(code_hash);
+        CHECK(ret_code == code);
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+    SECTION("read_storage with empty response from db") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes storage{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{storage};
+        const uint64_t block_number = 1'000'000;
+        evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
+        const auto location{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto ret_storage = remoteBufferTest.read_storage(address, 0, location);
+        CHECK(ret_storage == 0x0000000000000000000000000000000000000000000000000000000000000608_bytes32);
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+    SECTION("read_account with empty response from db") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes value{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{value};
+        const uint64_t block_number = 1'000'000;
+        evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto account = remoteBufferTest.read_account(address);
+        CHECK(account == std::nullopt);
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+    SECTION("read_header with empty response from db") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes value{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{value};
+        const uint64_t block_number = 1'000'000;
+        const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+        evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto header = remoteBufferTest.read_header(block_number, block_hash);
+        CHECK(header == std::nullopt);
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+    SECTION("read_body with empty response from db") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes value{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{value};
+        const uint64_t block_number = 1'000'000;
+        const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+        evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto header = remoteBufferTest.read_body(block_number, block_hash);
+        CHECK(header == std::nullopt);
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+    SECTION("total_difficulty with empty response from db") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes value{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{value};
+        const uint64_t block_number = 1'000'000;
+        const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+        evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto header = remoteBufferTest.total_difficulty(block_number, block_hash);
+        CHECK(header == std::nullopt);
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+    SECTION("previous_incarnation returns ok") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes value{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{value};
+        const uint64_t block_number = 1'000'000;
+        evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto prev_incarnation = remoteBufferTest.previous_incarnation(address);
+        CHECK(prev_incarnation == 0);
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+    SECTION("current_canonical_block returns ok") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes value{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{value};
+        const uint64_t block_number = 1'000'000;
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto canonical_block = remoteBufferTest.current_canonical_block();
+        CHECK(canonical_block == 0);
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+    SECTION("canonical_hash with returns ok") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes value{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{value};
+        const uint64_t block_number = 1'000'000;
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto canonical_block = remoteBufferTest.canonical_hash(block_number);
+        CHECK(canonical_block == std::nullopt);
+        io_context.stop();
+        io_context_thread.join();
+    }
+
+    SECTION("state_root_hash with returns ok") {
+        asio::io_context io_context;
+        asio::io_context::work work{io_context};
+        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
+
+        silkworm::Bytes value{*silkworm::from_hex("0x0608")};
+        MockDatabaseReader db_reader{value};
+        const uint64_t block_number = 1'000'000;
+        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
+        auto root_hash = remoteBufferTest.state_root_hash();
+        CHECK(root_hash == evmc::bytes32{});
+        io_context.stop();
+        io_context_thread.join();
+    }
+
 /*
-    SECTION("read code with error - notp") {
+    SECTION("read_code with exception") {
         asio::io_context io_context;
         asio::io_context::work work{io_context};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
@@ -126,30 +286,30 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         io_context_thread.join();
     }
 
-    SECTION("read storage with error") {
+    SECTION("read_storage with exception") {
         asio::io_context io_context;
         asio::io_context::work work{io_context};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
-        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
-        MockDatabaseReaderExp db_reader{code};
+        silkworm::Bytes storage{*silkworm::from_hex("0x0608")};
+        MockDatabaseReaderExp db_reader{storage};
         const uint64_t block_number = 1'000'000;
         evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
         const auto location{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
         RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto storage = remoteBufferTest.read_storage(address, 0, location);
-        CHECK(storage == evmc::bytes32{});
+        auto ret_storage = remoteBufferTest.read_storage(address, 0, location);
+        CHECK(ret_storage == evmc::bytes32{});
         io_context.stop();
         io_context_thread.join();
     }
 
-    SECTION("read account with error") {
+    SECTION("read_account with exception") {
         asio::io_context io_context;
         asio::io_context::work work{io_context};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
-        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
-        MockDatabaseReaderExp db_reader{code};
+        silkworm::Bytes value{*silkworm::from_hex("0x0608")};
+        MockDatabaseReaderExp db_reader{value};
         const uint64_t block_number = 1'000'000;
         evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
         RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
@@ -159,84 +319,6 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         io_context_thread.join();
     }
 */
-
-    SECTION("current_canonical_block") {
-        asio::io_context io_context;
-        asio::io_context::work work{io_context};
-        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
-
-        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
-        MockDatabaseReader db_reader{code};
-        const uint64_t block_number = 1'000'000;
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto canonical_block = remoteBufferTest.current_canonical_block();
-        CHECK(canonical_block == 0);
-        io_context.stop();
-        io_context_thread.join();
-    }
-
-    SECTION("canonical_hash") {
-        asio::io_context io_context;
-        asio::io_context::work work{io_context};
-        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
-
-        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
-        MockDatabaseReader db_reader{code};
-        const uint64_t block_number = 1'000'000;
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto canonical_block = remoteBufferTest.canonical_hash(block_number);
-        CHECK(canonical_block == std::nullopt);
-        io_context.stop();
-        io_context_thread.join();
-    }
-
-    SECTION("state_root_hash") {
-        asio::io_context io_context;
-        asio::io_context::work work{io_context};
-        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
-
-        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
-        MockDatabaseReader db_reader{code};
-        const uint64_t block_number = 1'000'000;
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto root_hash = remoteBufferTest.state_root_hash();
-        CHECK(root_hash == evmc::bytes32{});
-        io_context.stop();
-        io_context_thread.join();
-    }
-
-    SECTION("previous_incarnation") {
-        asio::io_context io_context;
-        asio::io_context::work work{io_context};
-        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
-
-        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
-        MockDatabaseReader db_reader{code};
-        const uint64_t block_number = 1'000'000;
-        evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto prev_incarnation = remoteBufferTest.previous_incarnation(address);
-        CHECK(prev_incarnation == 0);
-        io_context.stop();
-        io_context_thread.join();
-    }
-
-    SECTION("read_header") {
-        asio::io_context io_context;
-        asio::io_context::work work{io_context};
-        std::thread io_context_thread{[&io_context]() { io_context.run(); }};
-
-        silkworm::Bytes code{*silkworm::from_hex("0x0608")};
-        MockDatabaseReader db_reader{code};
-        const uint64_t block_number = 1'000'000;
-        const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
-        evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto header = remoteBufferTest.read_header(block_number, block_hash);
-        CHECK(header == std::nullopt);
-        io_context.stop();
-        io_context_thread.join();
-    }
 }
 
 } // namespace silkrpc::state
