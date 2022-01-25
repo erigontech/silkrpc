@@ -54,7 +54,7 @@ public:
 
     asio::awaitable<void> open_cursor(const std::string& table_name) override { co_return; }
 
-    asio::awaitable<KeyValue> seek(const silkworm::ByteView& seek_key) override {
+    asio::awaitable<KeyValue> seek(silkworm::ByteView seek_key) override {
         index_ = 0;
         for (; index_ < vector_.size(); index_++) {
             if (vector_[index_].part1 == seek_key) {
@@ -65,7 +65,7 @@ public:
         co_return KeyValue{};
     }
 
-    asio::awaitable<KeyValue> seek_exact(const silkworm::ByteView& key) override { co_return KeyValue{silkworm::Bytes{key}, value}; }
+    asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override { co_return KeyValue{silkworm::Bytes{key}, value}; }
 
     asio::awaitable<KeyValue> next() override {
         if (++index_ >= vector_.size()) {

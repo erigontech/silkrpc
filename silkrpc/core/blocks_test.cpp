@@ -25,6 +25,7 @@
 #include <gmock/gmock.h>
 #include <silkworm/common/base.hpp>
 
+#include <silkrpc/common/log.hpp>
 #include <silkrpc/stagedsync/stages.hpp>
 #include <silkrpc/ethdb/tables.hpp>
 
@@ -44,38 +45,44 @@ public:
 };
 
 TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     const silkworm::ByteView kExecutionStage{stages::kExecution};
     MockDatabaseReader db_reader;
     asio::thread_pool pool{1};
 
     SECTION("kEarliestBlockId") {
-        auto result = asio::co_spawn(pool, get_block_number(kEarliestBlockId, db_reader), asio::use_future);
+        static const std::string EARLIEST_BLOCK_ID = kEarliestBlockId;
+        auto result = asio::co_spawn(pool, get_block_number(EARLIEST_BLOCK_ID, db_reader), asio::use_future);
         CHECK(result.get() == kEarliestBlockNumber);
     }
 
     SECTION("kLatestBlockId") {
+        static const std::string LATEST_BLOCK_ID = kLatestBlockId;
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")}; }
         ));
-        auto result = asio::co_spawn(pool, get_block_number(kLatestBlockId, db_reader), asio::use_future);
+        auto result = asio::co_spawn(pool, get_block_number(LATEST_BLOCK_ID, db_reader), asio::use_future);
         CHECK(result.get() == 0x1234567890123456);
     }
 
     SECTION("kPendingBlockId") {
+        static const std::string PENDING_BLOCK_ID = kPendingBlockId;
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")}; }
         ));
-        auto result = asio::co_spawn(pool, get_block_number(kPendingBlockId, db_reader), asio::use_future);
+        auto result = asio::co_spawn(pool, get_block_number(PENDING_BLOCK_ID, db_reader), asio::use_future);
         CHECK(result.get() == 0x1234567890123456);
     }
 
     SECTION("number in hex") {
-        auto result = asio::co_spawn(pool, get_block_number("0x12345", db_reader), asio::use_future);
+        static const std::string BLOCK_ID_HEX = "0x12345";
+        auto result = asio::co_spawn(pool, get_block_number(BLOCK_ID_HEX, db_reader), asio::use_future);
         CHECK(result.get() == 0x12345);
     }
 
     SECTION("number in dec") {
-        auto result = asio::co_spawn(pool, get_block_number("67890", db_reader), asio::use_future);
+        static const std::string BLOCK_ID_DEC = "67890";
+        auto result = asio::co_spawn(pool, get_block_number(BLOCK_ID_DEC, db_reader), asio::use_future);
         CHECK(result.get() == 67890);
     }
 }
