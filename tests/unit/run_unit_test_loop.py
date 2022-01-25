@@ -15,11 +15,17 @@ SILKRPC_GCC_DEBUG_BUILDDIR : str = "../../build_gcc_debug/"
 SILKRPC_GCC_RELEASE_BUILDDIR : str = "../../build_gcc_release/"
 
 class Build(str, Enum):
+    """ The build configuration """
     CLANG_COVERAGE = 'CLANG_COVERAGE'
     CLANG_DEBUG = 'CLANG_DEBUG'
     CLANG_RELEASE = 'CLANG_RELEASE'
     GCC_DEBUG = 'GCC_DEBUG'
     GCC_RELEASE = 'GCC_RELEASE'
+
+    @classmethod
+    def has_item(cls, name: str) -> bool:
+        """ Return true if name is a valid enumeration item, false otherwise """
+        return name in Build._member_names_ # pylint: disable=no-member
 
 class UnitTest:
     """ The unit test executable """
@@ -100,7 +106,7 @@ def main(argv):
 
     for build_name in build_names:
         build_name = build_name.upper()
-        if not build_name in Build._member_names_:
+        if not Build.has_item(build_name):
             print("Invalid build name [" + build_name + "], ignored")
             continue
         build = Build[build_name]
