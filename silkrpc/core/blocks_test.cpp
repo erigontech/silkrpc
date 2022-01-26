@@ -51,13 +51,13 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
     asio::thread_pool pool{1};
 
     SECTION("kEarliestBlockId") {
-        static const std::string EARLIEST_BLOCK_ID = kEarliestBlockId;
+        const std::string EARLIEST_BLOCK_ID = kEarliestBlockId;
         auto result = asio::co_spawn(pool, get_block_number(EARLIEST_BLOCK_ID, db_reader), asio::use_future);
         CHECK(result.get() == kEarliestBlockNumber);
     }
 
     SECTION("kLatestBlockId") {
-        static const std::string LATEST_BLOCK_ID = kLatestBlockId;
+        const std::string LATEST_BLOCK_ID = kLatestBlockId;
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")}; }
         ));
@@ -66,7 +66,7 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
     }
 
     SECTION("kPendingBlockId") {
-        static const std::string PENDING_BLOCK_ID = kPendingBlockId;
+        const std::string PENDING_BLOCK_ID = kPendingBlockId;
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")}; }
         ));
@@ -75,13 +75,13 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
     }
 
     SECTION("number in hex") {
-        static const std::string BLOCK_ID_HEX = "0x12345";
+        const std::string BLOCK_ID_HEX = "0x12345";
         auto result = asio::co_spawn(pool, get_block_number(BLOCK_ID_HEX, db_reader), asio::use_future);
         CHECK(result.get() == 0x12345);
     }
 
     SECTION("number in dec") {
-        static const std::string BLOCK_ID_DEC = "67890";
+        const std::string BLOCK_ID_DEC = "67890";
         auto result = asio::co_spawn(pool, get_block_number(BLOCK_ID_DEC, db_reader), asio::use_future);
         CHECK(result.get() == 67890);
     }
