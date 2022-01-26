@@ -52,3 +52,6 @@ target_link_libraries(unit_test silkrpc Catch2::Catch2 GTest::gmock)
 include(CTest)
 include(Catch)
 catch_discover_tests(unit_test)
+
+# Benchmark tests
+add_subdirectory(benchmark)
