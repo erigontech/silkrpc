@@ -47,7 +47,7 @@ ABSL_FLAG(std::string, eth2_local, silkrpc::kDefaultEth2Local, "Engine JSON RPC 
 ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "Erigon Core gRPC service location as string <address>:<port>");
 ABSL_FLAG(std::string, api_spec, silkrpc::kDefaultEth1ApiSpec, "JSON RPC API namespaces as comma-separated list of strings");
 ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "number of running I/O contexts as 32-bit integer");
-ABSL_FLAG(uint32_t, numWorkers, std::thread::hardware_concurrency(), "number of worker threads as 32-bit integer");
+ABSL_FLAG(uint32_t, numWorkers, 16, "number of worker threads as 32-bit integer");
 ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
 
