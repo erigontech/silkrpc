@@ -46,17 +46,17 @@ public:
 
     asio::awaitable<void> open_cursor(const std::string& table_name) override;
 
-    asio::awaitable<KeyValue> seek(const silkworm::ByteView& seek_key) override;
+    asio::awaitable<KeyValue> seek(silkworm::ByteView key) override;
 
-    asio::awaitable<KeyValue> seek_exact(const silkworm::ByteView& key) override;
+    asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override;
 
     asio::awaitable<KeyValue> next() override;
 
     asio::awaitable<void> close_cursor() override;
 
-    asio::awaitable<silkworm::Bytes> seek_both(const silkworm::ByteView& key, const silkworm::ByteView& value) override;
+    asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) override;
 
-    asio::awaitable<KeyValue> seek_both_exact(const silkworm::ByteView& key, const silkworm::ByteView& value) override;
+    asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) override;
 
 private:
     KvAsioAwaitable<asio::io_context::executor_type>& kv_awaitable_;
