@@ -62,7 +62,7 @@ public:
         co_return;
     }
 
-    asio::awaitable<KeyValue> seek(const silkworm::ByteView& key) override {
+    asio::awaitable<KeyValue> seek(silkworm::ByteView key) override {
         const auto key_ = silkworm::to_hex(key);
 
         KeyValue out;
@@ -83,7 +83,7 @@ public:
         co_return out;
     }
 
-    asio::awaitable<KeyValue> seek_exact(const silkworm::ByteView& key) override {
+    asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override {
         const nlohmann::json table = json_.value(table_name_, empty);
         const auto& entry = table.value(silkworm::to_hex(key), "");
         auto value{*silkworm::from_hex(entry)};
@@ -105,7 +105,7 @@ public:
         co_return out;
     }
 
-    asio::awaitable<silkworm::Bytes> seek_both(const silkworm::ByteView& key, const silkworm::ByteView& value) override {
+    asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) override {
         silkworm::Bytes key_{key};
         key_ += value;
 
@@ -116,7 +116,7 @@ public:
         co_return out;
     }
 
-    asio::awaitable<KeyValue> seek_both_exact(const silkworm::ByteView& key, const silkworm::ByteView& value) override {
+    asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) override {
         silkworm::Bytes key_{key};
         key_ += value;
 

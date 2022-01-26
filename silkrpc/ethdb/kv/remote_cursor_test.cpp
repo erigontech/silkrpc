@@ -43,9 +43,9 @@ public:
 
 TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient1 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient1(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
@@ -60,7 +60,7 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient1 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -74,9 +74,9 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     }
 
     SECTION("write_start failure") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient2 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient2(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
@@ -91,7 +91,7 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient2 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -105,9 +105,9 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     }
 
     SECTION("read_start failure") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient3 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient3(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     read_completed(grpc::Status::CANCELLED, {});
@@ -122,7 +122,7 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient3 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -138,9 +138,9 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
 
 TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success w/ sync read - sync write") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient4 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient4(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
@@ -153,7 +153,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient4 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -172,9 +172,9 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     }
 
     SECTION("success w/ async read - sync write") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient5 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient5(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
@@ -189,7 +189,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient5 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -208,9 +208,9 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     }
 
     SECTION("success w/ sync read - async write") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient6 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient6(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
@@ -225,7 +225,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient6 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -244,9 +244,9 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     }
 
     SECTION("success w/ async read - async write") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient7 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient7(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
@@ -263,7 +263,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient7 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -282,9 +282,9 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     }
 
     SECTION("write_start failure") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient8 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient8(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
@@ -301,7 +301,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient8 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -321,9 +321,9 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     }
 
     SECTION("read_start failure") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient9 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient9(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     read_completed(grpc::Status::CANCELLED, {});
@@ -338,7 +338,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient9 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -360,9 +360,9 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
 
 TEST_CASE("RemoteCursor::seek", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success w/ sync read - sync write") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient10 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient10(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
@@ -377,7 +377,7 @@ TEST_CASE("RemoteCursor::seek", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient10 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -404,9 +404,9 @@ TEST_CASE("RemoteCursor::seek", "[silkrpc][ethdb][kv][remote_cursor]") {
 
 TEST_CASE("RemoteCursor::seek_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success w/ sync read - sync write") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient11 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient11(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
@@ -420,7 +420,7 @@ TEST_CASE("RemoteCursor::seek_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient11 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -447,9 +447,9 @@ TEST_CASE("RemoteCursor::seek_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
 
 TEST_CASE("RemoteCursor::next", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success w/ sync read - sync write") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient12 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient12(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
@@ -464,7 +464,7 @@ TEST_CASE("RemoteCursor::next", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient12 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -491,9 +491,9 @@ TEST_CASE("RemoteCursor::next", "[silkrpc][ethdb][kv][remote_cursor]") {
 
 TEST_CASE("RemoteCursor::seek_both", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success w/ sync read - sync write") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient13 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient13(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
@@ -507,7 +507,7 @@ TEST_CASE("RemoteCursor::seek_both", "[silkrpc][ethdb][kv][remote_cursor]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient13 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
@@ -533,9 +533,9 @@ TEST_CASE("RemoteCursor::seek_both", "[silkrpc][ethdb][kv][remote_cursor]") {
 
 TEST_CASE("RemoteCursor::seek_both_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success w/ sync read - sync write") {
-        class MockStreamingClient : public MockBaseStreamingClient {
+        class MockStreamingClient14 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient14(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
@@ -549,7 +549,7 @@ TEST_CASE("RemoteCursor::seek_both_exact", "[silkrpc][ethdb][kv][remote_cursor]"
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        MockStreamingClient client{channel, &queue};
+        MockStreamingClient14 client{channel, &queue};
         KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
