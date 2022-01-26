@@ -1,6 +1,6 @@
 
 ----------------
-DATI PERFORMANCE
+PERFORMANCE DATA
 ----------------
 
 02-06/01/2022 stable release(05/01: 440acba6d33e3025ec10679de5ffdd3640cfa8ff), silk master 31/12/2021(ca8f25278393e8a06be13150b5dd85b9cca99141)
@@ -16,7 +16,7 @@ Pattern vegeta/erigon_stress_test_eth_call_goerly_001.tar
 1500: 30: Silk  43 msec     Rpcdaemon: 35 msec
 1700: 30: Silk  49 msec     Rpcdaemon: 42 msec 
 2000: 30: Silk  61 msec     Rpcdaemon: 60 msec  
-2000:800: Silk  2,766 msec  Rpcdaemon:  msec  La memoria fa un picco dopo 20 secs fino al 40% MEM poi scende e si stabilizza al 3%
+2000:800: Silk  2,766 msec  Rpcdaemon:         The memory reach a peak after 20 secs using 40%MEM then go down and the memory usage becomes 3%
 
 --------------------------------------------------------------------------------------------
 Pattern vegeta/erigon_stress_test_eth_call_goerly_002.tar
@@ -42,9 +42,9 @@ Pattern vegeta/erigon_stress_test_eth_call_goerly_003.tar
  1000:30: Silk 1100 msec  Rpcdaemon:  820 msec 
  1500:30: Silk 6100 msec  Rpcdaemon: 3000 msec
  1700:30: Silk   10  sec  Rpcdaemon:  26   sec 
- 2000:30: Silk  19,6 sec  Rpcdaemon:  40   sec  ERRORS  Silk alla 3 iterazione, mettendo sleep 15 fra due iterazioni: funziona
-10000:15: Silk  48   sec  Rpcdaemon:  XX   sec  muore RPCdaemon too memory
-50000:15: Silk  xx   sec  Rpcdaemon:  XX   sec  con Silk muore Erigon(runtime: program exceeds 10000-thread limit) con RPCdaemon muore RPCdaemon too memory
+ 2000:30: Silk  19,6 sec  Rpcdaemon:  40   sec  Silk returns ERRORS after 3 iterations, if waits at least 15 secs between tests the errors disappeared
+10000:15: Silk  48   sec  Rpcdaemon:  XX   sec  RPCdaemon dead: too memory
+50000:15: Silk  xx   sec  Rpcdaemon:  XX   sec  Silk tests Erigon dead: (runtime: program exceeds 10000-thread limit) with RPCdaemon: dead RPCdaemon: too memory
 
 --------------------------------------------------------------------------------------------
 Pattern vegeta/erigon_stress_test_eth_getLogs_goerly_001.tar
@@ -57,11 +57,11 @@ Pattern vegeta/erigon_stress_test_eth_getLogs_goerly_001.tar
  1500: 30: Silk 18,0   secs Rpcdaemon: 41,8 secs  
  1700: 30: Silk 24,0   secs Rpcdaemon: 51,1 secs 
  2000: 30: Silk 35,0   secs Rpcdaemon: 1m03 
- 2000:800: Silk xx     secs Rpcdaemon: xx        RPcdaemon muore quasi subito, Silk cresce la memoria non in maniera brusca ma continua 
- 4000: 30: Silk 1m,44  secs Rpcdaemon: xx        RpcDaemon muore alla prima iterazione, Silk: OK 
- 9000: 30: Silk 1m,15  secs Rpcdaemon: xx        RpcDaemon muore alla prima iterazione, Silk: OK 
-20000: 30: Silk xx     secs Rpcdaemon: xx        Nel caso Silk muore erigon(program exceeds 10000-thread limit), con Rpcdaemon muore RpcDaemon too memory
-                                                 Silk da errore E0106 23:15:41.300216363   80674 call_op_set.h:973] assertion failed: false (forse x morte Erigon)
+ 2000:800: Silk xx     secs Rpcdaemon: xx        RPCdaemon dead quickly, Silk the memory usage increase continuosly  (to be analized)
+ 4000: 30: Silk 1m,44  secs Rpcdaemon: xx        RPCdaemon dead quickly, Silk: OK
+ 9000: 30: Silk 1m,15  secs Rpcdaemon: xx        RPCdaemon dead quickly, Silk: OK 
+20000: 30: Silk xx     secs Rpcdaemon: xx        Silk erigon dead(program exceeds 10000-thread limit), with RPCdaemon: RPCDaemon dead: too memory usage
+                                                 When erigon Dead Silk returns an error: E0106 23:15:41.300216363   80674 call_op_set.h:973] assertion failed: false 
 
 --------------------------------------------------------------------------------------------
 Pattern vegeta/erigon_stress_test_eth_getLogs_goerly_002.tar
@@ -89,12 +89,12 @@ Pattern vegeta/erigon_stress_test_eth_call_main_002.tar
  1000: 30: Silk  230 msec  Rpcdaemon:  215 msec 
  1500: 30: Silk  410 msec  Rpcdaemon:  430 msec
  1700: 30: Silk  520 msec  Rpcdaemon:  550 msec 
- 2000: 30: Silk  600 msec  Rpcdaemon:  630 msec * dati un po ballerini  
- 2000:800: Silk  1.4  sec  Rpcdaemon:  7m23s     RPCDAEMON: memoria 85% e swap MEM 68G occupato, RATIO 53%, SILK: 2.0% MEM, RATIO 92%
- 3000: 30: Silk  xx   sec  Rpcdaemon:   xx sec entrambi non 100% Rate migliore RPCdaemon Latency migliore Silk 
- 4000: 30: Silk  xx   sec  Rpcdaemon:   xx sec Silk muore Erigon (runtime: program exceeds 10000-thread limit), RPCDaemon muore Erigon (runtime: program exceeds 10000-thread limit)
- 5000: 30: Silk  xx   sec  Rpcdaemon:   xx sec Silk muore Erigon (runtime: program exceeds 10000-thread limit), RPCDaemon: muore Erigon(runtime: program exceeds 10000-thread limit)
-40000: 10: Silk  20   sec  Rpcdaemon:   xx sec Silk rate 80%, RpcDaemon: muore quasi subito Erigon(runtime: program exceeds 10000-thread limit)
+ 2000: 30: Silk  600 msec  Rpcdaemon:  630 msec 
+ 2000:800: Silk  1.4  sec  Rpcdaemon:  7m23s     RPCDaemon: memory usage 85% RATIO 53%; SILK: 2.0% MEM, RATIO 92%
+ 3000: 30: Silk  xx   sec  Rpcdaemon:   xx sec   Tests with both servers is not 100%  Rate better with RPCdaemon Latency better with Silk 
+ 4000: 30: Silk  xx   sec  Rpcdaemon:   xx sec   Silk: Erigon dead (runtime: program exceeds 10000-thread limit), RPCDaemon Erigon dead (runtime: program exceeds 10000-thread limit)
+ 5000: 30: Silk  xx   sec  Rpcdaemon:   xx sec   Silk: Erigon dead (runtime: program exceeds 10000-thread limit), RPCDaemon Erigon dead (runtime: program exceeds 10000-thread limit)
+40000: 10: Silk  20   sec  Rpcdaemon:   xx sec   Silk Rate 80%, RPCDaemon Erigon dead (runtime: program exceeds 10000-thread limit)
 
 --------------------------------------------------------------------------------------------
 Pattern vegeta/erigon_stress_test_eth_call_main_003.tar
@@ -105,12 +105,12 @@ Pattern vegeta/erigon_stress_test_eth_call_main_003.tar
  700 :30: Silk  193 msec  Rpcdaemon:  187 msec
  1000:30: Silk  240 msec  Rpcdaemon:  215 msec 
  1500:30: Silk  410 msec  Rpcdaemon:  430 msec
- 1700:30: Silk  520 msec  Rpcdaemon:  630 msec * dati ballerini 
+ 1700:30: Silk  520 msec  Rpcdaemon:  630 msec 
  2000:30: Silk  530 msec  Rpcdaemon:  730 msec  
- 2000:800: Silk 1.6  sec  Rpcdaemon:  5m44s msec  RPCDAEMON: memoria 85% MEM 65G occupato RATIO 49%, SILK: 1.1% MEM RATIO 90%
+ 2000:800: Silk 1.6  sec  Rpcdaemon:  5m44s msec  RPCDaemon: memory usage 85% RATIO 49%; SILK: 1.1% MEM, RATIO 90%
  4000:30: Silk  530 msec  Rpcdaemon:  730 msec  
-60000:10: Silk  35   sec  Rpcdaemon:   xx sec Silk OK, RpcDaemon muore quasi subito Erigon(runtime: program exceeds 10000-thread limit)
-80000:10: Silk  35   sec  Rpcdaemon:   xx sec Silk 80% ma non muore, RpcDaemon muore quasi subito Erigon(runtime: program exceeds 10000-thread limit)
+60000:10: Silk  35   sec  Rpcdaemon:   xx sec     Silk OK, RPCDaemon Erigon dead (runtime: program exceeds 10000-thread limit)
+80000:10: Silk  35   sec  Rpcdaemon:   xx sec     Silk Rate: 80%; RPCDaemon Erigon dead (runtime: program exceeds 10000-thread limit)
 --------------------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------------------
@@ -124,13 +124,13 @@ Pattern vegeta/erigon_stress_test_eth_getLogs_main_002.tar
   1500:30: Silk 1000 msec  Rpcdaemon:  905 msec
   1700:30: Silk 1000 msec  Rpcdaemon:  960 msec 
   2000:30: Silk 1100 msec  Rpcdaemon:  900 msec  
-  2000:800: Silk 3.7   sec  Rpcdaemon:  1.7  sec  RPCDAEMON: no MEMORY LEAK, SILK no memory leak
+  2000:800: Silk 3.7  sec  Rpcdaemon:  1.7  sec  RPCDaemon and Silk no memory leak 
   4000:10: Silk 1700 msec  Rpcdaemon: 1100 msec  
   8000:10: Silk 4500 msec  Rpcdaemon: 3600 msec  
-  9000:30: Silk 1,16 secs  Rpcdaemon: xx   msec Silk OK, RPCdameon muore Erigon(runtime: program exceeds 10000-thread limit) 
- 16000:10: Silk   xx msec  Rpcdaemon: xx   msec Silk: Muore Erigon(alla 1 o 2 iterazione), RpcDaemon muore Erigon prima iterazione x entrambi(runtime: program exceeds 10000-thread limit) 
-                                                Silk da questo errore penso dopo che è morto Erigon ma non so: E0106 17:27:39.059661972 1973960 call_op_set.h:973]  assertion failed: false
-                                                Erigon error:
+  9000:30: Silk 1,16 secs  Rpcdaemon: xx   msec  Silk OK, RPCDaemon Erigon dead (runtime: program exceeds 10000-thread limit)
+ 16000:10: Silk   xx msec  Rpcdaemon: xx   msec  Silk: Erigon dead after 1 or 2 iteration;  RPCDaemon Erigon dead (runtime: program exceeds 10000-thread limit)
+                                                 Silk display this error: E0106 17:27:39.059661972 1973960 call_op_set.h:973]  assertion failed: false
+                                                 Erigon error:
                                                      runtime: program exceeds 10000-thread limit
                                                      fatal error: thread exhaustion
 
@@ -145,9 +145,8 @@ Pattern vegeta/erigon_stress_test_eth_getLogs_main_003.tar
  1500: 30: Silk  230 msec  Rpcdaemon:  246 msec
  1700: 30: Silk  230 msec  Rpcdaemon:  254 msec 
  2000: 30: Silk  250 msec  Rpcdaemon:  260 msec  
- 2000:800: Silk  298 msec  Rpcdaemon:  277 msec  RPCDAEMON: no MEMORY LEAK, SILK no memory leak
-16000:30: Silk  xx  sec   Rpcdaemon:  260 msec  Silk: alla sec iterazioe muore Erigon (runtime: program exceeds 10000-thread limit)
-                                                RpcDaemon: muore subito erigon (runtime: program exceeds 10000-thread limit)
+ 2000:800: Silk  298 msec  Rpcdaemon:  277 msec  RPCDaemon and Silk no memory leak 
+16000: 30: Silk  xx  sec   Rpcdaemon:  260 msec  Silk & RPCDaemon dead Erigon (runtime: program exceeds 10000-thread limit)
 --------------------------------------------------------------------------------------------
 
 
