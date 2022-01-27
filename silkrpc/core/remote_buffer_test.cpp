@@ -345,7 +345,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         CHECK(future_code.get() == evmc::bytes32{});
     }
 
-    SECTION("AsyncRemoteBuffer::previous_incarnation with empty response from db") {
+    SECTION("AsyncRemoteBuffer::previous_incarnation returns ok") {
         asio::io_context io_context;
         MockDatabaseReader db_reader;
         const uint64_t block_number = 1'000'000;
@@ -356,7 +356,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         CHECK(future_code.get() == 0);
     }
 
-    SECTION("AsyncRemoteBuffer::total_difficulty with empty response from db") {
+    SECTION("AsyncRemoteBuffer::state_root_hash returns ok") {
         asio::io_context io_context;
         MockDatabaseReader db_reader;
         const uint64_t block_number = 1'000'000;
@@ -366,7 +366,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         CHECK(future_code.get() == evmc::bytes32{});
     }
 
-    SECTION("AsyncRemoteBuffer::current_canonical_block with empty response from db") {
+    SECTION("AsyncRemoteBuffer::current_canonical_block returns ok") {
         asio::io_context io_context;
         MockDatabaseReader db_reader;
         const uint64_t block_number = 1'000'000;
