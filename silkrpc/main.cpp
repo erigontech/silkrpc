@@ -16,6 +16,7 @@
 
 #include <silkrpc/config.hpp>
 
+#include <cxxabi.h>
 #include <exception>
 #include <filesystem>
 #include <iostream>
@@ -51,6 +52,11 @@ ABSL_FLAG(uint32_t, numWorkers, 16, "number of worker threads as 32-bit integer"
 ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
 
+const char* currentExceptionTypeName() {
+    int status;
+    return abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, 0, &status);
+}
+
 int main(int argc, char* argv[]) {
     const auto pid = boost::this_process::get_id();
     const auto tid = std::this_thread::get_id();
@@ -70,6 +76,20 @@ int main(int argc, char* argv[]) {
 
     SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
     SILKRPC_LOG_THREAD(true);
+
+    std::set_terminate([](){
+        SILKRPC_ERROR << "termination_handler called unhandled exception\n";
+        try {
+           auto exc = std::current_exception();
+           std::rethrow_exception(exc);
+        } catch(const std::exception& e) {
+           SILKRPC_CRIT << "Caught exception: " << e.what() << "\n";
+        } catch(...) {
+           SILKRPC_CRIT << "Type of caught exception is " << currentExceptionTypeName() << "\n";
+        }
+
+        std::abort();
+    });
 
     try {
         auto chaindata{absl::GetFlag(FLAGS_chaindata)};
@@ -199,6 +219,7 @@ int main(int argc, char* argv[]) {
         SILKRPC_CRIT << "Exception: " << e.what() << "\n" << std::flush;
     } catch (...) {
         SILKRPC_CRIT << "Unexpected exception\n" << std::flush;
+        SILKRPC_CRIT << "Type of caught exception is " << currentExceptionTypeName() << "\n";
     }
 
     SILKRPC_LOG << "Silkrpc exiting [pid=" << pid << ", main thread=" << tid << "]\n" << std::flush;
