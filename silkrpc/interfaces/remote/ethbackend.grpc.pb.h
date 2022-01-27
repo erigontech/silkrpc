@@ -117,12 +117,22 @@ class ETHBACKEND final {
     }
     // High-level method - can read block from db, snapshots or apply any other logic
     // it doesn't provide consistency
+    // Request fields are optional - it's ok to request block only by hash or only by number
     virtual ::grpc::Status Block(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::remote::BlockReply* response) = 0;
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::remote::BlockReply>> AsyncBlock(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::remote::BlockReply>>(AsyncBlockRaw(context, request, cq));
     }
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::remote::BlockReply>> PrepareAsyncBlock(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::remote::BlockReply>>(PrepareAsyncBlockRaw(context, request, cq));
+    }
+    // High-level method - can find block number by txn hash
+    // it doesn't provide consistency
+    virtual ::grpc::Status TxnLookup(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::remote::TxnLookupReply* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::remote::TxnLookupReply>> AsyncTxnLookup(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::remote::TxnLookupReply>>(AsyncTxnLookupRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::remote::TxnLookupReply>> PrepareAsyncTxnLookup(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::remote::TxnLookupReply>>(PrepareAsyncTxnLookupRaw(context, request, cq));
     }
     // NodeInfo collects and returns NodeInfo from all running celery instances.
     virtual ::grpc::Status NodeInfo(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::remote::NodesInfoReply* response) = 0;
@@ -257,6 +267,7 @@ class ETHBACKEND final {
       #endif
       // High-level method - can read block from db, snapshots or apply any other logic
       // it doesn't provide consistency
+      // Request fields are optional - it's ok to request block only by hash or only by number
       virtual void Block(::grpc::ClientContext* context, const ::remote::BlockRequest* request, ::remote::BlockReply* response, std::function<void(::grpc::Status)>) = 0;
       virtual void Block(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::BlockReply* response, std::function<void(::grpc::Status)>) = 0;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
@@ -268,6 +279,20 @@ class ETHBACKEND final {
       virtual void Block(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::BlockReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
       #else
       virtual void Block(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::BlockReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      // High-level method - can find block number by txn hash
+      // it doesn't provide consistency
+      virtual void TxnLookup(::grpc::ClientContext* context, const ::remote::TxnLookupRequest* request, ::remote::TxnLookupReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void TxnLookup(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::TxnLookupReply* response, std::function<void(::grpc::Status)>) = 0;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void TxnLookup(::grpc::ClientContext* context, const ::remote::TxnLookupRequest* request, ::remote::TxnLookupReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void TxnLookup(::grpc::ClientContext* context, const ::remote::TxnLookupRequest* request, ::remote::TxnLookupReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void TxnLookup(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::TxnLookupReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void TxnLookup(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::TxnLookupReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
       // NodeInfo collects and returns NodeInfo from all running celery instances.
       virtual void NodeInfo(::grpc::ClientContext* context, const ::remote::NodesInfoRequest* request, ::remote::NodesInfoReply* response, std::function<void(::grpc::Status)>) = 0;
@@ -314,6 +339,8 @@ class ETHBACKEND final {
     virtual ::grpc::ClientAsyncReaderInterface< ::remote::SubscribeReply>* PrepareAsyncSubscribeRaw(::grpc::ClientContext* context, const ::remote::SubscribeRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::remote::BlockReply>* AsyncBlockRaw(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::remote::BlockReply>* PrepareAsyncBlockRaw(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::remote::TxnLookupReply>* AsyncTxnLookupRaw(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::remote::TxnLookupReply>* PrepareAsyncTxnLookupRaw(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::remote::NodesInfoReply>* AsyncNodeInfoRaw(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::remote::NodesInfoReply>* PrepareAsyncNodeInfoRaw(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
@@ -398,6 +425,13 @@ class ETHBACKEND final {
     }
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::remote::BlockReply>> PrepareAsyncBlock(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::remote::BlockReply>>(PrepareAsyncBlockRaw(context, request, cq));
+    }
+    ::grpc::Status TxnLookup(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::remote::TxnLookupReply* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::remote::TxnLookupReply>> AsyncTxnLookup(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::remote::TxnLookupReply>>(AsyncTxnLookupRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::remote::TxnLookupReply>> PrepareAsyncTxnLookup(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::remote::TxnLookupReply>>(PrepareAsyncTxnLookupRaw(context, request, cq));
     }
     ::grpc::Status NodeInfo(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::remote::NodesInfoReply* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::remote::NodesInfoReply>> AsyncNodeInfo(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::grpc::CompletionQueue* cq) {
@@ -534,6 +568,18 @@ class ETHBACKEND final {
       #else
       void Block(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::BlockReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
+      void TxnLookup(::grpc::ClientContext* context, const ::remote::TxnLookupRequest* request, ::remote::TxnLookupReply* response, std::function<void(::grpc::Status)>) override;
+      void TxnLookup(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::TxnLookupReply* response, std::function<void(::grpc::Status)>) override;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void TxnLookup(::grpc::ClientContext* context, const ::remote::TxnLookupRequest* request, ::remote::TxnLookupReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void TxnLookup(::grpc::ClientContext* context, const ::remote::TxnLookupRequest* request, ::remote::TxnLookupReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void TxnLookup(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::TxnLookupReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void TxnLookup(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::TxnLookupReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
       void NodeInfo(::grpc::ClientContext* context, const ::remote::NodesInfoRequest* request, ::remote::NodesInfoReply* response, std::function<void(::grpc::Status)>) override;
       void NodeInfo(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::remote::NodesInfoReply* response, std::function<void(::grpc::Status)>) override;
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
@@ -580,6 +626,8 @@ class ETHBACKEND final {
     ::grpc::ClientAsyncReader< ::remote::SubscribeReply>* PrepareAsyncSubscribeRaw(::grpc::ClientContext* context, const ::remote::SubscribeRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::remote::BlockReply>* AsyncBlockRaw(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::remote::BlockReply>* PrepareAsyncBlockRaw(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::remote::TxnLookupReply>* AsyncTxnLookupRaw(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::remote::TxnLookupReply>* PrepareAsyncTxnLookupRaw(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::remote::NodesInfoReply>* AsyncNodeInfoRaw(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::remote::NodesInfoReply>* PrepareAsyncNodeInfoRaw(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_Etherbase_;
@@ -593,6 +641,7 @@ class ETHBACKEND final {
     const ::grpc::internal::RpcMethod rpcmethod_ClientVersion_;
     const ::grpc::internal::RpcMethod rpcmethod_Subscribe_;
     const ::grpc::internal::RpcMethod rpcmethod_Block_;
+    const ::grpc::internal::RpcMethod rpcmethod_TxnLookup_;
     const ::grpc::internal::RpcMethod rpcmethod_NodeInfo_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
@@ -620,7 +669,11 @@ class ETHBACKEND final {
     virtual ::grpc::Status Subscribe(::grpc::ServerContext* context, const ::remote::SubscribeRequest* request, ::grpc::ServerWriter< ::remote::SubscribeReply>* writer);
     // High-level method - can read block from db, snapshots or apply any other logic
     // it doesn't provide consistency
+    // Request fields are optional - it's ok to request block only by hash or only by number
     virtual ::grpc::Status Block(::grpc::ServerContext* context, const ::remote::BlockRequest* request, ::remote::BlockReply* response);
+    // High-level method - can find block number by txn hash
+    // it doesn't provide consistency
+    virtual ::grpc::Status TxnLookup(::grpc::ServerContext* context, const ::remote::TxnLookupRequest* request, ::remote::TxnLookupReply* response);
     // NodeInfo collects and returns NodeInfo from all running celery instances.
     virtual ::grpc::Status NodeInfo(::grpc::ServerContext* context, const ::remote::NodesInfoRequest* request, ::remote::NodesInfoReply* response);
   };
@@ -845,12 +898,32 @@ class ETHBACKEND final {
     }
   };
   template <class BaseClass>
+  class WithAsyncMethod_TxnLookup : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_TxnLookup() {
+      ::grpc::Service::MarkMethodAsync(11);
+    }
+    ~WithAsyncMethod_TxnLookup() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status TxnLookup(::grpc::ServerContext* /*context*/, const ::remote::TxnLookupRequest* /*request*/, ::remote::TxnLookupReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestTxnLookup(::grpc::ServerContext* context, ::remote::TxnLookupRequest* request, ::grpc::ServerAsyncResponseWriter< ::remote::TxnLookupReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithAsyncMethod_NodeInfo : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_NodeInfo() {
-      ::grpc::Service::MarkMethodAsync(11);
+      ::grpc::Service::MarkMethodAsync(12);
     }
     ~WithAsyncMethod_NodeInfo() override {
       BaseClassMustBeDerivedFromService(this);
@@ -861,10 +934,10 @@ class ETHBACKEND final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestNodeInfo(::grpc::ServerContext* context, ::remote::NodesInfoRequest* request, ::grpc::ServerAsyncResponseWriter< ::remote::NodesInfoReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(12, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_Etherbase<WithAsyncMethod_NetVersion<WithAsyncMethod_NetPeerCount<WithAsyncMethod_EngineGetPayloadV1<WithAsyncMethod_EngineExecutePayloadV1<WithAsyncMethod_EngineForkChoiceUpdatedV1<WithAsyncMethod_Version<WithAsyncMethod_ProtocolVersion<WithAsyncMethod_ClientVersion<WithAsyncMethod_Subscribe<WithAsyncMethod_Block<WithAsyncMethod_NodeInfo<Service > > > > > > > > > > > > AsyncService;
+  typedef WithAsyncMethod_Etherbase<WithAsyncMethod_NetVersion<WithAsyncMethod_NetPeerCount<WithAsyncMethod_EngineGetPayloadV1<WithAsyncMethod_EngineExecutePayloadV1<WithAsyncMethod_EngineForkChoiceUpdatedV1<WithAsyncMethod_Version<WithAsyncMethod_ProtocolVersion<WithAsyncMethod_ClientVersion<WithAsyncMethod_Subscribe<WithAsyncMethod_Block<WithAsyncMethod_TxnLookup<WithAsyncMethod_NodeInfo<Service > > > > > > > > > > > > > AsyncService;
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_Etherbase : public BaseClass {
    private:
@@ -1374,6 +1447,53 @@ class ETHBACKEND final {
       { return nullptr; }
   };
   template <class BaseClass>
+  class ExperimentalWithCallbackMethod_TxnLookup : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithCallbackMethod_TxnLookup() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(11,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::remote::TxnLookupRequest, ::remote::TxnLookupReply>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::remote::TxnLookupRequest* request, ::remote::TxnLookupReply* response) { return this->TxnLookup(context, request, response); }));}
+    void SetMessageAllocatorFor_TxnLookup(
+        ::grpc::experimental::MessageAllocator< ::remote::TxnLookupRequest, ::remote::TxnLookupReply>* allocator) {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(11);
+    #else
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(11);
+    #endif
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::remote::TxnLookupRequest, ::remote::TxnLookupReply>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_TxnLookup() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status TxnLookup(::grpc::ServerContext* /*context*/, const ::remote::TxnLookupRequest* /*request*/, ::remote::TxnLookupReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* TxnLookup(
+      ::grpc::CallbackServerContext* /*context*/, const ::remote::TxnLookupRequest* /*request*/, ::remote::TxnLookupReply* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* TxnLookup(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::remote::TxnLookupRequest* /*request*/, ::remote::TxnLookupReply* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
   class ExperimentalWithCallbackMethod_NodeInfo : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
@@ -1384,7 +1504,7 @@ class ETHBACKEND final {
     #else
       ::grpc::Service::experimental().
     #endif
-        MarkMethodCallback(11,
+        MarkMethodCallback(12,
           new ::grpc_impl::internal::CallbackUnaryHandler< ::remote::NodesInfoRequest, ::remote::NodesInfoReply>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
@@ -1396,9 +1516,9 @@ class ETHBACKEND final {
     void SetMessageAllocatorFor_NodeInfo(
         ::grpc::experimental::MessageAllocator< ::remote::NodesInfoRequest, ::remote::NodesInfoReply>* allocator) {
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(11);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(12);
     #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(11);
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(12);
     #endif
       static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::remote::NodesInfoRequest, ::remote::NodesInfoReply>*>(handler)
               ->SetMessageAllocator(allocator);
@@ -1421,10 +1541,10 @@ class ETHBACKEND final {
       { return nullptr; }
   };
   #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-  typedef ExperimentalWithCallbackMethod_Etherbase<ExperimentalWithCallbackMethod_NetVersion<ExperimentalWithCallbackMethod_NetPeerCount<ExperimentalWithCallbackMethod_EngineGetPayloadV1<ExperimentalWithCallbackMethod_EngineExecutePayloadV1<ExperimentalWithCallbackMethod_EngineForkChoiceUpdatedV1<ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_ProtocolVersion<ExperimentalWithCallbackMethod_ClientVersion<ExperimentalWithCallbackMethod_Subscribe<ExperimentalWithCallbackMethod_Block<ExperimentalWithCallbackMethod_NodeInfo<Service > > > > > > > > > > > > CallbackService;
+  typedef ExperimentalWithCallbackMethod_Etherbase<ExperimentalWithCallbackMethod_NetVersion<ExperimentalWithCallbackMethod_NetPeerCount<ExperimentalWithCallbackMethod_EngineGetPayloadV1<ExperimentalWithCallbackMethod_EngineExecutePayloadV1<ExperimentalWithCallbackMethod_EngineForkChoiceUpdatedV1<ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_ProtocolVersion<ExperimentalWithCallbackMethod_ClientVersion<ExperimentalWithCallbackMethod_Subscribe<ExperimentalWithCallbackMethod_Block<ExperimentalWithCallbackMethod_TxnLookup<ExperimentalWithCallbackMethod_NodeInfo<Service > > > > > > > > > > > > > CallbackService;
   #endif
 
-  typedef ExperimentalWithCallbackMethod_Etherbase<ExperimentalWithCallbackMethod_NetVersion<ExperimentalWithCallbackMethod_NetPeerCount<ExperimentalWithCallbackMethod_EngineGetPayloadV1<ExperimentalWithCallbackMethod_EngineExecutePayloadV1<ExperimentalWithCallbackMethod_EngineForkChoiceUpdatedV1<ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_ProtocolVersion<ExperimentalWithCallbackMethod_ClientVersion<ExperimentalWithCallbackMethod_Subscribe<ExperimentalWithCallbackMethod_Block<ExperimentalWithCallbackMethod_NodeInfo<Service > > > > > > > > > > > > ExperimentalCallbackService;
+  typedef ExperimentalWithCallbackMethod_Etherbase<ExperimentalWithCallbackMethod_NetVersion<ExperimentalWithCallbackMethod_NetPeerCount<ExperimentalWithCallbackMethod_EngineGetPayloadV1<ExperimentalWithCallbackMethod_EngineExecutePayloadV1<ExperimentalWithCallbackMethod_EngineForkChoiceUpdatedV1<ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_ProtocolVersion<ExperimentalWithCallbackMethod_ClientVersion<ExperimentalWithCallbackMethod_Subscribe<ExperimentalWithCallbackMethod_Block<ExperimentalWithCallbackMethod_TxnLookup<ExperimentalWithCallbackMethod_NodeInfo<Service > > > > > > > > > > > > > ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Etherbase : public BaseClass {
    private:
@@ -1613,12 +1733,29 @@ class ETHBACKEND final {
     }
   };
   template <class BaseClass>
+  class WithGenericMethod_TxnLookup : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_TxnLookup() {
+      ::grpc::Service::MarkMethodGeneric(11);
+    }
+    ~WithGenericMethod_TxnLookup() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status TxnLookup(::grpc::ServerContext* /*context*/, const ::remote::TxnLookupRequest* /*request*/, ::remote::TxnLookupReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
   class WithGenericMethod_NodeInfo : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_NodeInfo() {
-      ::grpc::Service::MarkMethodGeneric(11);
+      ::grpc::Service::MarkMethodGeneric(12);
     }
     ~WithGenericMethod_NodeInfo() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1850,12 +1987,32 @@ class ETHBACKEND final {
     }
   };
   template <class BaseClass>
+  class WithRawMethod_TxnLookup : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_TxnLookup() {
+      ::grpc::Service::MarkMethodRaw(11);
+    }
+    ~WithRawMethod_TxnLookup() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status TxnLookup(::grpc::ServerContext* /*context*/, const ::remote::TxnLookupRequest* /*request*/, ::remote::TxnLookupReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestTxnLookup(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithRawMethod_NodeInfo : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_NodeInfo() {
-      ::grpc::Service::MarkMethodRaw(11);
+      ::grpc::Service::MarkMethodRaw(12);
     }
     ~WithRawMethod_NodeInfo() override {
       BaseClassMustBeDerivedFromService(this);
@@ -1866,7 +2023,7 @@ class ETHBACKEND final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestNodeInfo(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncUnary(11, context, request, response, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncUnary(12, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -2288,6 +2445,44 @@ class ETHBACKEND final {
       { return nullptr; }
   };
   template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_TxnLookup : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithRawCallbackMethod_TxnLookup() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(11,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->TxnLookup(context, request, response); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_TxnLookup() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status TxnLookup(::grpc::ServerContext* /*context*/, const ::remote::TxnLookupRequest* /*request*/, ::remote::TxnLookupReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* TxnLookup(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* TxnLookup(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_NodeInfo : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
@@ -2298,7 +2493,7 @@ class ETHBACKEND final {
     #else
       ::grpc::Service::experimental().
     #endif
-        MarkMethodRawCallback(11,
+        MarkMethodRawCallback(12,
           new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
@@ -2596,12 +2791,39 @@ class ETHBACKEND final {
     virtual ::grpc::Status StreamedBlock(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::remote::BlockRequest,::remote::BlockReply>* server_unary_streamer) = 0;
   };
   template <class BaseClass>
+  class WithStreamedUnaryMethod_TxnLookup : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_TxnLookup() {
+      ::grpc::Service::MarkMethodStreamed(11,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::remote::TxnLookupRequest, ::remote::TxnLookupReply>(
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerUnaryStreamer<
+                     ::remote::TxnLookupRequest, ::remote::TxnLookupReply>* streamer) {
+                       return this->StreamedTxnLookup(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_TxnLookup() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status TxnLookup(::grpc::ServerContext* /*context*/, const ::remote::TxnLookupRequest* /*request*/, ::remote::TxnLookupReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedTxnLookup(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::remote::TxnLookupRequest,::remote::TxnLookupReply>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_NodeInfo : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithStreamedUnaryMethod_NodeInfo() {
-      ::grpc::Service::MarkMethodStreamed(11,
+      ::grpc::Service::MarkMethodStreamed(12,
         new ::grpc::internal::StreamedUnaryHandler<
           ::remote::NodesInfoRequest, ::remote::NodesInfoReply>(
             [this](::grpc_impl::ServerContext* context,
@@ -2622,7 +2844,7 @@ class ETHBACKEND final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedNodeInfo(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::remote::NodesInfoRequest,::remote::NodesInfoReply>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_Etherbase<WithStreamedUnaryMethod_NetVersion<WithStreamedUnaryMethod_NetPeerCount<WithStreamedUnaryMethod_EngineGetPayloadV1<WithStreamedUnaryMethod_EngineExecutePayloadV1<WithStreamedUnaryMethod_EngineForkChoiceUpdatedV1<WithStreamedUnaryMethod_Version<WithStreamedUnaryMethod_ProtocolVersion<WithStreamedUnaryMethod_ClientVersion<WithStreamedUnaryMethod_Block<WithStreamedUnaryMethod_NodeInfo<Service > > > > > > > > > > > StreamedUnaryService;
+  typedef WithStreamedUnaryMethod_Etherbase<WithStreamedUnaryMethod_NetVersion<WithStreamedUnaryMethod_NetPeerCount<WithStreamedUnaryMethod_EngineGetPayloadV1<WithStreamedUnaryMethod_EngineExecutePayloadV1<WithStreamedUnaryMethod_EngineForkChoiceUpdatedV1<WithStreamedUnaryMethod_Version<WithStreamedUnaryMethod_ProtocolVersion<WithStreamedUnaryMethod_ClientVersion<WithStreamedUnaryMethod_Block<WithStreamedUnaryMethod_TxnLookup<WithStreamedUnaryMethod_NodeInfo<Service > > > > > > > > > > > > StreamedUnaryService;
   template <class BaseClass>
   class WithSplitStreamingMethod_Subscribe : public BaseClass {
    private:
@@ -2651,7 +2873,7 @@ class ETHBACKEND final {
     virtual ::grpc::Status StreamedSubscribe(::grpc::ServerContext* context, ::grpc::ServerSplitStreamer< ::remote::SubscribeRequest,::remote::SubscribeReply>* server_split_streamer) = 0;
   };
   typedef WithSplitStreamingMethod_Subscribe<Service > SplitStreamedService;
-  typedef WithStreamedUnaryMethod_Etherbase<WithStreamedUnaryMethod_NetVersion<WithStreamedUnaryMethod_NetPeerCount<WithStreamedUnaryMethod_EngineGetPayloadV1<WithStreamedUnaryMethod_EngineExecutePayloadV1<WithStreamedUnaryMethod_EngineForkChoiceUpdatedV1<WithStreamedUnaryMethod_Version<WithStreamedUnaryMethod_ProtocolVersion<WithStreamedUnaryMethod_ClientVersion<WithSplitStreamingMethod_Subscribe<WithStreamedUnaryMethod_Block<WithStreamedUnaryMethod_NodeInfo<Service > > > > > > > > > > > > StreamedService;
+  typedef WithStreamedUnaryMethod_Etherbase<WithStreamedUnaryMethod_NetVersion<WithStreamedUnaryMethod_NetPeerCount<WithStreamedUnaryMethod_EngineGetPayloadV1<WithStreamedUnaryMethod_EngineExecutePayloadV1<WithStreamedUnaryMethod_EngineForkChoiceUpdatedV1<WithStreamedUnaryMethod_Version<WithStreamedUnaryMethod_ProtocolVersion<WithStreamedUnaryMethod_ClientVersion<WithSplitStreamingMethod_Subscribe<WithStreamedUnaryMethod_Block<WithStreamedUnaryMethod_TxnLookup<WithStreamedUnaryMethod_NodeInfo<Service > > > > > > > > > > > > > StreamedService;
 };
 
 }  // namespace remote

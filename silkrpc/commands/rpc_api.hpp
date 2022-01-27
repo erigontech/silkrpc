@@ -21,9 +21,8 @@
 
 #include <asio/thread_pool.hpp>
 
-#include <silkrpc/context_pool.hpp>
-#include <silkrpc/commands/debug_api.hpp>
 #include <silkrpc/commands/eth_api.hpp>
+#include <silkrpc/commands/debug_api.hpp>
 #include <silkrpc/commands/net_api.hpp>
 #include <silkrpc/commands/parity_api.hpp>
 #include <silkrpc/commands/tg_api.hpp>

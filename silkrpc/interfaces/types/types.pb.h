@@ -1336,13 +1336,13 @@ class ExecutionPayload PROTOBUF_FINAL :
 
   enum : int {
     kTransactionsFieldNumber = 14,
+    kExtraDataFieldNumber = 11,
     kParentHashFieldNumber = 1,
     kCoinbaseFieldNumber = 2,
     kStateRootFieldNumber = 3,
     kReceiptRootFieldNumber = 4,
     kLogsBloomFieldNumber = 5,
     kRandomFieldNumber = 6,
-    kExtraDataFieldNumber = 11,
     kBaseFeePerGasFieldNumber = 12,
     kBlockHashFieldNumber = 13,
     kBlockNumberFieldNumber = 7,
@@ -1372,6 +1372,22 @@ class ExecutionPayload PROTOBUF_FINAL :
   private:
   const std::string& _internal_transactions(int index) const;
   std::string* _internal_add_transactions();
+  public:
+
+  // bytes extraData = 11;
+  void clear_extradata();
+  const std::string& extradata() const;
+  void set_extradata(const std::string& value);
+  void set_extradata(std::string&& value);
+  void set_extradata(const char* value);
+  void set_extradata(const void* value, size_t size);
+  std::string* mutable_extradata();
+  std::string* release_extradata();
+  void set_allocated_extradata(std::string* extradata);
+  private:
+  const std::string& _internal_extradata() const;
+  void _internal_set_extradata(const std::string& value);
+  std::string* _internal_mutable_extradata();
   public:
 
   // .types.H256 parentHash = 1;
@@ -1482,24 +1498,6 @@ class ExecutionPayload PROTOBUF_FINAL :
       ::types::H256* random);
   ::types::H256* unsafe_arena_release_random();
 
-  // .types.H256 extraData = 11;
-  bool has_extradata() const;
-  private:
-  bool _internal_has_extradata() const;
-  public:
-  void clear_extradata();
-  const ::types::H256& extradata() const;
-  ::types::H256* release_extradata();
-  ::types::H256* mutable_extradata();
-  void set_allocated_extradata(::types::H256* extradata);
-  private:
-  const ::types::H256& _internal_extradata() const;
-  ::types::H256* _internal_mutable_extradata();
-  public:
-  void unsafe_arena_set_allocated_extradata(
-      ::types::H256* extradata);
-  ::types::H256* unsafe_arena_release_extradata();
-
   // .types.H256 baseFeePerGas = 12;
   bool has_basefeepergas() const;
   private:
@@ -1580,13 +1578,13 @@ class ExecutionPayload PROTOBUF_FINAL :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> transactions_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr extradata_;
   ::types::H256* parenthash_;
   ::types::H160* coinbase_;
   ::types::H256* stateroot_;
   ::types::H256* receiptroot_;
   ::types::H2048* logsbloom_;
   ::types::H256* random_;
-  ::types::H256* extradata_;
   ::types::H256* basefeepergas_;
   ::types::H256* blockhash_;
   ::PROTOBUF_NAMESPACE_ID::uint64 blocknumber_;
@@ -3492,86 +3490,64 @@ inline void ExecutionPayload::set_timestamp(::PROTOBUF_NAMESPACE_ID::uint64 valu
   // @@protoc_insertion_point(field_set:types.ExecutionPayload.timestamp)
 }
 
-// .types.H256 extraData = 11;
-inline bool ExecutionPayload::_internal_has_extradata() const {
-  return this != internal_default_instance() && extradata_ != nullptr;
-}
-inline bool ExecutionPayload::has_extradata() const {
-  return _internal_has_extradata();
-}
+// bytes extraData = 11;
 inline void ExecutionPayload::clear_extradata() {
-  if (GetArena() == nullptr && extradata_ != nullptr) {
-    delete extradata_;
-  }
-  extradata_ = nullptr;
+  extradata_.ClearToEmpty();
 }
-inline const ::types::H256& ExecutionPayload::_internal_extradata() const {
-  const ::types::H256* p = extradata_;
-  return p != nullptr ? *p : reinterpret_cast<const ::types::H256&>(
-      ::types::_H256_default_instance_);
-}
-inline const ::types::H256& ExecutionPayload::extradata() const {
+inline const std::string& ExecutionPayload::extradata() const {
   // @@protoc_insertion_point(field_get:types.ExecutionPayload.extraData)
   return _internal_extradata();
 }
-inline void ExecutionPayload::unsafe_arena_set_allocated_extradata(
-    ::types::H256* extradata) {
-  if (GetArena() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(extradata_);
-  }
-  extradata_ = extradata;
-  if (extradata) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:types.ExecutionPayload.extraData)
+inline void ExecutionPayload::set_extradata(const std::string& value) {
+  _internal_set_extradata(value);
+  // @@protoc_insertion_point(field_set:types.ExecutionPayload.extraData)
 }
-inline ::types::H256* ExecutionPayload::release_extradata() {
-  
-  ::types::H256* temp = extradata_;
-  extradata_ = nullptr;
-  if (GetArena() != nullptr) {
-    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
-  }
-  return temp;
-}
-inline ::types::H256* ExecutionPayload::unsafe_arena_release_extradata() {
-  // @@protoc_insertion_point(field_release:types.ExecutionPayload.extraData)
-  
-  ::types::H256* temp = extradata_;
-  extradata_ = nullptr;
-  return temp;
-}
-inline ::types::H256* ExecutionPayload::_internal_mutable_extradata() {
-  
-  if (extradata_ == nullptr) {
-    auto* p = CreateMaybeMessage<::types::H256>(GetArena());
-    extradata_ = p;
-  }
-  return extradata_;
-}
-inline ::types::H256* ExecutionPayload::mutable_extradata() {
+inline std::string* ExecutionPayload::mutable_extradata() {
   // @@protoc_insertion_point(field_mutable:types.ExecutionPayload.extraData)
   return _internal_mutable_extradata();
 }
-inline void ExecutionPayload::set_allocated_extradata(::types::H256* extradata) {
-  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
-  if (message_arena == nullptr) {
-    delete extradata_;
-  }
-  if (extradata) {
-    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-      ::PROTOBUF_NAMESPACE_ID::Arena::GetArena(extradata);
-    if (message_arena != submessage_arena) {
-      extradata = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, extradata, submessage_arena);
-    }
+inline const std::string& ExecutionPayload::_internal_extradata() const {
+  return extradata_.Get();
+}
+inline void ExecutionPayload::_internal_set_extradata(const std::string& value) {
+  
+  extradata_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
+}
+inline void ExecutionPayload::set_extradata(std::string&& value) {
+  
+  extradata_.Set(
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:types.ExecutionPayload.extraData)
+}
+inline void ExecutionPayload::set_extradata(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  extradata_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
+  // @@protoc_insertion_point(field_set_char:types.ExecutionPayload.extraData)
+}
+inline void ExecutionPayload::set_extradata(const void* value,
+    size_t size) {
+  
+  extradata_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:types.ExecutionPayload.extraData)
+}
+inline std::string* ExecutionPayload::_internal_mutable_extradata() {
+  
+  return extradata_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
+}
+inline std::string* ExecutionPayload::release_extradata() {
+  // @@protoc_insertion_point(field_release:types.ExecutionPayload.extraData)
+  return extradata_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void ExecutionPayload::set_allocated_extradata(std::string* extradata) {
+  if (extradata != nullptr) {
     
   } else {
     
   }
-  extradata_ = extradata;
+  extradata_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), extradata,
+      GetArena());
   // @@protoc_insertion_point(field_set_allocated:types.ExecutionPayload.extraData)
 }
 

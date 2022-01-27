@@ -45,6 +45,9 @@ class MockETHBACKENDStub : public ETHBACKEND::StubInterface {
   MOCK_METHOD3(Block, ::grpc::Status(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::remote::BlockReply* response));
   MOCK_METHOD3(AsyncBlockRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::BlockReply>*(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(PrepareAsyncBlockRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::BlockReply>*(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(TxnLookup, ::grpc::Status(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::remote::TxnLookupReply* response));
+  MOCK_METHOD3(AsyncTxnLookupRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::TxnLookupReply>*(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PrepareAsyncTxnLookupRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::TxnLookupReply>*(::grpc::ClientContext* context, const ::remote::TxnLookupRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(NodeInfo, ::grpc::Status(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::remote::NodesInfoReply* response));
   MOCK_METHOD3(AsyncNodeInfoRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::NodesInfoReply>*(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(PrepareAsyncNodeInfoRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::NodesInfoReply>*(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::grpc::CompletionQueue* cq));
