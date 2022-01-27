@@ -433,6 +433,61 @@ void from_json(const nlohmann::json& json, Filter& filter) {
     }
 }
 
+void to_json(nlohmann::json& json, const ExecutionPayload& execution_payload) {
+    nlohmann::json transaction_list;
+    for (const auto& transaction : execution_payload.transactions) {
+        transaction_list.push_back("0x" + silkworm::to_hex(transaction));
+    }
+    json["parentHash"] = execution_payload.parent_hash;
+    json["suggestedFeeRecipient"] = execution_payload.suggested_fee_recipient;
+    json["stateRoot"] = execution_payload.state_root;
+    json["receiptsRoot"] = execution_payload.receipts_root;
+    json["logsBloom"] = "0x" + silkworm::to_hex(execution_payload.logs_bloom);
+    json["random"] = execution_payload.random;
+    json["blockNumber"] = silkrpc::to_quantity(execution_payload.number);
+    json["gasLimit"] = silkrpc::to_quantity(execution_payload.gas_limit);
+    json["gasUsed"] = silkrpc::to_quantity(execution_payload.gas_used);
+    json["timestamp"] = silkrpc::to_quantity(execution_payload.timestamp);
+    json["extraData"] = "0x" + silkworm::to_hex(execution_payload.extra_data);
+    json["baseFeePerGas"] = silkrpc::to_quantity(execution_payload.base_fee);
+    json["blockHash"] = execution_payload.block_hash;
+    json["transactions"] = transaction_list;
+}
+
+void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload) {
+    // Parse logs bloom
+    silkworm::Bloom logs_bloom;
+    std::memcpy(&logs_bloom[0],
+                silkworm::from_hex(json.at("logsBloom").get<std::string>())->data(),
+                silkworm::kBloomByteLength
+    );
+    // Parse transactions
+    std::vector<silkworm::Bytes> transactions;
+    for (const auto& hex_transaction : json.at("transactions")) {
+        transactions.push_back(
+            *silkworm::from_hex(hex_transaction.get<std::string>())
+        );
+    }
+
+    execution_payload = ExecutionPayload{
+        .number = static_cast<uint64_t>(std::stol(json.at("blockNumber").get<std::string>(), 0, 16)),
+        .timestamp = static_cast<uint64_t>(std::stol(json.at("timestamp").get<std::string>(), 0, 16)),
+        .gas_limit = static_cast<uint64_t>(std::stol(json.at("gasLimit").get<std::string>(), 0, 16)),
+        .gas_used = static_cast<uint64_t>(std::stol(json.at("gasUsed").get<std::string>(), 0, 16)),
+        .suggested_fee_recipient = json.at("suggestedFeeRecipient").get<evmc::address>(),
+        .state_root = json.at("stateRoot").get<evmc::bytes32>(),
+        .receipts_root = json.at("receiptsRoot").get<evmc::bytes32>(),
+        .parent_hash = json.at("parentHash").get<evmc::bytes32>(),
+        .block_hash = json.at("blockHash").get<evmc::bytes32>(),
+        .random = json.at("random").get<evmc::bytes32>(),
+        .base_fee = json.at("baseFeePerGas").get<intx::uint256>(),
+        .logs_bloom = logs_bloom,
+        .extra_data = *silkworm::from_hex(json.at("extraData").get<std::string>()),
+        .transactions = transactions
+    };
+}
+
+
 void to_json(nlohmann::json& json, const Forks& forks) {
     json["genesis"] = forks.genesis_hash;
     json["forks"] = forks.block_numbers;

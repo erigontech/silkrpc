@@ -17,25 +17,19 @@
 #ifndef SILKRPC_ETHBACKEND_BACKEND_HPP_
 #define SILKRPC_ETHBACKEND_BACKEND_HPP_
 
-#include <memory>
-#include <optional>
-#include <string>
 #include <utility>
-
-#include <silkrpc/config.hpp>
+#include <string>
+#include <memory>
 
 #include <asio/io_context.hpp>
 #include <asio/use_awaitable.hpp>
-#include <boost/endian/conversion.hpp>
 #include <evmc/evmc.hpp>
-#include <grpcpp/grpcpp.h>
 
-#include <silkrpc/common/clock_time.hpp>
-#include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/awaitables.hpp>
 #include <silkrpc/grpc/async_unary_client.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
+#include <silkrpc/types/execution_payload.hpp>
 
 namespace silkrpc::ethbackend {
 
@@ -72,6 +66,13 @@ using NetPeerCountClient = AsyncUnaryClient<
     ::remote::NetPeerCountRequest,
     ::remote::NetPeerCountReply,
     &::remote::ETHBACKEND::StubInterface::PrepareAsyncNetPeerCount
+>;
+
+using EngineGetPayloadV1Client = AsyncUnaryClient<
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::EngineGetPayloadRequest,
+    ::types::ExecutionPayload,
+    &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineGetPayloadV1
 >;
 
 using EtherbaseAwaitable = unary_awaitable<
@@ -114,6 +115,14 @@ using NetPeerCountAwaitable = unary_awaitable<
     ::remote::NetPeerCountReply
 >;
 
+using EngineGetPayloadV1Awaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    EngineGetPayloadV1Client,
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::EngineGetPayloadRequest,
+    ::types::ExecutionPayload
+>;
+
 class BackEnd final {
 public:
     explicit BackEnd(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
@@ -128,66 +137,35 @@ public:
         SILKRPC_TRACE << "BackEnd::dtor " << this << "\n";
     }
 
-    asio::awaitable<evmc::address> etherbase() {
-        const auto start_time = clock_time::now();
-        EtherbaseAwaitable eb_awaitable{executor_, stub_, queue_};
-        const auto reply = co_await eb_awaitable.async_call(::remote::EtherbaseRequest{}, asio::use_awaitable);
-        evmc::address evmc_address;
-        if (reply.has_address()) {
-            const auto h160_address = reply.address();
-            evmc_address = address_from_H160(h160_address);
-        }
-        SILKRPC_DEBUG << "BackEnd::etherbase address=" << evmc_address << " t=" << clock_time::since(start_time) << "\n";
-        co_return evmc_address;
-    }
+    asio::awaitable<evmc::address> etherbase();
+    asio::awaitable<uint64_t> protocol_version();
+    asio::awaitable<uint64_t> net_version();
+    asio::awaitable<std::string> client_version();
+    asio::awaitable<uint64_t> net_peer_count();
+    asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id);
 
-    asio::awaitable<uint64_t> protocol_version() {
-        const auto start_time = clock_time::now();
-        ProtocolVersionAwaitable pv_awaitable{executor_, stub_, queue_};
-        const auto reply = co_await pv_awaitable.async_call(::remote::ProtocolVersionRequest{}, asio::use_awaitable);
-        const auto pv = reply.id();
-        SILKRPC_DEBUG << "BackEnd::protocol_version version=" << pv << " t=" << clock_time::since(start_time) << "\n";
-        co_return pv;
-    }
-
-    asio::awaitable<uint64_t> net_version() {
-        const auto start_time = clock_time::now();
-        NetVersionAwaitable nv_awaitable{executor_, stub_, queue_};
-        const auto reply = co_await nv_awaitable.async_call(::remote::NetVersionRequest{}, asio::use_awaitable);
-        const auto nv = reply.id();
-        SILKRPC_DEBUG << "BackEnd::net_version version=" << nv << " t=" << clock_time::since(start_time) << "\n";
-        co_return nv;
-    }
-
-    asio::awaitable<std::string> client_version() {
-        const auto start_time = clock_time::now();
-        ClientVersionAwaitable cv_awaitable{executor_, stub_, queue_};
-        const auto reply = co_await cv_awaitable.async_call(::remote::ClientVersionRequest{}, asio::use_awaitable);
-        const auto cv = reply.nodename();
-        SILKRPC_DEBUG << "BackEnd::client_version version=" << cv << " t=" << clock_time::since(start_time) << "\n";
-        co_return cv;
-    }
-
-    asio::awaitable<uint64_t> net_peer_count() {
-        const auto start_time = clock_time::now();
-        NetPeerCountAwaitable npc_awaitable{executor_, stub_, queue_};
-        const auto reply = co_await npc_awaitable.async_call(::remote::NetPeerCountRequest{}, asio::use_awaitable);
-        const auto count = reply.count();
-        SILKRPC_DEBUG << "BackEnd::net_peer_count count=" << count << " t=" << clock_time::since(start_time) << "\n";
-        co_return count;
-    }
+    // just for testing
+    asio::awaitable<::types::ExecutionPayload> execution_payload_to_proto(ExecutionPayload payload);
 
 private:
-    evmc::address address_from_H160(const types::H160& h160) {
-        uint64_t hi_hi = h160.hi().hi();
-        uint64_t hi_lo = h160.hi().lo();
-        uint32_t lo = h160.lo();
-        evmc::address address{};
-        boost::endian::store_big_u64(address.bytes +  0, hi_hi);
-        boost::endian::store_big_u64(address.bytes +  8, hi_lo);
-        boost::endian::store_big_u32(address.bytes + 16, lo);
-        return address;
-    }
+    evmc::address address_from_H160(const types::H160& h160);
+    silkworm::Bytes bytes_from_H128(const types::H128& h128);
+    types::H128* H128_from_bytes(const uint8_t* bytes);
+    types::H160* H160_from_address(const evmc::address& address);
+    types::H256* H256_from_bytes(const uint8_t* bytes);
+    silkworm::Bytes bytes_from_H256(const types::H256& h256);
+    intx::uint256 uint256_from_H256(const types::H256& h256);
+    types::H256* H256_from_uint256(const intx::uint256& n);
+    evmc::bytes32 bytes32_from_H256(const types::H256& h256);
+    types::H512* H512_from_bytes(const uint8_t* bytes);
+    silkworm::Bytes bytes_from_H512(types::H512& h512);
+    types::H1024* H1024_from_bytes(const uint8_t* bytes);
+    silkworm::Bytes bytes_from_H1024(types::H1024& h1024);
+    types::H2048* H2048_from_bytes(const uint8_t* bytes);
+    silkworm::Bytes bytes_from_H2048(types::H2048& h2048);
+
+    ExecutionPayload decode_execution_payload(const types::ExecutionPayload& execution_payload_grpc);
+    types::ExecutionPayload encode_execution_payload(const ExecutionPayload& execution_payload);
 
     asio::io_context::executor_type executor_;
     std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub_;
