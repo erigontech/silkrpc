@@ -89,9 +89,6 @@ std::optional<silkworm::Account> RemoteBuffer::read_account(const evmc::address&
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "RemoteBuffer::read_account exception: " << e.what() << "\n";
         return std::nullopt;
-    } catch (...) {
-        SILKRPC_ERROR << "RemoteBuffer::read_account unknown exception\n";
-        return std::nullopt;
     }
 }
 
@@ -103,9 +100,6 @@ silkworm::ByteView RemoteBuffer::read_code(const evmc::bytes32& code_hash) const
         return code;
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "RemoteBuffer::read_code exception: " << e.what() << "\n";
-        return silkworm::ByteView{};
-    } catch (...) {
-        SILKRPC_ERROR << "RemoteBuffer::read_code unknown exception\n";
         return silkworm::ByteView{};
     }
 }
@@ -119,9 +113,6 @@ evmc::bytes32 RemoteBuffer::read_storage(const evmc::address& address, uint64_t 
         return storage_value;
     } catch (const std::exception& e) {
        SILKRPC_ERROR << "RemoteBuffer::read_storage exception: " << e.what() << "\n";
-       return evmc::bytes32{};
-    } catch (...) {
-       SILKRPC_ERROR << "RemoteBuffer::read_storage unknown exception\n";
        return evmc::bytes32{};
     }
 }
@@ -141,9 +132,6 @@ std::optional<silkworm::BlockHeader> RemoteBuffer::read_header(uint64_t block_nu
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "RemoteBuffer::read_header exception: " << e.what() << "\n";
         return std::nullopt;
-    } catch (...) {
-        SILKRPC_ERROR << "RemoteBuffer::read_header unknown exception\n";
-        return std::nullopt;
     }
 }
 
@@ -157,9 +145,6 @@ std::optional<silkworm::BlockBody> RemoteBuffer::read_body(uint64_t block_number
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "RemoteBuffer::read_body exception: " << e.what() << "\n";
         return std::nullopt;
-    } catch (...) {
-        SILKRPC_ERROR << "RemoteBuffer::read_body unknown exception\n";
-        return std::nullopt;
     }
 }
 
@@ -172,9 +157,6 @@ std::optional<intx::uint256> RemoteBuffer::total_difficulty(uint64_t block_numbe
         return optional_total_difficulty;
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "RemoteBuffer::total_difficulty exception: " << e.what() << "\n";
-        return std::nullopt;
-    } catch (...) {
-        SILKRPC_ERROR << "RemoteBuffer::total_difficulty unknown exception\n";
         return std::nullopt;
     }
 }

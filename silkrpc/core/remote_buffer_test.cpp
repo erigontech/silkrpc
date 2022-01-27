@@ -60,17 +60,16 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         silkworm::Bytes value_;
     };
 
-    class MockDatabaseReaderExp : public core::rawdb::DatabaseReader {
+    class MockDatabaseFailingReader : public core::rawdb::DatabaseReader {
     public:
-        MockDatabaseReaderExp() = default;
-        explicit MockDatabaseReaderExp(const silkworm::Bytes& value) : value_(value) {}
+        MockDatabaseFailingReader() = default;
+        explicit MockDatabaseFailingReader(const silkworm::Bytes& value) : value_(value) {}
 
         asio::awaitable<KeyValue> get(const std::string& table, const silkworm::ByteView& key) const override {
             co_return KeyValue{};
         }
         asio::awaitable<silkworm::Bytes> get_one(const std::string& table, const silkworm::ByteView& key) const override {
             throw new std::exception;
-            co_return value_;
         }
         asio::awaitable<std::optional<silkworm::Bytes>> get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const override {
             co_return silkworm::Bytes{};
@@ -117,8 +116,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         MockDatabaseReader db_reader{code};
         const uint64_t block_number = 1'000'000;
         const auto code_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto ret_code = remoteBufferTest.read_code(code_hash);
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto ret_code = remoteBuffer.read_code(code_hash);
         CHECK(ret_code == code);
         io_context.stop();
         io_context_thread.join();
@@ -134,8 +133,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         const uint64_t block_number = 1'000'000;
         evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
         const auto location{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto ret_storage = remoteBufferTest.read_storage(address, 0, location);
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto ret_storage = remoteBuffer.read_storage(address, 0, location);
         CHECK(ret_storage == 0x0000000000000000000000000000000000000000000000000000000000000608_bytes32);
         io_context.stop();
         io_context_thread.join();
@@ -149,8 +148,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         MockDatabaseReader db_reader;
         const uint64_t block_number = 1'000'000;
         evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto account = remoteBufferTest.read_account(address);
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto account = remoteBuffer.read_account(address);
         CHECK(account == std::nullopt);
         io_context.stop();
         io_context_thread.join();
@@ -165,8 +164,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         const uint64_t block_number = 1'000'000;
         const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
         evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto header = remoteBufferTest.read_header(block_number, block_hash);
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto header = remoteBuffer.read_header(block_number, block_hash);
         CHECK(header == std::nullopt);
         io_context.stop();
         io_context_thread.join();
@@ -181,8 +180,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         const uint64_t block_number = 1'000'000;
         const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
         evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto header = remoteBufferTest.read_body(block_number, block_hash);
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto header = remoteBuffer.read_body(block_number, block_hash);
         CHECK(header == std::nullopt);
         io_context.stop();
         io_context_thread.join();
@@ -197,8 +196,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         const uint64_t block_number = 1'000'000;
         const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
         evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto header = remoteBufferTest.total_difficulty(block_number, block_hash);
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto header = remoteBuffer.total_difficulty(block_number, block_hash);
         CHECK(header == std::nullopt);
         io_context.stop();
         io_context_thread.join();
@@ -212,8 +211,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         MockDatabaseReader db_reader;
         const uint64_t block_number = 1'000'000;
         evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto prev_incarnation = remoteBufferTest.previous_incarnation(address);
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto prev_incarnation = remoteBuffer.previous_incarnation(address);
         CHECK(prev_incarnation == 0);
         io_context.stop();
         io_context_thread.join();
@@ -226,8 +225,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
         MockDatabaseReader db_reader;
         const uint64_t block_number = 1'000'000;
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto canonical_block = remoteBufferTest.current_canonical_block();
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto canonical_block = remoteBuffer.current_canonical_block();
         CHECK(canonical_block == 0);
         io_context.stop();
         io_context_thread.join();
@@ -240,8 +239,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
         MockDatabaseReader db_reader;
         const uint64_t block_number = 1'000'000;
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto canonical_block = remoteBufferTest.canonical_hash(block_number);
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto canonical_block = remoteBuffer.canonical_hash(block_number);
         CHECK(canonical_block == std::nullopt);
         io_context.stop();
         io_context_thread.join();
@@ -254,8 +253,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
         MockDatabaseReader db_reader;
         const uint64_t block_number = 1'000'000;
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto root_hash = remoteBufferTest.state_root_hash();
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto root_hash = remoteBuffer.state_root_hash();
         CHECK(root_hash == evmc::bytes32{});
         io_context.stop();
         io_context_thread.join();
@@ -268,11 +267,11 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         silkworm::Bytes code{*silkworm::from_hex("0x0608")};
-        MockDatabaseReaderExp db_reader{code};
+        MockDatabaseFailingReader db_reader{code};
         const uint64_t block_number = 1'000'000;
         const auto code_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto ret_code = remoteBufferTest.read_code(code_hash);
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto ret_code = remoteBuffer.read_code(code_hash);
         CHECK(ret_code == silkworm::ByteView{});
         io_context.stop();
         io_context_thread.join();
@@ -284,12 +283,12 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         silkworm::Bytes storage{*silkworm::from_hex("0x0608")};
-        MockDatabaseReaderExp db_reader{storage};
+        MockDatabaseFailingReader db_reader{storage};
         const uint64_t block_number = 1'000'000;
         evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
         const auto location{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto ret_storage = remoteBufferTest.read_storage(address, 0, location);
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto ret_storage = remoteBuffer.read_storage(address, 0, location);
         CHECK(ret_storage == evmc::bytes32{});
         io_context.stop();
         io_context_thread.join();
@@ -300,11 +299,11 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         asio::io_context::work work{io_context};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
-        MockDatabaseReaderExp db_reader;
+        MockDatabaseFailingReader db_reader;
         const uint64_t block_number = 1'000'000;
         evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
-        RemoteBuffer remoteBufferTest(io_context, db_reader, block_number);
-        auto account = remoteBufferTest.read_account(address);
+        RemoteBuffer remoteBuffer(io_context, db_reader, block_number);
+        auto account = remoteBuffer.read_account(address);
         CHECK(account == std::nullopt);
         io_context.stop();
         io_context_thread.join();
@@ -374,6 +373,50 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         auto future_code{asio::co_spawn(io_context, arb.current_canonical_block(), asio::use_future)};
         io_context.run();
         CHECK(future_code.get() == 0);
+    }
+
+    SECTION("AsyncRemoteBuffer::total_difficulty returns exceptions") {
+        asio::io_context io_context;
+        MockDatabaseReader db_reader;
+        const uint64_t block_number = 1'000'000;
+        const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+        AsyncRemoteBuffer arb{io_context, db_reader, block_number};
+        auto future_code{asio::co_spawn(io_context, arb.total_difficulty(block_number, block_hash), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(future_code.get(), std::exception);
+    }
+
+    SECTION("AsyncRemoteBuffer::read_header returns exceptions") {
+        asio::io_context io_context;
+        MockDatabaseReader db_reader;
+        const uint64_t block_number = 1'000'000;
+        const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+        AsyncRemoteBuffer arb{io_context, db_reader, block_number};
+        auto future_code{asio::co_spawn(io_context, arb.read_header(block_number, block_hash), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(future_code.get(), std::exception);
+    }
+
+    SECTION("AsyncRemoteBuffer::read_body returns exceptions") {
+        asio::io_context io_context;
+        MockDatabaseReader db_reader;
+        const uint64_t block_number = 1'000'000;
+        const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+        AsyncRemoteBuffer arb{io_context, db_reader, block_number};
+        auto future_code{asio::co_spawn(io_context, arb.read_body(block_number, block_hash), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(future_code.get(), std::exception);
+    }
+
+    SECTION("AsyncRemoteBuffer::canonical_hash returns exceptions") {
+        asio::io_context io_context;
+        MockDatabaseReader db_reader;
+        const uint64_t block_number = 1'000'000;
+        const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
+        AsyncRemoteBuffer arb{io_context, db_reader, block_number};
+        auto future_code{asio::co_spawn(io_context, arb.canonical_hash(block_number), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(future_code.get(), std::exception);
     }
 }
 
