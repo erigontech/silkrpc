@@ -12,10 +12,10 @@ def get_silkrpc_target(silk: bool, method: str):
     "Determine where silkrpc is supposed to be serving at."
     if "engine_" in method:
         return "localhost:8550"
-    elif silk:
+    if silk:
         return "localhost:51515"
-    else:
-        return "localhost:8545"
+
+    return "localhost:8545"
 
 def run_shell_command(command: str, expected_response: str, exit_on_fail):
     """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
