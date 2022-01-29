@@ -51,6 +51,7 @@ private:
     void add_tg_handlers();
     void add_trace_handlers();
     void add_web3_handlers();
+    void add_engine_handlers();
 
     std::map<std::string, HandleMethod> handlers_;
 };
