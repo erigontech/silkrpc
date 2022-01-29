@@ -8,6 +8,14 @@ import sys
 import getopt
 import jsondiff
 
+def get_silkrpc_target(silk: bool, method: str):
+    "Determine where silkrpc is supposed to be serving at."
+    if "engine_" in method:
+        return "localhost:8550"
+    elif silk:
+        return "localhost:51515"
+    else:
+        return "localhost:8545"
 
 def run_shell_command(command: str, expected_response: str, exit_on_fail):
     """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
@@ -36,20 +44,16 @@ def run_tests(json_filename, verbose, silk, exit_on_fail, req_test):
         test_number = 0
         for json_rpc in jsonrpc_commands:
             if req_test in (-1, test_number):
-                request = json.dumps(json_rpc["request"])
+                request = json_rpc["request"]
+                request_dumps = json.dumps(request)
+                target = get_silkrpc_target(silk, request["method"])
                 if verbose:
-                    print (str(test_number) + ") " + request)
+                    print (str(test_number) + ") " + request_dumps)
                 response = json_rpc["response"]
-                if silk:
-                    run_shell_command(
-                        '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
-                        request + '''\' localhost:51515''',
-                        response, exit_on_fail)
-                else:
-                    run_shell_command(
-                        '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
-                        request + '''\' localhost:8545''',
-                        response, exit_on_fail)
+                run_shell_command(
+                    '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
+                    request_dumps + '''\' ''' + target,
+                    response, exit_on_fail)
             test_number = test_number + 1
 
 #
