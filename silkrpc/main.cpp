@@ -78,10 +78,11 @@ int main(int argc, char* argv[]) {
     SILKRPC_LOG_THREAD(true);
 
     std::set_terminate([](){
-        SILKRPC_ERROR << "termination_handler called unhandled exception\n";
+        SILKRPC_CRIT << "silkrpc terminating with exception\n";
         try {
            auto exc = std::current_exception();
-           std::rethrow_exception(exc);
+           if (exc)
+               std::rethrow_exception(exc);
         } catch(const std::exception& e) {
            SILKRPC_CRIT << "Caught exception: " << e.what() << "\n";
         } catch(...) {
