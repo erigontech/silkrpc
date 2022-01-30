@@ -81,25 +81,40 @@ asio::awaitable<std::optional<evmc::bytes32>> AsyncRemoteBuffer::canonical_hash(
 
 std::optional<silkworm::Account> RemoteBuffer::read_account(const evmc::address& address) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_account address=" << address << " start\n";
-    std::future<std::optional<silkworm::Account>> result{asio::co_spawn(io_context_, async_buffer_.read_account(address), asio::use_future)};
-    const auto optional_account{result.get()};
-    SILKRPC_DEBUG << "RemoteBuffer::read_account account.nonce=" << (optional_account ? optional_account->nonce : 0) << " end\n";
-    return optional_account;
+    try {
+        std::future<std::optional<silkworm::Account>> result{asio::co_spawn(io_context_, async_buffer_.read_account(address), asio::use_future)};
+        const auto optional_account{result.get()};
+        SILKRPC_DEBUG << "RemoteBuffer::read_account account.nonce=" << (optional_account ? optional_account->nonce : 0) << " end\n";
+        return optional_account;
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "RemoteBuffer::read_account exception: " << e.what() << "\n";
+        return std::nullopt;
+    }
 }
 
 silkworm::ByteView RemoteBuffer::read_code(const evmc::bytes32& code_hash) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_code code_hash=" << code_hash << " start\n";
-    std::future<silkworm::ByteView> result{asio::co_spawn(io_context_, async_buffer_.read_code(code_hash), asio::use_future)};
-    const auto code{result.get()};
-    return code;
+    try {
+        std::future<silkworm::ByteView> result{asio::co_spawn(io_context_, async_buffer_.read_code(code_hash), asio::use_future)};
+        const auto code{result.get()};
+        return code;
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "RemoteBuffer::read_code exception: " << e.what() << "\n";
+        return silkworm::ByteView{};
+    }
 }
 
 evmc::bytes32 RemoteBuffer::read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_storage address=" << address << " incarnation=" << incarnation << " location=" << location << " start\n";
-    std::future<evmc::bytes32> result{asio::co_spawn(io_context_, async_buffer_.read_storage(address, incarnation, location), asio::use_future)};
-    const auto storage_value{result.get()};
-    SILKRPC_DEBUG << "RemoteBuffer::read_storage storage_value=" << storage_value << " end\n";
-    return storage_value;
+    try {
+        std::future<evmc::bytes32> result{asio::co_spawn(io_context_, async_buffer_.read_storage(address, incarnation, location), asio::use_future)};
+        const auto storage_value{result.get()};
+        SILKRPC_DEBUG << "RemoteBuffer::read_storage storage_value=" << storage_value << " end\n";
+        return storage_value;
+    } catch (const std::exception& e) {
+       SILKRPC_ERROR << "RemoteBuffer::read_storage exception: " << e.what() << "\n";
+       return evmc::bytes32{};
+    }
 }
 
 uint64_t RemoteBuffer::previous_incarnation(const evmc::address& address) const noexcept {
@@ -109,26 +124,41 @@ uint64_t RemoteBuffer::previous_incarnation(const evmc::address& address) const 
 
 std::optional<silkworm::BlockHeader> RemoteBuffer::read_header(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_header block_number=" << block_number << " block_hash=" << block_hash << "\n";
-    std::future<std::optional<silkworm::BlockHeader>> result{asio::co_spawn(io_context_, async_buffer_.read_header(block_number, block_hash), asio::use_future)};
-    const auto optional_header{result.get()};
-    SILKRPC_DEBUG << "RemoteBuffer::read_header block_number=" << block_number << " block_hash=" << block_hash << "\n";
-    return optional_header;
+    try {
+        std::future<std::optional<silkworm::BlockHeader>> result{asio::co_spawn(io_context_, async_buffer_.read_header(block_number, block_hash), asio::use_future)};
+        const auto optional_header{result.get()};
+        SILKRPC_DEBUG << "RemoteBuffer::read_header block_number=" << block_number << " block_hash=" << block_hash << "\n";
+        return optional_header;
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "RemoteBuffer::read_header exception: " << e.what() << "\n";
+        return std::nullopt;
+    }
 }
 
 std::optional<silkworm::BlockBody> RemoteBuffer::read_body(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_body block_number=" << block_number << " block_hash=" << block_hash << "\n";
-    std::future<std::optional<silkworm::BlockBody>> result{asio::co_spawn(io_context_, async_buffer_.read_body(block_number, block_hash), asio::use_future)};
-    const auto optional_body{result.get()};
-    SILKRPC_DEBUG << "RemoteBuffer::read_body block_number=" << block_number << " block_hash=" << block_hash << "\n";
-    return optional_body;
+    try {
+        std::future<std::optional<silkworm::BlockBody>> result{asio::co_spawn(io_context_, async_buffer_.read_body(block_number, block_hash), asio::use_future)};
+        const auto optional_body{result.get()};
+        SILKRPC_DEBUG << "RemoteBuffer::read_body block_number=" << block_number << " block_hash=" << block_hash << "\n";
+        return optional_body;
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "RemoteBuffer::read_body exception: " << e.what() << "\n";
+        return std::nullopt;
+    }
 }
 
 std::optional<intx::uint256> RemoteBuffer::total_difficulty(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::total_difficulty block_number=" << block_number << " block_hash=" << block_hash << "\n";
-    std::future<std::optional<intx::uint256>> result{asio::co_spawn(io_context_, async_buffer_.total_difficulty(block_number, block_hash), asio::use_future)};
-    const auto optional_total_difficulty{result.get()};
-    SILKRPC_DEBUG << "RemoteBuffer::total_difficulty block_number=" << block_number << " block_hash=" << block_hash << "\n";
-    return optional_total_difficulty;
+    try {
+        std::future<std::optional<intx::uint256>> result{asio::co_spawn(io_context_, async_buffer_.total_difficulty(block_number, block_hash), asio::use_future)};
+        const auto optional_total_difficulty{result.get()};
+        SILKRPC_DEBUG << "RemoteBuffer::total_difficulty block_number=" << block_number << " block_hash=" << block_hash << "\n";
+        return optional_total_difficulty;
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "RemoteBuffer::total_difficulty exception: " << e.what() << "\n";
+        return std::nullopt;
+    }
 }
 
 evmc::bytes32 RemoteBuffer::state_root_hash() const {

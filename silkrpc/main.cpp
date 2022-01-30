@@ -16,6 +16,7 @@
 
 #include <silkrpc/config.hpp>
 
+#include <cxxabi.h>
 #include <exception>
 #include <filesystem>
 #include <iostream>
@@ -47,9 +48,14 @@ ABSL_FLAG(std::string, eth2_local, silkrpc::kDefaultEth2Local, "Engine JSON RPC 
 ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "Erigon Core gRPC service location as string <address>:<port>");
 ABSL_FLAG(std::string, api_spec, silkrpc::kDefaultEth1ApiSpec, "JSON RPC API namespaces as comma-separated list of strings");
 ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "number of running I/O contexts as 32-bit integer");
-ABSL_FLAG(uint32_t, numWorkers, std::thread::hardware_concurrency(), "number of worker threads as 32-bit integer");
+ABSL_FLAG(uint32_t, numWorkers, 16, "number of worker threads as 32-bit integer");
 ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
+
+const char* currentExceptionTypeName() {
+    int status;
+    return abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, 0, &status);
+}
 
 int main(int argc, char* argv[]) {
     const auto pid = boost::this_process::get_id();
@@ -70,6 +76,21 @@ int main(int argc, char* argv[]) {
 
     SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
     SILKRPC_LOG_THREAD(true);
+
+    std::set_terminate([]() {
+        try {
+            auto exc = std::current_exception();
+            if (exc) {
+                std::rethrow_exception(exc);
+            }
+        } catch (const std::exception& e) {
+            SILKRPC_CRIT << "Silkrpc terminating due to exception: " << e.what() << "\n";
+        } catch (...) {
+            SILKRPC_CRIT << "Silkrpc terminating due to unexpected exception: " << currentExceptionTypeName() << "\n";
+        }
+
+        std::abort();
+    });
 
     try {
         auto chaindata{absl::GetFlag(FLAGS_chaindata)};
@@ -198,7 +219,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         SILKRPC_CRIT << "Exception: " << e.what() << "\n" << std::flush;
     } catch (...) {
-        SILKRPC_CRIT << "Unexpected exception\n" << std::flush;
+        SILKRPC_CRIT << "Unexpected exception: " << currentExceptionTypeName() << "\n" << std::flush;
     }
 
     SILKRPC_LOG << "Silkrpc exiting [pid=" << pid << ", main thread=" << tid << "]\n" << std::flush;
