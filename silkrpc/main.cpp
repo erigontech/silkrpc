@@ -77,16 +77,16 @@ int main(int argc, char* argv[]) {
     SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
     SILKRPC_LOG_THREAD(true);
 
-    std::set_terminate([](){
-        SILKRPC_CRIT << "silkrpc terminating with exception\n";
+    std::set_terminate([]() {
         try {
-           auto exc = std::current_exception();
-           if (exc)
-               std::rethrow_exception(exc);
-        } catch(const std::exception& e) {
-           SILKRPC_CRIT << "Caught exception: " << e.what() << "\n";
-        } catch(...) {
-           SILKRPC_CRIT << "Type of caught exception is " << currentExceptionTypeName() << "\n";
+            auto exc = std::current_exception();
+            if (exc) {
+                std::rethrow_exception(exc);
+            }
+        } catch (const std::exception& e) {
+            SILKRPC_CRIT << "Silkrpc terminating due to exception: " << e.what() << "\n";
+        } catch (...) {
+            SILKRPC_CRIT << "Silkrpc terminating due to unexpected exception: " << currentExceptionTypeName() << "\n";
         }
 
         std::abort();
@@ -219,8 +219,7 @@ int main(int argc, char* argv[]) {
     } catch (const std::exception& e) {
         SILKRPC_CRIT << "Exception: " << e.what() << "\n" << std::flush;
     } catch (...) {
-        SILKRPC_CRIT << "Unexpected exception\n" << std::flush;
-        SILKRPC_CRIT << "Type of caught exception is " << currentExceptionTypeName() << "\n";
+        SILKRPC_CRIT << "Unexpected exception: " << currentExceptionTypeName() << "\n" << std::flush;
     }
 
     SILKRPC_LOG << "Silkrpc exiting [pid=" << pid << ", main thread=" << tid << "]\n" << std::flush;
