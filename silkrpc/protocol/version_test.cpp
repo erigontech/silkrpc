@@ -183,7 +183,7 @@ TEST_CASE("KV protocol version match", "[silkrpc][protocol][wait_for_kv_protocol
     std::unique_ptr<::remote::KV::StubInterface> stub{std::make_unique<::remote::FixIssue24351_MockKVStub>()};
     types::VersionReply reply;
     reply.set_major(4);
-    reply.set_minor(0);
+    reply.set_minor(1);
 
     EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockKVStub*>(stub.get()), Version(_, _, _)).WillOnce(
         DoAll(SetArgPointee<2>(reply), Return(grpc::Status::OK)));
@@ -198,7 +198,7 @@ TEST_CASE("KV protocol version with server stub", "[silkrpc][protocol][wait_for_
     public:
         ::grpc::Status Version(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response) override {
             response->set_major(4);
-            response->set_minor(0);
+            response->set_minor(1);
             response->set_patch(0);
             return ::grpc::Status::OK;
         }
