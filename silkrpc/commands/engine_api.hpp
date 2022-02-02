@@ -40,6 +40,8 @@ public:
 
     EngineRpcApi(const EngineRpcApi&) = delete;
     EngineRpcApi& operator=(const EngineRpcApi&) = delete;
+
+protected:
     asio::awaitable<void> handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
