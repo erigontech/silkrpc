@@ -26,7 +26,7 @@
 
 #include <silkrpc/context_pool.hpp>
 #include <silkrpc/json/types.hpp>
-#include <silkrpc/ethbackend/backend.hpp>
+#include <silkrpc/ethbackend/backend_interface.hpp>
 
 
 namespace silkrpc::http { class RequestHandler; }
@@ -35,17 +35,15 @@ namespace silkrpc::commands {
 
 class EngineRpcApi {
 public:
-    explicit EngineRpcApi(std::unique_ptr<ethbackend::BackEnd>& backend): backend_(backend) {}
+    explicit EngineRpcApi(std::unique_ptr<ethbackend::BackEndInterface>& backend): backend_(backend) {}
     virtual ~EngineRpcApi() {}
 
     EngineRpcApi(const EngineRpcApi&) = delete;
     EngineRpcApi& operator=(const EngineRpcApi&) = delete;
-
-protected:
     asio::awaitable<void> handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
-    std::unique_ptr<ethbackend::BackEnd>& backend_;
+    std::unique_ptr<ethbackend::BackEndInterface>& backend_;
 
     friend class silkrpc::http::RequestHandler;
 };

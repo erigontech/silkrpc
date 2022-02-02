@@ -27,6 +27,7 @@
 
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/types/log.hpp>
+#include <silkrpc/ethbackend/backend_interface.hpp>
 #include <silkrpc/ethbackend/backend.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
@@ -35,7 +36,7 @@ namespace silkrpc::commands {
 
 class NetRpcApi {
 public:
-    explicit NetRpcApi(std::unique_ptr<ethbackend::BackEnd>& backend) : backend_(backend) {}
+    explicit NetRpcApi(std::unique_ptr<ethbackend::BackEndInterface>& backend) : backend_(backend) {}
     virtual ~NetRpcApi() = default;
 
     NetRpcApi(const NetRpcApi&) = delete;
@@ -49,7 +50,7 @@ protected:
 private:
     friend class silkrpc::http::RequestHandler;
 
-    std::unique_ptr<ethbackend::BackEnd>& backend_;
+    std::unique_ptr<ethbackend::BackEndInterface>& backend_;
 };
 } // namespace silkrpc::commands
 

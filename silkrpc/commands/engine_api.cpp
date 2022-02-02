@@ -21,7 +21,7 @@ namespace silkrpc::commands {
 
 asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
-    if (params.size() == 0 || params.size() > 1) {
+    if (params.size() != 1) {
         auto error_msg = "invalid engine_getPayloadV1 params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);

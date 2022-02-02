@@ -30,6 +30,7 @@
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
 #include <silkrpc/types/execution_payload.hpp>
+#include <silkrpc/ethbackend/backend_interface.hpp>
 
 namespace silkrpc::ethbackend {
 
@@ -123,7 +124,8 @@ using EngineGetPayloadV1Awaitable = unary_awaitable<
     ::types::ExecutionPayload
 >;
 
-class BackEnd final {
+
+class BackEnd final: public BackEndInterface {
 public:
     explicit BackEnd(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
     : BackEnd(context.get_executor(), ::remote::ETHBACKEND::NewStub(channel), queue) {}

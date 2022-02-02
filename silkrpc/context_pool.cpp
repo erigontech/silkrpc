@@ -22,6 +22,7 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
 
 namespace silkrpc {
 

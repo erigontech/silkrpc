@@ -48,7 +48,7 @@ protected:
 
 private:
     std::unique_ptr<ethdb::Database>& database_;
-    std::unique_ptr<ethbackend::BackEnd>& backend_;
+    std::unique_ptr<ethbackend::BackEndInterface>& backend_;
 
     friend class silkrpc::http::RequestHandler;
 };
