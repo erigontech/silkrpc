@@ -30,7 +30,7 @@ constexpr evmc::address kEtherbaseTest = 0xD6f2Ce894ea1A181E07040615F9a6598A7638
 constexpr uint64_t kProtocolVersionTest = 1;
 constexpr uint64_t kNetVersionTest = 2;
 static const char* kClientVersionTest = "6.0.0";
-constexpr uint64_t kNetPeerCountTest = UINT64_MAX; // We are very popular
+constexpr uint64_t kNetPeerCountTest = 5;
 static const ExecutionPayload kGetPayloadTest = ExecutionPayload{1}; // Empty payload with block number 1
 
 

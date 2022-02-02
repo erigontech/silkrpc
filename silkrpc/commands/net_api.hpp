@@ -27,7 +27,6 @@
 
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/types/log.hpp>
-#include <silkrpc/ethbackend/backend_interface.hpp>
 #include <silkrpc/ethbackend/backend.hpp>
 
 namespace silkrpc::http { class RequestHandler; }

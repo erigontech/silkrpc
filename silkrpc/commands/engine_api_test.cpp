@@ -21,7 +21,6 @@
 #include <catch2/catch.hpp>
 #include <asio/use_future.hpp>
 #include <asio/co_spawn.hpp>
-#include <unistd.h>
 
 namespace silkrpc::commands {
 
