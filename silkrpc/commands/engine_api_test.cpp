@@ -46,7 +46,7 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request well-formed", "[silk
     })"_json};
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_get_payload_v1(
-            request, 
+            request,
             reply
         );
     }, asio::use_future)};
@@ -58,5 +58,4 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request well-formed", "[silk
     context_pool_thread.join();
 }
 
-} // namespace silkrpc
-
+} // namespace silkrpc::commands

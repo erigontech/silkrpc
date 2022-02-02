@@ -17,6 +17,7 @@
 #ifndef SILKRPC_ETHBACKEND_TEST_BACKEND_HPP_
 #define SILKRPC_ETHBACKEND_TEST_BACKEND_HPP_
 
+#include <string>
 
 #include <silkrpc/ethbackend/backend_interface.hpp>
 #include <evmc/evmc.hpp>
@@ -28,14 +29,13 @@ using evmc::literals::operator""_address;
 constexpr evmc::address kEtherbaseTest = 0xD6f2Ce894ea1A181E07040615F9a6598A76380CD_address;
 constexpr uint64_t kProtocolVersionTest = 1;
 constexpr uint64_t kNetVersionTest = 2;
-static const std::string kClientVersionTest = "6.0.0";
+static const char* kClientVersionTest = "6.0.0";
 constexpr uint64_t kNetPeerCountTest = UINT64_MAX; // We are very popular
 static const ExecutionPayload kGetPayloadTest = ExecutionPayload{1}; // Empty payload with block number 1
 
 
 class TestBackEnd : public BackEndInterface {
 public:
-
     asio::awaitable<evmc::address> etherbase() { co_return kEtherbaseTest; }
     asio::awaitable<uint64_t> protocol_version() { co_return kProtocolVersionTest; }
     asio::awaitable<uint64_t> net_version() { co_return kNetVersionTest; }
@@ -44,5 +44,6 @@ public:
     asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id) { co_return kGetPayloadTest; }
 };
 
-} // namespace silkworm::ethbackend
-#endif
+} // namespace silkrpc::ethbackend
+
+#endif // SILKRPC_ETHBACKEND_TEST_BACKEND_HPP_

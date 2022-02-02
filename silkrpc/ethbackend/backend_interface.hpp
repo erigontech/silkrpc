@@ -29,7 +29,6 @@ namespace silkrpc::ethbackend {
 
 class BackEndInterface {
     public:
-    
     virtual ~BackEndInterface() = default;
     virtual asio::awaitable<evmc::address> etherbase() = 0;
     virtual asio::awaitable<uint64_t> protocol_version() = 0;
@@ -41,4 +40,4 @@ class BackEndInterface {
 
 } // namespace silkrpc::ethbackend
 
-# endif
+#endif // SILKRPC_ETHBACKEND_BACKEND_INTERFACE_HPP_
