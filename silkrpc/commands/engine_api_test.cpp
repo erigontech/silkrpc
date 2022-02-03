@@ -43,12 +43,12 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
     asio::thread_pool workers{1};
     // spawn routine
     nlohmann::json reply;
-    auto request{R"({
+    nlohmann::json request(R"({
         "jsonrpc":"2.0",
         "id":1,
         "method":"engine_getPayloadV1",
         "params":["0x0000000000000001"]
-    })"_json};
+    })"_json);
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_get_payload_v1(
             request,
