@@ -14,9 +14,6 @@
    limitations under the License.
 ]]
 
-set( CMAKE_CXX_COMPILER "/usr/bin/g++" )
-set( CMAKE_C_COMPILER "/usr/bin/gcc" )
-
 if(XCODE_VERSION)
   set(_err "This toolchain is not available for Xcode")
   set(_err "${_err} because Xcode ignores CMAKE_C(XX)_COMPILER variable.")
@@ -24,6 +21,8 @@ if(XCODE_VERSION)
   fatal_error(${_err})
 endif()
 
+find_program(CMAKE_C_COMPILER clang)
+find_program(CMAKE_CXX_COMPILER clang++)
 
 if(NOT CMAKE_C_COMPILER)
   message(FATAL_ERROR "clang not found")
