@@ -21,7 +21,6 @@
 #include <catch2/catch.hpp>
 #include <asio/use_future.hpp>
 #include <asio/co_spawn.hpp>
-#include <boost/exception/diagnostic_information.hpp>
 
 namespace silkrpc::commands {
 
@@ -50,23 +49,18 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
         "method":"engine_getPayloadV1",
         "params":["0x0000000000000001"]
     })"_json};
-    try {
-        auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-            return rpc.handle_engine_get_payload_v1(
-                request,
-                reply
-            );
-        }, asio::use_future)};
-        result.get();
-        ExecutionPayload response_payload = reply;
-        CHECK(response_payload.number == 1);
-        // Stop context pool
-        cp.stop();
-        context_pool_thread.join();
-    } catch(...) {
-        std::cout << boost::current_exception_diagnostic_information() << std::endl;
-        CHECK(false);
-    }
+    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_get_payload_v1(
+            request,
+            reply
+        );
+    }, asio::use_future)};
+    result.get();
+    ExecutionPayload response_payload = reply;
+    CHECK(response_payload.number == 1);
+    // Stop context pool
+    cp.stop();
+    context_pool_thread.join();
 }
 
 } // namespace silkrpc::commands

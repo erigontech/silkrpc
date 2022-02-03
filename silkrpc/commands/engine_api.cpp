@@ -20,11 +20,11 @@
 namespace silkrpc::commands {
 
 asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
+    auto params = request.at("params");
     if (params.size() != 1) {
         auto error_msg = "invalid engine_getPayloadV1 params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
-        reply = make_json_error(request["id"], 100, error_msg);
+        reply = make_json_error(request.at("id"), 100, error_msg);
         co_return;
     }
     const auto payload_id = params[0].get<std::string>();
@@ -34,10 +34,10 @@ asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann:
         reply = co_await backend_->engine_get_payload_v1(payload_number);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
+        reply = make_json_error(request.at("id"), 100, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, "unexpected exception");
+        reply = make_json_error(request.at("id"), 100, "unexpected exception");
     }
 
     co_return;
