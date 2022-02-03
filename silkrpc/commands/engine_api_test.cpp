@@ -21,7 +21,7 @@
 #include <catch2/catch.hpp>
 #include <asio/use_future.hpp>
 #include <asio/co_spawn.hpp>
-#include <boost/exception/diagnostic_information.hpp> 
+#include <boost/exception/diagnostic_information.hpp>
 
 namespace silkrpc::commands {
 
