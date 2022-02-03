@@ -28,22 +28,23 @@ asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann:
         reply = make_json_error(request.at("id"), 100, error_msg);
         co_return;
     }
-
-    const auto payload_id = params[0].get<std::string>();
-    const auto payload_number = std::stoul(payload_id, 0, 16);
-    reply = co_await backend_->engine_get_payload_v1(payload_number);
     // Coverage data result maflormed in cmd/unit_test if we use a try/catch here
-    /*try {
+    #ifndef BUILD_COVERAGE
+    #error "a"
+    try {
+    #endif
         const auto payload_id = params[0].get<std::string>();
         const auto payload_number = std::stoul(payload_id, 0, 16);
         reply = co_await backend_->engine_get_payload_v1(payload_number);
+    #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request.at("id"), 100, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request.at("id"), 100, "unexpected exception");
-    }*/
+    }
+    #endif
 
     co_return;
 }
