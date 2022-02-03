@@ -29,13 +29,11 @@ asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann:
         reply = make_json_error(request.at("id"), 100, error_msg);
         co_return;
     }
-    // Coverage data result malformed in cmd/unit_test if we use a try/catch here
     #ifndef BUILD_COVERAGE
     try {
     #endif
         const auto payload_id = params[0].get<std::string>();
-        const auto payload_number = std::stoul(payload_id, 0, 16);
-        reply = co_await backend_->engine_get_payload_v1(payload_number);
+        reply = co_await backend_->engine_get_payload_v1(std::stoul(payload_id, 0, 16));
     #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
