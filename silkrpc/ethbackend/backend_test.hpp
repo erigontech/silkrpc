@@ -46,4 +46,4 @@ public:
 
 } // namespace silkrpc::ethbackend
 
-#endif // SILKRPC_ETHBACKEND_TEST_BACKEND_HPP_
+#endif // SILKRPC_ETHBACKEND_BACKEND_TEST_HPP_
