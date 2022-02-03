@@ -33,7 +33,7 @@ public:
     using EngineRpcApi::handle_engine_get_payload_v1;
 };
 
-TEST_CASE("handle_engine_get_payload_v1 succeeds if request well-formed", "[silkrpc][engine_api]") {
+TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::TestBackEnd());
     EngineRpcApiTest rpc(backend);
