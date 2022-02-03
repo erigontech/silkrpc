@@ -28,7 +28,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann:
         reply = make_json_error(request.at("id"), 100, error_msg);
         co_return;
     }
-    // Coverage data result maflormed in cmd/unit_test if we use a try/catch here
+    // Coverage data result malformed in cmd/unit_test if we use a try/catch here
     #ifndef BUILD_COVERAGE
     try {
     #endif
