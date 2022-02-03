@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_ETHBACKEND_TEST_BACKEND_HPP_
-#define SILKRPC_ETHBACKEND_TEST_BACKEND_HPP_
+#ifndef SILKRPC_ETHBACKEND_BACKEND_TEST_HPP_
+#define SILKRPC_ETHBACKEND_BACKEND_TEST_HPP_
 
 #include <string>
 
