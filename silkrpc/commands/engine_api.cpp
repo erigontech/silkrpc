@@ -30,7 +30,6 @@ asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann:
     }
     // Coverage data result maflormed in cmd/unit_test if we use a try/catch here
     #ifndef BUILD_COVERAGE
-    #error "a"
     try {
     #endif
         const auto payload_id = params[0].get<std::string>();
