@@ -18,6 +18,7 @@
 
 #include <silkrpc/ethbackend/test_backend.hpp>
 #include <silkrpc/json/types.hpp>
+#include <silkrpc/http/methods.hpp>
 #include <catch2/catch.hpp>
 #include <asio/use_future.hpp>
 #include <asio/co_spawn.hpp>
@@ -49,9 +50,11 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
     nlohmann::json request(R"({
         "jsonrpc":"2.0",
         "id":1,
-        "method":"engine_getPayloadV1",
+        "method":"method",
         "params":["0x0000000000000001"]
     })"_json);
+    request["method"] = http::method::k_engine_getPayloadV1;
+
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_get_payload_v1(
             request,
@@ -82,9 +85,11 @@ TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[
     nlohmann::json request(R"({
         "jsonrpc":"2.0",
         "id":1,
-        "method":"engine_getPayloadV1",
+        "method":"method",
         "params":[]
     })"_json);
+    request["method"] = http::method::k_engine_getPayloadV1;
+
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_get_payload_v1(
             request,

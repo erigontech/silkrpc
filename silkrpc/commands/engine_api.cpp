@@ -17,6 +17,7 @@
 #include "engine_api.hpp"
 
 #include <string>
+
 namespace silkrpc::commands {
 
 asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
