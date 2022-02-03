@@ -16,11 +16,12 @@
 
 #include "net_api.hpp"
 
+#include <silkrpc/http/methods.hpp>
+#include <silkrpc/ethbackend/test_backend.hpp>
+#include <silkrpc/json/types.hpp>
 #include <catch2/catch.hpp>
 #include <asio/use_future.hpp>
 #include <asio/co_spawn.hpp>
-#include <silkrpc/ethbackend/test_backend.hpp>
-#include <silkrpc/json/types.hpp>
 
 namespace silkrpc::commands {
 
@@ -48,9 +49,10 @@ TEST_CASE("handle_net_peer_count succeeds if request is expected peer count", "[
     nlohmann::json request(R"({
         "jsonrpc":"2.0",
         "id":1,
-        "method":"net_peerCount",
+        "method":"method",
         "params":[]
     })"_json);
+    request["method"] = http::method::k_net_peerCount;
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_net_peer_count(
             request,
@@ -82,9 +84,10 @@ TEST_CASE("handle_net_version succeeds if request is expected peer count", "[sil
     nlohmann::json request(R"({
         "jsonrpc":"2.0",
         "id":1,
-        "method":"net_version",
+        "method":"method",
         "params":[]
     })"_json);
+    request["method"] = http::method::k_net_version;
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_net_version(
             request,
