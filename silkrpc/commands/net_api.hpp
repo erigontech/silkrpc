@@ -22,6 +22,7 @@
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
+#include <silkrpc/context_pool.hpp>
 #include <asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 

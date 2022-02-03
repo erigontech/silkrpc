@@ -36,12 +36,13 @@ public:
 TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::TestBackEnd());
-    EngineRpcApiTest rpc(backend);
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     asio::thread_pool workers{1};
+    // Initialise components
+    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::TestBackEnd());
+    EngineRpcApiTest rpc(backend);
 
     // spawn routine
     nlohmann::json reply;
@@ -68,12 +69,13 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
 TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::TestBackEnd());
-    EngineRpcApiTest rpc(backend);
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     asio::thread_pool workers{1};
+    // Initialise components
+    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::TestBackEnd());
+    EngineRpcApiTest rpc(backend);
 
     // spawn routine
     nlohmann::json reply;

@@ -44,8 +44,6 @@ asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann:
         reply = make_json_error(request.at("id"), 100, "unexpected exception");
     }
     #endif
-
-    co_return;
 }
 
 
