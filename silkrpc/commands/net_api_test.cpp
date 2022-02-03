@@ -17,7 +17,7 @@
 #include "net_api.hpp"
 
 #include <silkrpc/http/methods.hpp>
-#include <silkrpc/ethbackend/test_backend.hpp>
+#include <silkrpc/ethbackend/backend_test.hpp>
 #include <silkrpc/json/types.hpp>
 #include <catch2/catch.hpp>
 #include <asio/use_future.hpp>
