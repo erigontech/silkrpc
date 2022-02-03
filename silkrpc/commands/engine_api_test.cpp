@@ -65,4 +65,43 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
     context_pool_thread.join();
 }
 
+TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[silkrpc][engine_api]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::TestBackEnd());
+    EngineRpcApiTest rpc(backend);
+    // Initialize contex pool
+    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    asio::thread_pool workers{1};
+
+    // spawn routine
+    nlohmann::json reply;
+    nlohmann::json request(R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":"engine_getPayloadV1",
+        "params":[]
+    })"_json);
+    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_get_payload_v1(
+            request,
+            reply
+        );
+    }, asio::use_future)};
+    result.get();
+
+    CHECK(reply == R"({
+        "error":{
+            "code":100,
+            "message":"invalid engine_getPayloadV1 params: []"
+        },
+        "id":1,
+        "jsonrpc":"2.0"
+    })"_json);
+    // Stop context pool
+    cp.stop();
+    context_pool_thread.join();
+}
+
 } // namespace silkrpc::commands

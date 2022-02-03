@@ -26,7 +26,6 @@
 
 namespace silkrpc::ethbackend {
 
-
 class BackEndInterface {
     public:
     virtual ~BackEndInterface() = default;
