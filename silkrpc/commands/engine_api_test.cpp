@@ -16,7 +16,7 @@
 
 #include "engine_api.hpp"
 
-#include <silkrpc/ethbackend/backend_test.hpp>
+#include <silkrpc/ethbackend/backend_mock.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/http/methods.hpp>
 #include <catch2/catch.hpp>
@@ -27,7 +27,7 @@ namespace silkrpc::commands {
 
 using Catch::Matchers::Message;
 
-class EngineRpcApiTest : EngineRpcApi{
+class EngineRpcApiTest : public EngineRpcApi{
 public:
     explicit EngineRpcApiTest(std::unique_ptr<ethbackend::BackEndInterface>& backend): EngineRpcApi(backend) {}
 
@@ -37,78 +37,40 @@ public:
 TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    // Initialize contex pool
-    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
-    asio::thread_pool workers{1};
-    // Initialise components
-    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::TestBackEnd());
-    EngineRpcApiTest rpc(backend);
-
-    // spawn routine
-    nlohmann::json reply;
-    nlohmann::json request(R"({
-        "jsonrpc":"2.0",
-        "id":1,
-        "method":"method",
-        "params":["0x0000000000000001"]
-    })"_json);
-    request["method"] = http::method::k_engine_getPayloadV1;
-
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_engine_get_payload_v1(
-            request,
-            reply
-        );
-    }, asio::use_future)};
-    result.get();
-    ExecutionPayload response_payload = reply;
-    CHECK(response_payload.number == 1);
-    // Stop context pool
-    cp.stop();
-    context_pool_thread.join();
+    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::BackEndMock());
+    ethbackend::test_rpc_call<EngineRpcApiTest, &EngineRpcApiTest::handle_engine_get_payload_v1, std::unique_ptr<ethbackend::BackEndInterface>>(
+        R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"engine_getPayloadV1",
+            "params":["0x0000000000000001"]
+        })"_json,
+        ethbackend::kGetPayloadTest,
+        std::move(backend)
+    );
 }
 
 TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    // Initialize contex pool
-    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
-    asio::thread_pool workers{1};
-    // Initialise components
-    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::TestBackEnd());
-    EngineRpcApiTest rpc(backend);
-
-    // spawn routine
-    nlohmann::json reply;
-    nlohmann::json request(R"({
-        "jsonrpc":"2.0",
-        "id":1,
-        "method":"method",
-        "params":[]
-    })"_json);
-    request["method"] = http::method::k_engine_getPayloadV1;
-
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_engine_get_payload_v1(
-            request,
-            reply
-        );
-    }, asio::use_future)};
-    result.get();
-
-    CHECK(reply == R"({
-        "error":{
-            "code":100,
-            "message":"invalid engine_getPayloadV1 params: []"
-        },
-        "id":1,
-        "jsonrpc":"2.0"
-    })"_json);
-    // Stop context pool
-    cp.stop();
-    context_pool_thread.join();
+    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::BackEndMock());
+    ethbackend::test_rpc_call<EngineRpcApiTest, &EngineRpcApiTest::handle_engine_get_payload_v1, std::unique_ptr<ethbackend::BackEndInterface>>(
+        R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"engine_getPayloadV1",
+            "params":[]
+        })"_json,
+        R"({
+            "error":{
+                "code":100,
+                "message":"invalid engine_getPayloadV1 params: []"
+            },
+            "id":1,
+            "jsonrpc":"2.0" 
+        })"_json,
+        std::move(backend)
+    );
 }
 
 } // namespace silkrpc::commands

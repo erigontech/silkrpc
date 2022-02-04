@@ -17,7 +17,7 @@
 #include "web3_api.hpp"
 
 #include <silkrpc/http/methods.hpp>
-#include <silkrpc/ethbackend/backend_test.hpp>
+#include <silkrpc/ethbackend/backend_mock.hpp>
 #include <silkrpc/json/types.hpp>
 #include <catch2/catch.hpp>
 #include <asio/use_future.hpp>
@@ -27,7 +27,7 @@ namespace silkrpc::commands {
 
 using Catch::Matchers::Message;
 
-class Web3RpcApiTest : Web3RpcApi {
+class Web3RpcApiTest : public Web3RpcApi {
 public:
     explicit Web3RpcApiTest(Context& context): Web3RpcApi(context) {}
 
@@ -39,150 +39,90 @@ TEST_CASE("handle_web3_client_version succeeds if request is expected version", 
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     Context context;
-    context.backend = std::unique_ptr<ethbackend::BackEndInterface>(new ethbackend::TestBackEnd());
-    Web3RpcApiTest rpc(context);
-    // Initialize contex pool
-    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
-
-    // spawn routine
-    nlohmann::json reply;
-    nlohmann::json request(R"({
-        "jsonrpc":"2.0",
-        "id":1,
-        "method":"method",
-        "params":[]
-    })"_json);
-    request["method"] = http::method::k_web3_clientVersion;
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_web3_client_version(
-            request,
-            reply
-        );
-    }, asio::use_future)};
-    result.get();
-    CHECK(reply == R"({
-        "id":1,
-        "jsonrpc":"2.0",
-        "result":"6.0.0"
-    })"_json);
-    // Stop context pool
-    cp.stop();
-    context_pool_thread.join();
+    context.backend = std::unique_ptr<ethbackend::BackEndInterface>(new ethbackend::BackEndMock());
+    ethbackend::test_rpc_call<Web3RpcApiTest, &Web3RpcApiTest::handle_web3_client_version, Context&>(
+        R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"web3_clientVersion",
+            "params":[]
+        })"_json,
+        R"({
+            "id":1,
+            "jsonrpc":"2.0",
+            "result":"6.0.0"
+        })"_json,
+        context
+    );
 }
 
 TEST_CASE("handle_web3_sha3 succeeds if request is sha3 of input", "[silkrpc][web3_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     Context context;
-    context.backend = std::unique_ptr<ethbackend::BackEndInterface>(new ethbackend::TestBackEnd());
-    Web3RpcApiTest rpc(context);
-    // Initialize contex pool
-    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
-
-    // spawn routine
-    nlohmann::json reply;
-    nlohmann::json request(R"({
-        "jsonrpc":"2.0",
-        "id":1,
-        "method":"method",
-        "params":["0x5"]
-    })"_json);
-    request["method"] = http::method::k_web3_sha3;
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_web3_sha3(
-            request,
-            reply
-        );
-    }, asio::use_future)};
-    result.get();
-    CHECK(reply == R"({
-        "id":1,
-        "jsonrpc":"2.0",
-        "result":"0xdbb8d0f4c497851a5043c6363657698cb1387682cac2f786c731f8936109d795"
-    })"_json);
-    // Stop context pool
-    cp.stop();
-    context_pool_thread.join();
+    context.backend = std::unique_ptr<ethbackend::BackEndInterface>(new ethbackend::BackEndMock());
+    ethbackend::test_rpc_call<Web3RpcApiTest, &Web3RpcApiTest::handle_web3_sha3, Context&>(
+        R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"handle_web3_sha3",
+            "params":["0x1"]
+        })"_json,
+        R"({
+            "id":1,
+            "jsonrpc":"2.0",
+            "result":"0x5fe7f977e71dba2ea1a68e21057beebb9be2ac30c6410aa38d4f3fbe41dcffd2"
+        })"_json,
+        context
+    );
 }
 
 TEST_CASE("handle_web3_sha3 fails with not enough parameters", "[silkrpc][web3_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     Context context;
-    context.backend = std::unique_ptr<ethbackend::BackEndInterface>(new ethbackend::TestBackEnd());
-    Web3RpcApiTest rpc(context);
-    // Initialize contex pool
-    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
-
-    // spawn routine
-    nlohmann::json reply;
-    nlohmann::json request(R"({
-        "jsonrpc":"2.0",
-        "id":1,
-        "method":"method",
-        "params":[]
-    })"_json);
-    request["method"] = http::method::k_web3_sha3;
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_web3_sha3(
-            request,
-            reply
-        );
-    }, asio::use_future)};
-    result.get();
-    CHECK(reply == R"({
-        "error":{
-            "code":100,
-            "message":"invalid web3_sha3 params: []"
-        },
-        "id":1,
-        "jsonrpc":"2.0"
-    })"_json);
-    // Stop context pool
-    cp.stop();
-    context_pool_thread.join();
+    context.backend = std::unique_ptr<ethbackend::BackEndInterface>(new ethbackend::BackEndMock());
+    ethbackend::test_rpc_call<Web3RpcApiTest, &Web3RpcApiTest::handle_web3_sha3, Context&>(
+        R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"web3_sha3",
+            "params":[]
+        })"_json,
+        R"({
+            "error":{
+                "code":100,
+                "message":"invalid web3_sha3 params: []"
+            },
+            "id":1,
+            "jsonrpc":"2.0" 
+        })"_json,
+        context
+    );
 }
 
 TEST_CASE("handle_web3_sha3 fails with not non-hex parameter", "[silkrpc][web3_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     Context context;
-    context.backend = std::unique_ptr<ethbackend::BackEndInterface>(new ethbackend::TestBackEnd());
-    Web3RpcApiTest rpc(context);
-    // Initialize contex pool
-    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
-
-    // spawn routine
-    nlohmann::json reply;
-    nlohmann::json request(R"({
-        "jsonrpc":"2.0",
-        "id":1,
-        "method":"method",
-        "params":["buongiorno"]
-    })"_json);
-    request["method"] = http::method::k_web3_sha3;
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_web3_sha3(
-            request,
-            reply
-        );
-    }, asio::use_future)};
-    result.get();
-    CHECK(reply == R"({
-        "error":{
-            "code":100,
-            "message":"invalid input: buongiorno"
-        },
-        "id":1,
-        "jsonrpc":"2.0"
-    })"_json);
-    // Stop context pool
-    cp.stop();
-    context_pool_thread.join();
+    context.backend = std::unique_ptr<ethbackend::BackEndInterface>(new ethbackend::BackEndMock());
+    ethbackend::test_rpc_call<Web3RpcApiTest, &Web3RpcApiTest::handle_web3_sha3, Context&>(
+        R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"handle_web3_sha3",
+            "params":["buongiorno"]
+        })"_json,
+        R"({
+            "error":{
+                "code":100,
+                "message":"invalid input: buongiorno"
+            },
+            "id":1,
+            "jsonrpc":"2.0" 
+        })"_json,
+        context
+    );
 }
 
 using Catch::Matchers::Message;

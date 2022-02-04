@@ -17,7 +17,7 @@
 #include "net_api.hpp"
 
 #include <silkrpc/http/methods.hpp>
-#include <silkrpc/ethbackend/backend_test.hpp>
+#include <silkrpc/ethbackend/backend_mock.hpp>
 #include <silkrpc/json/types.hpp>
 #include <catch2/catch.hpp>
 #include <asio/use_future.hpp>
@@ -27,7 +27,7 @@ namespace silkrpc::commands {
 
 using Catch::Matchers::Message;
 
-class NetRpcApiTest : NetRpcApi {
+class NetRpcApiTest : public NetRpcApi {
 public:
     explicit NetRpcApiTest(std::unique_ptr<ethbackend::BackEndInterface>& backend): NetRpcApi(backend) {}
 
@@ -38,72 +38,41 @@ public:
 TEST_CASE("handle_net_peer_count succeeds if request is expected peer count", "[silkrpc][net_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::TestBackEnd());
-    NetRpcApiTest rpc(backend);
-    // Initialize contex pool
-    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
-
-    // spawn routine
-    nlohmann::json reply;
-    nlohmann::json request(R"({
-        "jsonrpc":"2.0",
-        "id":1,
-        "method":"method",
-        "params":[]
-    })"_json);
-    request["method"] = http::method::k_net_peerCount;
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_net_peer_count(
-            request,
-            reply
-        );
-    }, asio::use_future)};
-    result.get();
-    CHECK(reply == R"({
-        "id":1,
-        "jsonrpc":"2.0",
-        "result":"0x5"
-    })"_json);
-    // Stop context pool
-    cp.stop();
-    context_pool_thread.join();
+    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::BackEndMock());
+    ethbackend::test_rpc_call<NetRpcApiTest, &NetRpcApiTest::handle_net_peer_count, std::unique_ptr<ethbackend::BackEndInterface>>(
+        R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"net_peerCount",
+            "params":[]
+        })"_json,
+        R"({
+            "id":1,
+            "jsonrpc":"2.0",
+            "result":"0x5"
+        })"_json,
+        std::move(backend)
+    );
 }
 
 TEST_CASE("handle_net_version succeeds if request is expected version", "[silkrpc][net_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::TestBackEnd());
-    NetRpcApiTest rpc(backend);
-    // Initialize contex pool
-    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
-
-    // spawn routine
-    nlohmann::json reply;
-    nlohmann::json request(R"({
-        "jsonrpc":"2.0",
-        "id":1,
-        "method":"method",
-        "params":[]
-    })"_json);
-    request["method"] = http::method::k_net_version;
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_net_version(
-            request,
-            reply
-        );
-    }, asio::use_future)};
-    result.get();
-
-    CHECK(reply == R"({
-        "id":1,
-        "jsonrpc":"2.0",
-        "result":"2"
-    })"_json);
-    // Stop context pool
-    cp.stop();
-    context_pool_thread.join();
+    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::BackEndMock());
+    ethbackend::test_rpc_call<NetRpcApiTest, &NetRpcApiTest::handle_net_version, std::unique_ptr<ethbackend::BackEndInterface>>(
+        R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"net_version",
+            "params":[]
+        })"_json,
+        R"({
+            "id":1,
+            "jsonrpc":"2.0",
+            "result":"2"
+        })"_json,
+        std::move(backend)
+    );
 }
 
 using Catch::Matchers::Message;

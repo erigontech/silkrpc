@@ -18,7 +18,10 @@
 #define SILKRPC_ETHBACKEND_BACKEND_TEST_HPP_
 
 #include <string>
+#include <catch2/catch.hpp>
 
+#include <asio/use_future.hpp>
+#include <asio/co_spawn.hpp>
 #include <silkrpc/ethbackend/backend_interface.hpp>
 #include <evmc/evmc.hpp>
 
@@ -34,7 +37,7 @@ constexpr uint64_t kNetPeerCountTest = 5;
 static const ExecutionPayload kGetPayloadTest = ExecutionPayload{1}; // Empty payload with block number 1
 
 
-class TestBackEnd : public BackEndInterface {
+class BackEndMock : public BackEndInterface {
 public:
     asio::awaitable<evmc::address> etherbase() { co_return kEtherbaseTest; }
     asio::awaitable<uint64_t> protocol_version() { co_return kProtocolVersionTest; }
@@ -43,6 +46,31 @@ public:
     asio::awaitable<uint64_t> net_peer_count() { co_return kNetPeerCountTest; }
     asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id) { co_return kGetPayloadTest; }
 };
+
+template<typename T, auto method, typename ...Args>
+void test_rpc_call(const nlohmann::json& request, const nlohmann::json& expected, Args... rpc_args) {
+    nlohmann::json reply;
+    // Initialize contex pool
+    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    // Initialise components
+    std::unique_ptr<ethbackend::BackEndInterface> backend(new BackEndMock());
+    T rpc(rpc_args...);
+
+    // spawn routine
+    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+        return (rpc.*method)(
+            request,
+            reply
+        );
+    }, asio::use_future)};
+    result.get();
+
+    CHECK(reply == expected);
+
+    cp.stop();
+    context_pool_thread.join();
+}
 
 } // namespace silkrpc::ethbackend
 

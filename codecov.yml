@@ -16,7 +16,7 @@ coverage:
 
 ignore:
   - "**/*_test.cpp"
-  - "**/*_test.hpp"
+  - "silrpc/ethbackend/backend_mock.hpp"
   - "cmd"
   - "silkrpc/croaring"
   - "silkrpc/interfaces"
