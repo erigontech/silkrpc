@@ -18,9 +18,15 @@
 
 #include <catch2/catch.hpp>
 
-namespace silkrpc {
+namespace silkrpc::commands {
 
 using Catch::Matchers::Message;
 
-} // namespace silkrpc
+TEST_CASE("construct/deconstruct rpc_api", "[silkrpc][rpc_api]") {
+    Context context{};
+    asio::thread_pool pool{1};
+    RpcApi* rpc = new RpcApi(context, pool);
+    delete rpc;
+}
+} // namespace silkrpc::commands
 
