@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_ETHBACKEND_BACKEND_TEST_HPP_
-#define SILKRPC_ETHBACKEND_BACKEND_TEST_HPP_
+#ifndef SILKRPC_ETHBACKEND_BACKEND_MOCK_HPP_
+#define SILKRPC_ETHBACKEND_BACKEND_MOCK_HPP_
 
 #include <string>
 #include <catch2/catch.hpp>
@@ -24,6 +24,7 @@
 #include <asio/co_spawn.hpp>
 #include <silkrpc/ethbackend/backend_interface.hpp>
 #include <evmc/evmc.hpp>
+#include <memory>
 
 namespace silkrpc::ethbackend {
 
@@ -74,4 +75,4 @@ void test_rpc_call(const nlohmann::json& request, const nlohmann::json& expected
 
 } // namespace silkrpc::ethbackend
 
-#endif // SILKRPC_ETHBACKEND_BACKEND_TEST_HPP_
+#endif // SILKRPC_ETHBACKEND_BACKEND_MOCK_HPP_
