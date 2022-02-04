@@ -70,7 +70,7 @@ TEST_CASE("handle_net_peer_count succeeds if request is expected peer count", "[
     context_pool_thread.join();
 }
 
-TEST_CASE("handle_net_version succeeds if request is expected peer count", "[silkrpc][net_api]") {
+TEST_CASE("handle_net_version succeeds if request is expected version", "[silkrpc][net_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::TestBackEnd());
