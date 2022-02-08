@@ -8,7 +8,7 @@ import sys
 import getopt
 import jsondiff
 
-def get_silkrpc_target(silk: bool, method: str):
+def get_target(silk: bool, method: str):
     "Determine where silkrpc is supposed to be serving at."
     if "engine_" in method:
         return "localhost:8550"
@@ -46,7 +46,7 @@ def run_tests(json_filename, verbose, silk, exit_on_fail, req_test):
             if req_test in (-1, test_number):
                 request = json_rpc["request"]
                 request_dumps = json.dumps(request)
-                target = get_silkrpc_target(silk, request["method"])
+                target = get_target(silk, request["method"])
                 if verbose:
                     print (str(test_number) + ") " + request_dumps)
                 response = json_rpc["response"]
