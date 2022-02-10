@@ -29,12 +29,9 @@ namespace silkrpc::commands {
 
 // https://eth.wiki/json-rpc/API#web3_clientversion
 asio::awaitable<void> Web3RpcApi::handle_web3_client_version(const nlohmann::json& request, nlohmann::json& reply) {
-    #ifndef BUILD_COVERAGE
     try {
-    #endif
         const auto client_version = co_await backend_->client_version();
         reply = make_json_content(request["id"], client_version);
-    #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());
@@ -42,7 +39,6 @@ asio::awaitable<void> Web3RpcApi::handle_web3_client_version(const nlohmann::jso
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
-    #endif
     co_return;
 }
 

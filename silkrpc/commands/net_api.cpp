@@ -31,12 +31,9 @@ asio::awaitable<void> NetRpcApi::handle_net_listening(const nlohmann::json& requ
 
 // https://eth.wiki/json-rpc/API#net_peercount
 asio::awaitable<void> NetRpcApi::handle_net_peer_count(const nlohmann::json& request, nlohmann::json& reply) {
-    #ifndef BUILD_COVERAGE
     try {
-    #endif
         const auto peer_count = co_await backend_->net_peer_count();
         reply = make_json_content(request["id"], to_quantity(peer_count));
-    #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());
@@ -44,17 +41,13 @@ asio::awaitable<void> NetRpcApi::handle_net_peer_count(const nlohmann::json& req
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
-    #endif
 }
 
 // https://eth.wiki/json-rpc/API#net_version
 asio::awaitable<void> NetRpcApi::handle_net_version(const nlohmann::json& request, nlohmann::json& reply) {
-    #ifndef BUILD_COVERAGE
     try {
-    #endif
         const auto net_version = co_await backend_->net_version();
         reply = make_json_content(request["id"], std::to_string(net_version));
-    #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());
@@ -62,7 +55,6 @@ asio::awaitable<void> NetRpcApi::handle_net_version(const nlohmann::json& reques
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
-    #endif
 }
 
 } // namespace silkrpc::commands
