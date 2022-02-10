@@ -23,3 +23,4 @@ namespace silkrpc {
 using Catch::Matchers::Message;
 
 } // namespace silkrpc
+
