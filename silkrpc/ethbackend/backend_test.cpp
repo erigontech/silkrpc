@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "backend.hpp"
+#include "backend_grpc.hpp"
 
 #include <string>
 #include <system_error>
@@ -242,13 +242,13 @@ asio::awaitable<R> test_comethod(::remote::ETHBACKEND::Service* service, Args...
     co_return co_await method_proxy(args...);
 }
 
-auto test_etherbase = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::etherbase, evmc::address>;
-auto test_protocol_version = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::protocol_version, uint64_t>;
-auto test_net_version = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::net_version, uint64_t>;
-auto test_client_version = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::client_version, std::string>;
-auto test_net_peer_count = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::net_peer_count, uint64_t>;
-auto test_engine_get_payload_v1 = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::engine_get_payload_v1, ExecutionPayload, uint64_t>;
-auto test_execution_payload_to_proto = test_comethod<ethbackend::BackEnd, &ethbackend::BackEnd::execution_payload_to_proto, ::types::ExecutionPayload, ExecutionPayload>;
+auto test_etherbase = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::etherbase, evmc::address>;
+auto test_protocol_version = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::protocol_version, uint64_t>;
+auto test_net_version = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::net_version, uint64_t>;
+auto test_client_version = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::client_version, std::string>;
+auto test_net_peer_count = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::net_peer_count, uint64_t>;
+auto test_engine_get_payload_v1 = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::engine_get_payload_v1, ExecutionPayload, uint64_t>;
+auto test_execution_payload_to_proto = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::execution_payload_to_proto, ::types::ExecutionPayload, ExecutionPayload>;
 
 TEST_CASE("BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);

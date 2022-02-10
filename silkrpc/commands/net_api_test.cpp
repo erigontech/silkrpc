@@ -30,7 +30,7 @@ using Catch::Matchers::Message;
 
 class NetRpcApiTest : public NetRpcApi {
 public:
-    explicit NetRpcApiTest(std::unique_ptr<ethbackend::BackEndInterface>& backend): NetRpcApi(backend) {}
+    explicit NetRpcApiTest(std::unique_ptr<ethbackend::BackEnd>& backend): NetRpcApi(backend) {}
 
     using NetRpcApi::handle_net_peer_count;
     using NetRpcApi::handle_net_version;
@@ -39,8 +39,8 @@ public:
 TEST_CASE("handle_net_peer_count succeeds if request is expected peer count", "[silkrpc][net_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::BackEndMock());
-    ethbackend::test_rpc_call<NetRpcApiTest, &NetRpcApiTest::handle_net_peer_count, std::unique_ptr<ethbackend::BackEndInterface>>(
+    std::unique_ptr<ethbackend::BackEnd> backend(new ethbackend::BackEndMock());
+    ethbackend::test_rpc_call<NetRpcApiTest, &NetRpcApiTest::handle_net_peer_count, std::unique_ptr<ethbackend::BackEnd>>(
         R"({
             "jsonrpc":"2.0",
             "id":1,
@@ -59,8 +59,8 @@ TEST_CASE("handle_net_peer_count succeeds if request is expected peer count", "[
 TEST_CASE("handle_net_version succeeds if request is expected version", "[silkrpc][net_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::BackEndMock());
-    ethbackend::test_rpc_call<NetRpcApiTest, &NetRpcApiTest::handle_net_version, std::unique_ptr<ethbackend::BackEndInterface>>(
+    std::unique_ptr<ethbackend::BackEnd> backend(new ethbackend::BackEndMock());
+    ethbackend::test_rpc_call<NetRpcApiTest, &NetRpcApiTest::handle_net_version, std::unique_ptr<ethbackend::BackEnd>>(
         R"({
             "jsonrpc":"2.0",
             "id":1,

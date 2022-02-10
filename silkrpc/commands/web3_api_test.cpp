@@ -39,7 +39,7 @@ TEST_CASE("handle_web3_client_version succeeds if request is expected version", 
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     Context context;
-    context.backend = std::unique_ptr<ethbackend::BackEndInterface>(new ethbackend::BackEndMock());
+    context.backend = std::unique_ptr<ethbackend::BackEnd>(new ethbackend::BackEndMock());
     ethbackend::test_rpc_call<Web3RpcApiTest, &Web3RpcApiTest::handle_web3_client_version, Context&>(
         R"({
             "jsonrpc":"2.0",
@@ -60,7 +60,7 @@ TEST_CASE("handle_web3_sha3 succeeds if request is sha3 of input", "[silkrpc][we
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     Context context;
-    context.backend = std::unique_ptr<ethbackend::BackEndInterface>(new ethbackend::BackEndMock());
+    context.backend = std::unique_ptr<ethbackend::BackEnd>(new ethbackend::BackEndMock());
     ethbackend::test_rpc_call<Web3RpcApiTest, &Web3RpcApiTest::handle_web3_sha3, Context&>(
         R"({
             "jsonrpc":"2.0",
@@ -81,7 +81,7 @@ TEST_CASE("handle_web3_sha3 fails with not enough parameters", "[silkrpc][web3_a
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     Context context;
-    context.backend = std::unique_ptr<ethbackend::BackEndInterface>(new ethbackend::BackEndMock());
+    context.backend = std::unique_ptr<ethbackend::BackEnd>(new ethbackend::BackEndMock());
     ethbackend::test_rpc_call<Web3RpcApiTest, &Web3RpcApiTest::handle_web3_sha3, Context&>(
         R"({
             "jsonrpc":"2.0",
@@ -105,7 +105,7 @@ TEST_CASE("handle_web3_sha3 fails with not non-hex parameter", "[silkrpc][web3_a
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     Context context;
-    context.backend = std::unique_ptr<ethbackend::BackEndInterface>(new ethbackend::BackEndMock());
+    context.backend = std::unique_ptr<ethbackend::BackEnd>(new ethbackend::BackEndMock());
     ethbackend::test_rpc_call<Web3RpcApiTest, &Web3RpcApiTest::handle_web3_sha3, Context&>(
         R"({
             "jsonrpc":"2.0",

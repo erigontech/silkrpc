@@ -30,7 +30,7 @@ using Catch::Matchers::Message;
 
 class EngineRpcApiTest : public EngineRpcApi{
 public:
-    explicit EngineRpcApiTest(std::unique_ptr<ethbackend::BackEndInterface>& backend): EngineRpcApi(backend) {}
+    explicit EngineRpcApiTest(std::unique_ptr<ethbackend::BackEnd>& backend): EngineRpcApi(backend) {}
 
     using EngineRpcApi::handle_engine_get_payload_v1;
 };
@@ -38,8 +38,8 @@ public:
 TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::BackEndMock());
-    ethbackend::test_rpc_call<EngineRpcApiTest, &EngineRpcApiTest::handle_engine_get_payload_v1, std::unique_ptr<ethbackend::BackEndInterface>>(
+    std::unique_ptr<ethbackend::BackEnd> backend(new ethbackend::BackEndMock());
+    ethbackend::test_rpc_call<EngineRpcApiTest, &EngineRpcApiTest::handle_engine_get_payload_v1, std::unique_ptr<ethbackend::BackEnd>>(
         R"({
             "jsonrpc":"2.0",
             "id":1,
@@ -54,8 +54,8 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
 TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    std::unique_ptr<ethbackend::BackEndInterface> backend(new ethbackend::BackEndMock());
-    ethbackend::test_rpc_call<EngineRpcApiTest, &EngineRpcApiTest::handle_engine_get_payload_v1, std::unique_ptr<ethbackend::BackEndInterface>>(
+    std::unique_ptr<ethbackend::BackEnd> backend(new ethbackend::BackEndMock());
+    ethbackend::test_rpc_call<EngineRpcApiTest, &EngineRpcApiTest::handle_engine_get_payload_v1, std::unique_ptr<ethbackend::BackEnd>>(
         R"({
             "jsonrpc":"2.0",
             "id":1,

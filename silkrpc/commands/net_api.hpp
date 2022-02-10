@@ -36,7 +36,7 @@ namespace silkrpc::commands {
 
 class NetRpcApi {
 public:
-    explicit NetRpcApi(std::unique_ptr<ethbackend::BackEndInterface>& backend) : backend_(backend) {}
+    explicit NetRpcApi(std::unique_ptr<ethbackend::BackEnd>& backend) : backend_(backend) {}
     virtual ~NetRpcApi() = default;
 
     NetRpcApi(const NetRpcApi&) = delete;
@@ -50,7 +50,7 @@ protected:
 private:
     friend class silkrpc::http::RequestHandler;
 
-    std::unique_ptr<ethbackend::BackEndInterface>& backend_;
+    std::unique_ptr<ethbackend::BackEnd>& backend_;
 };
 } // namespace silkrpc::commands
 

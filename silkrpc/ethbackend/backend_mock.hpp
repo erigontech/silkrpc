@@ -22,7 +22,7 @@
 
 #include <asio/use_future.hpp>
 #include <asio/co_spawn.hpp>
-#include <silkrpc/ethbackend/backend_interface.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
 #include <evmc/evmc.hpp>
 #include <memory>
 
@@ -38,7 +38,7 @@ constexpr uint64_t kNetPeerCountTest = 5;
 static const ExecutionPayload kGetPayloadTest = ExecutionPayload{1}; // Empty payload with block number 1
 
 
-class BackEndMock : public BackEndInterface {
+class BackEndMock : public BackEnd {
 public:
     asio::awaitable<evmc::address> etherbase() { co_return kEtherbaseTest; }
     asio::awaitable<uint64_t> protocol_version() { co_return kProtocolVersionTest; }
@@ -55,7 +55,7 @@ void test_rpc_call(const nlohmann::json& request, const nlohmann::json& expected
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     // Initialise components
-    std::unique_ptr<ethbackend::BackEndInterface> backend(new BackEndMock());
+    std::unique_ptr<ethbackend::BackEnd> backend(new BackEndMock());
     T rpc(rpc_args...);
 
     // spawn routine

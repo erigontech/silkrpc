@@ -29,7 +29,7 @@
 
 #include <silkrpc/txpool/transaction_pool.hpp>
 #include <silkrpc/common/block_cache.hpp>
-#include <silkrpc/ethbackend/backend_interface.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/grpc/completion_runner.hpp>
 #include <silkrpc/txpool/miner.hpp>
@@ -41,7 +41,7 @@ struct Context {
     std::unique_ptr<grpc::CompletionQueue> grpc_queue;
     std::unique_ptr<CompletionRunner> grpc_runner;
     std::unique_ptr<ethdb::Database> database;
-    std::unique_ptr<ethbackend::BackEndInterface> backend;
+    std::unique_ptr<ethbackend::BackEnd> backend;
     std::unique_ptr<txpool::Miner> miner;
     std::unique_ptr<txpool::TransactionPool> tx_pool;
     std::shared_ptr<BlockCache> block_cache;
