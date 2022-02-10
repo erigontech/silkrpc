@@ -303,45 +303,6 @@ static void benchmark_decode_uint256_lithium_json(benchmark::State& state) {
 }
 //BENCHMARK(benchmark_decode_uint256_lithium_json);
 
-/* benchmark_encode_block_header */
-static const silkworm::BlockHeader HEADER{
-    0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
-    0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d_bytes32,
-    0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
-    0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d_bytes32,
-    0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e_bytes32,
-    0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f_bytes32,
-    silkworm::Bloom{},
-    intx::uint256{0},
-    uint64_t(5),
-    uint64_t(1000000),
-    uint64_t(1000000),
-    uint64_t(5405021),
-    *silkworm::from_hex("0001FF0100"),                                          // extradata
-    0x0000000000000000000000000000000000000000000000000000000000000001_bytes32, // mixhash
-    {1, 2, 3, 4, 5, 6, 7, 8},                                                   // nonce
-    std::optional<intx::uint256>(1000),                                         // base_fee_per_gas
-};
-
-static void benchmark_encode_block_header_nlohmann_json(benchmark::State& state) {
-    for (auto _ : state) {
-        const nlohmann::json j = HEADER;
-        const auto s = j.dump(/*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace);
-        benchmark::DoNotOptimize(s);
-    }
-}
-BENCHMARK(benchmark_encode_block_header_nlohmann_json);
-
-#ifndef LI_SYMBOL_parent_hash
-#define LI_SYMBOL_parent_hash
-    LI_SYMBOL(parent_hash)
-#endif // LI_SYMBOL_parent_hash
-
-#ifndef LI_SYMBOL_ommers_hash
-#define LI_SYMBOL_ommers_hash
-    LI_SYMBOL(ommers_hash)
-#endif // LI_SYMBOL_ommers_hash
-
 #ifndef LI_SYMBOL_transactions_root
 #define LI_SYMBOL_transactions_root
     LI_SYMBOL(transactions_root)
@@ -407,6 +368,12 @@ BENCHMARK(benchmark_encode_block_header_nlohmann_json);
     LI_SYMBOL(extra_data)
 #endif // LI_SYMBOL_extra_data
 
+#ifndef LI_SYMBOL_get_block_number
+#define LI_SYMBOL_get_block_number
+    LI_SYMBOL(get_block_number)
+#endif // LI_SYMBOL_get_block_number
+
+
 template<std::size_t N>
 std::size_t to_hex_no_leading_zeros(std::array<char, N>& hex_bytes, silkworm::ByteView bytes) {
     static const char* kHexDigits{"0123456789abcdef"};
@@ -453,6 +420,56 @@ std::size_t to_quantity(std::array<char, 8>& quantity_hex_bytes, uint64_t number
     silkworm::endian::store_big_u64(number_bytes.data(), number);
     return to_hex_no_leading_zeros<8>(quantity_hex_bytes, number_bytes);
 }
+
+struct BlockHeader : public silkworm::BlockHeader {
+   std::array<char, 8> block_number_quantity;
+   //size_t block_number_quantity_size;
+   std::string_view get_block_number() { 
+          auto block_number_quantity_size = to_quantity(block_number_quantity, number);
+          return std::string_view{block_number_quantity.data(), block_number_quantity_size }; 
+   }
+};
+
+
+/* benchmark_encode_block_header */
+static const BlockHeader HEADER{
+    0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
+    0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d_bytes32,
+    0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+    0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d_bytes32,
+    0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e_bytes32,
+    0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f_bytes32,
+    silkworm::Bloom{},
+    intx::uint256{0},
+    uint64_t(5),
+    uint64_t(1000000),
+    uint64_t(1000000),
+    uint64_t(5405021),
+    *silkworm::from_hex("0001FF0100"),                                          // extradata
+    0x0000000000000000000000000000000000000000000000000000000000000001_bytes32, // mixhash
+    {1, 2, 3, 4, 5, 6, 7, 8},                                                   // nonce
+    std::optional<intx::uint256>(1000),                                         // base_fee_per_gas
+    "0x5",
+};
+
+static void benchmark_encode_block_header_nlohmann_json(benchmark::State& state) {
+    for (auto _ : state) {
+        const nlohmann::json j = HEADER;
+        const auto s = j.dump(/*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace);
+        benchmark::DoNotOptimize(s);
+    }
+}
+BENCHMARK(benchmark_encode_block_header_nlohmann_json);
+
+#ifndef LI_SYMBOL_parent_hash
+#define LI_SYMBOL_parent_hash
+    LI_SYMBOL(parent_hash)
+#endif // LI_SYMBOL_parent_hash
+
+#ifndef LI_SYMBOL_ommers_hash
+#define LI_SYMBOL_ommers_hash
+    LI_SYMBOL(ommers_hash)
+#endif // LI_SYMBOL_ommers_hash
 
 namespace li {
 
@@ -504,7 +521,7 @@ inline output_buffer& operator<<(output_buffer& out, const silkworm::Bytes& byte
     return out;
 }
 
-inline output_buffer& operator<<(output_buffer& out, const silkworm::BlockHeader& block_header) {
+inline output_buffer& operator<<(output_buffer& out, const BlockHeader& block_header) {
     li::json_object(
         s::parent_hash(li::json_key("parentHash")),
         s::ommers_hash(li::json_key("sha3Uncles")),
@@ -514,7 +531,7 @@ inline output_buffer& operator<<(output_buffer& out, const silkworm::BlockHeader
         s::receipts_root(li::json_key("receiptsRoot")),
         s::logs_bloom(li::json_key("logsBloom")),
         s::difficulty,
-        //s::number,
+        s::get_block_number(li::json_key("number")),
         //s::gas_limit,
         //s::gas_used,
         //s::timestamp,
@@ -526,7 +543,7 @@ inline output_buffer& operator<<(output_buffer& out, const silkworm::BlockHeader
 
 } // namespace li
 
-li::output_buffer encode_block_header(const silkworm::BlockHeader& block_header) {
+li::output_buffer encode_block_header(const BlockHeader& block_header) {
     char buffer[2048];
     li::output_buffer output_buffer{buffer, 2048};
     output_buffer << block_header;
@@ -551,9 +568,11 @@ static void benchmark_encode_block_header_lithium_json(benchmark::State& state) 
                     R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
                     R"(00000000000000000000000000000000000000000000000000000000000000000000000000000000",)"
         R"("difficulty":"0x",)"
+        R"("number":"0x5",)"
         R"("extraData":"0x0001ff0100",)"
         R"("mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",)"
         R"("nonce":"0x0102030405060708"})");
+
     for (auto _ : state) {
         li::output_buffer output_buffer = encode_block_header(HEADER);
         output_buffer.reset();
