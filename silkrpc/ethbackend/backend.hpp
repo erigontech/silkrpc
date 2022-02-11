@@ -27,7 +27,7 @@
 namespace silkrpc::ethbackend {
 
 class BackEnd {
-    public:
+public:
     virtual ~BackEnd() = default;
     virtual asio::awaitable<evmc::address> etherbase() = 0;
     virtual asio::awaitable<uint64_t> protocol_version() = 0;
