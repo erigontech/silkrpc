@@ -1399,15 +1399,6 @@ TEST_CASE("serialize payload status", "[silkrpc::json][to_json]") {
     })"_json);
 }
 
-TEST_CASE("deserialize payload status", "[silkrpc::json][to_json]") {
-    PayloadStatus payload_status = R"({
-        "status":"VALID",
-        "latestValidHash":"0x0000000000000000000000000000000000000000000000000000000000000040",
-        "validationError":"some error"
-    })"_json;
-    CHECK(payload_status.status == "VALID");
-}
-
 TEST_CASE("make empty json content", "[silkrpc::json][make_json_content]") {
     const auto j = silkrpc::make_json_content(0, {});
     CHECK(j == R"({

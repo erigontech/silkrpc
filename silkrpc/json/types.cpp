@@ -498,17 +498,6 @@ void to_json(nlohmann::json& json, const PayloadStatus& payload_status) {
     }
 }
 
-void from_json(const nlohmann::json& json, PayloadStatus& payload_status) {
-    payload_status.status = json.at("status").get<std::string>();
-    if (json.contains("latestValidHash")) {
-        payload_status.latest_valid_hash = json.at("latestValidHash").get<evmc::bytes32>();
-    }
-    if (json.contains("validationError")) {
-        payload_status.validation_error = json.at("validationError").get<std::string>();
-    }
-}
-
-
 void to_json(nlohmann::json& json, const Forks& forks) {
     json["genesis"] = forks.genesis_hash;
     json["forks"] = forks.block_numbers;
