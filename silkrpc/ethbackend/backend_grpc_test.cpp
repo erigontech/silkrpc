@@ -492,7 +492,7 @@ TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
         io_context.run();
         auto payload_status{reply.get()};
         CHECK(payload_status.status == "ACCEPTED");
-        CHECK(*payload_status.latest_valid_hash == 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32);
+        CHECK(payload_status.latest_valid_hash == 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32);
         CHECK(payload_status.validation_error == "some error");
     }
 

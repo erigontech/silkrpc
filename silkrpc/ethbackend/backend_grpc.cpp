@@ -93,9 +93,8 @@ asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPaylo
     EngineNewPayloadV1Awaitable npc_awaitable{executor_, stub_, queue_};
     auto req{encode_execution_payload(payload)};
     const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
-    auto payload_status = PayloadStatus{
-        .status = decode_status_message(reply.status()),
-    };
+    PayloadStatus payload_status;
+    payload_status.status = decode_status_message(reply.status());
     // Set LatestValidHash (if there is one)
     if (reply.has_latestvalidhash()) {
         payload_status.latest_valid_hash = bytes32_from_H256(reply.latestvalidhash());
