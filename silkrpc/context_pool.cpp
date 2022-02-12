@@ -22,6 +22,7 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
+#include <silkrpc/ethbackend/backend_grpc.hpp>
 
 namespace silkrpc {
 
@@ -52,7 +53,7 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) :
         auto grpc_queue = std::make_unique<grpc::CompletionQueue>();
         auto grpc_runner = std::make_unique<CompletionRunner>(*grpc_queue, *io_context);
         auto database = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
-        auto backend = std::make_unique<ethbackend::BackEnd>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
+        auto backend = std::make_unique<ethbackend::BackEndGrpc>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
         auto miner = std::make_unique<txpool::Miner>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
         auto tx_pool = std::make_unique<txpool::TransactionPool>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
         contexts_.push_back({

@@ -1,5 +1,5 @@
 /*
-    Copyright 2020 The Silkrpc Authors
+    Copyright 2022 The Silkrpc Authors
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-#include "backend.hpp"
+#include "backend_grpc.hpp"
 
 #include <optional>
 #include <vector>
@@ -28,7 +28,7 @@
 
 namespace silkrpc::ethbackend {
 
-asio::awaitable<evmc::address> BackEnd::etherbase() {
+asio::awaitable<evmc::address> BackEndGrpc::etherbase() {
         const auto start_time = clock_time::now();
         EtherbaseAwaitable eb_awaitable{executor_, stub_, queue_};
         const auto reply = co_await eb_awaitable.async_call(::remote::EtherbaseRequest{}, asio::use_awaitable);
@@ -41,7 +41,7 @@ asio::awaitable<evmc::address> BackEnd::etherbase() {
         co_return evmc_address;
 }
 
-asio::awaitable<uint64_t> BackEnd::protocol_version() {
+asio::awaitable<uint64_t> BackEndGrpc::protocol_version() {
     const auto start_time = clock_time::now();
     ProtocolVersionAwaitable pv_awaitable{executor_, stub_, queue_};
     const auto reply = co_await pv_awaitable.async_call(::remote::ProtocolVersionRequest{}, asio::use_awaitable);
@@ -50,7 +50,7 @@ asio::awaitable<uint64_t> BackEnd::protocol_version() {
     co_return pv;
 }
 
-asio::awaitable<uint64_t> BackEnd::net_version() {
+asio::awaitable<uint64_t> BackEndGrpc::net_version() {
     const auto start_time = clock_time::now();
     NetVersionAwaitable nv_awaitable{executor_, stub_, queue_};
     const auto reply = co_await nv_awaitable.async_call(::remote::NetVersionRequest{}, asio::use_awaitable);
@@ -59,7 +59,7 @@ asio::awaitable<uint64_t> BackEnd::net_version() {
     co_return nv;
 }
 
-asio::awaitable<std::string> BackEnd::client_version() {
+asio::awaitable<std::string> BackEndGrpc::client_version() {
     const auto start_time = clock_time::now();
     ClientVersionAwaitable cv_awaitable{executor_, stub_, queue_};
     const auto reply = co_await cv_awaitable.async_call(::remote::ClientVersionRequest{}, asio::use_awaitable);
@@ -68,7 +68,7 @@ asio::awaitable<std::string> BackEnd::client_version() {
     co_return cv;
 }
 
-asio::awaitable<uint64_t> BackEnd::net_peer_count() {
+asio::awaitable<uint64_t> BackEndGrpc::net_peer_count() {
     const auto start_time = clock_time::now();
     NetPeerCountAwaitable npc_awaitable{executor_, stub_, queue_};
     const auto reply = co_await npc_awaitable.async_call(::remote::NetPeerCountRequest{}, asio::use_awaitable);
@@ -77,7 +77,7 @@ asio::awaitable<uint64_t> BackEnd::net_peer_count() {
     co_return count;
 }
 
-asio::awaitable<ExecutionPayload> BackEnd::engine_get_payload_v1(uint64_t payload_id) {
+asio::awaitable<ExecutionPayload> BackEndGrpc::engine_get_payload_v1(uint64_t payload_id) {
     const auto start_time = clock_time::now();
     EngineGetPayloadV1Awaitable npc_awaitable{executor_, stub_, queue_};
     ::remote::EngineGetPayloadRequest req;
@@ -88,11 +88,11 @@ asio::awaitable<ExecutionPayload> BackEnd::engine_get_payload_v1(uint64_t payloa
     co_return execution_payload;
 }
 
-asio::awaitable<::types::ExecutionPayload> BackEnd::execution_payload_to_proto(ExecutionPayload payload) {
+asio::awaitable<::types::ExecutionPayload> BackEndGrpc::execution_payload_to_proto(ExecutionPayload payload) {
     co_return encode_execution_payload(payload);
 }
 
-evmc::address BackEnd::address_from_H160(const types::H160& h160) {
+evmc::address BackEndGrpc::address_from_H160(const types::H160& h160) {
     uint64_t hi_hi = h160.hi().hi();
     uint64_t hi_lo = h160.hi().lo();
     uint32_t lo = h160.lo();
@@ -103,21 +103,21 @@ evmc::address BackEnd::address_from_H160(const types::H160& h160) {
     return address;
 }
 
-silkworm::Bytes BackEnd::bytes_from_H128(const types::H128& h128) {
+silkworm::Bytes BackEndGrpc::bytes_from_H128(const types::H128& h128) {
     silkworm::Bytes bytes(16, '\0');
     boost::endian::store_big_u64(&bytes[0], h128.hi());
     boost::endian::store_big_u64(&bytes[8], h128.lo());
     return bytes;
 }
 
-types::H128* BackEnd::H128_from_bytes(const uint8_t* bytes) {
+types::H128* BackEndGrpc::H128_from_bytes(const uint8_t* bytes) {
     auto h128{new types::H128()};
     h128->set_hi(boost::endian::load_big_u64(bytes));
     h128->set_lo(boost::endian::load_big_u64(bytes + 8));
     return h128;
 }
 
-types::H160* BackEnd::H160_from_address(const evmc::address& address) {
+types::H160* BackEndGrpc::H160_from_address(const evmc::address& address) {
     auto h160{new types::H160()};
     auto hi{H128_from_bytes(address.bytes)};
     h160->set_allocated_hi(hi);
@@ -125,7 +125,7 @@ types::H160* BackEnd::H160_from_address(const evmc::address& address) {
     return h160;
 }
 
-types::H256* BackEnd::H256_from_bytes(const uint8_t* bytes) {
+types::H256* BackEndGrpc::H256_from_bytes(const uint8_t* bytes) {
     auto h256{new types::H256()};
     auto hi{H128_from_bytes(bytes)};
     auto lo{H128_from_bytes(bytes + 16)};
@@ -134,7 +134,7 @@ types::H256* BackEnd::H256_from_bytes(const uint8_t* bytes) {
     return h256;
 }
 
-silkworm::Bytes BackEnd::bytes_from_H256(const types::H256& h256) {
+silkworm::Bytes BackEndGrpc::bytes_from_H256(const types::H256& h256) {
     silkworm::Bytes bytes(32, '\0');
     auto hi{h256.hi()};
     auto lo{h256.lo()};
@@ -143,7 +143,7 @@ silkworm::Bytes BackEnd::bytes_from_H256(const types::H256& h256) {
     return bytes;
 }
 
-intx::uint256 BackEnd::uint256_from_H256(const types::H256& h256) {
+intx::uint256 BackEndGrpc::uint256_from_H256(const types::H256& h256) {
     intx::uint256 n;
     n[3] = h256.hi().hi();
     n[2] = h256.hi().lo();
@@ -152,7 +152,7 @@ intx::uint256 BackEnd::uint256_from_H256(const types::H256& h256) {
     return n;
 }
 
-types::H256* BackEnd::H256_from_uint256(const intx::uint256& n) {
+types::H256* BackEndGrpc::H256_from_uint256(const intx::uint256& n) {
     auto h256{new types::H256()};
     auto hi{new types::H128()};
     auto lo{new types::H128()};
@@ -167,13 +167,13 @@ types::H256* BackEnd::H256_from_uint256(const intx::uint256& n) {
     return h256;
 }
 
-evmc::bytes32 BackEnd::bytes32_from_H256(const types::H256& h256) {
+evmc::bytes32 BackEndGrpc::bytes32_from_H256(const types::H256& h256) {
     evmc::bytes32 bytes32;
     std::memcpy(bytes32.bytes, bytes_from_H256(h256).data(), 32);
     return bytes32;
 }
 
-types::H512* BackEnd::H512_from_bytes(const uint8_t* bytes) {
+types::H512* BackEndGrpc::H512_from_bytes(const uint8_t* bytes) {
     auto h512{new types::H512()};
     auto hi{H256_from_bytes(bytes)};
     auto lo{H256_from_bytes(bytes + 32)};
@@ -182,7 +182,7 @@ types::H512* BackEnd::H512_from_bytes(const uint8_t* bytes) {
     return h512;
 }
 
-silkworm::Bytes BackEnd::bytes_from_H512(types::H512& h512) {
+silkworm::Bytes BackEndGrpc::bytes_from_H512(types::H512& h512) {
     silkworm::Bytes bytes(64, '\0');
     auto hi{h512.hi()};
     auto lo{h512.lo()};
@@ -191,7 +191,7 @@ silkworm::Bytes BackEnd::bytes_from_H512(types::H512& h512) {
     return bytes;
 }
 
-types::H1024* BackEnd::H1024_from_bytes(const uint8_t* bytes) {
+types::H1024* BackEndGrpc::H1024_from_bytes(const uint8_t* bytes) {
     auto h1024{new types::H1024()};
     auto hi{H512_from_bytes(bytes)};
     auto lo{H512_from_bytes(bytes + 64)};
@@ -200,7 +200,7 @@ types::H1024* BackEnd::H1024_from_bytes(const uint8_t* bytes) {
     return h1024;
 }
 
-silkworm::Bytes BackEnd::bytes_from_H1024(types::H1024& h1024) {
+silkworm::Bytes BackEndGrpc::bytes_from_H1024(types::H1024& h1024) {
     silkworm::Bytes bytes(128, '\0');
     auto hi{h1024.hi()};
     auto lo{h1024.lo()};
@@ -209,7 +209,7 @@ silkworm::Bytes BackEnd::bytes_from_H1024(types::H1024& h1024) {
     return bytes;
 }
 
-types::H2048* BackEnd::H2048_from_bytes(const uint8_t* bytes) {
+types::H2048* BackEndGrpc::H2048_from_bytes(const uint8_t* bytes) {
     auto h2048{new types::H2048()};
     auto hi{H1024_from_bytes(bytes)};
     auto lo{H1024_from_bytes(bytes + 128)};
@@ -218,7 +218,7 @@ types::H2048* BackEnd::H2048_from_bytes(const uint8_t* bytes) {
     return h2048;
 }
 
-silkworm::Bytes BackEnd::bytes_from_H2048(types::H2048& h2048) {
+silkworm::Bytes BackEndGrpc::bytes_from_H2048(types::H2048& h2048) {
     silkworm::Bytes bytes(256, '\0');
     auto hi{h2048.hi()};
     auto lo{h2048.lo()};
@@ -227,7 +227,7 @@ silkworm::Bytes BackEnd::bytes_from_H2048(types::H2048& h2048) {
     return bytes;
 }
 
-ExecutionPayload BackEnd::decode_execution_payload(const types::ExecutionPayload& execution_payload_grpc) {
+ExecutionPayload BackEndGrpc::decode_execution_payload(const types::ExecutionPayload& execution_payload_grpc) {
     auto state_root_h256{execution_payload_grpc.stateroot()};
     auto receipts_root_h256{execution_payload_grpc.receiptroot()};
     auto block_hash_h256{execution_payload_grpc.blockhash()};
@@ -264,7 +264,7 @@ ExecutionPayload BackEnd::decode_execution_payload(const types::ExecutionPayload
     };
 }
 
-types::ExecutionPayload BackEnd::encode_execution_payload(const ExecutionPayload& execution_payload) {
+types::ExecutionPayload BackEndGrpc::encode_execution_payload(const ExecutionPayload& execution_payload) {
     types::ExecutionPayload execution_payload_grpc;
     // Numerical parameters
     execution_payload_grpc.set_blocknumber(execution_payload.number);

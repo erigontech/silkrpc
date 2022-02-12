@@ -104,6 +104,7 @@ constexpr const char* k_tg_issuance{"tg_issuance"};
 
 constexpr const char* k_parity_getBlockReceipts{"parity_getBlockReceipts"};
 
+constexpr const char* k_engine_getPayloadV1{"engine_getPayloadV1"};
 } // namespace silkrpc::http::method
 
 #endif // SILKRPC_HTTP_METHODS_HPP_

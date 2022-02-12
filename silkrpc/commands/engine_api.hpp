@@ -1,5 +1,5 @@
 /*
-   Copyright 2020 The Silkrpc Authors
+   Copyright 2022 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,44 +14,42 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMANDS_NET_API_HPP_
-#define SILKRPC_COMMANDS_NET_API_HPP_
+#ifndef SILKRPC_COMMANDS_ENGINE_API_HPP_
+#define SILKRPC_COMMANDS_ENGINE_API_HPP_
 
 #include <memory>
 #include <vector>
 
-#include <silkrpc/config.hpp> // NOLINT(build/include_order)
-
 #include <asio/awaitable.hpp>
+#include <asio/thread_pool.hpp>
 #include <nlohmann/json.hpp>
 
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/json/types.hpp>
-#include <silkrpc/types/log.hpp>
 #include <silkrpc/ethbackend/backend.hpp>
-#include <silkrpc/common/log.hpp>
+
 
 namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
-class NetRpcApi {
+class EngineRpcApi {
 public:
-    explicit NetRpcApi(std::unique_ptr<ethbackend::BackEnd>& backend) : backend_(backend) {}
-    virtual ~NetRpcApi() = default;
+    explicit EngineRpcApi(std::unique_ptr<ethbackend::BackEnd>& backend): backend_(backend) {}
+    virtual ~EngineRpcApi() {}
 
-    NetRpcApi(const NetRpcApi&) = delete;
-    NetRpcApi& operator=(const NetRpcApi&) = delete;
+    EngineRpcApi(const EngineRpcApi&) = delete;
+    EngineRpcApi& operator=(const EngineRpcApi&) = delete;
 
 protected:
-    asio::awaitable<void> handle_net_listening(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_net_peer_count(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_net_version(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
-    friend class silkrpc::http::RequestHandler;
-
     std::unique_ptr<ethbackend::BackEnd>& backend_;
+
+    friend class silkrpc::http::RequestHandler;
 };
+
 } // namespace silkrpc::commands
 
-#endif  // SILKRPC_COMMANDS_NET_API_HPP_
+#endif  // SILKRPC_COMMANDS_ENGINE_API_HPP_

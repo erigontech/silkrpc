@@ -28,7 +28,7 @@
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/context_pool.hpp>
-#include <silkrpc/ethbackend/backend.hpp>
+#include <silkrpc/ethbackend/backend_grpc.hpp>
 #include <silkrpc/interfaces/types/types.pb.h>
 
 inline std::ostream& operator<<(std::ostream& out, const types::H160& address) {
@@ -74,7 +74,7 @@ int ethbackend_coroutines(const std::string& target) {
         const auto channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
 
         // Etherbase
-        silkrpc::ethbackend::BackEnd eth_backend{*io_context, channel, grpc_queue.get()};
+        silkrpc::ethbackend::BackEndGrpc eth_backend{*io_context, channel, grpc_queue.get()};
         asio::co_spawn(*io_context, ethbackend_etherbase(eth_backend), [&](std::exception_ptr exptr) {
             context_pool.stop();
         });
