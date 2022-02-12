@@ -221,7 +221,7 @@ static void benchmark_encode_bytes32_lithium_json(benchmark::State& state) {
         output_buffer.reset();
     }
 }
-BENCHMARK(benchmark_encode_bytes32_lithium_json);
+//BENCHMARK(benchmark_encode_bytes32_lithium_json);
 
 /* benchmark_decode_bytes32 */
 static void benchmark_decode_bytes32_nlohmann_json(benchmark::State& state) {
@@ -373,6 +373,21 @@ static void benchmark_decode_uint256_lithium_json(benchmark::State& state) {
     LI_SYMBOL(get_block_number)
 #endif // LI_SYMBOL_get_block_number
 
+#ifndef LI_SYMBOL_get_gas_used
+#define LI_SYMBOL_get_gas_used
+    LI_SYMBOL(get_gas_used)
+#endif // LI_SYMBOL_get_gas_used
+
+#ifndef LI_SYMBOL_get_timestamp
+#define LI_SYMBOL_get_timestamp
+    LI_SYMBOL(get_timestamp)
+#endif // LI_SYMBOL_get_timestamp
+
+#ifndef LI_SYMBOL_get_gas_limit
+#define LI_SYMBOL_get_gas_limit
+    LI_SYMBOL(get_gas_limit)
+#endif // LI_SYMBOL_get_gas_limit
+
 
 template<std::size_t N>
 std::size_t to_hex_no_leading_zeros(std::array<char, N>& hex_bytes, silkworm::ByteView bytes) {
@@ -423,10 +438,28 @@ std::size_t to_quantity(std::array<char, 8>& quantity_hex_bytes, uint64_t number
 
 struct BlockHeader : public silkworm::BlockHeader {
    std::array<char, 8> block_number_quantity;
-   //size_t block_number_quantity_size;
+   std::array<char, 8> gas_used_quantity;
+   std::array<char, 8> gas_limit_quantity;
+   std::array<char, 8> timestamp_quantity;
+
    std::string_view get_block_number() { 
           auto block_number_quantity_size = to_quantity(block_number_quantity, number);
           return std::string_view{block_number_quantity.data(), block_number_quantity_size }; 
+   }
+
+   std::string_view get_gas_used() { 
+          auto gas_used_quantity_size = to_quantity(gas_used_quantity, gas_used);
+          return std::string_view{gas_used_quantity.data(), gas_used_quantity_size }; 
+   }
+
+   std::string_view get_gas_limit() { 
+          auto gas_limit_quantity_size = to_quantity(gas_limit_quantity, gas_limit);
+          return std::string_view{gas_limit_quantity.data(), gas_limit_quantity_size }; 
+   }
+
+   std::string_view get_timestamp() { 
+          auto timestamp_quantity_size = to_quantity(timestamp_quantity, timestamp);
+          return std::string_view{timestamp_quantity.data(), timestamp_quantity_size }; 
    }
 };
 
@@ -449,7 +482,10 @@ static const BlockHeader HEADER{
     0x0000000000000000000000000000000000000000000000000000000000000001_bytes32, // mixhash
     {1, 2, 3, 4, 5, 6, 7, 8},                                                   // nonce
     std::optional<intx::uint256>(1000),                                         // base_fee_per_gas
-    "0x5",
+    "",
+    "",
+    "",
+    ""
 };
 
 static void benchmark_encode_block_header_nlohmann_json(benchmark::State& state) {
@@ -532,9 +568,9 @@ inline output_buffer& operator<<(output_buffer& out, const BlockHeader& block_he
         s::logs_bloom(li::json_key("logsBloom")),
         s::difficulty,
         s::get_block_number(li::json_key("number")),
-        //s::gas_limit,
-        //s::gas_used,
-        //s::timestamp,
+        s::get_gas_limit(li::json_key("gas_limit")),
+        s::get_gas_used(li::json_key("gas_used")),
+        s::get_timestamp(li::json_key("timestamp")),
         s::extra_data(li::json_key("extraData")),
         s::mix_hash(li::json_key("mixHash")),
         s::nonce).encode(out, block_header);
@@ -569,6 +605,9 @@ static void benchmark_encode_block_header_lithium_json(benchmark::State& state) 
                     R"(00000000000000000000000000000000000000000000000000000000000000000000000000000000",)"
         R"("difficulty":"0x",)"
         R"("number":"0x5",)"
+        R"("gas_limit":"0xf4240",)"
+        R"("gas_used":"0xf4240",)"
+        R"("timestamp":"0x52795d",)"
         R"("extraData":"0x0001ff0100",)"
         R"("mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",)"
         R"("nonce":"0x0102030405060708"})");
