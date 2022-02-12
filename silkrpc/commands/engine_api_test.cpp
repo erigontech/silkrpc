@@ -39,6 +39,7 @@ public:
     MOCK_METHOD((asio::awaitable<std::string>), client_version, ());
     MOCK_METHOD((asio::awaitable<uint64_t>), net_peer_count, ());
     MOCK_METHOD((asio::awaitable<ExecutionPayload>), engine_get_payload_v1, (uint64_t payload_id));
+    MOCK_METHOD((asio::awaitable<PayloadStatus>), engine_new_payload_v1, (ExecutionPayload payload));
 };
 
 } // namespace

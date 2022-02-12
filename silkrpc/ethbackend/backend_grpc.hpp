@@ -76,6 +76,13 @@ using EngineGetPayloadV1Client = AsyncUnaryClient<
     &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineGetPayloadV1
 >;
 
+using EngineNewPayloadV1Client = AsyncUnaryClient<
+    ::remote::ETHBACKEND::StubInterface,
+    ::types::ExecutionPayload,
+    ::remote::EnginePayloadStatus,
+    &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineNewPayloadV1
+>;
+
 using EtherbaseAwaitable = unary_awaitable<
     asio::io_context::executor_type,
     EtherbaseClient,
@@ -124,6 +131,13 @@ using EngineGetPayloadV1Awaitable = unary_awaitable<
     ::types::ExecutionPayload
 >;
 
+using EngineNewPayloadV1Awaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    EngineNewPayloadV1Client,
+    ::remote::ETHBACKEND::StubInterface,
+    ::types::ExecutionPayload,
+    ::remote::EnginePayloadStatus
+>;
 
 class BackEndGrpc final: public BackEnd {
 public:
@@ -145,9 +159,7 @@ public:
     asio::awaitable<std::string> client_version();
     asio::awaitable<uint64_t> net_peer_count();
     asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id);
-
-    // just for testing
-    asio::awaitable<::types::ExecutionPayload> execution_payload_to_proto(ExecutionPayload payload);
+    asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload);
 
 private:
     evmc::address address_from_H160(const types::H160& h160);
@@ -168,6 +180,7 @@ private:
 
     ExecutionPayload decode_execution_payload(const types::ExecutionPayload& execution_payload_grpc);
     types::ExecutionPayload encode_execution_payload(const ExecutionPayload& execution_payload);
+    std::string decode_status_message(const remote::EngineStatus& status);
 
     asio::io_context::executor_type executor_;
     std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub_;

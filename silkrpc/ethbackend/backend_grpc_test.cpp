@@ -117,6 +117,9 @@ public:
     ::grpc::Status EngineGetPayloadV1(::grpc::ServerContext* context, const ::remote::EngineGetPayloadRequest* request, ::types::ExecutionPayload* response) override {
         return ::grpc::Status::OK;
     }
+    ::grpc::Status EngineNewPayloadV1(::grpc::ServerContext* context, const ::types::ExecutionPayload* request, ::remote::EnginePayloadStatus* response) override {
+        return ::grpc::Status::OK;
+    }
 };
 
 class FailureBackEndService : public ::remote::ETHBACKEND::Service {
@@ -137,6 +140,9 @@ public:
         return ::grpc::Status::CANCELLED;
     }
     ::grpc::Status EngineGetPayloadV1(::grpc::ServerContext* context, const ::remote::EngineGetPayloadRequest* request, ::types::ExecutionPayload* response) override {
+        return ::grpc::Status::CANCELLED;
+    }
+    ::grpc::Status EngineNewPayloadV1(::grpc::ServerContext* context, const ::types::ExecutionPayload* request, ::remote::EnginePayloadStatus* response) override {
         return ::grpc::Status::CANCELLED;
     }
 };
@@ -187,6 +193,31 @@ public:
         logsbloom->set_allocated_hi(hi_logsbloom);
         response->set_allocated_logsbloom(logsbloom);
 
+        return ::grpc::Status::OK;
+    }
+
+    ::grpc::Status EngineNewPayloadV1(::grpc::ServerContext* context, const ::types::ExecutionPayload* request, ::remote::EnginePayloadStatus* response) override {
+        silkworm::Bloom bloom;
+        bloom.fill(0);
+        bloom[0] = 0x12;
+        auto transaction{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
+        // Check that payload was converted to protobuf correctly
+        CHECK(request->blocknumber() == 0x1);
+        CHECK(request->timestamp() == 0x5);
+        CHECK(request->gaslimit() == 0x1c9c380);
+        CHECK(request->gasused() == 0x9);
+        CHECK(h160_equal_address(request->coinbase(), 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address));
+        CHECK(h256_equal_bytes32(request->stateroot(), 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32));
+        CHECK(h256_equal_bytes32(request->receiptroot(), 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32));
+        CHECK(h256_equal_bytes32(request->parenthash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
+        CHECK(h256_equal_bytes32(request->random(), 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32));
+        CHECK(h256_equal_bytes32(request->basefeepergas(), 0x0000000000000000000000000000000000000000000000000000000000000007_bytes32));
+        CHECK(h2048_equal_bloom(request->logsbloom(), bloom));
+        CHECK(request->transactions(0) == std::string(reinterpret_cast<char*>(&transaction[0]), 16));
+        // Assemble response
+        response->set_status(::remote::EngineStatus::ACCEPTED);
+        response->set_allocated_latestvalidhash(make_h256(0, 0, 0, 0x40));
+        response->set_validationerror("some error");
         return ::grpc::Status::OK;
     }
 };
@@ -248,7 +279,7 @@ auto test_net_version = test_comethod<ethbackend::BackEndGrpc, &ethbackend::Back
 auto test_client_version = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::client_version, std::string>;
 auto test_net_peer_count = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::net_peer_count, uint64_t>;
 auto test_engine_get_payload_v1 = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::engine_get_payload_v1, ExecutionPayload, uint64_t>;
-auto test_execution_payload_to_proto = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::execution_payload_to_proto, ::types::ExecutionPayload, ExecutionPayload>;
+auto test_engine_new_payload_v1 = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::engine_new_payload_v1, PayloadStatus, ExecutionPayload>;
 
 TEST_CASE("BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -432,13 +463,14 @@ TEST_CASE("BackEnd::engine_get_payload_v1", "[silkrpc][ethbackend][backend]") {
     }
 }
 
-TEST_CASE("BackEnd::execution_payload_to_proto", "[silkrpc][ethbackend][backend]") {
+TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    SECTION("call execution_payload_to_proto and get proto") {
+    SECTION("call engine_new_payload_v1 and get correct payload status") {
         TestBackEndService service;
         asio::io_context io_context;
         silkworm::Bloom bloom;
+        bloom.fill(0);
         bloom[0] = 0x12;
         auto transaction{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
         silkrpc::ExecutionPayload execution_payload{
@@ -456,21 +488,31 @@ TEST_CASE("BackEnd::execution_payload_to_proto", "[silkrpc][ethbackend][backend]
             .logs_bloom = bloom,
             .transactions = {transaction},
         };
-        auto reply{asio::co_spawn(io_context, test_execution_payload_to_proto(&service, execution_payload), asio::use_future)};
+        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
         io_context.run();
-        auto proto{reply.get()};
-        CHECK(proto.blocknumber() == 0x1);
-        CHECK(proto.timestamp() == 0x5);
-        CHECK(proto.gaslimit() == 0x1c9c380);
-        CHECK(proto.gasused() == 0x9);
-        CHECK(h160_equal_address(proto.coinbase(), 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address));
-        CHECK(h256_equal_bytes32(proto.stateroot(), 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32));
-        CHECK(h256_equal_bytes32(proto.receiptroot(), 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32));
-        CHECK(h256_equal_bytes32(proto.parenthash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
-        CHECK(h256_equal_bytes32(proto.random(), 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32));
-        CHECK(h256_equal_bytes32(proto.basefeepergas(), 0x0000000000000000000000000000000000000000000000000000000000000007_bytes32));
-        CHECK(h2048_equal_bloom(proto.logsbloom(), bloom));
-        CHECK(proto.transactions(0) == std::string(reinterpret_cast<char*>(&transaction[0]), 16));
+        auto payload_status{reply.get()};
+        CHECK(payload_status.status == "ACCEPTED");
+        CHECK(*payload_status.latest_valid_hash == 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32);
+        CHECK(payload_status.validation_error == "some error");
+    }
+
+    SECTION("call engine_new_payload_v1 and get empty peer count") {
+        EmptyBackEndService service;
+        asio::io_context io_context;
+        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, ExecutionPayload{}), asio::use_future)};
+        io_context.run();
+        auto payload_status{reply.get()};
+        CHECK(payload_status.status == "VALID"); // Default value in interfaces is Valid
+        CHECK(payload_status.latest_valid_hash == std::nullopt);
+        CHECK(payload_status.validation_error == std::nullopt);
+    }
+
+    SECTION("call engine_new_payload_v1 and get error") {
+        FailureBackEndService service;
+        asio::io_context io_context;
+        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, ExecutionPayload{}), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(reply.get(), std::system_error);
     }
 }
 
