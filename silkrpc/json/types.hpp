@@ -83,6 +83,9 @@ void from_json(const nlohmann::json& json, Filter& filter);
 void to_json(nlohmann::json& json, const ExecutionPayload& execution_payload);
 void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload);
 
+void to_json(nlohmann::json& json, const PayloadStatus& payload_status);
+void from_json(const nlohmann::json& json, PayloadStatus& payload_status);
+
 void to_json(nlohmann::json& json, const Forks& forks);
 
 void to_json(nlohmann::json& json, const Issuance& issuance);
