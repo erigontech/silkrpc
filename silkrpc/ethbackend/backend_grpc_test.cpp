@@ -202,7 +202,6 @@ public:
         bloom[0] = 0x12;
         auto transaction{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
         // Check that payload was converted to protobuf correctly
-        CHECK(request->blocknumber() == 0x1);
         CHECK(request->timestamp() == 0x5);
         CHECK(request->gaslimit() == 0x1c9c380);
         CHECK(request->gasused() == 0x9);
@@ -215,9 +214,10 @@ public:
         CHECK(h2048_equal_bloom(request->logsbloom(), bloom));
         CHECK(request->transactions(0) == std::string(reinterpret_cast<char*>(&transaction[0]), 16));
         // Assemble response
-        response->set_status(::remote::EngineStatus::ACCEPTED);
         response->set_allocated_latestvalidhash(make_h256(0, 0, 0, 0x40));
         response->set_validationerror("some error");
+        // Clean way to test each decoding of messages without writing a switch
+        response->set_status(static_cast<::remote::EngineStatus>(request->blocknumber()));
         return ::grpc::Status::OK;
     }
 };
@@ -466,40 +466,85 @@ TEST_CASE("BackEnd::engine_get_payload_v1", "[silkrpc][ethbackend][backend]") {
 TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    SECTION("call engine_new_payload_v1 and get correct payload status") {
+    silkworm::Bloom bloom;
+    bloom.fill(0);
+    bloom[0] = 0x12;
+    auto transaction{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
+    silkrpc::ExecutionPayload execution_payload{
+        .timestamp = 0x5,
+        .gas_limit = 0x1c9c380,
+        .gas_used = 0x9,
+        .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address,
+        .state_root = 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32,
+        .receipts_root = 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32,
+        .parent_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
+        .block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+        .random = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
+        .base_fee = 0x7,
+        .logs_bloom = bloom,
+        .transactions = {transaction},
+    };
+
+    SECTION("call engine_new_payload_v1 and get VALID status") {
         TestBackEndService service;
         asio::io_context io_context;
-        silkworm::Bloom bloom;
-        bloom.fill(0);
-        bloom[0] = 0x12;
-        auto transaction{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
-        silkrpc::ExecutionPayload execution_payload{
-            .number = 0x1,
-            .timestamp = 0x5,
-            .gas_limit = 0x1c9c380,
-            .gas_used = 0x9,
-            .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address,
-            .state_root = 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32,
-            .receipts_root = 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32,
-            .parent_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
-            .block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
-            .random = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
-            .base_fee = 0x7,
-            .logs_bloom = bloom,
-            .transactions = {transaction},
-        };
         auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
         io_context.run();
         auto payload_status{reply.get()};
-        CHECK(payload_status.status == "ACCEPTED");
+        CHECK(payload_status.status == "VALID");
         CHECK(payload_status.latest_valid_hash == 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32);
         CHECK(payload_status.validation_error == "some error");
+    }
+
+    SECTION("call engine_new_payload_v1 and get INVALID status") {
+        execution_payload.number = 1;
+        TestBackEndService service;
+        asio::io_context io_context;
+        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        io_context.run();
+        CHECK(reply.get().status == "INVALID");
+    }
+
+    SECTION("call engine_new_payload_v1 and get SYNCYNG status") {
+        execution_payload.number = 2;
+        TestBackEndService service;
+        asio::io_context io_context;
+        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        io_context.run();
+        CHECK(reply.get().status == "SYNCING");
+    }
+
+    SECTION("call engine_new_payload_v1 and get ACCEPTED status") {
+        execution_payload.number = 3;
+        TestBackEndService service;
+        asio::io_context io_context;
+        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        io_context.run();
+        CHECK(reply.get().status == "ACCEPTED");
+    }
+
+    SECTION("call engine_new_payload_v1 and get INVALID_BLOCK_HASH status") {
+        execution_payload.number = 4;
+        TestBackEndService service;
+        asio::io_context io_context;
+        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        io_context.run();
+        CHECK(reply.get().status == "INVALID_BLOCK_HASH");
+    }
+
+    SECTION("call engine_new_payload_v1 and get INVALID_TERMINAL_BLOCK status") {
+        execution_payload.number = 5;
+        TestBackEndService service;
+        asio::io_context io_context;
+        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        io_context.run();
+        CHECK(reply.get().status == "INVALID_TERMINAL_BLOCK");
     }
 
     SECTION("call engine_new_payload_v1 and get empty peer count") {
         EmptyBackEndService service;
         asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, ExecutionPayload{}), asio::use_future)};
+        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
         io_context.run();
         auto payload_status{reply.get()};
         CHECK(payload_status.status == "VALID"); // Default value in interfaces is Valid
@@ -510,7 +555,7 @@ TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
     SECTION("call engine_new_payload_v1 and get error") {
         FailureBackEndService service;
         asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, ExecutionPayload{}), asio::use_future)};
+        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
         io_context.run();
         CHECK_THROWS_AS(reply.get(), std::system_error);
     }
