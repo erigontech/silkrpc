@@ -31,6 +31,7 @@
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/bloom.hpp>
 
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/json/lithium.hpp>
 #include <silkrpc/json/lithium_json.hpp>
 #include <silkrpc/json/lithium_symbol.hpp>
@@ -388,6 +389,26 @@ static void benchmark_decode_uint256_lithium_json(benchmark::State& state) {
     LI_SYMBOL(get_gas_limit)
 #endif // LI_SYMBOL_get_gas_limit
 
+#ifndef LI_SYMBOL_get_value
+#define LI_SYMBOL_get_value
+    LI_SYMBOL(get_value)
+#endif // LI_SYMBOL_get_value
+
+#ifndef LI_SYMBOL_get_v
+#define LI_SYMBOL_get_v
+    LI_SYMBOL(get_v)
+#endif // LI_SYMBOL_get_v
+
+#ifndef LI_SYMBOL_get_r
+#define LI_SYMBOL_get_r
+    LI_SYMBOL(get_r)
+#endif // LI_SYMBOL_get_r
+
+#ifndef LI_SYMBOL_get_s
+#define LI_SYMBOL_get_s
+    LI_SYMBOL(get_s)
+#endif // LI_SYMBOL_get_s
+
 
 template<std::size_t N>
 std::size_t to_hex_no_leading_zeros(std::array<char, N>& hex_bytes, silkworm::ByteView bytes) {
@@ -436,6 +457,15 @@ std::size_t to_quantity(std::array<char, 8>& quantity_hex_bytes, uint64_t number
     return to_hex_no_leading_zeros<8>(quantity_hex_bytes, number_bytes);
 }
 
+std::size_t to_quantity(std::array<char, 8>& quantity_hex_bytes, intx::uint256 number) {
+    if (number == 0) {
+       std::array<char, 8> tmp = {"0x0"};
+       quantity_hex_bytes = tmp;
+       return 3;
+    }
+    return to_quantity(quantity_hex_bytes, silkworm::endian::to_big_compact(number));
+}
+
 struct BlockHeader : public silkworm::BlockHeader {
    std::array<char, 8> block_number_quantity;
    std::array<char, 8> gas_used_quantity;
@@ -460,6 +490,60 @@ struct BlockHeader : public silkworm::BlockHeader {
    std::string_view get_timestamp() { 
           auto timestamp_quantity_size = to_quantity(timestamp_quantity, timestamp);
           return std::string_view{timestamp_quantity.data(), timestamp_quantity_size }; 
+   }
+
+};
+
+struct Transaction : public silkworm::Transaction {
+   std::array<char, 8> gas_limit_quantity;
+   std::array<char, 8> type_quantity;
+   std::array<char, 8> nonce_quantity;
+   std::array<char, 8> value_quantity;
+   std::array<char, 70> v_quantity;
+   std::array<char, 70> s_quantity;
+   std::array<char, 70> r_quantity;
+
+   std::string_view get_gas_limit() { 
+          auto gas_limit_quantity_size = to_quantity(gas_limit_quantity, gas_limit);
+          return std::string_view{gas_limit_quantity.data(), gas_limit_quantity_size }; 
+   }
+
+   std::string_view get_type() { 
+          auto type_quantity_size = to_quantity(type_quantity, (uint8_t)type);
+          return std::string_view{type_quantity.data(), type_quantity_size }; 
+   }
+
+   std::string_view get_nonce() { 
+          auto nonce_quantity_size = to_quantity(nonce_quantity, nonce);
+          return std::string_view{nonce_quantity.data(), nonce_quantity_size }; 
+   }
+
+   std::string_view get_value() { 
+          auto value_quantity_size = to_quantity(value_quantity, value);
+          return std::string_view{value_quantity.data(), value_quantity_size }; 
+   }
+
+   std::string_view get_v() { 
+          auto v_quantity_size = to_quantity(v_quantity, silkworm::endian::to_big_compact(v()));
+          return std::string_view{v_quantity.data(), v_quantity_size }; 
+   }
+
+   std::string_view get_r() { 
+          auto r_quantity_size = to_quantity(r_quantity, silkworm::endian::to_big_compact(r));
+          return std::string_view{r_quantity.data(), r_quantity_size }; 
+   }
+
+   std::string_view get_s() { 
+          auto s_quantity_size = to_quantity(s_quantity, silkworm::endian::to_big_compact(s));
+          return std::string_view{s_quantity.data(), s_quantity_size }; 
+   }
+
+   std::string_view get_hash() { 
+          std::array<char, kHexHashSize> hex_bytes;
+          auto ethash_hash{hash_of_transaction(*this)};
+          evmc::bytes32 hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
+          bytes32_to_hex(hex_bytes, hash.bytes);
+          return std::string_view{hex_bytes.data(), hex_bytes.size()};
    }
 };
 
@@ -488,14 +572,44 @@ static const BlockHeader HEADER{
     ""
 };
 
+    //uint64_t(1000000),                                   // gas_limit
+static const Transaction TRANSACTION {
+    silkworm::Transaction::Type::kLegacy,                // type
+    0,                                                   // nonce
+    50'000 * silkworm::kGiga,                            // max_priority_fee_per_gas
+    50'000 * silkworm::kGiga,                            // max_fee_per_gas
+    uint64_t(0xFFFFFFFFFFFFFFFF),                        // gas_limit
+    0x5df9b87991262f6ba471f09758cde1c0fc1de734_address,  // to
+    31337,                                               // value
+    {},                                                  // data
+    true,                                                // odd_y_parity
+    std::nullopt,                                        // chain_id
+    intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"),  // r
+    intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"),  // s
+    {},                                                  // access_list
+    0x6df9b87991262f6ba471f09758cde1c0fc1de734_address,  // from
+};
+
+
 static void benchmark_encode_block_header_nlohmann_json(benchmark::State& state) {
     for (auto _ : state) {
         const nlohmann::json j = HEADER;
         const auto s = j.dump(/*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace);
+        //std::cout << "nlohmann::block_header: "  << s << "\n";
         benchmark::DoNotOptimize(s);
     }
 }
 BENCHMARK(benchmark_encode_block_header_nlohmann_json);
+
+static void benchmark_encode_transaction_nlohmann_json(benchmark::State& state) {
+    for (auto _ : state) {
+        const nlohmann::json j = TRANSACTION;
+        const auto s = j.dump(/*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace);
+        benchmark::DoNotOptimize(s);
+        //std::cout << "nlohmann::transaction: "  << s << "\n";
+    }
+}
+BENCHMARK(benchmark_encode_transaction_nlohmann_json);
 
 #ifndef LI_SYMBOL_parent_hash
 #define LI_SYMBOL_parent_hash
@@ -506,6 +620,41 @@ BENCHMARK(benchmark_encode_block_header_nlohmann_json);
 #define LI_SYMBOL_ommers_hash
     LI_SYMBOL(ommers_hash)
 #endif // LI_SYMBOL_ommers_hash
+
+#ifndef LI_SYMBOL_get_type
+#define LI_SYMBOL_get_type
+    LI_SYMBOL(get_type)
+#endif // LI_SYMBOL_get_type
+
+#ifndef LI_SYMBOL_max_fee_per_gas
+#define LI_SYMBOL_max_fee_per_gas
+    LI_SYMBOL(max_fee_per_gas)
+#endif // LI_SYMBOL_max_fee_per_gas
+
+#ifndef LI_SYMBOL_to
+#define LI_SYMBOL_to
+    LI_SYMBOL(to)
+#endif // LI_SYMBOL_to
+
+#ifndef LI_SYMBOL_from
+#define LI_SYMBOL_from
+    LI_SYMBOL(from)
+#endif // LI_SYMBOL_from
+
+#ifndef LI_SYMBOL_get_nonce
+#define LI_SYMBOL_get_nonce
+    LI_SYMBOL(get_nonce)
+#endif // LI_SYMBOL_get_nonce
+
+#ifndef LI_SYMBOL_data
+#define LI_SYMBOL_data
+    LI_SYMBOL(data)
+#endif // LI_SYMBOL_data
+
+#ifndef LI_SYMBOL_get_hash
+#define LI_SYMBOL_get_hash
+    LI_SYMBOL(get_hash)
+#endif // LI_SYMBOL_get_hash
 
 namespace li {
 
@@ -577,6 +726,25 @@ inline output_buffer& operator<<(output_buffer& out, const BlockHeader& block_he
     return out;
 }
 
+inline output_buffer& operator<<(output_buffer& out, const Transaction& transaction) {
+    //auto ethash_hash{hash_of_transaction(transaction)};
+    //evmc::bytes32 hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
+    li::json_object(
+        s::from(li::json_key("from")),
+        s::get_gas_limit(li::json_key("gas")),
+        s::get_hash(li::json_key("hash")),
+        s::data(li::json_key("input")),
+        s::get_nonce(li::json_key("nonce")),
+        s::get_r(li::json_key("r")),
+        s::get_s(li::json_key("s")),
+        s::to(li::json_key("to")),
+        s::get_type(li::json_key("type")),
+        s::get_v(li::json_key("v")),
+        //s::max_fee_per_gas,
+        s::get_value(li::json_key("value"))).encode(out, transaction);
+    return out;
+}
+
 } // namespace li
 
 li::output_buffer encode_block_header(const BlockHeader& block_header) {
@@ -584,6 +752,14 @@ li::output_buffer encode_block_header(const BlockHeader& block_header) {
     li::output_buffer output_buffer{buffer, 2048};
     output_buffer << block_header;
     //std::cout << "block_header: "  << output_buffer.to_string_view() << "\n";
+    return output_buffer;
+}
+
+li::output_buffer encode_transaction(const Transaction& transaction) {
+    char buffer[2048];
+    li::output_buffer output_buffer{buffer, 2048};
+    output_buffer << transaction;
+    //std::cout << "transaction: "  << output_buffer.to_string_view() << "\n";
     return output_buffer;
 }
 
@@ -618,5 +794,30 @@ static void benchmark_encode_block_header_lithium_json(benchmark::State& state) 
     }
 }
 BENCHMARK(benchmark_encode_block_header_lithium_json);
+
+static void benchmark_encode_transaction_lithium_json(benchmark::State& state) {
+    const auto transaction_json = encode_transaction(TRANSACTION).to_string_view();
+    //std::cout << "transaction: "  << transaction_json << "\n";
+
+    ensure(transaction_json == 
+        R"({"from":"0x6df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("gas":"0xffffffffffffffff",)"
+        R"("hash":"0xa4ee16008c6596d86a7c599a74b1cda264d609558ccc2d20a722a2cd58bad6eb",)"
+        R"("input":"0x",)"
+        R"("nonce":"0x0",)"
+        R"("r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",)"
+        R"("s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a",)"
+        R"("to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("type":"0x0",)"
+        R"("v":"0x1c",)"
+        R"("value":"0x7a69"})");
+
+
+    for (auto _ : state) {
+        li::output_buffer output_buffer = encode_transaction(TRANSACTION);
+        output_buffer.reset();
+    }
+}
+BENCHMARK(benchmark_encode_transaction_lithium_json);
 
 BENCHMARK_MAIN();
