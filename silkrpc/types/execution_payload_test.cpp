@@ -16,6 +16,7 @@
 
 #include "execution_payload.hpp" // NOLINT(build/include)
 
+#include <evmc/evmc.hpp>
 #include <catch2/catch.hpp>
 #include <silkrpc/common/log.hpp>
 
@@ -27,7 +28,10 @@ TEST_CASE("print empty execution payload", "[silkrpc][types][execution_payload]"
 }
 
 TEST_CASE("print empty payload status", "[silkrpc][types][execution_payload]") {
-    PayloadStatus p{};
+    PayloadStatus p{
+        .latest_valid_hash = evmc::bytes32{},
+        .validation_error = ""
+    };
     CHECK_NOTHROW(null_stream() << p);
 }
 
