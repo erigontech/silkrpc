@@ -16,10 +16,19 @@
 
 #include "execution_payload.hpp" // NOLINT(build/include)
 
-#include <evmc/evmc.h>
-#include <sstream>
 #include <catch2/catch.hpp>
+#include <silkrpc/common/log.hpp>
 
-#include <silkrpc/common/util.hpp>
+namespace silkrpc {
 
+TEST_CASE("print empty execution payload", "[silkrpc][types][execution_payload]") {
+    ExecutionPayload p{};
+    CHECK_NOTHROW(null_stream() << p);
+}
 
+TEST_CASE("print empty payload status", "[silkrpc][types][execution_payload]") {
+    PayloadStatus p{};
+    CHECK_NOTHROW(null_stream() << p);
+}
+
+} // namespace silkrpc
