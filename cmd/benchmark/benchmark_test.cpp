@@ -656,6 +656,17 @@ BENCHMARK(benchmark_encode_transaction_nlohmann_json);
     LI_SYMBOL(get_hash)
 #endif // LI_SYMBOL_get_hash
 
+#ifndef LI_SYMBOL_ommers
+#define LI_SYMBOL_ommers
+    LI_SYMBOL(ommers)
+#endif // LI_SYMBOL_ommers
+
+#ifndef LI_SYMBOL_transactions
+#define LI_SYMBOL_transactions
+    LI_SYMBOL(transactions)
+#endif // LI_SYMBOL_transactions
+
+
 namespace li {
 
 inline output_buffer& operator<<(output_buffer& out, const evmc::address& address) {
@@ -727,8 +738,6 @@ inline output_buffer& operator<<(output_buffer& out, const BlockHeader& block_he
 }
 
 inline output_buffer& operator<<(output_buffer& out, const Transaction& transaction) {
-    //auto ethash_hash{hash_of_transaction(transaction)};
-    //evmc::bytes32 hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
     li::json_object(
         s::from(li::json_key("from")),
         s::get_gas_limit(li::json_key("gas")),
@@ -744,6 +753,25 @@ inline output_buffer& operator<<(output_buffer& out, const Transaction& transact
         s::get_value(li::json_key("value"))).encode(out, transaction);
     return out;
 }
+
+inline output_buffer& operator<<(output_buffer& out, std::vector<Transaction>& transactions) {
+    li::json_vector().encode(out, transactions);
+    return out;
+}
+
+inline output_buffer& operator<<(output_buffer& out, std::vector<BlockHeader>& ommers) {
+    li::json_vector().encode(out, ommers);
+    return out;
+}
+
+/*
+inline output_buffer& operator<<(output_buffer& out, silkworm::BlockBody& block_body) {
+    li::json_object(
+        s::transactions,
+        s::ommers).encode(out, block_body);
+    return out;
+}
+*/
 
 } // namespace li
 
@@ -821,3 +849,4 @@ static void benchmark_encode_transaction_lithium_json(benchmark::State& state) {
 BENCHMARK(benchmark_encode_transaction_lithium_json);
 
 BENCHMARK_MAIN();
+
