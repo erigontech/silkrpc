@@ -20,6 +20,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
@@ -115,6 +116,26 @@ constexpr auto nonce_to_hex = to_hex<8>;
 constexpr auto address_to_hex = to_hex<20>;
 constexpr auto bytes32_to_hex = to_hex<32>;
 constexpr auto bloom_to_hex = to_hex<256>;
+
+
+template<std::size_t N>
+std::size_t to_my_hex(char *hex_bytes, const uint8_t bytes[N]) {
+    static const char* kHexDigits{"0123456789abcdef"};
+    int j,i;
+    hex_bytes[0] = '0';
+    hex_bytes[1] = 'x';
+    for (i = 0, j = 2; i<N; i++, j+=2) {
+        const auto v = bytes[i];
+        hex_bytes[j] = kHexDigits[v >> 4];
+        hex_bytes[j+1] = kHexDigits[v & 0x0f];
+    }
+    return j;
+}
+constexpr auto address_to_hex2 = to_my_hex<20>;
+constexpr auto bytes32_to_hex2 = to_my_hex<32>;
+constexpr auto nonce_to_hex2 = to_my_hex<8>;
+constexpr auto bloom_to_hex2 = to_my_hex<256>;
+
 
 template<std::size_t N>
 bool from_hex(uint8_t (&bytes)[N], std::string_view& hex) {
@@ -440,15 +461,54 @@ std::size_t to_hex_no_leading_zeros(std::array<char, N>& hex_bytes, silkworm::By
     return position;
 }
 
+std::size_t to_hex_no_leading_zeros(char *hex_bytes, silkworm::ByteView bytes) {
+    static const char* kHexDigits{"0123456789abcdef"};
+
+    std::size_t position = 0;
+    hex_bytes[position++] = '0';
+    hex_bytes[position++] = 'x';
+
+    bool found_nonzero{false};
+    for (size_t i{0}; i < bytes.length(); ++i) {
+        uint8_t x{bytes[i]};
+        char lo{kHexDigits[x & 0x0f]};
+        char hi{kHexDigits[x >> 4]};
+        if (!found_nonzero && hi != '0') {
+            found_nonzero = true;
+        }
+        if (found_nonzero) {
+            hex_bytes[position++] = hi;
+        }
+        if (!found_nonzero && lo != '0') {
+            found_nonzero = true;
+        }
+        if (found_nonzero || i == bytes.length() - 1) {
+            hex_bytes[position++] = lo;
+        }
+    }
+
+    return position;
+}
+
 /*std::string to_hex_no_leading_zeros(uint64_t number) {
     silkworm::Bytes number_bytes(8, '\0');
     silkworm::endian::store_big_u64(&number_bytes[0], number);
     return to_hex_no_leading_zeros(number_bytes);
 }*/
 
+std::size_t to_quantity(char *quantity_hex_bytes, silkworm::ByteView bytes) {
+    return to_hex_no_leading_zeros(quantity_hex_bytes, bytes);
+}
+
 template<std::size_t N>
 std::size_t to_quantity(std::array<char, N>& quantity_hex_bytes, silkworm::ByteView bytes) {
     return to_hex_no_leading_zeros<N>(quantity_hex_bytes, bytes);
+}
+
+std::size_t to_quantity(char *quantity_hex_bytes, uint64_t number) {
+    silkworm::Bytes number_bytes(8, '\0');
+    silkworm::endian::store_big_u64(number_bytes.data(), number);
+    return to_hex_no_leading_zeros(quantity_hex_bytes, number_bytes);
 }
 
 std::size_t to_quantity(std::array<char, 8>& quantity_hex_bytes, uint64_t number) {
@@ -457,10 +517,22 @@ std::size_t to_quantity(std::array<char, 8>& quantity_hex_bytes, uint64_t number
     return to_hex_no_leading_zeros<8>(quantity_hex_bytes, number_bytes);
 }
 
+std::size_t to_quantity(char *quantity_hex_bytes, intx::uint256 number) {
+    if (number == 0) {
+       quantity_hex_bytes[0] = '0';
+       quantity_hex_bytes[1] = 'x';
+       quantity_hex_bytes[2] = '0';
+       return 3;
+    }
+    return to_quantity(quantity_hex_bytes, silkworm::endian::to_big_compact(number));
+}
+
+
 std::size_t to_quantity(std::array<char, 8>& quantity_hex_bytes, intx::uint256 number) {
     if (number == 0) {
-       std::array<char, 8> tmp = {"0x0"};
-       quantity_hex_bytes = tmp;
+       quantity_hex_bytes[0] = '0';
+       quantity_hex_bytes[1] = 'x';
+       quantity_hex_bytes[2] = '0';
        return 3;
     }
     return to_quantity(quantity_hex_bytes, silkworm::endian::to_big_compact(number));
@@ -499,9 +571,9 @@ struct Transaction : public silkworm::Transaction {
    std::array<char, 8> type_quantity;
    std::array<char, 8> nonce_quantity;
    std::array<char, 8> value_quantity;
-   std::array<char, 70> v_quantity;
-   std::array<char, 70> s_quantity;
-   std::array<char, 70> r_quantity;
+   std::array<char, 64+2> v_quantity;
+   std::array<char, 64+2> s_quantity;
+   std::array<char, 64+2> r_quantity;
 
    std::string_view get_gas_limit() { 
           auto gas_limit_quantity_size = to_quantity(gas_limit_quantity, gas_limit);
@@ -547,6 +619,26 @@ struct Transaction : public silkworm::Transaction {
    }
 };
 
+struct BlockBody  {
+    std::vector<Transaction> transactions;
+    std::vector<BlockHeader> ommers;
+};
+
+struct Block : public BlockBody {
+    BlockHeader header;
+    evmc::bytes32 hash;
+    intx::uint256 total_difficulty{0};
+    bool full_tx;
+    int tmp{123}; // PXB
+
+    std::array<char, 8> block_size_quantity;
+
+
+    std::string_view get_block_size() { 
+          auto block_size_quantity_size = to_quantity(block_size_quantity, tmp); 
+          return std::string_view{block_size_quantity.data(), block_size_quantity_size }; 
+    }
+};
 
 /* benchmark_encode_block_header */
 static const BlockHeader HEADER{
@@ -572,13 +664,35 @@ static const BlockHeader HEADER{
     ""
 };
 
-    //uint64_t(1000000),                                   // gas_limit
-static const Transaction TRANSACTION {
+static const BlockHeader OMMER_HEADER{
+    0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
+    0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d_bytes32,
+    0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+    0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d_bytes32,
+    0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e_bytes32,
+    0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f_bytes32,
+    silkworm::Bloom{},
+    intx::uint256{0},
+    uint64_t(5),
+    uint64_t(1000000),
+    uint64_t(1000000),
+    uint64_t(5405021),
+    *silkworm::from_hex("0001FF0100"),                                          // extradata
+    0x0000000000000000000000000000000000000000000000000000000000000001_bytes32, // mixhash
+    {1, 2, 3, 4, 5, 6, 7, 8},                                                   // nonce
+    std::optional<intx::uint256>(1000),                                         // base_fee_per_gas
+    "",
+    "",
+    "",
+    ""
+};
+
+static const Transaction TRANSACTION_LEGACY{
     silkworm::Transaction::Type::kLegacy,                // type
     0,                                                   // nonce
     50'000 * silkworm::kGiga,                            // max_priority_fee_per_gas
     50'000 * silkworm::kGiga,                            // max_fee_per_gas
-    uint64_t(0xFFFFFFFFFFFFFFFF),                        // gas_limit
+    uint64_t(18),                                        // gas_limit
     0x5df9b87991262f6ba471f09758cde1c0fc1de734_address,  // to
     31337,                                               // value
     {},                                                  // data
@@ -590,6 +704,51 @@ static const Transaction TRANSACTION {
     0x6df9b87991262f6ba471f09758cde1c0fc1de734_address,  // from
 };
 
+static const Transaction TRANSACTION_EIP2930{
+    silkworm::Transaction::Type::kEip2930,               // type
+    0,                                                   // nonce
+    20000000000,                                         // max_priority_fee_per_gas
+    20000000000,                                         // max_fee_per_gas
+    uint64_t(0),                                         // gas_limit
+    0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,  // to
+    intx::uint256{0},                                    // value
+    {},                                                  // data
+    false,                                               // odd_y_parity
+    std::nullopt,                                        // chain_id
+    intx::uint256{1},                                    // r
+    intx::uint256{18},                                   // s
+    {},                                                  // access_list
+    0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address   // from
+};
+
+static const Block BLOCK1{
+    std::vector<Transaction>{TRANSACTION_LEGACY, TRANSACTION_EIP2930},
+    std::vector<BlockHeader>{OMMER_HEADER},
+    HEADER,
+    0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
+    true,
+    0,                                                                           // total_difficulty
+    false                                                                        // full_tx
+};
+
+static const silkrpc::Block BLOCK{
+    std::vector<silkworm::Transaction>{TRANSACTION_LEGACY},
+    std::vector<silkworm::BlockHeader>{OMMER_HEADER, OMMER_HEADER},
+    HEADER,
+    0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
+    4,                                                                           // total_difficulty
+    true                                                                         // full_tx
+};
+
+static void benchmark_encode_transaction_nlohmann_json(benchmark::State& state) {
+    for (auto _ : state) {
+        const nlohmann::json j = TRANSACTION_LEGACY;
+        const auto s = j.dump(/*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace);
+        benchmark::DoNotOptimize(s);
+        //std::cout << "nlohmann::transaction: "  << s << "\n";
+    }
+}
+BENCHMARK(benchmark_encode_transaction_nlohmann_json);
 
 static void benchmark_encode_block_header_nlohmann_json(benchmark::State& state) {
     for (auto _ : state) {
@@ -601,15 +760,17 @@ static void benchmark_encode_block_header_nlohmann_json(benchmark::State& state)
 }
 BENCHMARK(benchmark_encode_block_header_nlohmann_json);
 
-static void benchmark_encode_transaction_nlohmann_json(benchmark::State& state) {
+
+static void benchmark_encode_block_nlohmann_json(benchmark::State& state) {
     for (auto _ : state) {
-        const nlohmann::json j = TRANSACTION;
+        const nlohmann::json j = BLOCK;
         const auto s = j.dump(/*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace);
         benchmark::DoNotOptimize(s);
-        //std::cout << "nlohmann::transaction: "  << s << "\n";
+        //std::cout << "nlohmann::block: "  << s << "\n";
     }
 }
-BENCHMARK(benchmark_encode_transaction_nlohmann_json);
+BENCHMARK(benchmark_encode_block_nlohmann_json);
+
 
 #ifndef LI_SYMBOL_parent_hash
 #define LI_SYMBOL_parent_hash
@@ -665,6 +826,27 @@ BENCHMARK(benchmark_encode_transaction_nlohmann_json);
 #define LI_SYMBOL_transactions
     LI_SYMBOL(transactions)
 #endif // LI_SYMBOL_transactions
+
+#ifndef LI_SYMBOL_header
+#define LI_SYMBOL_header
+    LI_SYMBOL(header)
+#endif // LI_SYMBOL_header
+
+#ifndef LI_SYMBOL_hash
+#define LI_SYMBOL_hash
+    LI_SYMBOL(hash)
+#endif // LI_SYMBOL_hash
+
+#ifndef LI_SYMBOL_total_difficulty
+#define LI_SYMBOL_total_difficulty
+    LI_SYMBOL(total_difficulty)
+#endif // LI_SYMBOL_total_difficulty
+
+#ifndef LI_SYMBOL_get_block_size
+#define LI_SYMBOL_get_block_size
+    LI_SYMBOL(get_block_size)
+#endif // LI_SYMBOL_get_block_size
+
 
 
 namespace li {
@@ -741,7 +923,7 @@ inline output_buffer& operator<<(output_buffer& out, const Transaction& transact
     li::json_object(
         s::from(li::json_key("from")),
         s::get_gas_limit(li::json_key("gas")),
-        s::get_hash(li::json_key("hash")),
+        //s::get_hash(li::json_key("hash")),
         s::data(li::json_key("input")),
         s::get_nonce(li::json_key("nonce")),
         s::get_r(li::json_key("r")),
@@ -754,24 +936,199 @@ inline output_buffer& operator<<(output_buffer& out, const Transaction& transact
     return out;
 }
 
-inline output_buffer& operator<<(output_buffer& out, std::vector<Transaction>& transactions) {
-    li::json_vector().encode(out, transactions);
-    return out;
+#define START_JSON() \
+    std::array<char, 4096> buffer; \
+    int first = 1; \
+    char *ptr = &buffer[0]; \
+    *ptr++ = '{';
+
+#define END_JSON() *ptr++ = '}';
+
+#define GET_CURR_BUFF_ADDR() (ptr)
+
+#define GET_JSON_BUFFER() (buffer)
+#define GET_JSON_LEN() (ptr-&buffer[0])
+#define DUMP_JSON() \
+       int tmp = ptr-&buffer[0]; \
+       printf ("Len %d\n",tmp); \
+       for (int i = 0; i < tmp; i++) \
+          printf ("%c",buffer[i]); \
+       printf("\n");
+        
+#define ADD_ATTRIBUTE(name, value) \
+    if (first) { \
+       first = 0; \
+       ptr += std::sprintf (ptr, "\"%s\":\"%s\"", name,value); \
+    } \
+    else { \
+       ptr += std::sprintf (ptr, ",\"%s\":\"%s\"", name,value); \
+    }
+
+
+#define ADD_ATTRIBUTE_ZEROCOPY(name, len) \
+    if (first) { \
+       first = 0; \
+       *ptr++ = '\"'; \
+       memcpy(ptr, name, strlen(name)); \
+       ptr+=strlen(name); \
+       *ptr++ = '\"'; \
+       *ptr++ = ':'; \
+       *ptr++ = '\"'; \
+       ptr+=len; \
+       *ptr++ = '\"'; \
+    } \
+    else { \
+       *ptr++ = ','; \
+       *ptr++ = '\"'; \
+       memcpy(ptr, name, strlen(name)); \
+       ptr += strlen(name); \
+       *ptr++ = '\"'; \
+       *ptr++ = ':'; \
+       *ptr++ = '\"'; \
+       ptr += len; \
+       *ptr++ = '\"'; \
+    }
+    
+
+void to_json2(const Transaction& transaction) {
+    START_JSON();
+    if (!transaction.from) {
+        (const_cast<Transaction&>(transaction)).recover_sender();
+    }
+    if (transaction.from) {
+        ADD_ATTRIBUTE_ZEROCOPY("from", address_to_hex2(GET_CURR_BUFF_ADDR(), transaction.from.value().bytes));
+    }
+
+    ADD_ATTRIBUTE_ZEROCOPY("gas", to_quantity(GET_CURR_BUFF_ADDR(), transaction.gas_limit));
+    //ADD_ATTRIBUTE_ZEROCOPY("input", address_to_hex2(GET_CURR_BUFF_ADDR(), transaction.data.c_str()));
+    ADD_ATTRIBUTE_ZEROCOPY("nonce", to_quantity(GET_CURR_BUFF_ADDR(), transaction.nonce));
+
+    if (transaction.to) {
+        ADD_ATTRIBUTE_ZEROCOPY("to", address_to_hex2(GET_CURR_BUFF_ADDR(), transaction.to.value().bytes));
+    } else {
+        ADD_ATTRIBUTE("to", "0x0");
+    }
+    ADD_ATTRIBUTE_ZEROCOPY("type", to_quantity(GET_CURR_BUFF_ADDR(), (uint8_t)transaction.type));
+
+    if (transaction.type != silkworm::Transaction::Type::kLegacy) {
+       ADD_ATTRIBUTE_ZEROCOPY("chainId", to_quantity(GET_CURR_BUFF_ADDR(), *transaction.chain_id));
+       ADD_ATTRIBUTE_ZEROCOPY("v", to_quantity(GET_CURR_BUFF_ADDR(), transaction.odd_y_parity));
+       //json["accessList"] = transaction.access_list; // EIP2930
+    } else {
+       ADD_ATTRIBUTE_ZEROCOPY("v", to_quantity(GET_CURR_BUFF_ADDR(), silkworm::endian::to_big_compact(transaction.v())));
+    }
+
+    ADD_ATTRIBUTE_ZEROCOPY("value", to_quantity(GET_CURR_BUFF_ADDR(), transaction.value));
+    ADD_ATTRIBUTE_ZEROCOPY("r", to_quantity(GET_CURR_BUFF_ADDR(), silkworm::endian::to_big_compact(transaction.r)));
+    ADD_ATTRIBUTE_ZEROCOPY("s", to_quantity(GET_CURR_BUFF_ADDR(), silkworm::endian::to_big_compact(transaction.s)));
+    END_JSON();
 }
 
-inline output_buffer& operator<<(output_buffer& out, std::vector<BlockHeader>& ommers) {
-    li::json_vector().encode(out, ommers);
-    return out;
+static void to_json2(const silkworm::BlockHeader& header) {
+    START_JSON();
+    ADD_ATTRIBUTE_ZEROCOPY("number", to_quantity(GET_CURR_BUFF_ADDR(), header.number));
+    ADD_ATTRIBUTE_ZEROCOPY("parentHash", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.parent_hash.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("nonce", nonce_to_hex2(GET_CURR_BUFF_ADDR(), header.nonce.data()));
+    ADD_ATTRIBUTE_ZEROCOPY("sha3Uncles", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.ommers_hash.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("logsBloom", bloom_to_hex2(GET_CURR_BUFF_ADDR(), header.logs_bloom.data()));
+    ADD_ATTRIBUTE_ZEROCOPY("transactionsRoot", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.transactions_root.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("stateRoot", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.state_root.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("receiptsRoot", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.receipts_root.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("miner", address_to_hex2(GET_CURR_BUFF_ADDR(), header.beneficiary.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("extraData", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.extra_data.data()));
+    ADD_ATTRIBUTE_ZEROCOPY("difficulty", to_quantity(GET_CURR_BUFF_ADDR(), silkworm::endian::to_big_compact(header.difficulty)));
+    ADD_ATTRIBUTE_ZEROCOPY("mixHash", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.mix_hash.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("gaslimit", to_quantity(GET_CURR_BUFF_ADDR(), header.gas_limit));
+    ADD_ATTRIBUTE_ZEROCOPY("gasUsed", to_quantity(GET_CURR_BUFF_ADDR(), header.gas_used));
+    ADD_ATTRIBUTE_ZEROCOPY("timestamp", to_quantity(GET_CURR_BUFF_ADDR(), header.timestamp));
+
+    if (header.base_fee_per_gas.has_value()) {
+       ADD_ATTRIBUTE_ZEROCOPY("baseFeePerGas", to_quantity(GET_CURR_BUFF_ADDR(), header.base_fee_per_gas.value_or(0)));
+    }
+
+    END_JSON();
+
+    //auto buff = GET_JSON_BUFFER();
+    //DUMP_JSON();
 }
 
-/*
-inline output_buffer& operator<<(output_buffer& out, silkworm::BlockBody& block_body) {
+
+static void benchmark_encode_transaction_pxb_json(benchmark::State& state) {
+#ifdef notdef
+    const auto transaction_json = to_json2(TRANSACTION_LEGACY);
+
+      //  R"("hash":"0xa4ee16008c6596d86a7c599a74b1cda264d609558ccc2d20a722a2cd58bad6eb",)"
+    ensure(transaction_json == 
+        R"({"from":"0x6df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("gas":"0x12",)"
+        R"("input":"0x",)"
+        R"("nonce":"0x0",)"
+        R"("r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",)"
+        R"("s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a",)"
+        R"("to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("type":"0x0",)"
+        R"("v":"0x1c",)"
+        R"("value":"0x7a69"})");
+#endif
+
+    for (auto _ : state) {
+        to_json2(TRANSACTION_LEGACY);
+    }
+}
+BENCHMARK(benchmark_encode_transaction_pxb_json);
+
+static void benchmark_encode_block_header_pxb_json(benchmark::State& state) {
+    for (auto _ : state) {
+        to_json2(HEADER);
+    }
+}
+BENCHMARK(benchmark_encode_block_header_pxb_json);
+
+
+inline output_buffer& operator<<(output_buffer& out, const Block& block) {
     li::json_object(
-        s::transactions,
-        s::ommers).encode(out, block_body);
-    return out;
+        s::transactions = li::json_vector(
+                                        s::data(li::json_key("input")), // PXB:: TRANS_INDEX 
+                                        //s::hash(li::json_key("hash")),
+                                        //s::get_block_number(li::json_key("number")),
+                                        s::get_gas_limit(li::json_key("gas")), // PXB:: GAS_PRICE 
+                                        s::from(li::json_key("from")),
+                                        s::get_gas_limit(li::json_key("gas")),
+                                        //s::get_hash(li::json_key("hash")),
+                                        s::data(li::json_key("input")),
+                                        s::get_nonce(li::json_key("nonce")),
+                                        s::get_r(li::json_key("r")),
+                                        s::get_s(li::json_key("s")),
+                                        s::to(li::json_key("to")),
+                                        s::get_type(li::json_key("type")),
+                                        s::get_v(li::json_key("v")),
+                                        //s::max_fee_per_gas,
+                                        s::get_value(li::json_key("value"))),
+
+        s::ommers =    li::json_vector( s::parent_hash(li::json_key("parentHash"))),
+
+        s::header  = li::json_object(
+                                        s::get_block_number(li::json_key("number")),
+                                        //s::hash(li::json_key("hash")),
+                                        s::parent_hash(li::json_key("parentHash")),
+                                        s::nonce,
+                                        s::ommers_hash(li::json_key("sha3Uncles")),
+                                        s::logs_bloom(li::json_key("logsBloom")),
+                                        s::transactions_root(li::json_key("transactionsRoot")),
+                                        s::state_root(li::json_key("stateRoot")),
+                                        s::receipts_root(li::json_key("receiptsRoot")),
+                                        s::beneficiary(li::json_key("miner")),
+                                        s::difficulty,
+                                        //s::total_difficulty,
+                                        s::extra_data(li::json_key("extraData")),
+                                        s::mix_hash(li::json_key("mixHash")),
+                                        //s::get_block_size(li::json_key("size")),
+                                        s::get_gas_limit(li::json_key("gas_limit")),
+                                        s::get_gas_used(li::json_key("gas_used")),
+                                        s::get_timestamp(li::json_key("timestamp")))).encode(out, block);
+
+       return out;
 }
-*/
 
 } // namespace li
 
@@ -788,6 +1145,14 @@ li::output_buffer encode_transaction(const Transaction& transaction) {
     li::output_buffer output_buffer{buffer, 2048};
     output_buffer << transaction;
     //std::cout << "transaction: "  << output_buffer.to_string_view() << "\n";
+    return output_buffer;
+}
+
+li::output_buffer encode_block(const Block& block) {
+    char buffer[4096];
+    li::output_buffer output_buffer{buffer, 4096};
+    output_buffer << block;
+    //std::cout << "block: "  << output_buffer.to_string_view() << "\n";
     return output_buffer;
 }
 
@@ -824,13 +1189,13 @@ static void benchmark_encode_block_header_lithium_json(benchmark::State& state) 
 BENCHMARK(benchmark_encode_block_header_lithium_json);
 
 static void benchmark_encode_transaction_lithium_json(benchmark::State& state) {
-    const auto transaction_json = encode_transaction(TRANSACTION).to_string_view();
+    const auto transaction_json = encode_transaction(TRANSACTION_LEGACY).to_string_view();
     //std::cout << "transaction: "  << transaction_json << "\n";
 
+      //  R"("hash":"0xa4ee16008c6596d86a7c599a74b1cda264d609558ccc2d20a722a2cd58bad6eb",)"
     ensure(transaction_json == 
         R"({"from":"0x6df9b87991262f6ba471f09758cde1c0fc1de734",)"
-        R"("gas":"0xffffffffffffffff",)"
-        R"("hash":"0xa4ee16008c6596d86a7c599a74b1cda264d609558ccc2d20a722a2cd58bad6eb",)"
+        R"("gas":"0x12",)"
         R"("input":"0x",)"
         R"("nonce":"0x0",)"
         R"("r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",)"
@@ -840,13 +1205,40 @@ static void benchmark_encode_transaction_lithium_json(benchmark::State& state) {
         R"("v":"0x1c",)"
         R"("value":"0x7a69"})");
 
-
     for (auto _ : state) {
-        li::output_buffer output_buffer = encode_transaction(TRANSACTION);
+        li::output_buffer output_buffer = encode_transaction(TRANSACTION_LEGACY);
         output_buffer.reset();
     }
 }
 BENCHMARK(benchmark_encode_transaction_lithium_json);
+
+static void benchmark_encode_block_lithium_json(benchmark::State& state) {
+    const auto block = encode_block(BLOCK1).to_string_view();
+    //std::cout << "block: "  << block << "\n";
+
+
+/*
+    ensure(transaction_json == 
+        R"({"from":"0x6df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("gas":"18",)"
+        R"("hash":"0xa4ee16008c6596d86a7c599a74b1cda264d609558ccc2d20a722a2cd58bad6eb",)"
+        R"("input":"0x",)"
+        R"("nonce":"0x0",)"
+        R"("r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",)"
+        R"("s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a",)"
+        R"("to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("type":"0x0",)"
+        R"("v":"0x1c",)"
+        R"("value":"0x7a69"})");
+*/
+
+
+    for (auto _ : state) {
+        li::output_buffer output_buffer = encode_block(BLOCK1);
+        output_buffer.reset();
+    }
+}
+BENCHMARK(benchmark_encode_block_lithium_json);
 
 BENCHMARK_MAIN();
 
