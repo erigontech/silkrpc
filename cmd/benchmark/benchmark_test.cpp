@@ -100,6 +100,7 @@ std::ostream& operator<<(std::ostream& o, const std::array<T, N>& a) {
     return o;
 }
 
+
 template<std::size_t N>
 void to_hex(std::array<char, 2 + N * 2>& hex_bytes, const uint8_t bytes[N]) {
     static const char* kHexDigits{"0123456789abcdef"};
@@ -117,19 +118,31 @@ constexpr auto address_to_hex = to_hex<20>;
 constexpr auto bytes32_to_hex = to_hex<32>;
 constexpr auto bloom_to_hex = to_hex<256>;
 
+size_t to_hex(char *hex_bytes, silkworm::ByteView bytes) {
+    static const char* kHexDigits{"0123456789abcdef"};
+    char* dest{&hex_bytes[0]};
+    *dest++ = '0';
+    *dest++ = 'x';
+    for (const auto& b : bytes) {
+        *dest++ = kHexDigits[b >> 4];    // Hi
+        *dest++ = kHexDigits[b & 0x0f];  // Lo
+    }
+    return dest-hex_bytes;
+}
+
 
 template<std::size_t N>
 std::size_t to_my_hex(char *hex_bytes, const uint8_t bytes[N]) {
     static const char* kHexDigits{"0123456789abcdef"};
-    int j,i;
-    hex_bytes[0] = '0';
-    hex_bytes[1] = 'x';
-    for (i = 0, j = 2; i<N; i++, j+=2) {
+    char* dest{&hex_bytes[0]};
+    *dest++ = '0';
+    *dest++ = 'x';
+    for (int i = 0; i<N; i++) {
         const auto v = bytes[i];
-        hex_bytes[j] = kHexDigits[v >> 4];
-        hex_bytes[j+1] = kHexDigits[v & 0x0f];
+        *dest++ = kHexDigits[v >> 4];    // Hi
+        *dest++ = kHexDigits[v & 0x0f];  // Lo
     }
-    return j;
+    return dest-hex_bytes;
 }
 constexpr auto address_to_hex2 = to_my_hex<20>;
 constexpr auto bytes32_to_hex2 = to_my_hex<32>;
@@ -754,8 +767,8 @@ static void benchmark_encode_block_header_nlohmann_json(benchmark::State& state)
     for (auto _ : state) {
         const nlohmann::json j = HEADER;
         const auto s = j.dump(/*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace);
-        //std::cout << "nlohmann::block_header: "  << s << "\n";
         benchmark::DoNotOptimize(s);
+        //std::cout << "nlohmann::block_header: "  << s << "\n";
     }
 }
 BENCHMARK(benchmark_encode_block_header_nlohmann_json);
@@ -936,7 +949,13 @@ inline output_buffer& operator<<(output_buffer& out, const Transaction& transact
     return out;
 }
 
-#define START_JSON() \
+#define START_JSON(out) \
+    int first = 1; \
+    char *start = out.buffer_; \
+    char *ptr = out.buffer_; \
+    *ptr++ = '{';
+
+#define START_JSON_OLD() \
     std::array<char, 4096> buffer; \
     int first = 1; \
     char *ptr = &buffer[0]; \
@@ -947,12 +966,12 @@ inline output_buffer& operator<<(output_buffer& out, const Transaction& transact
 #define GET_CURR_BUFF_ADDR() (ptr)
 
 #define GET_JSON_BUFFER() (buffer)
-#define GET_JSON_LEN() (ptr-&buffer[0])
+#define GET_JSON_LEN() (ptr-start)
 #define DUMP_JSON() \
-       int tmp = ptr-&buffer[0]; \
+       int tmp = ptr-start; \
        printf ("Len %d\n",tmp); \
        for (int i = 0; i < tmp; i++) \
-          printf ("%c",buffer[i]); \
+          printf ("%c",start[i]); \
        printf("\n");
         
 #define ADD_ATTRIBUTE(name, value) \
@@ -990,17 +1009,39 @@ inline output_buffer& operator<<(output_buffer& out, const Transaction& transact
     }
     
 
-void to_json2(const Transaction& transaction) {
-    START_JSON();
+struct json_buffer {
+
+  json_buffer(json_buffer&& o) : buffer_(o.buffer_), curr_(o.curr_) {
+  }
+
+  json_buffer(char *buffer, int max_len) : buffer_(buffer), curr_(buffer), max_len_(max_len) {
+  }
+
+  void set_len(int len) {
+     curr_+=len;
+  }
+
+  void reset() {
+      curr_ = buffer_;
+  }
+  std::string_view to_string_view() { return std::string_view(buffer_, curr_ - buffer_); }
+  
+  char *buffer_;
+  char *curr_;
+  int max_len_;
+};
+
+inline json_buffer& to_json(json_buffer& out, const silkworm::Transaction& transaction) {
+    START_JSON(out);
     if (!transaction.from) {
-        (const_cast<Transaction&>(transaction)).recover_sender();
+        (const_cast<silkworm::Transaction&>(transaction)).recover_sender();
     }
     if (transaction.from) {
         ADD_ATTRIBUTE_ZEROCOPY("from", address_to_hex2(GET_CURR_BUFF_ADDR(), transaction.from.value().bytes));
     }
 
     ADD_ATTRIBUTE_ZEROCOPY("gas", to_quantity(GET_CURR_BUFF_ADDR(), transaction.gas_limit));
-    //ADD_ATTRIBUTE_ZEROCOPY("input", address_to_hex2(GET_CURR_BUFF_ADDR(), transaction.data.c_str()));
+    ADD_ATTRIBUTE_ZEROCOPY("input", to_hex(GET_CURR_BUFF_ADDR(), transaction.data));
     ADD_ATTRIBUTE_ZEROCOPY("nonce", to_quantity(GET_CURR_BUFF_ADDR(), transaction.nonce));
 
     if (transaction.to) {
@@ -1022,10 +1063,13 @@ void to_json2(const Transaction& transaction) {
     ADD_ATTRIBUTE_ZEROCOPY("r", to_quantity(GET_CURR_BUFF_ADDR(), silkworm::endian::to_big_compact(transaction.r)));
     ADD_ATTRIBUTE_ZEROCOPY("s", to_quantity(GET_CURR_BUFF_ADDR(), silkworm::endian::to_big_compact(transaction.s)));
     END_JSON();
+
+    out.set_len(GET_JSON_LEN());
+    return out;
 }
 
-static void to_json2(const silkworm::BlockHeader& header) {
-    START_JSON();
+inline json_buffer& to_json(json_buffer& out, const silkworm::BlockHeader& header) {
+    START_JSON(out);
     ADD_ATTRIBUTE_ZEROCOPY("number", to_quantity(GET_CURR_BUFF_ADDR(), header.number));
     ADD_ATTRIBUTE_ZEROCOPY("parentHash", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.parent_hash.bytes));
     ADD_ATTRIBUTE_ZEROCOPY("nonce", nonce_to_hex2(GET_CURR_BUFF_ADDR(), header.nonce.data()));
@@ -1035,10 +1079,10 @@ static void to_json2(const silkworm::BlockHeader& header) {
     ADD_ATTRIBUTE_ZEROCOPY("stateRoot", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.state_root.bytes));
     ADD_ATTRIBUTE_ZEROCOPY("receiptsRoot", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.receipts_root.bytes));
     ADD_ATTRIBUTE_ZEROCOPY("miner", address_to_hex2(GET_CURR_BUFF_ADDR(), header.beneficiary.bytes));
-    ADD_ATTRIBUTE_ZEROCOPY("extraData", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.extra_data.data()));
+    ADD_ATTRIBUTE_ZEROCOPY("extraData", to_hex(GET_CURR_BUFF_ADDR(), header.extra_data));
     ADD_ATTRIBUTE_ZEROCOPY("difficulty", to_quantity(GET_CURR_BUFF_ADDR(), silkworm::endian::to_big_compact(header.difficulty)));
     ADD_ATTRIBUTE_ZEROCOPY("mixHash", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.mix_hash.bytes));
-    ADD_ATTRIBUTE_ZEROCOPY("gaslimit", to_quantity(GET_CURR_BUFF_ADDR(), header.gas_limit));
+    ADD_ATTRIBUTE_ZEROCOPY("gasLimit", to_quantity(GET_CURR_BUFF_ADDR(), header.gas_limit));
     ADD_ATTRIBUTE_ZEROCOPY("gasUsed", to_quantity(GET_CURR_BUFF_ADDR(), header.gas_used));
     ADD_ATTRIBUTE_ZEROCOPY("timestamp", to_quantity(GET_CURR_BUFF_ADDR(), header.timestamp));
 
@@ -1047,39 +1091,85 @@ static void to_json2(const silkworm::BlockHeader& header) {
     }
 
     END_JSON();
+    out.set_len(GET_JSON_LEN());
+    return out;
+}
 
-    //auto buff = GET_JSON_BUFFER();
-    //DUMP_JSON();
+
+
+json_buffer encode_transaction(const Transaction& transaction) {
+    char buffer[2048];
+    json_buffer output_buffer{buffer, 2048};
+    to_json(output_buffer, transaction);
+    //std::cout << "transaction: "  << output_buffer.to_string_view() << "\n";
+    return output_buffer;
+}
+
+json_buffer encode_block_header(const BlockHeader& header) {
+    char buffer[2048];
+    json_buffer output_buffer{buffer, 2048};
+    to_json(output_buffer, header);
+    //std::cout << "header: "  << output_buffer.to_string_view() << "\n";
+    return output_buffer;
 }
 
 
 static void benchmark_encode_transaction_pxb_json(benchmark::State& state) {
-#ifdef notdef
-    const auto transaction_json = to_json2(TRANSACTION_LEGACY);
+    const auto transaction_json = encode_transaction(TRANSACTION_LEGACY).to_string_view();
+    //std::cout << "transaction: "  << transaction_json << "\n";
 
       //  R"("hash":"0xa4ee16008c6596d86a7c599a74b1cda264d609558ccc2d20a722a2cd58bad6eb",)"
+
     ensure(transaction_json == 
         R"({"from":"0x6df9b87991262f6ba471f09758cde1c0fc1de734",)"
         R"("gas":"0x12",)"
         R"("input":"0x",)"
         R"("nonce":"0x0",)"
-        R"("r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",)"
-        R"("s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a",)"
         R"("to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",)"
         R"("type":"0x0",)"
         R"("v":"0x1c",)"
-        R"("value":"0x7a69"})");
-#endif
+        R"("value":"0x7a69",)"
+        R"("r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",)"
+        R"("s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"})");
 
     for (auto _ : state) {
-        to_json2(TRANSACTION_LEGACY);
+        json_buffer output_buffer = encode_transaction(TRANSACTION_LEGACY);
+        output_buffer.reset();
     }
 }
 BENCHMARK(benchmark_encode_transaction_pxb_json);
 
 static void benchmark_encode_block_header_pxb_json(benchmark::State& state) {
+    const auto block_header_json = encode_block_header(HEADER).to_string_view();
+    //std::cout << "block_header: "  << block_header_json << "\n";
+
+    ensure(block_header_json == 
+        R"({"number":"0x5",)"
+        R"("parentHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",)"
+        R"("nonce":"0x0102030405060708",)"
+        R"("sha3Uncles":"0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d",)"
+        R"("logsBloom":"0x000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(00000000000000000000000000000000000000000000000000000000000000000000000000000000",)"
+        R"("transactionsRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e",)"
+        R"("stateRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d",)"
+        R"("receiptsRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f",)"
+        R"("miner":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",)"
+        R"("extraData":"0x0001ff0100",)"
+        R"("difficulty":"0x",)"
+        R"("mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",)"
+        R"("gasLimit":"0xf4240",)"
+        R"("gasUsed":"0xf4240",)"
+        R"("timestamp":"0x52795d",)"
+        R"("baseFeePerGas":"0x3e8"})");
+
     for (auto _ : state) {
-        to_json2(HEADER);
+        json_buffer output_buffer = encode_block_header(HEADER);
+        output_buffer.reset();
     }
 }
 BENCHMARK(benchmark_encode_block_header_pxb_json);
