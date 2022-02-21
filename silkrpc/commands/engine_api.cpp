@@ -45,5 +45,30 @@ asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann:
     #endif
 }
 
+asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request.at("params");
+
+    if (params.size() != 1) {
+        auto error_msg = "invalid engine_newPayloadV1 params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request.at("id"), 100, error_msg);
+        co_return;
+    }
+    #ifndef BUILD_COVERAGE
+    try {
+    #endif
+        const auto payload = params[0].get<ExecutionPayload>();
+        reply = co_await backend_->engine_new_payload_v1(payload);
+    #ifndef BUILD_COVERAGE
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request.at("id"), 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request.at("id"), 100, "unexpected exception");
+    }
+    #endif
+}
+
 
 } // namespace silkrpc::commands

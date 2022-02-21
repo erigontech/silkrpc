@@ -43,7 +43,7 @@ public:
 
 protected:
     asio::awaitable<void> handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply);
-
+    asio::awaitable<void> handle_engine_new_payload_v1(const nlohmann::json& request, nlohmann::json& reply);
 private:
     std::unique_ptr<ethbackend::BackEnd>& backend_;
 

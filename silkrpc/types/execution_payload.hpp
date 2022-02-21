@@ -18,6 +18,8 @@
 #define SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
 
 #include <vector>
+#include <optional>
+#include <string>
 
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
@@ -46,7 +48,17 @@ struct ExecutionPayload {
     std::vector<silkworm::Bytes> transactions;
 };
 
+/*
+*   Payload Status as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
+*/
+struct PayloadStatus {
+    std::string status;
+    std::optional<evmc::bytes32> latest_valid_hash;
+    std::optional<std::string> validation_error;
+};
+
 std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload);
+std::ostream& operator<<(std::ostream& out, const PayloadStatus& payload_status);
 
 } // namespace silkrpc
 

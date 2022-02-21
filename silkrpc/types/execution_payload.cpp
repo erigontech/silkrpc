@@ -36,4 +36,17 @@ std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload) {
 
     return out;
 }
+
+std::ostream& operator<<(std::ostream& out, const PayloadStatus& payload_status) {
+    out << "status: " << payload_status.status;
+
+    if (payload_status.latest_valid_hash) {
+        out << " latest_valid_hash: " << *payload_status.latest_valid_hash;
+    }
+    if (payload_status.validation_error) {
+        out << " validation_error: " << *payload_status.validation_error;
+    }
+
+    return out;
+}
 } // namespace silkrpc

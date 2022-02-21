@@ -88,8 +88,24 @@ asio::awaitable<ExecutionPayload> BackEndGrpc::engine_get_payload_v1(uint64_t pa
     co_return execution_payload;
 }
 
-asio::awaitable<::types::ExecutionPayload> BackEndGrpc::execution_payload_to_proto(ExecutionPayload payload) {
-    co_return encode_execution_payload(payload);
+asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPayload payload) {
+    const auto start_time = clock_time::now();
+    EngineNewPayloadV1Awaitable npc_awaitable{executor_, stub_, queue_};
+    auto req{encode_execution_payload(payload)};
+    const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
+    PayloadStatus payload_status;
+    payload_status.status = decode_status_message(reply.status());
+    // Set LatestValidHash (if there is one)
+    if (reply.has_latestvalidhash()) {
+        payload_status.latest_valid_hash = bytes32_from_H256(reply.latestvalidhash());
+    }
+    // Set ValidationError (if there is one)
+    const auto validation_error{reply.validationerror()};
+    if (validation_error != "") {
+        payload_status.validation_error = validation_error;
+    }
+    SILKRPC_DEBUG << "BackEnd::engine_new_payload_v1 data=" << payload_status << " t=" << clock_time::since(start_time) << "\n";
+    co_return payload_status;
 }
 
 evmc::address BackEndGrpc::address_from_H160(const types::H160& h160) {
@@ -287,6 +303,23 @@ types::ExecutionPayload BackEndGrpc::encode_execution_payload(const ExecutionPay
     }
     execution_payload_grpc.set_extradata(std::string(execution_payload.extra_data.begin(), execution_payload.extra_data.end()));
     return execution_payload_grpc;
+}
+
+std::string BackEndGrpc::decode_status_message(const remote::EngineStatus& status) {
+    switch (status) {
+        case remote::EngineStatus::VALID:
+            return "VALID";
+        case remote::EngineStatus::SYNCING:
+            return "SYNCING";
+        case remote::EngineStatus::ACCEPTED:
+            return "ACCEPTED";
+        case remote::EngineStatus::INVALID_BLOCK_HASH:
+            return "INVALID_BLOCK_HASH";
+        case remote::EngineStatus::INVALID_TERMINAL_BLOCK:
+            return "INVALID_TERMINAL_BLOCK";
+        default:
+            return "INVALID";
+    }
 }
 
 } // namespace silkrpc::ethbackend
