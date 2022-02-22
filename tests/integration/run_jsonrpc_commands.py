@@ -33,7 +33,7 @@ def run_shell_command(command: str, expected_response: str, exit_on_fail):
             # response and expected_response are different but don't care
             return
         response_diff = jsondiff.diff(expected_response, response)
-        print("--> KO: unexpected result for command: {0}\n--> DIFF expected-received: {1}".format(command, response_diff))
+        print(f"--> KO: unexpected result for command: {command}\n--> DIFF expected-received: {response_diff}")
         if exit_on_fail:
             sys.exit(1)
 

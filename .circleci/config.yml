@@ -157,7 +157,7 @@ jobs:
 
 workflows:
   version: 2
-  silkworm:
+  silkrpc:
     jobs:
       - linux-gcc-10
       - linux-clang-coverage
