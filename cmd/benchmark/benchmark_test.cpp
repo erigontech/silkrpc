@@ -40,6 +40,10 @@
 #include <silkrpc/types/block.hpp>
 #include <silkrpc/types/transaction.hpp>
 
+#define MAX_THRS 6
+#define MAX_ENCODE 1000000
+pthread_t tid[MAX_THRS];
+
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
 static constexpr int kHexAddressSize = 2 + 20 * 2; // 0x + 2 bytes for each hex digit
@@ -745,8 +749,17 @@ static const Block BLOCK1{
 };
 
 static const silkrpc::Block BLOCK{
-    std::vector<silkworm::Transaction>{TRANSACTION_LEGACY},
-    std::vector<silkworm::BlockHeader>{OMMER_HEADER, OMMER_HEADER},
+    std::vector<silkworm::Transaction>{TRANSACTION_LEGACY, TRANSACTION_EIP2930},
+    std::vector<silkworm::BlockHeader>{OMMER_HEADER},
+    HEADER,
+    0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
+    4,                                                                           // total_difficulty
+    true                                                                         // full_tx
+};
+
+static const silkrpc::Block BIG_BLOCK{
+    std::vector<silkworm::Transaction>{TRANSACTION_LEGACY, TRANSACTION_EIP2930, TRANSACTION_LEGACY, TRANSACTION_EIP2930, TRANSACTION_LEGACY, TRANSACTION_EIP2930, TRANSACTION_LEGACY, TRANSACTION_EIP2930, TRANSACTION_LEGACY, TRANSACTION_EIP2930, TRANSACTION_LEGACY, TRANSACTION_EIP2930, TRANSACTION_EIP2930, TRANSACTION_LEGACY, TRANSACTION_EIP2930, TRANSACTION_LEGACY, TRANSACTION_EIP2930, TRANSACTION_LEGACY, TRANSACTION_EIP2930, TRANSACTION_LEGACY, TRANSACTION_EIP2930, TRANSACTION_LEGACY, TRANSACTION_EIP2930},
+    std::vector<silkworm::BlockHeader>{OMMER_HEADER},
     HEADER,
     0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
     4,                                                                           // total_difficulty
@@ -784,6 +797,33 @@ static void benchmark_encode_block_nlohmann_json(benchmark::State& state) {
 }
 BENCHMARK(benchmark_encode_block_nlohmann_json);
 
+void *encode_nlohmann_child(void *arg) {
+    int i;
+    for (i = 0; i < MAX_ENCODE; i++) {
+        const nlohmann::json j = BLOCK; // BIG_BLOCK
+        const auto s = j.dump(/*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace);
+        benchmark::DoNotOptimize(s);
+    }
+    return 0;
+}
+
+void encode_nlohmann() {
+    int i;
+
+    for (i = 0; i < MAX_THRS; i++) {
+        pthread_create(&tid[i], NULL, &encode_nlohmann_child, NULL);
+    }
+    for (i = 0; i < MAX_THRS; i++) {
+        pthread_join(tid[i], NULL);
+    }
+}
+
+static void benchmark_encode_block_nlohmann_batch_class_json(benchmark::State& state) {
+    for (auto _ : state) {
+       encode_nlohmann();
+    }
+}
+BENCHMARK(benchmark_encode_block_nlohmann_batch_class_json);
 
 #ifndef LI_SYMBOL_parent_hash
 #define LI_SYMBOL_parent_hash
@@ -949,24 +989,18 @@ inline output_buffer& operator<<(output_buffer& out, const Transaction& transact
     return out;
 }
 
-#define START_JSON(out) \
-    int first = 1; \
+#define START_OBJECT(out) \
+    json_buffer& local_out = out; \
+    int first_attribute = 1; \
+    int first_element = 1; \
     char *start = out.buffer_; \
-    char *ptr = out.buffer_; \
-    *ptr++ = '{';
+    char *ptr = out.curr_; 
 
-#define START_JSON_OLD() \
-    std::array<char, 4096> buffer; \
-    int first = 1; \
-    char *ptr = &buffer[0]; \
-    *ptr++ = '{';
-
-#define END_JSON() *ptr++ = '}';
+#define END_OBJECT() local_out.set_curr(ptr);
+      
 
 #define GET_CURR_BUFF_ADDR() (ptr)
 
-#define GET_JSON_BUFFER() (buffer)
-#define GET_JSON_LEN() (ptr-start)
 #define DUMP_JSON() \
        int tmp = ptr-start; \
        printf ("Len %d\n",tmp); \
@@ -975,18 +1009,49 @@ inline output_buffer& operator<<(output_buffer& out, const Transaction& transact
        printf("\n");
         
 #define ADD_ATTRIBUTE(name, value) \
-    if (first) { \
-       first = 0; \
+    if (first_attribute) { \
+       first_attribute = 0; \
        ptr += std::sprintf (ptr, "\"%s\":\"%s\"", name,value); \
     } \
     else { \
        ptr += std::sprintf (ptr, ",\"%s\":\"%s\"", name,value); \
     }
 
+#define START_VECTOR(name) \
+       *ptr++ = ','; \
+       *ptr++ = '\"'; \
+       memcpy(ptr, name, strlen(name)); \
+       ptr+=strlen(name); \
+       *ptr++ = '\"'; \
+       *ptr++ = ':'; \
+       *ptr++ = '['; \
+       first_element = 1; 
+
+#define END_VECTOR() \
+       *ptr++ = ']'; \
+
+#define RESTORE() \
+          ptr = local_out.curr_; 
+
+#define SAVE() \
+          local_out.set_curr(ptr); \
+          *ptr++ = ','; 
+
+#define START_ELEMENT(name) \
+       if (first_element) { \
+          first_element = 0; \
+       } \
+       else \
+          *ptr++ = ','; \
+       *ptr++ = '{'; \
+       local_out.set_curr(ptr); 
+
+#define END_ELEMENT(name) \
+       *ptr++ = '}';
 
 #define ADD_ATTRIBUTE_ZEROCOPY(name, len) \
-    if (first) { \
-       first = 0; \
+    if (first_attribute) { \
+       first_attribute = 0; \
        *ptr++ = '\"'; \
        memcpy(ptr, name, strlen(name)); \
        ptr+=strlen(name); \
@@ -1015,24 +1080,99 @@ struct json_buffer {
   }
 
   json_buffer(char *buffer, int max_len) : buffer_(buffer), curr_(buffer), max_len_(max_len) {
+     *curr_++ = '{'; 
   }
 
-  void set_len(int len) {
-     curr_+=len;
+  inline void set_curr(char *curr) {
+     curr_=curr;
   }
 
-  void reset() {
+  inline void reset() {
       curr_ = buffer_;
   }
+
+  inline void end() {
+     *curr_++ = '}'; 
+  }
+
+  inline void add_attribute_name(const char *name) {
+    if (first_attribute) { 
+       first_attribute = 0; 
+       *curr_++ = '\"'; 
+       memcpy(curr_, name, strlen(name)); 
+       curr_+=strlen(name); 
+       *curr_++ = '\"'; 
+       *curr_++ = ':'; 
+       *curr_++ = '\"'; \
+    } 
+    else { \
+       *curr_++ = ','; 
+       *curr_++ = '\"'; 
+       memcpy(curr_, name, strlen(name)); 
+       curr_ += strlen(name); 
+       *curr_++ = '\"'; 
+       *curr_++ = ':'; 
+       *curr_++ = '\"'; 
+    }
+  }
+
+  inline char *get_addr() {
+    return curr_;
+  }
+
+  inline void add_attribute_value(int len) {
+       curr_+=len; 
+       *curr_++ = '\"'; 
+  }
+
+  inline void add_attribute_value(const char *value) {
+       auto len = strlen(value);
+       memcpy(curr_, value, len); 
+       curr_+=len; 
+       *curr_++ = '\"'; 
+  }
+
+  inline void start_vector(const char *name) {
+       *curr_++ = ','; 
+       *curr_++ = '\"'; 
+       memcpy(curr_, name, strlen(name)); 
+       curr_+=strlen(name); 
+       *curr_++ = '\"'; 
+       *curr_++ = ':'; 
+       *curr_++ = '[';
+       first_element = 1; 
+  }
+
+  inline void end_vector() {
+       *curr_++ = ']';
+  }
+
+  inline void start_vector_element() {
+       if (first_element) { 
+          first_element = 0; 
+       } 
+       else 
+          *curr_++ = ','; 
+       *curr_++ = '{'; 
+       first_attribute = 1; 
+  }
+
+  inline void end_vector_element() {
+       *curr_++ = '}'; \
+   }
+
   std::string_view to_string_view() { return std::string_view(buffer_, curr_ - buffer_); }
   
   char *buffer_;
   char *curr_;
   int max_len_;
+  int first_element = 1; 
+  int first_attribute = 1; 
 };
 
 inline json_buffer& to_json(json_buffer& out, const silkworm::Transaction& transaction) {
-    START_JSON(out);
+    START_OBJECT(out);
+
     if (!transaction.from) {
         (const_cast<silkworm::Transaction&>(transaction)).recover_sender();
     }
@@ -1062,14 +1202,66 @@ inline json_buffer& to_json(json_buffer& out, const silkworm::Transaction& trans
     ADD_ATTRIBUTE_ZEROCOPY("value", to_quantity(GET_CURR_BUFF_ADDR(), transaction.value));
     ADD_ATTRIBUTE_ZEROCOPY("r", to_quantity(GET_CURR_BUFF_ADDR(), silkworm::endian::to_big_compact(transaction.r)));
     ADD_ATTRIBUTE_ZEROCOPY("s", to_quantity(GET_CURR_BUFF_ADDR(), silkworm::endian::to_big_compact(transaction.s)));
-    END_JSON();
+    END_OBJECT();
 
-    out.set_len(GET_JSON_LEN());
+    return out;
+}
+
+inline json_buffer& to_json2(json_buffer& out, const silkworm::Transaction& transaction) {
+
+    if (!transaction.from) {
+        (const_cast<silkworm::Transaction&>(transaction)).recover_sender();
+    }
+    if (transaction.from) {
+        out.add_attribute_name("from"); 
+        out.add_attribute_value(address_to_hex2(out.get_addr(), transaction.from.value().bytes));
+    }
+
+    out.add_attribute_name("gas");
+    out.add_attribute_value(to_quantity(out.get_addr(), transaction.gas_limit));
+
+    out.add_attribute_name("input");
+    out.add_attribute_value(to_hex(out.get_addr(), transaction.data));
+
+    out.add_attribute_name("nonce");
+    out.add_attribute_value(to_quantity(out.get_addr(), transaction.nonce));
+
+    if (transaction.to) {
+        out.add_attribute_name("to");
+        out.add_attribute_value(address_to_hex2(out.get_addr(), transaction.to.value().bytes));
+    } else {
+        out.add_attribute_name("to");
+        out.add_attribute_value("0x0");
+    }
+    out.add_attribute_name("type");
+    out.add_attribute_value(to_quantity(out.get_addr(), (uint8_t)transaction.type));
+
+    if (transaction.type != silkworm::Transaction::Type::kLegacy) {
+       out.add_attribute_name("chainId");
+       out.add_attribute_value(to_quantity(out.get_addr(), *transaction.chain_id));
+
+       out.add_attribute_name("v");
+       out.add_attribute_value(to_quantity(out.get_addr(), transaction.odd_y_parity));
+       //json["accessList"] = transaction.access_list; // EIP2930
+    } else {
+       out.add_attribute_name("v");
+       out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(transaction.v())));
+    }
+
+    out.add_attribute_name("value");
+    out.add_attribute_value(to_quantity(out.get_addr(), transaction.value));
+
+    out.add_attribute_name("r");
+    out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(transaction.r)));
+
+    out.add_attribute_name("s");
+    out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(transaction.s)));
+
     return out;
 }
 
 inline json_buffer& to_json(json_buffer& out, const silkworm::BlockHeader& header) {
-    START_JSON(out);
+    START_OBJECT(out);
     ADD_ATTRIBUTE_ZEROCOPY("number", to_quantity(GET_CURR_BUFF_ADDR(), header.number));
     ADD_ATTRIBUTE_ZEROCOPY("parentHash", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), header.parent_hash.bytes));
     ADD_ATTRIBUTE_ZEROCOPY("nonce", nonce_to_hex2(GET_CURR_BUFF_ADDR(), header.nonce.data()));
@@ -1090,31 +1282,279 @@ inline json_buffer& to_json(json_buffer& out, const silkworm::BlockHeader& heade
        ADD_ATTRIBUTE_ZEROCOPY("baseFeePerGas", to_quantity(GET_CURR_BUFF_ADDR(), header.base_fee_per_gas.value_or(0)));
     }
 
-    END_JSON();
-    out.set_len(GET_JSON_LEN());
+    END_OBJECT();
+    return out;
+}
+
+inline json_buffer& to_json2(json_buffer& out, const silkworm::BlockHeader& header) {
+    out.add_attribute_name("number");
+    out.add_attribute_value(to_quantity(out.get_addr(), header.number));
+
+    out.add_attribute_name("parentHash");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), header.parent_hash.bytes));
+
+    out.add_attribute_name("nonce");
+    out.add_attribute_value(nonce_to_hex2(out.get_addr(), header.nonce.data()));
+
+    out.add_attribute_name("sha3Uncles");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), header.ommers_hash.bytes));
+
+    out.add_attribute_name("logsBloom");
+    out.add_attribute_value(bloom_to_hex2(out.get_addr(), header.logs_bloom.data()));
+
+    out.add_attribute_name("transactionsRoot");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), header.transactions_root.bytes));
+
+    out.add_attribute_name("stateRoot");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), header.state_root.bytes));
+
+    out.add_attribute_name("receiptsRoot");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), header.receipts_root.bytes));
+
+    out.add_attribute_name("miner");
+    out.add_attribute_value(address_to_hex2(out.get_addr(), header.beneficiary.bytes));
+
+    out.add_attribute_name("extraData");
+    out.add_attribute_value(to_hex(out.get_addr(), header.extra_data));
+
+    out.add_attribute_name("difficulty");
+    out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(header.difficulty)));
+
+    out.add_attribute_name("mixHash");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), header.mix_hash.bytes));
+
+    out.add_attribute_name("gasLimit");
+    out.add_attribute_value(to_quantity(out.get_addr(), header.gas_limit));
+
+    out.add_attribute_name("gasUsed");
+    out.add_attribute_value(to_quantity(out.get_addr(), header.gas_used));
+
+    out.add_attribute_name("timestamp");
+    out.add_attribute_value(to_quantity(out.get_addr(), header.timestamp));
+
+    if (header.base_fee_per_gas.has_value()) {
+       out.add_attribute_name("baseFeePerGas");
+       out.add_attribute_value(to_quantity(out.get_addr(), header.base_fee_per_gas.value_or(0)));
+    }
+
+    return out;
+}
+
+inline size_t copy_bn (char *dest, char *src, int len) {
+   memcpy(dest, src, len);
+   return len;
+}
+
+inline json_buffer& to_json(json_buffer& out, const silkrpc::Block& b) {
+    char buffer[100];
+    const auto block_number_size = to_quantity(buffer, b.block.header.number); 
+    START_OBJECT(out);
+    ADD_ATTRIBUTE_ZEROCOPY("number", copy_bn(GET_CURR_BUFF_ADDR(), buffer, block_number_size));
+    ADD_ATTRIBUTE_ZEROCOPY("hash", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), b.hash.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("parentHash", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), b.block.header.parent_hash.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("nonce", nonce_to_hex2(GET_CURR_BUFF_ADDR(), b.block.header.nonce.data()));
+    ADD_ATTRIBUTE_ZEROCOPY("sha3Uncles", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), b.block.header.ommers_hash.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("logsBloom", bloom_to_hex2(GET_CURR_BUFF_ADDR(), b.block.header.logs_bloom.data()));
+    ADD_ATTRIBUTE_ZEROCOPY("transactionsRoot", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), b.block.header.transactions_root.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("stateRoot", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), b.block.header.state_root.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("receiptsRoot", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), b.block.header.receipts_root.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("miner", address_to_hex2(GET_CURR_BUFF_ADDR(), b.block.header.beneficiary.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("difficulty", to_quantity(GET_CURR_BUFF_ADDR(), silkworm::endian::to_big_compact(b.block.header.difficulty)));
+    ADD_ATTRIBUTE_ZEROCOPY("totalDifficulty", to_quantity(GET_CURR_BUFF_ADDR(), silkworm::endian::to_big_compact(b.total_difficulty)));
+    ADD_ATTRIBUTE_ZEROCOPY("extraData", to_hex(GET_CURR_BUFF_ADDR(), b.block.header.extra_data));
+    ADD_ATTRIBUTE_ZEROCOPY("mixHash", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), b.block.header.mix_hash.bytes));
+    ADD_ATTRIBUTE_ZEROCOPY("size", to_quantity(GET_CURR_BUFF_ADDR(), b.get_block_size()));
+    ADD_ATTRIBUTE_ZEROCOPY("gasLimit", to_quantity(GET_CURR_BUFF_ADDR(), b.block.header.gas_limit));
+    ADD_ATTRIBUTE_ZEROCOPY("gasUsed", to_quantity(GET_CURR_BUFF_ADDR(), b.block.header.gas_used));
+    if (b.block.header.base_fee_per_gas.has_value()) {
+       ADD_ATTRIBUTE_ZEROCOPY("baseFeePerGas", to_quantity(GET_CURR_BUFF_ADDR(), b.block.header.base_fee_per_gas.value_or(0))); }
+    ADD_ATTRIBUTE_ZEROCOPY("timestamp", to_quantity(GET_CURR_BUFF_ADDR(), b.block.header.timestamp));
+
+    if (b.full_tx) {
+        int n_elem =  b.block.transactions.size(); 
+        START_VECTOR("transactions");
+        for (auto i{0}; i < n_elem; i++) {
+            START_ELEMENT(out);
+            to_json(out, b.block.transactions[i]);
+            RESTORE();  //XXX
+            ADD_ATTRIBUTE_ZEROCOPY("transactionIndex", to_quantity(GET_CURR_BUFF_ADDR(), i));
+            ADD_ATTRIBUTE_ZEROCOPY("blockhash", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), b.hash.bytes));
+            ADD_ATTRIBUTE_ZEROCOPY("blockNumber", copy_bn(GET_CURR_BUFF_ADDR(), buffer, block_number_size));
+            //ADD_ATTRIBUTE_ZEROCOPY("blockNumber", to_quantity(GET_CURR_BUFF_ADDR(), b.block.header.number)); // XXX
+            ADD_ATTRIBUTE_ZEROCOPY("gasPrice", to_quantity(GET_CURR_BUFF_ADDR(), b.block.transactions[i].effective_gas_price(b.block.header.base_fee_per_gas.value_or(0))));
+            END_ELEMENT();
+        }
+        END_VECTOR();
+    }
+
+    std::vector<evmc::bytes32> ommer_hashes;
+    ommer_hashes.reserve(b.block.ommers.size());
+    for (auto i{0}; i < b.block.ommers.size(); i++) {
+        //ommer_hashes.emplace(ommer_hashes.end(), std::move(b.block.ommers[i].hash()));
+    }
+    //ADD_ATTRIBUTE_ZEROCOPY("uncles", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), ommer_hashes)); XXX
+
+    END_OBJECT();
+    return out;
+}
+
+inline json_buffer& to_json2(json_buffer& out, const silkrpc::Block& b) {
+    char buffer[100];
+    const auto block_number_size = to_quantity(buffer, b.block.header.number); 
+    out.add_attribute_name("number");
+    out.add_attribute_value(copy_bn(out.get_addr(), buffer, block_number_size));
+
+    out.add_attribute_name("hash");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.hash.bytes));
+
+    out.add_attribute_name("parentHash");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.header.parent_hash.bytes));
+
+    out.add_attribute_name("nonce");
+    out.add_attribute_value(nonce_to_hex2(out.get_addr(), b.block.header.nonce.data()));
+
+    out.add_attribute_name("sha3Uncles");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.header.ommers_hash.bytes));
+
+    out.add_attribute_name("logsBloom");
+    out.add_attribute_value(bloom_to_hex2(out.get_addr(), b.block.header.logs_bloom.data()));
+
+    out.add_attribute_name("transactionsRoot");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.header.transactions_root.bytes));
+
+    out.add_attribute_name("stateRoot");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.header.state_root.bytes));
+
+    out.add_attribute_name("receiptsRoot");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.header.receipts_root.bytes));
+
+    out.add_attribute_name("miner");
+    out.add_attribute_value(address_to_hex2(out.get_addr(), b.block.header.beneficiary.bytes));
+
+    out.add_attribute_name("difficulty");
+    out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(b.block.header.difficulty)));
+
+    out.add_attribute_name("totalDifficulty");
+    out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(b.total_difficulty)));
+
+    out.add_attribute_name("extraData");
+    out.add_attribute_value(to_hex(out.get_addr(), b.block.header.extra_data));
+
+    out.add_attribute_name("mixHash");
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.header.mix_hash.bytes));
+
+    out.add_attribute_name("size");
+    out.add_attribute_value(to_quantity(out.get_addr(), b.get_block_size()));
+
+    out.add_attribute_name("gasLimit");
+    out.add_attribute_value(to_quantity(out.get_addr(), b.block.header.gas_limit));
+
+    out.add_attribute_name("gasUsed");
+    out.add_attribute_value(to_quantity(out.get_addr(), b.block.header.gas_used));
+
+    if (b.block.header.base_fee_per_gas.has_value()) {
+       out.add_attribute_name("baseFeePerGas");
+       out.add_attribute_value(to_quantity(out.get_addr(), b.block.header.base_fee_per_gas.value_or(0)));
+    }
+    out.add_attribute_name("timestamp");
+    out.add_attribute_value(to_quantity(out.get_addr(), b.block.header.timestamp));
+
+    if (b.full_tx) {
+        int n_elem =  b.block.transactions.size(); 
+        out.start_vector("transactions");
+        for (auto i{0}; i < n_elem; i++) {
+            out.start_vector_element();
+            to_json2(out, b.block.transactions[i]);
+
+            out.add_attribute_name("transactionIndex");
+            out.add_attribute_value(to_quantity(out.get_addr(), i));
+
+            out.add_attribute_name("blockhash");
+            out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.hash.bytes));
+
+            out.add_attribute_name("blockNumber");
+            out.add_attribute_value(copy_bn(out.get_addr(), buffer, block_number_size));
+
+            out.add_attribute_name("gasPrice");
+            out.add_attribute_value(to_quantity(out.get_addr(), b.block.transactions[i].effective_gas_price(b.block.header.base_fee_per_gas.value_or(0))));
+            out.end_vector_element();
+        }
+        out.end_vector();
+    }
+
+    std::vector<evmc::bytes32> ommer_hashes;
+    ommer_hashes.reserve(b.block.ommers.size());
+    for (auto i{0}; i < b.block.ommers.size(); i++) {
+#ifdef notdef
+        out.add_attribute_name("uncles");
+        out.add_attribute_value(bytes32_to_hex2(out.get_addr(), std::move(b.block.ommers[i].hash())));
+#endif
+    }
+
     return out;
 }
 
 
 
 json_buffer encode_transaction(const Transaction& transaction) {
-    char buffer[2048];
-    json_buffer output_buffer{buffer, 2048};
+    char buffer[4096];
+    json_buffer output_buffer{buffer, 4096};
     to_json(output_buffer, transaction);
-    //std::cout << "transaction: "  << output_buffer.to_string_view() << "\n";
+    output_buffer.end();
+    //std::cout << "Transaction: "  << output_buffer.to_string_view() << "\n";
+    return output_buffer;
+}
+
+json_buffer encode_transaction2(const Transaction& transaction) {
+    char buffer[4096];
+    json_buffer output_buffer{buffer, 4096};
+    to_json2(output_buffer, transaction);
+    output_buffer.end();
+    //std::cout << "Transaction: "  << output_buffer.to_string_view() << "\n";
     return output_buffer;
 }
 
 json_buffer encode_block_header(const BlockHeader& header) {
-    char buffer[2048];
-    json_buffer output_buffer{buffer, 2048};
+    char buffer[4096];
+    json_buffer output_buffer{buffer, 4096};
     to_json(output_buffer, header);
-    //std::cout << "header: "  << output_buffer.to_string_view() << "\n";
+    output_buffer.end();
+    //std::cout << "BlockHeader: "  << output_buffer.to_string_view() << "\n";
+    return output_buffer;
+}
+
+json_buffer encode_block_header2(const BlockHeader& header) {
+    char buffer[4096];
+    json_buffer output_buffer{buffer, 4096};
+    to_json2(output_buffer, header);
+    output_buffer.end();
+    //std::cout << "BlockHeader: "  << output_buffer.to_string_view() << "\n";
+    return output_buffer;
+}
+
+json_buffer encode_block(const silkrpc::Block& b) {
+    //char *buffer = (char *)malloc(1*4096); // XXX
+    char buffer[14096];
+    json_buffer output_buffer{buffer, 4096};
+    to_json(output_buffer, b);
+    output_buffer.end();
+    //std::cout << "Block: "  << output_buffer.to_string_view() << "\n";
+    return output_buffer;
+}
+
+json_buffer encode_block2(const silkrpc::Block& b) {
+    //char *buffer = (char *)malloc(1*4096); // XXX
+    char buffer[14096];
+    json_buffer output_buffer{buffer, 4096};
+    to_json2(output_buffer, b);
+    output_buffer.end();
+    //std::cout << "Block: "  << output_buffer.to_string_view() << "\n";
     return output_buffer;
 }
 
 
-static void benchmark_encode_transaction_pxb_json(benchmark::State& state) {
+
+static void benchmark_encode_transaction_macro_json(benchmark::State& state) {
     const auto transaction_json = encode_transaction(TRANSACTION_LEGACY).to_string_view();
     //std::cout << "transaction: "  << transaction_json << "\n";
 
@@ -1137,9 +1577,10 @@ static void benchmark_encode_transaction_pxb_json(benchmark::State& state) {
         output_buffer.reset();
     }
 }
-BENCHMARK(benchmark_encode_transaction_pxb_json);
+BENCHMARK(benchmark_encode_transaction_macro_json);
 
-static void benchmark_encode_block_header_pxb_json(benchmark::State& state) {
+
+static void benchmark_encode_block_header_macro_json(benchmark::State& state) {
     const auto block_header_json = encode_block_header(HEADER).to_string_view();
     //std::cout << "block_header: "  << block_header_json << "\n";
 
@@ -1172,7 +1613,89 @@ static void benchmark_encode_block_header_pxb_json(benchmark::State& state) {
         output_buffer.reset();
     }
 }
-BENCHMARK(benchmark_encode_block_header_pxb_json);
+BENCHMARK(benchmark_encode_block_header_macro_json);
+
+static void benchmark_encode_block_macro_json(benchmark::State& state) {
+    const auto block_json = encode_block(BLOCK).to_string_view();
+    //std::cout << "block: "  << block_json << "\n";
+
+    for (auto _ : state) {
+        json_buffer output_buffer = encode_block(BLOCK);
+        output_buffer.reset();
+    }
+}
+BENCHMARK(benchmark_encode_block_macro_json);
+
+static void benchmark_encode_transaction_class_json(benchmark::State& state) {
+    const auto transaction_json = encode_transaction2(TRANSACTION_LEGACY).to_string_view();
+    //std::cout << "transaction: "  << transaction_json << "\n";
+
+      //  R"("hash":"0xa4ee16008c6596d86a7c599a74b1cda264d609558ccc2d20a722a2cd58bad6eb",)"
+
+    ensure(transaction_json == 
+        R"({"from":"0x6df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("gas":"0x12",)"
+        R"("input":"0x",)"
+        R"("nonce":"0x0",)"
+        R"("to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("type":"0x0",)"
+        R"("v":"0x1c",)"
+        R"("value":"0x7a69",)"
+        R"("r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",)"
+        R"("s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"})");
+
+    for (auto _ : state) {
+        json_buffer output_buffer = encode_transaction2(TRANSACTION_LEGACY);
+        output_buffer.reset();
+    }
+}
+BENCHMARK(benchmark_encode_transaction_class_json);
+
+static void benchmark_encode_block_header_class_json(benchmark::State& state) {
+    const auto block_header_json = encode_block_header2(HEADER).to_string_view();
+    //std::cout << "block_header: "  << block_header_json << "\n";
+
+    ensure(block_header_json == 
+        R"({"number":"0x5",)"
+        R"("parentHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",)"
+        R"("nonce":"0x0102030405060708",)"
+        R"("sha3Uncles":"0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d",)"
+        R"("logsBloom":"0x000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(00000000000000000000000000000000000000000000000000000000000000000000000000000000",)"
+        R"("transactionsRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e",)"
+        R"("stateRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d",)"
+        R"("receiptsRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f",)"
+        R"("miner":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",)"
+        R"("extraData":"0x0001ff0100",)"
+        R"("difficulty":"0x",)"
+        R"("mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",)"
+        R"("gasLimit":"0xf4240",)"
+        R"("gasUsed":"0xf4240",)"
+        R"("timestamp":"0x52795d",)"
+        R"("baseFeePerGas":"0x3e8"})");
+
+    for (auto _ : state) {
+        json_buffer output_buffer = encode_block_header2(HEADER);
+        output_buffer.reset();
+    }
+}
+BENCHMARK(benchmark_encode_block_header_class_json);
+
+static void benchmark_encode_block_class_json(benchmark::State& state) {
+    const auto block_json = encode_block2(BLOCK).to_string_view();
+    //std::cout << "block: "  << block_json << "\n";
+
+    for (auto _ : state) {
+        json_buffer output_buffer = encode_block2(BLOCK);
+        output_buffer.reset();
+    }
+}
+BENCHMARK(benchmark_encode_block_class_json);
 
 
 inline output_buffer& operator<<(output_buffer& out, const Block& block) {
@@ -1220,9 +1743,36 @@ inline output_buffer& operator<<(output_buffer& out, const Block& block) {
        return out;
 }
 
+void *encode_class_child(void *arg) {
+    int i;
+    for (i = 0; i < MAX_ENCODE; i++) {
+        json_buffer output_buffer = encode_block2(BLOCK); // BIG_BLOCK
+        output_buffer.reset();
+    }
+    return 0;
+}
+
+void encode_class() {
+    int i;
+
+    for (i = 0; i < MAX_THRS; i++) {
+        pthread_create(&tid[i], NULL, &encode_class_child, NULL);
+    }
+    for (i = 0; i < MAX_THRS; i++) {
+        pthread_join(tid[i], NULL);
+    }
+}
+
+static void benchmark_encode_block_class_batch_json(benchmark::State& state) {
+    for (auto _ : state) {
+       encode_class();
+    }
+}
+BENCHMARK(benchmark_encode_block_class_batch_json);
+
 } // namespace li
 
-li::output_buffer encode_block_header(const BlockHeader& block_header) {
+li::output_buffer encode_block_header_lit(const BlockHeader& block_header) {
     char buffer[2048];
     li::output_buffer output_buffer{buffer, 2048};
     output_buffer << block_header;
@@ -1230,7 +1780,7 @@ li::output_buffer encode_block_header(const BlockHeader& block_header) {
     return output_buffer;
 }
 
-li::output_buffer encode_transaction(const Transaction& transaction) {
+li::output_buffer encode_transaction_lit(const Transaction& transaction) {
     char buffer[2048];
     li::output_buffer output_buffer{buffer, 2048};
     output_buffer << transaction;
@@ -1238,7 +1788,7 @@ li::output_buffer encode_transaction(const Transaction& transaction) {
     return output_buffer;
 }
 
-li::output_buffer encode_block(const Block& block) {
+li::output_buffer encode_block_lit(const Block& block) {
     char buffer[4096];
     li::output_buffer output_buffer{buffer, 4096};
     output_buffer << block;
@@ -1246,8 +1796,32 @@ li::output_buffer encode_block(const Block& block) {
     return output_buffer;
 }
 
+static void benchmark_encode_transaction_lithium_json(benchmark::State& state) {
+    const auto transaction_json = encode_transaction_lit(TRANSACTION_LEGACY).to_string_view();
+    //std::cout << "transaction: "  << transaction_json << "\n";
+
+      //  R"("hash":"0xa4ee16008c6596d86a7c599a74b1cda264d609558ccc2d20a722a2cd58bad6eb",)"
+    ensure(transaction_json == 
+        R"({"from":"0x6df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("gas":"0x12",)"
+        R"("input":"0x",)"
+        R"("nonce":"0x0",)"
+        R"("r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",)"
+        R"("s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a",)"
+        R"("to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("type":"0x0",)"
+        R"("v":"0x1c",)"
+        R"("value":"0x7a69"})");
+
+    for (auto _ : state) {
+        li::output_buffer output_buffer = encode_transaction_lit(TRANSACTION_LEGACY);
+        output_buffer.reset();
+    }
+}
+BENCHMARK(benchmark_encode_transaction_lithium_json);
+
 static void benchmark_encode_block_header_lithium_json(benchmark::State& state) {
-    const auto block_header_json = encode_block_header(HEADER).to_string_view();
+    const auto block_header_json = encode_block_header_lit(HEADER).to_string_view();
     //std::cout << "block_header: "  << block_header_json << "\n";
     ensure(block_header_json == R"({"parentHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",)"
         R"("sha3Uncles":"0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d",)"
@@ -1272,38 +1846,15 @@ static void benchmark_encode_block_header_lithium_json(benchmark::State& state) 
         R"("nonce":"0x0102030405060708"})");
 
     for (auto _ : state) {
-        li::output_buffer output_buffer = encode_block_header(HEADER);
+        li::output_buffer output_buffer = encode_block_header_lit(HEADER);
         output_buffer.reset();
     }
 }
 BENCHMARK(benchmark_encode_block_header_lithium_json);
 
-static void benchmark_encode_transaction_lithium_json(benchmark::State& state) {
-    const auto transaction_json = encode_transaction(TRANSACTION_LEGACY).to_string_view();
-    //std::cout << "transaction: "  << transaction_json << "\n";
-
-      //  R"("hash":"0xa4ee16008c6596d86a7c599a74b1cda264d609558ccc2d20a722a2cd58bad6eb",)"
-    ensure(transaction_json == 
-        R"({"from":"0x6df9b87991262f6ba471f09758cde1c0fc1de734",)"
-        R"("gas":"0x12",)"
-        R"("input":"0x",)"
-        R"("nonce":"0x0",)"
-        R"("r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",)"
-        R"("s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a",)"
-        R"("to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",)"
-        R"("type":"0x0",)"
-        R"("v":"0x1c",)"
-        R"("value":"0x7a69"})");
-
-    for (auto _ : state) {
-        li::output_buffer output_buffer = encode_transaction(TRANSACTION_LEGACY);
-        output_buffer.reset();
-    }
-}
-BENCHMARK(benchmark_encode_transaction_lithium_json);
 
 static void benchmark_encode_block_lithium_json(benchmark::State& state) {
-    const auto block = encode_block(BLOCK1).to_string_view();
+    const auto block = encode_block_lit(BLOCK1).to_string_view();
     //std::cout << "block: "  << block << "\n";
 
 
@@ -1324,7 +1875,7 @@ static void benchmark_encode_block_lithium_json(benchmark::State& state) {
 
 
     for (auto _ : state) {
-        li::output_buffer output_buffer = encode_block(BLOCK1);
+        li::output_buffer output_buffer = encode_block_lit(BLOCK1);
         output_buffer.reset();
     }
 }
