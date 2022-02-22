@@ -27,11 +27,11 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getUncleCountByBlockNumber             | Yes          |                                            |
 |                                            |              |                                            |
 | eth_getTransactionByHash                   | Yes          | partially implemented                      |
-| eth_getRawTransactionByHash                | No           |                                            |
+| eth_getRawTransactionByHash                | -            | not yet implemented                        |
 | eth_getTransactionByBlockHashAndIndex      | Yes          |                                            |
-| eth_getRawTransactionByBlockHashAndIndex   | No           |                                            |
+| eth_getRawTransactionByBlockHashAndIndex   | -            | not yet implemented                        |
 | eth_getTransactionByBlockNumberAndIndex    | Yes          |                                            |
-| eth_getRawTransactionByBlockNumberAndIndex | No           |                                            |
+| eth_getRawTransactionByBlockNumberAndIndex | -            | not yet implemented                        |
 | eth_getTransactionReceipt                  | Yes          | partially implemented                      |
 | eth_getBlockReceipts                       | Yes          | same as parity_getBlockReceipts            |
 |                                            |              |                                            |
@@ -41,6 +41,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getTransactionCount                    | Yes          |                                            |
 | eth_getStorageAt                           | Yes          |                                            |
 | eth_call                                   | Yes          |                                            |
+| eth_callBundle                             | -            | not yet implemented                        |
+| eth_createAccessList                       | -            | not yet implemented                        |
 |                                            |              |                                            |
 | eth_newFilter                              | -            | not yet implemented                        |
 | eth_newBlockFilter                         | -            | not yet implemented                        |
@@ -68,10 +70,17 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_subscribe                              | -            | not yet implemented                        |
 | eth_unsubscribe                            | -            | not yet implemented                        |
 |                                            |              |                                            |
+| engine_newPayloadV1                        | Yes          |                                            |
+| engine_forkchoiceUpdatedV1                 | -            | not yet implemented                        |
+| engine_getPayloadV1                        | Yes          |                                            |
+| engine_exchangeTransitionConfigurationV1   | -            | not yet implemented                        |
+|                                            |              |                                            |
 | debug_accountRange                         | Yes          |                                            |
 | debug_getModifiedAccountsByHash            | Yes          |                                            |
 | debug_getModifiedAccountsByNumber          | Yes          |                                            |
 | debug_storageRangeAt                       | Yes          |                                            |
+| debug_traceBlockByHash                     | -            | not yet implemented                        |
+| debug_traceBlockByNumber                   | -            | not yet implemented                        |
 | debug_traceTransaction                     | -            | not yet implemented                        |
 | debug_traceCall                            | -            | not yet implemented                        |
 |                                            |              |                                            |
@@ -84,6 +93,9 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | trace_filter                               | -            | not yet implemented                        |
 | trace_get                                  | -            | not yet implemented                        |
 | trace_transaction                          | -            | not yet implemented                        |
+|                                            |              |                                            |
+| txpool_content                             | -            | not yet implemented                        |
+| txpool_status                              | -            | not yet implemented                        |
 |                                            |              |                                            |
 | eth_getCompilers                           | No           | deprecated                                 |
 | eth_compileLLL                             | No           | deprecated                                 |
@@ -111,6 +123,17 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | tg_getLogsByHash                           | Yes          |                                            |
 | tg_forks                                   | Yes          |                                            |
 | tg_issuance                                | Yes          |                                            |
+|                                            |              |                                            |
+| starknet_call                              | -            | not yet implemented                        |
+|                                            |              |                                            |
+| bor_getSnapshot                            | -            | not yet implemented                        |
+| bor_getAuthor                              | -            | not yet implemented                        |
+| bor_getSnapshotAtHash                      | -            | not yet implemented                        |
+| bor_getSigners                             | -            | not yet implemented                        |
+| bor_getSignersAtHash                       | -            | not yet implemented                        |
+| bor_getCurrentProposer                     | -            | not yet implemented                        |
+| bor_getCurrentValidators                   | -            | not yet implemented                        |
+| bor_getRootHash                            | -            | not yet implemented                        |
 |                                            |              |                                            |
 | parity_getBlockReceipts                    | Yes          | same as eth_getBlockReceipts               |
 
