@@ -15,6 +15,9 @@
 ]]
 
 find_package(benchmark CONFIG REQUIRED)
+find_package(mimalloc 1.4 REQUIRED)
 
 add_executable(benchmark_test benchmark_test.cpp)
-target_link_libraries(benchmark_test silkrpc benchmark::benchmark)
+target_link_libraries(benchmark_test silkrpc benchmark::benchmark mimalloc)
+#target_link_libraries(benchmark_test silkrpc benchmark::benchmark)
+#target_link_libraries(benchmark_test silkrpc benchmark::benchmark /usr/lib/tcmalloc_minimal.so)
