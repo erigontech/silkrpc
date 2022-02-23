@@ -200,7 +200,6 @@ static void benchmark_encode_address_nlohmann_json(benchmark::State& state) {
         benchmark::DoNotOptimize(s);
     }
 }
-//BENCHMARK(benchmark_encode_address_nlohmann_json);
 
 static void benchmark_encode_address_lithium_json(benchmark::State& state) {
     for (auto _ : state) {
@@ -214,7 +213,6 @@ static void benchmark_encode_address_lithium_json(benchmark::State& state) {
         output_buffer.reset();
     }
 }
-//BENCHMARK(benchmark_encode_address_lithium_json);
 
 /* benchmark_decode_address */
 static void benchmark_decode_address_nlohmann_json(benchmark::State& state) {
@@ -224,7 +222,6 @@ static void benchmark_decode_address_nlohmann_json(benchmark::State& state) {
         benchmark::DoNotOptimize(address);
     }
 }
-//BENCHMARK(benchmark_decode_address_nlohmann_json);
 
 static void benchmark_decode_address_lithium_json(benchmark::State& state) {
     for (auto _ : state) {
@@ -234,7 +231,6 @@ static void benchmark_decode_address_lithium_json(benchmark::State& state) {
         address_from_hex(address.bytes, hex);
     }
 }
-//BENCHMARK(benchmark_decode_address_lithium_json);
 
 /* benchmark_encode_bytes32 */
 static void benchmark_encode_bytes32_nlohmann_json(benchmark::State& state) {
@@ -244,7 +240,6 @@ static void benchmark_encode_bytes32_nlohmann_json(benchmark::State& state) {
         benchmark::DoNotOptimize(s);
     }
 }
-//BENCHMARK(benchmark_encode_bytes32_nlohmann_json);
 
 void encode_bytes32(li::output_buffer& output_buffer, const evmc::bytes32& b32) {
     std::array<char, kHexHashSize> hex_bytes;
@@ -260,7 +255,6 @@ static void benchmark_encode_bytes32_lithium_json(benchmark::State& state) {
         output_buffer.reset();
     }
 }
-//BENCHMARK(benchmark_encode_bytes32_lithium_json);
 
 /* benchmark_decode_bytes32 */
 static void benchmark_decode_bytes32_nlohmann_json(benchmark::State& state) {
@@ -270,7 +264,6 @@ static void benchmark_decode_bytes32_nlohmann_json(benchmark::State& state) {
         benchmark::DoNotOptimize(hash);
     }
 }
-//BENCHMARK(benchmark_decode_bytes32_nlohmann_json);
 
 static void benchmark_decode_bytes32_lithium_json(benchmark::State& state) {
     for (auto _ : state) {
@@ -280,7 +273,6 @@ static void benchmark_decode_bytes32_lithium_json(benchmark::State& state) {
         bytes32_from_hex(hash.bytes, hex);
     }
 }
-//BENCHMARK(benchmark_decode_bytes32_lithium_json);
 
 /* benchmark_decode_uint256 */
 static const std::string UINT256_STRING{"\"0x752f02b1438be7f67ebf0e71310db3514b162fb169cdb95ad15dde38eff7719b\""};
@@ -292,7 +284,6 @@ static void benchmark_decode_uint256_nlohmann_json(benchmark::State& state) {
         benchmark::DoNotOptimize(i);
     }
 }
-//BENCHMARK(benchmark_decode_uint256_nlohmann_json);
 
 // TODO: this could be added to evmone
 namespace intx {
@@ -340,7 +331,6 @@ static void benchmark_decode_uint256_lithium_json(benchmark::State& state) {
         benchmark::DoNotOptimize(i);
     }
 }
-//BENCHMARK(benchmark_decode_uint256_lithium_json);
 
 #ifndef LI_SYMBOL_transactions_root
 #define LI_SYMBOL_transactions_root
@@ -818,12 +808,12 @@ void encode_nlohmann() {
     }
 }
 
-static void benchmark_encode_block_nlohmann_batch_class_json(benchmark::State& state) {
+static void benchmark_encode_block_nlohmann_batch_json(benchmark::State& state) {
     for (auto _ : state) {
        encode_nlohmann();
     }
 }
-BENCHMARK(benchmark_encode_block_nlohmann_batch_class_json);
+BENCHMARK(benchmark_encode_block_nlohmann_batch_json);
 
 #ifndef LI_SYMBOL_parent_hash
 #define LI_SYMBOL_parent_hash
@@ -1484,12 +1474,16 @@ inline json_buffer& to_json2(json_buffer& out, const silkrpc::Block& b) {
 
     std::vector<evmc::bytes32> ommer_hashes;
     ommer_hashes.reserve(b.block.ommers.size());
+    out.start_vector("uncles");
     for (auto i{0}; i < b.block.ommers.size(); i++) {
 #ifdef notdef
+        out.start_vector_element();
         out.add_attribute_name("uncles");
         out.add_attribute_value(bytes32_to_hex2(out.get_addr(), std::move(b.block.ommers[i].hash())));
+        out.end_vector_element();
 #endif
     }
+    out.end_vector();
 
     return out;
 }
@@ -1619,6 +1613,64 @@ static void benchmark_encode_block_macro_json(benchmark::State& state) {
     const auto block_json = encode_block(BLOCK).to_string_view();
     //std::cout << "block: "  << block_json << "\n";
 
+    ensure(block_json == 
+        R"({"number":"0x5",)"
+        R"("hash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",)"
+        R"("parentHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",)"
+        R"("nonce":"0x0102030405060708",)"
+        R"("sha3Uncles":"0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d",)"
+        R"("logsBloom":"0x000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(00000000000000000000000000000000000000000000000000000000000000000000000000000000",)"
+        R"("transactionsRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e",)"
+        R"("stateRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d",)"
+        R"("receiptsRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f",)"
+        R"("miner":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",)"
+        R"("difficulty":"0x",)"
+        R"("totalDifficulty":"0x4",)"
+        R"("extraData":"0x0001ff0100",)"
+        R"("mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",)"
+        R"("size":"0x498",)"
+        R"("gasLimit":"0xf4240",)"
+        R"("gasUsed":"0xf4240",)"
+        R"("baseFeePerGas":"0x3e8",)"
+        R"("timestamp":"0x52795d",)"
+        R"("transactions":[)"
+        R"({"from":"0x6df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("gas":"0x12",)"
+        R"("input":"0x",)"
+        R"("nonce":"0x0",)"
+        R"("to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("type":"0x0",)"
+        R"("v":"0x1c",)"
+        R"("value":"0x7a69",)"
+        R"("r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",)"
+        R"("s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a",)"
+        R"("transactionIndex":"0x0",)"
+        R"("blockhash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",)"
+        R"("blockNumber":"0x5",)"
+        R"("gasPrice":"0x2d79883d2000"},)"
+        R"({"from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",)"
+        R"("gas":"0x0",)"
+        R"("input":"0x",)"
+        R"("nonce":"0x0",)"
+        R"("to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",)"
+        R"("type":"0x1",)"
+        R"("chainId":"0x0",)"
+        R"("v":"0x0",)"
+        R"("value":"0x0",)"
+        R"("r":"0x1",)"
+        R"("s":"0x12",)"
+        R"("transactionIndex":"0x1",)"
+        R"("blockhash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",)"
+        R"("blockNumber":"0x5",)"
+        R"("gasPrice":"0x4a817c800"}]})");
+
+
     for (auto _ : state) {
         json_buffer output_buffer = encode_block(BLOCK);
         output_buffer.reset();
@@ -1689,6 +1741,65 @@ BENCHMARK(benchmark_encode_block_header_class_json);
 static void benchmark_encode_block_class_json(benchmark::State& state) {
     const auto block_json = encode_block2(BLOCK).to_string_view();
     //std::cout << "block: "  << block_json << "\n";
+
+
+    ensure(block_json == 
+        R"({"number":"0x5",)"
+        R"("hash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",)"
+        R"("parentHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",)"
+        R"("nonce":"0x0102030405060708",)"
+        R"("sha3Uncles":"0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d",)"
+        R"("logsBloom":"0x000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(000000000000000000000000000000000000000000000000000000000000000000000000)"
+                    R"(00000000000000000000000000000000000000000000000000000000000000000000000000000000",)"
+        R"("transactionsRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e",)"
+        R"("stateRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d",)"
+        R"("receiptsRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f",)"
+        R"("miner":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",)"
+        R"("difficulty":"0x",)"
+        R"("totalDifficulty":"0x4",)"
+        R"("extraData":"0x0001ff0100",)"
+        R"("mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",)"
+        R"("size":"0x498",)"
+        R"("gasLimit":"0xf4240",)"
+        R"("gasUsed":"0xf4240",)"
+        R"("baseFeePerGas":"0x3e8",)"
+        R"("timestamp":"0x52795d",)"
+        R"("transactions":[)"
+        R"({"from":"0x6df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("gas":"0x12",)"
+        R"("input":"0x",)"
+        R"("nonce":"0x0",)"
+        R"("to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",)"
+        R"("type":"0x0",)"
+        R"("v":"0x1c",)"
+        R"("value":"0x7a69",)"
+        R"("r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",)"
+        R"("s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a",)"
+        R"("transactionIndex":"0x0",)"
+        R"("blockhash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",)"
+        R"("blockNumber":"0x5",)"
+        R"("gasPrice":"0x2d79883d2000"},)"
+        R"({"from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",)"
+        R"("gas":"0x0",)"
+        R"("input":"0x",)"
+        R"("nonce":"0x0",)"
+        R"("to":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",)"
+        R"("type":"0x1",)"
+        R"("chainId":"0x0",)"
+        R"("v":"0x0",)"
+        R"("value":"0x0",)"
+        R"("r":"0x1",)"
+        R"("s":"0x12",)"
+        R"("transactionIndex":"0x1",)"
+        R"("blockhash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",)"
+        R"("blockNumber":"0x5",)"
+        R"("gasPrice":"0x4a817c800"}],)"
+        R"("uncles":[]})");
 
     for (auto _ : state) {
         json_buffer output_buffer = encode_block2(BLOCK);
