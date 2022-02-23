@@ -148,8 +148,8 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
         json["from"] = transaction.from.value();
     }
     json["gas"] = silkrpc::to_quantity(transaction.gas_limit);
-    auto ethash_hash{hash_of_transaction(transaction)};
-    json["hash"] = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
+    //auto ethash_hash{hash_of_transaction(transaction)};
+    //json["hash"] = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
     json["input"] = "0x" + silkworm::to_hex(transaction.data);
     json["nonce"] = silkrpc::to_quantity(transaction.nonce);
     if (transaction.to) {
@@ -166,7 +166,7 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
     if (transaction.type != silkworm::Transaction::Type::kLegacy) {
        json["chainId"] = silkrpc::to_quantity(*transaction.chain_id);
        json["v"] = silkrpc::to_quantity((uint64_t)transaction.odd_y_parity);
-       json["accessList"] = transaction.access_list; // EIP2930
+       //json["accessList"] = transaction.access_list; // EIP2930
     } else {
        json["v"] = silkrpc::to_quantity(silkworm::endian::to_big_compact(transaction.v()));
     }
@@ -217,9 +217,9 @@ void to_json(nlohmann::json& json, const Block& b) {
         std::vector<evmc::bytes32> transaction_hashes;
         transaction_hashes.reserve(b.block.transactions.size());
         for (auto i{0}; i < b.block.transactions.size(); i++) {
-            auto ethash_hash{hash_of_transaction(b.block.transactions[i])};
-            auto bytes32_hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
-            transaction_hashes.emplace(transaction_hashes.end(), std::move(bytes32_hash));
+            //auto ethash_hash{hash_of_transaction(b.block.transactions[i])};
+            //auto bytes32_hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
+            //transaction_hashes.emplace(transaction_hashes.end(), std::move(bytes32_hash));
             SILKRPC_DEBUG << "transaction_hashes[" << i << "]: " << silkworm::to_hex({transaction_hashes[i].bytes, silkworm::kHashLength}) << "\n";
         }
         json["transactions"] = transaction_hashes;
@@ -227,7 +227,7 @@ void to_json(nlohmann::json& json, const Block& b) {
     std::vector<evmc::bytes32> ommer_hashes;
     ommer_hashes.reserve(b.block.ommers.size());
     for (auto i{0}; i < b.block.ommers.size(); i++) {
-        ommer_hashes.emplace(ommer_hashes.end(), std::move(b.block.ommers[i].hash()));
+        //ommer_hashes.emplace(ommer_hashes.end(), std::move(b.block.ommers[i].hash()));
         SILKRPC_DEBUG << "ommer_hashes[" << i << "]: " << silkworm::to_hex({ommer_hashes[i].bytes, silkworm::kHashLength}) << "\n";
     }
     json["uncles"] = ommer_hashes;
