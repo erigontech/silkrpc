@@ -471,12 +471,13 @@ std::size_t to_hex_no_leading_zeros(std::array<char, N>& hex_bytes, silkworm::By
 std::size_t to_hex_no_leading_zeros(char *hex_bytes, silkworm::ByteView bytes) {
     static const char* kHexDigits{"0123456789abcdef"};
 
-    std::size_t position = 0;
-    hex_bytes[position++] = '0';
-    hex_bytes[position++] = 'x';
+    char* dest{&hex_bytes[0]};
+    int len = bytes.length();
+    *dest++ = '0';
+    *dest++ = 'x';
 
     bool found_nonzero{false};
-    for (size_t i{0}; i < bytes.length(); ++i) {
+    for (size_t i{0}; i < len; ++i) {
         uint8_t x{bytes[i]};
         char lo{kHexDigits[x & 0x0f]};
         char hi{kHexDigits[x >> 4]};
@@ -484,17 +485,17 @@ std::size_t to_hex_no_leading_zeros(char *hex_bytes, silkworm::ByteView bytes) {
             found_nonzero = true;
         }
         if (found_nonzero) {
-            hex_bytes[position++] = hi;
+            *dest++ = hi;
         }
         if (!found_nonzero && lo != '0') {
             found_nonzero = true;
         }
-        if (found_nonzero || i == bytes.length() - 1) {
-            hex_bytes[position++] = lo;
+        if (found_nonzero || i == len - 1) {
+            *dest++ = lo;
         }
     }
 
-    return position;
+    return dest-hex_bytes;
 }
 
 /*std::string to_hex_no_leading_zeros(uint64_t number) {
