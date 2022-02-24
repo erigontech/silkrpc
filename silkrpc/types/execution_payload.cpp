@@ -29,7 +29,7 @@ std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload) {
     << " suggested_fee_recipient: " << payload.suggested_fee_recipient
     << " state_root: " << payload.state_root
     << " receipts_root: " << payload.receipts_root
-    << " random: " << payload.random
+    << " prev_randao: " << payload.prev_randao
     << " logs_bloom: " << silkworm::to_hex(bloom_bytes)
     << " extra_data: " << silkworm::to_hex(payload.extra_data)
     << "#transactions: " << payload.transactions.size();
