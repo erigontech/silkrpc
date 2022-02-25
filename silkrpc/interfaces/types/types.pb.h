@@ -1342,7 +1342,7 @@ class ExecutionPayload PROTOBUF_FINAL :
     kStateRootFieldNumber = 3,
     kReceiptRootFieldNumber = 4,
     kLogsBloomFieldNumber = 5,
-    kRandomFieldNumber = 6,
+    kPrevRandaoFieldNumber = 6,
     kBaseFeePerGasFieldNumber = 12,
     kBlockHashFieldNumber = 13,
     kBlockNumberFieldNumber = 7,
@@ -1480,23 +1480,23 @@ class ExecutionPayload PROTOBUF_FINAL :
       ::types::H2048* logsbloom);
   ::types::H2048* unsafe_arena_release_logsbloom();
 
-  // .types.H256 random = 6;
-  bool has_random() const;
+  // .types.H256 prevRandao = 6;
+  bool has_prevrandao() const;
   private:
-  bool _internal_has_random() const;
+  bool _internal_has_prevrandao() const;
   public:
-  void clear_random();
-  const ::types::H256& random() const;
-  ::types::H256* release_random();
-  ::types::H256* mutable_random();
-  void set_allocated_random(::types::H256* random);
+  void clear_prevrandao();
+  const ::types::H256& prevrandao() const;
+  ::types::H256* release_prevrandao();
+  ::types::H256* mutable_prevrandao();
+  void set_allocated_prevrandao(::types::H256* prevrandao);
   private:
-  const ::types::H256& _internal_random() const;
-  ::types::H256* _internal_mutable_random();
+  const ::types::H256& _internal_prevrandao() const;
+  ::types::H256* _internal_mutable_prevrandao();
   public:
-  void unsafe_arena_set_allocated_random(
-      ::types::H256* random);
-  ::types::H256* unsafe_arena_release_random();
+  void unsafe_arena_set_allocated_prevrandao(
+      ::types::H256* prevrandao);
+  ::types::H256* unsafe_arena_release_prevrandao();
 
   // .types.H256 baseFeePerGas = 12;
   bool has_basefeepergas() const;
@@ -1584,7 +1584,7 @@ class ExecutionPayload PROTOBUF_FINAL :
   ::types::H256* stateroot_;
   ::types::H256* receiptroot_;
   ::types::H2048* logsbloom_;
-  ::types::H256* random_;
+  ::types::H256* prevrandao_;
   ::types::H256* basefeepergas_;
   ::types::H256* blockhash_;
   ::PROTOBUF_NAMESPACE_ID::uint64 blocknumber_;
@@ -3327,87 +3327,87 @@ inline void ExecutionPayload::set_allocated_logsbloom(::types::H2048* logsbloom)
   // @@protoc_insertion_point(field_set_allocated:types.ExecutionPayload.logsBloom)
 }
 
-// .types.H256 random = 6;
-inline bool ExecutionPayload::_internal_has_random() const {
-  return this != internal_default_instance() && random_ != nullptr;
+// .types.H256 prevRandao = 6;
+inline bool ExecutionPayload::_internal_has_prevrandao() const {
+  return this != internal_default_instance() && prevrandao_ != nullptr;
 }
-inline bool ExecutionPayload::has_random() const {
-  return _internal_has_random();
+inline bool ExecutionPayload::has_prevrandao() const {
+  return _internal_has_prevrandao();
 }
-inline void ExecutionPayload::clear_random() {
-  if (GetArena() == nullptr && random_ != nullptr) {
-    delete random_;
+inline void ExecutionPayload::clear_prevrandao() {
+  if (GetArena() == nullptr && prevrandao_ != nullptr) {
+    delete prevrandao_;
   }
-  random_ = nullptr;
+  prevrandao_ = nullptr;
 }
-inline const ::types::H256& ExecutionPayload::_internal_random() const {
-  const ::types::H256* p = random_;
+inline const ::types::H256& ExecutionPayload::_internal_prevrandao() const {
+  const ::types::H256* p = prevrandao_;
   return p != nullptr ? *p : reinterpret_cast<const ::types::H256&>(
       ::types::_H256_default_instance_);
 }
-inline const ::types::H256& ExecutionPayload::random() const {
-  // @@protoc_insertion_point(field_get:types.ExecutionPayload.random)
-  return _internal_random();
+inline const ::types::H256& ExecutionPayload::prevrandao() const {
+  // @@protoc_insertion_point(field_get:types.ExecutionPayload.prevRandao)
+  return _internal_prevrandao();
 }
-inline void ExecutionPayload::unsafe_arena_set_allocated_random(
-    ::types::H256* random) {
+inline void ExecutionPayload::unsafe_arena_set_allocated_prevrandao(
+    ::types::H256* prevrandao) {
   if (GetArena() == nullptr) {
-    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(random_);
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(prevrandao_);
   }
-  random_ = random;
-  if (random) {
+  prevrandao_ = prevrandao;
+  if (prevrandao) {
     
   } else {
     
   }
-  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:types.ExecutionPayload.random)
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:types.ExecutionPayload.prevRandao)
 }
-inline ::types::H256* ExecutionPayload::release_random() {
+inline ::types::H256* ExecutionPayload::release_prevrandao() {
   
-  ::types::H256* temp = random_;
-  random_ = nullptr;
+  ::types::H256* temp = prevrandao_;
+  prevrandao_ = nullptr;
   if (GetArena() != nullptr) {
     temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
   }
   return temp;
 }
-inline ::types::H256* ExecutionPayload::unsafe_arena_release_random() {
-  // @@protoc_insertion_point(field_release:types.ExecutionPayload.random)
+inline ::types::H256* ExecutionPayload::unsafe_arena_release_prevrandao() {
+  // @@protoc_insertion_point(field_release:types.ExecutionPayload.prevRandao)
   
-  ::types::H256* temp = random_;
-  random_ = nullptr;
+  ::types::H256* temp = prevrandao_;
+  prevrandao_ = nullptr;
   return temp;
 }
-inline ::types::H256* ExecutionPayload::_internal_mutable_random() {
+inline ::types::H256* ExecutionPayload::_internal_mutable_prevrandao() {
   
-  if (random_ == nullptr) {
+  if (prevrandao_ == nullptr) {
     auto* p = CreateMaybeMessage<::types::H256>(GetArena());
-    random_ = p;
+    prevrandao_ = p;
   }
-  return random_;
+  return prevrandao_;
 }
-inline ::types::H256* ExecutionPayload::mutable_random() {
-  // @@protoc_insertion_point(field_mutable:types.ExecutionPayload.random)
-  return _internal_mutable_random();
+inline ::types::H256* ExecutionPayload::mutable_prevrandao() {
+  // @@protoc_insertion_point(field_mutable:types.ExecutionPayload.prevRandao)
+  return _internal_mutable_prevrandao();
 }
-inline void ExecutionPayload::set_allocated_random(::types::H256* random) {
+inline void ExecutionPayload::set_allocated_prevrandao(::types::H256* prevrandao) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
   if (message_arena == nullptr) {
-    delete random_;
+    delete prevrandao_;
   }
-  if (random) {
+  if (prevrandao) {
     ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
-      ::PROTOBUF_NAMESPACE_ID::Arena::GetArena(random);
+      ::PROTOBUF_NAMESPACE_ID::Arena::GetArena(prevrandao);
     if (message_arena != submessage_arena) {
-      random = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
-          message_arena, random, submessage_arena);
+      prevrandao = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, prevrandao, submessage_arena);
     }
     
   } else {
     
   }
-  random_ = random;
-  // @@protoc_insertion_point(field_set_allocated:types.ExecutionPayload.random)
+  prevrandao_ = prevrandao;
+  // @@protoc_insertion_point(field_set_allocated:types.ExecutionPayload.prevRandao)
 }
 
 // uint64 blockNumber = 7;

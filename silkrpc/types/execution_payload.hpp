@@ -41,7 +41,7 @@ struct ExecutionPayload {
     evmc::bytes32 receipts_root;
     evmc::bytes32 parent_hash;
     evmc::bytes32 block_hash;
-    evmc::bytes32 random;
+    evmc::bytes32 prev_randao;
     intx::uint256 base_fee;
     silkworm::Bloom logs_bloom;
     silkworm::Bytes extra_data;

@@ -248,7 +248,7 @@ ExecutionPayload BackEndGrpc::decode_execution_payload(const types::ExecutionPay
     auto receipts_root_h256{execution_payload_grpc.receiptroot()};
     auto block_hash_h256{execution_payload_grpc.blockhash()};
     auto parent_hash_h256{execution_payload_grpc.parenthash()};
-    auto random_h256{execution_payload_grpc.random()};
+    auto prev_randao_h256{execution_payload_grpc.prevrandao()};
     auto base_fee_h256{execution_payload_grpc.basefeepergas()};
     auto logs_bloom_h2048{execution_payload_grpc.logsbloom()};
     auto extra_data_string{execution_payload_grpc.extradata()}; // []byte becomes std::string in silkrpc protobuf
@@ -272,7 +272,7 @@ ExecutionPayload BackEndGrpc::decode_execution_payload(const types::ExecutionPay
         .receipts_root = bytes32_from_H256(receipts_root_h256),
         .parent_hash = bytes32_from_H256(parent_hash_h256),
         .block_hash = bytes32_from_H256(block_hash_h256),
-        .random = bytes32_from_H256(random_h256),
+        .prev_randao = bytes32_from_H256(prev_randao_h256),
         .base_fee = uint256_from_H256(base_fee_h256),
         .logs_bloom = bloom,
         .extra_data = silkworm::bytes_of_string(extra_data_string),
@@ -293,7 +293,7 @@ types::ExecutionPayload BackEndGrpc::encode_execution_payload(const ExecutionPay
     execution_payload_grpc.set_allocated_receiptroot(H256_from_bytes(execution_payload.receipts_root.bytes));
     execution_payload_grpc.set_allocated_stateroot(H256_from_bytes(execution_payload.state_root.bytes));
     execution_payload_grpc.set_allocated_parenthash(H256_from_bytes(execution_payload.parent_hash.bytes));
-    execution_payload_grpc.set_allocated_random(H256_from_bytes(execution_payload.random.bytes));
+    execution_payload_grpc.set_allocated_prevrandao(H256_from_bytes(execution_payload.prev_randao.bytes));
     execution_payload_grpc.set_allocated_basefeepergas(H256_from_uint256(execution_payload.base_fee));
     // Logs Bloom
     execution_payload_grpc.set_allocated_logsbloom(H2048_from_bytes(&execution_payload.logs_bloom[0]));

@@ -443,7 +443,7 @@ void to_json(nlohmann::json& json, const ExecutionPayload& execution_payload) {
     json["stateRoot"] = execution_payload.state_root;
     json["receiptsRoot"] = execution_payload.receipts_root;
     json["logsBloom"] = "0x" + silkworm::to_hex(execution_payload.logs_bloom);
-    json["random"] = execution_payload.random;
+    json["prevRandao"] = execution_payload.prev_randao;
     json["blockNumber"] = silkrpc::to_quantity(execution_payload.number);
     json["gasLimit"] = silkrpc::to_quantity(execution_payload.gas_limit);
     json["gasUsed"] = silkrpc::to_quantity(execution_payload.gas_used);
@@ -479,7 +479,7 @@ void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload) 
         .receipts_root = json.at("receiptsRoot").get<evmc::bytes32>(),
         .parent_hash = json.at("parentHash").get<evmc::bytes32>(),
         .block_hash = json.at("blockHash").get<evmc::bytes32>(),
-        .random = json.at("random").get<evmc::bytes32>(),
+        .prev_randao = json.at("prevRandao").get<evmc::bytes32>(),
         .base_fee = json.at("baseFeePerGas").get<intx::uint256>(),
         .logs_bloom = logs_bloom,
         .extra_data = *silkworm::from_hex(json.at("extraData").get<std::string>()),
