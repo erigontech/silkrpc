@@ -248,7 +248,7 @@ ExecutionPayload BackEndGrpc::decode_execution_payload(const types::ExecutionPay
     auto receipts_root_h256{execution_payload_grpc.receiptroot()};
     auto block_hash_h256{execution_payload_grpc.blockhash()};
     auto parent_hash_h256{execution_payload_grpc.parenthash()};
-    auto pre_randao_h256{execution_payload_grpc.prevrandao()};
+    auto prev_randao_h256{execution_payload_grpc.prevrandao()};
     auto base_fee_h256{execution_payload_grpc.basefeepergas()};
     auto logs_bloom_h2048{execution_payload_grpc.logsbloom()};
     auto extra_data_string{execution_payload_grpc.extradata()}; // []byte becomes std::string in silkrpc protobuf
@@ -272,7 +272,7 @@ ExecutionPayload BackEndGrpc::decode_execution_payload(const types::ExecutionPay
         .receipts_root = bytes32_from_H256(receipts_root_h256),
         .parent_hash = bytes32_from_H256(parent_hash_h256),
         .block_hash = bytes32_from_H256(block_hash_h256),
-        .prev_randao = bytes32_from_H256(pre_randao_h256),
+        .prev_randao = bytes32_from_H256(prev_randao_h256),
         .base_fee = uint256_from_H256(base_fee_h256),
         .logs_bloom = bloom,
         .extra_data = silkworm::bytes_of_string(extra_data_string),
