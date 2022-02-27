@@ -32,6 +32,22 @@ using Catch::Matchers::Message;
 using evmc::literals::operator""_bytes32;
 
 namespace {
+
+
+class KVTransactionMock : public ethdb::Transaction {
+public:
+    MOCK_METHOD(uint64_t, tx_id, ());
+    MOCK_METHOD((asio::awaitable<void>), open, ());
+    MOCK_METHOD((asio::awaitable<std::shared_ptr<ethdb::Cursor>>), cursor, (const std::string& table));
+    MOCK_METHOD((asio::awaitable<std::shared_ptr<ethdb::CursorDupSort>>), cursor_dup_sort, (const std::string& table));
+    MOCK_METHOD((asio::awaitable<void>), close, ());
+};
+
+class KVDatabaseMock : public ethdb::Database {
+public:
+    MOCK_METHOD((asio::awaitable<std::unique_ptr<ethdb::Transaction>>), begin, ());
+};
+
 class BackEndMock : public ethbackend::BackEnd {
 public:
     MOCK_METHOD((asio::awaitable<evmc::address>), etherbase, ());
@@ -47,7 +63,8 @@ public:
 
 class EngineRpcApiTest : public EngineRpcApi{
 public:
-    explicit EngineRpcApiTest(std::unique_ptr<ethbackend::BackEnd>& backend): EngineRpcApi(backend) {}
+    explicit EngineRpcApiTest(std::unique_ptr<ethbackend::BackEnd>& backend, std::unique_ptr<ethdb::Database>& database): 
+        EngineRpcApi(backend, database) {}
 
     using EngineRpcApi::handle_engine_get_payload_v1;
     using EngineRpcApi::handle_engine_new_payload_v1;
@@ -58,7 +75,9 @@ using testing::InvokeWithoutArgs;
 TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
+    std::unique_ptr<ethdb::Database> database_ptr(new KVDatabaseMock);
     BackEndMock backend;
+
     EXPECT_CALL(backend, engine_get_payload_v1(1)).WillOnce(InvokeWithoutArgs(
         []() -> asio::awaitable<ExecutionPayload> {
             co_return ExecutionPayload{1};
@@ -78,7 +97,7 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     // Initialise components
-    EngineRpcApiTest rpc(backend_ptr);
+    EngineRpcApiTest rpc(backend_ptr, database_ptr);
 
     // spawn routine
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
@@ -111,7 +130,8 @@ TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(new BackEndMock);
-    EngineRpcApiTest rpc(backend_ptr);
+    std::unique_ptr<ethdb::Database> database_ptr(new KVDatabaseMock);
+    EngineRpcApiTest rpc(backend_ptr, database_ptr);
 
     // spawn routine
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
@@ -149,6 +169,7 @@ TEST_CASE("handle_engine_new_payload_v1 succeeds if request is expected payload 
         }
     ));
 
+    std::unique_ptr<ethdb::Database> database_ptr(new KVDatabaseMock);
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(&backend);
 
     nlohmann::json reply;
@@ -177,7 +198,7 @@ TEST_CASE("handle_engine_new_payload_v1 succeeds if request is expected payload 
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     // Initialise components
-    EngineRpcApiTest rpc(backend_ptr);
+    EngineRpcApiTest rpc(backend_ptr, database_ptr);
 
     // spawn routine
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
@@ -214,7 +235,8 @@ TEST_CASE("handle_engine_new_payload_v1 fails with invalid amount of params", "[
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(new BackEndMock);
-    EngineRpcApiTest rpc(backend_ptr);
+    std::unique_ptr<ethdb::Database> database_ptr(new KVDatabaseMock);
+    EngineRpcApiTest rpc(backend_ptr, database_ptr);
 
     // spawn routine
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {

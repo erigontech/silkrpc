@@ -70,5 +70,42 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
     #endif
 }
 
+asio::awaitable<void> handle_engine_exchange_transition_configuration_v1(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 1) {
+        auto error_msg = "invalid engine_exchangeTranstionConfigurationV1 params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    /*const auto call = params[0].get<Call>();
+    SILKRPC_DEBUG << "call: " << call << "\n";*/
+
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+
+        const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        chain_config_ptr
+    } catch (const ego::EstimateGasException& e) {
+        SILKRPC_ERROR << "EstimateGasException: code: " << e.error_code() << " message: " << e.message() << " processing request: " << request.dump() << "\n";
+        if (e.data().empty()) {
+            reply = make_json_error(request["id"], e.error_code(), e.message());
+        } else {
+            reply = make_json_error(request["id"], {3, e.message(), e.data()});
+        }
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
 
 } // namespace silkrpc::commands

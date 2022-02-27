@@ -35,7 +35,6 @@
 namespace silkrpc {
 
 using Catch::Matchers::Message;
-
 class EthereumRpcApiTest : public commands::EthereumRpcApi {
 public:
     explicit EthereumRpcApiTest(Context& context, asio::thread_pool& workers) : commands::EthereumRpcApi{context, workers} {}
