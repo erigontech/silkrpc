@@ -71,4 +71,28 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
 }
 
 
+asio::awaitable<void> EngineRpcApi::handle_engine_transition_configuration_v1(const nlohmann::json& request, nlohmann:json& reply){
+    auto params = request.at("params");
+    // params = [TransitionConfiguration]
+    if(params.size() != 1){
+        auto error_msg = "invalid engine_transitionConfigurationV1 params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request.at("id"), 100, error_msg);
+        co_return;
+    }
+    #ifndef BUILD_COVERAGE
+    try{
+        #endif
+        const auto cl_configuration = params.[0].get<TransitionConfiguration>();
+        reply = co_await backend_->engine_transition_configuration_v1(cl_configuration);
+        #ifndef BUILD_COVERAGE
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request.at("id"), 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request.at("id"), 100, "unexpected exception");
+    }
+}
+
 } // namespace silkrpc::commands
