@@ -160,7 +160,6 @@ public:
     asio::awaitable<uint64_t> net_peer_count();
     asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id);
     asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload);
-    asio::awaitable<TransitionConfiguration> engine_exchange_transition_configuration_v1(TransitionConfiguraiton configuration, uint64_t blockNum);
 
 private:
     evmc::address address_from_H160(const types::H160& h160);
