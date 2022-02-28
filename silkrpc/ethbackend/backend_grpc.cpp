@@ -108,6 +108,10 @@ asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPaylo
     co_return payload_status;
 }
 
+asio::awaitable<TransitionConfiguration> BackEndGrpc::engine_exchange_transition_configuration_v1(TransitionConfiguraiton configuration, uint64_t blockNum){
+    const auto start_time = clock_time::now();
+}
+
 evmc::address BackEndGrpc::address_from_H160(const types::H160& h160) {
     uint64_t hi_hi = h160.hi().hi();
     uint64_t hi_lo = h160.hi().lo();
