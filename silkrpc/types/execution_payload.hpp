@@ -57,6 +57,12 @@ struct PayloadStatus {
     std::optional<std::string> validation_error;
 };
 
+struct TransitionConfiguration{
+    uint256_t total_terminal_difficulty;
+    uint64_t terminal_block_number;
+    evmc::bytes32 terminal_block_hash;
+};
+
 std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload);
 std::ostream& operator<<(std::ostream& out, const PayloadStatus& payload_status);
 
