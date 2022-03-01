@@ -183,6 +183,12 @@ bool from_hex(uint8_t (&bytes)[N], std::string_view& hex) {
     return true;
 }
 
+void to_big_compact(char *buffer, const uint64_t value) {
+    silkworm::endian::store_big_u64((uint8_t *)buffer, value);
+}
+
+
+
 constexpr auto address_from_hex = from_hex<20>;
 constexpr auto bytes32_from_hex = from_hex<32>;
 
@@ -498,15 +504,55 @@ std::size_t to_hex_no_leading_zeros(char *hex_bytes, silkworm::ByteView bytes) {
     return dest-hex_bytes;
 }
 
+std::size_t to_hex_no_leading_zeros(char *hex_bytes, char *bytes, int len) {
+    static const char* kHexDigits{"0123456789abcdef"};
+
+    char* dest{&hex_bytes[0]};
+    *dest++ = '0';
+    *dest++ = 'x';
+
+    bool found_nonzero{false};
+    for (size_t i{0}; i < len; ++i) {
+        uint8_t x = bytes[i];
+        char lo{kHexDigits[x & 0x0f]};
+        char hi{kHexDigits[x >> 4]};
+        if (!found_nonzero && hi != '0') {
+            found_nonzero = true;
+        }
+        if (found_nonzero) {
+            *dest++ = hi;
+        }
+        if (!found_nonzero && lo != '0') {
+            found_nonzero = true;
+        }
+        if (found_nonzero || i == len - 1) {
+            *dest++ = lo;
+        }
+    }
+
+    return dest-hex_bytes;
+}
+
 /*std::string to_hex_no_leading_zeros(uint64_t number) {
     silkworm::Bytes number_bytes(8, '\0');
     silkworm::endian::store_big_u64(&number_bytes[0], number);
     return to_hex_no_leading_zeros(number_bytes);
 }*/
 
+
 std::size_t to_quantity(char *quantity_hex_bytes, silkworm::ByteView bytes) {
     return to_hex_no_leading_zeros(quantity_hex_bytes, bytes);
 }
+
+/*
+std::size_t to_quantity(char *quantity_hex_bytes, const intx::uint256& value, int len) {
+    char buffer[4096];
+    auto d = intx::bswap(value);
+    std::memcpy(buffer, &d, sizeof(value));
+
+    return to_hex_no_leading_zeros(quantity_hex_bytes, buffer, sizeof(value));
+}
+*/
 
 template<std::size_t N>
 std::size_t to_quantity(std::array<char, N>& quantity_hex_bytes, silkworm::ByteView bytes) {
@@ -1088,6 +1134,28 @@ struct json_buffer {
      *curr_++ = '}'; 
   }
 
+  inline void start_object(const char *name, int len) {
+    auto ptr = curr_;
+    if (first_attribute) { 
+       first_attribute = 0; 
+    } 
+    else { \
+       *ptr++ = ','; 
+    }
+    *ptr++ = '\"'; 
+    memcpy(ptr, name, len); 
+    ptr+=len;
+    *ptr++ = '\"'; 
+    *ptr++ = ':'; 
+    *ptr++ = '{'; 
+    curr_ = ptr;
+    first_attribute = 1; 
+  }
+
+  inline void end_object() {
+     *curr_++ = '}'; 
+  }
+
   inline void add_attribute_name(const char *name, int len) {
     auto ptr = curr_;
     if (first_attribute) { 
@@ -1282,6 +1350,7 @@ inline json_buffer& to_json2(json_buffer& out, const silkworm::Transaction& tran
     } else {
        out.add_attribute_name(v,sizeof(v)-1);
        out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(transaction.v())));
+       //out.add_attribute_value(to_quantity(out.get_addr(), transaction.v(), 0));
     }
 
     out.add_attribute_name(value,sizeof(value)-1);
@@ -1416,7 +1485,7 @@ inline json_buffer& to_json(json_buffer& out, const silkrpc::Block& b) {
             ADD_ATTRIBUTE_ZEROCOPY("transactionIndex", to_quantity(GET_CURR_BUFF_ADDR(), i));
             ADD_ATTRIBUTE_ZEROCOPY("blockhash", bytes32_to_hex2(GET_CURR_BUFF_ADDR(), b.hash.bytes));
             ADD_ATTRIBUTE_ZEROCOPY("blockNumber", copy_bn(GET_CURR_BUFF_ADDR(), buffer, block_number_size));
-            //ADD_ATTRIBUTE_ZEROCOPY("blockNumber", to_quantity(GET_CURR_BUFF_ADDR(), b.block.header.number)); // XXX
+            //ADD_ATTRIBUTE_ZEROCOPY("blockNumber", to_quantity(GET_CURR_BUFF_ADDR(), b.block.header.number));
             ADD_ATTRIBUTE_ZEROCOPY("gasPrice", to_quantity(GET_CURR_BUFF_ADDR(), b.block.transactions[i].effective_gas_price(b.block.header.base_fee_per_gas.value_or(0))));
             END_ELEMENT();
         }
@@ -1537,6 +1606,40 @@ inline json_buffer& to_json2(json_buffer& out, const silkrpc::Block& b) {
     return out;
 }
 
+char json_rpc[] = "jsonrpc";
+char id_str[] = "id";
+char code_str[] = "code";
+char error[] = "error";
+char vers[] = "2.0";
+char result[] = "result";
+
+inline size_t copy_int(char *buffer, int32_t value) {
+   return sprintf (buffer, "%d", value);
+}
+
+inline size_t copy_str(char *buffer, const std::string& message) {
+   memcpy(buffer, message.c_str(), message.length());
+   return message.length();
+}
+
+inline size_t copy_str(char *buffer, char *message, int len) {
+   memcpy(buffer, message, len);
+   return len;
+}
+
+
+void make_json_content(json_buffer& out, uint32_t id, const silkrpc::Block& block) {
+    out.add_attribute_name(json_rpc,sizeof(json_rpc)-1);
+    out.add_attribute_value(copy_str(out.get_addr(), vers, sizeof(vers)-1));
+
+    out.add_attribute_name(id_str,sizeof(id_str)-1);
+    out.add_attribute_value(copy_int(out.get_addr(), id));
+
+    out.start_object(result, sizeof(result)-1);
+    to_json2(out, block);
+    out.end_object();
+    out.end();
+}
 
 
 json_buffer encode_transaction(const Transaction& transaction) {
@@ -1595,7 +1698,19 @@ json_buffer encode_block2(const silkrpc::Block& b) {
     return output_buffer;
 }
 
+static void benchmark_make_json_content(benchmark::State& state) {
+    char buffer[14096];
+    json_buffer out{buffer, 4096};
+    make_json_content(out, 4, BLOCK);
+    const auto block_json = out.to_string_view(); 
+    //std::cout << "make_json_content: "  << block_json << "\n";
 
+    for (auto _ : state) {
+        make_json_content(out, 4, BLOCK);
+        out.reset();
+    }
+}
+BENCHMARK(benchmark_make_json_content);
 
 static void benchmark_encode_transaction_macro_json(benchmark::State& state) {
     const auto transaction_json = encode_transaction(TRANSACTION_LEGACY).to_string_view();
@@ -1773,7 +1888,7 @@ static void benchmark_encode_block_header_class_json(benchmark::State& state) {
         R"("receiptsRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f",)"
         R"("miner":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",)"
         R"("extraData":"0x0001ff0100",)"
-        R"("difficulty":"0x",)"
+        R"("difficulty":"0x",)" 
         R"("mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",)"
         R"("gasLimit":"0xf4240",)"
         R"("gasUsed":"0xf4240",)"
@@ -1808,7 +1923,7 @@ static void benchmark_encode_block_class_json(benchmark::State& state) {
         R"("stateRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d",)"
         R"("receiptsRoot":"0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f",)"
         R"("miner":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",)"
-        R"("difficulty":"0x",)"
+        R"("difficulty":"0x",)" 
         R"("totalDifficulty":"0x4",)"
         R"("extraData":"0x0001ff0100",)"
         R"("mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",)"
@@ -1848,6 +1963,7 @@ static void benchmark_encode_block_class_json(benchmark::State& state) {
         R"("blockNumber":"0x5",)"
         R"("gasPrice":"0x4a817c800"}],)"
         R"("uncles":[]})");
+
 
     for (auto _ : state) {
         json_buffer output_buffer = encode_block2(BLOCK);
