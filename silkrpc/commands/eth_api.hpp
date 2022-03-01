@@ -53,6 +53,9 @@ public:
     EthereumRpcApi& operator=(const EthereumRpcApi&) = delete;
 
 protected:
+    asio::awaitable<void> handle_eth_get_block_by_hash2(const nlohmann::json& request, json_buffer& out);
+    asio::awaitable<void> handle_eth_get_block_by_number2(const nlohmann::json& request, json_buffer& out);
+
     asio::awaitable<void> handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_chain_id(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_protocol_version(const nlohmann::json& request, nlohmann::json& reply);
