@@ -114,6 +114,9 @@ asio::awaitable<void> EngineRpcApi::handle_engine_transition_configuration_v1(co
             reply = make_json_error(request.at("id"), 100, "incorrect terminal block hash");
         }
 
+        TransitionConfiguration transition_configuration{chain_config.terminal_total_difficulty, chain_config.terminal_block_hash, 0};
+        reply = transitioon_configuration;
+        
         #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
