@@ -65,6 +65,7 @@ struct TransitionConfiguration{
 
 std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload);
 std::ostream& operator<<(std::ostream& out, const PayloadStatus& payload_status);
+std::ostream& operator<<(std::ostream& out, const TransitionConfiguration& transition_configuration);
 
 } // namespace silkrpc
 
