@@ -30,6 +30,345 @@
 
 namespace silkrpc {
 
+// ----- ADDs
+
+size_t to_hex(char *hex_bytes, silkworm::ByteView bytes) {
+    static const char* kHexDigits{"0123456789abcdef"};
+    char* dest{&hex_bytes[0]};
+    *dest++ = '0';
+    *dest++ = 'x';
+    for (const auto& b : bytes) {
+        *dest++ = kHexDigits[b >> 4];    // Hi
+        *dest++ = kHexDigits[b & 0x0f];  // Lo
+    }
+    return dest-hex_bytes;
+}
+
+template<std::size_t N>
+std::size_t to_my_hex(char *hex_bytes, const uint8_t bytes[N]) {
+    static const char* kHexDigits{"0123456789abcdef"};
+    char* dest{&hex_bytes[0]};
+    *dest++ = '0';
+    *dest++ = 'x';
+    for (int i = 0; i<N; i++) {
+        const auto v = bytes[i];
+        *dest++ = kHexDigits[v >> 4];    // Hi
+        *dest++ = kHexDigits[v & 0x0f];  // Lo
+    }
+    return dest-hex_bytes;
+}
+constexpr auto address_to_hex2 = to_my_hex<20>;
+constexpr auto bytes32_to_hex2 = to_my_hex<32>;
+constexpr auto nonce_to_hex2 = to_my_hex<8>;
+constexpr auto bloom_to_hex2 = to_my_hex<256>;
+
+std::size_t to_hex_no_leading_zeros(char *hex_bytes, silkworm::ByteView bytes) {
+    static const char* kHexDigits{"0123456789abcdef"};
+
+    char* dest{&hex_bytes[0]};
+    int len = bytes.length();
+    *dest++ = '0';
+    *dest++ = 'x';
+
+    bool found_nonzero{false};
+    for (size_t i{0}; i < len; ++i) {
+        uint8_t x{bytes[i]};
+        char lo{kHexDigits[x & 0x0f]};
+        char hi{kHexDigits[x >> 4]};
+        if (!found_nonzero && hi != '0') {
+            found_nonzero = true;
+        }
+        if (found_nonzero) {
+            *dest++ = hi;
+        }
+        if (!found_nonzero && lo != '0') {
+            found_nonzero = true;
+        }
+        if (found_nonzero || i == len - 1) {
+            *dest++ = lo;
+        }
+    }
+
+    return dest-hex_bytes;
+}
+
+std::size_t to_quantity(char *quantity_hex_bytes, silkworm::ByteView bytes) {
+    return to_hex_no_leading_zeros(quantity_hex_bytes, bytes);
+}
+
+
+std::size_t to_quantity(char *quantity_hex_bytes, uint64_t number) {
+    silkworm::Bytes number_bytes(8, '\0');
+    silkworm::endian::store_big_u64(number_bytes.data(), number);
+    return to_hex_no_leading_zeros(quantity_hex_bytes, number_bytes);
+}
+
+std::size_t to_quantity(char *quantity_hex_bytes, intx::uint256 number) {
+    if (number == 0) {
+       quantity_hex_bytes[0] = '0';
+       quantity_hex_bytes[1] = 'x';
+       quantity_hex_bytes[2] = '0';
+       return 3;
+    }
+    return to_quantity(quantity_hex_bytes, silkworm::endian::to_big_compact(number));
+}
+
+
+char number[] = "number";
+char hash[] = "hash";
+char parentHash[] = "parentHash";
+char nonce[] = "nonce";
+char sha3Uncles[] = "sha3Uncles";
+char logsBloom[] = "logsBloom";
+char transactionsRoot[] = "transactionsRoot";
+char transactions[] = "transactions";
+char uncles[] = "uncles";
+char stateRoot[] = "stateRoot";
+char receiptsRoot[] = "receiptsRoot";
+char miner[] = "miner";
+char difficulty[] = "difficulty";
+char totalDifficulty[] = "totalDifficulty";
+char extraData[] = "extraData";
+char mixHash[] = "mixHash";
+char size_str[] = "size";
+char gasLimit[] = "gasLimit";
+char gas[] = "gas";
+char input[] = "input";
+char gasUsed[] = "gasUsed";
+char baseFeePerGas[] = "baseFeePerGas";
+char timestamp[] = "timestamp";
+char transactionIndex[] = "transactionIndex";
+char blockhash[] = "blockHash";
+char blockNumber[] = "blockNumber";
+char gasPrice[] = "gasPrice";
+char chainId[] = "chainId";
+char v[] = "v";
+char s[] = "s";
+char r[] = "r";
+char value[] = "value";
+char to[] = "to";
+char from[] = "from";
+char type[] = "type";
+
+inline json_buffer& to_json2(json_buffer& out, const silkworm::Transaction& transaction) {
+
+    if (!transaction.from) {
+        (const_cast<silkworm::Transaction&>(transaction)).recover_sender();
+    }
+    if (transaction.from) {
+        out.add_attribute_name(from,sizeof(from)-1);
+        out.add_attribute_value(address_to_hex2(out.get_addr(), transaction.from.value().bytes));
+    }
+
+    out.add_attribute_name(gas, sizeof(gas)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), transaction.gas_limit));
+
+    auto ethash_hash{hash_of_transaction(transaction)};
+    out.add_attribute_name(hash,sizeof(hash)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), ethash_hash.bytes));
+ 
+
+    out.add_attribute_name(input,sizeof(input)-1);
+    out.add_attribute_value(to_hex(out.get_addr(), transaction.data));
+
+    out.add_attribute_name(nonce,sizeof(nonce)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), transaction.nonce));
+
+    if (transaction.to) {
+        out.add_attribute_name(to,sizeof(to)-1);
+        out.add_attribute_value(address_to_hex2(out.get_addr(), transaction.to.value().bytes));
+    } else {
+        out.add_attribute_name(to,sizeof(to)-1);
+        out.add_attribute_value("0x0");
+    }
+    out.add_attribute_name(type,sizeof(type)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), (uint8_t)transaction.type));
+
+    if (transaction.type != silkworm::Transaction::Type::kLegacy) {
+       out.add_attribute_name(chainId,sizeof(chainId)-1);
+       out.add_attribute_value(to_quantity(out.get_addr(), *transaction.chain_id));
+
+       out.add_attribute_name(v,sizeof(v)-1);
+       out.add_attribute_value(to_quantity(out.get_addr(), transaction.odd_y_parity));
+       //json["accessList"] = transaction.access_list; // EIP2930
+    } else {
+       out.add_attribute_name(v,sizeof(v)-1);
+       out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(transaction.v())));
+    }
+
+    out.add_attribute_name(value,sizeof(value)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), transaction.value));
+
+    out.add_attribute_name(r,sizeof(r)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(transaction.r)));
+
+    out.add_attribute_name(s,sizeof(s)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(transaction.s)));
+
+    return out;
+}
+
+inline json_buffer& to_json2(json_buffer& out, const silkworm::BlockHeader& header) {
+    out.add_attribute_name(number, sizeof(number)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), header.number));
+
+    out.add_attribute_name(parentHash, sizeof(parentHash)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), header.parent_hash.bytes));
+
+    out.add_attribute_name(nonce, sizeof(nonce)-1);
+    out.add_attribute_value(nonce_to_hex2(out.get_addr(), header.nonce.data()));
+
+    out.add_attribute_name(sha3Uncles, sizeof(sha3Uncles)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), header.ommers_hash.bytes));
+
+    out.add_attribute_name(logsBloom, sizeof(logsBloom)-1);
+    out.add_attribute_value(bloom_to_hex2(out.get_addr(), header.logs_bloom.data()));
+
+    out.add_attribute_name(transactionsRoot, sizeof(transactionsRoot)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), header.transactions_root.bytes));
+
+    out.add_attribute_name(stateRoot, sizeof(stateRoot)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), header.state_root.bytes));
+
+    out.add_attribute_name(receiptsRoot, sizeof(receiptsRoot)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), header.receipts_root.bytes));
+
+    out.add_attribute_name(miner, sizeof(miner)-1);
+    out.add_attribute_value(address_to_hex2(out.get_addr(), header.beneficiary.bytes));
+
+    out.add_attribute_name(extraData,sizeof(extraData)-1);
+    out.add_attribute_value(to_hex(out.get_addr(), header.extra_data));
+
+    out.add_attribute_name(difficulty, sizeof(difficulty)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(header.difficulty)));
+
+    out.add_attribute_name(mixHash, sizeof(mixHash)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), header.mix_hash.bytes));
+
+    out.add_attribute_name(gasLimit,sizeof(gasLimit)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), header.gas_limit));
+
+    out.add_attribute_name(gasUsed,sizeof(gasUsed)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), header.gas_used));
+
+    out.add_attribute_name(timestamp,sizeof(timestamp)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), header.timestamp));
+
+    if (header.base_fee_per_gas.has_value()) {
+       out.add_attribute_name(baseFeePerGas,sizeof(baseFeePerGas)-1);
+       out.add_attribute_value(to_quantity(out.get_addr(), header.base_fee_per_gas.value_or(0)));
+    }
+
+    return out;
+}
+
+inline size_t copy_bn (char *dest, char *src, int len) {
+   memcpy(dest, src, len);
+   return len;
+}
+
+inline json_buffer& to_json2(json_buffer& out, const silkrpc::Block& b) {
+    char buffer[100];
+    const auto block_number_size = to_quantity(buffer, b.block.header.number);
+
+    out.add_attribute_name(number,sizeof(number)-1);
+    out.add_attribute_value(copy_bn(out.get_addr(), buffer, block_number_size));
+
+    out.add_attribute_name(hash,sizeof(hash)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.hash.bytes));
+
+    out.add_attribute_name(parentHash,sizeof(parentHash)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.header.parent_hash.bytes));
+
+    out.add_attribute_name(nonce,sizeof(nonce)-1);
+    out.add_attribute_value(nonce_to_hex2(out.get_addr(), b.block.header.nonce.data()));
+
+    out.add_attribute_name(sha3Uncles,sizeof(sha3Uncles)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.header.ommers_hash.bytes));
+
+    out.add_attribute_name(logsBloom,sizeof(logsBloom)-1);
+    out.add_attribute_value(bloom_to_hex2(out.get_addr(), b.block.header.logs_bloom.data()));
+
+    out.add_attribute_name(transactionsRoot,sizeof(transactionsRoot)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.header.transactions_root.bytes));
+
+    out.add_attribute_name(stateRoot,sizeof(stateRoot)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.header.state_root.bytes));
+
+    out.add_attribute_name(receiptsRoot,sizeof(receiptsRoot)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.header.receipts_root.bytes));
+
+    out.add_attribute_name(miner,sizeof(miner)-1);
+    out.add_attribute_value(address_to_hex2(out.get_addr(), b.block.header.beneficiary.bytes));
+
+    out.add_attribute_name(difficulty,sizeof(difficulty)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(b.block.header.difficulty)));
+
+    out.add_attribute_name(totalDifficulty,sizeof(totalDifficulty)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), silkworm::endian::to_big_compact(b.total_difficulty)));
+
+    out.add_attribute_name(extraData,sizeof(extraData)-1);
+    out.add_attribute_value(to_hex(out.get_addr(), b.block.header.extra_data));
+
+    out.add_attribute_name(mixHash,sizeof(mixHash)-1);
+    out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.header.mix_hash.bytes));
+
+    out.add_attribute_name(size_str, sizeof(size_str)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), b.get_block_size()));
+
+    out.add_attribute_name(gasLimit, sizeof(gasLimit)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), b.block.header.gas_limit));
+
+    out.add_attribute_name(gasUsed, sizeof(gasUsed)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), b.block.header.gas_used));
+
+    if (b.block.header.base_fee_per_gas.has_value()) {
+       out.add_attribute_name(baseFeePerGas, sizeof(baseFeePerGas)-1);
+       out.add_attribute_value(to_quantity(out.get_addr(), b.block.header.base_fee_per_gas.value_or(0)));
+    }
+    out.add_attribute_name(timestamp,sizeof(timestamp)-1);
+    out.add_attribute_value(to_quantity(out.get_addr(), b.block.header.timestamp));
+
+    if (b.full_tx) {
+        int n_elem =  b.block.transactions.size();
+        out.start_vector(transactions, sizeof(transactions)-1);
+        for (auto i{0}; i < n_elem; i++) {
+            out.start_vector_element();
+            to_json2(out, b.block.transactions[i]);
+
+            out.add_attribute_name(transactionIndex,sizeof(transactionIndex)-1);
+            out.add_attribute_value(to_quantity(out.get_addr(), i));
+
+            out.add_attribute_name(blockhash,sizeof(blockhash)-1);
+            out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.hash.bytes));
+
+            out.add_attribute_name(blockNumber,sizeof(blockNumber)-1);
+            out.add_attribute_value(copy_bn(out.get_addr(), buffer, block_number_size));
+
+            out.add_attribute_name(gasPrice,sizeof(gasPrice)-1);
+            out.add_attribute_value(to_quantity(out.get_addr(), b.block.transactions[i].effective_gas_price(b.block.header.base_fee_per_gas.value_or(0))));
+            out.end_vector_element();
+        }
+        out.end_vector();
+    }
+
+    std::vector<evmc::bytes32> ommer_hashes;
+    ommer_hashes.reserve(b.block.ommers.size());
+    out.start_vector(uncles,sizeof(uncles)-1);
+    for (auto i{0}; i < b.block.ommers.size(); i++) {
+        out.start_vector_element();
+        out.add_attribute_name(uncles, sizeof(uncles)-1);
+        out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.ommers[i].hash().bytes));
+        out.end_vector_element();
+    }
+    out.end_vector();
+
+    return out;
+}
+
+
+// ----- END ADDs
+
 std::string to_hex_no_leading_zeros(silkworm::ByteView bytes) {
     static const char* kHexDigits{"0123456789abcdef"};
 
@@ -148,8 +487,8 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
         json["from"] = transaction.from.value();
     }
     json["gas"] = silkrpc::to_quantity(transaction.gas_limit);
-    //auto ethash_hash{hash_of_transaction(transaction)};
-    //json["hash"] = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
+    auto ethash_hash{hash_of_transaction(transaction)};
+    json["hash"] = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
     json["input"] = "0x" + silkworm::to_hex(transaction.data);
     json["nonce"] = silkrpc::to_quantity(transaction.nonce);
     if (transaction.to) {
@@ -217,9 +556,9 @@ void to_json(nlohmann::json& json, const Block& b) {
         std::vector<evmc::bytes32> transaction_hashes;
         transaction_hashes.reserve(b.block.transactions.size());
         for (auto i{0}; i < b.block.transactions.size(); i++) {
-            //auto ethash_hash{hash_of_transaction(b.block.transactions[i])};
-            //auto bytes32_hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
-            //transaction_hashes.emplace(transaction_hashes.end(), std::move(bytes32_hash));
+            auto ethash_hash{hash_of_transaction(b.block.transactions[i])};
+            auto bytes32_hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
+            transaction_hashes.emplace(transaction_hashes.end(), std::move(bytes32_hash));
             SILKRPC_DEBUG << "transaction_hashes[" << i << "]: " << silkworm::to_hex({transaction_hashes[i].bytes, silkworm::kHashLength}) << "\n";
         }
         json["transactions"] = transaction_hashes;
@@ -227,7 +566,7 @@ void to_json(nlohmann::json& json, const Block& b) {
     std::vector<evmc::bytes32> ommer_hashes;
     ommer_hashes.reserve(b.block.ommers.size());
     for (auto i{0}; i < b.block.ommers.size(); i++) {
-        //ommer_hashes.emplace(ommer_hashes.end(), std::move(b.block.ommers[i].hash()));
+        ommer_hashes.emplace(ommer_hashes.end(), std::move(b.block.ommers[i].hash()));
         SILKRPC_DEBUG << "ommer_hashes[" << i << "]: " << silkworm::to_hex({ommer_hashes[i].bytes, silkworm::kHashLength}) << "\n";
     }
     json["uncles"] = ommer_hashes;
@@ -469,6 +808,7 @@ nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result) {
     return {{"jsonrpc", "2.0"}, {"id", id}, {"result", result}};
 }
 
+
 nlohmann::json make_json_error(uint32_t id, int32_t code, const std::string& message) {
     const Error error{code, message};
     return {{"jsonrpc", "2.0"}, {"id", id}, {"error", error}};
@@ -476,6 +816,57 @@ nlohmann::json make_json_error(uint32_t id, int32_t code, const std::string& mes
 
 nlohmann::json make_json_error(uint32_t id, const RevertError& error) {
     return {{"jsonrpc", "2.0"}, {"id", id}, {"error", error}};
+}
+
+
+char json_rpc[] = "jsonrpc";
+char id_str[] = "id";
+char code_str[] = "code";
+char error[] = "error";
+char vers[] = "2.0";
+char result[] = "result";
+
+inline size_t copy_int(char *buffer, int32_t value) {
+   return sprintf (buffer, "%d", value);
+}
+
+inline size_t copy_str(char *buffer, const std::string& message) {
+   memcpy(buffer, message.c_str(), message.length());
+   return message.length();
+}
+
+inline size_t copy_str(char *buffer, char *message, int len) {
+   memcpy(buffer, message, len);
+   return len;
+}
+
+void make_json_error(json_buffer& out, uint32_t id, int32_t code, const std::string& message) {
+    
+    out.add_attribute_name(json_rpc,sizeof(json_rpc)-1);
+    out.add_attribute_value(copy_str(out.get_addr(), vers, sizeof(vers)-1));
+
+    out.add_attribute_name(id_str,sizeof(id_str)-1);
+    out.add_attribute_value(copy_int(out.get_addr(), id));
+
+    out.add_attribute_name(code_str,sizeof(code_str)-1);
+    out.add_attribute_value(copy_int(out.get_addr(), code));
+
+    out.add_attribute_name(error,sizeof(error)-1);
+    out.add_attribute_value(copy_str(out.get_addr(), error));
+    out.end();
+}
+
+void make_json_content(json_buffer& out, uint32_t id, const silkrpc::Block& block) {
+    out.add_attribute_name(json_rpc,sizeof(json_rpc)-1);
+    out.add_attribute_value(copy_str(out.get_addr(), vers, sizeof(vers)-1));
+
+    out.add_attribute_name2(id_str,sizeof(id_str)-1);
+    out.add_attribute_value2(copy_int(out.get_addr(), id));
+
+    out.start_object(result, sizeof(result)-1);
+    to_json2(out, block);
+    out.end_object();
+    out.end();
 }
 
 } // namespace silkrpc

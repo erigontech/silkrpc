@@ -37,7 +37,7 @@ namespace silkrpc::http {
 class RequestHandler {
 public:
     RequestHandler(Context& context, asio::thread_pool& workers, const commands::RpcApiTable& rpc_api_table)
-        : rpc_api_{context, workers}, rpc_api_table_(rpc_api_table) {}
+        : rpc_api_{context, workers}, context_{context},  rpc_api_table_(rpc_api_table) {}
 
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
@@ -45,6 +45,7 @@ public:
     asio::awaitable<void> handle_request(const http::Request& request, http::Reply& reply);
 
 private:
+    Context& context_;
     commands::RpcApi rpc_api_;
     const commands::RpcApiTable& rpc_api_table_;
 };

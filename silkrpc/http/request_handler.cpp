@@ -30,6 +30,7 @@
 #include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/http/header.hpp>
+#include <silkrpc/http/methods.hpp>
 
 namespace silkrpc::http {
 
@@ -73,12 +74,22 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
             co_return;
         }
         const auto handle_method = handle_method_opt.value();
+        char buffer[300000];
+        json_buffer out{buffer, sizeof(buffer)};
 
-        nlohmann::json reply_json;
-        co_await (rpc_api_.*handle_method)(request_json, reply_json);
-
-        reply.content = reply_json.dump(
+        
+        //if (method == "xxx" ) {
+        if (method == http::method::k_eth_getBlockByNumber) {
+           co_await rpc_api_.handle_eth_get_block_by_number2(request_json, out);
+           reply.content = out.to_string_view();
+        }
+        else {
+           nlohmann::json reply_json;
+           co_await (rpc_api_.*handle_method)(request_json, reply_json);
+           reply.content = reply_json.dump(
             /*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace) + "\n";
+        }
+
         reply.status = http::Reply::ok;
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
