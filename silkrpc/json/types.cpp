@@ -358,8 +358,6 @@ inline json_buffer& to_json2(json_buffer& out, const silkrpc::Block& b) {
     for (auto i{0}; i < b.block.ommers.size(); i++) {
         out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.ommers[i].hash().bytes));
     }
-    out.end_vector();
-
     return out;
 }
 
