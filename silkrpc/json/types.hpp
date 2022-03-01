@@ -227,8 +227,7 @@ struct json_buffer {
        *curr_++ = '\"'; 
   }
 
-  inline void add_attribute_value_list(const char *value) {
-       int len = strlen(value);
+  inline void add_attribute_value_list(const char *value, int len) {
        auto ptr = curr_;
        if (first_attribute) {
           first_attribute = 0;
