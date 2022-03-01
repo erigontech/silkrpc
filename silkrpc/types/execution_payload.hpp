@@ -58,7 +58,7 @@ struct PayloadStatus {
 };
 
 struct TransitionConfiguration{
-    uint256_t total_terminal_difficulty;
+    uint256_t terminal_total_difficulty;
     uint64_t terminal_block_number;
     evmc::bytes32 terminal_block_hash;
 };
