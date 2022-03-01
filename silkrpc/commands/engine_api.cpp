@@ -115,8 +115,8 @@ asio::awaitable<void> EngineRpcApi::handle_engine_transition_configuration_v1(co
         }
 
         TransitionConfiguration transition_configuration{chain_config.terminal_total_difficulty, chain_config.terminal_block_hash, 0};
-        reply = transitioon_configuration;
-        
+        reply = transition_configuration;
+
         #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
