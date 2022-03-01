@@ -82,6 +82,7 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
         if (method == http::method::k_eth_getBlockByNumber) {
            co_await rpc_api_.handle_eth_get_block_by_number2(request_json, out);
            reply.content = out.to_string_view();
+           std::cout << reply.content << "\n";
         }
         else {
            nlohmann::json reply_json;
