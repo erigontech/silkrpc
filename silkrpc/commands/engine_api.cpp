@@ -94,6 +94,16 @@ asio::awaitable<void> EngineRpcApi::handle_engine_transition_configuration_v1(co
         const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
         SILKRPC_DEBUG << "chain config: " << chain_config << "\n";
 
+        if(cl_configuration.terminal_block_number != 0){
+            SILKRPC_ERROR << "consensus layer has the wrong terminal block number expected zero but instead got: " << cl_configuration.terminal_block_number << "\n";
+            reply = make_json_error(request.at("id"), 100, "consensus layer terminal block number is not zero");
+        }
+
+        if(chain_config.terminal_total_difficulty != NULL){
+            SILKRPC_ERROR << "execution layer does not have terminal total difficulty";
+            reply = make_json_error(request.at("id"), 100, "execution layer does not have terminal total difficulty");
+        }
+
         if(chain_config.terminal_total_difficulty != cl_configuration.terminal_total_difficulty){
             SILKRPC_ERROR << "execution layer has the incorrect terminal total difficulty, expected: " << cl_configuration.terminal_total_difficulty << " got: " << chain_config.terminal_total_difficulty << "\n";
             reply = make_json_error(request.at("id"), 100, "incorrect terminal total difficulty");
