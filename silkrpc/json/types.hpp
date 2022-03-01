@@ -140,6 +140,24 @@ struct json_buffer {
     curr_ = ptr;
   }
 
+  inline void add_attribute_name_list(const char *name, int len) {
+    auto ptr = curr_;
+    if (first_attribute) { 
+       first_attribute = 0; 
+    } 
+    else { \
+       *ptr++ = ','; 
+    }
+    *ptr++ = '\"'; 
+    memcpy(ptr, name, len); 
+    ptr+=len;
+    *ptr++ = '\"'; 
+    *ptr++ = ':'; 
+    *ptr++ = '['; 
+    curr_ = ptr;
+    first_attribute = 1;
+  }
+
   // XXX
   inline void add_attribute_name2(const char *name, int len) {
     auto ptr = curr_;
@@ -174,6 +192,7 @@ struct json_buffer {
        *curr_++ = '\"'; 
   }
 
+  // XXX
   inline void add_attribute_value2(int len) {
        curr_+=len; 
   }
@@ -206,6 +225,22 @@ struct json_buffer {
        memcpy(curr_, value, len); 
        curr_+=len; 
        *curr_++ = '\"'; 
+  }
+
+  inline void add_attribute_value_list(const char *value) {
+       int len = strlen(value);
+       auto ptr = curr_;
+       if (first_attribute) {
+          first_attribute = 0;
+       }
+       else { \
+          *ptr++ = ',';
+       }
+       *ptr++ = '\"';
+       memcpy(ptr, value, len);
+       ptr+=len;
+       *ptr++ = '\"';
+       curr_ = ptr;
   }
 
 
@@ -241,10 +276,6 @@ struct json_buffer {
   }
 
   inline void add_end_attribute_list() {
-     *curr_++ = '[';
-  }
-
-  inline void add_start_attribute_list() {
      *curr_++ = ']';
   }
 
