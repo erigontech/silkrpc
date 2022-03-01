@@ -357,8 +357,8 @@ inline json_buffer& to_json2(json_buffer& out, const silkrpc::Block& b) {
     out.add_attribute_name_list(uncles,sizeof(uncles)-1);
     for (auto i{0}; i < b.block.ommers.size(); i++) {
         char buffer[1000];
-        bytes32_to_hex2(buffer, b.block.ommers[i].hash().bytes);
-        out.add_attribute_value_list(buffer);
+        auto len = bytes32_to_hex2(buffer, b.block.ommers[i].hash().bytes);
+        out.add_attribute_value_list(buffer, len);
     }
     out.add_end_attribute_list();
     return out;
