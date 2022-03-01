@@ -238,7 +238,15 @@ struct json_buffer {
 
   inline void end_vector_element() {
        *curr_++ = '}';
-   }
+  }
+
+  inline void add_end_attribute_list() {
+     *curr_++ = '[';
+  }
+
+  inline void add_start_attribute_list() {
+     *curr_++ = ']';
+  }
 
   std::string_view to_string_view() { return std::string_view(buffer_, curr_ - buffer_ ); }
   
