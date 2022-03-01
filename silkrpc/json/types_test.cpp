@@ -1399,6 +1399,40 @@ TEST_CASE("serialize payload status", "[silkrpc::json][to_json]") {
     })"_json);
 }
 
+TEST_CASE("serialize transition configuratin", "[silkrpc::json][to_json]") {
+    silkrpc::TransitionConfiguration transition_configuration{
+        .total_terminal_difficulty = 0xf4240,
+        .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+        .terminal_block_number = 0x0
+    };
+
+    nlohmann::json j = transition_configuration;
+    CHECK(j == R"({
+        "totalTerminalDifficulty":"0xf4240",
+        "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32",
+        "terminalBlockNumber":"0x0"
+    })");
+}
+
+TEST_CASE("deserialize transition configuration", "[silkrpc::json][from_json]"){
+    silkrpc::TransitionConfiguration actual_transition_configuration = R"({
+        "totalTerminalDifficulty":"0xf4240",
+        "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32",
+        "terminalBlockNumber":"0x0"
+    })"_json;
+
+
+    silkrpc::TransitionConfiguration expected_transition_configuration{
+        .total_terminal_difficulty = 0xf4240,
+        .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+        .terminal_block_number = 0x0
+    };
+
+    CHECK(actual_transition_configuration.total_terminal_difficulty == expected_transition_configuration.total_terminal_difficulty);
+    CHECK(actual_transition_configuration.terminal_block_hash == expected_transition_configuration.terminal_block_hash);
+    CHECK(actual_transition_configuration.terminal_block_number == expected_transition_configuration.terminal_block_number);
+}
+
 TEST_CASE("make empty json content", "[silkrpc::json][make_json_content]") {
     const auto j = silkrpc::make_json_content(0, {});
     CHECK(j == R"({
