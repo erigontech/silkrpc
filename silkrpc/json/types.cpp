@@ -354,12 +354,9 @@ inline json_buffer& to_json2(json_buffer& out, const silkrpc::Block& b) {
 
     std::vector<evmc::bytes32> ommer_hashes;
     ommer_hashes.reserve(b.block.ommers.size());
-    out.start_vector(uncles,sizeof(uncles)-1);
+    out.add_attribute_name(uncles,sizeof(uncles)-1);
     for (auto i{0}; i < b.block.ommers.size(); i++) {
-        out.start_vector_element();
-        out.add_attribute_name(uncles, sizeof(uncles)-1);
         out.add_attribute_value(bytes32_to_hex2(out.get_addr(), b.block.ommers[i].hash().bytes));
-        out.end_vector_element();
     }
     out.end_vector();
 
