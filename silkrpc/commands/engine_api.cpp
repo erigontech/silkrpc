@@ -15,6 +15,9 @@
 */
 
 #include "engine_api.hpp"
+#include <silkrpc/core/rawdb/chain.hpp>
+#include <silkrpc/types/execution_payload.hpp>
+#include <silkrpc/ethdb/transaction_database.hpp>
 
 #include <string>
 
@@ -84,7 +87,23 @@ asio::awaitable<void> EngineRpcApi::handle_engine_transition_configuration_v1(co
     try{
         #endif
         const auto cl_configuration = params.[0].get<TransitionConfiguration>();
-        reply = co_await backend_->engine_transition_configuration_v1(cl_configuration);
+
+        auto tx = co_await database_->begin();
+        ethdb::TransactionDatabase tx_database{*tx};
+        
+        const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
+        SILKRPC_DEBUG << "chain config: " << chain_config << "\n";
+
+        if(chain_config.terminal_total_difficulty != cl_configuration.terminal_total_difficulty){
+            SILKRPC_ERROR << "execution layer has the incorrect terminal total difficulty, expected: " << cl_configuration.terminal_total_difficulty << " got: " << chain_config.terminal_total_difficulty << "\n";
+            reply = make_json_error(request.at("id"), 100, "incorrect terminal total difficulty");
+        }
+
+        if(chain_config.terminal_block_hash != cl_configuration.terminal_block_hash){
+            SILKRPC_ERROR << "executioono layer has the incorrect terminal block hash, expected: " << cl_configuration.terminal_block_hash << " got: " << chain_config.terminal_block_hash << "\n";
+            reply = make_json_error(request.at("id"), 100, "incorrect terminal block hash");
+        }
+
         #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
