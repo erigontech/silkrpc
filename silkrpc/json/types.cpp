@@ -177,10 +177,7 @@ inline json_buffer& to_json2(json_buffer& out, const silkworm::Transaction& tran
     if (transaction.to) {
         out.add_attribute_name(to,sizeof(to)-1);
         out.add_attribute_value(address_to_hex2(out.get_addr(), transaction.to.value().bytes));
-    } else {
-        out.add_attribute_name(to,sizeof(to)-1);
-        out.add_attribute_value("0x0");
-    }
+    } 
     out.add_attribute_name(type,sizeof(type)-1);
     out.add_attribute_value(to_quantity(out.get_addr(), (uint8_t)transaction.type));
 
