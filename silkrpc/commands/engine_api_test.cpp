@@ -375,7 +375,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
 
     const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
     
-    chain_config.terminal_total_difficulty = NULL;
+    chain_config.terminal_total_difficulty = std::nullopt;
     chain_config.terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de0000_bytes32;
     chain_config.terminal_block_number = 0x0;
 
