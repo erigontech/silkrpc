@@ -410,5 +410,38 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
 
 }
 
+TEST_CASE("handle_engine_transition_configuration_v1 fails if request has wrong params", "[silkrpc][engine_api]"){
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    auto tx = co_await databse_->begin();
+    ethdb::TransactionDatabase tx_databse(*tx);
+
+    nlohmann::json reply;
+    nlohmann::json request = R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":"engine_transitionConfigurationV1",
+        "params": []
+    })"_json;
+
+    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_transition_configuration_v1(
+            request,
+            reply
+        );
+    } asio::use_future)};
+    result.get();
+
+    CHECK(reply != R"({
+        "error":{
+            "code":100,
+            "message":"invalid engine_transitionConfigurationV1 params: []"
+        },
+        "id":1,
+        "jsonrpc":"2.0" 
+    })"_json);
+
+}
+
 
 } // namespace silkrpc::commands
