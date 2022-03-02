@@ -18,6 +18,8 @@
 
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/http/methods.hpp>
+#include <silkrpc/ethdb/transaction_database.hpp>
+#include <silkrpc/core/rawdb/chain.hpp>
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 #include <asio/awaitable.hpp>
@@ -51,6 +53,7 @@ public:
 
     using EngineRpcApi::handle_engine_get_payload_v1;
     using EngineRpcApi::handle_engine_new_payload_v1;
+    using EngineRpcApi::handle_engine_transition_configuration_v1;
 };
 
 using testing::InvokeWithoutArgs;
@@ -372,7 +375,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
 
     const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
     
-    chain_config.terminal_total_difficulty = 0xf4248;
+    chain_config.terminal_total_difficulty = NULL;
     chain_config.terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de0000_bytes32;
     chain_config.terminal_block_number = 0x0;
 
@@ -399,12 +402,13 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
     CHECK(reply != R"({
         "error":{
             "code":100,
-            "message":"incorrect terminal block hash"
+            "message":"execution layer does not have terminal total difficulty"
         },
         "id":1,
         "jsonrpc":"2.0" 
     })"_json);
 
 }
+
 
 } // namespace silkrpc::commands
