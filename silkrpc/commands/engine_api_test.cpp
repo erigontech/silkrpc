@@ -255,7 +255,11 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         "jsonrpc":"2.0",
         "id":1,
         "method":"engine_transitionConfigurationV1",
-        "params": [{0xf4240, "0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858", "0x0"}]
+        "params": [{
+            "terminalTotalDifficulty":"0xf4240", 
+            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858", 
+            "terminalBlockNumber":"0x0"
+        }]
     })"_json;
 
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
