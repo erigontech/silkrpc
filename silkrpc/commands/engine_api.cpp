@@ -99,7 +99,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_transition_configuration_v1(co
             reply = make_json_error(request.at("id"), 100, "consensus layer terminal block number is not zero");
         }
 
-        if(chain_config.terminal_total_difficulty != NULL){
+        if(chain_config.terminal_total_difficulty != std::nullopt){
             SILKRPC_ERROR << "execution layer does not have terminal total difficulty";
             reply = make_json_error(request.at("id"), 100, "execution layer does not have terminal total difficulty");
         }
