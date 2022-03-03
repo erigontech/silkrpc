@@ -94,27 +94,33 @@ asio::awaitable<void> EngineRpcApi::handle_engine_transition_configuration_v1(co
         const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
         SILKRPC_DEBUG << "chain config: " << chain_config << "\n";
 
+        auto config = silkworm::ChainConfig::from_json(chain_config.config);
+
         if(cl_configuration.terminal_block_number != 0){
             SILKRPC_ERROR << "consensus layer has the wrong terminal block number expected zero but instead got: " << cl_configuration.terminal_block_number << "\n";
             reply = make_json_error(request.at("id"), 100, "consensus layer terminal block number is not zero");
         }
 
-        if(chain_config.terminal_total_difficulty != std::nullopt){
+        if(config->terminal_total_difficulty != std::nullopt){
             SILKRPC_ERROR << "execution layer does not have terminal total difficulty";
             reply = make_json_error(request.at("id"), 100, "execution layer does not have terminal total difficulty");
         }
 
-        if(chain_config.terminal_total_difficulty != cl_configuration.terminal_total_difficulty){
-            SILKRPC_ERROR << "execution layer has the incorrect terminal total difficulty, expected: " << cl_configuration.terminal_total_difficulty << " got: " << chain_config.terminal_total_difficulty << "\n";
+        if(config->terminal_total_difficulty != cl_configuration.terminal_total_difficulty){
+            SILKRPC_ERROR << "execution layer has the incorrect terminal total difficulty, expected: " << cl_configuration.terminal_total_difficulty << " got: " << *config->terminal_total_difficulty << "\n";
             reply = make_json_error(request.at("id"), 100, "incorrect terminal total difficulty");
         }
 
-        if(chain_config.terminal_block_hash != cl_configuration.terminal_block_hash){
-            SILKRPC_ERROR << "executioono layer has the incorrect terminal block hash, expected: " << cl_configuration.terminal_block_hash << " got: " << chain_config.terminal_block_hash << "\n";
+        if(config->terminal_block_hash != cl_configuration.terminal_block_hash){
+            SILKRPC_ERROR << "executioono layer has the incorrect terminal block hash, expected: " << cl_configuration.terminal_block_hash << " got: " << *config->terminal_block_hash << "\n";
             reply = make_json_error(request.at("id"), 100, "incorrect terminal block hash");
         }
 
-        TransitionConfiguration transition_configuration{chain_config.terminal_total_difficulty, chain_config.terminal_block_hash, 0};
+        TransitionConfiguration transition_configuration{
+            .terminal_total_difficulty = *config->terminal_total_difficulty, 
+            .terminal_block_hash = *config->terminal_block_hash, 
+            .terminal_block_number = 0
+        };
         reply = transition_configuration;
 
         #ifndef BUILD_COVERAGE
@@ -125,6 +131,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_transition_configuration_v1(co
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request.at("id"), 100, "unexpected exception");
     }
+    #endif
 }
 
 } // namespace silkrpc::commands
