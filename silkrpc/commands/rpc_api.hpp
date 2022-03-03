@@ -41,7 +41,7 @@ public:
     explicit RpcApi(Context& context, asio::thread_pool& workers) :
         EthereumRpcApi{context, workers}, NetRpcApi{context.backend}, Web3RpcApi{context}, DebugRpcApi{context.database},
         ParityRpcApi{context.database}, TurboGethRpcApi{context.database}, TraceRpcApi{context.database},
-        EngineRpcApi(context.backend) {}
+        EngineRpcApi(context.database, context.backend) {}
     virtual ~RpcApi() {}
 
     RpcApi(const RpcApi&) = delete;
