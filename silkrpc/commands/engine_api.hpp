@@ -35,7 +35,7 @@ namespace silkrpc::commands {
 
 class EngineRpcApi {
 public:
-    explicit EngineRpcApi(std::unique_ptr<ethbackend::BackEnd>& backend): backend_(backend) {}
+    explicit EngineRpcApi(std::unique_ptr<ethdb::Database>& database, std::unique_ptr<ethbackend::BackEnd>& backend): database_(database), backend_(backend) {}
     virtual ~EngineRpcApi() {}
 
     EngineRpcApi(const EngineRpcApi&) = delete;
@@ -44,9 +44,10 @@ public:
 protected:
     asio::awaitable<void> handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_engine_new_payload_v1(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_exchange_transition_configuration_v1(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_engine_transition_configuration_v1(const nlohmann::json& request, nlohmann::json& reply);
 private:
     std::unique_ptr<ethbackend::BackEnd>& backend_;
+    std::unique_ptr<ethdb::Database>& database_;
 
     friend class silkrpc::http::RequestHandler;
 };
