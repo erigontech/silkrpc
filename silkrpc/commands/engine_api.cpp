@@ -74,7 +74,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
 }
 
 
-asio::awaitable<void> EngineRpcApi::handle_engine_transition_configuration_v1(const nlohmann::json& request, nlohmann:json& reply){
+asio::awaitable<void> EngineRpcApi::handle_engine_transition_configuration_v1(const nlohmann::json& request, nlohmann::json& reply){
     auto params = request.at("params");
     // params = [TransitionConfiguration]
     if(params.size() != 1){
@@ -86,7 +86,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_transition_configuration_v1(co
     #ifndef BUILD_COVERAGE
     try{
         #endif
-        const auto cl_configuration = params.[0].get<TransitionConfiguration>();
+        const auto cl_configuration = params[0].get<TransitionConfiguration>();
 
         auto tx = co_await database_->begin();
         ethdb::TransactionDatabase tx_database{*tx};
