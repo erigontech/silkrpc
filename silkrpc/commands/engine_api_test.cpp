@@ -241,14 +241,13 @@ TEST_CASE("handle_engine_new_payload_v1 fails with invalid amount of params", "[
     context_pool_thread.join();
 }
 
-TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configurations has the same request configuration", "[silkrpc][engine_api]"){
+TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configurations has the same request configuration", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     auto tx = co_await databse_->begin();
     ethdb::TransactionDatabase tx_databse(*tx);
 
-    const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
-    
+    const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};    
     chain_config.terminal_total_difficulty = 0xf4240;
     chain_config.terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32;
     chain_config.terminal_block_number = 0x0;
@@ -278,12 +277,10 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858", 
         "terminalBlockNumber":"0x0"
         })"_json);
-
 }
 
-TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has different TTD", "[silkrpc][engine_api]"){
+TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has different TTD", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
-
     auto tx = co_await databse_->begin();
     ethdb::TransactionDatabase tx_databse(*tx);
 
@@ -324,7 +321,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
 
 }
 
-TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has different terminal block hash", "[silkrpc][engine_api]"){
+TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has different terminal block hash", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     auto tx = co_await databse_->begin();
@@ -364,10 +361,9 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
         "id":1,
         "jsonrpc":"2.0" 
     })"_json);
-
 }
 
-TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has no TTD", "[silkrpc][engine_api]"){
+TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has no TTD", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     auto tx = co_await databse_->begin();
@@ -410,7 +406,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
 
 }
 
-TEST_CASE("handle_engine_transition_configuration_v1 fails if request has wrong params", "[silkrpc][engine_api]"){
+TEST_CASE("handle_engine_transition_configuration_v1 fails if request has wrong params", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     auto tx = co_await databse_->begin();
