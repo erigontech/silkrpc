@@ -135,16 +135,17 @@ std::optional<silkworm::BlockHeader> RemoteBuffer::read_header(uint64_t block_nu
     }
 }
 
-std::optional<silkworm::BlockBody> RemoteBuffer::read_body(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
+bool RemoteBuffer::read_body(uint64_t block_number, const evmc::bytes32& block_hash, silkworm::BlockBody& out) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_body block_number=" << block_number << " block_hash=" << block_hash << "\n";
     try {
         std::future<std::optional<silkworm::BlockBody>> result{asio::co_spawn(io_context_, async_buffer_.read_body(block_number, block_hash), asio::use_future)};
         const auto optional_body{result.get()};
         SILKRPC_DEBUG << "RemoteBuffer::read_body block_number=" << block_number << " block_hash=" << block_hash << "\n";
-        return optional_body;
+        out = *optional_body;
+        return true;
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "RemoteBuffer::read_body exception: " << e.what() << "\n";
-        return std::nullopt;
+        return false;
     }
 }
 
