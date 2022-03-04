@@ -202,10 +202,6 @@ TEST_CASE("decoding_result_to_string(kInputTooShort)", "[silkrpc][common][util]"
     CHECK(decoding_result_to_string(silkworm::DecodingResult::kInputTooShort) == "rlp: element is larger than containing list");
 }
 
-TEST_CASE("decoding_result_to_string(kNonCanonicalSingleByte)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kNonCanonicalSingleByte) == "rlp: non-canonical integer format");
-}
-
 TEST_CASE("decoding_result_to_string(kNonCanonicalSize)", "[silkrpc][common][util]") {
     CHECK(decoding_result_to_string(silkworm::DecodingResult::kNonCanonicalSize) == "rlp: non-canonical size information");
 }
