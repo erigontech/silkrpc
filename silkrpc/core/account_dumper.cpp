@@ -84,7 +84,7 @@ asio::awaitable<void> AccountDumper::load_accounts(ethdb::TransactionDatabase& t
     for (auto kv : collected_data) {
         const auto address = silkworm::to_evmc_address(kv.key);
 
-        auto [account, err]{silkworm::decode_account_from_storage(kv.value)};
+        auto [account, err]{silkworm::Account::from_encoded_storage(kv.value)};
         silkworm::rlp::success_or_throw(err);
 
         DumpAccount dump_account;

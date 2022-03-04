@@ -37,7 +37,7 @@ asio::awaitable<std::optional<silkworm::Account>> StateReader::read_account(cons
         co_return std::nullopt;
     }
 
-    auto [account, err]{silkworm::decode_account_from_storage(*encoded)};
+    auto [account, err]{silkworm::Account::from_encoded_storage(*encoded)};
     silkworm::rlp::success_or_throw(err); // TODO(canepat) suggest rename as throw_if_error or better throw_if(err != kOk)
 
     if (account.incarnation > 0 && account.code_hash == silkworm::kEmptyHash) {
