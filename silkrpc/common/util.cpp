@@ -157,29 +157,29 @@ bool is_replay_protected(const silkworm::Transaction& txn) {
     return false;
 }
 
-std::string decoding_result_to_string(silkworm::rlp::DecodingResult decode_result) {
+std::string decoding_result_to_string(silkworm::DecodingResult decode_result) {
     switch (decode_result) {
-        case silkworm::rlp::DecodingResult::kOverflow:
+        case silkworm::DecodingResult::kOverflow:
             return "rlp: uint overflow";
-        case silkworm::rlp::DecodingResult::kLeadingZero:
+        case silkworm::DecodingResult::kLeadingZero:
             return "rlp: leading Zero";
-        case silkworm::rlp::DecodingResult::kInputTooShort:
+        case silkworm::DecodingResult::kInputTooShort:
             return "rlp: element is larger than containing list";
-        case silkworm::rlp::DecodingResult::kNonCanonicalSingleByte:
+        case silkworm::DecodingResult::kNonCanonicalSingleByte:
             return "rlp: non-canonical integer format";
-        case silkworm::rlp::DecodingResult::kNonCanonicalSize:
+        case silkworm::DecodingResult::kNonCanonicalSize:
             return "rlp: non-canonical size information";
-        case silkworm::rlp::DecodingResult::kUnexpectedLength:
+        case silkworm::DecodingResult::kUnexpectedLength:
             return "rlp: unexpected Length";
-        case silkworm::rlp::DecodingResult::kUnexpectedString:
+        case silkworm::DecodingResult::kUnexpectedString:
             return "rlp: unexpected String";
-        case silkworm::rlp::DecodingResult::kUnexpectedList:
+        case silkworm::DecodingResult::kUnexpectedList:
             return "rlp: element is larger than containing list";
-        case silkworm::rlp::DecodingResult::kListLengthMismatch:
+        case silkworm::DecodingResult::kListLengthMismatch:
             return "rlp: list Length Mismatch";
-        case silkworm::rlp::DecodingResult::kInvalidVInSignature: // v != 27 && v != 28 && v < 35, see EIP-155
+        case silkworm::DecodingResult::kInvalidVInSignature: // v != 27 && v != 28 && v < 35, see EIP-155
             return "rlp: invalid V in signature";
-        case silkworm::rlp::DecodingResult::kUnsupportedTransactionType:
+        case silkworm::DecodingResult::kUnsupportedTransactionType:
             return "rlp: unknown tx type prefix";
         default:
             return "unknownError";
