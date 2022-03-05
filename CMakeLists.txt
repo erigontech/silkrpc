@@ -26,8 +26,6 @@ if(NOT CMAKE_TOOLCHAIN_FILE)
   set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/silkworm/cmake/toolchain/cxx20.cmake CACHE FILEPATH "" FORCE)
 endif()
 
-include(silkworm/third_party/evmone/cmake/cable/bootstrap.cmake)
-include(CableBuildInfo)
 include(silkworm/evmone/cmake/cable/HunterGate.cmake)
 HunterGate(
   URL "https://github.com/cpp-pm/hunter/archive/v0.23.317.tar.gz"
