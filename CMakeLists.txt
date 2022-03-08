@@ -28,7 +28,7 @@ endif()
 
 include(silkworm/third_party/evmone/cmake/cable/bootstrap.cmake)
 include(CableBuildInfo)
-include(silkworm/third_party/evmone/cmake/cable/HunterGate.cmake)
+include(silkworm/evmone/cmake/cable/HunterGate.cmake)
 HunterGate(
   URL "https://github.com/cpp-pm/hunter/archive/v0.23.317.tar.gz"
   SHA1 "fbdd94b1966d351384e27b02c8d134915b1131d6"
