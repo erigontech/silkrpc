@@ -39,7 +39,7 @@ class RpcApiTable;
 class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, TurboGethRpcApi, TraceRpcApi, EngineRpcApi {
 public:
     explicit RpcApi(Context& context, asio::thread_pool& workers) :
-        EthereumRpcApi{context, workers}, NetRpcApi{context.backend}, Web3RpcApi{context}, DebugRpcApi{context.database},
+        EthereumRpcApi{context, workers}, NetRpcApi{context.backend}, Web3RpcApi{context}, DebugRpcApi{context, workers},
         ParityRpcApi{context.database}, TurboGethRpcApi{context.database}, TraceRpcApi{context.database},
         EngineRpcApi(context.backend) {}
     virtual ~RpcApi() {}

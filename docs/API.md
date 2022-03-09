@@ -81,8 +81,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | debug_storageRangeAt                       | Yes          |                                            |
 | debug_traceBlockByHash                     | -            | not yet implemented                        |
 | debug_traceBlockByNumber                   | -            | not yet implemented                        |
-| debug_traceTransaction                     | -            | not yet implemented                        |
-| debug_traceCall                            | -            | not yet implemented                        |
+| debug_traceTransaction                     | Yes          |                                            |
+| debug_traceCall                            | Yes          |                                            |
 |                                            |              |                                            |
 | trace_call                                 | -            | not yet implemented                        |
 | trace_callMany                             | -            | not yet implemented                        |

@@ -17,6 +17,7 @@
 #ifndef SILKRPC_CORE_EVM_EXECUTOR_HPP_
 #define SILKRPC_CORE_EVM_EXECUTOR_HPP_
 
+#include <memory>
 #include <string>
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
@@ -26,6 +27,7 @@
 #include <silkworm/execution/evm.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
+#include <silkworm/core/silkworm/execution/evm.hpp>
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 
@@ -48,13 +50,13 @@ public:
     static std::string get_error_message(int64_t error_code, const silkworm::Bytes& error_data);
 
     explicit EVMExecutor(const Context& context, const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config, asio::thread_pool& workers, uint64_t block_number)
-    : context_(context), db_reader_(db_reader), config_(config), workers_{workers}, buffer_{*context.io_context, db_reader, block_number} {}
+    : context_(context), db_reader_(db_reader), config_(config), workers_{workers}, buffer_{*context.io_context, db_reader, block_number}, state_{buffer_} {}
     virtual ~EVMExecutor() {}
 
     EVMExecutor(const EVMExecutor&) = delete;
     EVMExecutor& operator=(const EVMExecutor&) = delete;
 
-    asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn);
+    asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, std::shared_ptr<silkworm::EvmTracer> tracer = {});
 
 private:
     std::optional<std::string> pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0);
@@ -64,6 +66,7 @@ private:
     const silkworm::ChainConfig& config_;
     asio::thread_pool& workers_;
     state::RemoteBuffer buffer_;
+    WorldState state_;
 };
 
 } // namespace silkrpc

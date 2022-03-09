@@ -26,6 +26,7 @@
 #include <nlohmann/json.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/db/access_layer.hpp>
+#include <silkworm/db/prune_mode.hpp>
 
 namespace silkrpc {
 
