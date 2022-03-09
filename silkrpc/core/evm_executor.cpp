@@ -155,7 +155,6 @@ std::string EVMExecutor<WorldState, VM>::get_error_message(int64_t error_code, c
 
 template<typename WorldState, typename VM>
 std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0) {
-    // const WorldState& state{evm.state()};
     const evmc_revision rev{evm.revision()};
 
     if (rev >= EVMC_LONDON) {
@@ -194,7 +193,6 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
         [this, &block, &txn, tracer, &out](auto&& self) {
             SILKRPC_TRACE << "EVMExecutor::call post block: " << block.header.number << " txn: " << &txn << "\n";
             asio::post(workers_, [this, &block, &txn, tracer, &out, self = std::move(self)]() mutable {
-                // WorldState state{buffer_};
                 VM evm{block, state_, config_};
                 if (tracer) {
                     evm.add_tracer(*tracer);
