@@ -183,8 +183,20 @@ asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& reader, con
     try {
         silkworm::ByteView data_view{data};
         auto stored_body{silkworm::db::detail::decode_stored_block_body(data_view)};
-        SILKRPC_DEBUG << "base_txn_id: " << stored_body.base_txn_id << " txn_count: " << stored_body.txn_count << "\n";
         auto transactions = co_await read_transactions(reader, stored_body.base_txn_id, stored_body.txn_count);
+        if (transactions.size() != 0) {
+           auto senders = co_await read_senders(reader, block_hash, block_number);
+           if (senders.size() != transactions.size()) {
+              SILKRPC_ERROR << "block_number << : " << block_number << " block_hash: " << block_hash << "\n";
+              SILKRPC_ERROR << "senders.size(): " << senders.size() << " transactions.size(): " << transactions.size() << "\n";
+              SILKRPC_ERROR << "senders.size(): " << senders.size() << " transactions.size(): " << transactions.size() << "\n";
+              SILKRPC_ERROR << "base_txn_id: " << stored_body.base_txn_id << " txn_count: " << stored_body.txn_count << "\n";
+              throw std::runtime_error{"#senders and #transactions do not match in in read_body"};
+           }
+           for (size_t i{0}; i < transactions.size(); i++) {
+              transactions[i].from = senders[i];
+           }
+        }
 
         silkworm::BlockBody body{transactions, stored_body.ommers};
         co_return body;
