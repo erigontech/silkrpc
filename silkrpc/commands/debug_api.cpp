@@ -280,9 +280,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann
         config = params[1].get<trace::TraceConfig>();
     }
 
-    SILKRPC_DEBUG << "transaction_hash: " << transaction_hash
-        << " config: {" << config << "}"
-        << "\n";
+    SILKRPC_DEBUG << "transaction_hash: " << transaction_hash << " config: {" << config << "}\n";
 
     auto tx = co_await database_->begin();
 
@@ -335,10 +333,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json&
         config = params[2].get<trace::TraceConfig>();
     }
 
-    SILKRPC_DEBUG << "call: " << call
-        << " block_number_or_hash: " << block_number_or_hash
-        << " config: {" << config << "}"
-        << "\n";
+    SILKRPC_DEBUG << "call: " << call << " block_number_or_hash: " << block_number_or_hash << " config: {" << config << "}\n";
 
     auto tx = co_await database_->begin();
 
@@ -376,10 +371,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json&
 asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::TransactionDatabase& tx_database, uint64_t start_block_number, uint64_t end_block_number) {
     auto last_block_number = co_await silkrpc::core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
 
-    SILKRPC_DEBUG << "last_block_number: " << last_block_number
-        << " start_block_number: " << start_block_number
-        << " end_block_number: " << end_block_number
-        << "\n";
+    SILKRPC_DEBUG << "last_block_number: " << last_block_number << " start_block_number: " << start_block_number << " end_block_number: " << end_block_number << "\n";
 
     std::set<evmc::address> addresses;
     if (start_block_number > last_block_number) {
