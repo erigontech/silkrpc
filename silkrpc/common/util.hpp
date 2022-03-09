@@ -104,15 +104,19 @@ inline std::ostream& operator<<(std::ostream& out, const silkworm::ByteView& byt
     return out;
 }
 
-inline std::ostream& operator<<(std::ostream& out, const evmc::address& addr) {
+namespace evmc {
+
+inline std::ostream& operator<<(std::ostream& out, const address& addr) {
     out << silkworm::to_hex(addr);
     return out;
 }
 
-inline std::ostream& operator<<(std::ostream& out, const evmc::bytes32& b32) {
+inline std::ostream& operator<<(std::ostream& out, const bytes32& b32) {
     out << silkworm::to_hex(b32);
     return out;
 }
+
+} // namespace evmc
 
 namespace intx {
 template <unsigned N>

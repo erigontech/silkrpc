@@ -25,7 +25,7 @@
 #include <intx/intx.hpp>
 #include <nlohmann/json.hpp>
 #include <silkworm/common/util.hpp>
-#include <silkworm/db/storage.hpp>
+#include <silkworm/db/prune_mode.hpp>
 
 namespace silkrpc {
 

@@ -33,6 +33,8 @@ using Catch::Matchers::Message;
 using evmc::literals::operator""_address;
 
 TEST_CASE("EVMexecutor") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+
     class StubDatabase : public core::rawdb::DatabaseReader {
         asio::awaitable<KeyValue> get(const std::string& table, const silkworm::ByteView& key) const override {
             co_return KeyValue{};

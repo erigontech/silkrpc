@@ -29,9 +29,11 @@
 #include <intx/intx.hpp>
 #include <silkworm/chain/intrinsic_gas.hpp>
 #include <silkworm/common/util.hpp>
+#include <silkworm/evmone/lib/evmone/vm.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/core/evm_tracing.hpp>
 
 namespace silkrpc {
 
@@ -153,7 +155,6 @@ std::string EVMExecutor<WorldState, VM>::get_error_message(int64_t error_code, c
 
 template<typename WorldState, typename VM>
 std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0) {
-    const WorldState& state{evm.state()};
     const evmc_revision rev{evm.revision()};
 
     if (rev >= EVMC_LONDON) {
@@ -183,18 +184,22 @@ std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm,
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn) {
+asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn, std::shared_ptr<silkworm::EvmTracer> tracer) {
     SILKRPC_DEBUG << "EVMExecutor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " start\n";
 
+    std::ostringstream out;
+
     const auto exec_result = co_await asio::async_compose<decltype(asio::use_awaitable), void(ExecutionResult)>(
-        [this, &block, &txn](auto&& self) {
+        [this, &block, &txn, tracer, &out](auto&& self) {
             SILKRPC_TRACE << "EVMExecutor::call post block: " << block.header.number << " txn: " << &txn << "\n";
-            asio::post(workers_, [this, &block, &txn, self = std::move(self)]() mutable {
-                WorldState state{buffer_};
-                VM evm{block, state, config_};
+            asio::post(workers_, [this, &block, &txn, tracer, &out, self = std::move(self)]() mutable {
+                VM evm{block, state_, config_};
+                if (tracer) {
+                    evm.add_tracer(*tracer);
+                }
 
                 assert(txn.from.has_value());
-                state.access_account(*txn.from);
+                state_.access_account(*txn.from);
 
                 const evmc_revision rev{evm.revision()};
                 const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
@@ -219,7 +224,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 } else {
                    want = 0;
                 }
-                const auto have = state.get_balance(*txn.from);
+                const auto have = state_.get_balance(*txn.from);
                 if (have < want + txn.value) {
                    silkworm::Bytes data{};
                    std::string from = silkworm::to_hex(*txn.from);
@@ -230,17 +235,17 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                    });
                    return;
                 }
-                state.subtract_from_balance(*txn.from, want);
+                state_.subtract_from_balance(*txn.from, want);
 
                 if (txn.to.has_value()) {
-                    state.access_account(*txn.to);
+                    state_.access_account(*txn.to);
                     // EVM itself increments the nonce for contract creation
-                    state.set_nonce(*txn.from, txn.nonce + 1);
+                    state_.set_nonce(*txn.from, txn.nonce + 1);
                 }
                 for (const silkworm::AccessListEntry& ae : txn.access_list) {
-                    state.access_account(ae.account);
+                    state_.access_account(ae.account);
                     for (const evmc::bytes32& key : ae.storage_keys) {
-                        state.access_storage(ae.account, key);
+                        state_.access_storage(ae.account, key);
                     }
                 }
 
