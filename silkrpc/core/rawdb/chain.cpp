@@ -185,7 +185,17 @@ asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& reader, con
         auto stored_body{silkworm::db::detail::decode_stored_block_body(data_view)};
         SILKRPC_DEBUG << "base_txn_id: " << stored_body.base_txn_id << " txn_count: " << stored_body.txn_count << "\n";
         auto transactions = co_await read_transactions(reader, stored_body.base_txn_id, stored_body.txn_count);
-
+        if (transactions.size() != 0) {
+           auto senders = co_await read_senders(reader, block_hash, block_number);
+           if (senders.size() != transactions.size()) {
+              SILKRPC_ERROR << "block_number << : " << block_number << " block_hash: " << block_hash << "\n";
+              SILKRPC_ERROR << "senders.size: " << senders.size() << " transactions.size: " << transactions.size() << "\n";
+              throw std::runtime_error{"#senders and #transactions do not match in read_body"};
+           }
+           for (size_t i{0}; i < transactions.size(); i++) {
+              transactions[i].from = senders[i];
+           }
+        }
         silkworm::BlockBody body{transactions, stored_body.ommers};
         co_return body;
     } catch (silkworm::rlp::DecodingError error) {
@@ -283,7 +293,7 @@ asio::awaitable<Receipts> read_raw_receipts(const DatabaseReader& reader, const 
 asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     auto receipts = co_await read_raw_receipts(reader, block_hash, block_number);
     auto body = co_await read_body(reader, block_hash, block_number);
-    auto senders = co_await read_senders(reader, block_hash, block_number);
+    //auto senders = co_await read_senders(reader, block_hash, block_number);
 
     // Add derived fields to the receipts
     auto transactions = body.transactions;
@@ -291,8 +301,8 @@ asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc
     if (body.transactions.size() != receipts.size()) {
         throw std::runtime_error{"#transactions and #receipts do not match in read_receipts"};
     }
-    if (senders.size() != receipts.size()) {
-        throw std::runtime_error{"#senders and #receipts do not match in in read_receipts"};
+    if (transactions.size() != receipts.size()) {
+        throw std::runtime_error{"#transactions and #receipts do not match in read_receipts"};
     }
     size_t log_index{0};
     for (size_t i{0}; i < receipts.size(); i++) {
@@ -306,7 +316,7 @@ asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc
 
         // When tx receiver is not set, create a contract with address depending on tx sender and its nonce
         if (!transactions[i].to.has_value()) {
-            receipts[i].contract_address = silkworm::create_address(senders[i], transactions[i].nonce);
+            receipts[i].contract_address = silkworm::create_address(*transactions[i].from, transactions[i].nonce);
         }
 
         // The gas used can be calculated by the previous receipt
@@ -316,7 +326,7 @@ asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc
             receipts[i].gas_used = receipts[i].cumulative_gas_used - receipts[i-1].cumulative_gas_used;
         }
 
-        receipts[i].from = senders[i];
+        receipts[i].from = transactions[i].from;
         receipts[i].to = transactions[i].to;
         receipts[i].type = static_cast<uint8_t>(transactions[i].type);
 
