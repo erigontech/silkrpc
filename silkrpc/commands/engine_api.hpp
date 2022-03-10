@@ -33,6 +33,7 @@ namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
+// engine rpc api
 class EngineRpcApi {
 public:
     explicit EngineRpcApi(std::unique_ptr<ethbackend::BackEnd>& backend): backend_(backend) {}
