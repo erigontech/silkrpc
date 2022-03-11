@@ -90,7 +90,6 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
 
         auto tx = co_await database_->begin();
         ethdb::TransactionDatabase tx_database{*tx};
-        
         const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
         SILKRPC_DEBUG << "chain config: " << chain_config << "\n";
 

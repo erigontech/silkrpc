@@ -1414,7 +1414,7 @@ TEST_CASE("serialize transition configuratin", "[silkrpc::json][to_json]") {
     })");
 }
 
-TEST_CASE("deserialize transition configuration", "[silkrpc::json][from_json]"){
+TEST_CASE("deserialize transition configuration", "[silkrpc::json][from_json]") {
     silkrpc::TransitionConfiguration actual_transition_configuration = R"({
         "totalTerminalDifficulty":"0xf4240",
         "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32",
