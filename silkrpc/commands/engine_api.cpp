@@ -112,7 +112,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
         }
 
         if(config->terminal_block_hash != cl_configuration.terminal_block_hash){
-            SILKRPC_ERROR << "executioon layer has the incorrect terminal block hash, expected: " << cl_configuration.terminal_block_hash << " got: " << *config->terminal_block_hash << "\n";
+            SILKRPC_ERROR << "execution layer has the incorrect terminal block hash, expected: " << cl_configuration.terminal_block_hash << " got: " << *config->terminal_block_hash << "\n";
             reply = make_json_error(request.at("id"), 100, "incorrect terminal block hash");
         }
 
