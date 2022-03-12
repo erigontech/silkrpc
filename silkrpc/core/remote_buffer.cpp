@@ -57,8 +57,8 @@ asio::awaitable<std::optional<silkworm::BlockHeader>> AsyncRemoteBuffer::read_he
     co_return co_await core::rawdb::read_header(db_reader_, block_hash, block_number);
 }
 
-asio::awaitable<std::optional<silkworm::BlockBody>> AsyncRemoteBuffer::read_body(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
-    co_return co_await core::rawdb::read_body(db_reader_, block_hash, block_number);
+asio::awaitable<bool> AsyncRemoteBuffer::read_body(uint64_t block_number, const evmc::bytes32& block_hash, silkworm::BlockBody& filled_body) const noexcept {
+    co_return co_await core::rawdb::read_body(db_reader_, block_hash, block_number, filled_body);
 }
 
 asio::awaitable<std::optional<intx::uint256>> AsyncRemoteBuffer::total_difficulty(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
@@ -138,11 +138,10 @@ std::optional<silkworm::BlockHeader> RemoteBuffer::read_header(uint64_t block_nu
 bool RemoteBuffer::read_body(uint64_t block_number, const evmc::bytes32& block_hash, silkworm::BlockBody& filled_body) const noexcept {
     SILKRPC_DEBUG << "RemoteBuffer::read_body block_number=" << block_number << " block_hash=" << block_hash << "\n";
     try {
-        std::future<std::optional<silkworm::BlockBody>> result{asio::co_spawn(io_context_, async_buffer_.read_body(block_number, block_hash), asio::use_future)};
-        const auto optional_body{result.get()};
+        auto result{asio::co_spawn(io_context_, async_buffer_.read_body(block_number, block_hash, filled_body), asio::use_future)};
         SILKRPC_DEBUG << "RemoteBuffer::read_body block_number=" << block_number << " block_hash=" << block_hash << "\n";
-        filled_body = *optional_body;
-        return true;
+        bool isBodyFilled{result.get()};
+        return isBodyFilled;
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "RemoteBuffer::read_body exception: " << e.what() << "\n";
         return false;
