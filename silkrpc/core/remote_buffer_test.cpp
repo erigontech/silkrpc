@@ -404,7 +404,8 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         const uint64_t block_number = 1'000'000;
         const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
         AsyncRemoteBuffer arb{io_context, db_reader, block_number};
-        auto future_code{asio::co_spawn(io_context, arb.read_body(block_number, block_hash), asio::use_future)};
+        silkworm::BlockBody body;
+        auto future_code{asio::co_spawn(io_context, arb.read_body(block_number, block_hash, body), asio::use_future)};
         io_context.run();
         CHECK_THROWS_AS(future_code.get(), std::exception);
     }

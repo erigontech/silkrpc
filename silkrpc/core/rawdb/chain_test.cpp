@@ -904,7 +904,8 @@ TEST_CASE("read_body") {
         EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
         ));
-        auto result = asio::co_spawn(pool, read_body(db_reader, block_hash, block_number), asio::use_future);
+        silkworm::BlockBody body;
+        auto result = asio::co_spawn(pool, read_body(db_reader, block_hash, block_number, body), asio::use_future);
         CHECK_THROWS_MATCHES(result.get(), std::runtime_error, Message("empty block body RLP in read_body"));
     }
 
@@ -914,7 +915,8 @@ TEST_CASE("read_body") {
         EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{0x00, 0x01}}; }
         ));
-        auto result = asio::co_spawn(pool, read_body(db_reader, block_hash, block_number), asio::use_future);
+        silkworm::BlockBody body;
+        auto result = asio::co_spawn(pool, read_body(db_reader, block_hash, block_number, body), asio::use_future);
         CHECK_THROWS_AS(result.get(), std::runtime_error);
     }
 
@@ -927,8 +929,8 @@ TEST_CASE("read_body") {
         EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<void> { co_return; }
         ));
-        auto result = asio::co_spawn(pool, read_body(db_reader, block_hash, block_number), asio::use_future);
-        const silkworm::BlockBody body = result.get();
+        silkworm::BlockBody body;
+        asio::co_spawn(pool, read_body(db_reader, block_hash, block_number, body), asio::use_future);
         check_expected_block_body(body);
     }
 }

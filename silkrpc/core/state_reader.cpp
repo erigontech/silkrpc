@@ -136,5 +136,4 @@ asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_sto
 
     co_return value;
 }
-
 } // namespace silkrpc
