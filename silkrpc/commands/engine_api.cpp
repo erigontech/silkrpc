@@ -117,8 +117,8 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
             reply = make_json_error(request.at("id"), 100, "incorrect terminal block hash");
         }
         TransitionConfiguration transition_configuration {
-            .terminal_total_difficulty = *config->terminal_total_difficulty, 
-            .terminal_block_hash = *config->terminal_block_hash, 
+            .terminal_total_difficulty = *config->terminal_total_difficulty,
+            .terminal_block_hash = *config->terminal_block_hash,
             .terminal_block_number = 0
         };
         reply = transition_configuration;

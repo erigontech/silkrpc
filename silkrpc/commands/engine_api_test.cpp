@@ -283,7 +283,6 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     auto tx = co_await databse_->begin();
     ethdb::TransactionDatabase tx_databse(*tx);
-
     const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};    
     chain_config.terminal_total_difficulty = 0xf4248;
     chain_config.terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32;
@@ -325,8 +324,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
     auto tx = co_await databse_->begin();
     ethdb::TransactionDatabase tx_databse(*tx);
 
-    const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
-    
+    const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};    
     chain_config.terminal_total_difficulty = 0xf4248;
     chain_config.terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de0000_bytes32;
     chain_config.terminal_block_number = 0x0;
@@ -367,8 +365,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
     auto tx = co_await databse_->begin();
     ethdb::TransactionDatabase tx_databse(*tx);
 
-    const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
-    
+    const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};    
     chain_config.terminal_total_difficulty = std::nullopt;
     chain_config.terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de0000_bytes32;
     chain_config.terminal_block_number = 0x0;
@@ -401,7 +398,6 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
         "id":1,
         "jsonrpc":"2.0" 
     })"_json);
-
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if request has wrong params", "[silkrpc][engine_api]") {
