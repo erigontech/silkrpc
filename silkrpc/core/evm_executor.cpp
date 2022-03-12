@@ -29,7 +29,6 @@
 #include <intx/intx.hpp>
 #include <silkworm/chain/intrinsic_gas.hpp>
 #include <silkworm/common/util.hpp>
-#include <silkworm/third_party/evmone/lib/evmone/vm.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
