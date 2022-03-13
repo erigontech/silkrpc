@@ -293,7 +293,6 @@ asio::awaitable<Receipts> read_raw_receipts(const DatabaseReader& reader, const 
 asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     auto receipts = co_await read_raw_receipts(reader, block_hash, block_number);
     auto body = co_await read_body(reader, block_hash, block_number);
-    //auto senders = co_await read_senders(reader, block_hash, block_number);
 
     // Add derived fields to the receipts
     auto transactions = body.transactions;
