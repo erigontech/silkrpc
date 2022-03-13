@@ -923,12 +923,6 @@ TEST_CASE("read_body") {
     SECTION("block found and matching") {
         const auto block_hash{0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32};
         const uint64_t block_number{4'000'000};
-        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kBody}; }
-        ));
-        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<void> { co_return; }
-        ));
         silkworm::BlockBody body;
         asio::co_spawn(pool, read_body(db_reader, block_hash, block_number, body), asio::use_future);
         check_expected_block_body(body);
