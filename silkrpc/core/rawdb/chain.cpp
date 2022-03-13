@@ -142,8 +142,7 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_transaction_hash(const Da
 asio::awaitable<silkworm::BlockWithHash> read_block(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     auto header = co_await read_header(reader, block_hash, block_number);
     SILKRPC_INFO << "header: number=" << header.number << "\n";
-    silkworm::BlockBody body;
-    co_await read_body(reader, block_hash, block_number, body);
+    auto body = co_await read_body(reader, block_hash, block_number);
     SILKRPC_INFO << "body: #txn=" << body.transactions.size() << " #ommers=" << body.ommers.size() << "\n";
     silkworm::BlockWithHash block{silkworm::Block{body.transactions, body.ommers, header}, block_hash};
     co_return block;
@@ -174,7 +173,7 @@ asio::awaitable<silkworm::BlockHeader> read_header(const DatabaseReader& reader,
     co_return header;
 }
 
-asio::awaitable<bool> read_body(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number, silkworm::BlockBody& filled_body) {
+asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     const auto data = co_await read_body_rlp(reader, block_hash, block_number);
     if (data.empty()) {
         throw std::runtime_error{"empty block body RLP in read_body"};
@@ -188,8 +187,7 @@ asio::awaitable<bool> read_body(const DatabaseReader& reader, const evmc::bytes3
         auto transactions = co_await read_transactions(reader, stored_body.base_txn_id, stored_body.txn_count);
 
         silkworm::BlockBody body{transactions, stored_body.ommers};
-        filled_body = body;
-        co_return true;
+        co_return body;
     } catch (silkworm::rlp::DecodingError error) {
         SILKRPC_ERROR << "RLP decoding error for block body #" << block_number << " [" << error.what() << "]\n";
         throw std::runtime_error{"RLP decoding error for block body [" + std::string(error.what()) + "]"};
@@ -284,8 +282,7 @@ asio::awaitable<Receipts> read_raw_receipts(const DatabaseReader& reader, const 
 
 asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     auto receipts = co_await read_raw_receipts(reader, block_hash, block_number);
-    silkworm::BlockBody body;
-    co_await read_body(reader, block_hash, block_number, body);
+    auto body = co_await read_body(reader, block_hash, block_number);
     auto senders = co_await read_senders(reader, block_hash, block_number);
 
     // Add derived fields to the receipts

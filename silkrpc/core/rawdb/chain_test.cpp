@@ -904,8 +904,7 @@ TEST_CASE("read_body") {
         EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
         ));
-        silkworm::BlockBody body;
-        auto result = asio::co_spawn(pool, read_body(db_reader, block_hash, block_number, body), asio::use_future);
+        auto result = asio::co_spawn(pool, read_body(db_reader, block_hash, block_number), asio::use_future);
         CHECK_THROWS_MATCHES(result.get(), std::runtime_error, Message("empty block body RLP in read_body"));
     }
 
@@ -915,16 +914,21 @@ TEST_CASE("read_body") {
         EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{0x00, 0x01}}; }
         ));
-        silkworm::BlockBody body;
-        auto result = asio::co_spawn(pool, read_body(db_reader, block_hash, block_number, body), asio::use_future);
+        auto result = asio::co_spawn(pool, read_body(db_reader, block_hash, block_number), asio::use_future);
         CHECK_THROWS_AS(result.get(), std::runtime_error);
     }
 
-    SECTION("block found and matching") {
+     SECTION("block found and matching") {
         const auto block_hash{0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32};
         const uint64_t block_number{4'000'000};
-        silkworm::BlockBody body;
-        asio::co_spawn(pool, read_body(db_reader, block_hash, block_number, body), asio::use_future);
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kBody}; }
+        ));
+        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(InvokeWithoutArgs(
+             []() -> asio::awaitable<void> { co_return; }
+        ));
+        auto result = asio::co_spawn(pool, read_body(db_reader, block_hash, block_number), asio::use_future);
+        const silkworm::BlockBody body = result.get();
         check_expected_block_body(body);
     }
 }

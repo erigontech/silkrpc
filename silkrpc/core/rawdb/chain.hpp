@@ -64,7 +64,7 @@ asio::awaitable<silkworm::BlockHeader> read_header_by_number(const DatabaseReade
 
 asio::awaitable<silkworm::BlockHeader> read_header(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
 
-asio::awaitable<bool> read_body(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number, silkworm::BlockBody& filled_body);
+asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
 
 asio::awaitable<silkworm::Bytes> read_header_rlp(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
 

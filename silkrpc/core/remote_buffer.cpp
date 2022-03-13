@@ -58,7 +58,8 @@ asio::awaitable<std::optional<silkworm::BlockHeader>> AsyncRemoteBuffer::read_he
 }
 
 asio::awaitable<bool> AsyncRemoteBuffer::read_body(uint64_t block_number, const evmc::bytes32& block_hash, silkworm::BlockBody& filled_body) const noexcept {
-    co_return co_await core::rawdb::read_body(db_reader_, block_hash, block_number, filled_body);
+    filled_body = co_await core::rawdb::read_body(db_reader_, block_hash, block_number);
+    co_return true;
 }
 
 asio::awaitable<std::optional<intx::uint256>> AsyncRemoteBuffer::total_difficulty(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
