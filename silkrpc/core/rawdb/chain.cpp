@@ -297,9 +297,6 @@ asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc
     // Add derived fields to the receipts
     auto transactions = body.transactions;
     SILKRPC_DEBUG << "#transactions=" << body.transactions.size() << " #receipts=" << receipts.size() << "\n";
-    if (body.transactions.size() != receipts.size()) {
-        throw std::runtime_error{"#transactions and #receipts do not match in read_receipts"};
-    }
     if (transactions.size() != receipts.size()) {
         throw std::runtime_error{"#transactions and #receipts do not match in read_receipts"};
     }
