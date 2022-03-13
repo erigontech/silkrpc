@@ -140,8 +140,7 @@ bool RemoteBuffer::read_body(uint64_t block_number, const evmc::bytes32& block_h
     try {
         auto result{asio::co_spawn(io_context_, async_buffer_.read_body(block_number, block_hash, filled_body), asio::use_future)};
         SILKRPC_DEBUG << "RemoteBuffer::read_body block_number=" << block_number << " block_hash=" << block_hash << "\n";
-        bool isBodyFilled{result.get()};
-        return isBodyFilled;
+        return result.get();
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "RemoteBuffer::read_body exception: " << e.what() << "\n";
         return false;
