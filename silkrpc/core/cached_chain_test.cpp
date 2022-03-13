@@ -197,16 +197,15 @@ TEST_CASE("silkrpc::core::read_block_by_number") {
     }
 }
 
-#ifdef notdef
 TEST_CASE("silkrpc::core::read_block_by_hash") {
-    const evmc::bytes32 bh = 0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dfe_bytes32;
+    const evmc::bytes32 bh = 0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32;
     asio::thread_pool pool{1};
     MockDatabaseReader db_reader;
     BlockCache cache(10, true);
 
     SECTION("using valid block_hash") {
-        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<silkworm::Bytes> { co_return kBlockHash; }
+        EXPECT_CALL(db_reader, get(db::table::kHeaderNumbers, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kNumber}; }
         ));
         EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
@@ -222,7 +221,6 @@ TEST_CASE("silkrpc::core::read_block_by_hash") {
         check_expected_block_with_hash(bwh);
     }
 }
-#endif
 
 } // namespace silkrpc::core::rawdb
 
