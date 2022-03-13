@@ -189,7 +189,7 @@ TEST_CASE("account dumper") {
     nlohmann::json json;
 
     json["TxSender"] = {
-          {"0000000002440239", "19a4d418f7887dd4d5123a41b6c8c186686ae8cb"},
+          {"000000000052a0b3e64899e6fe64ebb72b8f65565e9dd765776da064aff9af4601c1efa445dbb0a1", "56768b032fc12d2e911ef654b0054e26a58cef7479a4d418f7887dd4d5123a41b6c8c186686ae8cbf14cd6286564e44223ad6aee242623bf4398f99d8bb2dc06b366a48fbf98824e2d30387b1d8c748823b790f50dacb056c5e1ef6bc33fde744a739633b1b19eff752019cd5108dbef2ff56eb1dd0bb0633dfbfdf2fdb29d1976d70483eff7552de991be5c4ba4880d287d504e503bc5883848cbcce839e495cb9ec8584681f4ffc23029eb5d303370e2112b64f3a3956d084e3f2a24add02c35c8afd09e3e9bf5ca3cd40edc45d29b28442e87892a32b020076d59d978cc9c7a93935fecd66c96e2df5f363dc63bc8784798960e52dde47705f1aa1c21243ea8222dda"},
     };
     json["CanonicalHeader"] = {
         {"000000000052a0b3", "e64899e6fe64ebb72b8f65565e9dd765776da064aff9af4601c1efa445dbb0a1"}
@@ -297,7 +297,6 @@ TEST_CASE("account dumper") {
         CHECK(!account.storage.has_value());
     }
 
-#ifdef notdef
     SECTION("2 result, exclude code and storage") {
         int16_t max_result = 2;
         bool exclude_code = true;
@@ -576,7 +575,6 @@ TEST_CASE("account dumper") {
         CHECK(storage[0x0178b166a1bcfd299a6ce6918f016c8d0c52788988d89f65f5727c2fa97be6e9_bytes32] == *silkworm::from_hex("1e80355e00"));
         CHECK(storage[0xb797965b738ad51ddbf643b315d0421c26972862ca2e64304783dc8930a2b6e8_bytes32] == *silkworm::from_hex("ee6b2800"));
     }
-#endif
 }
 
 }  // namespace silkrpc
