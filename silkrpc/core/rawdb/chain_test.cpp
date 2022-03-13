@@ -1311,7 +1311,7 @@ TEST_CASE("read_receipts") {
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
         ));
         auto result = asio::co_spawn(pool, read_receipts(db_reader, block_hash, block_number), asio::use_future);
-        CHECK_THROWS_MATCHES(result.get(), std::runtime_error, Message("#senders and #transactions do not match in read_body")); 
+        CHECK_THROWS_MATCHES(result.get(), std::runtime_error, Message("#senders and #transactions do not match in read_body"));
     }
 
     SECTION("zero receipts w/ zero transactions and non-zero senders") {
