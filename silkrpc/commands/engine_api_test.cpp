@@ -220,7 +220,8 @@ TEST_CASE("handle_engine_new_payload_v1 fails with invalid amount of params", "[
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(new BackEndMock);
-    EngineRpcApiTest rpc(backend_ptr);
+    std::unique_ptr<ethdb::Database> database;
+    EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
