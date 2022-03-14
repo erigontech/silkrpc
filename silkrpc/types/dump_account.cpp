@@ -59,7 +59,7 @@ void to_json(nlohmann::json& json, const DumpAccount& dump_account) {
     if (dump_account.storage) {
         nlohmann::json storage({});
         for (auto entry : dump_account.storage.value()) {
-            storage["0x" + silkworm::to_hex(entry.first)] = "0x" + silkworm::to_hex(entry.second);
+            storage["0x" + silkworm::to_hex(entry.first)] = silkworm::to_hex(entry.second);
         }
         json["storage"] = storage;
     }
