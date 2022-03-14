@@ -180,7 +180,7 @@ asio::awaitable<void> StorageWalker::storage_range_at(uint64_t block_number, con
     ethdb::TransactionDatabase tx_database{transaction_};
     auto account_data = co_await tx_database.get_one(db::table::kPlainState, full_view(address));
 
-    auto [account, err] = silkworm::decode_account_from_storage(account_data);
+    auto [account, err] = silkworm::Account::from_encoded_storage(account_data);
     silkworm::rlp::success_or_throw(err);
 
     std::set<StorageItem> storage;

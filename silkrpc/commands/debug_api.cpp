@@ -19,12 +19,14 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <ostream>
 #include <sstream>
 #include <vector>
 
 #include <chrono>
 #include <ctime>
 
+#include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/core/silkworm/common/endian.hpp>
 #include <silkworm/core/silkworm/consensus/ethash/engine.hpp>
@@ -34,9 +36,12 @@
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/core/cached_chain.hpp>
 #include <silkrpc/core/account_dumper.hpp>
 #include <silkrpc/core/account_walker.hpp>
 #include <silkrpc/core/blocks.hpp>
+#include <silkrpc/core/evm_executor.hpp>
+#include <silkrpc/core/evm_tracing.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/core/state_reader.hpp>
 #include <silkrpc/core/storage_walker.hpp>
@@ -44,6 +49,7 @@
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/types/block.hpp>
+#include <silkrpc/types/call.hpp>
 #include <silkrpc/types/dump_account.hpp>
 
 namespace silkrpc::commands {
@@ -82,7 +88,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_account_range(const nlohmann::js
     try {
         auto start = std::chrono::system_clock::now();
         AccountDumper dumper{*tx};
-        DumpAccounts dump_accounts = co_await dumper.dump_accounts(block_number_or_hash, start_address, max_result, exclude_code, exclude_storage);
+        DumpAccounts dump_accounts = co_await dumper.dump_accounts(*context_.block_cache, block_number_or_hash, start_address, max_result, exclude_code, exclude_storage);
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
         SILKRPC_DEBUG << "dump_accounts: elapsed " << elapsed_seconds.count() << " sec\n";
@@ -261,12 +267,45 @@ asio::awaitable<void> DebugRpcApi::handle_debug_storage_range_at(const nlohmann:
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_tracetransaction
 asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() < 1) {
+        auto error_msg = "invalid debug_traceTransaction params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    auto transaction_hash = params[0].get<evmc::bytes32>();
+
+    trace::TraceConfig config;
+    if (params.size() > 1) {
+        config = params[1].get<trace::TraceConfig>();
+    }
+
+    SILKRPC_DEBUG << "transaction_hash: " << transaction_hash << " config: {" << config << "}\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+        auto optional_transaction = co_await core::rawdb::read_transaction_by_hash(tx_database, transaction_hash);
+        if (!optional_transaction) {
+            std::ostringstream oss;
+            oss << "transaction 0x" << transaction_hash << " not found";
+            reply = make_json_error(request["id"], -32000, oss.str());
+        } else {
+            auto block_with_hash = co_await core::rawdb::read_block_by_transaction_hash(tx_database, transaction_hash);
+            optional_transaction->recover_sender();
 
-        reply = make_json_error(request["id"], 500, "not yet implemented");
+            trace::TraceExecutor executor{context_, tx_database, workers_, config};
+            const auto result = co_await executor.execute(block_with_hash.block, *optional_transaction);
+
+            if (result.pre_check_error) {
+                reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
+            } else {
+                SILKRPC_INFO << "LOGS size : " << result.trace.trace_logs.size() << "\n";
+                reply = make_json_content(request["id"], result.trace);
+            }
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -281,15 +320,46 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_tracecall
 asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() < 2) {
+        auto error_msg = "invalid debug_traceCall params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto call = params[0].get<Call>();
+    const auto block_number_or_hash = params[1].get<BlockNumberOrHash>();
+    trace::TraceConfig config;
+    if (params.size() > 2) {
+        config = params[2].get<trace::TraceConfig>();
+    }
+
+    SILKRPC_DEBUG << "call: " << call << " block_number_or_hash: " << block_number_or_hash << " config: {" << config << "}\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_error(request["id"], 500, "not yet implemented");
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache, tx_database, block_number_or_hash);
+
+        auto txn = call.to_transaction();
+        silkrpc::Transaction transaction{txn};
+
+        trace::TraceExecutor executor{context_, tx_database, workers_, config};
+        const auto result = co_await executor.execute(block_with_hash.block, call);
+
+        if (result.pre_check_error) {
+            reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
+        } else {
+            reply = make_json_content(request["id"], result.trace);
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
+
+        std::ostringstream oss;
+        oss << "block " << block_number_or_hash.number() << "(" << block_number_or_hash.hash() << ") not found";
+        reply = make_json_error(request["id"], -32000, oss.str());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
@@ -302,10 +372,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json&
 asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::TransactionDatabase& tx_database, uint64_t start_block_number, uint64_t end_block_number) {
     auto last_block_number = co_await silkrpc::core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
 
-    SILKRPC_DEBUG << "last_block_number: " << last_block_number
-        << " start_block_number: " << start_block_number
-        << " end_block_number: " << end_block_number
-        << "\n";
+    SILKRPC_DEBUG << "last_block_number: " << last_block_number << " start_block_number: " << start_block_number << " end_block_number: " << end_block_number << "\n";
 
     std::set<evmc::address> addresses;
     if (start_block_number > last_block_number) {
