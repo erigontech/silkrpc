@@ -274,13 +274,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
             "terminalBlockNumber":"0x0"
         }]
     })"_json;
-
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_engine_transition_configuration_v1(
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    } asio::use_future)};
+    }, asio::use_future)};
     result.get();
 
     CHECK(reply == R"({
@@ -320,12 +321,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
         }]
     })"_json;
 
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_engine_transition_configuration_v1(
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    } asio::use_future)};
+    }, asio::use_future)};
     result.get();
 
     CHECK(reply != R"({
@@ -368,12 +371,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
         }]
     })"_json;
 
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_engine_transition_configuration_v1(
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    } asio::use_future)};
+    }, asio::use_future)};
     result.get();
 
     CHECK(reply != R"({
@@ -415,12 +420,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
         }]
     })"_json;
 
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_engine_transition_configuration_v1(
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    } asio::use_future)};
+    }, asio::use_future)};
     result.get();
 
     CHECK(reply != R"({
@@ -450,12 +457,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if request has wrong 
         "params": []
     })"_json;
 
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_engine_transition_configuration_v1(
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    } asio::use_future)};
+    }, asio::use_future)};
     result.get();
 
     CHECK(reply != R"({
