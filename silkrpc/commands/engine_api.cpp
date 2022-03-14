@@ -119,7 +119,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
         TransitionConfiguration transition_configuration {
             .terminal_total_difficulty = *config->terminal_total_difficulty,
             .terminal_block_hash = *config->terminal_block_hash,
-            .terminal_block_number = 0
+            .terminal_block_number = *config->terminal_block_number
         };
         reply = transition_configuration;
 
