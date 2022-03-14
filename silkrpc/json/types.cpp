@@ -499,14 +499,14 @@ void to_json(nlohmann::json& json, const PayloadStatus& payload_status) {
 }
 
 void to_json(nlohmann::json& json, const TransitionConfiguration& transition_configuration) {
-    json["totalTerminalDifficulty"] = transition_configuration.total_terminal_difficulty;
+    json["totalTerminalDifficulty"] = transition_configuration.terminal_total_difficulty;
     json["terminalBlockHash"] = transition_configuration.terminal_block_hash;
     json["terminalBlockNumber"] = transition_configuration.terminal_block_number;
 }
 
 void from_json(const nlohmann::json& json, TransitionConfiguration& transition_configuration) {
-    transition_configuration = TransiTionConfiguration{
-        .total_terminal_difficulty = json.at("totalTerminalDifficulty").get<intx::uint256>(),
+    transition_configuration = TransitionConfiguration{
+        .terminal_total_difficulty = json.at("totalTerminalDifficulty").get<intx::uint256>(),
         .terminal_block_hash = json.at("terminalBlockHash").get<evmc::bytes32>(),
         .terminal_block_number = static_cast<uint64_t>(std::stol(json.at("terminalBlockNumber").get<std::string>(), 0, 16))
     };
