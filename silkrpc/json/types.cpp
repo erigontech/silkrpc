@@ -499,7 +499,7 @@ void to_json(nlohmann::json& json, const PayloadStatus& payload_status) {
 }
 
 void to_json(nlohmann::json& json, const TransitionConfiguration& transition_configuration) {
-    json["totalTerminalDifficulty"] = transition_configuration.terminal_total_difficulty;
+    json["terminalTotalDifficulty"] = silkrpc::to_quantity(transition_configuration.terminal_total_difficulty);
     json["terminalBlockHash"] = transition_configuration.terminal_block_hash;
     json["terminalBlockNumber"] = transition_configuration.terminal_block_number;
 }
