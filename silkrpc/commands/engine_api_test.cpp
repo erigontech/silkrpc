@@ -273,7 +273,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     result.get();
 
     CHECK(reply == R"({
-        "termintalTotalDifficulty": "0xf4240", 
+        "terminalTotalDifficulty": "0xf4240", 
         "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858", 
         "terminalBlockNumber":"0x0"
         })"_json);
