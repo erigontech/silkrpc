@@ -506,7 +506,7 @@ void to_json(nlohmann::json& json, const TransitionConfiguration& transition_con
 
 void from_json(const nlohmann::json& json, TransitionConfiguration& transition_configuration) {
     transition_configuration = TransitionConfiguration {
-        .terminal_total_difficulty = json.at("totalTerminalDifficulty").get<intx::uint256>(),
+        .terminal_total_difficulty = json.at("terminalTotalDifficulty").get<intx::uint256>(),
         .terminal_block_hash = json.at("terminalBlockHash").get<evmc::bytes32>(),
         .terminal_block_number = json.at("terminalBlockNumber").get<intx::uint256>()
     };
