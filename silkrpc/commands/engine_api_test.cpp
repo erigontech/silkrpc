@@ -53,7 +53,7 @@ public:
 
     using EngineRpcApi::handle_engine_get_payload_v1;
     using EngineRpcApi::handle_engine_new_payload_v1;
-    using EngineRpcApi::handle_engine_transition_configuration_v1;
+    using EngineRpcApi::handle_engine_exchange_transition_configuration_v1;
 };
 
 using testing::InvokeWithoutArgs;
