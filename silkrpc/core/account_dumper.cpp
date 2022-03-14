@@ -27,6 +27,7 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/core/cached_chain.hpp>
 #include <silkrpc/core/account_walker.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/core/state_reader.hpp>
@@ -38,11 +39,12 @@
 
 namespace silkrpc {
 
-asio::awaitable<DumpAccounts> AccountDumper::dump_accounts(const BlockNumberOrHash& bnoh, const evmc::address& start_address, int16_t max_result, bool exclude_code, bool exclude_storage) {
+asio::awaitable<DumpAccounts> AccountDumper::dump_accounts(BlockCache& cache, const BlockNumberOrHash& bnoh, const evmc::address& start_address, int16_t max_result,
+                                                           bool exclude_code, bool exclude_storage) {
     DumpAccounts dump_accounts;
     ethdb::TransactionDatabase tx_database{transaction_};
 
-    const auto block_with_hash = co_await core::rawdb::read_block_by_number_or_hash(tx_database, bnoh);
+    const auto block_with_hash = co_await core::read_block_by_number_or_hash(cache, tx_database, bnoh);
     const auto block_number = block_with_hash.block.header.number;
 
     dump_accounts.root = block_with_hash.block.header.state_root;

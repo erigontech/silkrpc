@@ -17,6 +17,7 @@
 #include "cached_chain.hpp"
 
 #include <silkrpc/core/rawdb/chain.hpp>
+#include <silkrpc/core/blocks.hpp>
 
 namespace silkrpc::core  {
 
@@ -40,6 +41,20 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(BlockCache& cache, c
     cache.insert(block_hash, block_with_hash);
     co_return block_with_hash;
 }
+
+asio::awaitable<silkworm::BlockWithHash> read_block_by_number_or_hash(BlockCache& cache, const rawdb::DatabaseReader& reader, const silkrpc::BlockNumberOrHash& bnoh) {
+    if (bnoh.is_number()) {
+        co_return co_await read_block_by_number(cache, reader, bnoh.number());
+    } else if (bnoh.is_hash()) {
+        co_return co_await read_block_by_hash(cache, reader, bnoh.hash());
+    } else if (bnoh.is_tag()) {
+        auto block_number = co_await get_latest_block_number(reader);
+        co_return co_await read_block_by_number(cache, reader, block_number);
+    }
+
+    throw std::runtime_error{"invalid block_number_or_hash value"};
+}
+
 
 } // namespace silkrpc::core
 

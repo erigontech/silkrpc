@@ -30,6 +30,7 @@
 #include <silkworm/types/account.hpp>
 
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/core/cached_chain.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
 #include <silkrpc/ethdb/database.hpp>
@@ -46,7 +47,8 @@ public:
     AccountDumper(const AccountDumper&) = delete;
     AccountDumper& operator=(const AccountDumper&) = delete;
 
-    asio::awaitable<DumpAccounts> dump_accounts(const BlockNumberOrHash& bnoh, const evmc::address& start_address, int16_t max_result, bool exclude_code, bool exclude_storage);
+    asio::awaitable<DumpAccounts> dump_accounts(BlockCache& cache, const BlockNumberOrHash& bnoh, const evmc::address& start_address, int16_t max_result,
+                                                bool exclude_code, bool exclude_storage);
 
 private:
     asio::awaitable<void> load_accounts(ethdb::TransactionDatabase& tx_database, const std::vector<silkrpc::KeyValue>& collected_data, DumpAccounts& dump_accounts, bool exclude_code);
