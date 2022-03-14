@@ -97,7 +97,7 @@ asio::awaitable<intx::uint256> read_total_difficulty(const DatabaseReader& reade
     }
     intx::uint256 total_difficulty{0};
     auto decoding_result{silkworm::rlp::decode(value, total_difficulty)};
-    if (decoding_result != silkworm::rlp::DecodingResult::kOk) {
+    if (decoding_result != silkworm::DecodingResult::kOk) {
         throw std::runtime_error{"cannot RLP-decode total difficulty value in read_total_difficulty"};
     }
     SILKRPC_DEBUG << "rawdb::read_total_difficulty canonical total difficulty: " << total_difficulty << "\n";
@@ -154,7 +154,7 @@ asio::awaitable<silkworm::BlockHeader> read_header(const DatabaseReader& reader,
     silkworm::ByteView data_view{data};
     silkworm::BlockHeader header{};
     const auto error = silkworm::rlp::decode(data_view, header);
-    if (error != silkworm::rlp::DecodingResult::kOk) {
+    if (error != silkworm::DecodingResult::kOk) {
         throw std::runtime_error{"invalid RLP decoding for block header"};
     }
     co_return header;
@@ -345,7 +345,7 @@ asio::awaitable<Transactions> read_transactions(const DatabaseReader& reader, ui
         silkworm::ByteView value{v};
         silkworm::Transaction tx{};
         const auto error = silkworm::rlp::decode(value, tx);
-        if (error != silkworm::rlp::DecodingResult::kOk) {
+        if (error != silkworm::DecodingResult::kOk) {
             SILKRPC_ERROR << "invalid RLP decoding for transaction index " << i << "\n";
             return false;
         }
