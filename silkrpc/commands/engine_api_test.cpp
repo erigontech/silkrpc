@@ -49,7 +49,7 @@ public:
 
 class EngineRpcApiTest : public EngineRpcApi{
 public:
-    explicit EngineRpcApiTest(std::unique_ptr<ethbackend::BackEnd>& backend): EngineRpcApi(backend) {}
+    explicit EngineRpcApiTest(std::unique_ptr<ethdb::Database>& database, std::unique_ptr<ethbackend::BackEnd>& backend): EngineRpcApi(database, backend) {}
 
     using EngineRpcApi::handle_engine_get_payload_v1;
     using EngineRpcApi::handle_engine_new_payload_v1;
@@ -80,8 +80,9 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
+    std::unique_ptr<ethdb::Database> database;
     // Initialise components
-    EngineRpcApiTest rpc(backend_ptr);
+    EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
@@ -114,7 +115,8 @@ TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(new BackEndMock);
-    EngineRpcApiTest rpc(backend_ptr);
+    std::unique_ptr<ethdb::Database> database;
+    EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
@@ -179,8 +181,9 @@ TEST_CASE("handle_engine_new_payload_v1 succeeds if request is expected payload 
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
+    std::unique_ptr<ethdb::Database> database;
     // Initialise components
-    EngineRpcApiTest rpc(backend_ptr);
+    EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
     auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
