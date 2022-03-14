@@ -26,16 +26,17 @@
 #include <chrono>
 #include <ctime>
 
+#include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/core/silkworm/common/endian.hpp>
 #include <silkworm/core/silkworm/consensus/ethash/engine.hpp>
 #include <silkworm/core/silkworm/state/intra_block_state.hpp>
-#include <silkworm/evmone/evmc/include/evmc/evmc.hpp>
 #include <silkworm/node/silkworm/db/util.hpp>
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/core/cached_chain.hpp>
 #include <silkrpc/core/account_dumper.hpp>
 #include <silkrpc/core/account_walker.hpp>
 #include <silkrpc/core/blocks.hpp>
@@ -87,7 +88,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_account_range(const nlohmann::js
     try {
         auto start = std::chrono::system_clock::now();
         AccountDumper dumper{*tx};
-        DumpAccounts dump_accounts = co_await dumper.dump_accounts(block_number_or_hash, start_address, max_result, exclude_code, exclude_storage);
+        DumpAccounts dump_accounts = co_await dumper.dump_accounts(*context_.block_cache, block_number_or_hash, start_address, max_result, exclude_code, exclude_storage);
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
         SILKRPC_DEBUG << "dump_accounts: elapsed " << elapsed_seconds.count() << " sec\n";
@@ -340,7 +341,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json&
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_with_hash = co_await core::rawdb::read_block_by_number_or_hash(tx_database, block_number_or_hash);
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache, tx_database, block_number_or_hash);
 
         auto txn = call.to_transaction();
         silkrpc::Transaction transaction{txn};

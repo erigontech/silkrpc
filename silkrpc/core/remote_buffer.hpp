@@ -50,7 +50,7 @@ public:
 
     asio::awaitable<std::optional<silkworm::BlockHeader>> read_header(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept;
 
-    asio::awaitable<std::optional<silkworm::BlockBody>> read_body(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept;
+    asio::awaitable<bool> read_body(uint64_t block_number, const evmc::bytes32& block_hash, silkworm::BlockBody& filled_body) const noexcept;
 
     asio::awaitable<std::optional<intx::uint256>> total_difficulty(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept;
 
@@ -82,7 +82,7 @@ public:
 
     std::optional<silkworm::BlockHeader> read_header(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept override;
 
-    std::optional<silkworm::BlockBody> read_body(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept override;
+    bool read_body(uint64_t block_number, const evmc::bytes32& block_hash, silkworm::BlockBody& out) const noexcept override;
 
     std::optional<intx::uint256> total_difficulty(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept override;
 

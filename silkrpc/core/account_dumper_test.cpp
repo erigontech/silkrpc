@@ -181,12 +181,17 @@ private:
     const nlohmann::json& json_;
 };
 
+    const evmc::address start_address{0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address};
 TEST_CASE("account dumper") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
 
     asio::thread_pool pool{1};
     nlohmann::json json;
+    BlockCache block_cache(100, true);
 
+    json["TxSender"] = {
+          {"000000000052a0b3e64899e6fe64ebb72b8f65565e9dd765776da064aff9af4601c1efa445dbb0a1", "56768b032fc12d2e911ef654b0054e26a58cef7479a4d418f7887dd4d5123a41b6c8c186686ae8cbf14cd6286564e44223ad6aee242623bf4398f99d8bb2dc06b366a48fbf98824e2d30387b1d8c748823b790f50dacb056c5e1ef6bc33fde744a739633b1b19eff752019cd5108dbef2ff56eb1dd0bb0633dfbfdf2fdb29d1976d70483eff7552de991be5c4ba4880d287d504e503bc5883848cbcce839e495cb9ec8584681f4ffc23029eb5d303370e2112b64f3a3956d084e3f2a24add02c35c8afd09e3e9bf5ca3cd40edc45d29b28442e87892a32b020076d59d978cc9c7a93935fecd66c96e2df5f363dc63bc8784798960e52dde47705f1aa1c21243ea8222dda"}, //NOLINT
+    };
     json["CanonicalHeader"] = {
         {"000000000052a0b3", "e64899e6fe64ebb72b8f65565e9dd765776da064aff9af4601c1efa445dbb0a1"}
     };
@@ -275,7 +280,7 @@ TEST_CASE("account dumper") {
         int16_t max_result = 1;
         bool exclude_code = true;
         bool exclude_storage = true;
-        auto result = asio::co_spawn(pool, ad.dump_accounts(bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
+        auto result = asio::co_spawn(pool, ad.dump_accounts(block_cache, bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
         const DumpAccounts &da = result.get();
 
         CHECK(da.root == root);
@@ -297,7 +302,7 @@ TEST_CASE("account dumper") {
         int16_t max_result = 2;
         bool exclude_code = true;
         bool exclude_storage = true;
-        auto result = asio::co_spawn(pool, ad.dump_accounts(bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
+        auto result = asio::co_spawn(pool, ad.dump_accounts(block_cache, bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
         const DumpAccounts &da = result.get();
 
         CHECK(da.root == root);
@@ -328,7 +333,7 @@ TEST_CASE("account dumper") {
         int16_t max_result = 3;
         bool exclude_code = true;
         bool exclude_storage = true;
-        auto result = asio::co_spawn(pool, ad.dump_accounts(bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
+        auto result = asio::co_spawn(pool, ad.dump_accounts(block_cache, bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
         const DumpAccounts &da = result.get();
 
         CHECK(da.root == root);
@@ -369,7 +374,7 @@ TEST_CASE("account dumper") {
         int16_t max_result = 1;
         bool exclude_code = false;
         bool exclude_storage = true;
-        auto result = asio::co_spawn(pool, ad.dump_accounts(bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
+        auto result = asio::co_spawn(pool, ad.dump_accounts(block_cache, bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
         const DumpAccounts &da = result.get();
 
         CHECK(da.root == root);
@@ -391,7 +396,7 @@ TEST_CASE("account dumper") {
         int16_t max_result = 2;
         bool exclude_code = false;
         bool exclude_storage = true;
-        auto result = asio::co_spawn(pool, ad.dump_accounts(bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
+        auto result = asio::co_spawn(pool, ad.dump_accounts(block_cache, bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
         const DumpAccounts &da = result.get();
 
         CHECK(da.root == root);
@@ -423,7 +428,7 @@ TEST_CASE("account dumper") {
         int16_t max_result = 3;
         bool exclude_code = false;
         bool exclude_storage = true;
-        auto result = asio::co_spawn(pool, ad.dump_accounts(bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
+        auto result = asio::co_spawn(pool, ad.dump_accounts(block_cache, bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
         const DumpAccounts &da = result.get();
 
         CHECK(da.root == root);
@@ -465,7 +470,7 @@ TEST_CASE("account dumper") {
         int16_t max_result = 1;
         bool exclude_code = false;
         bool exclude_storage = false;
-        auto result = asio::co_spawn(pool, ad.dump_accounts(bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
+        auto result = asio::co_spawn(pool, ad.dump_accounts(block_cache, bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
         const DumpAccounts &da = result.get();
 
         CHECK(da.root == root);
@@ -487,7 +492,7 @@ TEST_CASE("account dumper") {
         int16_t max_result = 2;
         bool exclude_code = false;
         bool exclude_storage = false;
-        auto result = asio::co_spawn(pool, ad.dump_accounts(bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
+        auto result = asio::co_spawn(pool, ad.dump_accounts(block_cache, bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
         const DumpAccounts &da = result.get();
 
         CHECK(da.root == root);
@@ -523,7 +528,7 @@ TEST_CASE("account dumper") {
         int16_t max_result = 3;
         bool exclude_code = false;
         bool exclude_storage = false;
-        auto result = asio::co_spawn(pool, ad.dump_accounts(bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
+        auto result = asio::co_spawn(pool, ad.dump_accounts(block_cache, bnoh, start_address, max_result, exclude_code, exclude_storage), asio::use_future);
         const DumpAccounts &da = result.get();
 
         CHECK(da.root == root);

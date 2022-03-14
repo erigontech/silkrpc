@@ -23,8 +23,8 @@
 #include <evmc/hex.hpp>
 #include <evmc/instructions.h>
 #include <intx/intx.hpp>
-#include <silkworm/evmone/lib/evmone/execution_state.hpp>
-#include <silkworm/evmone/lib/evmone/instructions.hpp>
+#include <silkworm/third_party/evmone/lib/evmone/execution_state.hpp>
+#include <silkworm/third_party/evmone/lib/evmone/instructions.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>

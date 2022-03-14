@@ -57,8 +57,9 @@ asio::awaitable<std::optional<silkworm::BlockHeader>> AsyncRemoteState::read_hea
     co_return co_await core::rawdb::read_header(db_reader_, block_hash, block_number);
 }
 
-asio::awaitable<std::optional<silkworm::BlockBody>> AsyncRemoteState::read_body(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
-    co_return co_await core::rawdb::read_body(db_reader_, block_hash, block_number);
+asio::awaitable<bool> AsyncRemoteState::read_body(uint64_t block_number, const evmc::bytes32& block_hash, silkworm::BlockBody& filled_body) const noexcept {
+    filled_body = co_await core::rawdb::read_body(db_reader_, block_hash, block_number);
+    co_return true;
 }
 
 asio::awaitable<std::optional<intx::uint256>> AsyncRemoteState::total_difficulty(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
@@ -135,16 +136,15 @@ std::optional<silkworm::BlockHeader> RemoteState::read_header(uint64_t block_num
     }
 }
 
-std::optional<silkworm::BlockBody> RemoteState::read_body(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept {
+bool RemoteState::read_body(uint64_t block_number, const evmc::bytes32& block_hash, silkworm::BlockBody& filled_body) const noexcept {
     SILKRPC_DEBUG << "RemoteState::read_body block_number=" << block_number << " block_hash=" << block_hash << "\n";
     try {
-        std::future<std::optional<silkworm::BlockBody>> result{asio::co_spawn(io_context_, async_buffer_.read_body(block_number, block_hash), asio::use_future)};
-        const auto optional_body{result.get()};
+        auto result{asio::co_spawn(io_context_, async_buffer_.read_body(block_number, block_hash, filled_body), asio::use_future)};
         SILKRPC_DEBUG << "RemoteState::read_body block_number=" << block_number << " block_hash=" << block_hash << "\n";
-        return optional_body;
+        return result.get();
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "RemoteState::read_body exception: " << e.what() << "\n";
-        return std::nullopt;
+        return false;
     }
 }
 
