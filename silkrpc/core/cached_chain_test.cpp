@@ -148,9 +148,9 @@ TEST_CASE("read_block_by_number_or_hash") {
         auto result = asio::co_spawn(pool, read_block_by_number_or_hash(cache, db_reader, bnoh), asio::use_future);
         const silkworm::BlockWithHash bwh = result.get();
         check_expected_block_with_hash(bwh);
-    }
+   }
 
-  SECTION("using tag kEarliestBlockId") {
+   SECTION("using tag kEarliestBlockId") {
         BlockNumberOrHash bnoh{kEarliestBlockId};
         BlockCache cache(10, true);
 
@@ -169,7 +169,7 @@ TEST_CASE("read_block_by_number_or_hash") {
         auto result = asio::co_spawn(pool, read_block_by_number_or_hash(cache, db_reader, bnoh), asio::use_future);
         const silkworm::BlockWithHash bwh = result.get();
         check_expected_block_with_hash(bwh);
-    }
+  }
 }
 
 TEST_CASE("silkrpc::core::read_block_by_number") {
@@ -272,7 +272,7 @@ TEST_CASE("read_block_by_transaction_hash") {
         CHECK_THROWS_MATCHES(result.get(), std::runtime_error, Message("empty block header RLP in read_header"));
     }
 
-   SECTION("block body not found") {
+    SECTION("block body not found") {
         const auto transaction_hash{0x18dcb90e76b61fe6f37c9a9cd269a66188c05af5f7a62c50ff3246c6e207dc6d_bytes32};
         EXPECT_CALL(db_reader, get_one(db::table::kTxLookup, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<silkworm::Bytes> { co_return *silkworm::from_hex("3D0900"); }
