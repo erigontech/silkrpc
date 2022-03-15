@@ -283,12 +283,12 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         );
     }, asio::use_future)};
     result.get();
-
-    CHECK(reply == R"({
-        "terminalTotalDifficulty": "0xf4240", 
-        "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858", 
-        "terminalBlockNumber":"0x0"
-        })"_json);
+    CHECK(reply == TransitionConfiguration {
+        .terminal_total_difficulty = 0xf4240, 
+        .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32, 
+        .terminal_block_number = 0x0
+    });
+    context_pool.stop();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has different TTD", "[silkrpc][engine_api]") {
@@ -339,6 +339,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
         "id":1,
         "jsonrpc":"2.0" 
     })"_json);
+    context_pool.stop();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has different terminal block hash", "[silkrpc][engine_api]") {
@@ -389,6 +390,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
         "id":1,
         "jsonrpc":"2.0" 
     })"_json);
+    context_pool.stop();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has no TTD", "[silkrpc][engine_api]") {
@@ -438,6 +440,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
         "id":1,
         "jsonrpc":"2.0" 
     })"_json);
+    context_pool.stop();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if request has wrong params", "[silkrpc][engine_api]") {
@@ -475,5 +478,6 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if request has wrong 
         "id":1,
         "jsonrpc":"2.0" 
     })"_json);
+    context_pool.stop();
 }
 } // namespace silkrpc::commands

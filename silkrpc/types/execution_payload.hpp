@@ -60,7 +60,7 @@ struct PayloadStatus {
 struct TransitionConfiguration{
     intx::uint256 terminal_total_difficulty;
     evmc::bytes32 terminal_block_hash;
-    intx::uint256 terminal_block_number;
+    uint64_t terminal_block_number;
 };
 
 std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload);
