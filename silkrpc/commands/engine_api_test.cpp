@@ -284,8 +284,8 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     }, asio::use_future)};
     result.get();
     CHECK(reply == TransitionConfiguration {
-        .terminal_total_difficulty = 0xf4240, 
-        .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32, 
+        .terminal_total_difficulty = 0xf4240,
+        .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
         .terminal_block_number = 0x0
     });
     context_pool.stop();
@@ -303,7 +303,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
 
     auto chain_config_result{asio::co_spawn(context_pool.get_io_context(), [&tx_database]() { return core::rawdb::read_chain_config(tx_database); }, asio::use_future)};
     const auto& chain_config = chain_config_result.get();
-    
+
     auto config = silkworm::ChainConfig::from_json(chain_config.config);
     config->terminal_total_difficulty = 0xf4248;
     config->terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32;
@@ -354,7 +354,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
 
     auto chain_config_result{asio::co_spawn(context_pool.get_io_context(), [&tx_database]() { return core::rawdb::read_chain_config(tx_database); }, asio::use_future)};
     const auto& chain_config = chain_config_result.get();
-    
+
     auto config = silkworm::ChainConfig::from_json(chain_config.config);
     config->terminal_total_difficulty = 0xf4248;
     config->terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de0000_bytes32;
@@ -405,7 +405,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
 
     auto chain_config_result{asio::co_spawn(context_pool.get_io_context(), [&tx_database]() { return core::rawdb::read_chain_config(tx_database); }, asio::use_future)};
     const auto& chain_config = chain_config_result.get();
-    
+
     auto config = silkworm::ChainConfig::from_json(chain_config.config);
     config->terminal_total_difficulty = std::nullopt;
     config->terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de0000_bytes32;
