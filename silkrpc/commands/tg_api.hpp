@@ -24,6 +24,7 @@
 #include <asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/database.hpp>
@@ -34,7 +35,7 @@ namespace silkrpc::commands {
 
 class TurboGethRpcApi {
 public:
-    explicit TurboGethRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
+    explicit TurboGethRpcApi(Context& context) : database_(context.database), context_(context) {}
     virtual ~TurboGethRpcApi() {}
 
     TurboGethRpcApi(const TurboGethRpcApi&) = delete;
@@ -49,6 +50,7 @@ protected:
 
 private:
     std::unique_ptr<ethdb::Database>& database_;
+    Context& context_;
 
     friend class silkrpc::http::RequestHandler;
 };
