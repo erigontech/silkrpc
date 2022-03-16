@@ -24,6 +24,20 @@
 #include <asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
+// ----
+#include <silkrpc/txpool/transaction_pool.hpp>
+#include <silkworm/types/receipt.hpp>
+#include <silkrpc/context_pool.hpp>
+#include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/croaring/roaring.hh>
+#include <silkrpc/json/types.hpp>
+#include <silkrpc/ethbackend/backend.hpp>
+#include <silkrpc/ethdb/database.hpp>
+#include <silkrpc/ethdb/transaction.hpp>
+#include <silkrpc/types/log.hpp>
+#include <silkrpc/types/receipt.hpp>
+// ----
+
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/database.hpp>
@@ -34,7 +48,7 @@ namespace silkrpc::commands {
 
 class ParityRpcApi {
 public:
-    explicit ParityRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
+    explicit ParityRpcApi(Context& context) : database_(context.database), context_(context) {}
     virtual ~ParityRpcApi() {}
 
     ParityRpcApi(const ParityRpcApi&) = delete;
@@ -45,6 +59,7 @@ protected:
 
 private:
     std::unique_ptr<ethdb::Database>& database_;
+    Context& context_;
 
     friend class silkrpc::http::RequestHandler;
 };
