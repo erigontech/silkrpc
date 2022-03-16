@@ -46,7 +46,6 @@
 
 #include <catch2/catch.hpp>
 
-
 namespace silkrpc::core::rawdb {
 using testing::DoAll;
 using testing::Invoke;
@@ -148,9 +147,9 @@ TEST_CASE("read_block_by_number_or_hash") {
         auto result = asio::co_spawn(pool, read_block_by_number_or_hash(cache, db_reader, bnoh), asio::use_future);
         const silkworm::BlockWithHash bwh = result.get();
         check_expected_block_with_hash(bwh);
-   }
+    }
 
-   SECTION("using tag kEarliestBlockId") {
+    SECTION("using tag kEarliestBlockId") {
         BlockNumberOrHash bnoh{kEarliestBlockId};
         BlockCache cache(10, true);
 
@@ -169,7 +168,7 @@ TEST_CASE("read_block_by_number_or_hash") {
         auto result = asio::co_spawn(pool, read_block_by_number_or_hash(cache, db_reader, bnoh), asio::use_future);
         const silkworm::BlockWithHash bwh = result.get();
         check_expected_block_with_hash(bwh);
-  }
+    }
 }
 
 TEST_CASE("silkrpc::core::read_block_by_number") {
