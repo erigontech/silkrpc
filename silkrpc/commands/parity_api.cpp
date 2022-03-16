@@ -24,6 +24,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/core/blocks.hpp>
+#include <silkrpc/core/cached_chain.hpp>
 #include <silkrpc/core/receipts.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
@@ -50,10 +51,9 @@ asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohm
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_number{co_await core::get_block_number(block_id, tx_database)};
-        const auto block_hash{co_await core::rawdb::read_canonical_block_hash(tx_database, block_number)};
-        const auto block_with_hash{co_await core::rawdb::read_block(tx_database, block_hash, block_number)};
-        auto receipts{co_await core::get_receipts(tx_database, block_hash, block_number)};
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
+        const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache, tx_database, block_number);
+        auto receipts{co_await core::get_receipts(tx_database, block_with_hash.hash, block_with_hash.block.header.number)};
         SILKRPC_INFO << "#receipts: " << receipts.size() << "\n";
 
         const auto block{block_with_hash.block};
