@@ -60,8 +60,4 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_transaction_hash(BlockCac
     co_return co_await read_block_by_number(cache, reader, block_number);
 }
 
-
-
 } // namespace silkrpc::core
-
-
