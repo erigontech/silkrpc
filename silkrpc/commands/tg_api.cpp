@@ -27,6 +27,7 @@
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/consensus/ethash.hpp>
 #include <silkrpc/core/blocks.hpp>
+#include <silkrpc/core/cached_chain.hpp>
 #include <silkrpc/core/receipts.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
@@ -124,8 +125,8 @@ asio::awaitable<void> TurboGethRpcApi::handle_tg_get_logs_by_hash(const nlohmann
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_number{co_await core::rawdb::read_header_number(tx_database, block_hash)};
-        const auto receipts{co_await core::get_receipts(tx_database, block_hash, block_number)};
+        const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache, tx_database, block_hash);
+        const auto receipts{co_await core::get_receipts(tx_database, block_with_hash)};
 
         SILKRPC_DEBUG << "receipts.size(): " << receipts.size() << "\n";
         std::vector<Log> logs{};
