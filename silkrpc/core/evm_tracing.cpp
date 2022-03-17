@@ -137,7 +137,8 @@ void DebugTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState
     assert(execution_state.msg);
     evmc::address recipient(execution_state.msg->recipient);
     evmc::address sender(execution_state.msg->sender);
-    evmone::advanced::Stack _stack{execution_state.stack_space.bottom()};
+    evmone::uint256 stack_bottom = sizeof(execution_state.stack_space);
+    evmone::advanced::Stack stack_{&stack_bottom};
 
     const auto opcode = execution_state.code[pc];
     auto opcode_name = get_opcode_name(opcode_names_, opcode);
@@ -157,15 +158,15 @@ void DebugTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState
 
     bool output_storage = false;
     if (!config_.disableStorage) {
-        if (opcode_name == "SLOAD" && _stack.size() > 0) {
-            const auto address = silkworm::bytes32_from_hex(intx::hex(_stack[0]));
+        if (opcode_name == "SLOAD" && stack_.size() > 0) {
+            const auto address = silkworm::bytes32_from_hex(intx::hex(stack_[0]));
             const auto value = intra_block_state.get_current_storage(recipient, address);
 
             storage_[recipient][silkworm::to_hex(address)] = silkworm::to_hex(value);
             output_storage = true;
-        } else if (opcode_name == "SSTORE" && _stack.size() > 1) {
-            const auto address = silkworm::bytes32_from_hex(intx::hex(_stack[0]));
-            const auto value = silkworm::bytes32_from_hex(intx::hex(_stack[1]));
+        } else if (opcode_name == "SSTORE" && stack_.size() > 1) {
+            const auto address = silkworm::bytes32_from_hex(intx::hex(stack_[0]));
+            const auto value = silkworm::bytes32_from_hex(intx::hex(stack_[1]));
             storage_[recipient][silkworm::to_hex(address)] = silkworm::to_hex(value);
             output_storage = true;
         }
@@ -200,7 +201,7 @@ void DebugTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState
     log.gas = execution_state.gas_left;
     log.depth = execution_state.msg->depth + 1;
     if (!config_.disableStack) {
-        output_stack(log.stack, _stack);
+        output_stack(log.stack, stack_);
     }
     if (!config_.disableMemory) {
         log.memory = current_memory;
