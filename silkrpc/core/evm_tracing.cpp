@@ -86,7 +86,7 @@ std::string get_opcode_name(const char* const* names, std::uint8_t opcode) {
 
 static std::string EMPTY_MEMORY(64, '0');
 
-void output_stack(std::vector<std::string>& vect, const evmone::advance::Stack& stack) {
+void output_stack(std::vector<std::string>& vect, const evmone::advanced::Stack& stack) {
     vect.reserve(stack.size());
     const auto top = stack.size() - 1;
     for (int i = top; i >= 0; --i) {
@@ -137,7 +137,7 @@ void DebugTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState
     assert(execution_state.msg);
     evmc::address recipient(execution_state.msg->recipient);
     evmc::address sender(execution_state.msg->sender);
-    evmc::advance::Stack _stack{execution_state.stack_space};
+    evmc::advanced::Stack _stack{execution_state.stack_space};
 
     const auto opcode = execution_state.code[pc];
     auto opcode_name = get_opcode_name(opcode_names_, opcode);
