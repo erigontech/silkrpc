@@ -71,7 +71,7 @@ public:
     DebugTracer& operator=(const DebugTracer&) = delete;
 
     void on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept override;
-    void on_instruction_start(uint32_t pc, const evmone::advanced::AdvancedExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
+    void on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
 
 private:
