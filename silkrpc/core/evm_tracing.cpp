@@ -133,11 +133,10 @@ void DebugTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
         << "\n";
 }
 
-void DebugTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
+void DebugTracer::on_instruction_start(uint32_t pc, const evmone::advanced::AdvancedExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
     assert(execution_state.msg);
     evmc::address recipient(execution_state.msg->recipient);
     evmc::address sender(execution_state.msg->sender);
-    evmone::advanced::Stack _stack{execution_state.stack_space.bottom()};
 
     const auto opcode = execution_state.code[pc];
     auto opcode_name = get_opcode_name(opcode_names_, opcode);
@@ -157,15 +156,15 @@ void DebugTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState
 
     bool output_storage = false;
     if (!config_.disableStorage) {
-        if (opcode_name == "SLOAD" && _stack.size() > 0) {
-            const auto address = silkworm::bytes32_from_hex(intx::hex(_stack[0]));
+        if (opcode_name == "SLOAD" && execution_state.stack.size() > 0) {
+            const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
             const auto value = intra_block_state.get_current_storage(recipient, address);
 
             storage_[recipient][silkworm::to_hex(address)] = silkworm::to_hex(value);
             output_storage = true;
-        } else if (opcode_name == "SSTORE" && _stack.size() > 1) {
-            const auto address = silkworm::bytes32_from_hex(intx::hex(_stack[0]));
-            const auto value = silkworm::bytes32_from_hex(intx::hex(_stack[1]));
+        } else if (opcode_name == "SSTORE" && execution_state.stack.size() > 1) {
+            const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
+            const auto value = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[1]));
             storage_[recipient][silkworm::to_hex(address)] = silkworm::to_hex(value);
             output_storage = true;
         }
@@ -200,7 +199,7 @@ void DebugTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState
     log.gas = execution_state.gas_left;
     log.depth = execution_state.msg->depth + 1;
     if (!config_.disableStack) {
-        output_stack(log.stack, _stack);
+        output_stack(log.stack, execution_state.stack);
     }
     if (!config_.disableMemory) {
         log.memory = current_memory;
