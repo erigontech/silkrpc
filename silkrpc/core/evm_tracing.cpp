@@ -137,7 +137,7 @@ void DebugTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState
     assert(execution_state.msg);
     evmc::address recipient(execution_state.msg->recipient);
     evmc::address sender(execution_state.msg->sender);
-    evmone::advanced::Stack _stack{execution_state.stack_space};
+    evmone::advanced::Stack _stack{execution_state.stack_space.bottom()};
 
     const auto opcode = execution_state.code[pc];
     auto opcode_name = get_opcode_name(opcode_names_, opcode);
