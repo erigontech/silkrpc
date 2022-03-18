@@ -55,7 +55,9 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_number_or_hash(BlockCache
     throw std::runtime_error{"invalid block_number_or_hash value"};
 }
 
+asio::awaitable<silkworm::BlockWithHash> read_block_by_transaction_hash(BlockCache& cache, const rawdb::DatabaseReader& reader, const evmc::bytes32& transaction_hash) {
+    auto block_number = co_await rawdb::read_block_number_by_transaction_hash(reader, transaction_hash);
+    co_return co_await read_block_by_number(cache, reader, block_number);
+}
 
 } // namespace silkrpc::core
-
-
