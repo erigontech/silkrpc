@@ -105,15 +105,15 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
             reply = make_json_error(request.at("id"), 100, "execution layer does not have terminal total difficulty");
         }
 
-        if(config.terminal_total_difficulty != cl_configuration.terminal_total_difficulty) {
+        if(config.terminal_total_difficulty.value() != cl_configuration.terminal_total_difficulty) {
             SILKRPC_ERROR << "execution layer has the incorrect terminal total difficulty, expected: ";
-            SILKRPC_ERROR << cl_configuration.terminal_total_difficulty << " got: " << config.terminal_total_difficulty << "\n";
+            SILKRPC_ERROR << cl_configuration.terminal_total_difficulty << " got: " << config.terminal_total_difficulty.value() << "\n";
             reply = make_json_error(request.at("id"), 100, "incorrect terminal total difficulty");
         }
 
-        if(config.terminal_block_hash != cl_configuration.terminal_block_hash) {
+        if(config.terminal_block_hash.value() != cl_configuration.terminal_block_hash) {
             SILKRPC_ERROR << "execution layer has the incorrect terminal block hash, expected: ";
-            SILKRPC_ERROR << cl_configuration.terminal_block_hash << " got: " << config.terminal_block_hash << "\n";
+            SILKRPC_ERROR << cl_configuration.terminal_block_hash << " got: " << config.terminal_block_hash.value() << "\n";
             reply = make_json_error(request.at("id"), 100, "incorrect terminal block hash");
         }
         TransitionConfiguration transition_configuration {
