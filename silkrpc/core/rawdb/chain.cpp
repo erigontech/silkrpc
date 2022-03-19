@@ -203,31 +203,6 @@ asio::awaitable<silkworm::Bytes> read_body_rlp(const DatabaseReader& reader, con
     co_return data;
 }
 
-asio::awaitable<std::optional<silkrpc::Transaction>> read_transaction_by_hash(const DatabaseReader& reader, const evmc::bytes32& transaction_hash) {
-    const silkworm::ByteView tx_hash{transaction_hash.bytes, silkworm::kHashLength};
-
-    auto bytes = co_await reader.get_one(silkrpc::db::table::kTxLookup, tx_hash);
-    if (bytes.empty()) {
-        SILKRPC_DEBUG << "No block number found for transaction hash " << transaction_hash << "\n";
-        co_return std::nullopt;
-    }
-    auto block_number = std::stoul(silkworm::to_hex(bytes), 0, 16);
-    SILKRPC_TRACE << "block number " << block_number << " for transaction hash " << transaction_hash << "\n";
-    const auto block_with_hash = co_await core::rawdb::read_block_by_number(reader, block_number);
-    const auto transactions = block_with_hash.block.transactions;
-
-    for (size_t idx{0}; idx < transactions.size(); idx++) {
-        auto ethash_hash{hash_of_transaction(transactions[idx])};
-        silkworm::ByteView hash_view{ethash_hash.bytes, silkworm::kHashLength};
-        SILKRPC_TRACE << "tx " << idx << ") hash: " << silkworm::to_bytes32(hash_view) << "\n";
-        if (tx_hash == hash_view) {
-            const auto block_header = block_with_hash.block.header;
-            co_return silkrpc::Transaction{transactions[idx], block_with_hash.hash, block_header.number, block_header.base_fee_per_gas, idx};
-        }
-    }
-    co_return std::nullopt;
-}
-
 asio::awaitable<Addresses> read_senders(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
     const auto kv_pair = co_await reader.get(silkrpc::db::table::kSenders, block_key);
