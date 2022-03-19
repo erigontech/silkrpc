@@ -24,6 +24,7 @@
 #include <intx/intx.hpp>
 
 #include <silkworm/common/base.hpp>
+#include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 
 namespace silkrpc {
@@ -35,6 +36,11 @@ struct Transaction : public silkworm::Transaction {
     uint64_t transaction_index{0};
 
     intx::uint256 effective_gas_price() const; // EIP-1559
+};
+
+struct TransactionWithBlock {
+    silkworm::BlockWithHash block_with_hash;
+    struct Transaction transaction;
 };
 
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
