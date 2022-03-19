@@ -615,7 +615,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const n
         ethdb::TransactionDatabase tx_database{*tx};
         reply = make_json_content(request["id"], nullptr);
         const auto block_with_hash = co_await core::read_block_by_transaction_hash(*context_.block_cache, tx_database, transaction_hash);
-        auto receipts = co_await core::get_receipts(tx_database, block_with_hash.hash, block_with_hash.block.header.number);
+        auto receipts = co_await core::get_receipts(tx_database, block_with_hash);
         auto transactions = block_with_hash.block.transactions;
         if (receipts.size() != transactions.size()) {
             throw std::invalid_argument{"Unexpected size for receipts in handle_eth_get_transaction_receipt"};
