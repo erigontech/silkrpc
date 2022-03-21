@@ -366,6 +366,100 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json&
     co_return;
 }
 
+// https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_traceblockbynumber
+asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() < 1) {
+        auto error_msg = "invalid debug_traceBlockByNumber params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto block_id = params[0].get<std::string>();
+
+    trace::TraceConfig config;
+    if (params.size() > 1) {
+        config = params[1].get<trace::TraceConfig>();
+    }
+
+    SILKRPC_LOG << "block_id: " << block_id << " config: {" << config << "}\n";
+
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
+        SILKRPC_LOG << "block_number: " << block_number << "\n";
+
+        const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
+
+        trace::TraceExecutor executor{context_, tx_database, workers_, config};
+        const auto traces = co_await executor.execute(block_with_hash.block);
+        SILKRPC_LOG << "#traces in response: " << std::dec << traces.size() << "\n";
+
+        reply = make_json_content(request["id"], traces);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+
+        std::ostringstream oss;
+        oss << "block_id " << block_id << " not found";
+        reply = make_json_error(request["id"], -32000, oss.str());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
+// https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_traceblockbyhash
+asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() < 1) {
+        auto error_msg = "invalid debug_traceBlockByHash params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto block_hash = params[0].get<evmc::bytes32>();
+
+    trace::TraceConfig config;
+    if (params.size() > 1) {
+        config = params[1].get<trace::TraceConfig>();
+    }
+
+    SILKRPC_DEBUG << "block_hash: " << block_hash << " config: {" << config << "}\n";
+
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+
+        const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
+        SILKRPC_LOG << "block_number: " << block_with_hash.block.header.number << "\n";
+
+        trace::TraceExecutor executor{context_, tx_database, workers_, config};
+        const auto traces = co_await executor.execute(block_with_hash.block);
+        SILKRPC_LOG << "#traces in response: " << std::dec << traces.size() << "\n";
+
+        reply = make_json_content(request["id"], traces);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+
+        std::ostringstream oss;
+        oss << "block_hash " << block_hash << " not found";
+        reply = make_json_error(request["id"], -32000, oss.str());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
 asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::TransactionDatabase& tx_database, uint64_t start_block_number, uint64_t end_block_number) {
     auto last_block_number = co_await silkrpc::core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
 
