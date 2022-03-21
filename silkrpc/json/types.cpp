@@ -508,7 +508,7 @@ void from_json(const nlohmann::json& json, TransitionConfiguration& transition_c
     transition_configuration = TransitionConfiguration {
         .terminal_total_difficulty = json.at("terminalTotalDifficulty").get<intx::uint256>(),
         .terminal_block_hash = json.at("terminalBlockHash").get<evmc::bytes32>(),
-        .terminal_block_number = static_cast<uint64_t>(std::stol(json.at("terminalBlockNumber").get<std::string>(), 0 ,16))
+        .terminal_block_number = static_cast<uint64_t>(std::stol(json.at("terminalBlockNumber").get<std::string>(), 0, 16))
     };
 }
 
