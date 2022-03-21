@@ -275,13 +275,14 @@ asio::awaitable<Receipts> read_raw_receipts(const DatabaseReader& reader, const 
     co_return receipts;
 }
 
-asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
+asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const silkworm::BlockWithHash& block_with_hash) {
+    const evmc::bytes32 block_hash = block_with_hash.hash;
+    uint64_t block_number = block_with_hash.block.header.number;
     auto receipts = co_await read_raw_receipts(reader, block_hash, block_number);
-    auto body = co_await read_body(reader, block_hash, block_number);
 
     // Add derived fields to the receipts
-    auto transactions = body.transactions;
-    SILKRPC_DEBUG << "#transactions=" << body.transactions.size() << " #receipts=" << receipts.size() << "\n";
+    auto transactions = block_with_hash.block.transactions;
+    SILKRPC_DEBUG << "#transactions=" << block_with_hash.block.transactions.size() << " #receipts=" << receipts.size() << "\n";
     if (transactions.size() != receipts.size()) {
         throw std::runtime_error{"#transactions and #receipts do not match in read_receipts"};
     }

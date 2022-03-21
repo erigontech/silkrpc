@@ -53,7 +53,7 @@ asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohm
 
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
         const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache, tx_database, block_number);
-        auto receipts{co_await core::get_receipts(tx_database, block_with_hash.hash, block_with_hash.block.header.number)};
+        auto receipts{co_await core::get_receipts(tx_database, block_with_hash)};
         SILKRPC_INFO << "#receipts: " << receipts.size() << "\n";
 
         const auto block{block_with_hash.block};
