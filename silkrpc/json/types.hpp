@@ -61,6 +61,8 @@ void to_json(nlohmann::json& json, const BlockHeader& ommer);
 
 void to_json(nlohmann::json& json, const Transaction& transaction);
 
+void to_json(nlohmann::json& json, const Bytes rlp);
+
 } // namespace silkworm
 
 namespace silkrpc {
