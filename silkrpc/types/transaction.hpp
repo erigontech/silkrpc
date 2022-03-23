@@ -37,6 +37,10 @@ struct Transaction : public silkworm::Transaction {
     intx::uint256 effective_gas_price() const; // EIP-1559
 };
 
+struct Rlp  {
+   silkworm::Bytes rlp;
+};
+
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
 
 } // namespace silkrpc
