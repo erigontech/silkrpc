@@ -1408,17 +1408,15 @@ TEST_CASE("serialize transition configuratin", "[silkrpc::json][to_json]") {
     };
 
     nlohmann::json j = transition_configuration;
-    CHECK(j == R"({
-        "totalTerminalDifficulty":"0xf4240",
-        "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32",
-        "terminalBlockNumber":"0x0"
-    })");
+    CHECK(j["terminalTotalDifficulty"] == "0xf4240");
+    CHECK(j["terminalBlockHash"] == "0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858");
+    CHECK(j["terminalBlockNumber"] == "0x0");
 }
 
 TEST_CASE("deserialize transition configuration", "[silkrpc::json][from_json]") {
     silkrpc::TransitionConfiguration actual_transition_configuration = R"({
-        "totalTerminalDifficulty":"0xf4240",
-        "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32",
+        "terminalTotalDifficulty":"0xf4240",
+        "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
         "terminalBlockNumber":"0x0"
     })"_json;
 
