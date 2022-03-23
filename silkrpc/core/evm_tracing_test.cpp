@@ -909,6 +909,69 @@ TEST_CASE("Trace json serialization") {
             }]
         })"_json);
     }
+
+    SECTION("Trace: full") {
+        Trace trace;
+        trace.failed = false;
+        trace.gas = 20;
+        trace.return_value = "deadbeaf";
+        trace.trace_logs.push_back(log);
+
+        trace.trace_config.disableStorage = false;
+        trace.trace_config.disableMemory = false;
+        trace.trace_config.disableStack = false;
+
+        CHECK(trace == R"({
+            "failed": false,
+            "gas": 20,
+            "returnValue": "deadbeaf",
+            "structLogs": [{
+                "depth": 1,
+                "gas": 3,
+                "gasCost": 4,
+                "op": "PUSH1",
+                "pc": 1,
+                "stack":["0x80"],
+                "memory":["0000000000000000000000000000000000000000000000000000000000000080"],
+                "storage": {
+                    "804292fe56769f4b9f0e91cf85875f67487cd9e85a084cbba2188be4466c4f23": "0000000000000000000000000000000000000000000000000000000000000008"
+                }
+            }]
+        })"_json);
+    }
+
+    SECTION("Trace vector") {
+        Trace trace;
+        trace.failed = false;
+        trace.gas = 20;
+        trace.return_value = "deadbeaf";
+        trace.trace_logs.push_back(log);
+
+        trace.trace_config.disableStorage = false;
+        trace.trace_config.disableMemory = false;
+        trace.trace_config.disableStack = false;
+
+        std::vector<Trace> traces;
+        traces.push_back(trace);
+
+        CHECK(traces == R"([{
+            "failed": false,
+            "gas": 20,
+            "returnValue": "deadbeaf",
+            "structLogs": [{
+                "depth": 1,
+                "gas": 3,
+                "gasCost": 4,
+                "op": "PUSH1",
+                "pc": 1,
+                "stack":["0x80"],
+                "memory":["0000000000000000000000000000000000000000000000000000000000000080"],
+                "storage": {
+                    "804292fe56769f4b9f0e91cf85875f67487cd9e85a084cbba2188be4466c4f23": "0000000000000000000000000000000000000000000000000000000000000008"
+                }
+            }]
+        }])"_json);
+    }
 }
 
 TEST_CASE("TraceConfig json deserialization") {

@@ -252,52 +252,6 @@ void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::In
         << "\n";
 }
 
-// template<typename WorldState, typename VM>
-// asio::awaitable<std::vector<Trace>> TraceExecutor<WorldState, VM>::execute(const silkworm::BlockWithHash& block_with_hash) {
-//     auto block_number = block_with_hash.block.header.number;
-//     const auto &transactions = block_with_hash.block.transactions;
-
-//     SILKRPC_LOG << "execute: "
-//         << " block_number: " << block_number
-//         << " #txns: " << transactions.size()
-//         << " config: " << config_
-//         << "\n";
-
-
-//     const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
-//     const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
-
-//     EVMExecutor<WorldState, VM> executor{context_, database_reader_, *chain_config_ptr, workers_, block_number-1};
-
-//     std::vector<Trace> traces(transactions.size());
-//     for (std::uint64_t idx = 0; idx < transactions.size(); idx++) {
-//         silkrpc::Transaction txn{transactions[idx], block_with_hash.hash, block_number, block_with_hash.block.header.base_fee_per_gas, idx};
-//         txn.recover_sender();
-//         SILKRPC_LOG << "processing transaction: "
-//             << " idx: " << idx
-//             << " txn: " << txn
-//             << "\n";
-
-//         auto& trace = traces.at(idx);
-
-//         trace.trace_config = config_;
-//         auto tracer = std::make_shared<trace::DebugTracer>(trace.trace_logs, config_);
-
-//         const auto execution_result = co_await executor.call(block_with_hash.block, txn, tracer);
-
-//         if (execution_result.pre_check_error) {
-//             SILKRPC_LOG << "tracing failed: " << execution_result.pre_check_error.value() << "\n";
-//             trace.failed = true;
-//         } else {
-//             trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
-//             trace.gas = txn.gas_limit - execution_result.gas_left;
-//             trace.return_value = silkworm::to_hex(execution_result.data);
-//         }
-//     }
-
-//     co_return traces;
-// }
-
 template<typename WorldState, typename VM>
 asio::awaitable<std::vector<Trace>> TraceExecutor<WorldState, VM>::execute(const silkworm::Block& block) {
     auto block_number = block.header.number;
