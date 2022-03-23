@@ -175,15 +175,17 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
     json["s"] = silkrpc::to_quantity(silkworm::endian::to_big_compact(transaction.s));
 }
 
-void to_json(nlohmann::json& json, const Bytes rlp) {
-    json = "0x" + silkworm::to_hex(rlp);
-    std::cout << "to_json" << json;
-    SILKRPC_LOG << "json: " << json.dump() << "\n";
-}
 
 } // namespace silkworm
 
 namespace silkrpc {
+
+void to_json(nlohmann::json& json, const Rlp& rlp) {
+    json = "0x" + silkworm::to_hex(rlp.rlp);
+    std::cout << "to_json" << json;
+    SILKRPC_LOG << "json: " << json.dump() << "\n";
+}
+
 
 void to_json(nlohmann::json& json, const Block& b) {
     const auto block_number = silkrpc::to_quantity(b.block.header.number);
