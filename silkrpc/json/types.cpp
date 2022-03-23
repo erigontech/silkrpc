@@ -182,8 +182,6 @@ namespace silkrpc {
 
 void to_json(nlohmann::json& json, const Rlp& rlp) {
     json = "0x" + silkworm::to_hex(rlp.rlp);
-    std::cout << "to_json" << json;
-    SILKRPC_LOG << "json: " << json.dump() << "\n";
 }
 
 
