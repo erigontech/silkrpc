@@ -79,8 +79,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | debug_getModifiedAccountsByHash            | Yes          |                                            |
 | debug_getModifiedAccountsByNumber          | Yes          |                                            |
 | debug_storageRangeAt                       | Yes          |                                            |
-| debug_traceBlockByHash                     | -            | not yet implemented                        |
-| debug_traceBlockByNumber                   | -            | not yet implemented                        |
+| debug_traceBlockByHash                     | Yes          |                                            |
+| debug_traceBlockByNumber                   | Yes          |                                            |
 | debug_traceTransaction                     | Yes          |                                            |
 | debug_traceCall                            | Yes          |                                            |
 |                                            |              |                                            |
