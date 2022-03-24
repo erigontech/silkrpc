@@ -534,7 +534,8 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_hash(con
             // TODO(sixtysixter)
             // Maybe no finalized transaction, try to retrieve it from the pool
             SILKRPC_DEBUG << "Retrieving not finalized transactions from pool not implemented yet\n";
-            reply = make_json_content(request["id"], nullptr);
+            Rlp rlp{};
+            reply = make_json_content(request["id"], rlp);
         } else {
             Rlp rlp{};
             silkworm::rlp::encode(rlp.rlp, *optional_transaction);
