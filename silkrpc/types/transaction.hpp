@@ -41,7 +41,7 @@ struct Transaction : public silkworm::Transaction {
 struct Rlp  {
    silkworm::Bytes rlp;
 };
-  
+
 struct TransactionWithBlock {
     silkworm::BlockWithHash block_with_hash;
     Transaction transaction;
