@@ -45,6 +45,54 @@ public:
     MOCK_METHOD((asio::awaitable<PayloadStatus>), engine_new_payload_v1, (ExecutionPayload payload));
 };
 
+class DummyTransaction: public silkrpc::ethdb::Transaction {
+public:
+    explicit DummyTransaction(const nlohmann::json& json) : json_{json}, tx_id_{next_tx_id++} {};
+
+    uint64_t tx_id() const override {
+        return tx_id_;
+    }
+
+    asio::awaitable<void> open() override {
+        co_return;
+    }
+
+    asio::awaitable<std::shared_ptr<silkrpc::ethdb::Cursor>> cursor(const std::string& table) override {
+        auto cursor = std::make_unique<DummyCursor>(json_);
+        co_await cursor->open_cursor(table);
+
+        co_return cursor;
+    }
+
+    asio::awaitable<std::shared_ptr<silkrpc::ethdb::CursorDupSort>> cursor_dup_sort(const std::string& table) override {
+        auto cursor = std::make_unique<DummyCursor>(json_);
+        co_await cursor->open_cursor(table);
+
+        co_return cursor;
+    }
+
+    asio::awaitable<void> close() override {
+        co_return;
+    }
+
+private:
+    const nlohmann::json& json_;
+    const uint64_t tx_id_;
+};
+
+class DummyDatabase: public silkrpc::ethdb::Database {
+public:
+    explicit DummyDatabase(const nlohmann::json& json) : json_{json} {};
+
+    asio::awaitable<std::unique_ptr<silkrpc::ethdb::Transaction>> begin() override {
+        auto txn = std::make_unique<DummyTransaction>(json_);
+        co_return txn;
+    }
+
+private:
+    const nlohmann::json& json_;
+};
+
 } // namespace
 
 class EngineRpcApiTest : public EngineRpcApi{
