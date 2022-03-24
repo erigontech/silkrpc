@@ -128,27 +128,6 @@ static void check_expected_block_with_hash(const silkworm::BlockWithHash& bwh) {
     CHECK(bwh.hash == 0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32);
 }
 
-static void check_expected_transaction(const Transaction& transaction) {
-    const auto eth_hash = hash_of_transaction(transaction);
-    const auto tx_hash = silkworm::to_bytes32(silkworm::ByteView{eth_hash.bytes, silkworm::kHashLength});
-    CHECK(tx_hash == 0x3ff7b8917f1941784c709d6e54db18500fddc2b4c1a90b5cdec675cd0f9fc042_bytes32);
-    CHECK(transaction.access_list.empty());
-    CHECK(transaction.block_hash == 0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32);
-    CHECK(transaction.block_number == 4'000'000);
-    CHECK(transaction.block_base_fee_per_gas == std::nullopt);
-    CHECK(transaction.chain_id == 5);
-    CHECK(transaction.data == *silkworm::from_hex(
-        "f2f0387700000000000000000000000000000000000000000000000000000000000158b09f0270fc889c577c1c64db7c819f921d1b6e8c7e5d3f2ff34f162cf4b324cc05"));
-    CHECK(*transaction.from == 0x70A5C9D346416f901826581d423Cd5B92d44Ff5a_address);
-    //CHECK(transaction.nonce == 103470);
-    CHECK(transaction.max_priority_fee_per_gas == 0x77359400);
-    CHECK(transaction.max_fee_per_gas == 0x77359400);
-    //CHECK(transaction.gas == 103470);
-    CHECK(transaction.gas_limit == 5000000);
-    CHECK(transaction.transaction_index == 0);
-    CHECK(transaction.type == Transaction::Type::kLegacy);
-}
-
 TEST_CASE("read_header_number") {
     asio::thread_pool pool{1};
     MockDatabaseReader db_reader;
