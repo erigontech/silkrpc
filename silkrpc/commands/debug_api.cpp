@@ -287,7 +287,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache, tx_database, transaction_hash);
+        const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache, tx_database, transaction_hash);
         if (!tx_with_block) {
             std::ostringstream oss;
             oss << "transaction 0x" << transaction_hash << " not found";
