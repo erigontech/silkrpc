@@ -709,7 +709,8 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_block_nu
         const auto idx = std::stoul(index, 0, 16);
         if (idx >= transactions.size()) {
             SILKRPC_WARN << "Transaction not found for index: " << index << "\n";
-            reply = make_json_content(request["id"], nullptr);
+            Rlp rlp{};
+            reply = make_json_content(request["id"], rlp);
         } else {
             Rlp rlp{};
             silkworm::rlp::encode(rlp.rlp, transactions[idx]);
