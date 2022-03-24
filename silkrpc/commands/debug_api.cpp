@@ -287,14 +287,14 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        auto optional_block_and_transaction = co_await core::read_transaction_by_hash(*context_.block_cache, tx_database, transaction_hash);
-        if (!optional_block_and_transaction) {
+        auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache, tx_database, transaction_hash);
+        if (!tx_with_block) {
             std::ostringstream oss;
             oss << "transaction 0x" << transaction_hash << " not found";
             reply = make_json_error(request["id"], -32000, oss.str());
         } else {
             trace::TraceExecutor executor{context_, tx_database, workers_, config};
-            const auto result = co_await executor.execute(optional_block_and_transaction->block_with_hash.block, optional_block_and_transaction->transaction);
+            const auto result = co_await executor.execute(tx_with_block->block_with_hash.block, tx_with_block->transaction);
 
             if (result.pre_check_error) {
                 reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
