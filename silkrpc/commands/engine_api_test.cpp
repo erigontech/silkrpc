@@ -45,6 +45,105 @@ public:
     MOCK_METHOD((asio::awaitable<PayloadStatus>), engine_new_payload_v1, (ExecutionPayload payload));
 };
 
+static const nlohmann::json empty;
+static const std::string zeros = "00000000000000000000000000000000000000000000000000000000000000000000000000000000"; // NOLINT
+static const evmc::bytes32 zero_hash = 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32;
+
+class DummyCursor : public silkrpc::ethdb::CursorDupSort {
+public:
+    explicit DummyCursor(const nlohmann::json& json) : json_{json} {};
+
+    uint32_t cursor_id() const override {
+        return 0;
+    }
+
+    asio::awaitable<void> open_cursor(const std::string& table_name) override {
+        table_name_ = table_name;
+        table_ = json_.value(table_name_, empty);
+        itr_ = table_.end();
+
+        co_return;
+    }
+
+    asio::awaitable<void> close_cursor() override {
+        table_name_ = "";
+        co_return;
+    }
+
+    asio::awaitable<KeyValue> seek(silkworm::ByteView key) override {
+        const auto key_ = silkworm::to_hex(key);
+
+        KeyValue out;
+        for (itr_ = table_.begin(); itr_ != table_.end(); itr_++) {
+            auto actual = key_;
+            auto delta = itr_.key().size() - actual.size();
+            if (delta > 0) {
+                actual += zeros.substr(0, delta);
+            }
+            if (itr_.key() >= actual) {
+                auto kk{*silkworm::from_hex(itr_.key())};
+                auto value{*silkworm::from_hex(itr_.value().get<std::string>())};
+                out = KeyValue{kk, value};
+                break;
+            }
+        }
+
+        co_return out;
+    }
+
+    asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override {
+        const nlohmann::json table = json_.value(table_name_, empty);
+        const auto& entry = table.value(silkworm::to_hex(key), "");
+        auto value{*silkworm::from_hex(entry)};
+
+        auto kv = KeyValue{silkworm::Bytes{key}, value};
+
+        co_return kv;
+    }
+
+    asio::awaitable<KeyValue> next() override {
+        KeyValue out;
+
+        if (++itr_ != table_.end()) {
+            auto key{*silkworm::from_hex(itr_.key())};
+            auto value{*silkworm::from_hex(itr_.value().get<std::string>())};
+            out = KeyValue{key, value};
+        }
+
+        co_return out;
+    }
+
+    asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) override {
+        silkworm::Bytes key_{key};
+        key_ += value;
+
+        const nlohmann::json table = json_.value(table_name_, empty);
+        const auto& entry = table.value(silkworm::to_hex(key_), "");
+        auto out{*silkworm::from_hex(entry)};
+
+        co_return out;
+    }
+
+    asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) override {
+        silkworm::Bytes key_{key};
+        key_ += value;
+
+        const nlohmann::json table = json_.value(table_name_, empty);
+        const auto& entry = table.value(silkworm::to_hex(key_), "");
+        auto out{*silkworm::from_hex(entry)};
+        auto kv = KeyValue{silkworm::Bytes{}, out};
+
+        co_return kv;
+    }
+
+private:
+    std::string table_name_;
+    const nlohmann::json& json_;
+    nlohmann::json table_;
+    nlohmann::json::iterator itr_;
+};
+
+static uint64_t next_tx_id{0};
 class DummyTransaction: public silkrpc::ethdb::Transaction {
 public:
     explicit DummyTransaction(const nlohmann::json& json) : json_{json}, tx_id_{next_tx_id++} {};
