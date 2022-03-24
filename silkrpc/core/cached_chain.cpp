@@ -65,7 +65,7 @@ asio::awaitable<std::optional<silkrpc::TransactionWithBlock>> read_transaction_b
     const silkworm::ByteView tx_hash{transaction_hash.bytes, silkworm::kHashLength};
 
     const auto transactions = block_with_hash.block.transactions;
-    for (size_t idx{0}; idx < transactions.size(); idx++) {
+    for (std::size_t idx{0}; idx < transactions.size(); idx++) {
         auto ethash_hash{hash_of_transaction(transactions[idx])};
         silkworm::ByteView hash_view{ethash_hash.bytes, silkworm::kHashLength};
         if (tx_hash == hash_view) {
