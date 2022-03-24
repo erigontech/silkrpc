@@ -38,6 +38,10 @@ struct Transaction : public silkworm::Transaction {
     intx::uint256 effective_gas_price() const; // EIP-1559
 };
 
+struct Rlp  {
+   silkworm::Bytes buffer;
+};
+
 struct TransactionWithBlock {
     silkworm::BlockWithHash block_with_hash;
     Transaction transaction;

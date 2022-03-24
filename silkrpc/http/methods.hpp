@@ -47,6 +47,9 @@ constexpr const char* k_eth_getUncleCountByBlockHash{"eth_getUncleCountByBlockHa
 constexpr const char* k_eth_getUncleCountByBlockNumber{"eth_getUncleCountByBlockNumber"};
 constexpr const char* k_eth_getTransactionByHash{"eth_getTransactionByHash"};
 constexpr const char* k_eth_getTransactionByBlockHashAndIndex{"eth_getTransactionByBlockHashAndIndex"};
+constexpr const char* k_eth_getRawTransactionByHash{"eth_getRawTransactionByHash"};
+constexpr const char* k_eth_getRawTransactionByBlockHashAndIndex{"eth_getRawTransactionByBlockHashAndIndex"};
+constexpr const char* k_eth_getRawTransactionByBlockNumberAndIndex{"eth_getRawTransactionByBlockNumberAndIndex"};
 constexpr const char* k_eth_getTransactionByBlockNumberAndIndex{"eth_getTransactionByBlockNumberAndIndex"};
 constexpr const char* k_eth_getTransactionReceipt{"eth_getTransactionReceipt"};
 constexpr const char* k_eth_estimateGas{"eth_estimateGas"};

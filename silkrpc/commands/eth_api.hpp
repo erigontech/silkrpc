@@ -69,6 +69,9 @@ protected:
     asio::awaitable<void> handle_eth_get_transaction_by_hash(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_transaction_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_transaction_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_raw_transaction_by_hash(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_raw_transaction_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_raw_transaction_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_transaction_receipt(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_estimate_gas(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_balance(const nlohmann::json& request, nlohmann::json& reply);

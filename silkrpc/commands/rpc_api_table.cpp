@@ -95,6 +95,9 @@ void RpcApiTable::add_eth_handlers() {
     handlers_[http::method::k_eth_getTransactionByHash] = &commands::RpcApi::handle_eth_get_transaction_by_hash;
     handlers_[http::method::k_eth_getTransactionByBlockHashAndIndex] = &commands::RpcApi::handle_eth_get_transaction_by_block_hash_and_index;
     handlers_[http::method::k_eth_getTransactionByBlockNumberAndIndex] = &commands::RpcApi::handle_eth_get_transaction_by_block_number_and_index;
+    handlers_[http::method::k_eth_getRawTransactionByHash] = &commands::RpcApi::handle_eth_get_raw_transaction_by_hash;
+    handlers_[http::method::k_eth_getRawTransactionByBlockHashAndIndex] = &commands::RpcApi::handle_eth_get_raw_transaction_by_block_hash_and_index;
+    handlers_[http::method::k_eth_getRawTransactionByBlockNumberAndIndex] = &commands::RpcApi::handle_eth_get_raw_transaction_by_block_number_and_index;
     handlers_[http::method::k_eth_getTransactionReceipt] = &commands::RpcApi::handle_eth_get_transaction_receipt;
     handlers_[http::method::k_eth_estimateGas] = &commands::RpcApi::handle_eth_estimate_gas;
     handlers_[http::method::k_eth_getBalance] = &commands::RpcApi::handle_eth_get_balance;
