@@ -181,7 +181,7 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
 namespace silkrpc {
 
 void to_json(nlohmann::json& json, const Rlp& rlp) {
-    json = "0x" + silkworm::to_hex(rlp.rlp);
+    json = "0x" + silkworm::to_hex(rlp.buffer);
 }
 
 

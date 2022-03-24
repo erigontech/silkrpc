@@ -39,7 +39,7 @@ struct Transaction : public silkworm::Transaction {
 };
 
 struct Rlp  {
-   silkworm::Bytes rlp;
+   silkworm::Bytes buffer;
 };
 
 struct TransactionWithBlock {

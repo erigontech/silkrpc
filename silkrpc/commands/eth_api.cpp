@@ -529,8 +529,8 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_hash(con
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        const auto optional_transaction = co_await core::read_transaction_by_hash(*context_.block_cache, tx_database, transaction_hash);
-        if (!optional_transaction) {
+        const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache, tx_database, transaction_hash);
+        if (!tx_with_block) {
             // TODO(sixtysixter)
             // Maybe no finalized transaction, try to retrieve it from the pool
             SILKRPC_DEBUG << "Retrieving not finalized transactions from pool not implemented yet\n";
@@ -538,7 +538,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_hash(con
             reply = make_json_content(request["id"], rlp);
         } else {
             Rlp rlp{};
-            silkworm::rlp::encode(rlp.rlp, *optional_transaction);
+            silkworm::rlp::encode(rlp.buffer, tx_with_block->transaction);
             reply = make_json_content(request["id"], rlp);
         }
     } catch (const std::invalid_argument& iv) {
@@ -626,7 +626,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_block_ha
             reply = make_json_content(request["id"], rlp);
         } else {
             Rlp rlp{};
-            silkworm::rlp::encode(rlp.rlp, transactions[idx]);
+            silkworm::rlp::encode(rlp.buffer, transactions[idx]);
             reply = make_json_content(request["id"], rlp);
         }
     } catch (const std::exception& e) {
@@ -713,7 +713,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_block_nu
             reply = make_json_content(request["id"], rlp);
         } else {
             Rlp rlp{};
-            silkworm::rlp::encode(rlp.rlp, transactions[idx]);
+            silkworm::rlp::encode(rlp.buffer, transactions[idx]);
             reply = make_json_content(request["id"], rlp);
         }
     } catch (const std::exception& e) {
