@@ -249,6 +249,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
     auto& context = context_pool.get_context();
     auto& database_ptr = context.database;
     auto result_tx{asio::co_spawn(context_pool.get_io_context(), [&database_ptr]() { return database_ptr->begin(); }, asio::use_future)};
@@ -289,12 +290,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         .terminal_block_number = 0
     }));
     context_pool.stop();
+    context_pool_thread.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has different TTD", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
     auto& context = context_pool.get_context();
     auto& database_ptr = context.database;
     auto result_tx{asio::co_spawn(context_pool.get_io_context(), [&database_ptr]() { return database_ptr->begin(); }, asio::use_future)};
@@ -340,12 +343,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
         "jsonrpc":"2.0" 
     })"_json);
     context_pool.stop();
+    context_pool_thread.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has different terminal block hash", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
     auto& context = context_pool.get_context();
     auto& database_ptr = context.database;
     auto result_tx{asio::co_spawn(context_pool.get_io_context(), [&database_ptr]() { return database_ptr->begin(); }, asio::use_future)};
@@ -391,12 +396,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
         "jsonrpc":"2.0" 
     })"_json);
     context_pool.stop();
+    context_pool_thread.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has no TTD", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
     auto& context = context_pool.get_context();
     auto& database_ptr = context.database;
     auto result_tx{asio::co_spawn(context_pool.get_io_context(), [&database_ptr]() { return database_ptr->begin(); }, asio::use_future)};
@@ -441,11 +448,13 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
         "jsonrpc":"2.0" 
     })"_json);
     context_pool.stop();
+    context_pool_thread.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if request has wrong params", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
     auto& context = context_pool.get_context();
     auto& database_ptr = context.database;
     auto result_tx{asio::co_spawn(context_pool.get_io_context(), [&database_ptr]() { return database_ptr->begin(); }, asio::use_future)};
@@ -479,5 +488,6 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if request has wrong 
         "jsonrpc":"2.0" 
     })"_json);
     context_pool.stop();
+    context_pool_thread.join();
 }
 } // namespace silkrpc::commands
