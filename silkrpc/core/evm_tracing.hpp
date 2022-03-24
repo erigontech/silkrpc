@@ -123,7 +123,7 @@ public:
     TraceExecutor(const TraceExecutor&) = delete;
     TraceExecutor& operator=(const TraceExecutor&) = delete;
 
-    asio::awaitable<std::vector<Trace>> execute(const silkworm::Block& block_with_hash);
+    asio::awaitable<std::vector<Trace>> execute(const silkworm::Block& block);
     asio::awaitable<TraceExecutorResult> execute(const silkworm::Block& block, const silkrpc::Call& call);
     asio::awaitable<TraceExecutorResult> execute(const silkworm::Block& block, const silkrpc::Transaction& transaction) {
         return execute(block.header.number-1, block, transaction, transaction.transaction_index);

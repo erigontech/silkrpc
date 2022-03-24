@@ -257,7 +257,7 @@ asio::awaitable<std::vector<Trace>> TraceExecutor<WorldState, VM>::execute(const
     auto block_number = block.header.number;
     const auto &transactions = block.transactions;
 
-    SILKRPC_LOG << "execute: "
+    SILKRPC_DEBUG << "execute: "
         << " block_number: " << block_number
         << " #txns: " << transactions.size()
         << " config: " << config_
@@ -273,7 +273,7 @@ asio::awaitable<std::vector<Trace>> TraceExecutor<WorldState, VM>::execute(const
     for (std::uint64_t idx = 0; idx < transactions.size(); idx++) {
         silkrpc::Transaction txn{block.transactions[idx]};
         txn.recover_sender();
-        SILKRPC_LOG << "processing transaction: "
+        SILKRPC_DEBUG << "processing transaction: "
             << " idx: " << idx
             << " txn: " << txn
             << "\n";
@@ -286,7 +286,7 @@ asio::awaitable<std::vector<Trace>> TraceExecutor<WorldState, VM>::execute(const
         const auto execution_result = co_await executor.call(block, txn, tracer);
 
         if (execution_result.pre_check_error) {
-            SILKRPC_LOG << "tracing failed: " << execution_result.pre_check_error.value() << "\n";
+            SILKRPC_DEBUG << "tracing failed: " << execution_result.pre_check_error.value() << "\n";
             trace.failed = true;
         } else {
             trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
@@ -308,7 +308,7 @@ asio::awaitable<TraceExecutorResult> TraceExecutor<WorldState, VM>::execute(cons
 template<typename WorldState, typename VM>
 asio::awaitable<TraceExecutorResult> TraceExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
         const silkrpc::Transaction& transaction, std::int32_t index) {
-    SILKRPC_LOG << "execute: "
+    SILKRPC_DEBUG << "execute: "
         << " block_number: " << block_number
         << " transaction: {" << transaction << "}"
         << " index: " << std::dec << index

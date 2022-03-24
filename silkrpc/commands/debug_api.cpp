@@ -382,7 +382,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(const nloh
         config = params[1].get<trace::TraceConfig>();
     }
 
-    SILKRPC_LOG << "block_id: " << block_id << " config: {" << config << "}\n";
+    SILKRPC_DEBUG << "block_id: " << block_id << " config: {" << config << "}\n";
 
     auto tx = co_await database_->begin();
 
