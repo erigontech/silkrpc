@@ -90,7 +90,7 @@ public:
     MOCK_CONST_METHOD3(for_prefix, asio::awaitable<void>(const std::string&, const silkworm::ByteView&, Walker));
 };
 
-void check_expected_block_header(const silkworm::BlockHeader& header) {
+static void check_expected_block_header(const silkworm::BlockHeader& header) {
     CHECK(header.parent_hash == 0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7_bytes32);
     CHECK(header.ommers_hash == 0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347_bytes32);
     CHECK(header.beneficiary == silkworm::to_evmc_address(*silkworm::from_hex("0000000000000000000000000000000000000000")));
@@ -106,12 +106,12 @@ void check_expected_block_header(const silkworm::BlockHeader& header) {
     CHECK(header.mix_hash == 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32);
 }
 
-void check_expected_block_body(const silkworm::BlockBody& body) {
+static void check_expected_block_body(const silkworm::BlockBody& body) {
     CHECK(body.transactions.size() == 0);
     CHECK(body.ommers.size() == 0);
 }
 
-void check_expected_block_with_hash(const silkworm::BlockWithHash& bwh) {
+static void check_expected_block_with_hash(const silkworm::BlockWithHash& bwh) {
     CHECK(bwh.block.header.parent_hash == 0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7_bytes32);
     CHECK(bwh.block.header.ommers_hash == 0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347_bytes32);
     CHECK(bwh.block.header.beneficiary == silkworm::to_evmc_address(*silkworm::from_hex("0000000000000000000000000000000000000000")));
@@ -128,7 +128,7 @@ void check_expected_block_with_hash(const silkworm::BlockWithHash& bwh) {
     CHECK(bwh.hash == 0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32);
 }
 
-void check_expected_transaction(const Transaction& transaction) {
+static void check_expected_transaction(const Transaction& transaction) {
     const auto eth_hash = hash_of_transaction(transaction);
     const auto tx_hash = silkworm::to_bytes32(silkworm::ByteView{eth_hash.bytes, silkworm::kHashLength});
     CHECK(tx_hash == 0x3ff7b8917f1941784c709d6e54db18500fddc2b4c1a90b5cdec675cd0f9fc042_bytes32);
