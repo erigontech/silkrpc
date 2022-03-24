@@ -21,6 +21,7 @@
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <catch2/catch.hpp>
+#include <nlohmann/json.hpp>
 #include <gmock/gmock.h>
 #include <asio/awaitable.hpp>
 #include <asio/use_future.hpp>
@@ -394,22 +395,30 @@ TEST_CASE("handle_engine_new_payload_v1 fails with invalid amount of params", "[
 
 TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configurations has the same request configuration", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    nlohmann::json raw_chain_config = R"(
+        {
+            "berlinBlock":12244000,
+            "byzantiumBlock":4370000,
+            "chainId":1,
+            "constantinopleBlock":7280000,
+            "daoForkBlock":1920000,
+            "eip150Block":2463000,
+            "eip155Block":2675000,
+            "ethash":{},
+            "homesteadBlock":1150000,
+            "istanbulBlock":9069000,
+            "londonBlock":12965000,
+            "muirGlacierBlock":9200000,
+            "petersburgBlock":7280000,
+            "terminalTotalDifficulty":"0xf4240",
+            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+            "terminalBlockNumber":"0x0"
+    })"_json;
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
-    auto& context = context_pool.get_context();
-    auto& database_ptr = context.database;
-    auto result_tx{asio::co_spawn(context_pool.get_io_context(), [&database_ptr]() { return database_ptr->begin(); }, asio::use_future)};
-    auto tx = result_tx.get();
-    ethdb::TransactionDatabase tx_database(*tx);
-
-    auto chain_config_result{asio::co_spawn(context_pool.get_io_context(), [&tx_database]() { return core::rawdb::read_chain_config(tx_database); }, asio::use_future)};
-    const auto& chain_config = chain_config_result.get();
-
-    auto config = silkworm::ChainConfig::from_json(chain_config.config);
-    config->terminal_total_difficulty = intx::from_string<intx::uint256>("1000000");
-    config->terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32;
-    config->terminal_block_number = 0;
+    DummyDatabase dummmy_db{raw_chain_config};
+    std::unique_ptr<ethdb::Database> database_ptr{&dummmy_db};
 
     nlohmann::json reply;
     nlohmann::json request = R"({
@@ -442,22 +451,30 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has different TTD", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    nlohmann::json raw_chain_config = R"(
+        {
+            "berlinBlock":12244000,
+            "byzantiumBlock":4370000,
+            "chainId":1,
+            "constantinopleBlock":7280000,
+            "daoForkBlock":1920000,
+            "eip150Block":2463000,
+            "eip155Block":2675000,
+            "ethash":{},
+            "homesteadBlock":1150000,
+            "istanbulBlock":9069000,
+            "londonBlock":12965000,
+            "muirGlacierBlock":9200000,
+            "petersburgBlock":7280000,
+            "terminalTotalDifficulty":"0xf9999",
+            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+            "terminalBlockNumber":"0x0"
+    })"_json;
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
-    auto& context = context_pool.get_context();
-    auto& database_ptr = context.database;
-    auto result_tx{asio::co_spawn(context_pool.get_io_context(), [&database_ptr]() { return database_ptr->begin(); }, asio::use_future)};
-    auto tx = result_tx.get();
-    ethdb::TransactionDatabase tx_database(*tx);
-
-    auto chain_config_result{asio::co_spawn(context_pool.get_io_context(), [&tx_database]() { return core::rawdb::read_chain_config(tx_database); }, asio::use_future)};
-    const auto& chain_config = chain_config_result.get();
-
-    auto config = silkworm::ChainConfig::from_json(chain_config.config);
-    config->terminal_total_difficulty = intx::from_string<intx::uint256>("1000000");
-    config->terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32;
-    config->terminal_block_number = 0;
+    DummyDatabase dummmy_db{raw_chain_config};
+    std::unique_ptr<ethdb::Database> database_ptr{&dummmy_db};
 
     nlohmann::json reply;
     nlohmann::json request = R"({
@@ -495,22 +512,30 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has different terminal block hash", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    nlohmann::json raw_chain_config = R"(
+        {
+            "berlinBlock":12244000,
+            "byzantiumBlock":4370000,
+            "chainId":1,
+            "constantinopleBlock":7280000,
+            "daoForkBlock":1920000,
+            "eip150Block":2463000,
+            "eip155Block":2675000,
+            "ethash":{},
+            "homesteadBlock":1150000,
+            "istanbulBlock":9069000,
+            "londonBlock":12965000,
+            "muirGlacierBlock":9200000,
+            "petersburgBlock":7280000,
+            "terminalTotalDifficulty":"0xf4240",
+            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+            "terminalBlockNumber":"0x0"
+    })"_json;
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
-    auto& context = context_pool.get_context();
-    auto& database_ptr = context.database;
-    auto result_tx{asio::co_spawn(context_pool.get_io_context(), [&database_ptr]() { return database_ptr->begin(); }, asio::use_future)};
-    auto tx = result_tx.get();
-    ethdb::TransactionDatabase tx_database(*tx);
-
-    auto chain_config_result{asio::co_spawn(context_pool.get_io_context(), [&tx_database]() { return core::rawdb::read_chain_config(tx_database); }, asio::use_future)};
-    const auto& chain_config = chain_config_result.get();
-
-    auto config = silkworm::ChainConfig::from_json(chain_config.config);
-    config->terminal_total_difficulty = intx::from_string<intx::uint256>("1000000");
-    config->terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de0000_bytes32;
-    config->terminal_block_number = 0;
+    DummyDatabase dummmy_db{raw_chain_config};
+    std::unique_ptr<ethdb::Database> database_ptr{&dummmy_db};
 
     nlohmann::json reply;
     nlohmann::json request = R"({
@@ -548,22 +573,31 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations has no TTD", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    nlohmann::json raw_chain_config = R"(
+        {
+            "berlinBlock":12244000,
+            "byzantiumBlock":4370000,
+            "chainId":1,
+            "constantinopleBlock":7280000,
+            "daoForkBlock":1920000,
+            "eip150Block":2463000,
+            "eip155Block":2675000,
+            "ethash":{},
+            "homesteadBlock":1150000,
+            "istanbulBlock":9069000,
+            "londonBlock":12965000,
+            "muirGlacierBlock":9200000,
+            "petersburgBlock":7280000,
+            "terminalTotalDifficulty":"0xf4240",
+            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+            "terminalBlockNumber":"0x0"
+    })"_json;
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
-    auto& context = context_pool.get_context();
-    auto& database_ptr = context.database;
-    auto result_tx{asio::co_spawn(context_pool.get_io_context(), [&database_ptr]() { return database_ptr->begin(); }, asio::use_future)};
-    auto tx = result_tx.get();
-    ethdb::TransactionDatabase tx_database(*tx);
+    DummyDatabase dummmy_db{raw_chain_config};
+    std::unique_ptr<ethdb::Database> database_ptr{&dummmy_db};
 
-    auto chain_config_result{asio::co_spawn(context_pool.get_io_context(), [&tx_database]() { return core::rawdb::read_chain_config(tx_database); }, asio::use_future)};
-    const auto& chain_config = chain_config_result.get();
-
-    auto config = silkworm::ChainConfig::from_json(chain_config.config);
-    config->terminal_total_difficulty = std::nullopt;
-    config->terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de0000_bytes32;
-    config->terminal_block_number = 0;
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
@@ -600,13 +634,30 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if EL configurations 
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if request has wrong params", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    nlohmann::json raw_chain_config = R"(
+        {
+            "berlinBlock":12244000,
+            "byzantiumBlock":4370000,
+            "chainId":1,
+            "constantinopleBlock":7280000,
+            "daoForkBlock":1920000,
+            "eip150Block":2463000,
+            "eip155Block":2675000,
+            "ethash":{},
+            "homesteadBlock":1150000,
+            "istanbulBlock":9069000,
+            "londonBlock":12965000,
+            "muirGlacierBlock":9200000,
+            "petersburgBlock":7280000,
+            "terminalTotalDifficulty":"0xf4240",
+            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+            "terminalBlockNumber":"0x0"
+    })"_json;
+
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
-    auto& context = context_pool.get_context();
-    auto& database_ptr = context.database;
-    auto result_tx{asio::co_spawn(context_pool.get_io_context(), [&database_ptr]() { return database_ptr->begin(); }, asio::use_future)};
-    auto tx = result_tx.get();
-    ethdb::TransactionDatabase tx_database(*tx);
+    DummyDatabase dummmy_db{raw_chain_config};
+    std::unique_ptr<ethdb::Database> database_ptr{&dummmy_db};
 
     nlohmann::json reply;
     nlohmann::json request = R"({
