@@ -529,7 +529,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_hash(con
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        const auto optional_transaction = co_await core::rawdb::read_transaction_by_hash(tx_database, transaction_hash);
+        const auto optional_transaction = co_await core::read_transaction_by_hash(*context_.block_cache, tx_database, transaction_hash);
         if (!optional_transaction) {
             // TODO(sixtysixter)
             // Maybe no finalized transaction, try to retrieve it from the pool
