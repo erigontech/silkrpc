@@ -40,7 +40,7 @@ struct Transaction : public silkworm::Transaction {
 
 struct TransactionWithBlock {
     silkworm::BlockWithHash block_with_hash;
-    struct Transaction transaction;
+    Transaction transaction;
 };
 
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
