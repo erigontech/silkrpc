@@ -489,14 +489,14 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const n
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        const auto optional_transaction = co_await core::rawdb::read_transaction_by_hash(tx_database, transaction_hash);
-        if (!optional_transaction) {
+        const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache, tx_database, transaction_hash);
+        if (!tx_with_block) {
             // TODO(sixtysixter)
             // Maybe no finalized transaction, try to retrieve it from the pool
             SILKRPC_DEBUG << "Retrieving not finalized transactions from pool not implemented yet\n";
             reply = make_json_content(request["id"], nullptr);
         } else {
-            reply = make_json_content(request["id"], *optional_transaction);
+            reply = make_json_content(request["id"], tx_with_block->transaction);
         }
     } catch (const std::invalid_argument& iv) {
         SILKRPC_DEBUG << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";

@@ -24,6 +24,7 @@
 #include <intx/intx.hpp>
 
 #include <silkworm/common/base.hpp>
+#include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 
 namespace silkrpc {
@@ -39,6 +40,11 @@ struct Transaction : public silkworm::Transaction {
 
 struct Rlp  {
    silkworm::Bytes rlp;
+};
+  
+struct TransactionWithBlock {
+    silkworm::BlockWithHash block_with_hash;
+    Transaction transaction;
 };
 
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
