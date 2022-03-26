@@ -326,7 +326,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     ));
 
     EXPECT_CALL(mock_cursor, seek(silkworm::ByteView{})).WillOnce(InvokeWithoutArgs(
-        [=]() -> asio::awaitable<KeyValue> {
+        [&]() -> asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
         }
     ));
