@@ -21,7 +21,6 @@
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/ethdb/tables.hpp>
-#include <silkworm/common/base.hpp>
 #include <catch2/catch.hpp>
 #include <nlohmann/json.hpp>
 #include <gmock/gmock.h>
