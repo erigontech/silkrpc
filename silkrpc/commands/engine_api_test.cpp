@@ -306,9 +306,9 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         }
     ));
 
-    EXPECT_CALL(mock_cursor, seek_exact(block_key)).WillOnce(InvokeWithoutArgs(
-        []() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{};
+    EXPECT_CALL(mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
+        [&]() -> asio::awaitable<KeyValue> {
+            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
