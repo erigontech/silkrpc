@@ -76,6 +76,8 @@ void RpcApiTable::add_debug_handlers() {
     handlers_[http::method::k_debug_storageRangeAt] = &commands::RpcApi::handle_debug_storage_range_at;
     handlers_[http::method::k_debug_traceTransaction] = &commands::RpcApi::handle_debug_trace_transaction;
     handlers_[http::method::k_debug_traceCall] = &commands::RpcApi::handle_debug_trace_call;
+    handlers_[http::method::k_debug_traceBlockByNumber] = &commands::RpcApi::handle_debug_trace_block_by_number;
+    handlers_[http::method::k_debug_traceBlockByHash] = &commands::RpcApi::handle_debug_trace_block_by_hash;
 }
 
 void RpcApiTable::add_eth_handlers() {
