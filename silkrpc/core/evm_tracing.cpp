@@ -255,7 +255,7 @@ void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::In
 template<typename WorldState, typename VM>
 asio::awaitable<std::vector<Trace>> TraceExecutor<WorldState, VM>::execute(const silkworm::Block& block) {
     auto block_number = block.header.number;
-    const auto &transactions = block.transactions;
+    const auto& transactions = block.transactions;
 
     SILKRPC_DEBUG << "execute: "
         << " block_number: " << block_number
@@ -272,11 +272,10 @@ asio::awaitable<std::vector<Trace>> TraceExecutor<WorldState, VM>::execute(const
     std::vector<Trace> traces(transactions.size());
     for (std::uint64_t idx = 0; idx < transactions.size(); idx++) {
         silkrpc::Transaction txn{block.transactions[idx]};
-        txn.recover_sender();
-        SILKRPC_DEBUG << "processing transaction: "
-            << " idx: " << idx
-            << " txn: " << txn
-            << "\n";
+        if (!txn.from) {
+            txn.recover_sender();
+        }
+        SILKRPC_DEBUG << "processing transaction: idx: " << idx << " txn: " << txn << "\n";
 
         auto& trace = traces.at(idx);
 
