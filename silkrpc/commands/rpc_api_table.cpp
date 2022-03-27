@@ -105,6 +105,7 @@ void RpcApiTable::add_eth_handlers() {
     handlers_[http::method::k_eth_getTransactionCount] = &commands::RpcApi::handle_eth_get_transaction_count;
     handlers_[http::method::k_eth_getStorageAt] = &commands::RpcApi::handle_eth_get_storage_at;
     handlers_[http::method::k_eth_call] = &commands::RpcApi::handle_eth_call;
+    handlers_[http::method::k_eth_createAccessList] = &commands::RpcApi::handle_eth_create_access_list;
     handlers_[http::method::k_eth_newFilter] = &commands::RpcApi::handle_eth_new_filter;
     handlers_[http::method::k_eth_newBlockFilter] = &commands::RpcApi::handle_eth_new_block_filter;
     handlers_[http::method::k_eth_newPendingTransactionFilter] = &commands::RpcApi::handle_eth_new_pending_transaction_filter;
