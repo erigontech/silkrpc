@@ -257,12 +257,7 @@ asio::awaitable<std::vector<Trace>> TraceExecutor<WorldState, VM>::execute(const
     auto block_number = block.header.number;
     const auto& transactions = block.transactions;
 
-    SILKRPC_DEBUG << "execute: "
-        << " block_number: " << block_number
-        << " #txns: " << transactions.size()
-        << " config: " << config_
-        << "\n";
-
+    SILKRPC_DEBUG << "execute: block_number: " << block_number << " #txns: " << transactions.size() << " config: " << config_ << "\n";
 
     const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
     const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
