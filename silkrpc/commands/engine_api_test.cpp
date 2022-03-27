@@ -36,6 +36,8 @@ using Catch::Matchers::Message;
 using evmc::literals::operator""_bytes32;
 
 namespace {
+
+static silkworm::Bytes kBlockHash{*silkworm::from_hex("439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff")};
 class BackEndMock : public ethbackend::BackEnd {
 public:
     MOCK_METHOD((asio::awaitable<evmc::address>), etherbase, ());
