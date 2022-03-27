@@ -445,11 +445,69 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         );
     }, asio::use_future)};
     result.get();
+    std::cout << reply << '\n';
     CHECK((reply == TransitionConfiguration{
         .terminal_total_difficulty = intx::from_string<intx::uint256>("1000000"),
         .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
         .terminal_block_number = 0
     }));
+    context_pool.stop();
+    context_pool_thread.join();
+}
+
+TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params", "[silkrpc][engine_api]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    nlohmann::json json;
+
+    json["CanonicalHeader"] = {
+        {"0000000000000000", "a7684665106faf27aa839975fb505b23af17b36179d73bec1e770f2b8db878f4"}
+    };
+    json["Config"] = {
+        {"a7684665106faf27aa839975fb505b23af17b36179d73bec1e770f2b8db878f4",
+        "7b226265726c696e426c6f636b223a31323234343030302c2262797a616e7469756"
+        "d426c6f636b223a343337303030302c22636861696e4964223a312c22636f6e7374"
+        "616e74696e6f706c65426c6f636b223a373238303030302c2264616f466f726b426"
+        "c6f636b223a313932303030302c22656970313530426c6f636b223a323436333030"
+        "302c22656970313535426c6f636b223a323637353030302c22657468617368223a7"
+        "b7d2c22686f6d657374656164426c6f636b223a313135303030302c22697374616e"
+        "62756c426c6f636b223a393036393030302c226c6f6e646f6e426c6f636b223a313"
+        "23936353030302c226d756972476c6163696572426c6f636b223a39323030303030"
+        "2c2270657465727362757267426c6f636b223a373238303030302c227465726d696"
+        "e616c546f74616c446966666963756c7479223a313030303030302c227465726d69"
+        "6e616c426c6f636b48617368223a223078333535396538353134373066366537626"
+        "2656431646234373439383036383365386333313562666365393962326136656634"
+        "3763303537633034646537383538222c227465726d696e616c426c6f636b4e756d6"
+        "26572223a307d"}
+    };
+    
+    std::unique_ptr<ethdb::Database> database_ptr{new DummyDatabase(json)};
+
+    nlohmann::json reply;
+    nlohmann::json request = R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":"engine_transitionConfigurationV1",
+        "params": []
+    })"_json;
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_exchange_transition_configuration_v1(
+            request,
+            reply
+        );
+    }, asio::use_future)};
+    result.get();
+    CHECK(reply == R"({
+        "error":{
+            "code":100,
+            "message":"invalid engine_transitionConfigurationV1 params: []"
+            },
+            "id":1,
+            "jsonrpc":"2.0"
+        })"_json);
     context_pool.stop();
     context_pool_thread.join();
 }
