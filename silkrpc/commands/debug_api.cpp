@@ -375,35 +375,31 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(const nloh
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
-    const auto block_id = params[0].get<std::string>();
+    const auto block_number = params[0].get<std::uint64_t>();
 
     trace::TraceConfig config;
     if (params.size() > 1) {
         config = params[1].get<trace::TraceConfig>();
     }
 
-    SILKRPC_DEBUG << "block_id: " << block_id << " config: {" << config << "}\n";
+    SILKRPC_DEBUG << "block_number: " << block_number << " config: {" << config << "}\n";
 
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_number = co_await core::get_block_number(block_id, tx_database);
-        SILKRPC_LOG << "block_number: " << block_number << "\n";
-
         const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
 
         trace::TraceExecutor executor{context_, tx_database, workers_, config};
         const auto traces = co_await executor.execute(block_with_hash.block);
-        SILKRPC_LOG << "#traces in response: " << std::dec << traces.size() << "\n";
 
         reply = make_json_content(request["id"], traces);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
 
         std::ostringstream oss;
-        oss << "block_id " << block_id << " not found";
+        oss << "block_number " << block_number << " not found";
         reply = make_json_error(request["id"], -32000, oss.str());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
@@ -438,11 +434,9 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const nlohma
         ethdb::TransactionDatabase tx_database{*tx};
 
         const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
-        SILKRPC_LOG << "block_number: " << block_with_hash.block.header.number << "\n";
 
         trace::TraceExecutor executor{context_, tx_database, workers_, config};
         const auto traces = co_await executor.execute(block_with_hash.block);
-        SILKRPC_LOG << "#traces in response: " << std::dec << traces.size() << "\n";
 
         reply = make_json_content(request["id"], traces);
     } catch (const std::exception& e) {

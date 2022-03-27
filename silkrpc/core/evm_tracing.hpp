@@ -98,7 +98,7 @@ public:
 
 struct Trace {
     bool failed;
-    std::int64_t gas;
+    std::int64_t gas{0};
     std::string return_value;
     std::vector<TraceLog> trace_logs;
 
