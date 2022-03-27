@@ -40,11 +40,14 @@ struct Call {
     std::optional<intx::uint256> max_fee_per_gas;
     std::optional<intx::uint256> value;
     std::optional<silkworm::Bytes> data;
+    std::optional<uint64_t> nonce;
 
     silkworm::Transaction to_transaction() const {
         silkworm::Transaction txn{};
         txn.from = from;
         txn.to = to;
+        if (nonce)
+           txn.nonce = *nonce;
         txn.gas_limit = gas.value_or(kDefaultGasLimit);
         if (gas_price) {
             txn.max_priority_fee_per_gas = gas_price.value();
