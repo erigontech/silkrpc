@@ -256,6 +256,12 @@ void from_json(const nlohmann::json& json, Call& call) {
             call.to = json.at("to").get<evmc::address>();
         }
     }
+    if (json.count("nonce") != 0) {
+        const auto nonce = json.at("nonce");
+        if (!nonce.is_null()) {
+            call.nonce = json.at("nonce").get<uint64_t>();
+        }
+    }
     if (json.count("gas") != 0) {
         auto json_gas = json.at("gas");
         if (json_gas.is_string()) {
