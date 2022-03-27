@@ -482,7 +482,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params",
         "26572223a307d"}
     };
     
-    std::unique_ptr<ethdb::Database> database_ptr{new DummyDatabase(json)};
+    std::unique_ptr<ethdb::Database> database_ptr(new DummyDatabase(json));
 
     nlohmann::json reply;
     nlohmann::json request = R"({
