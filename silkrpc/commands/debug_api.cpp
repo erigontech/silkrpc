@@ -389,7 +389,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(const nloh
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_with_hash = co_await core::rawdb::read_block_by_number(tx_database, block_number);
+        const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache, tx_database, block_number);
 
         trace::TraceExecutor executor{context_, tx_database, workers_, config};
         const auto traces = co_await executor.execute(block_with_hash.block);
@@ -433,7 +433,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const nlohma
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
+        const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache, tx_database, block_hash);
 
         trace::TraceExecutor executor{context_, tx_database, workers_, config};
         const auto traces = co_await executor.execute(block_with_hash.block);
