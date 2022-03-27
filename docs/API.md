@@ -42,7 +42,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getStorageAt                           | Yes          |                                            |
 | eth_call                                   | Yes          |                                            |
 | eth_callBundle                             | -            | not yet implemented                        |
-| eth_createAccessList                       | -            | not yet implemented                        |
+| eth_createAccessList                       | Yes          |                                            |
 |                                            |              |                                            |
 | eth_newFilter                              | -            | not yet implemented                        |
 | eth_newBlockFilter                         | -            | not yet implemented                        |
