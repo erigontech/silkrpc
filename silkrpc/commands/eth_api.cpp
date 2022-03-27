@@ -1049,6 +1049,72 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
     co_return;
 }
 
+// https://eth.wiki/json-rpc/API#eth_createAccessList
+asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 2) {
+        auto error_msg = "invalid eth_call params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto call = params[0].get<Call>();
+    const auto block_number_or_hash = params[1].get<BlockNumberOrHash>();
+
+    SILKRPC_DEBUG << "call: " << call << " block_number_or_hash: " << block_number_or_hash << "\n";
+
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+
+        const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache, tx_database, block_number_or_hash);
+        StateReader state_reader{tx_database};
+        evmc::address to{};
+
+        if (call.to) {
+           to = *(call.to);
+        } else {
+           auto nonce = *(call.nonce);
+           if (!nonce) {
+              // 1. Retrieve nonce by txpool ...
+           }
+           to = silkworm::create_address(*call.from, nonce);
+        }
+
+        for(;;) {
+           EVMExecutor executor{context_, tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number};
+
+           silkworm::Transaction txn{call.to_transaction()};
+           const auto execution_result = co_await executor.call(block_with_hash.block, txn);
+
+           if (execution_result.pre_check_error) {
+              reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
+           } else if (execution_result.error_code == evmc_status_code::EVMC_SUCCESS) {
+              reply = make_json_content(request["id"], "0x" + silkworm::to_hex(execution_result.data));
+           } else {
+               const auto error_message = EVMExecutor<>::get_error_message(execution_result.error_code, execution_result.data);
+               if (execution_result.data.empty()) {
+                  reply = make_json_error(request["id"], -32000, error_message);
+               } else {
+                  reply = make_json_error(request["id"], {3, error_message, execution_result.data});
+               }
+          }
+       }
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
 // https://eth.wiki/json-rpc/API#eth_newfilter
 asio::awaitable<void> EthereumRpcApi::handle_eth_new_filter(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
