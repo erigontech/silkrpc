@@ -87,7 +87,6 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
     try {
         #endif
         const auto cl_configuration = params[0].get<TransitionConfiguration>();
-
         auto tx = co_await database_->begin();
         ethdb::TransactionDatabase tx_database{*tx};
         const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
@@ -124,12 +123,6 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
             SILKRPC_ERROR << "execution layer has the incorrect terminal block hash, expected: ";
             SILKRPC_ERROR << cl_configuration.terminal_block_hash << " got: " << config.terminal_block_hash.value() << "\n";
             reply = make_json_error(request.at("id"), 100, "incorrect terminal block hash");
-            co_return;
-        }
-
-        if(config.terminal_block_number == std::nullopt) {
-            SILKRPC_ERROR << "execution layer does not have terminal block number";
-            reply = make_json_error(request.at("id"), 100, "execution layer does not have terminal block number");
             co_return;
         }
 
