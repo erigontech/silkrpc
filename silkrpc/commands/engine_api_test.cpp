@@ -426,7 +426,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
         "id":1,
-        "method":"engine_transitionConfigurationV1",
+        "method":"engine_exchangeTransitionConfigurationV1",
         "params": [{
             "terminalTotalDifficulty":"0xf4240",
             "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
@@ -482,7 +482,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params",
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
         "id":1,
-        "method":"engine_transitionConfigurationV1",
+        "method":"engine_exchangeTransitionConfigurationV1",
         "params": []
     })"_json;
     std::unique_ptr<ethbackend::BackEnd> backend_ptr;
@@ -497,7 +497,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params",
     CHECK(reply == R"({
         "error":{
             "code":100,
-            "message":"invalid engine_transitionConfigurationV1 params: []"
+            "message":"invalid engine_exchangeTransitionConfigurationV1 params: []"
             },
             "id":1,
             "jsonrpc":"2.0"
@@ -536,7 +536,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
         "id":1,
-        "method":"engine_transitionConfigurationV1",
+        "method":"engine_exchangeTransitionConfigurationV1",
         "params": [{
             "terminalTotalDifficulty":"0xf4242",
             "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
@@ -594,7 +594,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
         "id":1,
-        "method":"engine_transitionConfigurationV1",
+        "method":"engine_exchangeTransitionConfigurationV1",
         "params": [{
             "terminalTotalDifficulty":"0xf4240",
             "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de0000",
@@ -652,7 +652,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if no terminal total 
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
         "id":1,
-        "method":"engine_transitionConfigurationV1",
+        "method":"engine_exchangeTransitionConfigurationV1",
         "params": [{
             "terminalTotalDifficulty":"0xf4242",
             "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
@@ -708,7 +708,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
         "id":1,
-        "method":"engine_transitionConfigurationV1",
+        "method":"engine_exchangeTransitionConfigurationV1",
         "params": [{
             "terminalTotalDifficulty":"0xf4240",
             "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
@@ -764,7 +764,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
         "id":1,
-        "method":"engine_transitionConfigurationV1",
+        "method":"engine_exchangeTransitionConfigurationV1",
         "params": [{
             "terminalTotalDifficulty":"0xf4240",
             "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
@@ -822,7 +822,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
         "id":1,
-        "method":"engine_transitionConfigurationV1",
+        "method":"engine_exchangeTransitionConfigurationV1",
         "params": [{
             "terminalTotalDifficulty":"0xf4240",
             "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",

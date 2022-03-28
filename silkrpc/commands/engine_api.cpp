@@ -78,7 +78,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
     auto params = request.at("params");
     // params = [TransitionConfiguration]
     if(params.size() != 1) {
-        auto error_msg = "invalid engine_transitionConfigurationV1 params: " + params.dump();
+        auto error_msg = "invalid engine_exchangeTransitionConfigurationV1 params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request.at("id"), 100, error_msg);
         co_return;
