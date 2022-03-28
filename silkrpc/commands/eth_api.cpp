@@ -38,6 +38,7 @@
 #include <silkrpc/core/cached_chain.hpp>
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/evm_executor.hpp>
+#include <silkrpc/core/evm_access_list_tracer.hpp>
 #include <silkrpc/core/estimate_gas_oracle.hpp>
 #include <silkrpc/core/gas_price_oracle.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
@@ -1068,10 +1069,16 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache, tx_database, block_number_or_hash);
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
-        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache, tx_database, block_number_or_hash);
+
+        // MGT state_cache
         StateReader state_reader{tx_database};
+        // If the gas amount is not set, extract this as it will depend on access
+        // lists and we'll need to reestimate every time
+        auto nogas = !(call.gas);
+
         evmc::address to{};
 
         if (call.to) {
@@ -1083,25 +1090,27 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
            }
            to = silkworm::create_address(*call.from, nonce);
         }
+        // Retrieve the precompiles since they don't need to be added to the access list
+
 
         for(;;) {
            EVMExecutor executor{context_, tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number};
-
            silkworm::Transaction txn{call.to_transaction()};
-           const auto execution_result = co_await executor.call(block_with_hash.block, txn);
+
+           AccessListWithGas access_list;
+
+           auto tracer = std::make_shared<access_list::AccessListTracer>(access_list, txn.gas_limit);
+           const auto execution_result = co_await executor.call(block_with_hash.block, txn, tracer);
 
            if (execution_result.pre_check_error) {
-              reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
-           } else if (execution_result.error_code == evmc_status_code::EVMC_SUCCESS) {
-              reply = make_json_content(request["id"], "0x" + silkworm::to_hex(execution_result.data));
+              //result.pre_check_error = "tracing failed: " + execution_result.pre_check_error.value();
            } else {
-               const auto error_message = EVMExecutor<>::get_error_message(execution_result.error_code, execution_result.data);
-               if (execution_result.data.empty()) {
-                  reply = make_json_error(request["id"], -32000, error_message);
-               } else {
-                  reply = make_json_error(request["id"], {3, error_message, execution_result.data});
-               }
-          }
+
+              std::cout << "Return Failed: " << (execution_result.error_code != evmc_status_code::EVMC_SUCCESS) << "\n";
+              access_list.gas_used = txn.gas_limit - execution_result.gas_left;
+              reply = make_json_content(request["id"], access_list);
+           }
+           break;
        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
