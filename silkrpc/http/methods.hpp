@@ -47,6 +47,9 @@ constexpr const char* k_eth_getUncleCountByBlockHash{"eth_getUncleCountByBlockHa
 constexpr const char* k_eth_getUncleCountByBlockNumber{"eth_getUncleCountByBlockNumber"};
 constexpr const char* k_eth_getTransactionByHash{"eth_getTransactionByHash"};
 constexpr const char* k_eth_getTransactionByBlockHashAndIndex{"eth_getTransactionByBlockHashAndIndex"};
+constexpr const char* k_eth_getRawTransactionByHash{"eth_getRawTransactionByHash"};
+constexpr const char* k_eth_getRawTransactionByBlockHashAndIndex{"eth_getRawTransactionByBlockHashAndIndex"};
+constexpr const char* k_eth_getRawTransactionByBlockNumberAndIndex{"eth_getRawTransactionByBlockNumberAndIndex"};
 constexpr const char* k_eth_getTransactionByBlockNumberAndIndex{"eth_getTransactionByBlockNumberAndIndex"};
 constexpr const char* k_eth_getTransactionReceipt{"eth_getTransactionReceipt"};
 constexpr const char* k_eth_estimateGas{"eth_estimateGas"};
@@ -85,6 +88,8 @@ constexpr const char* k_debug_getModifiedAccountsByHash{"debug_getModifiedAccoun
 constexpr const char* k_debug_storageRangeAt{"debug_storageRangeAt"};
 constexpr const char* k_debug_traceTransaction{"debug_traceTransaction"};
 constexpr const char* k_debug_traceCall{"debug_traceCall"};
+constexpr const char* k_debug_traceBlockByNumber{"debug_traceBlockByNumber"};
+constexpr const char* k_debug_traceBlockByHash{"debug_traceBlockByHash"};
 
 constexpr const char* k_trace_call{"trace_call"};
 constexpr const char* k_trace_callMany{"trace_callMany"};

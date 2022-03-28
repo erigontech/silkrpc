@@ -90,7 +90,7 @@ public:
     MOCK_CONST_METHOD3(for_prefix, asio::awaitable<void>(const std::string&, const silkworm::ByteView&, Walker));
 };
 
-void check_expected_block_header(const silkworm::BlockHeader& header) {
+static void check_expected_block_header(const silkworm::BlockHeader& header) {
     CHECK(header.parent_hash == 0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7_bytes32);
     CHECK(header.ommers_hash == 0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347_bytes32);
     CHECK(header.beneficiary == silkworm::to_evmc_address(*silkworm::from_hex("0000000000000000000000000000000000000000")));
@@ -106,12 +106,12 @@ void check_expected_block_header(const silkworm::BlockHeader& header) {
     CHECK(header.mix_hash == 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32);
 }
 
-void check_expected_block_body(const silkworm::BlockBody& body) {
+static void check_expected_block_body(const silkworm::BlockBody& body) {
     CHECK(body.transactions.size() == 0);
     CHECK(body.ommers.size() == 0);
 }
 
-void check_expected_block_with_hash(const silkworm::BlockWithHash& bwh) {
+static void check_expected_block_with_hash(const silkworm::BlockWithHash& bwh) {
     CHECK(bwh.block.header.parent_hash == 0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7_bytes32);
     CHECK(bwh.block.header.ommers_hash == 0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347_bytes32);
     CHECK(bwh.block.header.beneficiary == silkworm::to_evmc_address(*silkworm::from_hex("0000000000000000000000000000000000000000")));
@@ -126,27 +126,6 @@ void check_expected_block_with_hash(const silkworm::BlockWithHash& bwh) {
         "b519bd4d046e167ddcab467d5db31d063f2d58f266fa86c4502aa169d17762090e92b821843de69b41adbb5d86f5d114ba7f01"));
     CHECK(bwh.block.header.mix_hash == 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32);
     CHECK(bwh.hash == 0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32);
-}
-
-void check_expected_transaction(const Transaction& transaction) {
-    const auto eth_hash = hash_of_transaction(transaction);
-    const auto tx_hash = silkworm::to_bytes32(silkworm::ByteView{eth_hash.bytes, silkworm::kHashLength});
-    CHECK(tx_hash == 0x3ff7b8917f1941784c709d6e54db18500fddc2b4c1a90b5cdec675cd0f9fc042_bytes32);
-    CHECK(transaction.access_list.empty());
-    CHECK(transaction.block_hash == 0x439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff_bytes32);
-    CHECK(transaction.block_number == 4'000'000);
-    CHECK(transaction.block_base_fee_per_gas == std::nullopt);
-    CHECK(transaction.chain_id == 5);
-    CHECK(transaction.data == *silkworm::from_hex(
-        "f2f0387700000000000000000000000000000000000000000000000000000000000158b09f0270fc889c577c1c64db7c819f921d1b6e8c7e5d3f2ff34f162cf4b324cc05"));
-    CHECK(*transaction.from == 0x70A5C9D346416f901826581d423Cd5B92d44Ff5a_address);
-    //CHECK(transaction.nonce == 103470);
-    CHECK(transaction.max_priority_fee_per_gas == 0x77359400);
-    CHECK(transaction.max_fee_per_gas == 0x77359400);
-    //CHECK(transaction.gas == 103470);
-    CHECK(transaction.gas_limit == 5000000);
-    CHECK(transaction.transaction_index == 0);
-    CHECK(transaction.type == Transaction::Type::kLegacy);
 }
 
 TEST_CASE("read_header_number") {
@@ -919,86 +898,6 @@ TEST_CASE("read_body_rlp") {
         ));
         auto result = asio::co_spawn(pool, read_body_rlp(db_reader, block_hash, block_number), asio::use_future);
         CHECK(result.get() == kBody);
-    }
-}
-
-TEST_CASE("read_transaction_by_hash") {
-    asio::thread_pool pool{1};
-    MockDatabaseReader db_reader;
-
-    SECTION("block header number not found") {
-        const auto transaction_hash{0x18dcb90e76b61fe6f37c9a9cd269a66188c05af5f7a62c50ff3246c6e207dc6d_bytes32};
-        EXPECT_CALL(db_reader, get_one(db::table::kTxLookup, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<silkworm::Bytes> { co_return silkworm::Bytes{}; }
-        ));
-        auto result = asio::co_spawn(pool, read_transaction_by_hash(db_reader, transaction_hash), asio::use_future);
-        CHECK(result.get() == std::nullopt);
-    }
-
-    SECTION("invalid block header number") {
-        const auto transaction_hash{0x18dcb90e76b61fe6f37c9a9cd269a66188c05af5f7a62c50ff3246c6e207dc6d_bytes32};
-        EXPECT_CALL(db_reader, get_one(db::table::kTxLookup, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<silkworm::Bytes> { co_return *silkworm::from_hex("01FFFFFFFFFFFFFFFF"); }
-        ));
-        auto result = asio::co_spawn(pool, read_transaction_by_hash(db_reader, transaction_hash), asio::use_future);
-        CHECK_THROWS_AS(result.get(), std::out_of_range);
-    }
-
-    SECTION("transaction not found") {
-        const auto transaction_hash{0x18dcb90e76b61fe6f37c9a9cd269a66188c05af5f7a62c50ff3246c6e207dc6d_bytes32};
-        EXPECT_CALL(db_reader, get_one(db::table::kTxLookup, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<silkworm::Bytes> { co_return *silkworm::from_hex("3D0900"); }
-        ));
-        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<silkworm::Bytes> { co_return kBlockHash; }
-        ));
-        EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
-        ));
-        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kBody}; }
-        ));
-        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<void> { co_return; }
-        ));
-        auto result = asio::co_spawn(pool, read_transaction_by_hash(db_reader, transaction_hash), asio::use_future);
-        CHECK(result.get() == std::nullopt);
-    }
-
-    SECTION("transaction found and matching") {
-        const auto transaction_hash{0x3ff7b8917f1941784c709d6e54db18500fddc2b4c1a90b5cdec675cd0f9fc042_bytes32};
-        EXPECT_CALL(db_reader, get_one(db::table::kTxLookup, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<silkworm::Bytes> { co_return *silkworm::from_hex("3D0900"); }
-        ));
-        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<silkworm::Bytes> { co_return kBlockHash; }
-        ));
-        EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
-        ));
-        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kNotEmptyBody}; }
-        ));
-        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(Invoke(
-            [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
-                silkworm::Bytes key{};
-                silkworm::Bytes value{*silkworm::from_hex("f8ac8301942e8477359400834c4b40945f62669ba0c6cf41cc162d8157ed71a0b9d6dbaf80b844f2"
-                    "f0387700000000000000000000000000000000000000000000000000000000000158b09f0270fc889c577c1c64db7c819f921d"
-                    "1b6e8c7e5d3f2ff34f162cf4b324cc052ea0d5494ad16e2233197daa9d54cbbcb1ee534cf9f675fa587c264a4ce01e7d3d23a0"
-                    "1421bcf57f4b39eb84a35042dc4675ae167f3e2f50e808252afa23e62e692355")};
-                w(key, value);
-                co_return;
-            }
-        ));
-        EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> {
-                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("70A5C9D346416f901826581d423Cd5B92d44Ff5a")};
-            }
-        ));
-        auto result = asio::co_spawn(pool, read_transaction_by_hash(db_reader, transaction_hash), asio::use_future);
-        const std::optional<silkrpc::Transaction> transaction = result.get();
-        CHECK(transaction.has_value());
-        check_expected_transaction(transaction.value());
     }
 }
 

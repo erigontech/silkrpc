@@ -76,6 +76,20 @@ TEST_CASE("serialize empty bytes32", "[silkrpc][to_json]") {
     CHECK(j == R"("0x0000000000000000000000000000000000000000000000000000000000000000")"_json);
 }
 
+TEST_CASE("serialize empty Rlp", "[silkrpc][to_json]") {
+    Rlp rlp;
+    nlohmann::json j = rlp;
+    CHECK(j == R"("0x")"_json);
+}
+
+TEST_CASE("serialize not empty Rlp", "[silkrpc][to_json]") {
+    Rlp rlp;
+    rlp.buffer.push_back(0x78);
+    rlp.buffer.push_back(0x24);
+    nlohmann::json j = rlp;
+    CHECK(j == R"("0x7824")"_json);
+}
+
 TEST_CASE("serialize non-empty bytes32", "[silkrpc][to_json]") {
     evmc::bytes32 b32{0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32};
     nlohmann::json j = b32;
