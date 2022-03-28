@@ -419,7 +419,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         "83036383365386333313562666365393962326136656634376330353763303464"
         "6537383538227d"}
     };
-    
+
     std::unique_ptr<ethdb::Database> database_ptr(new DummyDatabase(json));
 
     nlohmann::json reply;
@@ -475,7 +475,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params",
         "83036383365386333313562666365393962326136656634376330353763303464"
         "6537383538227d"}
     };
-    
+
     std::unique_ptr<ethdb::Database> database_ptr(new DummyDatabase(json));
 
     nlohmann::json reply;
@@ -529,7 +529,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
         "83036383365386333313562666365393962326136656634376330353763303464"
         "6537383538227d"}
     };
-    
+
     std::unique_ptr<ethdb::Database> database_ptr(new DummyDatabase(json));
 
     nlohmann::json reply;
@@ -587,7 +587,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
         "83036383365386333313562666365393962326136656634376330353763303464"
         "6537383538227d"}
     };
-    
+
     std::unique_ptr<ethdb::Database> database_ptr(new DummyDatabase(json));
 
     nlohmann::json reply;
@@ -645,7 +645,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if no terminal total 
         "83036383365386333313562666365393962326136656634376330353763303464"
         "6537383538227d"}
     };
-    
+
     std::unique_ptr<ethdb::Database> database_ptr(new DummyDatabase(json));
 
     nlohmann::json reply;
@@ -701,7 +701,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
        "353539653835313437306636653762626564316462343734393830363833653863"
        "333135626663653939623261366566343763303537633034646537383538227d"}
     };
-    
+
     std::unique_ptr<ethdb::Database> database_ptr(new DummyDatabase(json));
 
     nlohmann::json reply;
@@ -757,7 +757,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
        "6966666963756c7479223a2231303030303030222c227465726d696e616c426c6f"
        "636b4e756d626572223a307d"}
     };
-    
+
     std::unique_ptr<ethdb::Database> database_ptr(new DummyDatabase(json));
 
     nlohmann::json reply;
@@ -815,7 +815,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
         "64316462343734393830363833653863333135626663653939623261366566343"
         "763303537633034646537383538227d"}
     };
-    
+
     std::unique_ptr<ethdb::Database> database_ptr(new DummyDatabase(json));
 
     nlohmann::json reply;
