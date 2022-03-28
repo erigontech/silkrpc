@@ -184,6 +184,10 @@ void to_json(nlohmann::json& json, const Rlp& rlp) {
     json = "0x" + silkworm::to_hex(rlp.buffer);
 }
 
+void to_json(nlohmann::json& json, const AccessListWithGas& accessListAndGas) {
+    json["accessList"] = accessListAndGas.access_list;
+    json["gasUsed"] = silkrpc::to_quantity(accessListAndGas.gas_used);
+}
 
 void to_json(nlohmann::json& json, const Block& b) {
     const auto block_number = silkrpc::to_quantity(b.block.header.number);
