@@ -101,7 +101,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
             co_return;
         }
 
-        if(config.terminal_total_difficulty != std::nullopt) {
+        if(config.terminal_total_difficulty == std::nullopt) {
             SILKRPC_ERROR << "execution layer does not have terminal total difficulty";
             reply = make_json_error(request.at("id"), 100, "execution layer does not have terminal total difficulty");
             co_return;
@@ -114,12 +114,25 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
             co_return;
         }
 
+        if(config.terminal_block_hash == std::nullopt) {
+            SILKRPC_ERROR << "execution layer does not have terminal block hash";
+            reply = make_json_error(request.at("id"), 100, "execution layer does not have terminal block hash");
+            co_return;
+        }
+
         if(config.terminal_block_hash.value() != cl_configuration.terminal_block_hash) {
             SILKRPC_ERROR << "execution layer has the incorrect terminal block hash, expected: ";
             SILKRPC_ERROR << cl_configuration.terminal_block_hash << " got: " << config.terminal_block_hash.value() << "\n";
             reply = make_json_error(request.at("id"), 100, "incorrect terminal block hash");
             co_return;
         }
+
+        if(config.terminal_block_number == std::nullopt) {
+            SILKRPC_ERROR << "execution layer does not have terminal block number";
+            reply = make_json_error(request.at("id"), 100, "execution layer does not have terminal block number");
+            co_return;
+        }
+
         TransitionConfiguration transition_configuration {
             .terminal_total_difficulty = config.terminal_total_difficulty.value(),
             .terminal_block_hash = config.terminal_block_hash.value(),
