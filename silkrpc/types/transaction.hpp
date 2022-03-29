@@ -20,6 +20,7 @@
 #include <iostream>
 #include <optional>
 #include <vector>
+#include <string>
 
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
@@ -48,8 +49,9 @@ struct TransactionWithBlock {
     Transaction transaction;
 };
 
-struct AccessListWithGas {
+struct AccessListResult {
     std::vector<silkworm::AccessListEntry> access_list;
+    std::optional<std::string> error;
     uint64_t gas_used;
 };
 
