@@ -88,8 +88,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
         #endif
         const auto cl_configuration = params[0].get<TransitionConfiguration>();
         auto tx = co_await database_->begin();
-        ethdb::TransactionDatabase tx_database{*tx};
-        const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
+        const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(ethdb::TransactionDatabase{*tx})};
         SILKRPC_DEBUG << "chain config: " << chain_config << "\n";
         auto config = silkworm::ChainConfig::from_json(chain_config.config).value();
         if(cl_configuration.terminal_block_number != 0) {
