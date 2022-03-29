@@ -136,8 +136,8 @@ void to_json(nlohmann::json& json, const BlockHeader& header) {
 }
 
 void to_json(nlohmann::json& json, const AccessListEntry& access_list) {
-    json["account"] = access_list.account;
-    json["storage_keys"] = access_list.storage_keys;
+    json["address"] = access_list.account;
+    json["storageKeys"] = access_list.storage_keys;
 }
 
 void to_json(nlohmann::json& json, const Transaction& transaction) {
@@ -184,9 +184,12 @@ void to_json(nlohmann::json& json, const Rlp& rlp) {
     json = "0x" + silkworm::to_hex(rlp.buffer);
 }
 
-void to_json(nlohmann::json& json, const AccessListWithGas& accessListAndGas) {
-    json["accessList"] = accessListAndGas.access_list;
-    json["gasUsed"] = silkrpc::to_quantity(accessListAndGas.gas_used);
+void to_json(nlohmann::json& json, const AccessListResult& access_list_result) {
+    json["accessList"] = access_list_result.access_list;
+    if (access_list_result.error) {
+       json["error"] = *(access_list_result.error);
+    }
+    json["gasUsed"] = silkrpc::to_quantity(access_list_result.gas_used);
 }
 
 void to_json(nlohmann::json& json, const Block& b) {
