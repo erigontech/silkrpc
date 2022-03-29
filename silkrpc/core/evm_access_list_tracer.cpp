@@ -83,21 +83,21 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::Execution
 
 
 void AccessListTracer::addStorage(const evmc::address& address, const evmc::bytes32& storage) {
-    for (int i = 0; i < access_list_.access_list.size(); i++) {
-       if (access_list_.access_list[i].account == address) {
-          for (int j = 0; j < access_list_.access_list[i].storage_keys.size(); j++) {
-            if (access_list_.access_list[i].storage_keys[j] == storage) {
+    for (int i = 0; i < access_list_result_.access_list.size(); i++) {
+       if (access_list_result_.access_list[i].account == address) {
+          for (int j = 0; j < access_list_result_.access_list[i].storage_keys.size(); j++) {
+            if (access_list_result_.access_list[i].storage_keys[j] == storage) {
                return;
             }
           }
-          access_list_.access_list[i].storage_keys.push_back(storage);
+          access_list_result_.access_list[i].storage_keys.push_back(storage);
           return;
        }
     }
     silkworm::AccessListEntry item;
     item.account = address;
     item.storage_keys.push_back(storage);
-    access_list_.access_list.push_back(item);
+    access_list_result_.access_list.push_back(item);
 }
 
 void AccessListTracer::on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
