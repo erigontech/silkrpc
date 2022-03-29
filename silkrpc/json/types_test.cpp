@@ -792,15 +792,15 @@ TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {
         "transactionIndex":"0x3",
         "accessList":[
             {
-                "account":"0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae",
-                "storage_keys":[
+                "address":"0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae",
+                "storageKeys":[
                     "0x0000000000000000000000000000000000000000000000000000000000000003",
                     "0x0000000000000000000000000000000000000000000000000000000000000007"
                 ]
             },
             {
-                "account":"0xbb9bc244d798123fde783fcc1c72d3bb8c189413",
-                "storage_keys":[]
+                "address":"0xbb9bc244d798123fde783fcc1c72d3bb8c189413",
+                "storageKeys":[]
             }
         ]
     })"_json);
