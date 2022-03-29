@@ -66,7 +66,7 @@ void to_json(nlohmann::json& json, const Transaction& transaction);
 
 namespace silkrpc {
 
-void to_json(nlohmann::json& json, const AccessListWithGas& access_list);
+void to_json(nlohmann::json& json, const AccessListResult& access_list_result);
 
 void to_json(nlohmann::json& json, const Rlp& rlp);
 
