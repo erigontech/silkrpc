@@ -1097,17 +1097,21 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
            EVMExecutor executor{context_, tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number};
            silkworm::Transaction txn{call.to_transaction()};
 
-           AccessListWithGas access_list;
+           AccessListResult access_list_result;
 
-           auto tracer = std::make_shared<access_list::AccessListTracer>(access_list, txn.gas_limit);
+           auto tracer = std::make_shared<access_list::AccessListTracer>(access_list_result);
            const auto execution_result = co_await executor.call(block_with_hash.block, txn, tracer);
 
            if (execution_result.pre_check_error) {
-              //result.pre_check_error = "tracing failed: " + execution_result.pre_check_error.value();
+              reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
+           } else if (execution_result.error_code == evmc_status_code::EVMC_SUCCESS) {
+              access_list_result.gas_used = txn.gas_limit - execution_result.gas_left;
+              reply = make_json_content(request["id"], access_list_result);
            } else {
-              std::cout << "Return Failed: " << (execution_result.error_code != evmc_status_code::EVMC_SUCCESS) << "\n";
-              access_list.gas_used = txn.gas_limit - execution_result.gas_left;
-              reply = make_json_content(request["id"], access_list);
+              const auto error_message = EVMExecutor<>::get_error_message(execution_result.error_code, execution_result.data, false /* full_error */);
+              access_list_result.gas_used = txn.gas_limit - execution_result.gas_left;
+              access_list_result.error = error_message;
+              reply = make_json_content(request["id"], access_list_result);
            }
            break;
        }
