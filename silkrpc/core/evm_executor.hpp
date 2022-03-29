@@ -65,7 +65,7 @@ private:
     const core::rawdb::DatabaseReader& db_reader_;
     const silkworm::ChainConfig& config_;
     asio::thread_pool& workers_;
-    state::RemoteState buffer_;
+    state::RemoteState remote_state_;
     WorldState state_;
 };
 

@@ -124,7 +124,7 @@ public:
 
 private:
     asio::io_context& io_context_;
-    AsyncRemoteState async_buffer_;
+    AsyncRemoteState async_state_;
 };
 
 std::ostream& operator<<(std::ostream& out, const RemoteState& s);
