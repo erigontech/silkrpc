@@ -146,7 +146,6 @@ private:
     nlohmann::json::iterator itr_;
 };
 
-
 static uint64_t next_tx_id{0};
 class DummyTransaction: public silkrpc::ethdb::Transaction {
 public:
