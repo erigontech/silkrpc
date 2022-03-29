@@ -846,4 +846,65 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
     context_pool.stop();
     context_pool_thread.join();
 }
+
+TEST_CASE("handle_engine_transition_configuration_v1 fails when consensus layer terminal block number is not zero", "[silkrpc][engine_api]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    nlohmann::json json;
+
+    json["CanonicalHeader"] = {
+        {"0000000000000000", "a7684665106faf27aa839975fb505b23af17b36179d73bec1e770f2b8db878f4"}
+    };
+    json["Config"] = {
+        {"a7684665106faf27aa839975fb505b23af17b36179d73bec1e770f2b8db878f4",
+        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f6"
+        "36b223a302c22656970313530426c6f636b223a302c22656970313535426c6f63"
+        "6b223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e7"
+        "4696e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b22"
+        "3a302c22697374616e62756c426c6f636b223a302c226265726c696e426c6f636"
+        "b223a302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c546f74"
+        "616c446966666963756c7479223a2231303030303030222c227465726d696e616"
+        "c426c6f636b48617368223a223078333535396538353134373066366537626265"
+        "64316462343734393830363833653863333135626663653939623261366566343"
+        "763303537633034646537383538227d"}
+    };
+
+    std::unique_ptr<ethdb::Database> database_ptr(new DummyDatabase(json));
+
+    nlohmann::json reply;
+    nlohmann::json request = R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":"engine_exchangeTransitionConfigurationV1",
+        "params": [{
+            "terminalTotalDifficulty":"0xf4240",
+            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+            "terminalBlockNumber":"0x1"
+        }]
+    })"_json;
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_exchange_transition_configuration_v1(
+            request,
+            reply
+        );
+    }, asio::use_future)};
+    result.get();
+
+    CHECK(reply == R"({
+        "error":{
+            "code":100,
+            "message":"consensus layer terminal block number is not zero"
+            },
+            "id":1,
+            "jsonrpc":"2.0"
+        })"_json);
+    context_pool.stop();
+    context_pool_thread.join();
+}
+
+
+
 } // namespace silkrpc::commands
