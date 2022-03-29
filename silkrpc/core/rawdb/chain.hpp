@@ -52,7 +52,7 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(const DatabaseReader
 
 asio::awaitable<silkworm::BlockWithHash> read_block_by_number(const DatabaseReader& reader, uint64_t block_number);
 
-asio::awaitable<silkworm::BlockWithHash> read_block_by_transaction_hash(const DatabaseReader& reader, const evmc::bytes32& transaction_hash);
+asio::awaitable<uint64_t> read_block_number_by_transaction_hash(const DatabaseReader& reader, const evmc::bytes32& transaction_hash);
 
 asio::awaitable<silkworm::BlockWithHash> read_block(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
 
@@ -68,13 +68,11 @@ asio::awaitable<silkworm::Bytes> read_header_rlp(const DatabaseReader& reader, c
 
 asio::awaitable<silkworm::Bytes> read_body_rlp(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
 
-asio::awaitable<std::optional<silkrpc::Transaction>> read_transaction_by_hash(const DatabaseReader& reader, const evmc::bytes32& transaction_hash);
-
 asio::awaitable<Addresses> read_senders(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
 
 asio::awaitable<Receipts> read_raw_receipts(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
 
-asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
+asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const silkworm::BlockWithHash& block_with_hash);
 
 asio::awaitable<Transactions> read_transactions(const DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count);
 

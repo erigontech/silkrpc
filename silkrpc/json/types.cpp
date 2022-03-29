@@ -176,10 +176,14 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
 }
 
 
-
 } // namespace silkworm
 
 namespace silkrpc {
+
+void to_json(nlohmann::json& json, const Rlp& rlp) {
+    json = "0x" + silkworm::to_hex(rlp.buffer);
+}
+
 
 void to_json(nlohmann::json& json, const Block& b) {
     const auto block_number = silkrpc::to_quantity(b.block.header.number);

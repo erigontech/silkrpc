@@ -16,8 +16,8 @@
 
 #include "cached_chain.hpp"
 
-#include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/core/blocks.hpp>
+#include <silkrpc/core/rawdb/chain.hpp>
 
 namespace silkrpc::core  {
 
@@ -51,11 +51,29 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_number_or_hash(BlockCache
         auto block_number = co_await get_latest_block_number(reader);
         co_return co_await read_block_by_number(cache, reader, block_number);
     }
-
     throw std::runtime_error{"invalid block_number_or_hash value"};
 }
 
+asio::awaitable<silkworm::BlockWithHash> read_block_by_transaction_hash(BlockCache& cache, const rawdb::DatabaseReader& reader, const evmc::bytes32& transaction_hash) {
+    auto block_number = co_await rawdb::read_block_number_by_transaction_hash(reader, transaction_hash);
+    co_return co_await read_block_by_number(cache, reader, block_number);
+}
+
+asio::awaitable<std::optional<silkrpc::TransactionWithBlock>> read_transaction_by_hash(BlockCache& cache, const rawdb::DatabaseReader& reader, const evmc::bytes32& transaction_hash) {
+    auto block_number = co_await rawdb::read_block_number_by_transaction_hash(reader, transaction_hash);
+    auto block_with_hash = co_await read_block_by_number(cache, reader, block_number);
+    const silkworm::ByteView tx_hash{transaction_hash.bytes, silkworm::kHashLength};
+
+    const auto transactions = block_with_hash.block.transactions;
+    for (std::size_t idx{0}; idx < transactions.size(); idx++) {
+        auto ethash_hash{hash_of_transaction(transactions[idx])};
+        silkworm::ByteView hash_view{ethash_hash.bytes, silkworm::kHashLength};
+        if (tx_hash == hash_view) {
+            const auto block_header = block_with_hash.block.header;
+            co_return TransactionWithBlock{block_with_hash, transactions[idx], block_with_hash.hash, block_header.number, block_header.base_fee_per_gas, idx};
+        }
+    }
+    co_return std::nullopt;
+}
 
 } // namespace silkrpc::core
-
-
