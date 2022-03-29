@@ -1105,7 +1105,6 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
            if (execution_result.pre_check_error) {
               //result.pre_check_error = "tracing failed: " + execution_result.pre_check_error.value();
            } else {
-
               std::cout << "Return Failed: " << (execution_result.error_code != evmc_status_code::EVMC_SUCCESS) << "\n";
               access_list.gas_used = txn.gas_limit - execution_result.gas_left;
               reply = make_json_content(request["id"], access_list);
