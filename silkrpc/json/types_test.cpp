@@ -90,6 +90,28 @@ TEST_CASE("serialize not empty Rlp", "[silkrpc][to_json]") {
     CHECK(j == R"("0x7824")"_json);
 }
 
+TEST_CASE("serialize AccessListResult with gas_used", "[silkrpc][to_json]") {
+    AccessListResult accessListResult;
+    accessListResult.gas_used = 0x1234;
+    nlohmann::json j = accessListResult;
+    CHECK(j == R"({
+          "accessList":[],
+          "gasUsed":"0x1234"
+    })"_json);
+}
+
+TEST_CASE("serialize AccessListResult with error", "[silkrpc][to_json]") {
+    AccessListResult accessListResult;
+    accessListResult.gas_used = 0x1234;
+    accessListResult.error = "operation reverted";
+    nlohmann::json j = accessListResult;
+    CHECK(j == R"({
+          "accessList":[],
+          "error":"operation reverted",
+          "gasUsed":"0x1234"
+    })"_json);
+}
+
 TEST_CASE("serialize non-empty bytes32", "[silkrpc][to_json]") {
     evmc::bytes32 b32{0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32};
     nlohmann::json j = b32;
