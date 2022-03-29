@@ -33,7 +33,7 @@ namespace silkrpc::access_list {
 
 class AccessListTracer : public silkworm::EvmTracer {
 public:
-    explicit AccessListTracer(AccessListWithGas& access_list, std::int64_t gas_limit) : access_list_(access_list), gas_limit_(gas_limit) {}
+    explicit AccessListTracer(AccessListResult& access_list_result) : access_list_result_(access_list_result) {}
 
     AccessListTracer(const AccessListTracer&) = delete;
     AccessListTracer& operator=(const AccessListTracer&) = delete;
@@ -45,8 +45,7 @@ public:
 private:
     void addStorage(const evmc::address& address, const evmc::bytes32& storage);
 
-    AccessListWithGas& access_list_;
-    std::int64_t gas_limit_{0};
+    AccessListResult& access_list_result_;
 
     const char* const* opcode_names_ = nullptr;
     std::int64_t start_gas_{0};
