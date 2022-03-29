@@ -70,7 +70,7 @@ private:
 class RemoteState : public silkworm::State {
 public:
     explicit RemoteState(asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, uint64_t block_number)
-    : io_context_(io_context), async_buffer_{io_context, db_reader, block_number} {}
+    : io_context_(io_context), async_state_{io_context, db_reader, block_number} {}
 
     std::optional<silkworm::Account> read_account(const evmc::address& address) const noexcept override;
 
