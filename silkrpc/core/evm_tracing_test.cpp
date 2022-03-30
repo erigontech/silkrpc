@@ -1598,7 +1598,7 @@ TEST_CASE("Trace json serialization") {
 
         nlohmann::json json = trace;
 
-        CHECK(json == R"([{
+        CHECK(json == R"({
             "failed": false,
             "gas": 20,
             "returnValue": "deadbeaf",
@@ -1614,7 +1614,7 @@ TEST_CASE("Trace json serialization") {
                     "804292fe56769f4b9f0e91cf85875f67487cd9e85a084cbba2188be4466c4f23": "0000000000000000000000000000000000000000000000000000000000000008"
                 }
             }]
-        }])"_json);
+        })"_json);
     }
 }
 
