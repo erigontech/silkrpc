@@ -215,7 +215,9 @@ TEST_CASE("TraceExecutor::execute call 1") {
 
         CHECK(result.pre_check_error.has_value() == false);
 
-        CHECK(result.trace == R"({
+        nlohmann::json trace = result.trace;
+
+        CHECK(trace == R"({
             "failed": false,
             "gas": 75178,
             "returnValue": "",
@@ -316,7 +318,9 @@ TEST_CASE("TraceExecutor::execute call 1") {
 
         CHECK(result.pre_check_error.has_value() == false);
 
-        CHECK(result.trace == R"({
+        nlohmann::json trace = result.trace;
+
+        CHECK(trace == R"({
             "failed": false,
             "gas": 75178,
             "returnValue": "",
@@ -408,7 +412,9 @@ TEST_CASE("TraceExecutor::execute call 1") {
 
         CHECK(result.pre_check_error.has_value() == false);
 
-        CHECK(result.trace == R"({
+        nlohmann::json trace = result.trace;
+
+        CHECK(trace == R"({
             "failed": false,
             "gas": 75178,
             "returnValue": "",
@@ -505,7 +511,9 @@ TEST_CASE("TraceExecutor::execute call 1") {
 
         CHECK(result.pre_check_error.has_value() == false);
 
-        CHECK(result.trace == R"({
+        nlohmann::json trace = result.trace;
+
+        CHECK(trace == R"({
             "failed": false,
             "gas": 75178,
             "returnValue": "",
@@ -603,7 +611,9 @@ TEST_CASE("TraceExecutor::execute call 1") {
 
         CHECK(result.pre_check_error.has_value() == false);
 
-        CHECK(result.trace == R"({
+        nlohmann::json trace = result.trace;
+
+        CHECK(trace == R"({
             "failed": false,
             "gas": 75178,
             "returnValue": "",
@@ -791,7 +801,10 @@ TEST_CASE("TraceExecutor::execute call 2") {
         pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == false);
-        CHECK(result.trace == R"({
+        
+        nlohmann::json trace = result.trace;
+
+        CHECK(trace == R"({
             "failed": false,
             "gas": 21004,
             "returnValue": "",
@@ -934,7 +947,8 @@ TEST_CASE("TraceExecutor::execute call with error") {
     pool_thread.join();
 
     CHECK(result.pre_check_error.has_value() == false);
-    CHECK(result.trace == R"({
+    nlohmann::json trace = result.trace;
+    CHECK(trace == R"({
         "failed": true,
         "gas": 211190,
         "returnValue": "",
@@ -1078,7 +1092,7 @@ TEST_CASE("TraceExecutor::execute block") {
 
     asio::io_context& io_context = context_pool.get_io_context();
     auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block), asio::use_future);
-    auto result = execution_result.get();
+    nlohmann::json result = execution_result.get();
 
     context_pool.stop();
     io_context.stop();
@@ -1434,7 +1448,9 @@ TEST_CASE("Trace json serialization") {
         trace.trace_config.disableMemory = true;
         trace.trace_config.disableStack = true;
 
-        CHECK(trace == R"({
+        nlohmann::json json = trace;
+
+        CHECK(json == R"({
             "failed": false,
             "gas": 20,
             "returnValue": "deadbeaf",
@@ -1459,7 +1475,9 @@ TEST_CASE("Trace json serialization") {
         trace.trace_config.disableMemory = false;
         trace.trace_config.disableStack = true;
 
-        CHECK(trace == R"({
+        nlohmann::json json = trace;
+
+        CHECK(json == R"({
             "failed": false,
             "gas": 20,
             "returnValue": "deadbeaf",
@@ -1485,7 +1503,9 @@ TEST_CASE("Trace json serialization") {
         trace.trace_config.disableMemory = true;
         trace.trace_config.disableStack = false;
 
-        CHECK(trace == R"({
+        nlohmann::json json = trace;
+
+        CHECK(json == R"({
             "failed": false,
             "gas": 20,
             "returnValue": "deadbeaf",
@@ -1511,7 +1531,9 @@ TEST_CASE("Trace json serialization") {
         trace.trace_config.disableMemory = true;
         trace.trace_config.disableStack = true;
 
-        CHECK(trace == R"({
+        nlohmann::json json = trace;
+
+        CHECK(json == R"({
             "failed": false,
             "gas": 20,
             "returnValue": "deadbeaf",
@@ -1539,7 +1561,9 @@ TEST_CASE("Trace json serialization") {
         trace.trace_config.disableMemory = false;
         trace.trace_config.disableStack = false;
 
-        CHECK(trace == R"({
+        nlohmann::json json = trace;
+
+        CHECK(json == R"({
             "failed": false,
             "gas": 20,
             "returnValue": "deadbeaf",
@@ -1572,7 +1596,9 @@ TEST_CASE("Trace json serialization") {
         std::vector<Trace> traces;
         traces.push_back(trace);
 
-        CHECK(traces == R"([{
+        nlohmann::json json = trace;
+
+        CHECK(json == R"([{
             "failed": false,
             "gas": 20,
             "returnValue": "deadbeaf",
