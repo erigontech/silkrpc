@@ -27,6 +27,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/ethdb/tables.hpp>
 #include <silkrpc/types/transaction.hpp>
 
@@ -41,6 +42,17 @@ using testing::InvokeWithoutArgs;
 static silkworm::Bytes kZeroKey{*silkworm::from_hex("0000000000000000")};
 static silkworm::Bytes kZeroHeader{*silkworm::from_hex("bf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a")};
 
+static silkworm::Bytes kConfigKey{
+    *silkworm::from_hex("bf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a")};
+static silkworm::Bytes kConfigValue{*silkworm::from_hex(
+    "7b22436861696e4e616d65223a22676f65726c69222c22636861696e4964223a352c22636f6e73656e737573223a22636c69717565222c2268"
+    "6f6d657374656164426c6f636b223a302c2264616f466f726b537570706f7274223a747275652c22656970313530426c6f636b223a302c2265"
+    "697031353048617368223a22307830303030303030303030303030303030303030303030303030303030303030303030303030303030303030"
+    "303030303030303030303030303030303030303030222c22656970313535426c6f636b223a302c22656970313538426c6f636b223a302c2262"
+    "797a616e7469756d426c6f636b223a302c22636f6e7374616e74696e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b"
+    "223a302c22697374616e62756c426c6f636b223a313536313635312c226265726c696e426c6f636b223a343436303634342c226c6f6e646f6e"
+    "426c6f636b223a353036323630352c22636c69717565223a7b22706572696f64223a31352c2265706f6368223a33303030307d7d")};
+
 class EvmTracingMockDatabaseReader : public core::rawdb::DatabaseReader {
   public:
     MOCK_CONST_METHOD2(get, asio::awaitable<KeyValue>(const std::string&, const silkworm::ByteView&));
@@ -53,32 +65,6 @@ class EvmTracingMockDatabaseReader : public core::rawdb::DatabaseReader {
 TEST_CASE("TraceExecutor::execute call 1") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
-
-    static silkworm::Bytes kKey{
-        *silkworm::from_hex("00000000005279a7c07964f1077d2856a353fceafefb64b8ec1bcbefec632b6ce3ddff3798f5b878")};
-    static silkworm::Bytes kHeader{*silkworm::from_hex(
-        "f9025ea012e2a1c61976e189a9a8d6a11661314526a153edb174fd2f44db079ef6fbcb3da01dcc4de8dec75d7aab85b567b6ccd41ad312451b"
-        "948a7413f0a142fd40d49347940000000000000000000000000000000000000000a06d37320b6b30d8395610f23a017d2cef0ad7a095c36703"
-        "0b2be1a2a276a6e3a6a08d713b44f92bd42c9d5cc2cd03fca0b8241e8fe50a6df40eb25b172510e711d7a01356c1956437b9d1d6d8b94012e9"
-        "86db41c3cef5e0b645d4a9834389758aa7d5b90100000000022000000020000000108400000004000840010000000160014000800000000004"
-        "0000040000000080004000401010000000102000000000003021000100000000002000080040000c20800000028000108000002004404000a9"
-        "00040060080001028010000800100040000820000000100802200000004011400a000008000011000080000000000100200000000000001040"
-        "90000000000000000000260000050000028000800000808000208400084100010002400000000000000000000002a000000000000002000000"
-        "0021000000001004082000000000022000041000000001001080000000228000000000200000200000000400000008000402835279a78401c9"
-        "c380835721a584612b9ab2b861000000000000436f6e73656e5379732048797065726c656467657220426573758be0ef16841d141241253bd4"
-        "54fcd818886f4eb0bdb413fbe0327d6d95fc04f82d92e0664538b919c69217a2296f07e4dd7392a1b39bc8845e0f02b93eade70d00a0000000"
-        "000000000000000000000000000000000000000000000000000000000088000000000000000007")};
-
-    static silkworm::Bytes kConfigKey{
-        *silkworm::from_hex("bf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a")};
-    static silkworm::Bytes kConfigValue{*silkworm::from_hex(
-        "7b22436861696e4e616d65223a22676f65726c69222c22636861696e4964223a352c22636f6e73656e737573223a22636c69717565222c2268"
-        "6f6d657374656164426c6f636b223a302c2264616f466f726b537570706f7274223a747275652c22656970313530426c6f636b223a302c2265"
-        "697031353048617368223a22307830303030303030303030303030303030303030303030303030303030303030303030303030303030303030"
-        "303030303030303030303030303030303030303030222c22656970313535426c6f636b223a302c22656970313538426c6f636b223a302c2262"
-        "797a616e7469756d426c6f636b223a302c22636f6e7374616e74696e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b"
-        "223a302c22697374616e62756c426c6f636b223a313536313635312c226265726c696e426c6f636b223a343436303634342c226c6f6e646f6e"
-        "426c6f636b223a353036323630352c22636c69717565223a7b22706572696f64223a31352c2265706f6368223a33303030307d7d")};
 
     static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("e0a2bd4258d2768837baa26a28fe71dc079f84c700000000005279a8")};
     static silkworm::Bytes kAccountHistoryValue1{*silkworm::from_hex(
@@ -659,18 +645,6 @@ TEST_CASE("TraceExecutor::execute call 2") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    static silkworm::Bytes kConfigKey{
-        *silkworm::from_hex("bf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a")};
-    static silkworm::Bytes kConfigValue{*silkworm::from_hex(
-        "7b22436861696e4e616d65223a22676f65726c69222c22636861696e4964223a352c22636f6e73656e737573223a22636c69717565222c"
-        "22686f6d657374656164426c6f636b223a302c2264616f466f726b537570706f7274223a747275652c22656970313530426c6f636b223a"
-        "302c2265697031353048617368223a22307830303030303030303030303030303030303030303030303030303030303030303030303030"
-        "303030303030303030303030303030303030303030303030303030222c22656970313535426c6f636b223a302c22656970313538426c6f"
-        "636b223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e74696e6f706c65426c6f636b223a302c227065746572"
-        "7362757267426c6f636b223a302c22697374616e62756c426c6f636b223a313536313635312c226265726c696e426c6f636b223a343436"
-        "303634342c226c6f6e646f6e426c6f636b223a353036323630352c22636c69717565223a7b22706572696f64223a31352c2265706f6368"
-        "223a33303030307d7d")};
-
     static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("8ced5ad0d8da4ec211c17355ed3dbfec4cf0e5b900000000004366ad")};
     static silkworm::Bytes kAccountHistoryValue1{*silkworm::from_hex(
         "0100000000000000000000003a300000010000004300c00310000000d460da60de60f86008610d611161136125612d6149615c61626182"
@@ -734,29 +708,66 @@ TEST_CASE("TraceExecutor::execute call 2") {
 
     SECTION("Call: TO present") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> { co_return kZeroHeader; }));
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+                SILKRPC_LOG << "EXPECT_CALL::get "
+                    << " table: " << db::table::kCanonicalHashes
+                    << " key: " << silkworm::to_hex(kZeroKey)
+                    << " value: " << silkworm::to_hex(kZeroHeader)
+                    << "\n";
+                co_return kZeroHeader;
+            }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                SILKRPC_LOG << "EXPECT_CALL::get "
+                    << " table: " << db::table::kConfig
+                    << " key: " << silkworm::to_hex(kConfigKey)
+                    << " value: " << silkworm::to_hex(kConfigValue)
+                    << "\n";
                 co_return KeyValue{kConfigKey, kConfigValue};
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                SILKRPC_LOG << "EXPECT_CALL::get "
+                    << " table: " << db::table::kAccountHistory
+                    << " key: " << silkworm::to_hex(kAccountHistoryKey1)
+                    << " value: " << silkworm::to_hex(kAccountHistoryValue1)
+                    << "\n";
                 co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
             }));
         EXPECT_CALL(db_reader,
                 get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey1},
                                 silkworm::ByteView{kAccountChangeSetSubkey1}))
             .WillOnce(InvokeWithoutArgs(
-                []() -> asio::awaitable<std::optional<silkworm::Bytes>> { co_return kAccountChangeSetValue1; }));
+                []() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+                    SILKRPC_LOG << "EXPECT_CALL::get_both_range "
+                        << " table: " << db::table::kPlainAccountChangeSet
+                        << " key: " << silkworm::to_hex(kAccountChangeSetKey1)
+                        << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey1)
+                        << " value: " << silkworm::to_hex(kAccountChangeSetValue1)
+                        << "\n";
+                    co_return kAccountChangeSetValue1;
+                }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
             .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                SILKRPC_LOG << "EXPECT_CALL::get "
+                    << " table: " << db::table::kAccountHistory
+                    << " key: " << silkworm::to_hex(kAccountHistoryKey2)
+                    << " value: " << silkworm::to_hex(kAccountHistoryValue2)
+                    << "\n";
                 co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
             }));
-        EXPECT_CALL(db_reader,
-                get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey2},
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey2},
                                 silkworm::ByteView{kAccountChangeSetSubkey2}))
             .WillOnce(InvokeWithoutArgs(
-                []() -> asio::awaitable<std::optional<silkworm::Bytes>> { co_return kAccountChangeSetValue2; }));
+                []() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+                    SILKRPC_LOG << "EXPECT_CALL::get_both_range "
+                        << " table: " << db::table::kPlainAccountChangeSet
+                        << " key: " << silkworm::to_hex(kAccountChangeSetKey2)
+                        << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey2)
+                        << " value: " << silkworm::to_hex(kAccountChangeSetValue2)
+                        << "\n";
+                    co_return kAccountChangeSetValue2;
+                }));
 
         const auto block_number = 4'417'196;  // 0x4366AC
         silkrpc::Call call;
@@ -780,7 +791,6 @@ TEST_CASE("TraceExecutor::execute call 2") {
         pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == false);
-
         CHECK(result.trace == R"({
             "failed": false,
             "gas": 21004,
@@ -789,6 +799,614 @@ TEST_CASE("TraceExecutor::execute call 2") {
         })"_json);
     }
 }
+
+TEST_CASE("TraceExecutor::execute call with error") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("578f0a154b23be77fc2033197fbc775637648ad400000000005279a8")};
+    static silkworm::Bytes kAccountHistoryValue1{*silkworm::from_hex(
+        "0100000000000000000000003a300000010000005200650010000000a074f7740275247527752b75307549756d75787581758a75937598"
+        "759e75a275a775a975af75b775ce75eb75f67508760f7613769f76a176a376be76ca76ce76d876e576fb76267741776177627769777077"
+        "7c7783779e79a279a579a779ad79b279448a458a4d8a568a638acfa0d4a0d6a0d8a0dfa0e2a0e5a0e9a0eca0efa0f1a0f5a0fea003a10a"
+        "a117a11ba131a135a139a152a154a158a15aa15da171a175a17ca1b4a1e4a124a21fbb22bb26bb2bbb2dbb2fbb34bb38bb3fbb0bd14ed2"
+        "a0e5a3e550eb60eb6ceb72eb")};
+
+    static silkworm::Bytes kAccountChangeSetKey{*silkworm::from_hex("00000000005279ad")};
+    static silkworm::Bytes kAccountChangeSetSubkey{*silkworm::from_hex("578f0a154b23be77fc2033197fbc775637648ad4")};
+    static silkworm::Bytes kAccountChangeSetValue{*silkworm::from_hex("03012f090207fbc719f215d705")};
+
+    static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("6951c35e335fa18c97cb207119133cd8009580cd00000000005279a8")};
+    static silkworm::Bytes kAccountHistoryValue2{*silkworm::from_hex(
+        "0100000000000000000000003a3000000700000044000a004600010048000100490005004c0001004d0001005e"
+        "00000040000000560000005a0000005e0000006a0000006e000000720000005da562a563a565a567a56aa59da5"
+        "a0a5f0a5f5a57ef926a863a8eb520b535d1b951bb71b3c1c741caa4f53f5b0f5184f536018f6")};
+
+    static silkworm::Bytes kPlainStateKey{*silkworm::from_hex("6951c35e335fa18c97cb207119133cd8009580cd")};
+
+    static silkworm::Bytes kAccountChangeSetKey1{*silkworm::from_hex("00000000005EF618")};
+    static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("6951c35e335fa18c97cb207119133cd8009580cd")};
+    static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("00000000005279a8")};
+
+    EvmTracingMockDatabaseReader db_reader;
+    asio::thread_pool workers{1};
+
+    ChannelFactory channel_factory = []() {
+        return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+    };
+    ContextPool context_pool{1, channel_factory};
+    auto pool_thread = std::thread([&]() { context_pool.run(); });
+
+    EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
+        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            SILKRPC_LOG << "EXPECT_CALL::get_one "
+                << " table: " << db::table::kCanonicalHashes
+                << " key: " << silkworm::to_hex(kZeroKey)
+                << " value: " << silkworm::to_hex(kZeroHeader)
+                << "\n";
+            co_return kZeroHeader;
+        }));
+    EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
+        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kConfig
+                << " key: " << silkworm::to_hex(kConfigKey)
+                << " value: " << silkworm::to_hex(kConfigValue)
+                << "\n";
+            co_return KeyValue{kConfigKey, kConfigValue};
+        }));
+    EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
+        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kAccountHistory
+                << " key: " << silkworm::to_hex(kAccountHistoryKey1)
+                << " value: " << silkworm::to_hex(kAccountHistoryValue1)
+                << "\n";
+            co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
+        }));
+    EXPECT_CALL(db_reader,
+            get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey},
+                            silkworm::ByteView{kAccountChangeSetSubkey}))
+        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+            SILKRPC_LOG << "EXPECT_CALL::get_both_range "
+                << " table: " << db::table::kPlainAccountChangeSet
+                << " key: " << silkworm::to_hex(kAccountChangeSetKey)
+                << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey)
+                << " value: " << silkworm::to_hex(kAccountChangeSetValue)
+                << "\n";
+            co_return kAccountChangeSetValue;
+        }));
+    EXPECT_CALL(db_reader,
+            get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey1},
+                            silkworm::ByteView{kAccountChangeSetSubkey1}))
+        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+            SILKRPC_LOG << "NON DOVREBBE SUCCEDERE EXPECT_CALL::get_both_range "
+                << " table: " << db::table::kPlainAccountChangeSet
+                << " key: " << silkworm::to_hex(kAccountChangeSetKey1)
+                << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey1)
+                << " value: " << silkworm::to_hex(kAccountChangeSetValue1)
+                << "\n";
+            co_return kAccountChangeSetValue1;
+        }));
+    EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
+        .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kAccountHistory
+                << " key: " << silkworm::to_hex(kAccountHistoryKey2)
+                << " value: " << silkworm::to_hex(kAccountHistoryValue2)
+                << "\n";
+            co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
+        }));
+    EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey}))
+        .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kPlainState
+                << " key: " << silkworm::to_hex(kPlainStateKey)
+                << " value: "
+                << "\n";
+            co_return silkworm::Bytes{};
+        }));
+
+    uint64_t block_number = 5'405'095;  // 0x5279A7
+
+    silkrpc::Call call;
+    call.from = 0x578f0a154b23be77fc2033197fbc775637648ad4_address;
+    call.value = 0;
+    call.gas = 211'190;
+    call.gas_price = 14;
+    call.data = *silkworm::from_hex(
+        "0x414bf3890000000000000000000000009d381f0b1637475f133c92d9b9fdc5493ae19b630000000000000000000000009b73fc19"
+        "3bfa16abe18d1ea30734e4a6444a753f00000000000000000000000000000000000000000000000000000000000027100000000000"
+        "00000000000000578f0a154b23be77fc2033197fbc775637648ad40000000000000000000000000000000000000000000000000000"
+        "0000612ba19c00000000000000000000000000000000000000000001a784379d99db42000000000000000000000000000000000000"
+        "00000000000002cdc48e6cca575707722c0000000000000000000000000000000000000000000000000000000000000000");
+
+    silkworm::Block block{};
+    block.header.number = block_number;
+
+    TraceExecutor executor{context_pool.get_context(), db_reader, workers};
+    asio::io_context& io_context = context_pool.get_io_context();
+    auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
+    auto result = execution_result.get();
+
+    context_pool.stop();
+    io_context.stop();
+    pool_thread.join();
+
+    CHECK(result.pre_check_error.has_value() == false);
+    CHECK(result.trace == R"({
+        "failed": true,
+        "gas": 211190,
+        "returnValue": "",
+        "structLogs": [
+            {
+                "depth": 1,
+                "gas": 156082,
+                "gasCost": 2,
+                "memory": [],
+                "op": "COINBASE",
+                "pc": 0,
+                "stack": []
+            },
+            {
+                "depth": 1,
+                "error": {},
+                "gas": 156080,
+                "gasCost": 2,
+                "memory": [],
+                "op": "opcode 0x4b not defined",
+                "pc": 1,
+                "stack": [
+                    "0x0"
+                ]
+            }
+        ]
+    })"_json);
+}
+
+TEST_CASE("TraceExecutor::execute block") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("daae090d53f9ed9e2e1fd25258c01bac4dd6d1c500000000000fa0a5")};
+    static silkworm::Bytes kAccountHistoryValue1{*silkworm::from_hex(
+        "0100000000000000000000003a300000020000000e0004000f0031001800000022000000eca7f4a7d3a9dea9dfa9fd1b191c301cb91cbe"
+        "1cf21cfc1c0f1d141d261d801d911da61d00440e4a485f4f5f427b537baf7bb17bb57bb97bbf7bc57bc97bd87bda7be17be47be97bfa7b"
+        "fe7b017c267c297c2c7c367c3a9d3b9d3d9d429d47a071a0a5a0aea0b4a0b8a0c3a0c9a0")};
+
+    static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("a85b4c37cd8f447848d49851a1bb06d10d410c1300000000000fa0a5")};
+    static silkworm::Bytes kAccountHistoryValue2{*silkworm::from_hex("0100000000000000000000003a300000010000000f00000010000000a5a0")};
+
+    static silkworm::Bytes kAccountChangeSetKey{*silkworm::from_hex("00000000000fa0a5")};
+    static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("daae090d53f9ed9e2e1fd25258c01bac4dd6d1c5")};
+    static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("030127080334e1d62a9e3440")};
+
+    static silkworm::Bytes kAccountChangeSetSubkey2{*silkworm::from_hex("a85b4c37cd8f447848d49851a1bb06d10d410c13")};
+    static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("")};
+
+    EvmTracingMockDatabaseReader db_reader;
+    asio::thread_pool workers{1};
+
+    ChannelFactory channel_factory = []() {
+        return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+    };
+    ContextPool context_pool{1, channel_factory};
+    auto pool_thread = std::thread([&]() { context_pool.run(); });
+
+    EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
+        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            SILKRPC_LOG << "EXPECT_CALL::get_one "
+                << " table: " << db::table::kCanonicalHashes
+                << " key: " << silkworm::to_hex(kZeroKey)
+                << " value: " << silkworm::to_hex(kZeroHeader)
+                << "\n";
+            co_return kZeroHeader;
+        }));
+    EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
+        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kConfig
+                << " key: " << silkworm::to_hex(kConfigKey)
+                << " value: " << silkworm::to_hex(kConfigValue)
+                << "\n";
+            co_return KeyValue{kConfigKey, kConfigValue};
+        }));
+    EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
+        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kAccountHistory
+                << " key: " << silkworm::to_hex(kAccountHistoryKey1)
+                << " value: " << silkworm::to_hex(kAccountHistoryValue1)
+                << "\n";
+            co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
+        }));
+    EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
+        .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kAccountHistory
+                << " key: " << silkworm::to_hex(kAccountHistoryKey2)
+                << " value: " << silkworm::to_hex(kAccountHistoryValue2)
+                << "\n";
+            co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
+        }));
+    EXPECT_CALL(db_reader,
+            get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey},
+                            silkworm::ByteView{kAccountChangeSetSubkey1}))
+        .WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+            SILKRPC_LOG << "EXPECT_CALL::get_both_range "
+                << " table: " << db::table::kPlainAccountChangeSet
+                << " key: " << silkworm::to_hex(kAccountChangeSetKey)
+                << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey1)
+                << " value: " << silkworm::to_hex(kAccountChangeSetValue1)
+                << "\n";
+                co_return kAccountChangeSetValue1;
+            }));
+    EXPECT_CALL(db_reader,
+            get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey},
+                            silkworm::ByteView{kAccountChangeSetSubkey2}))
+        .WillRepeatedly(InvokeWithoutArgs(
+            []() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+            SILKRPC_LOG << "EXPECT_CALL::get_both_range "
+                << " table: " << db::table::kPlainAccountChangeSet
+                << " key: " << silkworm::to_hex(kAccountChangeSetKey)
+                << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey2)
+                << " value: " << silkworm::to_hex(kAccountChangeSetValue2)
+                << "\n";
+                co_return kAccountChangeSetValue2;
+            }));
+
+    uint64_t block_number = 1'024'165;
+
+    silkworm::Block block{};
+    block.header.number = block_number;
+
+    block.transactions.resize(1);
+    auto& transaction = block.transactions.at(0);
+    transaction.from = 0xdaae090d53f9ed9e2e1fd25258c01bac4dd6d1c5_address;
+    transaction.gas_limit = 4700000;
+    transaction.max_fee_per_gas = 1'000'000'000;
+    transaction.max_priority_fee_per_gas = 1'000'000'000;
+    transaction.data = *silkworm::from_hex(
+        "60806040526000805534801561001457600080fd5b5060c6806100236000396000f3fe6080604052348015600f57600080fd5b50600436"
+        "1060325760003560e01c806360fe47b11460375780636d4ce63c146062575b600080fd5b606060048036036020811015604b57600080fd"
+        "5b8101908080359060200190929190505050607e565b005b60686088565b6040518082815260200191505060405180910390f35b806000"
+        "8190555050565b6000805490509056fea265627a7a72305820ca7603d2458ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60"
+        "af2c64736f6c634300050a0032");
+
+    TraceExecutor executor{context_pool.get_context(), db_reader, workers};
+
+    asio::io_context& io_context = context_pool.get_io_context();
+    auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block), asio::use_future);
+    auto result = execution_result.get();
+
+    context_pool.stop();
+    io_context.stop();
+    pool_thread.join();
+
+    CHECK(result == R"([
+        {
+            "failed": false,
+            "gas": 112583,
+            "returnValue": "6080604052348015600f57600080fd5b506004361060325760003560e01c806360fe47b11460375780636d4ce63c146062575b600080fd5b606060048036036020811015604b57600080fd5b8101908080359060200190929190505050607e565b005b60686088565b6040518082815260200191505060405180910390f35b8060008190555050565b6000805490509056fea265627a7a72305820ca7603d2458ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60af2c64736f6c634300050a0032",
+            "structLogs": [
+                {
+                    "depth": 1,
+                    "gas": 4632116,
+                    "gasCost": 3,
+                    "memory": [],
+                    "op": "PUSH1",
+                    "pc": 0,
+                    "stack": []
+                },
+                {
+                    "depth": 1,
+                    "gas": 4632113,
+                    "gasCost": 3,
+                    "memory": [],
+                    "op": "PUSH1",
+                    "pc": 2,
+                    "stack": [
+                        "0x80"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4632110,
+                    "gasCost": 12,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000"
+                    ],
+                    "op": "MSTORE",
+                    "pc": 4,
+                    "stack": [
+                        "0x80",
+                        "0x40"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4632098,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "PUSH1",
+                    "pc": 5,
+                    "stack": []
+                },
+                {
+                    "depth": 1,
+                    "gas": 4632095,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "DUP1",
+                    "pc": 7,
+                    "stack": [
+                        "0x0"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4632092,
+                    "gasCost": 5000,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "SSTORE",
+                    "pc": 8,
+                    "stack": [
+                        "0x0",
+                        "0x0"
+                    ],
+                    "storage": {
+                        "0000000000000000000000000000000000000000000000000000000000000000": "0000000000000000000000000000000000000000000000000000000000000000"
+                    }
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627092,
+                    "gasCost": 2,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "CALLVALUE",
+                    "pc": 9,
+                    "stack": []
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627090,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "DUP1",
+                    "pc": 10,
+                    "stack": [
+                        "0x0"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627087,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "ISZERO",
+                    "pc": 11,
+                    "stack": [
+                        "0x0",
+                        "0x0"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627084,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "PUSH2",
+                    "pc": 12,
+                    "stack": [
+                        "0x0",
+                        "0x1"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627081,
+                    "gasCost": 10,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "JUMPI",
+                    "pc": 15,
+                    "stack": [
+                        "0x0",
+                        "0x1",
+                        "0x14"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627071,
+                    "gasCost": 1,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "JUMPDEST",
+                    "pc": 20,
+                    "stack": [
+                        "0x0"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627070,
+                    "gasCost": 2,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "POP",
+                    "pc": 21,
+                    "stack": [
+                        "0x0"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627068,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "PUSH1",
+                    "pc": 22,
+                    "stack": []
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627065,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "DUP1",
+                    "pc": 24,
+                    "stack": [
+                        "0xc6"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627062,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "PUSH2",
+                    "pc": 25,
+                    "stack": [
+                        "0xc6",
+                        "0xc6"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627059,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "PUSH1",
+                    "pc": 28,
+                    "stack": [
+                        "0xc6",
+                        "0xc6",
+                        "0x23"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627056,
+                    "gasCost": 36,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000"
+                    ],
+                    "op": "CODECOPY",
+                    "pc": 30,
+                    "stack": [
+                        "0xc6",
+                        "0xc6",
+                        "0x23",
+                        "0x0"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627020,
+                    "gasCost": 3,
+                    "memory": [
+                        "6080604052348015600f57600080fd5b506004361060325760003560e01c8063",
+                        "60fe47b11460375780636d4ce63c146062575b600080fd5b6060600480360360",
+                        "20811015604b57600080fd5b8101908080359060200190929190505050607e56",
+                        "5b005b60686088565b6040518082815260200191505060405180910390f35b80",
+                        "60008190555050565b6000805490509056fea265627a7a72305820ca7603d245",
+                        "8ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60af2c64736f6c63",
+                        "4300050a00320000000000000000000000000000000000000000000000000000"
+                    ],
+                    "op": "PUSH1",
+                    "pc": 31,
+                    "stack": [
+                        "0xc6"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627017,
+                    "gasCost": 0,
+                    "memory": [
+                        "6080604052348015600f57600080fd5b506004361060325760003560e01c8063",
+                        "60fe47b11460375780636d4ce63c146062575b600080fd5b6060600480360360",
+                        "20811015604b57600080fd5b8101908080359060200190929190505050607e56",
+                        "5b005b60686088565b6040518082815260200191505060405180910390f35b80",
+                        "60008190555050565b6000805490509056fea265627a7a72305820ca7603d245",
+                        "8ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60af2c64736f6c63",
+                        "4300050a00320000000000000000000000000000000000000000000000000000"
+                    ],
+                    "op": "RETURN",
+                    "pc": 33,
+                    "stack": [
+                        "0xc6",
+                        "0x0"
+                    ]
+                }
+            ]
+        }
+    ])"_json);
+}
+
 
 TEST_CASE("Trace json serialization") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
@@ -909,23 +1527,95 @@ TEST_CASE("Trace json serialization") {
             }]
         })"_json);
     }
+
+    SECTION("Trace: full") {
+        Trace trace;
+        trace.failed = false;
+        trace.gas = 20;
+        trace.return_value = "deadbeaf";
+        trace.trace_logs.push_back(log);
+
+        trace.trace_config.disableStorage = false;
+        trace.trace_config.disableMemory = false;
+        trace.trace_config.disableStack = false;
+
+        CHECK(trace == R"({
+            "failed": false,
+            "gas": 20,
+            "returnValue": "deadbeaf",
+            "structLogs": [{
+                "depth": 1,
+                "gas": 3,
+                "gasCost": 4,
+                "op": "PUSH1",
+                "pc": 1,
+                "stack":["0x80"],
+                "memory":["0000000000000000000000000000000000000000000000000000000000000080"],
+                "storage": {
+                    "804292fe56769f4b9f0e91cf85875f67487cd9e85a084cbba2188be4466c4f23": "0000000000000000000000000000000000000000000000000000000000000008"
+                }
+            }]
+        })"_json);
+    }
+
+    SECTION("Trace vector") {
+        Trace trace;
+        trace.failed = false;
+        trace.gas = 20;
+        trace.return_value = "deadbeaf";
+        trace.trace_logs.push_back(log);
+
+        trace.trace_config.disableStorage = false;
+        trace.trace_config.disableMemory = false;
+        trace.trace_config.disableStack = false;
+
+        std::vector<Trace> traces;
+        traces.push_back(trace);
+
+        CHECK(traces == R"([{
+            "failed": false,
+            "gas": 20,
+            "returnValue": "deadbeaf",
+            "structLogs": [{
+                "depth": 1,
+                "gas": 3,
+                "gasCost": 4,
+                "op": "PUSH1",
+                "pc": 1,
+                "stack":["0x80"],
+                "memory":["0000000000000000000000000000000000000000000000000000000000000080"],
+                "storage": {
+                    "804292fe56769f4b9f0e91cf85875f67487cd9e85a084cbba2188be4466c4f23": "0000000000000000000000000000000000000000000000000000000000000008"
+                }
+            }]
+        }])"_json);
+    }
 }
 
-TEST_CASE("TraceConfig json deserialization") {
+TEST_CASE("TraceConfig") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    nlohmann::json json = R"({
-       "disableStorage": true,
-       "disableMemory": false,
-       "disableStack": true
-    })"_json;
+    SECTION("json deserialization") {
+        nlohmann::json json = R"({
+            "disableStorage": true,
+            "disableMemory": false,
+            "disableStack": true
+            })"_json;
 
-    TraceConfig config;
-    from_json(json, config);
+        TraceConfig config;
+        from_json(json, config);
 
-    CHECK(config.disableStorage == true);
-    CHECK(config.disableMemory == false);
-    CHECK(config.disableStack == true);
+        CHECK(config.disableStorage == true);
+        CHECK(config.disableMemory == false);
+        CHECK(config.disableStack == true);
+    }
+    SECTION("dump on stream") {
+        TraceConfig config{true, false, true};
+
+        std::ostringstream os;
+        os << config;
+        CHECK(os.str() == "disableStorage: true disableMemory: false disableStack: true");
+    }
 }
 }  // namespace silkrpc::trace

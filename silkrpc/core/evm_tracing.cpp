@@ -79,6 +79,15 @@ void to_json(nlohmann::json& json, const Trace& trace) {
     }
 }
 
+void to_json(nlohmann::json& json, const std::vector<Trace>& traces) {
+    json = nlohmann::json::array();
+    for (auto& trace : traces) {
+        nlohmann::json entry;
+        to_json(entry, trace);
+        json.push_back(entry);
+    }
+}
+
 std::string get_opcode_name(const char* const* names, std::uint8_t opcode) {
     const auto name = names[opcode];
     return (name != nullptr) ?name : "opcode 0x" + evmc::hex(opcode) + " not defined";
@@ -246,6 +255,46 @@ void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::In
 }
 
 template<typename WorldState, typename VM>
+asio::awaitable<std::vector<Trace>> TraceExecutor<WorldState, VM>::execute(const silkworm::Block& block) {
+    auto block_number = block.header.number;
+    const auto& transactions = block.transactions;
+
+    SILKRPC_DEBUG << "execute: block_number: " << block_number << " #txns: " << transactions.size() << " config: " << config_ << "\n";
+
+    const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
+    const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+
+    EVMExecutor<WorldState, VM> executor{context_, database_reader_, *chain_config_ptr, workers_, block_number-1};
+
+    std::vector<Trace> traces(transactions.size());
+    for (std::uint64_t idx = 0; idx < transactions.size(); idx++) {
+        silkrpc::Transaction txn{block.transactions[idx]};
+        if (!txn.from) {
+            txn.recover_sender();
+        }
+        SILKRPC_DEBUG << "processing transaction: idx: " << idx << " txn: " << txn << "\n";
+
+        auto& trace = traces.at(idx);
+
+        trace.trace_config = config_;
+        auto tracer = std::make_shared<trace::DebugTracer>(trace.trace_logs, config_);
+
+        const auto execution_result = co_await executor.call(block, txn, tracer);
+
+        if (execution_result.pre_check_error) {
+            SILKRPC_DEBUG << "tracing failed: " << execution_result.pre_check_error.value() << "\n";
+            trace.failed = true;
+        } else {
+            trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
+            trace.gas = txn.gas_limit - execution_result.gas_left;
+            trace.return_value = silkworm::to_hex(execution_result.data);
+        }
+    }
+
+    co_return traces;
+}
+
+template<typename WorldState, typename VM>
 asio::awaitable<TraceExecutorResult> TraceExecutor<WorldState, VM>::execute(const silkworm::Block& block, const silkrpc::Call& call) {
     silkrpc::Transaction transaction{call.to_transaction()};
     auto result = co_await execute(block.header.number, block, transaction, -1);
@@ -270,6 +319,7 @@ asio::awaitable<TraceExecutorResult> TraceExecutor<WorldState, VM>::execute(std:
 
     for (auto idx = 0; idx < index; idx++) {
         silkrpc::Transaction txn{block.transactions[idx]};
+
         txn.recover_sender();
         const auto execution_result = co_await executor.call(block, txn);
     }

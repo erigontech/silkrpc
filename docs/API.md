@@ -27,11 +27,11 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getUncleCountByBlockNumber             | Yes          |                                            |
 |                                            |              |                                            |
 | eth_getTransactionByHash                   | Yes          | partially implemented                      |
-| eth_getRawTransactionByHash                | -            | not yet implemented                        |
+| eth_getRawTransactionByHash                | Yes          | partially implemented                      |
 | eth_getTransactionByBlockHashAndIndex      | Yes          |                                            |
-| eth_getRawTransactionByBlockHashAndIndex   | -            | not yet implemented                        |
+| eth_getRawTransactionByBlockHashAndIndex   | Yes          | partially implemented                      |
 | eth_getTransactionByBlockNumberAndIndex    | Yes          |                                            |
-| eth_getRawTransactionByBlockNumberAndIndex | -            | not yet implemented                        |
+| eth_getRawTransactionByBlockNumberAndIndex | Yes          | partially implemented                      |
 | eth_getTransactionReceipt                  | Yes          | partially implemented                      |
 | eth_getBlockReceipts                       | Yes          | same as parity_getBlockReceipts            |
 |                                            |              |                                            |
@@ -79,8 +79,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | debug_getModifiedAccountsByHash            | Yes          |                                            |
 | debug_getModifiedAccountsByNumber          | Yes          |                                            |
 | debug_storageRangeAt                       | Yes          |                                            |
-| debug_traceBlockByHash                     | -            | not yet implemented                        |
-| debug_traceBlockByNumber                   | -            | not yet implemented                        |
+| debug_traceBlockByHash                     | Yes          |                                            |
+| debug_traceBlockByNumber                   | Yes          |                                            |
 | debug_traceTransaction                     | Yes          |                                            |
 | debug_traceCall                            | Yes          |                                            |
 |                                            |              |                                            |
