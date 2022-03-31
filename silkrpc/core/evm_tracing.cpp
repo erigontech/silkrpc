@@ -95,11 +95,11 @@ std::string get_opcode_name(const char* const* names, std::uint8_t opcode) {
 
 static std::string EMPTY_MEMORY(64, '0');
 
-void output_stack(std::vector<std::string>& vect, const evmone::advanced::Stack& stack) {
-    vect.reserve(stack.size());
-    const auto top = stack.size() - 1;
-    for (int i = top; i >= 0; --i) {
-        vect.push_back("0x" + intx::to_string(stack[i], 16));
+void output_stack(std::vector<std::string>& vect, const evmone::uint256* stack_bottom) {
+    vect.reserve(sizeof(stack_bottom));
+    const auto top = sizeof(stack_bottom);
+    for (int i = 1; i <= top; ++i) {
+        vect.push_back("0x" + intx::to_string(stack_bottom[i], 16));
     }
 }
 
@@ -148,7 +148,6 @@ void DebugTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState
     evmc::address sender(execution_state.msg->sender);
     auto stack_space = execution_state.stack_space;
     evmone::uint256* stack_bottom = stack_space.bottom();
-    evmone::advanced::Stack stack_{stack_bottom};
 
     const auto opcode = execution_state.code[pc];
     auto opcode_name = get_opcode_name(opcode_names_, opcode);
@@ -168,15 +167,15 @@ void DebugTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState
 
     bool output_storage = false;
     if (!config_.disableStorage) {
-        if (opcode_name == "SLOAD" && stack_.size() > 0) {
-            const auto address = silkworm::bytes32_from_hex(intx::hex(stack_[0]));
+        if (opcode_name == "SLOAD" && sizeof(stack_bottom) > 0) {
+            const auto address = silkworm::bytes32_from_hex(intx::hex(stack_bottom[0]));
             const auto value = intra_block_state.get_current_storage(recipient, address);
 
             storage_[recipient][silkworm::to_hex(address)] = silkworm::to_hex(value);
             output_storage = true;
-        } else if (opcode_name == "SSTORE" && stack_.size() > 1) {
-            const auto address = silkworm::bytes32_from_hex(intx::hex(stack_[0]));
-            const auto value = silkworm::bytes32_from_hex(intx::hex(stack_[1]));
+        } else if (opcode_name == "SSTORE" && sizeof(stack_bottom) > 1) {
+            const auto address = silkworm::bytes32_from_hex(intx::hex(stack_bottom[0]));
+            const auto value = silkworm::bytes32_from_hex(intx::hex(stack_bottom[1]));
             storage_[recipient][silkworm::to_hex(address)] = silkworm::to_hex(value);
             output_storage = true;
         }
@@ -211,7 +210,7 @@ void DebugTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState
     log.gas = execution_state.gas_left;
     log.depth = execution_state.msg->depth + 1;
     if (!config_.disableStack) {
-        output_stack(log.stack, stack_);
+        output_stack(log.stack, stack_bottom);
     }
     if (!config_.disableMemory) {
         log.memory = current_memory;
