@@ -1059,7 +1059,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
-    const auto call = params[0].get<Call>();
+    auto call = params[0].get<Call>();
     const auto block_number_or_hash = params[1].get<BlockNumberOrHash>();
 
     SILKRPC_DEBUG << "call: " << call << " block_number_or_hash: " << block_number_or_hash << "\n";
@@ -1077,7 +1077,6 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
         StateReader state_reader{tx_database};
         // If the gas amount is not set, extract this as it will depend on access
         // lists and we'll need to reestimate every time
-        auto nogas = !(call.gas);
 
         evmc::address to{};
 
@@ -1090,30 +1089,34 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
            }
            to = silkworm::create_address(*call.from, nonce);
         }
-        // Retrieve the precompiles since they don't need to be added to the access list
 
+        std::vector<silkworm::AccessListEntry> prev;
+        std::vector<silkworm::AccessListEntry> curr;
+        // check on precompiles contract is done on tracer
 
         for(;;) {
+           auto tracer = std::make_shared<access_list::AccessListTracer>(call.access_list, *call.from, to);
            EVMExecutor executor{context_, tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number};
            silkworm::Transaction txn{call.to_transaction()};
-
-           AccessListResult access_list_result;
-
-           auto tracer = std::make_shared<access_list::AccessListTracer>(access_list_result);
+           prev = tracer->get_access_list();
            const auto execution_result = co_await executor.call(block_with_hash.block, txn, tracer);
-
+           curr = tracer->get_access_list();
            if (execution_result.pre_check_error) {
               reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
-           } else if (execution_result.error_code == evmc_status_code::EVMC_SUCCESS) {
-              access_list_result.gas_used = txn.gas_limit - execution_result.gas_left;
-              reply = make_json_content(request["id"], access_list_result);
            } else {
-              const auto error_message = EVMExecutor<>::get_error_message(execution_result.error_code, execution_result.data, false /* full_error */);
-              access_list_result.gas_used = txn.gas_limit - execution_result.gas_left;
-              access_list_result.error = error_message;
-              reply = make_json_content(request["id"], access_list_result);
-           }
-           break;
+              if (tracer->compare(curr, prev)) {
+                 AccessListResult access_list_result;
+                 access_list_result.access_list = tracer->get_access_list();
+                 access_list_result.gas_used = txn.gas_limit - execution_result.gas_left;
+                 if (execution_result.error_code != evmc_status_code::EVMC_SUCCESS) {
+                    const auto error_message = EVMExecutor<>::get_error_message(execution_result.error_code, execution_result.data, false /* full_error */);
+                    access_list_result.error = error_message;
+                 }
+                 reply = make_json_content(request["id"], access_list_result);
+                 break;
+              }
+          }
+          call.set_access_list(curr);
        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
