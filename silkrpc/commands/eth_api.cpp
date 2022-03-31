@@ -1085,7 +1085,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
         } else {
            auto nonce = *(call.nonce);
            if (!nonce) {
-              // 1. Retrieve nonce by txpool ...
+              // 1. Retrieve nonce by txpool ... ADD
            }
            to = silkworm::create_address(*call.from, nonce);
         }
@@ -1094,6 +1094,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
         std::vector<silkworm::AccessListEntry> curr;
         // check on precompiles contract is done on tracer
 
+        // ADD processing from_json(AccessListEntry) ..
         for(;;) {
            auto tracer = std::make_shared<access_list::AccessListTracer>(call.access_list, *call.from, to);
            EVMExecutor executor{context_, tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number};
