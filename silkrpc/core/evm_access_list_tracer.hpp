@@ -48,12 +48,12 @@ public:
     void on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void dump(const std::string str, const std::vector<silkworm::AccessListEntry>& acl);
-    inline bool exclude(const evmc::address& address);
 
     //void dump(const std::string str);
     //bool compare(std::shared_ptr<silkrpc::access_list::AccessListTracer> other);
 
 private:
+    inline bool exclude(const evmc::address& address);
     void add_storage(const evmc::address& address, const evmc::bytes32& storage);
     void add_address(const evmc::address& address);
     void add_local_access_list(const std::vector<silkworm::AccessListEntry> input_access_list);
