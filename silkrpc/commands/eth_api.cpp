@@ -1103,6 +1103,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
            curr = tracer->get_access_list();
            if (execution_result.pre_check_error) {
               reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
+              break;
            } else {
               if (tracer->compare(curr, prev)) {
                  AccessListResult access_list_result;
