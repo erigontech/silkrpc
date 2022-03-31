@@ -772,7 +772,7 @@
             "result":{
                 "accessList":[{"address":"0x900c8c0a1b609533762390254b58c5760e4d7405","storageKeys":["0x0000000000000000000000000000000000000000000000000000000000000000"]}],
                 "error":"execution reverted",
-                "gasUsed":"0x589c"
+                "gasUsed":"0x6968"
             }
         }
     },
