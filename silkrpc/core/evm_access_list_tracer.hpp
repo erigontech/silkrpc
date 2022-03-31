@@ -42,14 +42,16 @@ public:
 
     void set_access_list(std::vector<silkworm::AccessListEntry> ale) { access_list_ = ale; }
     std::vector<silkworm::AccessListEntry> get_access_list() { return access_list_; }
-    //bool compare(std::shared_ptr<silkrpc::access_list::AccessListTracer> other);
     bool compare(const std::vector<silkworm::AccessListEntry>& acl1, const std::vector<silkworm::AccessListEntry>& acl2);
 
     void on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept override;
     void on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
-    void dump(const std::string str);
     void dump(const std::string str, const std::vector<silkworm::AccessListEntry>& acl);
+    inline bool exclude(const evmc::address& address);
+
+    //void dump(const std::string str);
+    //bool compare(std::shared_ptr<silkrpc::access_list::AccessListTracer> other);
 
 private:
     void add_storage(const evmc::address& address, const evmc::bytes32& storage);
@@ -62,7 +64,6 @@ private:
     evmc::address to_;
 
     const char* const* opcode_names_ = nullptr;
-    std::int64_t start_gas_{0};
 };
 
 
