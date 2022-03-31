@@ -25,7 +25,7 @@
 #include <silkrpc/commands/debug_api.hpp>
 #include <silkrpc/commands/net_api.hpp>
 #include <silkrpc/commands/parity_api.hpp>
-#include <silkrpc/commands/tg_api.hpp>
+#include <silkrpc/commands/erigon_api.hpp>
 #include <silkrpc/commands/trace_api.hpp>
 #include <silkrpc/commands/web3_api.hpp>
 #include <silkrpc/commands/engine_api.hpp>

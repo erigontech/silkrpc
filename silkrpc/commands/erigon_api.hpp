@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMANDS_TG_API_HPP_
-#define SILKRPC_COMMANDS_TG_API_HPP_
+#ifndef SILKRPC_COMMANDS_ERIGON_API_HPP_
+#define SILKRPC_COMMANDS_ERIGON_API_HPP_
 
 #include <memory>
 
@@ -57,4 +57,4 @@ private:
 
 } // namespace silkrpc::commands
 
-#endif  // SILKRPC_COMMANDS_TG_API_HPP_
+#endif  // SILKRPC_COMMANDS_ERIGON_API_HPP_
