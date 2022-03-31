@@ -36,7 +36,7 @@
 namespace silkrpc::commands {
 
 // https://eth.wiki/json-rpc/API#tg_getheaderbyhash
-asio::awaitable<void> TurboGethRpcApi::handle_tg_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+asio::awaitable<void> ErigonRpcApi::handle_tg_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid tg_getHeaderByHash params: " + params.dump();
@@ -68,7 +68,7 @@ asio::awaitable<void> TurboGethRpcApi::handle_tg_get_header_by_hash(const nlohma
 }
 
 // https://eth.wiki/json-rpc/API#tg_getheaderbynumber
-asio::awaitable<void> TurboGethRpcApi::handle_tg_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply) {
+asio::awaitable<void> ErigonRpcApi::handle_tg_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid tg_getHeaderByNumber params: " + params.dump();
@@ -109,7 +109,7 @@ asio::awaitable<void> TurboGethRpcApi::handle_tg_get_header_by_number(const nloh
 }
 
 // https://eth.wiki/json-rpc/API#tg_getlogsbyhash
-asio::awaitable<void> TurboGethRpcApi::handle_tg_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+asio::awaitable<void> ErigonRpcApi::handle_tg_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid tg_getHeaderByHash params: " + params.dump();
@@ -151,7 +151,7 @@ asio::awaitable<void> TurboGethRpcApi::handle_tg_get_logs_by_hash(const nlohmann
 }
 
 // https://eth.wiki/json-rpc/API#tg_forks
-asio::awaitable<void> TurboGethRpcApi::handle_tg_forks(const nlohmann::json& request, nlohmann::json& reply) {
+asio::awaitable<void> ErigonRpcApi::handle_tg_forks(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -176,7 +176,7 @@ asio::awaitable<void> TurboGethRpcApi::handle_tg_forks(const nlohmann::json& req
 }
 
 // https://eth.wiki/json-rpc/API#tg_issuance
-asio::awaitable<void> TurboGethRpcApi::handle_tg_issuance(const nlohmann::json& request, nlohmann::json& reply) {
+asio::awaitable<void> ErigonRpcApi::handle_tg_issuance(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid tg_issuance params: " + params.dump();

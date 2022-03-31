@@ -33,13 +33,13 @@ namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
-class TurboGethRpcApi {
+class ErigonRpcApi {
 public:
-    explicit TurboGethRpcApi(Context& context) : database_(context.database), context_(context) {}
-    virtual ~TurboGethRpcApi() {}
+    explicit ErigonRpcApi(Context& context) : database_(context.database), context_(context) {}
+    virtual ~ErigonRpcApi() {}
 
-    TurboGethRpcApi(const TurboGethRpcApi&) = delete;
-    TurboGethRpcApi& operator=(const TurboGethRpcApi&) = delete;
+    ErigonRpcApi(const ErigonRpcApi&) = delete;
+    ErigonRpcApi& operator=(const ErigonRpcApi&) = delete;
 
 protected:
     asio::awaitable<void> handle_tg_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply);
