@@ -95,7 +95,7 @@ inline bool AccessListTracer::exclude(const evmc::address& address) {
 }
 
 void AccessListTracer::add_storage(const evmc::address& address, const evmc::bytes32& storage) {
-    std::cout << "add_storage:: Address: " << address << " Storage: " << storage << "\n";
+    //std::cout << "add_storage:: Address: " << address << " Storage: " << storage << "\n";
     for (int i = 0; i < access_list_.size(); i++) {
        if (access_list_[i].account == address) {
           for (int j = 0; j < access_list_[i].storage_keys.size(); j++) {
@@ -152,20 +152,15 @@ void AccessListTracer::dump(const std::string str, const std::vector<silkworm::A
 }
 
 bool AccessListTracer::compare(const std::vector<silkworm::AccessListEntry>& acl1, const std::vector<silkworm::AccessListEntry>& acl2) {
-    std::cout << "entering compare\n";
     if (acl1.size() != acl2.size()) {
-       std::cout << "exiting compare1\n";
        return false;
     }
     for (int i = 0; i < acl1.size(); i++) {
        bool match_address = false;
-       std::cout << "AccessList Address: " << acl1[i].account << "\n";
        for (int j = 0; j < acl2.size(); j++) {
-          std::cout << "other->AccessList Address: " << acl2[j].account << "\n";
           if (acl2[j].account == acl1[i].account) {
              match_address = true;
              if (acl2[j].storage_keys.size() != acl1[i].storage_keys.size()) {
-                std::cout << "exiting compare2\n";
                 return false;
              }
              bool match_storage = false;
@@ -177,7 +172,6 @@ bool AccessListTracer::compare(const std::vector<silkworm::AccessListEntry>& acl
                    }
                 }
                 if (!match_storage) {
-                   std::cout << "exiting compare3\n";
                    return false;
                 }
              }
@@ -185,12 +179,9 @@ bool AccessListTracer::compare(const std::vector<silkworm::AccessListEntry>& acl
           }
        }
        if (!match_address) {
-          std::cout << "exiting compare4\n";
           return false;
        }
     }
-
-    std::cout << "exiting compare true\n";
     return true;
 }
 
@@ -206,19 +197,15 @@ void AccessListTracer::dump(std::string str) {
 bool AccessListTracer::compare(std::shared_ptr<silkrpc::access_list::AccessListTracer> other) {
     std::cout << "entering compare\n";
     if (access_list_.size() != other->access_list_.size()) {
-       std::cout << "exiting compare1\n";
        return false;
     }
 
     for (int i = 0; i < access_list_.size(); i++) {
        bool match_address = false;
-       std::cout << "AccessList Address: " << access_list_[i].account << "\n";
        for (int j = 0; j < other->access_list_.size(); j++) {
-          std::cout << "other->AccessList Address: " << other->access_list_[j].account << "\n";
           if (other->access_list_[j].account == access_list_[i].account) {
              match_address = true;
              if (other->access_list_[j].storage_keys.size() != access_list_[i].storage_keys.size()) {
-                std::cout << "exiting compare2\n";
                 return false;
              }
              bool match_storage = false;
@@ -230,7 +217,6 @@ bool AccessListTracer::compare(std::shared_ptr<silkrpc::access_list::AccessListT
                    }
                 }
                 if (!match_storage) {
-                   std::cout << "exiting compare3\n";
                    return false;
                 }
              }
@@ -238,12 +224,9 @@ bool AccessListTracer::compare(std::shared_ptr<silkrpc::access_list::AccessListT
           }
        }
        if (!match_address) {
-          std::cout << "exiting compare4\n";
           return false;
        }
     }
-
-    std::cout << "exiting compare true\n";
     return true;
 }
 #endif
