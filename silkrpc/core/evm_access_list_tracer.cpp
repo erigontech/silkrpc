@@ -14,6 +14,8 @@
    limitations under the License.
 */
 
+#include <memory>
+
 #include "evm_access_list_tracer.hpp"
 
 #include <evmc/hex.hpp>
@@ -38,7 +40,7 @@ void AccessListTracer::on_execution_start(evmc_revision rev, const evmc_message&
         opcode_names_ = evmc_get_instruction_names_table(rev);
     }
 
-    start_gas_ = msg.gas;
+    //start_gas_ = msg.gas;
     evmc::address recipient(msg.recipient);
     evmc::address sender(msg.sender);
     SILKRPC_DEBUG << "on_execution_start: gas: " << std::dec << msg.gas
@@ -71,33 +73,47 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::Execution
 
     if (opcode_name == "SLOAD" && execution_state.stack.size() > 0) {
        const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
-       addStorage(recipient, address);
+       add_storage(recipient, address);
 
     } else if (opcode_name == "SSTORE" && execution_state.stack.size() > 1) {
        const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
-       addStorage(recipient, address);
+       add_storage(recipient, address);
     }
 
     //log.gas = execution_state.gas_left;
 }
 
 
-void AccessListTracer::addStorage(const evmc::address& address, const evmc::bytes32& storage) {
-    for (int i = 0; i < access_list_result_.access_list.size(); i++) {
-       if (access_list_result_.access_list[i].account == address) {
-          for (int j = 0; j < access_list_result_.access_list[i].storage_keys.size(); j++) {
-            if (access_list_result_.access_list[i].storage_keys[j] == storage) {
+void AccessListTracer::add_storage(const evmc::address& address, const evmc::bytes32& storage) {
+    std::cout << "add_storage:: Address: " << address << "\n";
+    for (int i = 0; i < access_list_.size(); i++) {
+       if (access_list_[i].account == address) {
+          for (int j = 0; j < access_list_[i].storage_keys.size(); j++) {
+            if (access_list_[i].storage_keys[j] == storage) {
                return;
             }
           }
-          access_list_result_.access_list[i].storage_keys.push_back(storage);
+          access_list_[i].storage_keys.push_back(storage);
           return;
        }
     }
     silkworm::AccessListEntry item;
     item.account = address;
     item.storage_keys.push_back(storage);
-    access_list_result_.access_list.push_back(item);
+    access_list_.push_back(item);
+
+    dump("in add storage", access_list_);
+}
+
+void AccessListTracer::add_address(const evmc::address& address) {
+    for (int i = 0; i < access_list_.size(); i++) {
+       if (access_list_[i].account == address) {
+          return;
+       }
+    }
+    silkworm::AccessListEntry item;
+    item.account = address;
+    access_list_.push_back(item);
 }
 
 void AccessListTracer::on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
@@ -107,5 +123,122 @@ void AccessListTracer::on_execution_end(const evmc_result& result, const silkwor
         << " gas_left: " << std::dec << result.gas_left
         << "\n";
 }
+
+void AccessListTracer::add_local_access_list(const std::vector<silkworm::AccessListEntry> input_access_list) {
+    std::cout << "entering add local_access_list\n";
+    for (int i = 0; i < input_access_list.size(); i++) {
+       if (input_access_list[i].account != from_ &&
+            input_access_list[i].account != to_) {
+          add_address(input_access_list[i].account);
+       }
+       for (int z = 0; z < input_access_list[i].storage_keys.size(); z++) {
+          add_storage(input_access_list[i].account, input_access_list[i].storage_keys[z]);
+       }
+    }
+    std::cout << "exit add local_access_list\n";
+}
+
+void AccessListTracer::dump(std::string str) {
+   std::cout << str << "\n";
+   for (int i = 0; i < access_list_.size(); i++) {
+          std::cout << "AccessList Address: " << access_list_[i].account << "\n";
+   }
+}
+
+void AccessListTracer::dump(const std::string str, const std::vector<silkworm::AccessListEntry>& acl) {
+   std::cout << str << "\n";
+   for (int i = 0; i < acl.size(); i++) {
+          std::cout << "AccessList Address: " << acl[i].account << "\n";
+   }
+}
+
+bool AccessListTracer::compare(const std::vector<silkworm::AccessListEntry>& acl1, const std::vector<silkworm::AccessListEntry>& acl2) {
+    std::cout << "entering compare\n";
+    if (acl1.size() != acl2.size()) {
+       std::cout << "exiting compare1\n";
+       return false;
+    }
+    for (int i = 0; i < acl1.size(); i++) {
+       bool match_address = false;
+       std::cout << "AccessList Address: " << acl1[i].account << "\n";
+       for (int j = 0; j < acl2.size(); j++) {
+          std::cout << "other->AccessList Address: " << acl2[j].account << "\n";
+          if (acl2[j].account == acl1[i].account) {
+             match_address = true;
+             if (acl2[j].storage_keys.size() != acl1[i].storage_keys.size()) {
+                std::cout << "exiting compare2\n";
+                return false;
+             }
+             bool match_storage = false;
+             for (int z = 0; z < acl1[i].storage_keys.size(); z++) {
+                for (int t = 0; t < acl2[j].storage_keys.size(); t++) {
+                   if (acl2[j].storage_keys[t] == acl1[i].storage_keys[z]) {
+                      match_storage = true;
+                      break;
+                   }
+                }
+                if (!match_storage) {
+                   std::cout << "exiting compare3\n";
+                   return false;
+                }
+             }
+             break;
+          }
+       }
+       if (!match_address) {
+          std::cout << "exiting compare4\n";
+          return false;
+       }
+    }
+
+    std::cout << "exiting compare true\n";
+    return true;
+}
+
+#ifdef notdef
+bool AccessListTracer::compare(std::shared_ptr<silkrpc::access_list::AccessListTracer> other) {
+    std::cout << "entering compare\n";
+    if (access_list_.size() != other->access_list_.size()) {
+       std::cout << "exiting compare1\n";
+       return false;
+    }
+
+    for (int i = 0; i < access_list_.size(); i++) {
+       bool match_address = false;
+       std::cout << "AccessList Address: " << access_list_[i].account << "\n";
+       for (int j = 0; j < other->access_list_.size(); j++) {
+          std::cout << "other->AccessList Address: " << other->access_list_[j].account << "\n";
+          if (other->access_list_[j].account == access_list_[i].account) {
+             match_address = true;
+             if (other->access_list_[j].storage_keys.size() != access_list_[i].storage_keys.size()) {
+                std::cout << "exiting compare2\n";
+                return false;
+             }
+             bool match_storage = false;
+             for (int z = 0; z < access_list_[i].storage_keys.size(); z++) {
+                for (int t = 0; t < other->access_list_[j].storage_keys.size(); t++) {
+                   if (other->access_list_[j].storage_keys[t] == access_list_[i].storage_keys[z]) {
+                      match_storage = true;
+                      break;
+                   }
+                }
+                if (!match_storage) {
+                   std::cout << "exiting compare3\n";
+                   return false;
+                }
+             }
+             break;
+          }
+       }
+       if (!match_address) {
+          std::cout << "exiting compare4\n";
+          return false;
+       }
+    }
+
+    std::cout << "exiting compare true\n";
+    return true;
+}
+#endif
 
 } // namespace silkrpc::access_list

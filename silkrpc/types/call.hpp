@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <optional>
+#include <vector>
 
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
@@ -41,13 +42,22 @@ struct Call {
     std::optional<intx::uint256> value;
     std::optional<silkworm::Bytes> data;
     std::optional<uint64_t> nonce;
+    std::optional<std::vector<silkworm::AccessListEntry>> access_list;
+
+    void set_access_list(std::vector<silkworm::AccessListEntry> new_access_list) {
+       access_list = new_access_list;
+    }
 
     silkworm::Transaction to_transaction() const {
         silkworm::Transaction txn{};
         txn.from = from;
         txn.to = to;
-        if (nonce)
+        if (nonce) {
            txn.nonce = *nonce;
+        }
+        if (access_list) {
+           txn.access_list = *access_list;
+        }
         txn.gas_limit = gas.value_or(kDefaultGasLimit);
         if (gas_price) {
             txn.max_priority_fee_per_gas = gas_price.value();

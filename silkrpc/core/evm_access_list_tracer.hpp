@@ -33,19 +33,33 @@ namespace silkrpc::access_list {
 
 class AccessListTracer : public silkworm::EvmTracer {
 public:
-    explicit AccessListTracer(AccessListResult& access_list_result) : access_list_result_(access_list_result) {}
-
+    explicit AccessListTracer(const std::optional<std::vector<silkworm::AccessListEntry>>& input_access_list, const evmc::address& from, const evmc::address& to): from_{from}, to_{to} {
+       if (input_access_list)
+          add_local_access_list(*input_access_list);
+    }
     AccessListTracer(const AccessListTracer&) = delete;
     AccessListTracer& operator=(const AccessListTracer&) = delete;
+
+    void set_access_list(std::vector<silkworm::AccessListEntry> ale) { access_list_ = ale; }
+    std::vector<silkworm::AccessListEntry> get_access_list() { return access_list_; }
+    //bool compare(std::shared_ptr<silkrpc::access_list::AccessListTracer> other);
+    bool compare(const std::vector<silkworm::AccessListEntry>& acl1, const std::vector<silkworm::AccessListEntry>& acl2);
 
     void on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept override;
     void on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
+    void dump(const std::string str);
+    void dump(const std::string str, const std::vector<silkworm::AccessListEntry>& acl);
 
 private:
-    void addStorage(const evmc::address& address, const evmc::bytes32& storage);
+    void add_storage(const evmc::address& address, const evmc::bytes32& storage);
+    void add_address(const evmc::address& address);
+    void add_local_access_list(const std::vector<silkworm::AccessListEntry> input_access_list);
 
-    AccessListResult& access_list_result_;
+
+    std::vector<silkworm::AccessListEntry> access_list_;
+    evmc::address from_;
+    evmc::address to_;
 
     const char* const* opcode_names_ = nullptr;
     std::int64_t start_gas_{0};
