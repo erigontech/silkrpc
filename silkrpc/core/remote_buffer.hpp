@@ -35,9 +35,9 @@
 
 namespace silkrpc::state {
 
-class AsyncRemoteBuffer {
+class AsyncRemoteState {
 public:
-    explicit AsyncRemoteBuffer(asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, uint64_t block_number)
+    explicit AsyncRemoteState(asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, uint64_t block_number)
     : io_context_(io_context), db_reader_(db_reader), block_number_(block_number), state_reader_{db_reader} {}
 
     asio::awaitable<std::optional<silkworm::Account>> read_account(const evmc::address& address) const noexcept;
@@ -67,10 +67,10 @@ private:
     StateReader state_reader_;
 };
 
-class RemoteBuffer : public silkworm::State {
+class RemoteState : public silkworm::State {
 public:
-    explicit RemoteBuffer(asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, uint64_t block_number)
-    : io_context_(io_context), async_buffer_{io_context, db_reader, block_number} {}
+    explicit RemoteState(asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, uint64_t block_number)
+    : io_context_(io_context), async_state_{io_context, db_reader, block_number} {}
 
     std::optional<silkworm::Account> read_account(const evmc::address& address) const noexcept override;
 
@@ -124,10 +124,10 @@ public:
 
 private:
     asio::io_context& io_context_;
-    AsyncRemoteBuffer async_buffer_;
+    AsyncRemoteState async_state_;
 };
 
-std::ostream& operator<<(std::ostream& out, const RemoteBuffer& s);
+std::ostream& operator<<(std::ostream& out, const RemoteState& s);
 
 } // namespace silkrpc::state
 
