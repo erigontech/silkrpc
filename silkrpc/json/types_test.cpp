@@ -1202,6 +1202,7 @@ TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
         "from": "0x52c24586c31cff0485a6208bb63859290fba5bce",
         "to": "0x0715a7794a1dc8e42615f059dd6e406a6594651a",
         "gas": "0xF4240",
+        "nonce":"0x1",
         "gasPrice": "0x10C388C00",
         "data": "0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000"
     })"_json;
