@@ -56,8 +56,8 @@ void RpcApiTable::add_handlers(const std::string& api_namespace) {
         add_net_handlers();
     } else if (api_namespace == kParityApiNamespace) {
         add_parity_handlers();
-    } else if (api_namespace == kTgApiNamespace) {
-        add_tg_handlers();
+    } else if (api_namespace == kErigonApiNamespace) {
+        add_erigon_handlers();
     } else if (api_namespace == kTraceApiNamespace) {
         add_trace_handlers();
     } else if (api_namespace == kWeb3ApiNamespace) {
@@ -138,12 +138,12 @@ void RpcApiTable::add_parity_handlers() {
     handlers_[http::method::k_parity_getBlockReceipts] = &commands::RpcApi::handle_parity_get_block_receipts;
 }
 
-void RpcApiTable::add_tg_handlers() {
-    handlers_[http::method::k_tg_getHeaderByHash] = &commands::RpcApi::handle_tg_get_header_by_hash;
-    handlers_[http::method::k_tg_getHeaderByNumber] = &commands::RpcApi::handle_tg_get_header_by_number;
-    handlers_[http::method::k_tg_getLogsByHash] = &commands::RpcApi::handle_tg_get_logs_by_hash;
-    handlers_[http::method::k_tg_forks] = &commands::RpcApi::handle_tg_forks;
-    handlers_[http::method::k_tg_issuance] = &commands::RpcApi::handle_tg_issuance;
+void RpcApiTable::add_erigon_handlers() {
+    handlers_[http::method::k_erigon_getHeaderByHash] = &commands::RpcApi::handle_erigon_get_header_by_hash;
+    handlers_[http::method::k_erigon_getHeaderByNumber] = &commands::RpcApi::handle_erigon_get_header_by_number;
+    handlers_[http::method::k_erigon_getLogsByHash] = &commands::RpcApi::handle_erigon_get_logs_by_hash;
+    handlers_[http::method::k_erigon_forks] = &commands::RpcApi::handle_erigon_forks;
+    handlers_[http::method::k_erigon_issuance] = &commands::RpcApi::handle_erigon_issuance;
 }
 
 void RpcApiTable::add_trace_handlers() {

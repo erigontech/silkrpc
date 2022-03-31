@@ -42,11 +42,11 @@ public:
     ErigonRpcApi& operator=(const ErigonRpcApi&) = delete;
 
 protected:
-    asio::awaitable<void> handle_tg_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_tg_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_tg_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_tg_forks(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_tg_issuance(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_erigon_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_erigon_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_erigon_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_erigon_forks(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_erigon_issuance(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
     Context& context_;
