@@ -40,10 +40,9 @@ void AccessListTracer::on_execution_start(evmc_revision rev, const evmc_message&
         opcode_names_ = evmc_get_instruction_names_table(rev);
     }
 
-    //start_gas_ = msg.gas;
     evmc::address recipient(msg.recipient);
     evmc::address sender(msg.sender);
-    SILKRPC_DEBUG << "on_execution_start: gas: " << std::dec << msg.gas
+    SILKRPC_DEBUG << "on_execution_start: "
         << " depth: " << msg.depth
         << " recipient: " << recipient
         << " sender: " << sender
@@ -74,18 +73,29 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::Execution
     if (opcode_name == "SLOAD" && execution_state.stack.size() > 0) {
        const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
        add_storage(recipient, address);
-
     } else if (opcode_name == "SSTORE" && execution_state.stack.size() > 1) {
        const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
        add_storage(recipient, address);
+    } else if ((opcode_name == "EXTCODECOPY" || opcode_name == "EXTCODEHASH" || opcode_name == "EXTCODESIZE" || opcode_name == "BALANCE" || opcode_name == "SELFDESTRUCT") &&
+                execution_state.stack.size() > 1) {
+       const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
+       if (!exclude(recipient))
+          add_address(recipient);
+    } else if ((opcode_name == "DELEGATECALL" || opcode_name == "CALL" || opcode_name == "STATICCALL" || opcode_name == "CALLCODE") &&
+                execution_state.stack.size() >= 5) {
+       const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[1]));
+       if (!exclude(recipient))
+          add_address(recipient);
     }
-
-    //log.gas = execution_state.gas_left;
 }
 
+inline bool AccessListTracer::exclude(const evmc::address& address) {
+       // return (address != from_ && address != to_ && !is_precompiled(address)); // ADD precompiled
+       return (address != from_ && address != to_);
+}
 
 void AccessListTracer::add_storage(const evmc::address& address, const evmc::bytes32& storage) {
-    std::cout << "add_storage:: Address: " << address << "\n";
+    std::cout << "add_storage:: Address: " << address << " Storage: " << storage << "\n";
     for (int i = 0; i < access_list_.size(); i++) {
        if (access_list_[i].account == address) {
           for (int j = 0; j < access_list_[i].storage_keys.size(); j++) {
@@ -101,8 +111,6 @@ void AccessListTracer::add_storage(const evmc::address& address, const evmc::byt
     item.account = address;
     item.storage_keys.push_back(storage);
     access_list_.push_back(item);
-
-    dump("in add storage", access_list_);
 }
 
 void AccessListTracer::add_address(const evmc::address& address) {
@@ -119,30 +127,21 @@ void AccessListTracer::add_address(const evmc::address& address) {
 void AccessListTracer::on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
     SILKRPC_DEBUG << "on_execution_end:"
         << " result.status_code: " << result.status_code
-        << " start_gas: " << std::dec << start_gas_
         << " gas_left: " << std::dec << result.gas_left
         << "\n";
 }
 
 void AccessListTracer::add_local_access_list(const std::vector<silkworm::AccessListEntry> input_access_list) {
-    std::cout << "entering add local_access_list\n";
     for (int i = 0; i < input_access_list.size(); i++) {
+       if (!exclude(input_access_list[i].account))
        if (input_access_list[i].account != from_ &&
-            input_access_list[i].account != to_) {
+            input_access_list[i].account != to_) {  // && !is _precompiled(input_access_list[i].account)
           add_address(input_access_list[i].account);
        }
        for (int z = 0; z < input_access_list[i].storage_keys.size(); z++) {
           add_storage(input_access_list[i].account, input_access_list[i].storage_keys[z]);
        }
     }
-    std::cout << "exit add local_access_list\n";
-}
-
-void AccessListTracer::dump(std::string str) {
-   std::cout << str << "\n";
-   for (int i = 0; i < access_list_.size(); i++) {
-          std::cout << "AccessList Address: " << access_list_[i].account << "\n";
-   }
 }
 
 void AccessListTracer::dump(const std::string str, const std::vector<silkworm::AccessListEntry>& acl) {
@@ -196,6 +195,14 @@ bool AccessListTracer::compare(const std::vector<silkworm::AccessListEntry>& acl
 }
 
 #ifdef notdef
+
+void AccessListTracer::dump(std::string str) {
+   std::cout << str << "\n";
+   for (int i = 0; i < access_list_.size(); i++) {
+          std::cout << "AccessList Address: " << access_list_[i].account << "\n";
+   }
+}
+
 bool AccessListTracer::compare(std::shared_ptr<silkrpc::access_list::AccessListTracer> other) {
     std::cout << "entering compare\n";
     if (access_list_.size() != other->access_list_.size()) {
