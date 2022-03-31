@@ -264,8 +264,10 @@ void from_json(const nlohmann::json& json, Call& call) {
         }
     }
     if (json.count("nonce") != 0) {
-        const auto nonce = json.at("nonce");
-        if (!nonce.is_null()) {
+        const auto json_nonce = json.at("nonce");
+        if (json_nonce.is_string()) {
+            call.gas = std::stol(json_nonce.get<std::string>(), 0, 16);
+        } else {
             call.nonce = json.at("nonce").get<uint64_t>();
         }
     }
