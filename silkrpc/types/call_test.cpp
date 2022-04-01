@@ -63,6 +63,25 @@ TEST_CASE("create call with gasprice", "[silkrpc][types][call]") {
     CHECK(txn.nonce == 1);
 }
 
+TEST_CASE("create call without accessAccesslist and set it", "[silkrpc][types][call][set_access_list]") {
+    Call call{
+       std::nullopt,
+       std::nullopt,
+       235,                 // gas
+       21000,               // gas_price
+       std::nullopt,
+       std::nullopt,
+       31337,               // value
+       {},                  // data
+       1,               // value
+    };
+    CHECK(call.access_list == std::nullopt);
+
+    std::vector<silkworm::AccessListEntry> access_list{};
+    call.set_access_list(access_list);
+    CHECK(call.access_list != std::nullopt);
+}
+
 TEST_CASE("create call with no gasprice & not max_fee_per_gas and max_priority_fee_per_gas ", "[silkrpc][types][call]") {
     Call call{
        std::nullopt,
