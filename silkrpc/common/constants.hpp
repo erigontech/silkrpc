@@ -27,7 +27,7 @@ constexpr const char* kEngineApiNamespace{"engine"};
 constexpr const char* kEthApiNamespace{"eth"};
 constexpr const char* kNetApiNamespace{"net"};
 constexpr const char* kParityApiNamespace{"parity"};
-constexpr const char* kTgApiNamespace{"tg"};
+constexpr const char* kErigonApiNamespace{"erigon"};
 constexpr const char* kTraceApiNamespace{"trace"};
 constexpr const char* kWeb3ApiNamespace{"web3"};
 
