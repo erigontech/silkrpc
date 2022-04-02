@@ -32,7 +32,7 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/core/evm_tracing.hpp>
+// #include <silkrpc/core/evm_debug.hpp>
 
 namespace silkrpc {
 
