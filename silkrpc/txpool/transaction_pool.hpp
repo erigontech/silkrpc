@@ -71,6 +71,26 @@ using TransactionsAwaitable = unary_awaitable<
     ::txpool::TransactionsReply
 >;
 
+using AddNonceClient = AsyncUnaryClient<
+    ::txpool::Txpool::StubInterface,
+    ::txpool::NonceRequest,
+    ::txpool::NonceReply,
+    &::txpool::Txpool::StubInterface::PrepareAsyncNonce
+>;
+
+using AddNonceAwaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    AddNonceClient,
+    ::txpool::Txpool::StubInterface,
+    ::txpool::NonceRequest,
+    ::txpool::NonceReply
+>;
+
+struct Nonce_reply {
+    bool found;
+    uint64_t nonce;
+};
+
 class TransactionPool final {
 public:
     typedef struct {
@@ -154,7 +174,34 @@ public:
         }
     }
 
+    asio::awaitable<Nonce_reply> nonce(const evmc::address& address) {
+        const auto start_time = clock_time::now();
+        SILKRPC_DEBUG << "TransactionPool::nonce\n";
+        ::txpool::NonceRequest request{};
+        request.set_allocated_address(H160_from_address(address));
+        AddNonceAwaitable nonce_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await nonce_awaitable.async_call(request, asio::use_awaitable);
+        SILKRPC_DEBUG << "TransactionPool::nonce found:" << reply.found() << " nonce: " << reply.nonce() <<
+                         " t=" << clock_time::since(start_time) << "\n";
+        co_return Nonce_reply{reply.found(), reply.nonce()};
+    }
+
+
 private:
+    types::H160* H160_from_address(const evmc::address& address) {
+        auto h160{new types::H160()};
+        auto hi{H128_from_bytes(address.bytes)};
+        h160->set_allocated_hi(hi);
+        h160->set_lo(boost::endian::load_big_u32(address.bytes + 16));
+        return h160;
+    }
+    types::H128* H128_from_bytes(const uint8_t* bytes) {
+        auto h128{new types::H128()};
+        h128->set_hi(boost::endian::load_big_u64(bytes));
+        h128->set_lo(boost::endian::load_big_u64(bytes + 8));
+        return h128;
+    }
+
     asio::io_context::executor_type executor_;
     std::unique_ptr<::txpool::Txpool::StubInterface> stub_;
     grpc::CompletionQueue* queue_;
