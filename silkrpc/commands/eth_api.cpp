@@ -1079,13 +1079,24 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
         // lists and we'll need to reestimate every time
 
         evmc::address to{};
-
         if (call.to) {
            to = *(call.to);
         } else {
-           auto nonce = *(call.nonce);
-           if (!nonce) {
-              // 1. Retrieve nonce by txpool ... ADD
+           uint64_t nonce;
+           if (!call.nonce) {
+              // 1. Retrieve nonce by txpool
+              auto reply = co_await tx_pool_->nonce(*call.from);
+              if (!reply.found) {
+                 std::optional<silkworm::Account> account{co_await state_reader.read_account(*call.from,  block_with_hash.block.header.number + 1)};
+                 if (account) {
+                    nonce = (*account).nonce;
+                 }
+              } else {
+                 nonce = reply.nonce + 1;
+              }
+              call.nonce = nonce;
+           } else {
+              nonce = *(call.nonce);
            }
            to = silkworm::create_address(*call.from, nonce);
         }
