@@ -35,13 +35,13 @@ TEST_CASE("create empty call", "[silkrpc][types][call]") {
     CHECK(call.from == std::nullopt);
     CHECK(call.to == std::nullopt);
     CHECK(call.gas == std::nullopt);
-    CHECK(call.nonce == std::nullopt);
-    CHECK(call.access_list == std::nullopt);
     CHECK(call.gas_price == std::nullopt);
     CHECK(call.max_priority_fee_per_gas == std::nullopt);
     CHECK(call.max_fee_per_gas == std::nullopt);
     CHECK(call.value == std::nullopt);
     CHECK(call.data == std::nullopt);
+    CHECK(call.nonce == std::nullopt);
+    CHECK(call.access_list == std::nullopt);
 }
 
 TEST_CASE("create call with gasprice", "[silkrpc][types][call]") {
@@ -55,6 +55,7 @@ TEST_CASE("create call with gasprice", "[silkrpc][types][call]") {
        31337,               // value
        {},                  // data
        1,               // value
+       {},
     };
     silkworm::Transaction txn = call.to_transaction();
     CHECK(txn.gas_limit == 235);
