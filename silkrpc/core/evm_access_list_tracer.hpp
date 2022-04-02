@@ -46,7 +46,7 @@ public:
 
     void on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept override;
     void on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
-    void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
+    void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {}
     void dump(const std::string str, const std::vector<silkworm::AccessListEntry>& acl);
 
     //void dump(const std::string str);
@@ -54,6 +54,7 @@ public:
 
 private:
     inline bool exclude(const evmc::address& address);
+    inline evmc::address address_from_bytes32_hex(const std::string& s);
     void add_storage(const evmc::address& address, const evmc::bytes32& storage);
     void add_address(const evmc::address& address);
     void add_local_access_list(const std::vector<silkworm::AccessListEntry> input_access_list);
