@@ -113,6 +113,20 @@ void from_json(const nlohmann::json& json, uint256& ui256) {
 
 namespace silkworm {
 
+void from_json(const nlohmann::json& json, std::vector<silkworm::AccessListEntry>& al) {
+    al.reserve(json.size());
+    for (auto ale : json) {
+       auto address = ale.at("address").get<evmc::address>();
+       auto keys = ale.at("storageKeys").get<std::vector<evmc::bytes32>>();
+       silkworm::AccessListEntry item;
+       item.account = address; 
+       if (keys.size()) {
+          item.storage_keys = keys;
+       }
+       al.push_back(item); 
+    }
+}
+
 void to_json(nlohmann::json& json, const BlockHeader& header) {
     const auto block_number = silkrpc::to_quantity(header.number);
     json["number"] = block_number;
@@ -288,6 +302,10 @@ void from_json(const nlohmann::json& json, Call& call) {
     if (json.count("data") != 0) {
         const auto json_data = json.at("data").get<std::string>();
         call.data = silkworm::from_hex(json_data);
+    }
+    if (json.count("accessList") != 0) {
+       const auto json_acl = json.at("accessList").get<std::vector<silkworm::AccessListEntry>>();
+       call.access_list = json_acl;
     }
 }
 
