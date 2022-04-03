@@ -79,8 +79,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | debug_getModifiedAccountsByHash            | Yes          |                                            |
 | debug_getModifiedAccountsByNumber          | Yes          |                                            |
 | debug_storageRangeAt                       | Yes          |                                            |
-| debug_traceBlockByHash                     | -            | not yet implemented                        |
-| debug_traceBlockByNumber                   | -            | not yet implemented                        |
+| debug_traceBlockByHash                     | Yes          |                                            |
+| debug_traceBlockByNumber                   | Yes          |                                            |
 | debug_traceTransaction                     | Yes          |                                            |
 | debug_traceCall                            | Yes          |                                            |
 |                                            |              |                                            |
@@ -118,11 +118,11 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | shh_getFilterChanges                       | No           | deprecated                                 |
 | shh_getMessages                            | No           | deprecated                                 |
 |                                            |              |                                            |
-| tg_getHeaderByHash                         | Yes          |                                            |
-| tg_getHeaderByNumber                       | Yes          |                                            |
-| tg_getLogsByHash                           | Yes          |                                            |
-| tg_forks                                   | Yes          |                                            |
-| tg_issuance                                | Yes          |                                            |
+| erigon_getHeaderByHash                     | Yes          |                                            |
+| erigon_getHeaderByNumber                   | Yes          |                                            |
+| erigon_getLogsByHash                       | Yes          |                                            |
+| erigon_forks                               | Yes          |                                            |
+| erigon_issuance                            | Yes          |                                            |
 |                                            |              |                                            |
 | starknet_call                              | -            | not yet implemented                        |
 |                                            |              |                                            |

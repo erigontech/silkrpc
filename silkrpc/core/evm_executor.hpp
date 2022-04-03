@@ -50,7 +50,7 @@ public:
     static std::string get_error_message(int64_t error_code, const silkworm::Bytes& error_data, const bool full_error = true);
 
     explicit EVMExecutor(const Context& context, const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config, asio::thread_pool& workers, uint64_t block_number)
-    : context_(context), db_reader_(db_reader), config_(config), workers_{workers}, buffer_{*context.io_context, db_reader, block_number}, state_{buffer_} {}
+    : context_(context), db_reader_(db_reader), config_(config), workers_{workers}, remote_state_{*context.io_context, db_reader, block_number}, state_{remote_state_} {}
     virtual ~EVMExecutor() {}
 
     EVMExecutor(const EVMExecutor&) = delete;
@@ -65,7 +65,7 @@ private:
     const core::rawdb::DatabaseReader& db_reader_;
     const silkworm::ChainConfig& config_;
     asio::thread_pool& workers_;
-    state::RemoteBuffer buffer_;
+    state::RemoteState remote_state_;
     WorldState state_;
 };
 

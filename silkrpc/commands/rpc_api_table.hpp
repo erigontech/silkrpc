@@ -48,7 +48,7 @@ private:
     void add_eth_handlers();
     void add_net_handlers();
     void add_parity_handlers();
-    void add_tg_handlers();
+    void add_erigon_handlers();
     void add_trace_handlers();
     void add_web3_handlers();
     void add_engine_handlers();
