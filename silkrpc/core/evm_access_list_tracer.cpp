@@ -92,7 +92,7 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::Execution
 
 
 inline bool AccessListTracer::exclude(const evmc::address& address) {
-       // return (address == from_ || address == to_ || is_precompiled(address)); // ADD precompiled
+       // return (address == from_ || address == to_ || is_precompiled(address)); // ADD check on precompiled when available from silkworm
        return (address == from_ || address == to_);
 }
 
