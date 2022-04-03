@@ -1193,8 +1193,12 @@ TEST_CASE("deserialize minimal call", "[silkrpc::json][from_json]") {
     CHECK(c1.to == evmc::address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address});
     CHECK(c1.gas == std::nullopt);
     CHECK(c1.gas_price == std::nullopt);
+    CHECK(c1.max_priority_fee_per_gas == std::nullopt);
+    CHECK(c1.max_fee_per_gas == std::nullopt);
     CHECK(c1.value == std::nullopt);
     CHECK(c1.data == std::nullopt);
+    CHECK(c1.nonce == std::nullopt);
+    CHECK(c1.access_list == std::nullopt);
 }
 
 TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
@@ -1202,15 +1206,20 @@ TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
         "from": "0x52c24586c31cff0485a6208bb63859290fba5bce",
         "to": "0x0715a7794a1dc8e42615f059dd6e406a6594651a",
         "gas": "0xF4240",
-        "nonce":"0x1",
         "gasPrice": "0x10C388C00",
-        "data": "0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000"
+        "max_priority_fee_per_gas": "0x10C388C00",
+        "max_fee_per_gas": "0x10C388C00",
+        "value": "0x10C388C00",
+        "data": "0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000",
+        "nonce": "0xF4240",
+        "access_list": ["0x52c24586c31cff0485a6208bb63859290fba5bce", ["0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c"]]
     })"_json;
     auto c1 = j1.get<Call>();
     CHECK(c1.from == 0x52c24586c31cff0485a6208bb63859290fba5bce_address);
     CHECK(c1.to == 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address);
     CHECK(c1.gas == intx::uint256{1000000});
     CHECK(c1.gas_price == intx::uint256{4499999744});
+    CHECK(c1.value == intx::uint256{4499999744});
     CHECK(c1.data == silkworm::from_hex("0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000"));
 
     auto j2 = R"({

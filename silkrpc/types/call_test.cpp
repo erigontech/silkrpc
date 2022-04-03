@@ -50,11 +50,11 @@ TEST_CASE("create call with gasprice", "[silkrpc][types][call]") {
        std::nullopt,
        235,                 // gas
        21000,               // gas_price
-       std::nullopt,
-       std::nullopt,
+       std::nullopt,        // max_priority_fee_per_gas
+       std::nullopt,        // max_fee_per_gas
        31337,               // value
        {},                  // data
-       1,               // value
+       1,                   // nonce
        {},
     };
     silkworm::Transaction txn = call.to_transaction();
