@@ -41,7 +41,7 @@
 #include <silkrpc/core/account_walker.hpp>
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/evm_executor.hpp>
-#include <silkrpc/core/evm_tracing.hpp>
+#include <silkrpc/core/evm_debug.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/core/state_reader.hpp>
 #include <silkrpc/core/storage_walker.hpp>
@@ -276,9 +276,9 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann
     }
     auto transaction_hash = params[0].get<evmc::bytes32>();
 
-    trace::TraceConfig config;
+    debug::DebugConfig config;
     if (params.size() > 1) {
-        config = params[1].get<trace::TraceConfig>();
+        config = params[1].get<debug::DebugConfig>();
     }
 
     SILKRPC_DEBUG << "transaction_hash: " << transaction_hash << " config: {" << config << "}\n";
@@ -293,14 +293,14 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann
             oss << "transaction 0x" << transaction_hash << " not found";
             reply = make_json_error(request["id"], -32000, oss.str());
         } else {
-            trace::TraceExecutor executor{context_, tx_database, workers_, config};
+            debug::DebugExecutor executor{context_, tx_database, workers_, config};
             const auto result = co_await executor.execute(tx_with_block->block_with_hash.block, tx_with_block->transaction);
 
             if (result.pre_check_error) {
                 reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
             } else {
-                SILKRPC_INFO << "LOGS size : " << result.trace.trace_logs.size() << "\n";
-                reply = make_json_content(request["id"], result.trace);
+                SILKRPC_INFO << "LOGS size : " << result.debug_trace.debug_logs.size() << "\n";
+                reply = make_json_content(request["id"], result.debug_trace);
             }
         }
     } catch (const std::exception& e) {
@@ -326,9 +326,9 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json&
     }
     const auto call = params[0].get<Call>();
     const auto block_number_or_hash = params[1].get<BlockNumberOrHash>();
-    trace::TraceConfig config;
+    debug::DebugConfig config;
     if (params.size() > 2) {
-        config = params[2].get<trace::TraceConfig>();
+        config = params[2].get<debug::DebugConfig>();
     }
 
     SILKRPC_DEBUG << "call: " << call << " block_number_or_hash: " << block_number_or_hash << " config: {" << config << "}\n";
@@ -343,13 +343,13 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json&
         auto txn = call.to_transaction();
         silkrpc::Transaction transaction{txn};
 
-        trace::TraceExecutor executor{context_, tx_database, workers_, config};
+        debug::DebugExecutor executor{context_, tx_database, workers_, config};
         const auto result = co_await executor.execute(block_with_hash.block, call);
 
         if (result.pre_check_error) {
             reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
         } else {
-            reply = make_json_content(request["id"], result.trace);
+            reply = make_json_content(request["id"], result.debug_trace);
         }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -377,9 +377,9 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(const nloh
     }
     const auto block_number = params[0].get<std::uint64_t>();
 
-    trace::TraceConfig config;
+    debug::DebugConfig config;
     if (params.size() > 1) {
-        config = params[1].get<trace::TraceConfig>();
+        config = params[1].get<debug::DebugConfig>();
     }
 
     SILKRPC_DEBUG << "block_number: " << block_number << " config: {" << config << "}\n";
@@ -391,10 +391,10 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(const nloh
 
         const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache, tx_database, block_number);
 
-        trace::TraceExecutor executor{context_, tx_database, workers_, config};
-        const auto traces = co_await executor.execute(block_with_hash.block);
+        debug::DebugExecutor executor{context_, tx_database, workers_, config};
+        const auto debug_traces = co_await executor.execute(block_with_hash.block);
 
-        reply = make_json_content(request["id"], traces);
+        reply = make_json_content(request["id"], debug_traces);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
 
@@ -421,9 +421,9 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const nlohma
     }
     const auto block_hash = params[0].get<evmc::bytes32>();
 
-    trace::TraceConfig config;
+    debug::DebugConfig config;
     if (params.size() > 1) {
-        config = params[1].get<trace::TraceConfig>();
+        config = params[1].get<debug::DebugConfig>();
     }
 
     SILKRPC_DEBUG << "block_hash: " << block_hash << " config: {" << config << "}\n";
@@ -435,10 +435,10 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const nlohma
 
         const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache, tx_database, block_hash);
 
-        trace::TraceExecutor executor{context_, tx_database, workers_, config};
-        const auto traces = co_await executor.execute(block_with_hash.block);
+        debug::DebugExecutor executor{context_, tx_database, workers_, config};
+        const auto debug_traces = co_await executor.execute(block_with_hash.block);
 
-        reply = make_json_content(request["id"], traces);
+        reply = make_json_content(request["id"], debug_traces);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
 
