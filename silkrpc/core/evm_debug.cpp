@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "evm_tracing.hpp"
+#include "evm_debug.hpp"
 
 #include <memory>
 #include <stack>
@@ -32,15 +32,15 @@
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/json/types.hpp>
 
-namespace silkrpc::trace {
+namespace silkrpc::debug {
 
-void from_json(const nlohmann::json& json, TraceConfig& tc) {
+void from_json(const nlohmann::json& json, DebugConfig& tc) {
     json.at("disableStorage").get_to(tc.disableStorage);
     json.at("disableMemory").get_to(tc.disableMemory);
     json.at("disableStack").get_to(tc.disableStack);
 }
 
-std::ostream& operator<<(std::ostream& out, const TraceConfig& tc) {
+std::ostream& operator<<(std::ostream& out, const DebugConfig& tc) {
     out << "disableStorage: " << std::boolalpha << tc.disableStorage;
     out << " disableMemory: " << std::boolalpha << tc.disableMemory;
     out << " disableStack: " << std::boolalpha << tc.disableStack;
@@ -48,14 +48,14 @@ std::ostream& operator<<(std::ostream& out, const TraceConfig& tc) {
     return out;
 }
 
-void to_json(nlohmann::json& json, const Trace& trace) {
-    json["failed"] = trace.failed;
-    json["gas"] = trace.gas;
-    json["returnValue"] = trace.return_value;
+void to_json(nlohmann::json& json, const DebugTrace& debug_trace) {
+    json["failed"] = debug_trace.failed;
+    json["gas"] = debug_trace.gas;
+    json["returnValue"] = debug_trace.return_value;
 
-    const auto& config = trace.trace_config;
+    const auto& config = debug_trace.debug_config;
     json["structLogs"] = nlohmann::json::array();
-    for (auto& log : trace.trace_logs) {
+    for (auto& log : debug_trace.debug_logs) {
         nlohmann::json entry;
 
         entry["depth"] = log.depth;
@@ -76,15 +76,6 @@ void to_json(nlohmann::json& json, const Trace& trace) {
             entry["error"] = nlohmann::json::object();
         }
         json["structLogs"].push_back(entry);
-    }
-}
-
-void to_json(nlohmann::json& json, const std::vector<Trace>& traces) {
-    json = nlohmann::json::array();
-    for (auto& trace : traces) {
-        nlohmann::json entry;
-        to_json(entry, trace);
-        json.push_back(entry);
     }
 }
 
@@ -114,7 +105,7 @@ void output_memory(std::vector<std::string>& vect, const evmone::Memory& memory)
     }
 }
 
-void insert_error(TraceLog& log, evmc_status_code status_code) {
+void insert_error(DebugLog& log, evmc_status_code status_code) {
     switch(status_code) {
     case evmc_status_code::EVMC_FAILURE:
     case evmc_status_code::EVMC_UNDEFINED_INSTRUCTION:
@@ -202,7 +193,7 @@ void DebugTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState
         }
     }
 
-    TraceLog log;
+    DebugLog log;
     log.pc = pc;
     log.op = opcode_name == "KECCAK256" ? "SHA3" : opcode_name; // TODO(sixtysixter) for RPCDAEMON compatibility
     log.gas = execution_state.gas_left;
@@ -253,7 +244,7 @@ void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::In
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<std::vector<Trace>> TraceExecutor<WorldState, VM>::execute(const silkworm::Block& block) {
+asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::execute(const silkworm::Block& block) {
     auto block_number = block.header.number;
     const auto& transactions = block.transactions;
 
@@ -264,7 +255,7 @@ asio::awaitable<std::vector<Trace>> TraceExecutor<WorldState, VM>::execute(const
 
     EVMExecutor<WorldState, VM> executor{context_, database_reader_, *chain_config_ptr, workers_, block_number-1};
 
-    std::vector<Trace> traces(transactions.size());
+    std::vector<DebugTrace> debug_traces(transactions.size());
     for (std::uint64_t idx = 0; idx < transactions.size(); idx++) {
         silkrpc::Transaction txn{block.transactions[idx]};
         if (!txn.from) {
@@ -272,35 +263,35 @@ asio::awaitable<std::vector<Trace>> TraceExecutor<WorldState, VM>::execute(const
         }
         SILKRPC_DEBUG << "processing transaction: idx: " << idx << " txn: " << txn << "\n";
 
-        auto& trace = traces.at(idx);
+        auto& debug_trace = debug_traces.at(idx);
 
-        trace.trace_config = config_;
-        auto tracer = std::make_shared<trace::DebugTracer>(trace.trace_logs, config_);
+        debug_trace.debug_config = config_;
+        auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_);
 
-        const auto execution_result = co_await executor.call(block, txn, tracer);
+        const auto execution_result = co_await executor.call(block, txn, debug_tracer);
 
         if (execution_result.pre_check_error) {
-            SILKRPC_DEBUG << "tracing failed: " << execution_result.pre_check_error.value() << "\n";
-            trace.failed = true;
+            SILKRPC_DEBUG << "debug failed: " << execution_result.pre_check_error.value() << "\n";
+            debug_trace.failed = true;
         } else {
-            trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
-            trace.gas = txn.gas_limit - execution_result.gas_left;
-            trace.return_value = silkworm::to_hex(execution_result.data);
+            debug_trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
+            debug_trace.gas = txn.gas_limit - execution_result.gas_left;
+            debug_trace.return_value = silkworm::to_hex(execution_result.data);
         }
     }
 
-    co_return traces;
+    co_return debug_traces;
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<TraceExecutorResult> TraceExecutor<WorldState, VM>::execute(const silkworm::Block& block, const silkrpc::Call& call) {
+asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(const silkworm::Block& block, const silkrpc::Call& call) {
     silkrpc::Transaction transaction{call.to_transaction()};
     auto result = co_await execute(block.header.number, block, transaction, -1);
     co_return result;
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<TraceExecutorResult> TraceExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
+asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
         const silkrpc::Transaction& transaction, std::int32_t index) {
     SILKRPC_DEBUG << "execute: "
         << " block_number: " << block_number
@@ -322,25 +313,25 @@ asio::awaitable<TraceExecutorResult> TraceExecutor<WorldState, VM>::execute(std:
         const auto execution_result = co_await executor.call(block, txn);
     }
 
-    TraceExecutorResult result;
-    auto& trace = result.trace;
+    DebugExecutorResult result;
+    auto& debug_trace = result.debug_trace;
 
-    trace.trace_config = config_;
+    debug_trace.debug_config = config_;
 
-    auto tracer = std::make_shared<trace::DebugTracer>(trace.trace_logs, config_);
-    const auto execution_result = co_await executor.call(block, transaction, tracer);
+    auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_);
+    const auto execution_result = co_await executor.call(block, transaction, debug_tracer);
 
     if (execution_result.pre_check_error) {
-        result.pre_check_error = "tracing failed: " + execution_result.pre_check_error.value();
+        result.pre_check_error = "debug failed: " + execution_result.pre_check_error.value();
     } else {
-        trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
-        trace.gas = transaction.gas_limit - execution_result.gas_left;
-        trace.return_value = silkworm::to_hex(execution_result.data);
+        debug_trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
+        debug_trace.gas = transaction.gas_limit - execution_result.gas_left;
+        debug_trace.return_value = silkworm::to_hex(execution_result.data);
     }
 
     co_return result;
 }
 
-template class TraceExecutor<>;
+template class DebugExecutor<>;
 
-} // namespace silkrpc::trace
+} // namespace silkrpc::debug
