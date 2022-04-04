@@ -49,8 +49,10 @@ struct TransactionWithBlock {
     Transaction transaction;
 };
 
+using AccessList = std::vector<silkworm::AccessListEntry>;
+
 struct AccessListResult {
-    std::vector<silkworm::AccessListEntry> access_list;
+    AccessList access_list;
     std::optional<std::string> error;
     uint64_t gas_used;
 };

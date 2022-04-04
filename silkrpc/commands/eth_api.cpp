@@ -1050,7 +1050,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
     co_return;
 }
 
-// https://eth.wiki/json-rpc/API#eth_createAccessList
+// https://geth.ethereum.org/docs/rpc/ns-eth#eth_createaccesslist
 asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
@@ -1073,26 +1073,23 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
 
-        // MGT state_cache
         StateReader state_reader{tx_database};
-        // If the gas amount is not set, extract this as it will depend on access
-        // lists and we'll need to reestimate every time
 
         evmc::address to{};
         if (call.to) {
            to = *(call.to);
         } else {
-           uint64_t nonce;
+           uint64_t nonce = 0;
            if (!call.nonce) {
               // 1. Retrieve nonce by txpool
-              auto reply = co_await tx_pool_->nonce(*call.from);
-              if (!reply.found) {
+              auto nonce_option = co_await tx_pool_->nonce(*call.from);
+              if (!nonce_option) {
                  std::optional<silkworm::Account> account{co_await state_reader.read_account(*call.from,  block_with_hash.block.header.number + 1)};
                  if (account) {
                     nonce = (*account).nonce;
                  }
               } else {
-                 nonce = reply.nonce + 1;
+                 nonce = *nonce_option + 1;
               }
               call.nonce = nonce;
            } else {
@@ -1101,35 +1098,45 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
            to = silkworm::create_address(*call.from, nonce);
         }
 
-        std::vector<silkworm::AccessListEntry> prev;
-        std::vector<silkworm::AccessListEntry> curr;
+        AccessList previous_access_list;
+        AccessList current_access_list;
         // check on precompiles contract is done on tracer
 
-        for(;;) {
+        bool access_list_match = false;
+        ExecutionResult execution_result{};
+        silkworm::Transaction txn{};
+
+
+        while (!access_list_match) {
            auto tracer = std::make_shared<access_list::AccessListTracer>(call.access_list, *call.from, to);
            EVMExecutor executor{context_, tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number};
-           silkworm::Transaction txn{call.to_transaction()};
-           prev = tracer->get_access_list();
-           const auto execution_result = co_await executor.call(block_with_hash.block, txn, tracer);
-           curr = tracer->get_access_list();
+           txn = call.to_transaction();
+           previous_access_list = tracer->get_access_list();
+           execution_result = co_await executor.call(block_with_hash.block, txn, tracer);
            if (execution_result.pre_check_error) {
-              reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
               break;
+           }
+           current_access_list = tracer->get_access_list();
+
+           if (tracer->compare(current_access_list, previous_access_list)) {
+              access_list_match = true;
            } else {
-              if (tracer->compare(curr, prev)) {
-                 AccessListResult access_list_result;
-                 access_list_result.access_list = tracer->get_access_list();
-                 access_list_result.gas_used = txn.gas_limit - execution_result.gas_left;
-                 if (execution_result.error_code != evmc_status_code::EVMC_SUCCESS) {
-                    const auto error_message = EVMExecutor<>::get_error_message(execution_result.error_code, execution_result.data, false /* full_error */);
-                    access_list_result.error = error_message;
-                 }
-                 reply = make_json_content(request["id"], access_list_result);
-                 break;
-              }
-          }
-          call.set_access_list(curr);
-       }
+              call.set_access_list(current_access_list);
+           }
+        }
+
+        if (execution_result.pre_check_error) {
+            reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
+        } else {
+            AccessListResult access_list_result;
+            access_list_result.access_list = current_access_list;
+            access_list_result.gas_used = txn.gas_limit - execution_result.gas_left;
+            if (execution_result.error_code != evmc_status_code::EVMC_SUCCESS) {
+                const auto error_message = EVMExecutor<>::get_error_message(execution_result.error_code, execution_result.data, false /* full_error */);
+                access_list_result.error = error_message;
+            }
+            reply = make_json_content(request["id"], access_list_result);
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());

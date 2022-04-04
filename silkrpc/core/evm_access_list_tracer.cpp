@@ -30,12 +30,24 @@
 
 namespace silkrpc::access_list {
 
+const char* SLOAD = evmone::instr::traits[evmc_opcode::OP_SLOAD].name;
+const char* SSTORE = evmone::instr::traits[evmc_opcode::OP_SSTORE].name;
+const char* EXTCODECOPY = evmone::instr::traits[evmc_opcode::OP_EXTCODECOPY].name;
+const char* EXTCODEHASH = evmone::instr::traits[evmc_opcode::OP_EXTCODEHASH].name;
+const char* EXTCODESIZE = evmone::instr::traits[evmc_opcode::OP_EXTCODESIZE].name;
+const char* BALANCE = evmone::instr::traits[evmc_opcode::OP_BALANCE].name;
+const char* SELFDESTRUCT = evmone::instr::traits[evmc_opcode::OP_SELFDESTRUCT].name;
+const char* DELEGATECALL = evmone::instr::traits[evmc_opcode::OP_DELEGATECALL].name;
+const char* CALL = evmone::instr::traits[evmc_opcode::OP_CALL].name;
+const char* STATICCALL = evmone::instr::traits[evmc_opcode::OP_STATICCALL].name;
+const char* CALLCODE = evmone::instr::traits[evmc_opcode::OP_CALLCODE].name;
+
 std::string get_opcode_name(const char* const* names, std::uint8_t opcode) {
     const auto name = names[opcode];
     return (name != nullptr) ?name : "opcode 0x" + evmc::hex(opcode) + " not defined";
 }
 
-inline evmc::address AccessListTracer::address_from_bytes32_hex(const std::string& s) {
+inline evmc::address AccessListTracer::address_from_hex_string(const std::string& s) {
     const auto bytes = silkworm::from_hex(s);
     return silkworm::to_evmc_address(bytes.value_or(silkworm::Bytes{}));
 }
@@ -52,7 +64,7 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::Execution
     evmc::address sender(execution_state.msg->sender);
 
     const auto opcode = execution_state.code[pc];
-    auto opcode_name = get_opcode_name(opcode_names_, opcode);
+    const auto opcode_name = get_opcode_name(opcode_names_, opcode);
 
     SILKRPC_DEBUG << "on_instruction_start:"
         << " pc: " << std::dec << pc
@@ -67,28 +79,34 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::Execution
         << "   msg.depth: " << std::dec << execution_state.msg->depth
         << "}\n";
 
-    if (opcode_name == "SLOAD" && execution_state.stack.size() >= 1) {
+    if (is_storage_opcode(opcode_name) && execution_state.stack.size() >= 1) {
        const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
        add_storage(recipient, address);
-    } else if (opcode_name == "SSTORE" && execution_state.stack.size() >= 1) {
-       const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
-       add_storage(recipient, address);
-    } else if ((opcode_name == "EXTCODECOPY" || opcode_name == "EXTCODEHASH" || opcode_name == "EXTCODESIZE" ||
-                opcode_name == "BALANCE" || opcode_name == "SELFDESTRUCT") &&
-                execution_state.stack.size() >= 1) {
-       const auto address = address_from_bytes32_hex(intx::hex(execution_state.stack[0]));
+    } else if (is_contract_opcode(opcode_name) && execution_state.stack.size() >= 1) {
+       const auto address = address_from_hex_string(intx::hex(execution_state.stack[0]));
        if (!exclude(address)) {
           add_address(address);
        }
-    } else if ((opcode_name == "DELEGATECALL" || opcode_name == "CALL" || opcode_name == "STATICCALL" || opcode_name == "CALLCODE") &&
-                execution_state.stack.size() >= 5) {
-       const auto address = address_from_bytes32_hex(intx::hex(execution_state.stack[1]));
+    } else if (is_call_opcode(opcode_name) && execution_state.stack.size() >= 5) {
+       const auto address = address_from_hex_string(intx::hex(execution_state.stack[1]));
        if (!exclude(address)) {
           add_address(address);
        }
     }
 }
 
+inline bool AccessListTracer::is_storage_opcode(const std::string & opcode_name) {
+    return (opcode_name == SLOAD || opcode_name == SSTORE);
+}
+
+inline bool AccessListTracer::is_contract_opcode(const std::string & opcode_name) {
+    return (opcode_name == EXTCODECOPY || opcode_name == EXTCODEHASH || opcode_name == EXTCODESIZE ||
+                opcode_name == BALANCE || opcode_name == SELFDESTRUCT);
+}
+
+inline bool AccessListTracer::is_call_opcode(const std::string & opcode_name) {
+    return (opcode_name == DELEGATECALL || opcode_name == CALL || opcode_name == STATICCALL || opcode_name == CALLCODE);
+}
 
 
 inline bool AccessListTracer::exclude(const evmc::address& address) {
@@ -97,7 +115,7 @@ inline bool AccessListTracer::exclude(const evmc::address& address) {
 }
 
 void AccessListTracer::add_storage(const evmc::address& address, const evmc::bytes32& storage) {
-    //std::cout << "add_storage:: Address: " << address << " Storage: " << storage << "\n";
+    SILKRPC_TRACE << "add_storage:" << address << " storage: " << storage << "\n";
     for (int i = 0; i < access_list_.size(); i++) {
        if (access_list_[i].account == address) {
           for (int j = 0; j < access_list_[i].storage_keys.size(); j++) {
@@ -116,6 +134,7 @@ void AccessListTracer::add_storage(const evmc::address& address, const evmc::byt
 }
 
 void AccessListTracer::add_address(const evmc::address& address) {
+    SILKRPC_TRACE << "add_address:" << address << "\n";
     for (int i = 0; i < access_list_.size(); i++) {
        if (access_list_[i].account == address) {
           return;
@@ -126,11 +145,9 @@ void AccessListTracer::add_address(const evmc::address& address) {
     access_list_.push_back(item);
 }
 
-void AccessListTracer::add_local_access_list(const std::vector<silkworm::AccessListEntry> input_access_list) {
+void AccessListTracer::add_local_access_list(const AccessList& input_access_list) {
     for (int i = 0; i < input_access_list.size(); i++) {
-       if (!exclude(input_access_list[i].account))
-       if (input_access_list[i].account != from_ &&
-            input_access_list[i].account != to_) {  // && !is _precompiled(input_access_list[i].account)
+       if (!exclude(input_access_list[i].account)) {
           add_address(input_access_list[i].account);
        }
        for (int z = 0; z < input_access_list[i].storage_keys.size(); z++) {
@@ -139,14 +156,17 @@ void AccessListTracer::add_local_access_list(const std::vector<silkworm::AccessL
     }
 }
 
-void AccessListTracer::dump(const std::string str, const std::vector<silkworm::AccessListEntry>& acl) {
-   std::cout << str << "\n";
+void AccessListTracer::dump(const std::string& user_string, const AccessList& acl) {
+   std::cout << user_string << "\n";
    for (int i = 0; i < acl.size(); i++) {
-          std::cout << "AccessList Address: " << acl[i].account << "\n";
+       std::cout << "Address: " << acl[i].account << "\n";
+       for (int z = 0; z < acl[i].storage_keys.size(); z++) {
+          std::cout << "-> StorageKeys: " << acl[i].storage_keys[z] << "\n";
+       }
    }
 }
 
-bool AccessListTracer::compare(const std::vector<silkworm::AccessListEntry>& acl1, const std::vector<silkworm::AccessListEntry>& acl2) {
+bool AccessListTracer::compare(const AccessList& acl1, const AccessList& acl2) {
     if (acl1.size() != acl2.size()) {
        return false;
     }

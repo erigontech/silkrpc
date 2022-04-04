@@ -33,34 +33,39 @@ namespace silkrpc::access_list {
 
 class AccessListTracer : public silkworm::EvmTracer {
 public:
-    explicit AccessListTracer(const std::optional<std::vector<silkworm::AccessListEntry>>& input_access_list, const evmc::address& from, const evmc::address& to): from_{from}, to_{to} {
-       if (input_access_list)
+    explicit AccessListTracer(const std::optional<AccessList>& input_access_list, const evmc::address& from, const evmc::address& to): from_{from}, to_{to} {
+       if (input_access_list) {
           add_local_access_list(*input_access_list);
+       }
     }
     AccessListTracer(const AccessListTracer&) = delete;
     AccessListTracer& operator=(const AccessListTracer&) = delete;
 
-    void set_access_list(std::vector<silkworm::AccessListEntry> ale) { access_list_ = ale; }
-    std::vector<silkworm::AccessListEntry> get_access_list() { return access_list_; }
-    bool compare(const std::vector<silkworm::AccessListEntry>& acl1, const std::vector<silkworm::AccessListEntry>& acl2);
+    void set_access_list(AccessList ale) { access_list_ = ale; }
+    AccessList get_access_list() { return access_list_; }
+    bool compare(const AccessList& acl1, const AccessList& acl2);
 
     void on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept override;
     void on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {}
-    void dump(const std::string str, const std::vector<silkworm::AccessListEntry>& acl);
+    void dump(const std::string& str, const AccessList& acl);
 
     //void dump(const std::string str);
     //bool compare(std::shared_ptr<silkrpc::access_list::AccessListTracer> other);
 
 private:
     inline bool exclude(const evmc::address& address);
-    inline evmc::address address_from_bytes32_hex(const std::string& s);
+    inline evmc::address address_from_hex_string(const std::string& s);
+    inline bool is_storage_opcode(const std::string & opcode_name);
+    inline bool is_contract_opcode(const std::string & opcode_name);
+    inline bool is_call_opcode(const std::string & opcode_name);
+
     void add_storage(const evmc::address& address, const evmc::bytes32& storage);
     void add_address(const evmc::address& address);
-    void add_local_access_list(const std::vector<silkworm::AccessListEntry> input_access_list);
+    void add_local_access_list(const AccessList& input_access_list);
 
 
-    std::vector<silkworm::AccessListEntry> access_list_;
+    AccessList access_list_;
     evmc::address from_;
     evmc::address to_;
 
