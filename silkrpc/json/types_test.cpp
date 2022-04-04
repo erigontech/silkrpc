@@ -1201,18 +1201,37 @@ TEST_CASE("deserialize minimal call", "[silkrpc::json][from_json]") {
     CHECK(c1.access_list == std::nullopt);
 }
 
+#ifdef notdef
+TEST_CASE("deserialize vector AccessListEntry", "[silkrpc::json][from_json]") {
+    auto j1 = R"({
+        "accessList":[
+            {
+                "address":"0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae",
+                "storageKeys":[
+                    "0x0000000000000000000000000000000000000000000000000000000000000003",
+                    "0x000000000000000000000000000000000000000000000000000000000000000a"
+                ]
+            },
+            {
+                "address":"0xbb0b295669a9fd93d5f28d9ec85e40f4cb697bae",
+                "storageKeys":[]
+            }
+        ]
+    })"_json;
+    auto c1 = j1.get<std::vector<silkworm::AccessListEntry>>();
+}
+#endif
+
+
 TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
     auto j1 = R"({
         "from": "0x52c24586c31cff0485a6208bb63859290fba5bce",
         "to": "0x0715a7794a1dc8e42615f059dd6e406a6594651a",
         "gas": "0xF4240",
         "gasPrice": "0x10C388C00",
-        "max_priority_fee_per_gas": "0x10C388C00",
-        "max_fee_per_gas": "0x10C388C00",
         "value": "0x10C388C00",
-        "data": "0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000",
-        "nonce": "0xF4240",
-        "access_list": ["0x52c24586c31cff0485a6208bb63859290fba5bce", ["0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c"]]
+        "nonce": "0x1",
+        "data": "0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000"
     })"_json;
     auto c1 = j1.get<Call>();
     CHECK(c1.from == 0x52c24586c31cff0485a6208bb63859290fba5bce_address);
@@ -1221,6 +1240,7 @@ TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
     CHECK(c1.gas_price == intx::uint256{4499999744});
     CHECK(c1.value == intx::uint256{4499999744});
     CHECK(c1.data == silkworm::from_hex("0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000"));
+    CHECK(c1.nonce == intx::uint256{1});
 
     auto j2 = R"({
         "from":"0x52c24586c31cff0485a6208bb63859290fba5bce",
@@ -1228,7 +1248,8 @@ TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
         "gas":1000000,
         "gasPrice":"0x10C388C00",
         "data":"0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000",
-        "value":"0x124F80"
+        "value":"0x124F80",
+        "nonce": 1
     })"_json;
     auto c2 = j2.get<Call>();
     CHECK(c2.from == 0x52c24586c31cff0485a6208bb63859290fba5bce_address);
@@ -1237,6 +1258,7 @@ TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
     CHECK(c2.gas_price == intx::uint256{4499999744});
     CHECK(c2.data == silkworm::from_hex("0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000"));
     CHECK(c2.value == intx::uint256{1200000});
+    CHECK(c2.nonce == intx::uint256{1});
 }
 
 TEST_CASE("deserialize block_number_or_hash", "[silkrpc::json][from_json]") {
