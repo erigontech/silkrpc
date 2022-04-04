@@ -117,13 +117,13 @@ void from_json(const nlohmann::json& json, std::vector<silkworm::AccessListEntry
     al.reserve(json.size());
     for (auto ale : json) {
        auto address = ale.at("address").get<evmc::address>();
-       auto keys = ale.at("storageKeys").get<std::vector<evmc::bytes32>>();
-       silkworm::AccessListEntry item;
-       item.account = address;
-       if (keys.size()) {
-          item.storage_keys = keys;
-       }
-       al.push_back(item);
+       //auto keys = ale.at("storageKeys").get<std::vector<evmc::bytes32>>();
+       //silkworm::AccessListEntry item;
+       //item.account = address;
+       //if (keys.size()) {
+       //   item.storage_keys = keys;
+       //}
+       //al.push_back(item);
     }
 }
 
@@ -280,9 +280,9 @@ void from_json(const nlohmann::json& json, Call& call) {
     if (json.count("nonce") != 0) {
         const auto json_nonce = json.at("nonce");
         if (json_nonce.is_string()) {
-            call.gas = std::stol(json_nonce.get<std::string>(), 0, 16);
+            call.nonce = std::stol(json_nonce.get<std::string>(), 0, 16);
         } else {
-            call.nonce = json.at("nonce").get<uint64_t>();
+            call.nonce = json_nonce.get<uint64_t>();
         }
     }
     if (json.count("gas") != 0) {
