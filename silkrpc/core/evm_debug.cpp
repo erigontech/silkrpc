@@ -126,9 +126,10 @@ void DebugTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
     start_gas_ = msg.gas;
     evmc::address recipient(msg.recipient);
     evmc::address sender(msg.sender);
-    SILKRPC_DEBUG << "on_execution_start: gas: " << std::dec << msg.gas
+    SILKRPC_LOG << "on_execution_start: gas: " << std::dec << msg.gas
         << " depth: " << msg.depth
         << " recipient: " << recipient
+        << " code: " << silkworm::to_hex(code)
         << " sender: " << sender
         << "\n";
 }
@@ -324,7 +325,7 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std:
     const auto execution_result = co_await executor.call(block, transaction, debug_tracer);
 
     if (execution_result.pre_check_error) {
-        result.pre_check_error = "debug failed: " + execution_result.pre_check_error.value();
+        result.pre_check_error = "tracing failed: " + execution_result.pre_check_error.value();
     } else {
         debug_trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
         debug_trace.gas = transaction.gas_limit - execution_result.gas_left;

@@ -17,25 +17,65 @@
 #include "trace_api.hpp"
 
 #include <string>
+#include <vector>
 
 #include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/core/blocks.hpp>
+#include <silkrpc/core/cached_chain.hpp>
+#include <silkrpc/core/evm_trace.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/json/types.hpp>
+#include <silkrpc/types/call.hpp>
 
 namespace silkrpc::commands {
 
 // https://eth.wiki/json-rpc/API#trace_call
 asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() < 3) {
+        auto error_msg = "invalid trace_call params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto call = params[0].get<Call>();
+    const auto trace_type = params[1].get<std::vector<std::string>>();
+    const auto block_number_or_hash = params[2].get<BlockNumberOrHash>();
+
+    trace::TraceConfig config;
+    for (auto entry : trace_type) {
+        if (entry == "trace") {
+            config.trace = true;
+        }
+        if (entry == "vmTrace") {
+            config.vm_trace = true;
+        }
+        if (entry == "stateDiff") {
+            config.state_diff = true;
+        }
+    }
+
+    SILKRPC_LOG << "call: " << call << " block_number_or_hash: " << block_number_or_hash << " config: " << config << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_error(request["id"], 500, "not yet implemented");
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache, tx_database, block_number_or_hash);
+
+        trace::TraceCallExecutor executor{context_, tx_database, workers_, config};
+        auto result = co_await executor.execute(block_with_hash.block, call);
+
+        if (result.pre_check_error) {
+            reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
+        } else {
+            reply = make_json_content(request["id"], result.traces);
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
