@@ -25,7 +25,7 @@
 #include <silkrpc/commands/debug_api.hpp>
 #include <silkrpc/commands/net_api.hpp>
 #include <silkrpc/commands/parity_api.hpp>
-#include <silkrpc/commands/tg_api.hpp>
+#include <silkrpc/commands/erigon_api.hpp>
 #include <silkrpc/commands/trace_api.hpp>
 #include <silkrpc/commands/web3_api.hpp>
 #include <silkrpc/commands/engine_api.hpp>
@@ -36,11 +36,11 @@ namespace silkrpc::commands {
 
 class RpcApiTable;
 
-class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, TurboGethRpcApi, TraceRpcApi, EngineRpcApi {
+class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, ErigonRpcApi, TraceRpcApi, EngineRpcApi {
 public:
     explicit RpcApi(Context& context, asio::thread_pool& workers) :
         EthereumRpcApi{context, workers}, NetRpcApi{context.backend}, Web3RpcApi{context}, DebugRpcApi{context, workers},
-        ParityRpcApi{context}, TurboGethRpcApi{context}, TraceRpcApi{context.database},
+        ParityRpcApi{context}, ErigonRpcApi{context}, TraceRpcApi{context.database},
         EngineRpcApi(context.database, context.backend) {}
     virtual ~RpcApi() {}
 
