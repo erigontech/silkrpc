@@ -295,7 +295,8 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
 
     MockDatabase mock_database;
     MockTransaction* mock_transaction = new MockTransaction();
-    MockCursor* mock_cursor = new MockCursor();
+    MockCursor* mock_cursor_1 = new MockCursor();
+    MockCursor* mock_cursor_2 = new MockCursor();
     std::unique_ptr<ethdb::Database> database_ptr{&mock_database};
 
 
@@ -307,18 +308,24 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
 
     EXPECT_CALL(*mock_transaction, cursor(testing::_)).WillRepeatedly(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
-            co_return std::shared_ptr<ethdb::Cursor>{mock_cursor};
+            co_return std::shared_ptr<ethdb::Cursor>{mock_cursor_1};
         }
     ));
 
-    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
+    EXPECT_CALL(*mock_cursor_1, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, key};
         }
     ));
 
+    EXPECT_CALL(*mock_transaction, cursor(db::table::kConfig)).WillOnce(InvokeWithoutArgs(
+        [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
+            co_return std::shared_ptr<ethdb::Cursor>{mock_cursor_2};
+        }
+    ));
 
-    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
+
+    EXPECT_CALL(*mock_cursor_2, seek(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
         }
