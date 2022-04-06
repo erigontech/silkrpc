@@ -268,11 +268,11 @@ TEST_CASE("check size of EIP-2718 block from RLP", "[silkrpc][types][block]") {
     silkworm::ByteView view{rlp_bytes};
     Block rpc_block_with_hash;
 
-    REQUIRE(silkworm::rlp::decode(view, rpc_block_with_hash.block) == silkworm::rlp::DecodingResult::kOk);
+    REQUIRE(silkworm::rlp::decode(view, rpc_block_with_hash.block) == silkworm::DecodingResult::kOk);
     CHECK(view.empty());
 
     CHECK(rpc_block_with_hash.get_block_size() == rlp_bytes.size());
-    CHECK_NOTHROW(silkworm::null_stream() << rpc_block_with_hash);
+    CHECK_NOTHROW(null_stream() << rpc_block_with_hash);
 }
 
 } // namespace silkrpc

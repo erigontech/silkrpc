@@ -21,29 +21,33 @@
 
 #include <asio/thread_pool.hpp>
 
-#include <silkrpc/commands/debug_api.hpp>
 #include <silkrpc/commands/eth_api.hpp>
+#include <silkrpc/commands/debug_api.hpp>
 #include <silkrpc/commands/net_api.hpp>
 #include <silkrpc/commands/parity_api.hpp>
-#include <silkrpc/commands/tg_api.hpp>
+#include <silkrpc/commands/erigon_api.hpp>
 #include <silkrpc/commands/trace_api.hpp>
 #include <silkrpc/commands/web3_api.hpp>
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/commands/engine_api.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
-class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, TurboGethRpcApi, TraceRpcApi {
+class RpcApiTable;
+
+class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, ErigonRpcApi, TraceRpcApi, EngineRpcApi {
 public:
     explicit RpcApi(Context& context, asio::thread_pool& workers) :
-        EthereumRpcApi{context, workers}, NetRpcApi{context.backend}, Web3RpcApi{context}, DebugRpcApi{context.database},
-        ParityRpcApi{context.database}, TurboGethRpcApi{context.database}, TraceRpcApi{context.database} {}
+        EthereumRpcApi{context, workers}, NetRpcApi{context.backend}, Web3RpcApi{context}, DebugRpcApi{context, workers},
+        ParityRpcApi{context}, ErigonRpcApi{context}, TraceRpcApi{context.database},
+        EngineRpcApi(context.backend) {}
     virtual ~RpcApi() {}
 
     RpcApi(const RpcApi&) = delete;
     RpcApi& operator=(const RpcApi&) = delete;
 
+    friend class RpcApiTable;
     friend class silkrpc::http::RequestHandler;
 };
 

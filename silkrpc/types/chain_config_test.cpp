@@ -36,12 +36,12 @@ TEST_CASE("create empty chain config", "[silkrpc][types][chain_config]") {
 
 TEST_CASE("print empty chain config", "[silkrpc][types][chain_config]") {
     ChainConfig chain_config{};
-    CHECK_NOTHROW(silkworm::null_stream() << chain_config);
+    CHECK_NOTHROW(null_stream() << chain_config);
 }
 
 TEST_CASE("cannot create forks from empty chain config", "[silkrpc][types][chain_config]") {
     ChainConfig chain_config{};
-    CHECK_THROWS(Forks{chain_config});
+    CHECK_THROWS_AS(Forks{chain_config}, std::system_error);
 }
 
 TEST_CASE("create forks from chain config", "[silkrpc][types][chain_config]") {

@@ -8,24 +8,32 @@ import sys
 import getopt
 import jsondiff
 
+def get_target(silk: bool, method: str):
+    "Determine where silkrpc is supposed to be serving at."
+    if "engine_" in method:
+        return "localhost:8550"
+    if silk:
+        return "localhost:51515"
 
-def run_shell_command(command: str, expected_response: str, exit_on_fail) -> int:
-    """ Run the specified command as shell. """
+    return "localhost:8545"
+
+def run_shell_command(command: str, expected_response: str, exit_on_fail):
+    """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
     command_and_args = shlex.split(command)
-    process = subprocess.run(command_and_args, stdout=subprocess.PIPE,
-                             universal_newlines=True, check=True)
+    process = subprocess.run(command_and_args, stdout=subprocess.PIPE, universal_newlines=True, check=True)
     if process.returncode != 0:
         sys.exit(process.returncode)
     process.stdout = process.stdout.strip('\n')
     response = json.loads(process.stdout)
-    if "result" in expected_response and expected_response["result"] is not None and response != expected_response:
+    if response != expected_response:
+        if "result" in response and "result" in expected_response and expected_response["result"] is None:
+            # response and expected_response are different but don't care
+            return
+        if "error" in response and "error" in expected_response and expected_response["error"] is None:
+            # response and expected_response are different but don't care
+            return
         response_diff = jsondiff.diff(expected_response, response)
-        print("--> KO: unexpected result for command: {0}\n--> DIFF expected-received: {1}".format(command, response_diff))
-        if exit_on_fail:
-            sys.exit(1)
-    elif "error" in expected_response and expected_response["error"] is not None and response != expected_response:
-        response_diff = jsondiff.diff(expected_response, response)
-        print("--> KO: unexpected error for command: {0}\n--> DIFF expected-received: {1}".format(command, response_diff))
+        print(f"--> KO: unexpected result for command: {command}\n--> DIFF expected-received: {response_diff}")
         if exit_on_fail:
             sys.exit(1)
 
@@ -36,20 +44,16 @@ def run_tests(json_filename, verbose, silk, exit_on_fail, req_test):
         test_number = 0
         for json_rpc in jsonrpc_commands:
             if req_test in (-1, test_number):
-                request = json.dumps(json_rpc["request"])
+                request = json_rpc["request"]
+                request_dumps = json.dumps(request)
+                target = get_target(silk, request["method"])
                 if verbose:
-                    print (str(test_number) + ") " + request)
+                    print (str(test_number) + ") " + request_dumps)
                 response = json_rpc["response"]
-                if silk:
-                    run_shell_command(
-                        '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
-                        request + '''\' localhost:51515''',
-                        response, exit_on_fail)
-                else:
-                    run_shell_command(
-                        '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
-                        request + '''\' localhost:8545''',
-                        response, exit_on_fail)
+                run_shell_command(
+                    '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
+                    request_dumps + '''\' ''' + target,
+                    response, exit_on_fail)
             test_number = test_number + 1
 
 #
@@ -66,6 +70,7 @@ def usage(argv):
     print("-c runs all tests even if one test fails [ default exit at first test fail ]")
     print("-t test_number (-1 all test)")
     print("-r connect to rpcdaemon [ default connect to silk ] ")
+    print("-l number of loops")
     print("-v verbose")
 
 
@@ -77,11 +82,12 @@ def main(argv):
     """
     exit_on_fail = 1
     silk = 1
+    loop_number = 1
     verbose = 0
     req_test = -1
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -94,6 +100,8 @@ def main(argv):
                 verbose = 1
             elif option == "-t":
                 req_test = int(optarg)
+            elif option == "-l":
+                loop_number = int(optarg)
             else:
                 usage(argv)
                 sys.exit(-1)
@@ -104,7 +112,10 @@ def main(argv):
         usage(argv)
         sys.exit(-1)
 
-    run_tests('./jsonrpc_commands_goerli.json', verbose, silk, exit_on_fail, req_test)
+    for test_rep in range(0, loop_number):
+        if verbose:
+            print("Test iteration: ", test_rep + 1)
+        run_tests('./jsonrpc_commands_goerli.json', verbose, silk, exit_on_fail, req_test)
 
 #
 # module as main

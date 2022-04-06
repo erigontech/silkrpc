@@ -18,24 +18,31 @@
 #define SILKRPC_COMMANDS_DEBUG_API_HPP_
 
 #include <memory>
+#include <set>
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
+#include <asio/thread_pool.hpp>
 #include <nlohmann/json.hpp>
 
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/database.hpp>
+#include <silkrpc/ethdb/transaction_database.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
+const int16_t kAccountRangeMaxResults = 256;
+
 class DebugRpcApi {
 public:
-    explicit DebugRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
+    explicit DebugRpcApi(Context& context, asio::thread_pool& workers)
+    : context_(context), database_(context.database), workers_{workers}, tx_pool_{context.tx_pool} {}
     virtual ~DebugRpcApi() {}
 
     DebugRpcApi(const DebugRpcApi&) = delete;
@@ -48,12 +55,19 @@ protected:
     asio::awaitable<void> handle_debug_storage_range_at(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_debug_trace_transaction(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_debug_trace_call(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_debug_trace_block_by_number(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_debug_trace_block_by_hash(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
+    Context& context_;
     std::unique_ptr<ethdb::Database>& database_;
+    std::unique_ptr<txpool::TransactionPool>& tx_pool_;
+    asio::thread_pool& workers_;
 
     friend class silkrpc::http::RequestHandler;
 };
+
+asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::TransactionDatabase& tx_database, uint64_t start_block_number, uint64_t end_block_number);
 
 } // namespace silkrpc::commands
 

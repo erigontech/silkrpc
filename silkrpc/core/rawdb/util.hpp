@@ -19,11 +19,14 @@
 
 #include <string>
 
-#include <silkrpc/common/util.hpp>
+#include <evmc/evmc.hpp>
+
+#include <silkworm/common/util.hpp>
 
 namespace silkrpc {
 
 silkworm::Bytes composite_storage_key(const evmc::address& address, uint64_t incarnation, const uint8_t (&hash)[silkworm::kHashLength]);
-}
+
+} // namespace silkrpc
 
 #endif // SILKRPC_CORE_RAWDB_UTIL_HPP_

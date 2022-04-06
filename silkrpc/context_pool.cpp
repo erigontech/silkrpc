@@ -22,6 +22,7 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
+#include <silkrpc/ethbackend/backend_grpc.hpp>
 
 namespace silkrpc {
 
@@ -30,7 +31,10 @@ std::ostream& operator<<(std::ostream& out, const Context& c) {
         << " grpc_queue: " << &*c.grpc_queue
         << " grpc_runner: " << &*c.grpc_runner
         << " database: " << &*c.database
-        << " backend: " << &*c.backend;
+        << " backend: " << &*c.backend
+        << " miner: " << &*c.miner
+        << " txpool: " << &*c.tx_pool
+        << " cache: " << &*c.block_cache;
     return out;
 }
 
@@ -40,15 +44,28 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) :
     }
     SILKRPC_INFO << "ContextPool::ContextPool creating pool with size: " << pool_size << "\n";
 
+    auto block_cache = std::make_shared<silkrpc::BlockCache>(1024);
+
     // Create all the io_contexts and give them work to do so that their event loop will not exit until they are explicitly stopped.
     for (std::size_t i{0}; i < pool_size; ++i) {
         auto io_context = std::make_shared<asio::io_context>();
         auto grpc_channel = create_channel();
         auto grpc_queue = std::make_unique<grpc::CompletionQueue>();
         auto grpc_runner = std::make_unique<CompletionRunner>(*grpc_queue, *io_context);
-        auto database = std::make_unique<ethdb::kv::RemoteDatabase>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
-        auto backend = std::make_unique<ethbackend::BackEnd>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
-        contexts_.push_back({io_context, std::move(grpc_queue), std::move(grpc_runner), std::move(database), std::move(backend)});
+        auto database = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
+        auto backend = std::make_unique<ethbackend::BackEndGrpc>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
+        auto miner = std::make_unique<txpool::Miner>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
+        auto tx_pool = std::make_unique<txpool::TransactionPool>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
+        contexts_.push_back({
+            io_context,
+            std::move(grpc_queue),
+            std::move(grpc_runner),
+            std::move(database),
+            std::move(backend),
+            std::move(miner),
+            std::move(tx_pool),
+            block_cache
+        });
         SILKRPC_DEBUG << "ContextPool::ContextPool context[" << i << "] " << contexts_[i] << "\n";
         work_.push_back(asio::require(io_context->get_executor(), asio::execution::outstanding_work.tracked));
     }

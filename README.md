@@ -29,8 +29,16 @@ Building SilkRPC daemon requires
 * Build system: [CMake](http://cmake.org) >= 3.18.4
 * GNU Multiple Precision arithmetic library: [GMP](http://gmplib.org) >= 6.2.0
     * `sudo apt-get install libgmp3-dev` or `brew install gmp`
-* Google TCMalloc library: [gperftools](https://github.com/gperftools/gperftools) >= 2.7.1
-    * `sudo apt-get install google-perftools libgoogle-perftools-dev`
+* Microsoft mimalloc library: [mimalloc](https://github.com/microsoft/mimalloc) >= 1.7.0
+    ```
+    git clone https://github.com/microsoft/mimalloc
+    cd mimalloc
+    mkdir -p out/release
+    cd out/release
+    cmake ../..
+    make
+    sudo make install
+    ```
 * [Python 3.x](https://www.python.org/downloads/) interpreter >= 3.8.2
     * `sudo apt-get install python3`
 * some additional Python modules
@@ -74,21 +82,13 @@ For example, in order to have 4 concurrent compile processes, insert in `.bashrc
 export CMAKE_BUILD_PARALLEL_LEVEL=4
 ```
 
-You can also perform the build step-by-step manually, just bootstrap cmake by running
-
+You can also perform the build step-by-step manually: just bootstrap cmake by running
 ```
 mkdir build_gcc_release
 cd build_gcc_release
 cmake ..
 ```
-(you have to run `cmake ..` just the first time).
-
-Generate the [gRPC](https://grpc.io/) Key-Value (KV) interface protocol bindings
-```
-cmake --build . --target generate_kv_grpc
-```
-
-then run the build itself
+(you have to run `cmake ..` just the first time), then run the build itself
 ```
 cmake --build .
 ```
@@ -151,7 +151,8 @@ silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
 
   Flags from main.cpp:
     --chaindata (chain data path as string); default: "";
-    --local (HTTP JSON local binding as string <address>:<port>); default: "localhost:8545";
+    --eth1_local (Ethereum JSON RPC API local binding as string <address>:<port>); default: "localhost:8545";
+    --eth2_local (Engine JSON RPC API local binding as string <address>:<port>); default: "localhost:8550";
     --logLevel (logging level); default: c;
     --numContexts (number of running I/O contexts as 32-bit integer); default: number of hardware thread contexts / 2;
     --numWorkers (number of worker threads as 32-bit integer); default: number of hardware thread contexts;
@@ -163,5 +164,5 @@ You can also check the Silkrpc executable version by:
 
 ```
 $ silkrpc/silkrpcdaemon --version
-silkrpcdaemon 0.0.6
+silkrpcdaemon 0.0.7
 ```

@@ -22,6 +22,7 @@
 
 #include <silkrpc/common/util.hpp>
 #include <silkworm/common/endian.hpp>
+#include <silkworm/core/silkworm/rlp/encode_vector.hpp>
 #include <silkrpc/core/blocks.hpp>
 
 namespace silkrpc {
@@ -37,7 +38,7 @@ std::ostream& operator<<(std::ostream& out, const Block& b) {
     out << " state_root: " << b.block.header.state_root;
     out << " transactions_root: " << b.block.header.transactions_root;
     out << " receipts_root: " << b.block.header.receipts_root;
-    out << " logs_bloom: " << silkworm::to_hex(silkworm::full_view(b.block.header.logs_bloom));
+    out << " logs_bloom: " << silkworm::to_hex(full_view(b.block.header.logs_bloom));
     out << " difficulty: " << silkworm::to_hex(silkworm::endian::to_big_compact(b.block.header.difficulty));
     out << " number: " << b.block.header.number;
     out << " gas_limit: " << b.block.header.gas_limit;
@@ -68,10 +69,9 @@ std::ostream& operator<<(std::ostream& out, const BlockNumberOrHash& bnoh) {
         out << "0x" << std::hex << bnoh.number();
     } else if (bnoh.is_hash()) {
         out << "0x" << bnoh.hash();
-    } else if (bnoh.is_tag()) {
-        out << bnoh.tag();
     } else {
-        out << "empty";
+        assert(bnoh.is_tag());
+        out << bnoh.tag();
     }
     return out;
 }

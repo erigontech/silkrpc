@@ -18,6 +18,7 @@
 #define SILKRPC_JSON_TYPES_HPP_
 
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -33,6 +34,7 @@
 #include <silkrpc/types/issuance.hpp>
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/transaction.hpp>
+#include <silkrpc/types/execution_payload.hpp>
 #include <silkrpc/types/receipt.hpp>
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
@@ -47,15 +49,24 @@ void from_json(const nlohmann::json& json, bytes32& b32);
 
 } // namespace evmc
 
+namespace intx {
+
+void from_json(const nlohmann::json& json, uint256& ui256);
+
+} // namespace intx
+
 namespace silkworm {
 
 void to_json(nlohmann::json& json, const BlockHeader& ommer);
 
 void to_json(nlohmann::json& json, const Transaction& transaction);
 
+
 } // namespace silkworm
 
 namespace silkrpc {
+
+void to_json(nlohmann::json& json, const Rlp& rlp);
 
 void to_json(nlohmann::json& json, const Block& b);
 
@@ -72,12 +83,19 @@ void from_json(const nlohmann::json& json, Receipt& receipt);
 void to_json(nlohmann::json& json, const Filter& filter);
 void from_json(const nlohmann::json& json, Filter& filter);
 
+void to_json(nlohmann::json& json, const ExecutionPayload& execution_payload);
+void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload);
+
+void to_json(nlohmann::json& json, const PayloadStatus& payload_status);
+
 void to_json(nlohmann::json& json, const Forks& forks);
 
 void to_json(nlohmann::json& json, const Issuance& issuance);
 
 void to_json(nlohmann::json& json, const Error& error);
 void to_json(nlohmann::json& json, const RevertError& error);
+
+void to_json(nlohmann::json& json, const std::set<evmc::address>& addresses);
 
 std::string to_hex_no_leading_zeros(uint64_t number);
 std::string to_hex_no_leading_zeros(silkworm::ByteView bytes);
@@ -98,11 +116,11 @@ template <>
 struct adl_serializer<silkrpc::BlockNumberOrHash> {
     static silkrpc::BlockNumberOrHash from_json(const json& json) {
         if (json.is_string()) {
-            return {json.get<std::string>()};
+            return silkrpc::BlockNumberOrHash{json.get<std::string>()};
         } else if (json.is_number()) {
-            return {json.get<std::uint64_t>()};
+            return silkrpc::BlockNumberOrHash{json.get<std::uint64_t>()};
         }
-        return {0};
+        return silkrpc::BlockNumberOrHash{0};
     }
 };
 

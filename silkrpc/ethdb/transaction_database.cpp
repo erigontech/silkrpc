@@ -44,16 +44,15 @@ asio::awaitable<std::optional<silkworm::Bytes>> TransactionDatabase::get_both_ra
     const auto value{co_await cursor->seek_both(key, subkey)};
     SILKRPC_DEBUG << "TransactionDatabase::get_both_range value: " << value << " subkey: " << subkey << "\n";
     if (value.substr(0, subkey.size()) != subkey) {
-        SILKRPC_DEBUG << "TransactionDatabase::get_both_range1 value: " << value << " subkey: " << subkey << "\n";
+        SILKRPC_DEBUG << "TransactionDatabase::get_both_range value: " << value << " subkey: " << subkey << "\n";
         co_return std::nullopt;
     }
-
     co_return value.substr(subkey.length());
 }
 
 asio::awaitable<void> TransactionDatabase::walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, core::rawdb::Walker w) const {
     const auto fixed_bytes = (fixed_bits + 7) / CHAR_BIT;
-    SILKRPC_TRACE << "fixed_bits: " << fixed_bits << " fixed_bytes: " << fixed_bytes << "\n";
+    SILKRPC_TRACE << "TransactionDatabase::walk fixed_bits: " << fixed_bits << " fixed_bytes: " << fixed_bytes << "\n";
     const auto shift_bits = fixed_bits & 7;
     uint8_t mask{0xff};
     if (shift_bits != 0) {
@@ -103,7 +102,5 @@ asio::awaitable<void> TransactionDatabase::for_prefix(const std::string& table, 
     }
     co_return;
 }
-
-void TransactionDatabase::close() {}
 
 } // namespace silkrpc::ethdb

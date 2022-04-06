@@ -20,24 +20,28 @@
 #include <iomanip>
 #include <iostream>
 
-#include <absl/flags/flag.h>
-#include <absl/flags/parse.h>
-#include <absl/flags/usage.h>
 #include <asio/co_spawn.hpp>
 #include <asio/signal_set.hpp>
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
-#include <cmd/ethbackend.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/context_pool.hpp>
-#include <silkrpc/ethbackend/backend.hpp>
+#include <silkrpc/ethbackend/backend_grpc.hpp>
+#include <silkrpc/interfaces/types/types.pb.h>
 
-ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "server location as string <address>:<port>");
-ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
-
-using silkrpc::LogLevel;
+inline std::ostream& operator<<(std::ostream& out, const types::H160& address) {
+    out << "address=" << address.has_hi();
+    if (address.has_hi()) {
+        auto hi_half = address.hi();
+        out << std::hex << hi_half.hi() << hi_half.lo();
+    } else {
+        auto lo_half = address.lo();
+        out << std::hex << lo_half;
+    }
+    return out;
+}
 
 asio::awaitable<void> ethbackend_etherbase(silkrpc::ethbackend::BackEnd& backend) {
     try {
@@ -49,20 +53,8 @@ asio::awaitable<void> ethbackend_etherbase(silkrpc::ethbackend::BackEnd& backend
     }
 }
 
-int main(int argc, char* argv[]) {
-    absl::SetProgramUsageMessage("Query Erigon/Silkworm ETHBACKEND remote interface");
-    absl::ParseCommandLine(argc, argv);
-
-    SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
-
+int ethbackend_coroutines(const std::string& target) {
     try {
-        auto target{absl::GetFlag(FLAGS_target)};
-        if (target.empty() || target.find(":") == std::string::npos) {
-            std::cerr << "Parameter target is invalid: [" << target << "]\n";
-            std::cerr << "Use --target flag to specify the location of Erigon running instance\n";
-            return -1;
-        }
-
         // TODO(canepat): handle also secure channel for remote
         silkrpc::ChannelFactory create_channel = [&]() {
             return grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
@@ -82,7 +74,7 @@ int main(int argc, char* argv[]) {
         const auto channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
 
         // Etherbase
-        silkrpc::ethbackend::BackEnd eth_backend{*io_context, channel, grpc_queue.get()};
+        silkrpc::ethbackend::BackEndGrpc eth_backend{*io_context, channel, grpc_queue.get()};
         asio::co_spawn(*io_context, ethbackend_etherbase(eth_backend), [&](std::exception_ptr exptr) {
             context_pool.stop();
         });

@@ -69,6 +69,22 @@ class Txpool final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::TransactionsReply>> PrepareAsyncTransactions(::grpc::ClientContext* context, const ::txpool::TransactionsRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::TransactionsReply>>(PrepareAsyncTransactionsRaw(context, request, cq));
     }
+    // returns all transactions from tx pool
+    virtual ::grpc::Status All(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::txpool::AllReply* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::AllReply>> AsyncAll(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::AllReply>>(AsyncAllRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::AllReply>> PrepareAsyncAll(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::AllReply>>(PrepareAsyncAllRaw(context, request, cq));
+    }
+    // Returns all pending (processable) transactions, in ready-for-mining order
+    virtual ::grpc::Status Pending(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::txpool::PendingReply* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::PendingReply>> AsyncPending(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::PendingReply>>(AsyncPendingRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::PendingReply>> PrepareAsyncPending(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::PendingReply>>(PrepareAsyncPendingRaw(context, request, cq));
+    }
     // subscribe to new transactions add event
     std::unique_ptr< ::grpc::ClientReaderInterface< ::txpool::OnAddReply>> OnAdd(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request) {
       return std::unique_ptr< ::grpc::ClientReaderInterface< ::txpool::OnAddReply>>(OnAddRaw(context, request));
@@ -78,6 +94,22 @@ class Txpool final {
     }
     std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::txpool::OnAddReply>> PrepareAsyncOnAdd(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::txpool::OnAddReply>>(PrepareAsyncOnAddRaw(context, request, cq));
+    }
+    // returns high level status
+    virtual ::grpc::Status Status(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::txpool::StatusReply* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::StatusReply>> AsyncStatus(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::StatusReply>>(AsyncStatusRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::StatusReply>> PrepareAsyncStatus(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::StatusReply>>(PrepareAsyncStatusRaw(context, request, cq));
+    }
+    // returns nonce for given account
+    virtual ::grpc::Status Nonce(::grpc::ClientContext* context, const ::txpool::NonceRequest& request, ::txpool::NonceReply* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::NonceReply>> AsyncNonce(::grpc::ClientContext* context, const ::txpool::NonceRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::NonceReply>>(AsyncNonceRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::NonceReply>> PrepareAsyncNonce(::grpc::ClientContext* context, const ::txpool::NonceRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::NonceReply>>(PrepareAsyncNonceRaw(context, request, cq));
     }
     class experimental_async_interface {
      public:
@@ -135,11 +167,63 @@ class Txpool final {
       #else
       virtual void Transactions(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TransactionsReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
+      // returns all transactions from tx pool
+      virtual void All(::grpc::ClientContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void All(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::AllReply* response, std::function<void(::grpc::Status)>) = 0;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void All(::grpc::ClientContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void All(::grpc::ClientContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void All(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::AllReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void All(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::AllReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      // Returns all pending (processable) transactions, in ready-for-mining order
+      virtual void Pending(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::txpool::PendingReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Pending(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::PendingReply* response, std::function<void(::grpc::Status)>) = 0;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void Pending(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::txpool::PendingReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void Pending(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::txpool::PendingReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void Pending(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::PendingReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void Pending(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::PendingReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
       // subscribe to new transactions add event
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void OnAdd(::grpc::ClientContext* context, ::txpool::OnAddRequest* request, ::grpc::ClientReadReactor< ::txpool::OnAddReply>* reactor) = 0;
       #else
       virtual void OnAdd(::grpc::ClientContext* context, ::txpool::OnAddRequest* request, ::grpc::experimental::ClientReadReactor< ::txpool::OnAddReply>* reactor) = 0;
+      #endif
+      // returns high level status
+      virtual void Status(::grpc::ClientContext* context, const ::txpool::StatusRequest* request, ::txpool::StatusReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Status(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::StatusReply* response, std::function<void(::grpc::Status)>) = 0;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void Status(::grpc::ClientContext* context, const ::txpool::StatusRequest* request, ::txpool::StatusReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void Status(::grpc::ClientContext* context, const ::txpool::StatusRequest* request, ::txpool::StatusReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void Status(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::StatusReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void Status(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::StatusReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      // returns nonce for given account
+      virtual void Nonce(::grpc::ClientContext* context, const ::txpool::NonceRequest* request, ::txpool::NonceReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Nonce(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::NonceReply* response, std::function<void(::grpc::Status)>) = 0;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void Nonce(::grpc::ClientContext* context, const ::txpool::NonceRequest* request, ::txpool::NonceReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void Nonce(::grpc::ClientContext* context, const ::txpool::NonceRequest* request, ::txpool::NonceReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      virtual void Nonce(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::NonceReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
+      #else
+      virtual void Nonce(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::NonceReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
     };
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
@@ -158,9 +242,17 @@ class Txpool final {
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::txpool::AddReply>* PrepareAsyncAddRaw(::grpc::ClientContext* context, const ::txpool::AddRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::txpool::TransactionsReply>* AsyncTransactionsRaw(::grpc::ClientContext* context, const ::txpool::TransactionsRequest& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::txpool::TransactionsReply>* PrepareAsyncTransactionsRaw(::grpc::ClientContext* context, const ::txpool::TransactionsRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::txpool::AllReply>* AsyncAllRaw(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::txpool::AllReply>* PrepareAsyncAllRaw(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::txpool::PendingReply>* AsyncPendingRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::txpool::PendingReply>* PrepareAsyncPendingRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientReaderInterface< ::txpool::OnAddReply>* OnAddRaw(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request) = 0;
     virtual ::grpc::ClientAsyncReaderInterface< ::txpool::OnAddReply>* AsyncOnAddRaw(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request, ::grpc::CompletionQueue* cq, void* tag) = 0;
     virtual ::grpc::ClientAsyncReaderInterface< ::txpool::OnAddReply>* PrepareAsyncOnAddRaw(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::txpool::StatusReply>* AsyncStatusRaw(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::txpool::StatusReply>* PrepareAsyncStatusRaw(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::txpool::NonceReply>* AsyncNonceRaw(::grpc::ClientContext* context, const ::txpool::NonceRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::txpool::NonceReply>* PrepareAsyncNonceRaw(::grpc::ClientContext* context, const ::txpool::NonceRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -193,6 +285,20 @@ class Txpool final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::TransactionsReply>> PrepareAsyncTransactions(::grpc::ClientContext* context, const ::txpool::TransactionsRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::TransactionsReply>>(PrepareAsyncTransactionsRaw(context, request, cq));
     }
+    ::grpc::Status All(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::txpool::AllReply* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::AllReply>> AsyncAll(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::AllReply>>(AsyncAllRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::AllReply>> PrepareAsyncAll(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::AllReply>>(PrepareAsyncAllRaw(context, request, cq));
+    }
+    ::grpc::Status Pending(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::txpool::PendingReply* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::PendingReply>> AsyncPending(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::PendingReply>>(AsyncPendingRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::PendingReply>> PrepareAsyncPending(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::PendingReply>>(PrepareAsyncPendingRaw(context, request, cq));
+    }
     std::unique_ptr< ::grpc::ClientReader< ::txpool::OnAddReply>> OnAdd(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request) {
       return std::unique_ptr< ::grpc::ClientReader< ::txpool::OnAddReply>>(OnAddRaw(context, request));
     }
@@ -201,6 +307,20 @@ class Txpool final {
     }
     std::unique_ptr< ::grpc::ClientAsyncReader< ::txpool::OnAddReply>> PrepareAsyncOnAdd(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReader< ::txpool::OnAddReply>>(PrepareAsyncOnAddRaw(context, request, cq));
+    }
+    ::grpc::Status Status(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::txpool::StatusReply* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::StatusReply>> AsyncStatus(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::StatusReply>>(AsyncStatusRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::StatusReply>> PrepareAsyncStatus(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::StatusReply>>(PrepareAsyncStatusRaw(context, request, cq));
+    }
+    ::grpc::Status Nonce(::grpc::ClientContext* context, const ::txpool::NonceRequest& request, ::txpool::NonceReply* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::NonceReply>> AsyncNonce(::grpc::ClientContext* context, const ::txpool::NonceRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::NonceReply>>(AsyncNonceRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::NonceReply>> PrepareAsyncNonce(::grpc::ClientContext* context, const ::txpool::NonceRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::NonceReply>>(PrepareAsyncNonceRaw(context, request, cq));
     }
     class experimental_async final :
       public StubInterface::experimental_async_interface {
@@ -253,10 +373,58 @@ class Txpool final {
       #else
       void Transactions(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::TransactionsReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
+      void All(::grpc::ClientContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response, std::function<void(::grpc::Status)>) override;
+      void All(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::AllReply* response, std::function<void(::grpc::Status)>) override;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void All(::grpc::ClientContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void All(::grpc::ClientContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void All(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::AllReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void All(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::AllReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      void Pending(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::txpool::PendingReply* response, std::function<void(::grpc::Status)>) override;
+      void Pending(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::PendingReply* response, std::function<void(::grpc::Status)>) override;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void Pending(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::txpool::PendingReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void Pending(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::txpool::PendingReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void Pending(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::PendingReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void Pending(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::PendingReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void OnAdd(::grpc::ClientContext* context, ::txpool::OnAddRequest* request, ::grpc::ClientReadReactor< ::txpool::OnAddReply>* reactor) override;
       #else
       void OnAdd(::grpc::ClientContext* context, ::txpool::OnAddRequest* request, ::grpc::experimental::ClientReadReactor< ::txpool::OnAddReply>* reactor) override;
+      #endif
+      void Status(::grpc::ClientContext* context, const ::txpool::StatusRequest* request, ::txpool::StatusReply* response, std::function<void(::grpc::Status)>) override;
+      void Status(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::StatusReply* response, std::function<void(::grpc::Status)>) override;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void Status(::grpc::ClientContext* context, const ::txpool::StatusRequest* request, ::txpool::StatusReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void Status(::grpc::ClientContext* context, const ::txpool::StatusRequest* request, ::txpool::StatusReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void Status(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::StatusReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void Status(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::StatusReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      void Nonce(::grpc::ClientContext* context, const ::txpool::NonceRequest* request, ::txpool::NonceReply* response, std::function<void(::grpc::Status)>) override;
+      void Nonce(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::NonceReply* response, std::function<void(::grpc::Status)>) override;
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void Nonce(::grpc::ClientContext* context, const ::txpool::NonceRequest* request, ::txpool::NonceReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void Nonce(::grpc::ClientContext* context, const ::txpool::NonceRequest* request, ::txpool::NonceReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      void Nonce(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::NonceReply* response, ::grpc::ClientUnaryReactor* reactor) override;
+      #else
+      void Nonce(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::NonceReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
       #endif
      private:
       friend class Stub;
@@ -277,14 +445,26 @@ class Txpool final {
     ::grpc::ClientAsyncResponseReader< ::txpool::AddReply>* PrepareAsyncAddRaw(::grpc::ClientContext* context, const ::txpool::AddRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::txpool::TransactionsReply>* AsyncTransactionsRaw(::grpc::ClientContext* context, const ::txpool::TransactionsRequest& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::txpool::TransactionsReply>* PrepareAsyncTransactionsRaw(::grpc::ClientContext* context, const ::txpool::TransactionsRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::txpool::AllReply>* AsyncAllRaw(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::txpool::AllReply>* PrepareAsyncAllRaw(::grpc::ClientContext* context, const ::txpool::AllRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::txpool::PendingReply>* AsyncPendingRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::txpool::PendingReply>* PrepareAsyncPendingRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientReader< ::txpool::OnAddReply>* OnAddRaw(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request) override;
     ::grpc::ClientAsyncReader< ::txpool::OnAddReply>* AsyncOnAddRaw(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request, ::grpc::CompletionQueue* cq, void* tag) override;
     ::grpc::ClientAsyncReader< ::txpool::OnAddReply>* PrepareAsyncOnAddRaw(::grpc::ClientContext* context, const ::txpool::OnAddRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::txpool::StatusReply>* AsyncStatusRaw(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::txpool::StatusReply>* PrepareAsyncStatusRaw(::grpc::ClientContext* context, const ::txpool::StatusRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::txpool::NonceReply>* AsyncNonceRaw(::grpc::ClientContext* context, const ::txpool::NonceRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::txpool::NonceReply>* PrepareAsyncNonceRaw(::grpc::ClientContext* context, const ::txpool::NonceRequest& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_Version_;
     const ::grpc::internal::RpcMethod rpcmethod_FindUnknown_;
     const ::grpc::internal::RpcMethod rpcmethod_Add_;
     const ::grpc::internal::RpcMethod rpcmethod_Transactions_;
+    const ::grpc::internal::RpcMethod rpcmethod_All_;
+    const ::grpc::internal::RpcMethod rpcmethod_Pending_;
     const ::grpc::internal::RpcMethod rpcmethod_OnAdd_;
+    const ::grpc::internal::RpcMethod rpcmethod_Status_;
+    const ::grpc::internal::RpcMethod rpcmethod_Nonce_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -301,8 +481,16 @@ class Txpool final {
     virtual ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response);
     // preserves incoming order and amount, if some transaction doesn't exists in pool - returns nil in this slot
     virtual ::grpc::Status Transactions(::grpc::ServerContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response);
+    // returns all transactions from tx pool
+    virtual ::grpc::Status All(::grpc::ServerContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response);
+    // Returns all pending (processable) transactions, in ready-for-mining order
+    virtual ::grpc::Status Pending(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::txpool::PendingReply* response);
     // subscribe to new transactions add event
     virtual ::grpc::Status OnAdd(::grpc::ServerContext* context, const ::txpool::OnAddRequest* request, ::grpc::ServerWriter< ::txpool::OnAddReply>* writer);
+    // returns high level status
+    virtual ::grpc::Status Status(::grpc::ServerContext* context, const ::txpool::StatusRequest* request, ::txpool::StatusReply* response);
+    // returns nonce for given account
+    virtual ::grpc::Status Nonce(::grpc::ServerContext* context, const ::txpool::NonceRequest* request, ::txpool::NonceReply* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_Version : public BaseClass {
@@ -385,12 +573,52 @@ class Txpool final {
     }
   };
   template <class BaseClass>
+  class WithAsyncMethod_All : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_All() {
+      ::grpc::Service::MarkMethodAsync(4);
+    }
+    ~WithAsyncMethod_All() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status All(::grpc::ServerContext* /*context*/, const ::txpool::AllRequest* /*request*/, ::txpool::AllReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestAll(::grpc::ServerContext* context, ::txpool::AllRequest* request, ::grpc::ServerAsyncResponseWriter< ::txpool::AllReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(4, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_Pending : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_Pending() {
+      ::grpc::Service::MarkMethodAsync(5);
+    }
+    ~WithAsyncMethod_Pending() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Pending(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::txpool::PendingReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestPending(::grpc::ServerContext* context, ::google::protobuf::Empty* request, ::grpc::ServerAsyncResponseWriter< ::txpool::PendingReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(5, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithAsyncMethod_OnAdd : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithAsyncMethod_OnAdd() {
-      ::grpc::Service::MarkMethodAsync(4);
+      ::grpc::Service::MarkMethodAsync(6);
     }
     ~WithAsyncMethod_OnAdd() override {
       BaseClassMustBeDerivedFromService(this);
@@ -401,10 +629,50 @@ class Txpool final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestOnAdd(::grpc::ServerContext* context, ::txpool::OnAddRequest* request, ::grpc::ServerAsyncWriter< ::txpool::OnAddReply>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(4, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(6, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_Version<WithAsyncMethod_FindUnknown<WithAsyncMethod_Add<WithAsyncMethod_Transactions<WithAsyncMethod_OnAdd<Service > > > > > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_Status : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_Status() {
+      ::grpc::Service::MarkMethodAsync(7);
+    }
+    ~WithAsyncMethod_Status() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Status(::grpc::ServerContext* /*context*/, const ::txpool::StatusRequest* /*request*/, ::txpool::StatusReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestStatus(::grpc::ServerContext* context, ::txpool::StatusRequest* request, ::grpc::ServerAsyncResponseWriter< ::txpool::StatusReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(7, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithAsyncMethod_Nonce : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_Nonce() {
+      ::grpc::Service::MarkMethodAsync(8);
+    }
+    ~WithAsyncMethod_Nonce() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Nonce(::grpc::ServerContext* /*context*/, const ::txpool::NonceRequest* /*request*/, ::txpool::NonceReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestNonce(::grpc::ServerContext* context, ::txpool::NonceRequest* request, ::grpc::ServerAsyncResponseWriter< ::txpool::NonceReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_Version<WithAsyncMethod_FindUnknown<WithAsyncMethod_Add<WithAsyncMethod_Transactions<WithAsyncMethod_All<WithAsyncMethod_Pending<WithAsyncMethod_OnAdd<WithAsyncMethod_Status<WithAsyncMethod_Nonce<Service > > > > > > > > > AsyncService;
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_Version : public BaseClass {
    private:
@@ -594,6 +862,100 @@ class Txpool final {
       { return nullptr; }
   };
   template <class BaseClass>
+  class ExperimentalWithCallbackMethod_All : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithCallbackMethod_All() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(4,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::txpool::AllRequest, ::txpool::AllReply>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::txpool::AllRequest* request, ::txpool::AllReply* response) { return this->All(context, request, response); }));}
+    void SetMessageAllocatorFor_All(
+        ::grpc::experimental::MessageAllocator< ::txpool::AllRequest, ::txpool::AllReply>* allocator) {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(4);
+    #else
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(4);
+    #endif
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::txpool::AllRequest, ::txpool::AllReply>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_All() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status All(::grpc::ServerContext* /*context*/, const ::txpool::AllRequest* /*request*/, ::txpool::AllReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* All(
+      ::grpc::CallbackServerContext* /*context*/, const ::txpool::AllRequest* /*request*/, ::txpool::AllReply* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* All(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::txpool::AllRequest* /*request*/, ::txpool::AllReply* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Pending : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithCallbackMethod_Pending() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(5,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::txpool::PendingReply>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::google::protobuf::Empty* request, ::txpool::PendingReply* response) { return this->Pending(context, request, response); }));}
+    void SetMessageAllocatorFor_Pending(
+        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::txpool::PendingReply>* allocator) {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(5);
+    #else
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(5);
+    #endif
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::txpool::PendingReply>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_Pending() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Pending(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::txpool::PendingReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* Pending(
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::txpool::PendingReply* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* Pending(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::txpool::PendingReply* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
   class ExperimentalWithCallbackMethod_OnAdd : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
@@ -604,7 +966,7 @@ class Txpool final {
     #else
       ::grpc::Service::experimental().
     #endif
-        MarkMethodCallback(4,
+        MarkMethodCallback(6,
           new ::grpc_impl::internal::CallbackServerStreamingHandler< ::txpool::OnAddRequest, ::txpool::OnAddReply>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
@@ -631,11 +993,105 @@ class Txpool final {
     #endif
       { return nullptr; }
   };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Status : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithCallbackMethod_Status() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(7,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::txpool::StatusRequest, ::txpool::StatusReply>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::txpool::StatusRequest* request, ::txpool::StatusReply* response) { return this->Status(context, request, response); }));}
+    void SetMessageAllocatorFor_Status(
+        ::grpc::experimental::MessageAllocator< ::txpool::StatusRequest, ::txpool::StatusReply>* allocator) {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(7);
+    #else
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(7);
+    #endif
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::txpool::StatusRequest, ::txpool::StatusReply>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_Status() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Status(::grpc::ServerContext* /*context*/, const ::txpool::StatusRequest* /*request*/, ::txpool::StatusReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* Status(
+      ::grpc::CallbackServerContext* /*context*/, const ::txpool::StatusRequest* /*request*/, ::txpool::StatusReply* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* Status(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::txpool::StatusRequest* /*request*/, ::txpool::StatusReply* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
+  class ExperimentalWithCallbackMethod_Nonce : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithCallbackMethod_Nonce() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(8,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::txpool::NonceRequest, ::txpool::NonceReply>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::txpool::NonceRequest* request, ::txpool::NonceReply* response) { return this->Nonce(context, request, response); }));}
+    void SetMessageAllocatorFor_Nonce(
+        ::grpc::experimental::MessageAllocator< ::txpool::NonceRequest, ::txpool::NonceReply>* allocator) {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(8);
+    #else
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(8);
+    #endif
+      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::txpool::NonceRequest, ::txpool::NonceReply>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~ExperimentalWithCallbackMethod_Nonce() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Nonce(::grpc::ServerContext* /*context*/, const ::txpool::NonceRequest* /*request*/, ::txpool::NonceReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* Nonce(
+      ::grpc::CallbackServerContext* /*context*/, const ::txpool::NonceRequest* /*request*/, ::txpool::NonceReply* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* Nonce(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::txpool::NonceRequest* /*request*/, ::txpool::NonceReply* /*response*/)
+    #endif
+      { return nullptr; }
+  };
   #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-  typedef ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_FindUnknown<ExperimentalWithCallbackMethod_Add<ExperimentalWithCallbackMethod_Transactions<ExperimentalWithCallbackMethod_OnAdd<Service > > > > > CallbackService;
+  typedef ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_FindUnknown<ExperimentalWithCallbackMethod_Add<ExperimentalWithCallbackMethod_Transactions<ExperimentalWithCallbackMethod_All<ExperimentalWithCallbackMethod_Pending<ExperimentalWithCallbackMethod_OnAdd<ExperimentalWithCallbackMethod_Status<ExperimentalWithCallbackMethod_Nonce<Service > > > > > > > > > CallbackService;
   #endif
 
-  typedef ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_FindUnknown<ExperimentalWithCallbackMethod_Add<ExperimentalWithCallbackMethod_Transactions<ExperimentalWithCallbackMethod_OnAdd<Service > > > > > ExperimentalCallbackService;
+  typedef ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_FindUnknown<ExperimentalWithCallbackMethod_Add<ExperimentalWithCallbackMethod_Transactions<ExperimentalWithCallbackMethod_All<ExperimentalWithCallbackMethod_Pending<ExperimentalWithCallbackMethod_OnAdd<ExperimentalWithCallbackMethod_Status<ExperimentalWithCallbackMethod_Nonce<Service > > > > > > > > > ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Version : public BaseClass {
    private:
@@ -705,18 +1161,86 @@ class Txpool final {
     }
   };
   template <class BaseClass>
+  class WithGenericMethod_All : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_All() {
+      ::grpc::Service::MarkMethodGeneric(4);
+    }
+    ~WithGenericMethod_All() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status All(::grpc::ServerContext* /*context*/, const ::txpool::AllRequest* /*request*/, ::txpool::AllReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_Pending : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_Pending() {
+      ::grpc::Service::MarkMethodGeneric(5);
+    }
+    ~WithGenericMethod_Pending() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Pending(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::txpool::PendingReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
   class WithGenericMethod_OnAdd : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithGenericMethod_OnAdd() {
-      ::grpc::Service::MarkMethodGeneric(4);
+      ::grpc::Service::MarkMethodGeneric(6);
     }
     ~WithGenericMethod_OnAdd() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
     ::grpc::Status OnAdd(::grpc::ServerContext* /*context*/, const ::txpool::OnAddRequest* /*request*/, ::grpc::ServerWriter< ::txpool::OnAddReply>* /*writer*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_Status : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_Status() {
+      ::grpc::Service::MarkMethodGeneric(7);
+    }
+    ~WithGenericMethod_Status() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Status(::grpc::ServerContext* /*context*/, const ::txpool::StatusRequest* /*request*/, ::txpool::StatusReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_Nonce : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_Nonce() {
+      ::grpc::Service::MarkMethodGeneric(8);
+    }
+    ~WithGenericMethod_Nonce() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Nonce(::grpc::ServerContext* /*context*/, const ::txpool::NonceRequest* /*request*/, ::txpool::NonceReply* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -802,12 +1326,52 @@ class Txpool final {
     }
   };
   template <class BaseClass>
+  class WithRawMethod_All : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_All() {
+      ::grpc::Service::MarkMethodRaw(4);
+    }
+    ~WithRawMethod_All() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status All(::grpc::ServerContext* /*context*/, const ::txpool::AllRequest* /*request*/, ::txpool::AllReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestAll(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(4, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_Pending : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_Pending() {
+      ::grpc::Service::MarkMethodRaw(5);
+    }
+    ~WithRawMethod_Pending() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Pending(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::txpool::PendingReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestPending(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(5, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
   class WithRawMethod_OnAdd : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithRawMethod_OnAdd() {
-      ::grpc::Service::MarkMethodRaw(4);
+      ::grpc::Service::MarkMethodRaw(6);
     }
     ~WithRawMethod_OnAdd() override {
       BaseClassMustBeDerivedFromService(this);
@@ -818,7 +1382,47 @@ class Txpool final {
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     void RequestOnAdd(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
-      ::grpc::Service::RequestAsyncServerStreaming(4, context, request, writer, new_call_cq, notification_cq, tag);
+      ::grpc::Service::RequestAsyncServerStreaming(6, context, request, writer, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_Status : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_Status() {
+      ::grpc::Service::MarkMethodRaw(7);
+    }
+    ~WithRawMethod_Status() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Status(::grpc::ServerContext* /*context*/, const ::txpool::StatusRequest* /*request*/, ::txpool::StatusReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestStatus(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(7, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_Nonce : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_Nonce() {
+      ::grpc::Service::MarkMethodRaw(8);
+    }
+    ~WithRawMethod_Nonce() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Nonce(::grpc::ServerContext* /*context*/, const ::txpool::NonceRequest* /*request*/, ::txpool::NonceReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestNonce(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(8, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -974,6 +1578,82 @@ class Txpool final {
       { return nullptr; }
   };
   template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_All : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithRawCallbackMethod_All() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(4,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->All(context, request, response); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_All() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status All(::grpc::ServerContext* /*context*/, const ::txpool::AllRequest* /*request*/, ::txpool::AllReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* All(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* All(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Pending : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Pending() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(5,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Pending(context, request, response); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Pending() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Pending(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::txpool::PendingReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* Pending(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* Pending(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
   class ExperimentalWithRawCallbackMethod_OnAdd : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
@@ -984,7 +1664,7 @@ class Txpool final {
     #else
       ::grpc::Service::experimental().
     #endif
-        MarkMethodRawCallback(4,
+        MarkMethodRawCallback(6,
           new ::grpc_impl::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
@@ -1008,6 +1688,82 @@ class Txpool final {
     #else
     virtual ::grpc::experimental::ServerWriteReactor< ::grpc::ByteBuffer>* OnAdd(
       ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Status : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Status() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(7,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Status(context, request, response); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Status() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Status(::grpc::ServerContext* /*context*/, const ::txpool::StatusRequest* /*request*/, ::txpool::StatusReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* Status(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* Status(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #endif
+      { return nullptr; }
+  };
+  template <class BaseClass>
+  class ExperimentalWithRawCallbackMethod_Nonce : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    ExperimentalWithRawCallbackMethod_Nonce() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(8,
+          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Nonce(context, request, response); }));
+    }
+    ~ExperimentalWithRawCallbackMethod_Nonce() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Nonce(::grpc::ServerContext* /*context*/, const ::txpool::NonceRequest* /*request*/, ::txpool::NonceReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    virtual ::grpc::ServerUnaryReactor* Nonce(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
+    #else
+    virtual ::grpc::experimental::ServerUnaryReactor* Nonce(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
     #endif
       { return nullptr; }
   };
@@ -1119,14 +1875,122 @@ class Txpool final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedTransactions(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::txpool::TransactionsRequest,::txpool::TransactionsReply>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_Version<WithStreamedUnaryMethod_FindUnknown<WithStreamedUnaryMethod_Add<WithStreamedUnaryMethod_Transactions<Service > > > > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_All : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_All() {
+      ::grpc::Service::MarkMethodStreamed(4,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::txpool::AllRequest, ::txpool::AllReply>(
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerUnaryStreamer<
+                     ::txpool::AllRequest, ::txpool::AllReply>* streamer) {
+                       return this->StreamedAll(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_All() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status All(::grpc::ServerContext* /*context*/, const ::txpool::AllRequest* /*request*/, ::txpool::AllReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedAll(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::txpool::AllRequest,::txpool::AllReply>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_Pending : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_Pending() {
+      ::grpc::Service::MarkMethodStreamed(5,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::google::protobuf::Empty, ::txpool::PendingReply>(
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerUnaryStreamer<
+                     ::google::protobuf::Empty, ::txpool::PendingReply>* streamer) {
+                       return this->StreamedPending(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_Pending() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status Pending(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::txpool::PendingReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedPending(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::google::protobuf::Empty,::txpool::PendingReply>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_Status : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_Status() {
+      ::grpc::Service::MarkMethodStreamed(7,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::txpool::StatusRequest, ::txpool::StatusReply>(
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerUnaryStreamer<
+                     ::txpool::StatusRequest, ::txpool::StatusReply>* streamer) {
+                       return this->StreamedStatus(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_Status() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status Status(::grpc::ServerContext* /*context*/, const ::txpool::StatusRequest* /*request*/, ::txpool::StatusReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedStatus(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::txpool::StatusRequest,::txpool::StatusReply>* server_unary_streamer) = 0;
+  };
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_Nonce : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_Nonce() {
+      ::grpc::Service::MarkMethodStreamed(8,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::txpool::NonceRequest, ::txpool::NonceReply>(
+            [this](::grpc_impl::ServerContext* context,
+                   ::grpc_impl::ServerUnaryStreamer<
+                     ::txpool::NonceRequest, ::txpool::NonceReply>* streamer) {
+                       return this->StreamedNonce(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_Nonce() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status Nonce(::grpc::ServerContext* /*context*/, const ::txpool::NonceRequest* /*request*/, ::txpool::NonceReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedNonce(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::txpool::NonceRequest,::txpool::NonceReply>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_Version<WithStreamedUnaryMethod_FindUnknown<WithStreamedUnaryMethod_Add<WithStreamedUnaryMethod_Transactions<WithStreamedUnaryMethod_All<WithStreamedUnaryMethod_Pending<WithStreamedUnaryMethod_Status<WithStreamedUnaryMethod_Nonce<Service > > > > > > > > StreamedUnaryService;
   template <class BaseClass>
   class WithSplitStreamingMethod_OnAdd : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
     WithSplitStreamingMethod_OnAdd() {
-      ::grpc::Service::MarkMethodStreamed(4,
+      ::grpc::Service::MarkMethodStreamed(6,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::txpool::OnAddRequest, ::txpool::OnAddReply>(
             [this](::grpc_impl::ServerContext* context,
@@ -1148,7 +2012,7 @@ class Txpool final {
     virtual ::grpc::Status StreamedOnAdd(::grpc::ServerContext* context, ::grpc::ServerSplitStreamer< ::txpool::OnAddRequest,::txpool::OnAddReply>* server_split_streamer) = 0;
   };
   typedef WithSplitStreamingMethod_OnAdd<Service > SplitStreamedService;
-  typedef WithStreamedUnaryMethod_Version<WithStreamedUnaryMethod_FindUnknown<WithStreamedUnaryMethod_Add<WithStreamedUnaryMethod_Transactions<WithSplitStreamingMethod_OnAdd<Service > > > > > StreamedService;
+  typedef WithStreamedUnaryMethod_Version<WithStreamedUnaryMethod_FindUnknown<WithStreamedUnaryMethod_Add<WithStreamedUnaryMethod_Transactions<WithStreamedUnaryMethod_All<WithStreamedUnaryMethod_Pending<WithSplitStreamingMethod_OnAdd<WithStreamedUnaryMethod_Status<WithStreamedUnaryMethod_Nonce<Service > > > > > > > > > StreamedService;
 };
 
 }  // namespace txpool

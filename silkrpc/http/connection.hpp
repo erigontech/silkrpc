@@ -24,7 +24,6 @@
 #define SILKRPC_HTTP_CONNECTION_HPP_
 
 #include <array>
-#include <memory>
 
 #include <silkrpc/config.hpp>
 
@@ -32,24 +31,24 @@
 #include <asio/ip/tcp.hpp>
 #include <asio/thread_pool.hpp>
 
+#include <silkrpc/commands/rpc_api_table.hpp>
+#include <silkrpc/common/constants.hpp>
 #include <silkrpc/context_pool.hpp>
-#include "reply.hpp"
-#include "request.hpp"
-#include "request_handler.hpp"
-#include "request_parser.hpp"
+#include <silkrpc/http/reply.hpp>
+#include <silkrpc/http/request.hpp>
+#include <silkrpc/http/request_handler.hpp>
+#include <silkrpc/http/request_parser.hpp>
 
 namespace silkrpc::http {
 
-class ConnectionManager;
-
 /// Represents a single connection from a client.
-class Connection : public std::enable_shared_from_this<Connection> {
+class Connection {
 public:
     Connection(const Connection&) = delete;
     Connection& operator=(const Connection&) = delete;
 
     /// Construct a connection running within the given execution context.
-    explicit Connection(Context& context, asio::thread_pool& workers);
+    Connection(Context& context, asio::thread_pool& workers, commands::RpcApiTable& handler_table);
 
     ~Connection();
 
@@ -75,7 +74,7 @@ private:
     RequestHandler request_handler_;
 
     /// Buffer for incoming data.
-    std::array<char, 8192> buffer_;
+    std::array<char, kHttpIncomingBufferSize> buffer_;
 
     /// The incoming request.
     Request request_;

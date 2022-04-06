@@ -49,7 +49,7 @@ struct TableStruct_txpool_2ftxpool_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxiliaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[7]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[16]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -63,12 +63,39 @@ extern AddReplyDefaultTypeInternal _AddReply_default_instance_;
 class AddRequest;
 class AddRequestDefaultTypeInternal;
 extern AddRequestDefaultTypeInternal _AddRequest_default_instance_;
+class AllReply;
+class AllReplyDefaultTypeInternal;
+extern AllReplyDefaultTypeInternal _AllReply_default_instance_;
+class AllReply_Tx;
+class AllReply_TxDefaultTypeInternal;
+extern AllReply_TxDefaultTypeInternal _AllReply_Tx_default_instance_;
+class AllRequest;
+class AllRequestDefaultTypeInternal;
+extern AllRequestDefaultTypeInternal _AllRequest_default_instance_;
+class NonceReply;
+class NonceReplyDefaultTypeInternal;
+extern NonceReplyDefaultTypeInternal _NonceReply_default_instance_;
+class NonceRequest;
+class NonceRequestDefaultTypeInternal;
+extern NonceRequestDefaultTypeInternal _NonceRequest_default_instance_;
 class OnAddReply;
 class OnAddReplyDefaultTypeInternal;
 extern OnAddReplyDefaultTypeInternal _OnAddReply_default_instance_;
 class OnAddRequest;
 class OnAddRequestDefaultTypeInternal;
 extern OnAddRequestDefaultTypeInternal _OnAddRequest_default_instance_;
+class PendingReply;
+class PendingReplyDefaultTypeInternal;
+extern PendingReplyDefaultTypeInternal _PendingReply_default_instance_;
+class PendingReply_Tx;
+class PendingReply_TxDefaultTypeInternal;
+extern PendingReply_TxDefaultTypeInternal _PendingReply_Tx_default_instance_;
+class StatusReply;
+class StatusReplyDefaultTypeInternal;
+extern StatusReplyDefaultTypeInternal _StatusReply_default_instance_;
+class StatusRequest;
+class StatusRequestDefaultTypeInternal;
+extern StatusRequestDefaultTypeInternal _StatusRequest_default_instance_;
 class TransactionsReply;
 class TransactionsReplyDefaultTypeInternal;
 extern TransactionsReplyDefaultTypeInternal _TransactionsReply_default_instance_;
@@ -82,14 +109,49 @@ extern TxHashesDefaultTypeInternal _TxHashes_default_instance_;
 PROTOBUF_NAMESPACE_OPEN
 template<> ::txpool::AddReply* Arena::CreateMaybeMessage<::txpool::AddReply>(Arena*);
 template<> ::txpool::AddRequest* Arena::CreateMaybeMessage<::txpool::AddRequest>(Arena*);
+template<> ::txpool::AllReply* Arena::CreateMaybeMessage<::txpool::AllReply>(Arena*);
+template<> ::txpool::AllReply_Tx* Arena::CreateMaybeMessage<::txpool::AllReply_Tx>(Arena*);
+template<> ::txpool::AllRequest* Arena::CreateMaybeMessage<::txpool::AllRequest>(Arena*);
+template<> ::txpool::NonceReply* Arena::CreateMaybeMessage<::txpool::NonceReply>(Arena*);
+template<> ::txpool::NonceRequest* Arena::CreateMaybeMessage<::txpool::NonceRequest>(Arena*);
 template<> ::txpool::OnAddReply* Arena::CreateMaybeMessage<::txpool::OnAddReply>(Arena*);
 template<> ::txpool::OnAddRequest* Arena::CreateMaybeMessage<::txpool::OnAddRequest>(Arena*);
+template<> ::txpool::PendingReply* Arena::CreateMaybeMessage<::txpool::PendingReply>(Arena*);
+template<> ::txpool::PendingReply_Tx* Arena::CreateMaybeMessage<::txpool::PendingReply_Tx>(Arena*);
+template<> ::txpool::StatusReply* Arena::CreateMaybeMessage<::txpool::StatusReply>(Arena*);
+template<> ::txpool::StatusRequest* Arena::CreateMaybeMessage<::txpool::StatusRequest>(Arena*);
 template<> ::txpool::TransactionsReply* Arena::CreateMaybeMessage<::txpool::TransactionsReply>(Arena*);
 template<> ::txpool::TransactionsRequest* Arena::CreateMaybeMessage<::txpool::TransactionsRequest>(Arena*);
 template<> ::txpool::TxHashes* Arena::CreateMaybeMessage<::txpool::TxHashes>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace txpool {
 
+enum AllReply_Type : int {
+  AllReply_Type_PENDING = 0,
+  AllReply_Type_QUEUED = 1,
+  AllReply_Type_BASE_FEE = 2,
+  AllReply_Type_AllReply_Type_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
+  AllReply_Type_AllReply_Type_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
+};
+bool AllReply_Type_IsValid(int value);
+constexpr AllReply_Type AllReply_Type_Type_MIN = AllReply_Type_PENDING;
+constexpr AllReply_Type AllReply_Type_Type_MAX = AllReply_Type_BASE_FEE;
+constexpr int AllReply_Type_Type_ARRAYSIZE = AllReply_Type_Type_MAX + 1;
+
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* AllReply_Type_descriptor();
+template<typename T>
+inline const std::string& AllReply_Type_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, AllReply_Type>::value ||
+    ::std::is_integral<T>::value,
+    "Incorrect type passed to function AllReply_Type_Name.");
+  return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
+    AllReply_Type_descriptor(), enum_t_value);
+}
+inline bool AllReply_Type_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, AllReply_Type* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<AllReply_Type>(
+    AllReply_Type_descriptor(), name, value);
+}
 enum ImportResult : int {
   SUCCESS = 0,
   ALREADY_EXISTS = 1,
@@ -1156,6 +1218,1372 @@ class OnAddReply PROTOBUF_FINAL :
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_txpool_2ftxpool_2eproto;
 };
+// -------------------------------------------------------------------
+
+class AllRequest PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:txpool.AllRequest) */ {
+ public:
+  inline AllRequest() : AllRequest(nullptr) {}
+  virtual ~AllRequest();
+
+  AllRequest(const AllRequest& from);
+  AllRequest(AllRequest&& from) noexcept
+    : AllRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline AllRequest& operator=(const AllRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline AllRequest& operator=(AllRequest&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const AllRequest& default_instance();
+
+  static inline const AllRequest* internal_default_instance() {
+    return reinterpret_cast<const AllRequest*>(
+               &_AllRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    7;
+
+  friend void swap(AllRequest& a, AllRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(AllRequest* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(AllRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline AllRequest* New() const final {
+    return CreateMaybeMessage<AllRequest>(nullptr);
+  }
+
+  AllRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<AllRequest>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const AllRequest& from);
+  void MergeFrom(const AllRequest& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(AllRequest* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "txpool.AllRequest";
+  }
+  protected:
+  explicit AllRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_txpool_2ftxpool_2eproto);
+    return ::descriptor_table_txpool_2ftxpool_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:txpool.AllRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_txpool_2ftxpool_2eproto;
+};
+// -------------------------------------------------------------------
+
+class AllReply_Tx PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:txpool.AllReply.Tx) */ {
+ public:
+  inline AllReply_Tx() : AllReply_Tx(nullptr) {}
+  virtual ~AllReply_Tx();
+
+  AllReply_Tx(const AllReply_Tx& from);
+  AllReply_Tx(AllReply_Tx&& from) noexcept
+    : AllReply_Tx() {
+    *this = ::std::move(from);
+  }
+
+  inline AllReply_Tx& operator=(const AllReply_Tx& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline AllReply_Tx& operator=(AllReply_Tx&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const AllReply_Tx& default_instance();
+
+  static inline const AllReply_Tx* internal_default_instance() {
+    return reinterpret_cast<const AllReply_Tx*>(
+               &_AllReply_Tx_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    8;
+
+  friend void swap(AllReply_Tx& a, AllReply_Tx& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(AllReply_Tx* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(AllReply_Tx* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline AllReply_Tx* New() const final {
+    return CreateMaybeMessage<AllReply_Tx>(nullptr);
+  }
+
+  AllReply_Tx* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<AllReply_Tx>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const AllReply_Tx& from);
+  void MergeFrom(const AllReply_Tx& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(AllReply_Tx* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "txpool.AllReply.Tx";
+  }
+  protected:
+  explicit AllReply_Tx(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_txpool_2ftxpool_2eproto);
+    return ::descriptor_table_txpool_2ftxpool_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kSenderFieldNumber = 2,
+    kRlpTxFieldNumber = 3,
+    kTypeFieldNumber = 1,
+  };
+  // bytes sender = 2;
+  void clear_sender();
+  const std::string& sender() const;
+  void set_sender(const std::string& value);
+  void set_sender(std::string&& value);
+  void set_sender(const char* value);
+  void set_sender(const void* value, size_t size);
+  std::string* mutable_sender();
+  std::string* release_sender();
+  void set_allocated_sender(std::string* sender);
+  private:
+  const std::string& _internal_sender() const;
+  void _internal_set_sender(const std::string& value);
+  std::string* _internal_mutable_sender();
+  public:
+
+  // bytes rlpTx = 3;
+  void clear_rlptx();
+  const std::string& rlptx() const;
+  void set_rlptx(const std::string& value);
+  void set_rlptx(std::string&& value);
+  void set_rlptx(const char* value);
+  void set_rlptx(const void* value, size_t size);
+  std::string* mutable_rlptx();
+  std::string* release_rlptx();
+  void set_allocated_rlptx(std::string* rlptx);
+  private:
+  const std::string& _internal_rlptx() const;
+  void _internal_set_rlptx(const std::string& value);
+  std::string* _internal_mutable_rlptx();
+  public:
+
+  // .txpool.AllReply.Type type = 1;
+  void clear_type();
+  ::txpool::AllReply_Type type() const;
+  void set_type(::txpool::AllReply_Type value);
+  private:
+  ::txpool::AllReply_Type _internal_type() const;
+  void _internal_set_type(::txpool::AllReply_Type value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:txpool.AllReply.Tx)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr sender_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr rlptx_;
+  int type_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_txpool_2ftxpool_2eproto;
+};
+// -------------------------------------------------------------------
+
+class AllReply PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:txpool.AllReply) */ {
+ public:
+  inline AllReply() : AllReply(nullptr) {}
+  virtual ~AllReply();
+
+  AllReply(const AllReply& from);
+  AllReply(AllReply&& from) noexcept
+    : AllReply() {
+    *this = ::std::move(from);
+  }
+
+  inline AllReply& operator=(const AllReply& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline AllReply& operator=(AllReply&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const AllReply& default_instance();
+
+  static inline const AllReply* internal_default_instance() {
+    return reinterpret_cast<const AllReply*>(
+               &_AllReply_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    9;
+
+  friend void swap(AllReply& a, AllReply& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(AllReply* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(AllReply* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline AllReply* New() const final {
+    return CreateMaybeMessage<AllReply>(nullptr);
+  }
+
+  AllReply* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<AllReply>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const AllReply& from);
+  void MergeFrom(const AllReply& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(AllReply* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "txpool.AllReply";
+  }
+  protected:
+  explicit AllReply(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_txpool_2ftxpool_2eproto);
+    return ::descriptor_table_txpool_2ftxpool_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  typedef AllReply_Tx Tx;
+
+  typedef AllReply_Type Type;
+  static constexpr Type PENDING =
+    AllReply_Type_PENDING;
+  static constexpr Type QUEUED =
+    AllReply_Type_QUEUED;
+  static constexpr Type BASE_FEE =
+    AllReply_Type_BASE_FEE;
+  static inline bool Type_IsValid(int value) {
+    return AllReply_Type_IsValid(value);
+  }
+  static constexpr Type Type_MIN =
+    AllReply_Type_Type_MIN;
+  static constexpr Type Type_MAX =
+    AllReply_Type_Type_MAX;
+  static constexpr int Type_ARRAYSIZE =
+    AllReply_Type_Type_ARRAYSIZE;
+  static inline const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor*
+  Type_descriptor() {
+    return AllReply_Type_descriptor();
+  }
+  template<typename T>
+  static inline const std::string& Type_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, Type>::value ||
+      ::std::is_integral<T>::value,
+      "Incorrect type passed to function Type_Name.");
+    return AllReply_Type_Name(enum_t_value);
+  }
+  static inline bool Type_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      Type* value) {
+    return AllReply_Type_Parse(name, value);
+  }
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kTxsFieldNumber = 1,
+  };
+  // repeated .txpool.AllReply.Tx txs = 1;
+  int txs_size() const;
+  private:
+  int _internal_txs_size() const;
+  public:
+  void clear_txs();
+  ::txpool::AllReply_Tx* mutable_txs(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::txpool::AllReply_Tx >*
+      mutable_txs();
+  private:
+  const ::txpool::AllReply_Tx& _internal_txs(int index) const;
+  ::txpool::AllReply_Tx* _internal_add_txs();
+  public:
+  const ::txpool::AllReply_Tx& txs(int index) const;
+  ::txpool::AllReply_Tx* add_txs();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::txpool::AllReply_Tx >&
+      txs() const;
+
+  // @@protoc_insertion_point(class_scope:txpool.AllReply)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::txpool::AllReply_Tx > txs_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_txpool_2ftxpool_2eproto;
+};
+// -------------------------------------------------------------------
+
+class PendingReply_Tx PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:txpool.PendingReply.Tx) */ {
+ public:
+  inline PendingReply_Tx() : PendingReply_Tx(nullptr) {}
+  virtual ~PendingReply_Tx();
+
+  PendingReply_Tx(const PendingReply_Tx& from);
+  PendingReply_Tx(PendingReply_Tx&& from) noexcept
+    : PendingReply_Tx() {
+    *this = ::std::move(from);
+  }
+
+  inline PendingReply_Tx& operator=(const PendingReply_Tx& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline PendingReply_Tx& operator=(PendingReply_Tx&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const PendingReply_Tx& default_instance();
+
+  static inline const PendingReply_Tx* internal_default_instance() {
+    return reinterpret_cast<const PendingReply_Tx*>(
+               &_PendingReply_Tx_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    10;
+
+  friend void swap(PendingReply_Tx& a, PendingReply_Tx& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PendingReply_Tx* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(PendingReply_Tx* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline PendingReply_Tx* New() const final {
+    return CreateMaybeMessage<PendingReply_Tx>(nullptr);
+  }
+
+  PendingReply_Tx* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<PendingReply_Tx>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const PendingReply_Tx& from);
+  void MergeFrom(const PendingReply_Tx& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(PendingReply_Tx* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "txpool.PendingReply.Tx";
+  }
+  protected:
+  explicit PendingReply_Tx(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_txpool_2ftxpool_2eproto);
+    return ::descriptor_table_txpool_2ftxpool_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kSenderFieldNumber = 1,
+    kRlpTxFieldNumber = 2,
+    kIsLocalFieldNumber = 3,
+  };
+  // bytes sender = 1;
+  void clear_sender();
+  const std::string& sender() const;
+  void set_sender(const std::string& value);
+  void set_sender(std::string&& value);
+  void set_sender(const char* value);
+  void set_sender(const void* value, size_t size);
+  std::string* mutable_sender();
+  std::string* release_sender();
+  void set_allocated_sender(std::string* sender);
+  private:
+  const std::string& _internal_sender() const;
+  void _internal_set_sender(const std::string& value);
+  std::string* _internal_mutable_sender();
+  public:
+
+  // bytes rlpTx = 2;
+  void clear_rlptx();
+  const std::string& rlptx() const;
+  void set_rlptx(const std::string& value);
+  void set_rlptx(std::string&& value);
+  void set_rlptx(const char* value);
+  void set_rlptx(const void* value, size_t size);
+  std::string* mutable_rlptx();
+  std::string* release_rlptx();
+  void set_allocated_rlptx(std::string* rlptx);
+  private:
+  const std::string& _internal_rlptx() const;
+  void _internal_set_rlptx(const std::string& value);
+  std::string* _internal_mutable_rlptx();
+  public:
+
+  // bool isLocal = 3;
+  void clear_islocal();
+  bool islocal() const;
+  void set_islocal(bool value);
+  private:
+  bool _internal_islocal() const;
+  void _internal_set_islocal(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:txpool.PendingReply.Tx)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr sender_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr rlptx_;
+  bool islocal_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_txpool_2ftxpool_2eproto;
+};
+// -------------------------------------------------------------------
+
+class PendingReply PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:txpool.PendingReply) */ {
+ public:
+  inline PendingReply() : PendingReply(nullptr) {}
+  virtual ~PendingReply();
+
+  PendingReply(const PendingReply& from);
+  PendingReply(PendingReply&& from) noexcept
+    : PendingReply() {
+    *this = ::std::move(from);
+  }
+
+  inline PendingReply& operator=(const PendingReply& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline PendingReply& operator=(PendingReply&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const PendingReply& default_instance();
+
+  static inline const PendingReply* internal_default_instance() {
+    return reinterpret_cast<const PendingReply*>(
+               &_PendingReply_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    11;
+
+  friend void swap(PendingReply& a, PendingReply& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PendingReply* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(PendingReply* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline PendingReply* New() const final {
+    return CreateMaybeMessage<PendingReply>(nullptr);
+  }
+
+  PendingReply* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<PendingReply>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const PendingReply& from);
+  void MergeFrom(const PendingReply& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(PendingReply* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "txpool.PendingReply";
+  }
+  protected:
+  explicit PendingReply(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_txpool_2ftxpool_2eproto);
+    return ::descriptor_table_txpool_2ftxpool_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  typedef PendingReply_Tx Tx;
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kTxsFieldNumber = 1,
+  };
+  // repeated .txpool.PendingReply.Tx txs = 1;
+  int txs_size() const;
+  private:
+  int _internal_txs_size() const;
+  public:
+  void clear_txs();
+  ::txpool::PendingReply_Tx* mutable_txs(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::txpool::PendingReply_Tx >*
+      mutable_txs();
+  private:
+  const ::txpool::PendingReply_Tx& _internal_txs(int index) const;
+  ::txpool::PendingReply_Tx* _internal_add_txs();
+  public:
+  const ::txpool::PendingReply_Tx& txs(int index) const;
+  ::txpool::PendingReply_Tx* add_txs();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::txpool::PendingReply_Tx >&
+      txs() const;
+
+  // @@protoc_insertion_point(class_scope:txpool.PendingReply)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::txpool::PendingReply_Tx > txs_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_txpool_2ftxpool_2eproto;
+};
+// -------------------------------------------------------------------
+
+class StatusRequest PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:txpool.StatusRequest) */ {
+ public:
+  inline StatusRequest() : StatusRequest(nullptr) {}
+  virtual ~StatusRequest();
+
+  StatusRequest(const StatusRequest& from);
+  StatusRequest(StatusRequest&& from) noexcept
+    : StatusRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline StatusRequest& operator=(const StatusRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline StatusRequest& operator=(StatusRequest&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const StatusRequest& default_instance();
+
+  static inline const StatusRequest* internal_default_instance() {
+    return reinterpret_cast<const StatusRequest*>(
+               &_StatusRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    12;
+
+  friend void swap(StatusRequest& a, StatusRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(StatusRequest* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(StatusRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline StatusRequest* New() const final {
+    return CreateMaybeMessage<StatusRequest>(nullptr);
+  }
+
+  StatusRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<StatusRequest>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const StatusRequest& from);
+  void MergeFrom(const StatusRequest& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(StatusRequest* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "txpool.StatusRequest";
+  }
+  protected:
+  explicit StatusRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_txpool_2ftxpool_2eproto);
+    return ::descriptor_table_txpool_2ftxpool_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:txpool.StatusRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_txpool_2ftxpool_2eproto;
+};
+// -------------------------------------------------------------------
+
+class StatusReply PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:txpool.StatusReply) */ {
+ public:
+  inline StatusReply() : StatusReply(nullptr) {}
+  virtual ~StatusReply();
+
+  StatusReply(const StatusReply& from);
+  StatusReply(StatusReply&& from) noexcept
+    : StatusReply() {
+    *this = ::std::move(from);
+  }
+
+  inline StatusReply& operator=(const StatusReply& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline StatusReply& operator=(StatusReply&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const StatusReply& default_instance();
+
+  static inline const StatusReply* internal_default_instance() {
+    return reinterpret_cast<const StatusReply*>(
+               &_StatusReply_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    13;
+
+  friend void swap(StatusReply& a, StatusReply& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(StatusReply* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(StatusReply* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline StatusReply* New() const final {
+    return CreateMaybeMessage<StatusReply>(nullptr);
+  }
+
+  StatusReply* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<StatusReply>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const StatusReply& from);
+  void MergeFrom(const StatusReply& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(StatusReply* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "txpool.StatusReply";
+  }
+  protected:
+  explicit StatusReply(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_txpool_2ftxpool_2eproto);
+    return ::descriptor_table_txpool_2ftxpool_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPendingCountFieldNumber = 1,
+    kQueuedCountFieldNumber = 2,
+    kBaseFeeCountFieldNumber = 3,
+  };
+  // uint32 pendingCount = 1;
+  void clear_pendingcount();
+  ::PROTOBUF_NAMESPACE_ID::uint32 pendingcount() const;
+  void set_pendingcount(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_pendingcount() const;
+  void _internal_set_pendingcount(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  public:
+
+  // uint32 queuedCount = 2;
+  void clear_queuedcount();
+  ::PROTOBUF_NAMESPACE_ID::uint32 queuedcount() const;
+  void set_queuedcount(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_queuedcount() const;
+  void _internal_set_queuedcount(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  public:
+
+  // uint32 baseFeeCount = 3;
+  void clear_basefeecount();
+  ::PROTOBUF_NAMESPACE_ID::uint32 basefeecount() const;
+  void set_basefeecount(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint32 _internal_basefeecount() const;
+  void _internal_set_basefeecount(::PROTOBUF_NAMESPACE_ID::uint32 value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:txpool.StatusReply)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::uint32 pendingcount_;
+  ::PROTOBUF_NAMESPACE_ID::uint32 queuedcount_;
+  ::PROTOBUF_NAMESPACE_ID::uint32 basefeecount_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_txpool_2ftxpool_2eproto;
+};
+// -------------------------------------------------------------------
+
+class NonceRequest PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:txpool.NonceRequest) */ {
+ public:
+  inline NonceRequest() : NonceRequest(nullptr) {}
+  virtual ~NonceRequest();
+
+  NonceRequest(const NonceRequest& from);
+  NonceRequest(NonceRequest&& from) noexcept
+    : NonceRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline NonceRequest& operator=(const NonceRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline NonceRequest& operator=(NonceRequest&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const NonceRequest& default_instance();
+
+  static inline const NonceRequest* internal_default_instance() {
+    return reinterpret_cast<const NonceRequest*>(
+               &_NonceRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    14;
+
+  friend void swap(NonceRequest& a, NonceRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(NonceRequest* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(NonceRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline NonceRequest* New() const final {
+    return CreateMaybeMessage<NonceRequest>(nullptr);
+  }
+
+  NonceRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<NonceRequest>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const NonceRequest& from);
+  void MergeFrom(const NonceRequest& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(NonceRequest* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "txpool.NonceRequest";
+  }
+  protected:
+  explicit NonceRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_txpool_2ftxpool_2eproto);
+    return ::descriptor_table_txpool_2ftxpool_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kAddressFieldNumber = 1,
+  };
+  // .types.H160 address = 1;
+  bool has_address() const;
+  private:
+  bool _internal_has_address() const;
+  public:
+  void clear_address();
+  const ::types::H160& address() const;
+  ::types::H160* release_address();
+  ::types::H160* mutable_address();
+  void set_allocated_address(::types::H160* address);
+  private:
+  const ::types::H160& _internal_address() const;
+  ::types::H160* _internal_mutable_address();
+  public:
+  void unsafe_arena_set_allocated_address(
+      ::types::H160* address);
+  ::types::H160* unsafe_arena_release_address();
+
+  // @@protoc_insertion_point(class_scope:txpool.NonceRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::types::H160* address_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_txpool_2ftxpool_2eproto;
+};
+// -------------------------------------------------------------------
+
+class NonceReply PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:txpool.NonceReply) */ {
+ public:
+  inline NonceReply() : NonceReply(nullptr) {}
+  virtual ~NonceReply();
+
+  NonceReply(const NonceReply& from);
+  NonceReply(NonceReply&& from) noexcept
+    : NonceReply() {
+    *this = ::std::move(from);
+  }
+
+  inline NonceReply& operator=(const NonceReply& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline NonceReply& operator=(NonceReply&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const NonceReply& default_instance();
+
+  static inline const NonceReply* internal_default_instance() {
+    return reinterpret_cast<const NonceReply*>(
+               &_NonceReply_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    15;
+
+  friend void swap(NonceReply& a, NonceReply& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(NonceReply* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(NonceReply* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline NonceReply* New() const final {
+    return CreateMaybeMessage<NonceReply>(nullptr);
+  }
+
+  NonceReply* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<NonceReply>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const NonceReply& from);
+  void MergeFrom(const NonceReply& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(NonceReply* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "txpool.NonceReply";
+  }
+  protected:
+  explicit NonceReply(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_txpool_2ftxpool_2eproto);
+    return ::descriptor_table_txpool_2ftxpool_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kNonceFieldNumber = 2,
+    kFoundFieldNumber = 1,
+  };
+  // uint64 nonce = 2;
+  void clear_nonce();
+  ::PROTOBUF_NAMESPACE_ID::uint64 nonce() const;
+  void set_nonce(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint64 _internal_nonce() const;
+  void _internal_set_nonce(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  public:
+
+  // bool found = 1;
+  void clear_found();
+  bool found() const;
+  void set_found(bool value);
+  private:
+  bool _internal_found() const;
+  void _internal_set_found(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:txpool.NonceReply)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::uint64 nonce_;
+  bool found_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_txpool_2ftxpool_2eproto;
+};
 // ===================================================================
 
 
@@ -1602,9 +3030,602 @@ OnAddReply::mutable_rpltxs() {
   return &rpltxs_;
 }
 
+// -------------------------------------------------------------------
+
+// AllRequest
+
+// -------------------------------------------------------------------
+
+// AllReply_Tx
+
+// .txpool.AllReply.Type type = 1;
+inline void AllReply_Tx::clear_type() {
+  type_ = 0;
+}
+inline ::txpool::AllReply_Type AllReply_Tx::_internal_type() const {
+  return static_cast< ::txpool::AllReply_Type >(type_);
+}
+inline ::txpool::AllReply_Type AllReply_Tx::type() const {
+  // @@protoc_insertion_point(field_get:txpool.AllReply.Tx.type)
+  return _internal_type();
+}
+inline void AllReply_Tx::_internal_set_type(::txpool::AllReply_Type value) {
+  
+  type_ = value;
+}
+inline void AllReply_Tx::set_type(::txpool::AllReply_Type value) {
+  _internal_set_type(value);
+  // @@protoc_insertion_point(field_set:txpool.AllReply.Tx.type)
+}
+
+// bytes sender = 2;
+inline void AllReply_Tx::clear_sender() {
+  sender_.ClearToEmpty();
+}
+inline const std::string& AllReply_Tx::sender() const {
+  // @@protoc_insertion_point(field_get:txpool.AllReply.Tx.sender)
+  return _internal_sender();
+}
+inline void AllReply_Tx::set_sender(const std::string& value) {
+  _internal_set_sender(value);
+  // @@protoc_insertion_point(field_set:txpool.AllReply.Tx.sender)
+}
+inline std::string* AllReply_Tx::mutable_sender() {
+  // @@protoc_insertion_point(field_mutable:txpool.AllReply.Tx.sender)
+  return _internal_mutable_sender();
+}
+inline const std::string& AllReply_Tx::_internal_sender() const {
+  return sender_.Get();
+}
+inline void AllReply_Tx::_internal_set_sender(const std::string& value) {
+  
+  sender_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
+}
+inline void AllReply_Tx::set_sender(std::string&& value) {
+  
+  sender_.Set(
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:txpool.AllReply.Tx.sender)
+}
+inline void AllReply_Tx::set_sender(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  sender_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
+  // @@protoc_insertion_point(field_set_char:txpool.AllReply.Tx.sender)
+}
+inline void AllReply_Tx::set_sender(const void* value,
+    size_t size) {
+  
+  sender_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:txpool.AllReply.Tx.sender)
+}
+inline std::string* AllReply_Tx::_internal_mutable_sender() {
+  
+  return sender_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
+}
+inline std::string* AllReply_Tx::release_sender() {
+  // @@protoc_insertion_point(field_release:txpool.AllReply.Tx.sender)
+  return sender_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void AllReply_Tx::set_allocated_sender(std::string* sender) {
+  if (sender != nullptr) {
+    
+  } else {
+    
+  }
+  sender_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), sender,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:txpool.AllReply.Tx.sender)
+}
+
+// bytes rlpTx = 3;
+inline void AllReply_Tx::clear_rlptx() {
+  rlptx_.ClearToEmpty();
+}
+inline const std::string& AllReply_Tx::rlptx() const {
+  // @@protoc_insertion_point(field_get:txpool.AllReply.Tx.rlpTx)
+  return _internal_rlptx();
+}
+inline void AllReply_Tx::set_rlptx(const std::string& value) {
+  _internal_set_rlptx(value);
+  // @@protoc_insertion_point(field_set:txpool.AllReply.Tx.rlpTx)
+}
+inline std::string* AllReply_Tx::mutable_rlptx() {
+  // @@protoc_insertion_point(field_mutable:txpool.AllReply.Tx.rlpTx)
+  return _internal_mutable_rlptx();
+}
+inline const std::string& AllReply_Tx::_internal_rlptx() const {
+  return rlptx_.Get();
+}
+inline void AllReply_Tx::_internal_set_rlptx(const std::string& value) {
+  
+  rlptx_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
+}
+inline void AllReply_Tx::set_rlptx(std::string&& value) {
+  
+  rlptx_.Set(
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:txpool.AllReply.Tx.rlpTx)
+}
+inline void AllReply_Tx::set_rlptx(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  rlptx_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
+  // @@protoc_insertion_point(field_set_char:txpool.AllReply.Tx.rlpTx)
+}
+inline void AllReply_Tx::set_rlptx(const void* value,
+    size_t size) {
+  
+  rlptx_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:txpool.AllReply.Tx.rlpTx)
+}
+inline std::string* AllReply_Tx::_internal_mutable_rlptx() {
+  
+  return rlptx_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
+}
+inline std::string* AllReply_Tx::release_rlptx() {
+  // @@protoc_insertion_point(field_release:txpool.AllReply.Tx.rlpTx)
+  return rlptx_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void AllReply_Tx::set_allocated_rlptx(std::string* rlptx) {
+  if (rlptx != nullptr) {
+    
+  } else {
+    
+  }
+  rlptx_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), rlptx,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:txpool.AllReply.Tx.rlpTx)
+}
+
+// -------------------------------------------------------------------
+
+// AllReply
+
+// repeated .txpool.AllReply.Tx txs = 1;
+inline int AllReply::_internal_txs_size() const {
+  return txs_.size();
+}
+inline int AllReply::txs_size() const {
+  return _internal_txs_size();
+}
+inline void AllReply::clear_txs() {
+  txs_.Clear();
+}
+inline ::txpool::AllReply_Tx* AllReply::mutable_txs(int index) {
+  // @@protoc_insertion_point(field_mutable:txpool.AllReply.txs)
+  return txs_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::txpool::AllReply_Tx >*
+AllReply::mutable_txs() {
+  // @@protoc_insertion_point(field_mutable_list:txpool.AllReply.txs)
+  return &txs_;
+}
+inline const ::txpool::AllReply_Tx& AllReply::_internal_txs(int index) const {
+  return txs_.Get(index);
+}
+inline const ::txpool::AllReply_Tx& AllReply::txs(int index) const {
+  // @@protoc_insertion_point(field_get:txpool.AllReply.txs)
+  return _internal_txs(index);
+}
+inline ::txpool::AllReply_Tx* AllReply::_internal_add_txs() {
+  return txs_.Add();
+}
+inline ::txpool::AllReply_Tx* AllReply::add_txs() {
+  // @@protoc_insertion_point(field_add:txpool.AllReply.txs)
+  return _internal_add_txs();
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::txpool::AllReply_Tx >&
+AllReply::txs() const {
+  // @@protoc_insertion_point(field_list:txpool.AllReply.txs)
+  return txs_;
+}
+
+// -------------------------------------------------------------------
+
+// PendingReply_Tx
+
+// bytes sender = 1;
+inline void PendingReply_Tx::clear_sender() {
+  sender_.ClearToEmpty();
+}
+inline const std::string& PendingReply_Tx::sender() const {
+  // @@protoc_insertion_point(field_get:txpool.PendingReply.Tx.sender)
+  return _internal_sender();
+}
+inline void PendingReply_Tx::set_sender(const std::string& value) {
+  _internal_set_sender(value);
+  // @@protoc_insertion_point(field_set:txpool.PendingReply.Tx.sender)
+}
+inline std::string* PendingReply_Tx::mutable_sender() {
+  // @@protoc_insertion_point(field_mutable:txpool.PendingReply.Tx.sender)
+  return _internal_mutable_sender();
+}
+inline const std::string& PendingReply_Tx::_internal_sender() const {
+  return sender_.Get();
+}
+inline void PendingReply_Tx::_internal_set_sender(const std::string& value) {
+  
+  sender_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
+}
+inline void PendingReply_Tx::set_sender(std::string&& value) {
+  
+  sender_.Set(
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:txpool.PendingReply.Tx.sender)
+}
+inline void PendingReply_Tx::set_sender(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  sender_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
+  // @@protoc_insertion_point(field_set_char:txpool.PendingReply.Tx.sender)
+}
+inline void PendingReply_Tx::set_sender(const void* value,
+    size_t size) {
+  
+  sender_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:txpool.PendingReply.Tx.sender)
+}
+inline std::string* PendingReply_Tx::_internal_mutable_sender() {
+  
+  return sender_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
+}
+inline std::string* PendingReply_Tx::release_sender() {
+  // @@protoc_insertion_point(field_release:txpool.PendingReply.Tx.sender)
+  return sender_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void PendingReply_Tx::set_allocated_sender(std::string* sender) {
+  if (sender != nullptr) {
+    
+  } else {
+    
+  }
+  sender_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), sender,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:txpool.PendingReply.Tx.sender)
+}
+
+// bytes rlpTx = 2;
+inline void PendingReply_Tx::clear_rlptx() {
+  rlptx_.ClearToEmpty();
+}
+inline const std::string& PendingReply_Tx::rlptx() const {
+  // @@protoc_insertion_point(field_get:txpool.PendingReply.Tx.rlpTx)
+  return _internal_rlptx();
+}
+inline void PendingReply_Tx::set_rlptx(const std::string& value) {
+  _internal_set_rlptx(value);
+  // @@protoc_insertion_point(field_set:txpool.PendingReply.Tx.rlpTx)
+}
+inline std::string* PendingReply_Tx::mutable_rlptx() {
+  // @@protoc_insertion_point(field_mutable:txpool.PendingReply.Tx.rlpTx)
+  return _internal_mutable_rlptx();
+}
+inline const std::string& PendingReply_Tx::_internal_rlptx() const {
+  return rlptx_.Get();
+}
+inline void PendingReply_Tx::_internal_set_rlptx(const std::string& value) {
+  
+  rlptx_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
+}
+inline void PendingReply_Tx::set_rlptx(std::string&& value) {
+  
+  rlptx_.Set(
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:txpool.PendingReply.Tx.rlpTx)
+}
+inline void PendingReply_Tx::set_rlptx(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  rlptx_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
+  // @@protoc_insertion_point(field_set_char:txpool.PendingReply.Tx.rlpTx)
+}
+inline void PendingReply_Tx::set_rlptx(const void* value,
+    size_t size) {
+  
+  rlptx_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:txpool.PendingReply.Tx.rlpTx)
+}
+inline std::string* PendingReply_Tx::_internal_mutable_rlptx() {
+  
+  return rlptx_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
+}
+inline std::string* PendingReply_Tx::release_rlptx() {
+  // @@protoc_insertion_point(field_release:txpool.PendingReply.Tx.rlpTx)
+  return rlptx_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void PendingReply_Tx::set_allocated_rlptx(std::string* rlptx) {
+  if (rlptx != nullptr) {
+    
+  } else {
+    
+  }
+  rlptx_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), rlptx,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:txpool.PendingReply.Tx.rlpTx)
+}
+
+// bool isLocal = 3;
+inline void PendingReply_Tx::clear_islocal() {
+  islocal_ = false;
+}
+inline bool PendingReply_Tx::_internal_islocal() const {
+  return islocal_;
+}
+inline bool PendingReply_Tx::islocal() const {
+  // @@protoc_insertion_point(field_get:txpool.PendingReply.Tx.isLocal)
+  return _internal_islocal();
+}
+inline void PendingReply_Tx::_internal_set_islocal(bool value) {
+  
+  islocal_ = value;
+}
+inline void PendingReply_Tx::set_islocal(bool value) {
+  _internal_set_islocal(value);
+  // @@protoc_insertion_point(field_set:txpool.PendingReply.Tx.isLocal)
+}
+
+// -------------------------------------------------------------------
+
+// PendingReply
+
+// repeated .txpool.PendingReply.Tx txs = 1;
+inline int PendingReply::_internal_txs_size() const {
+  return txs_.size();
+}
+inline int PendingReply::txs_size() const {
+  return _internal_txs_size();
+}
+inline void PendingReply::clear_txs() {
+  txs_.Clear();
+}
+inline ::txpool::PendingReply_Tx* PendingReply::mutable_txs(int index) {
+  // @@protoc_insertion_point(field_mutable:txpool.PendingReply.txs)
+  return txs_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::txpool::PendingReply_Tx >*
+PendingReply::mutable_txs() {
+  // @@protoc_insertion_point(field_mutable_list:txpool.PendingReply.txs)
+  return &txs_;
+}
+inline const ::txpool::PendingReply_Tx& PendingReply::_internal_txs(int index) const {
+  return txs_.Get(index);
+}
+inline const ::txpool::PendingReply_Tx& PendingReply::txs(int index) const {
+  // @@protoc_insertion_point(field_get:txpool.PendingReply.txs)
+  return _internal_txs(index);
+}
+inline ::txpool::PendingReply_Tx* PendingReply::_internal_add_txs() {
+  return txs_.Add();
+}
+inline ::txpool::PendingReply_Tx* PendingReply::add_txs() {
+  // @@protoc_insertion_point(field_add:txpool.PendingReply.txs)
+  return _internal_add_txs();
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::txpool::PendingReply_Tx >&
+PendingReply::txs() const {
+  // @@protoc_insertion_point(field_list:txpool.PendingReply.txs)
+  return txs_;
+}
+
+// -------------------------------------------------------------------
+
+// StatusRequest
+
+// -------------------------------------------------------------------
+
+// StatusReply
+
+// uint32 pendingCount = 1;
+inline void StatusReply::clear_pendingcount() {
+  pendingcount_ = 0u;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 StatusReply::_internal_pendingcount() const {
+  return pendingcount_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 StatusReply::pendingcount() const {
+  // @@protoc_insertion_point(field_get:txpool.StatusReply.pendingCount)
+  return _internal_pendingcount();
+}
+inline void StatusReply::_internal_set_pendingcount(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  
+  pendingcount_ = value;
+}
+inline void StatusReply::set_pendingcount(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_set_pendingcount(value);
+  // @@protoc_insertion_point(field_set:txpool.StatusReply.pendingCount)
+}
+
+// uint32 queuedCount = 2;
+inline void StatusReply::clear_queuedcount() {
+  queuedcount_ = 0u;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 StatusReply::_internal_queuedcount() const {
+  return queuedcount_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 StatusReply::queuedcount() const {
+  // @@protoc_insertion_point(field_get:txpool.StatusReply.queuedCount)
+  return _internal_queuedcount();
+}
+inline void StatusReply::_internal_set_queuedcount(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  
+  queuedcount_ = value;
+}
+inline void StatusReply::set_queuedcount(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_set_queuedcount(value);
+  // @@protoc_insertion_point(field_set:txpool.StatusReply.queuedCount)
+}
+
+// uint32 baseFeeCount = 3;
+inline void StatusReply::clear_basefeecount() {
+  basefeecount_ = 0u;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 StatusReply::_internal_basefeecount() const {
+  return basefeecount_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint32 StatusReply::basefeecount() const {
+  // @@protoc_insertion_point(field_get:txpool.StatusReply.baseFeeCount)
+  return _internal_basefeecount();
+}
+inline void StatusReply::_internal_set_basefeecount(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  
+  basefeecount_ = value;
+}
+inline void StatusReply::set_basefeecount(::PROTOBUF_NAMESPACE_ID::uint32 value) {
+  _internal_set_basefeecount(value);
+  // @@protoc_insertion_point(field_set:txpool.StatusReply.baseFeeCount)
+}
+
+// -------------------------------------------------------------------
+
+// NonceRequest
+
+// .types.H160 address = 1;
+inline bool NonceRequest::_internal_has_address() const {
+  return this != internal_default_instance() && address_ != nullptr;
+}
+inline bool NonceRequest::has_address() const {
+  return _internal_has_address();
+}
+inline const ::types::H160& NonceRequest::_internal_address() const {
+  const ::types::H160* p = address_;
+  return p != nullptr ? *p : reinterpret_cast<const ::types::H160&>(
+      ::types::_H160_default_instance_);
+}
+inline const ::types::H160& NonceRequest::address() const {
+  // @@protoc_insertion_point(field_get:txpool.NonceRequest.address)
+  return _internal_address();
+}
+inline void NonceRequest::unsafe_arena_set_allocated_address(
+    ::types::H160* address) {
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(address_);
+  }
+  address_ = address;
+  if (address) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:txpool.NonceRequest.address)
+}
+inline ::types::H160* NonceRequest::release_address() {
+  
+  ::types::H160* temp = address_;
+  address_ = nullptr;
+  if (GetArena() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+  return temp;
+}
+inline ::types::H160* NonceRequest::unsafe_arena_release_address() {
+  // @@protoc_insertion_point(field_release:txpool.NonceRequest.address)
+  
+  ::types::H160* temp = address_;
+  address_ = nullptr;
+  return temp;
+}
+inline ::types::H160* NonceRequest::_internal_mutable_address() {
+  
+  if (address_ == nullptr) {
+    auto* p = CreateMaybeMessage<::types::H160>(GetArena());
+    address_ = p;
+  }
+  return address_;
+}
+inline ::types::H160* NonceRequest::mutable_address() {
+  // @@protoc_insertion_point(field_mutable:txpool.NonceRequest.address)
+  return _internal_mutable_address();
+}
+inline void NonceRequest::set_allocated_address(::types::H160* address) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
+  if (message_arena == nullptr) {
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(address_);
+  }
+  if (address) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(address)->GetArena();
+    if (message_arena != submessage_arena) {
+      address = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, address, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  address_ = address;
+  // @@protoc_insertion_point(field_set_allocated:txpool.NonceRequest.address)
+}
+
+// -------------------------------------------------------------------
+
+// NonceReply
+
+// bool found = 1;
+inline void NonceReply::clear_found() {
+  found_ = false;
+}
+inline bool NonceReply::_internal_found() const {
+  return found_;
+}
+inline bool NonceReply::found() const {
+  // @@protoc_insertion_point(field_get:txpool.NonceReply.found)
+  return _internal_found();
+}
+inline void NonceReply::_internal_set_found(bool value) {
+  
+  found_ = value;
+}
+inline void NonceReply::set_found(bool value) {
+  _internal_set_found(value);
+  // @@protoc_insertion_point(field_set:txpool.NonceReply.found)
+}
+
+// uint64 nonce = 2;
+inline void NonceReply::clear_nonce() {
+  nonce_ = PROTOBUF_ULONGLONG(0);
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 NonceReply::_internal_nonce() const {
+  return nonce_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 NonceReply::nonce() const {
+  // @@protoc_insertion_point(field_get:txpool.NonceReply.nonce)
+  return _internal_nonce();
+}
+inline void NonceReply::_internal_set_nonce(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  
+  nonce_ = value;
+}
+inline void NonceReply::set_nonce(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  _internal_set_nonce(value);
+  // @@protoc_insertion_point(field_set:txpool.NonceReply.nonce)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
@@ -1624,6 +3645,11 @@ OnAddReply::mutable_rpltxs() {
 
 PROTOBUF_NAMESPACE_OPEN
 
+template <> struct is_proto_enum< ::txpool::AllReply_Type> : ::std::true_type {};
+template <>
+inline const EnumDescriptor* GetEnumDescriptor< ::txpool::AllReply_Type>() {
+  return ::txpool::AllReply_Type_descriptor();
+}
 template <> struct is_proto_enum< ::txpool::ImportResult> : ::std::true_type {};
 template <>
 inline const EnumDescriptor* GetEnumDescriptor< ::txpool::ImportResult>() {

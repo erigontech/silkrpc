@@ -25,6 +25,7 @@ find_program(PROTOBUF_PROTOC protoc REQUIRED)
 # Find gRPC installation
 find_package(gRPC CONFIG REQUIRED)
 find_program(GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin REQUIRED)
+find_package(mimalloc 1.4 REQUIRED)
 
 # Define gRPC proto files
 set(IF_PROTO_PATH "${CMAKE_SOURCE_DIR}/interfaces")
@@ -48,6 +49,11 @@ set(P2PSENTRY_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/p2psentry/sentry.pb.h")
 set(P2PSENTRY_GRPC_SOURCE "${PROTO_GENERATED_SRC_DIR}/p2psentry/sentry.grpc.pb.cc")
 set(P2PSENTRY_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/p2psentry/sentry.grpc.pb.h")
 set(P2PSENTRY_MOCK_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/p2psentry/sentry_mock.grpc.pb.h")
+set(MINING_PROTO_SOURCE "${PROTO_GENERATED_SRC_DIR}/txpool/mining.pb.cc")
+set(MINING_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/txpool/mining.pb.h")
+set(MINING_GRPC_SOURCE "${PROTO_GENERATED_SRC_DIR}/txpool/mining.grpc.pb.cc")
+set(MINING_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/txpool/mining.grpc.pb.h")
+set(MINING_MOCK_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/txpool/mining_mock.grpc.pb.h")
 set(TXPOOL_PROTO_SOURCE "${PROTO_GENERATED_SRC_DIR}/txpool/txpool.pb.cc")
 set(TXPOOL_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/txpool/txpool.pb.h")
 set(TXPOOL_GRPC_SOURCE "${PROTO_GENERATED_SRC_DIR}/txpool/txpool.grpc.pb.cc")
@@ -63,6 +69,7 @@ add_custom_command(
       "${BACKEND_PROTO_HEADER}" "${BACKEND_PROTO_SOURCE}" "${BACKEND_GRPC_HEADER}" "${BACKEND_GRPC_SOURCE}"
       "${KV_PROTO_SOURCE}" "${KV_PROTO_HEADER}" "${KV_GRPC_SOURCE}" "${KV_GRPC_HEADER}"
       "${P2PSENTRY_PROTO_SOURCE}" "${P2PSENTRY_PROTO_HEADER}" "${P2PSENTRY_GRPC_SOURCE}" "${P2PSENTRY_GRPC_HEADER}"
+      "${MINING_PROTO_SOURCE}" "${MINING_PROTO_HEADER}" "${MINING_GRPC_SOURCE}" "${MINING_GRPC_HEADER}"
       "${TXPOOL_PROTO_SOURCE}" "${TXPOOL_PROTO_HEADER}" "${TXPOOL_GRPC_SOURCE}" "${TXPOOL_GRPC_HEADER}"
     COMMAND ${PROTOBUF_PROTOC}
     ARGS --grpc_out generate_mock_code=true:"${PROTO_GENERATED_SRC_DIR}"
@@ -72,6 +79,7 @@ add_custom_command(
       "${IF_PROTO_PATH}/**/ethbackend.proto"
       "${IF_PROTO_PATH}/**/kv.proto"
       "${IF_PROTO_PATH}/**/sentry.proto"
+      "${IF_PROTO_PATH}/**/mining.proto"
       "${IF_PROTO_PATH}/**/txpool.proto"
       "${IF_PROTO_PATH}/**/types.proto"
     COMMENT "Running C++ gRPC compiler on ${IF_PROTO_PATH}"
@@ -83,10 +91,10 @@ add_library(silkinterfaces
     ${BACKEND_PROTO_HEADER} ${BACKEND_PROTO_SOURCE} ${BACKEND_GRPC_HEADER} ${BACKEND_GRPC_SOURCE}
     ${KV_PROTO_HEADER} ${KV_PROTO_SOURCE} ${KV_GRPC_HEADER} ${KV_GRPC_SOURCE}
     ${P2PSENTRY_PROTO_HEADER} ${P2PSENTRY_PROTO_SOURCE} ${P2PSENTRY_GRPC_HEADER} ${P2PSENTRY_GRPC_SOURCE}
+    ${MINING_PROTO_HEADER} ${MINING_PROTO_SOURCE} ${MINING_GRPC_HEADER} ${MINING_GRPC_SOURCE}
     ${TXPOOL_PROTO_HEADER} ${TXPOOL_PROTO_SOURCE} ${TXPOOL_GRPC_HEADER} ${TXPOOL_GRPC_SOURCE})
 target_include_directories(silkinterfaces PUBLIC ${PROTO_GENERATED_SRC_DIR})
 target_link_libraries(silkinterfaces
-    tcmalloc
     gRPC::grpc++
     protobuf::libprotobuf)
 
@@ -123,6 +131,14 @@ file(MAKE_DIRECTORY ${TXPOOL_IF_GENERATED_HEADER_DIR})
 add_custom_command(
     TARGET silkinterfaces POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
+        ${MINING_PROTO_HEADER}
+        ${MINING_GRPC_HEADER}
+        ${MINING_MOCK_GRPC_HEADER}
+        ${TXPOOL_IF_GENERATED_HEADER_DIR}
+)
+add_custom_command(
+    TARGET silkinterfaces POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
         ${TXPOOL_PROTO_HEADER}
         ${TXPOOL_GRPC_HEADER}
         ${TXPOOL_MOCK_GRPC_HEADER}
@@ -149,7 +165,6 @@ endif()
 add_library(silkrpc ${SILKRPC_SRC})
 target_include_directories(silkrpc PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(silkrpc
-    tcmalloc
     absl::flat_hash_map
     absl::flat_hash_set
     absl::btree
@@ -158,7 +173,8 @@ target_link_libraries(silkrpc
     protobuf::libprotobuf
     silkinterfaces
     silkworm_core
-    silkworm_node)
+    silkworm_node
+    mimalloc)
 
 add_executable(silkrpcdaemon main.cpp)
 target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
@@ -166,4 +182,4 @@ target_link_libraries(silkrpcdaemon
     silkrpc
     absl::flags_parse
     silkinterfaces
-    tcmalloc)
+    mimalloc)

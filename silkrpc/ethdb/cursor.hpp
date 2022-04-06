@@ -40,9 +40,9 @@ public:
 
     virtual asio::awaitable<void> open_cursor(const std::string& table_name) = 0;
 
-    virtual asio::awaitable<KeyValue> seek(const silkworm::ByteView& key) = 0;
+    virtual asio::awaitable<KeyValue> seek(silkworm::ByteView key) = 0;
 
-    virtual asio::awaitable<KeyValue> seek_exact(const silkworm::ByteView& key) = 0;
+    virtual asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) = 0;
 
     virtual asio::awaitable<KeyValue> next() = 0;
 
@@ -51,9 +51,9 @@ public:
 
 class CursorDupSort : public Cursor {
 public:
-    virtual asio::awaitable<silkworm::Bytes> seek_both(const silkworm::ByteView& key, const silkworm::ByteView& value) = 0;
+    virtual asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) = 0;
 
-    virtual asio::awaitable<KeyValue> seek_both_exact(const silkworm::ByteView& key, const silkworm::ByteView& value) = 0;
+    virtual asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) = 0;
 };
 
 struct SplittedKeyValue {
@@ -65,7 +65,7 @@ struct SplittedKeyValue {
 
 class SplitCursor {
 public:
-    SplitCursor(Cursor& inner_cursor, const silkworm::Bytes& key, uint64_t match_bits, uint64_t length1, uint64_t length2);
+    SplitCursor(Cursor& inner_cursor, silkworm::ByteView key, uint64_t match_bits, uint64_t part1_end, uint64_t part2_start, uint64_t part3_start);
     SplitCursor& operator=(const SplitCursor&) = delete;
 
     asio::awaitable<SplittedKeyValue> seek();
@@ -77,8 +77,9 @@ private:
     silkworm::Bytes key_;
     silkworm::Bytes first_bytes_;
     uint8_t last_bits_;
-    uint64_t length1_;
-    uint64_t length2_;
+    uint64_t part1_end_;
+    uint64_t part2_start_;
+    uint64_t part3_start_;
     uint64_t match_bytes_;
     uint8_t mask_;
 

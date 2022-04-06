@@ -47,6 +47,9 @@ constexpr const char* k_eth_getUncleCountByBlockHash{"eth_getUncleCountByBlockHa
 constexpr const char* k_eth_getUncleCountByBlockNumber{"eth_getUncleCountByBlockNumber"};
 constexpr const char* k_eth_getTransactionByHash{"eth_getTransactionByHash"};
 constexpr const char* k_eth_getTransactionByBlockHashAndIndex{"eth_getTransactionByBlockHashAndIndex"};
+constexpr const char* k_eth_getRawTransactionByHash{"eth_getRawTransactionByHash"};
+constexpr const char* k_eth_getRawTransactionByBlockHashAndIndex{"eth_getRawTransactionByBlockHashAndIndex"};
+constexpr const char* k_eth_getRawTransactionByBlockNumberAndIndex{"eth_getRawTransactionByBlockNumberAndIndex"};
 constexpr const char* k_eth_getTransactionByBlockNumberAndIndex{"eth_getTransactionByBlockNumberAndIndex"};
 constexpr const char* k_eth_getTransactionReceipt{"eth_getTransactionReceipt"};
 constexpr const char* k_eth_estimateGas{"eth_estimateGas"};
@@ -85,6 +88,8 @@ constexpr const char* k_debug_getModifiedAccountsByHash{"debug_getModifiedAccoun
 constexpr const char* k_debug_storageRangeAt{"debug_storageRangeAt"};
 constexpr const char* k_debug_traceTransaction{"debug_traceTransaction"};
 constexpr const char* k_debug_traceCall{"debug_traceCall"};
+constexpr const char* k_debug_traceBlockByNumber{"debug_traceBlockByNumber"};
+constexpr const char* k_debug_traceBlockByHash{"debug_traceBlockByHash"};
 
 constexpr const char* k_trace_call{"trace_call"};
 constexpr const char* k_trace_callMany{"trace_callMany"};
@@ -96,14 +101,16 @@ constexpr const char* k_trace_filter{"trace_filter"};
 constexpr const char* k_trace_get{"trace_get"};
 constexpr const char* k_trace_transaction{"trace_transaction"};
 
-constexpr const char* k_tg_getHeaderByHash{"tg_getHeaderByHash"};
-constexpr const char* k_tg_getHeaderByNumber{"tg_getHeaderByNumber"};
-constexpr const char* k_tg_getLogsByHash{"tg_getLogsByHash"};
-constexpr const char* k_tg_forks{"tg_forks"};
-constexpr const char* k_tg_issuance{"tg_issuance"};
+constexpr const char* k_erigon_getHeaderByHash{"erigon_getHeaderByHash"};
+constexpr const char* k_erigon_getHeaderByNumber{"erigon_getHeaderByNumber"};
+constexpr const char* k_erigon_getLogsByHash{"erigon_getlogsbyhash"};
+constexpr const char* k_erigon_forks{"erigon_forks"};
+constexpr const char* k_erigon_issuance{"erigon_issuance"};
 
 constexpr const char* k_parity_getBlockReceipts{"parity_getBlockReceipts"};
 
+constexpr const char* k_engine_getPayloadV1{"engine_getPayloadV1"};
+constexpr const char* k_engine_newPayloadV1{"engine_newPayloadV1"};
 } // namespace silkrpc::http::method
 
 #endif // SILKRPC_HTTP_METHODS_HPP_

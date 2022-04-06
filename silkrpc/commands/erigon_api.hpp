@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMANDS_TG_API_HPP_
-#define SILKRPC_COMMANDS_TG_API_HPP_
+#ifndef SILKRPC_COMMANDS_ERIGON_API_HPP_
+#define SILKRPC_COMMANDS_ERIGON_API_HPP_
 
 #include <memory>
 
@@ -24,6 +24,7 @@
 #include <asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/database.hpp>
@@ -32,22 +33,23 @@ namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
-class TurboGethRpcApi {
+class ErigonRpcApi {
 public:
-    explicit TurboGethRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
-    virtual ~TurboGethRpcApi() {}
+    explicit ErigonRpcApi(Context& context) : database_(context.database), context_(context) {}
+    virtual ~ErigonRpcApi() {}
 
-    TurboGethRpcApi(const TurboGethRpcApi&) = delete;
-    TurboGethRpcApi& operator=(const TurboGethRpcApi&) = delete;
+    ErigonRpcApi(const ErigonRpcApi&) = delete;
+    ErigonRpcApi& operator=(const ErigonRpcApi&) = delete;
 
 protected:
-    asio::awaitable<void> handle_tg_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_tg_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_tg_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_tg_forks(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_tg_issuance(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_erigon_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_erigon_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_erigon_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_erigon_forks(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_erigon_issuance(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
+    Context& context_;
     std::unique_ptr<ethdb::Database>& database_;
 
     friend class silkrpc::http::RequestHandler;
@@ -55,4 +57,4 @@ private:
 
 } // namespace silkrpc::commands
 
-#endif  // SILKRPC_COMMANDS_TG_API_HPP_
+#endif  // SILKRPC_COMMANDS_ERIGON_API_HPP_

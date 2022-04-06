@@ -22,6 +22,7 @@
 
 #include "server.hpp"
 
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
@@ -30,16 +31,27 @@
 #include <asio/dispatch.hpp>
 #include <asio/use_awaitable.hpp>
 
+#include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/http/connection.hpp>
+#include <silkrpc/http/methods.hpp>
 
 namespace silkrpc::http {
 
-Server::Server(const std::string& address, const std::string& port, ContextPool& context_pool, std::size_t num_workers)
-: context_pool_(context_pool), acceptor_{context_pool.get_io_context()}, workers_{num_workers} {
+std::tuple<std::string, std::string> Server::parse_endpoint(const std::string& tcp_end_point) {
+    const auto host = tcp_end_point.substr(0, tcp_end_point.find(kAddressPortSeparator));
+    const auto port = tcp_end_point.substr(tcp_end_point.find(kAddressPortSeparator) + 1, std::string::npos);
+    return {host, port};
+}
+
+Server::Server(const std::string& end_point, const std::string& api_spec, ContextPool& context_pool, asio::thread_pool& workers)
+: context_pool_(context_pool), workers_(workers), acceptor_{context_pool.get_io_context()}, handler_table_{api_spec} {
+    const auto [host, port] = parse_endpoint(end_point);
+
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
     asio::ip::tcp::resolver resolver{acceptor_.get_executor()};
-    asio::ip::tcp::endpoint endpoint = *resolver.resolve(address, port).begin();
+    asio::ip::tcp::endpoint endpoint = *resolver.resolve(host, port).begin();
     acceptor_.open(endpoint.protocol());
     acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));
     acceptor_.bind(endpoint);
@@ -62,7 +74,7 @@ asio::awaitable<void> Server::run() {
 
             SILKRPC_DEBUG << "Server::start accepting using io_context " << io_context << "...\n" << std::flush;
 
-            auto new_connection = std::make_shared<Connection>(context, workers_);
+            auto new_connection = std::make_shared<Connection>(context, workers_, handler_table_);
             co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);
             if (!acceptor_.is_open()) {
                 SILKRPC_TRACE << "Server::start returning...\n";

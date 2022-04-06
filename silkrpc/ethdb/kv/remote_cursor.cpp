@@ -31,7 +31,7 @@ asio::awaitable<void> RemoteCursor::open_cursor(const std::string& table_name) {
     co_return;
 }
 
-asio::awaitable<KeyValue> RemoteCursor::seek(const silkworm::ByteView& key) {
+asio::awaitable<KeyValue> RemoteCursor::seek(silkworm::ByteView key) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "RemoteCursor::seek cursor: " << cursor_id_ << " key: " << key << "\n";
     auto seek_pair = co_await kv_awaitable_.async_seek(cursor_id_, key, asio::use_awaitable);
@@ -41,7 +41,7 @@ asio::awaitable<KeyValue> RemoteCursor::seek(const silkworm::ByteView& key) {
     co_return KeyValue{k, v};
 }
 
-asio::awaitable<KeyValue> RemoteCursor::seek_exact(const silkworm::ByteView& key) {
+asio::awaitable<KeyValue> RemoteCursor::seek_exact(silkworm::ByteView key) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "RemoteCursor::seek_exact cursor: " << cursor_id_ << " key: " << key << "\n";
     auto seek_pair = co_await kv_awaitable_.async_seek_exact(cursor_id_, key, asio::use_awaitable);
@@ -56,11 +56,11 @@ asio::awaitable<KeyValue> RemoteCursor::next() {
     auto next_pair = co_await kv_awaitable_.async_next(cursor_id_, asio::use_awaitable);
     const auto k = silkworm::bytes_of_string(next_pair.k());
     const auto v = silkworm::bytes_of_string(next_pair.v());
-    SILKRPC_DEBUG << "RemoteCursor::next c=" << cursor_id_ << " t=" << clock_time::since(start_time) << "\n";
+    SILKRPC_DEBUG << "RemoteCursor::next k: " << k << " v: " << v << " c=" << cursor_id_ << " t=" << clock_time::since(start_time) << "\n";
     co_return KeyValue{k, v};
 }
 
-asio::awaitable<silkworm::Bytes> RemoteCursor::seek_both(const silkworm::ByteView& key, const silkworm::ByteView& value) {
+asio::awaitable<silkworm::Bytes> RemoteCursor::seek_both(silkworm::ByteView key, silkworm::ByteView value) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "RemoteCursor::seek_both cursor: " << cursor_id_ << " key: " << key << " subkey: " << value << "\n";
     auto seek_pair = co_await kv_awaitable_.async_seek_both(cursor_id_, key, value, asio::use_awaitable);
@@ -70,7 +70,7 @@ asio::awaitable<silkworm::Bytes> RemoteCursor::seek_both(const silkworm::ByteVie
     co_return v;
 }
 
-asio::awaitable<KeyValue> RemoteCursor::seek_both_exact(const silkworm::ByteView& key, const silkworm::ByteView& value) {
+asio::awaitable<KeyValue> RemoteCursor::seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "RemoteCursor::seek_both_exact cursor: " << cursor_id_ << " key: " << key << " subkey: " << value << "\n";
     auto seek_pair = co_await kv_awaitable_.async_seek_both_exact(cursor_id_, key, value, asio::use_awaitable);
@@ -85,7 +85,7 @@ asio::awaitable<void> RemoteCursor::close_cursor() {
     const auto cursor_id = cursor_id_;
     if (cursor_id_ != 0) {
         SILKRPC_DEBUG << "RemoteCursor::close_cursor closing cursor: " << cursor_id_ << "\n";
-        co_await kv_awaitable_.async_close_cursor(cursor_id_, asio::use_awaitable); // Can we shoot and forget?
+        co_await kv_awaitable_.async_close_cursor(cursor_id_, asio::use_awaitable); // Can we shoot and forget? Or avoid and delegate to CORE service cleanup?
         SILKRPC_DEBUG << "RemoteCursor::close_cursor cursor: " << cursor_id_ << "\n";
         cursor_id_ = 0;
     }

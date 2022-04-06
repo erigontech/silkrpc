@@ -27,6 +27,7 @@
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
+#include <silkrpc/txpool/transaction_pool.hpp>
 #include <silkworm/types/receipt.hpp>
 #include <silkrpc/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
@@ -45,7 +46,7 @@ namespace silkrpc::commands {
 class EthereumRpcApi {
 public:
     explicit EthereumRpcApi(Context& context, asio::thread_pool& workers)
-    : context_(context), database_(context.database), backend_(context.backend), workers_{workers} {}
+    : context_(context), database_(context.database), backend_(context.backend), miner_{context.miner}, tx_pool_{context.tx_pool}, workers_{workers} {}
     virtual ~EthereumRpcApi() {}
 
     EthereumRpcApi(const EthereumRpcApi&) = delete;
@@ -68,6 +69,9 @@ protected:
     asio::awaitable<void> handle_eth_get_transaction_by_hash(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_transaction_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_transaction_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_raw_transaction_by_hash(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_raw_transaction_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_get_raw_transaction_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_transaction_receipt(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_estimate_gas(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_balance(const nlohmann::json& request, nlohmann::json& reply);
@@ -100,6 +104,8 @@ protected:
     Context& context_;
     std::unique_ptr<ethdb::Database>& database_;
     std::unique_ptr<ethbackend::BackEnd>& backend_;
+    std::unique_ptr<txpool::Miner>& miner_;
+    std::unique_ptr<txpool::TransactionPool>& tx_pool_;
     asio::thread_pool& workers_;
 
     friend class silkrpc::http::RequestHandler;

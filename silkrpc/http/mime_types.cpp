@@ -10,8 +10,7 @@
 
 #include "mime_types.hpp"
 
-namespace silkrpc::http {
-namespace mime_types {
+namespace silkrpc::http::mime_types {
 
 struct Mapping {
     const char* extension;
@@ -34,5 +33,4 @@ std::string extension_to_type(const std::string& extension) {
     return "text/plain";
 }
 
-} // namespace mime_types
-} // namespace silkrpc::http
+} // namespace silkrpc::http::mime_types

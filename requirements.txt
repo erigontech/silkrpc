@@ -1,3 +1,4 @@
 cpplint
 jsondiff
-pylint==2.10.*
+web3
+pylint==2.11.*

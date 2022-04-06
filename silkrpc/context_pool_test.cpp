@@ -145,7 +145,7 @@ TEST_CASE("restart context pool", "[silkrpc][context_pool]") {
 TEST_CASE("print context pool", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     ContextPool cp{1, create_channel};
-    CHECK_NOTHROW(silkworm::null_stream() << cp.get_context());
+    CHECK_NOTHROW(null_stream() << cp.get_context());
 }
 
 } // namespace silkrpc

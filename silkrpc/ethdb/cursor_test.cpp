@@ -54,7 +54,7 @@ public:
 
     asio::awaitable<void> open_cursor(const std::string& table_name) override { co_return; }
 
-    asio::awaitable<KeyValue> seek(const silkworm::ByteView& seek_key) override {
+    asio::awaitable<KeyValue> seek(silkworm::ByteView seek_key) override {
         index_ = 0;
         for (; index_ < vector_.size(); index_++) {
             if (vector_[index_].part1 == seek_key) {
@@ -65,7 +65,7 @@ public:
         co_return KeyValue{};
     }
 
-    asio::awaitable<KeyValue> seek_exact(const silkworm::ByteView& key) override { co_return KeyValue{silkworm::Bytes{key}, value}; }
+    asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override { co_return KeyValue{silkworm::Bytes{key}, value}; }
 
     asio::awaitable<KeyValue> next() override {
         if (++index_ >= vector_.size()) {
@@ -126,7 +126,7 @@ TEST_CASE("split cursor") {
         uint32_t index = 0;
         silkworm::Bytes key = to_bytes(hex[index].part1);
 
-        SplitCursor sc(ac, key, 0, silkworm::kAddressLength, 8);
+        SplitCursor sc(ac, key, 0, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
 
         auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
         const SplittedKeyValue &skv = result.get();
@@ -140,7 +140,7 @@ TEST_CASE("split cursor") {
         uint32_t index = 0;
         silkworm::Bytes key = to_bytes(hex[index].part1);
 
-        SplitCursor sc(ac, key, 0, silkworm::kAddressLength, 8);
+        SplitCursor sc(ac, key, 0, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
 
         auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
         const SplittedKeyValue &skv = result.get();
@@ -169,7 +169,7 @@ TEST_CASE("split cursor") {
         uint32_t index = 5;
         silkworm::Bytes key = to_bytes(hex[index].part1);
 
-        SplitCursor sc(ac, key, 0, silkworm::kAddressLength, 8);
+        SplitCursor sc(ac, key, 0, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
 
         auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
         const SplittedKeyValue &skv = result.get();
@@ -197,7 +197,7 @@ TEST_CASE("split cursor") {
     SECTION("0 maching bits: seek, key does not exixt") {
         silkworm::Bytes key = to_bytes("79a4d75bd00b1843ec5292217e71dace5e5a7438");
 
-        SplitCursor sc(ac, key, 0, silkworm::kAddressLength, 8);
+        SplitCursor sc(ac, key, 0, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
 
         auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
         const SplittedKeyValue &skv = result.get();
@@ -211,7 +211,7 @@ TEST_CASE("split cursor") {
         uint32_t index = 1;
         silkworm::Bytes key = to_bytes(hex[index].part1);
 
-        SplitCursor sc(ac, key, 28, silkworm::kAddressLength, 8);
+        SplitCursor sc(ac, key, 28, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
 
         auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
         const SplittedKeyValue &skv = result.get();
@@ -225,7 +225,7 @@ TEST_CASE("split cursor") {
         uint32_t index = 1;
         silkworm::Bytes key = to_bytes(hex[index].part1);
 
-        SplitCursor sc(ac, key, 28, silkworm::kAddressLength, 8);
+        SplitCursor sc(ac, key, 28, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
 
         auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
         const SplittedKeyValue &skv = result.get();
@@ -254,13 +254,13 @@ TEST_CASE("split cursor") {
         uint32_t index = 1;
         silkworm::Bytes key = to_bytes(hex[index].part1);
 
-        SplitCursor sc(ac, key, 28, silkworm::kAddressLength, silkworm::kAddressLength + 8);
+        SplitCursor sc(ac, key, 28, silkworm::kAddressLength, silkworm::kAddressLength + 8, silkworm::kAddressLength + 12);
 
         auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
         CHECK(skv.key1 == key);
-        CHECK(skv.key2 == to_bytes(hex[index].part2 + hex[index].part3));
+        CHECK(skv.key2 == to_bytes(hex[index].part3));
         CHECK(skv.key3.length() == 0);
     }
 }

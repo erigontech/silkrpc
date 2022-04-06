@@ -46,6 +46,10 @@ class KV final {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::types::VersionReply>>(PrepareAsyncVersionRaw(context, request, cq));
     }
     // Tx exposes read-only transactions for the key-value store
+    //
+    // When tx open, client must receive 1 message from server with txID
+    // When cursor open, client must receive 1 message from server with cursorID
+    // Then only client can initiate messages from server
     std::unique_ptr< ::grpc::ClientReaderWriterInterface< ::remote::Cursor, ::remote::Pair>> Tx(::grpc::ClientContext* context) {
       return std::unique_ptr< ::grpc::ClientReaderWriterInterface< ::remote::Cursor, ::remote::Pair>>(TxRaw(context));
     }
@@ -55,14 +59,14 @@ class KV final {
     std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::remote::Cursor, ::remote::Pair>> PrepareAsyncTx(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::remote::Cursor, ::remote::Pair>>(PrepareAsyncTxRaw(context, cq));
     }
-    std::unique_ptr< ::grpc::ClientReaderInterface< ::remote::StateChange>> ReceiveStateChanges(::grpc::ClientContext* context, const ::google::protobuf::Empty& request) {
-      return std::unique_ptr< ::grpc::ClientReaderInterface< ::remote::StateChange>>(ReceiveStateChangesRaw(context, request));
+    std::unique_ptr< ::grpc::ClientReaderInterface< ::remote::StateChangeBatch>> StateChanges(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request) {
+      return std::unique_ptr< ::grpc::ClientReaderInterface< ::remote::StateChangeBatch>>(StateChangesRaw(context, request));
     }
-    std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::remote::StateChange>> AsyncReceiveStateChanges(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq, void* tag) {
-      return std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::remote::StateChange>>(AsyncReceiveStateChangesRaw(context, request, cq, tag));
+    std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>> AsyncStateChanges(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq, void* tag) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>>(AsyncStateChangesRaw(context, request, cq, tag));
     }
-    std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::remote::StateChange>> PrepareAsyncReceiveStateChanges(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::remote::StateChange>>(PrepareAsyncReceiveStateChangesRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>> PrepareAsyncStateChanges(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>>(PrepareAsyncStateChangesRaw(context, request, cq));
     }
     class experimental_async_interface {
      public:
@@ -81,15 +85,19 @@ class KV final {
       virtual void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
       #endif
       // Tx exposes read-only transactions for the key-value store
+      //
+      // When tx open, client must receive 1 message from server with txID
+      // When cursor open, client must receive 1 message from server with cursorID
+      // Then only client can initiate messages from server
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Tx(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::remote::Cursor,::remote::Pair>* reactor) = 0;
       #else
       virtual void Tx(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::remote::Cursor,::remote::Pair>* reactor) = 0;
       #endif
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void ReceiveStateChanges(::grpc::ClientContext* context, ::google::protobuf::Empty* request, ::grpc::ClientReadReactor< ::remote::StateChange>* reactor) = 0;
+      virtual void StateChanges(::grpc::ClientContext* context, ::remote::StateChangeRequest* request, ::grpc::ClientReadReactor< ::remote::StateChangeBatch>* reactor) = 0;
       #else
-      virtual void ReceiveStateChanges(::grpc::ClientContext* context, ::google::protobuf::Empty* request, ::grpc::experimental::ClientReadReactor< ::remote::StateChange>* reactor) = 0;
+      virtual void StateChanges(::grpc::ClientContext* context, ::remote::StateChangeRequest* request, ::grpc::experimental::ClientReadReactor< ::remote::StateChangeBatch>* reactor) = 0;
       #endif
     };
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
@@ -105,9 +113,9 @@ class KV final {
     virtual ::grpc::ClientReaderWriterInterface< ::remote::Cursor, ::remote::Pair>* TxRaw(::grpc::ClientContext* context) = 0;
     virtual ::grpc::ClientAsyncReaderWriterInterface< ::remote::Cursor, ::remote::Pair>* AsyncTxRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) = 0;
     virtual ::grpc::ClientAsyncReaderWriterInterface< ::remote::Cursor, ::remote::Pair>* PrepareAsyncTxRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) = 0;
-    virtual ::grpc::ClientReaderInterface< ::remote::StateChange>* ReceiveStateChangesRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request) = 0;
-    virtual ::grpc::ClientAsyncReaderInterface< ::remote::StateChange>* AsyncReceiveStateChangesRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq, void* tag) = 0;
-    virtual ::grpc::ClientAsyncReaderInterface< ::remote::StateChange>* PrepareAsyncReceiveStateChangesRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientReaderInterface< ::remote::StateChangeBatch>* StateChangesRaw(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request) = 0;
+    virtual ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>* AsyncStateChangesRaw(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq, void* tag) = 0;
+    virtual ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>* PrepareAsyncStateChangesRaw(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -128,14 +136,14 @@ class KV final {
     std::unique_ptr<  ::grpc::ClientAsyncReaderWriter< ::remote::Cursor, ::remote::Pair>> PrepareAsyncTx(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReaderWriter< ::remote::Cursor, ::remote::Pair>>(PrepareAsyncTxRaw(context, cq));
     }
-    std::unique_ptr< ::grpc::ClientReader< ::remote::StateChange>> ReceiveStateChanges(::grpc::ClientContext* context, const ::google::protobuf::Empty& request) {
-      return std::unique_ptr< ::grpc::ClientReader< ::remote::StateChange>>(ReceiveStateChangesRaw(context, request));
+    std::unique_ptr< ::grpc::ClientReader< ::remote::StateChangeBatch>> StateChanges(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request) {
+      return std::unique_ptr< ::grpc::ClientReader< ::remote::StateChangeBatch>>(StateChangesRaw(context, request));
     }
-    std::unique_ptr< ::grpc::ClientAsyncReader< ::remote::StateChange>> AsyncReceiveStateChanges(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq, void* tag) {
-      return std::unique_ptr< ::grpc::ClientAsyncReader< ::remote::StateChange>>(AsyncReceiveStateChangesRaw(context, request, cq, tag));
+    std::unique_ptr< ::grpc::ClientAsyncReader< ::remote::StateChangeBatch>> AsyncStateChanges(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq, void* tag) {
+      return std::unique_ptr< ::grpc::ClientAsyncReader< ::remote::StateChangeBatch>>(AsyncStateChangesRaw(context, request, cq, tag));
     }
-    std::unique_ptr< ::grpc::ClientAsyncReader< ::remote::StateChange>> PrepareAsyncReceiveStateChanges(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
-      return std::unique_ptr< ::grpc::ClientAsyncReader< ::remote::StateChange>>(PrepareAsyncReceiveStateChangesRaw(context, request, cq));
+    std::unique_ptr< ::grpc::ClientAsyncReader< ::remote::StateChangeBatch>> PrepareAsyncStateChanges(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncReader< ::remote::StateChangeBatch>>(PrepareAsyncStateChangesRaw(context, request, cq));
     }
     class experimental_async final :
       public StubInterface::experimental_async_interface {
@@ -158,9 +166,9 @@ class KV final {
       void Tx(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::remote::Cursor,::remote::Pair>* reactor) override;
       #endif
       #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void ReceiveStateChanges(::grpc::ClientContext* context, ::google::protobuf::Empty* request, ::grpc::ClientReadReactor< ::remote::StateChange>* reactor) override;
+      void StateChanges(::grpc::ClientContext* context, ::remote::StateChangeRequest* request, ::grpc::ClientReadReactor< ::remote::StateChangeBatch>* reactor) override;
       #else
-      void ReceiveStateChanges(::grpc::ClientContext* context, ::google::protobuf::Empty* request, ::grpc::experimental::ClientReadReactor< ::remote::StateChange>* reactor) override;
+      void StateChanges(::grpc::ClientContext* context, ::remote::StateChangeRequest* request, ::grpc::experimental::ClientReadReactor< ::remote::StateChangeBatch>* reactor) override;
       #endif
      private:
       friend class Stub;
@@ -178,12 +186,12 @@ class KV final {
     ::grpc::ClientReaderWriter< ::remote::Cursor, ::remote::Pair>* TxRaw(::grpc::ClientContext* context) override;
     ::grpc::ClientAsyncReaderWriter< ::remote::Cursor, ::remote::Pair>* AsyncTxRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) override;
     ::grpc::ClientAsyncReaderWriter< ::remote::Cursor, ::remote::Pair>* PrepareAsyncTxRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) override;
-    ::grpc::ClientReader< ::remote::StateChange>* ReceiveStateChangesRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request) override;
-    ::grpc::ClientAsyncReader< ::remote::StateChange>* AsyncReceiveStateChangesRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq, void* tag) override;
-    ::grpc::ClientAsyncReader< ::remote::StateChange>* PrepareAsyncReceiveStateChangesRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientReader< ::remote::StateChangeBatch>* StateChangesRaw(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request) override;
+    ::grpc::ClientAsyncReader< ::remote::StateChangeBatch>* AsyncStateChangesRaw(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq, void* tag) override;
+    ::grpc::ClientAsyncReader< ::remote::StateChangeBatch>* PrepareAsyncStateChangesRaw(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_Version_;
     const ::grpc::internal::RpcMethod rpcmethod_Tx_;
-    const ::grpc::internal::RpcMethod rpcmethod_ReceiveStateChanges_;
+    const ::grpc::internal::RpcMethod rpcmethod_StateChanges_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -194,8 +202,12 @@ class KV final {
     // Version returns the service version number
     virtual ::grpc::Status Version(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response);
     // Tx exposes read-only transactions for the key-value store
+    //
+    // When tx open, client must receive 1 message from server with txID
+    // When cursor open, client must receive 1 message from server with cursorID
+    // Then only client can initiate messages from server
     virtual ::grpc::Status Tx(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::remote::Pair, ::remote::Cursor>* stream);
-    virtual ::grpc::Status ReceiveStateChanges(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::grpc::ServerWriter< ::remote::StateChange>* writer);
+    virtual ::grpc::Status StateChanges(::grpc::ServerContext* context, const ::remote::StateChangeRequest* request, ::grpc::ServerWriter< ::remote::StateChangeBatch>* writer);
   };
   template <class BaseClass>
   class WithAsyncMethod_Version : public BaseClass {
@@ -238,26 +250,26 @@ class KV final {
     }
   };
   template <class BaseClass>
-  class WithAsyncMethod_ReceiveStateChanges : public BaseClass {
+  class WithAsyncMethod_StateChanges : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithAsyncMethod_ReceiveStateChanges() {
+    WithAsyncMethod_StateChanges() {
       ::grpc::Service::MarkMethodAsync(2);
     }
-    ~WithAsyncMethod_ReceiveStateChanges() override {
+    ~WithAsyncMethod_StateChanges() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ReceiveStateChanges(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::grpc::ServerWriter< ::remote::StateChange>* /*writer*/) override {
+    ::grpc::Status StateChanges(::grpc::ServerContext* /*context*/, const ::remote::StateChangeRequest* /*request*/, ::grpc::ServerWriter< ::remote::StateChangeBatch>* /*writer*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestReceiveStateChanges(::grpc::ServerContext* context, ::google::protobuf::Empty* request, ::grpc::ServerAsyncWriter< ::remote::StateChange>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+    void RequestStateChanges(::grpc::ServerContext* context, ::remote::StateChangeRequest* request, ::grpc::ServerAsyncWriter< ::remote::StateChangeBatch>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncServerStreaming(2, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_Version<WithAsyncMethod_Tx<WithAsyncMethod_ReceiveStateChanges<Service > > > AsyncService;
+  typedef WithAsyncMethod_Version<WithAsyncMethod_Tx<WithAsyncMethod_StateChanges<Service > > > AsyncService;
   template <class BaseClass>
   class ExperimentalWithCallbackMethod_Version : public BaseClass {
    private:
@@ -344,48 +356,48 @@ class KV final {
       { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_ReceiveStateChanges : public BaseClass {
+  class ExperimentalWithCallbackMethod_StateChanges : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_ReceiveStateChanges() {
+    ExperimentalWithCallbackMethod_StateChanges() {
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       ::grpc::Service::
     #else
       ::grpc::Service::experimental().
     #endif
         MarkMethodCallback(2,
-          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::google::protobuf::Empty, ::remote::StateChange>(
+          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::remote::StateChangeRequest, ::remote::StateChangeBatch>(
             [this](
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
                    ::grpc::CallbackServerContext*
     #else
                    ::grpc::experimental::CallbackServerContext*
     #endif
-                     context, const ::google::protobuf::Empty* request) { return this->ReceiveStateChanges(context, request); }));
+                     context, const ::remote::StateChangeRequest* request) { return this->StateChanges(context, request); }));
     }
-    ~ExperimentalWithCallbackMethod_ReceiveStateChanges() override {
+    ~ExperimentalWithCallbackMethod_StateChanges() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ReceiveStateChanges(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::grpc::ServerWriter< ::remote::StateChange>* /*writer*/) override {
+    ::grpc::Status StateChanges(::grpc::ServerContext* /*context*/, const ::remote::StateChangeRequest* /*request*/, ::grpc::ServerWriter< ::remote::StateChangeBatch>* /*writer*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    virtual ::grpc::ServerWriteReactor< ::remote::StateChange>* ReceiveStateChanges(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/)
+    virtual ::grpc::ServerWriteReactor< ::remote::StateChangeBatch>* StateChanges(
+      ::grpc::CallbackServerContext* /*context*/, const ::remote::StateChangeRequest* /*request*/)
     #else
-    virtual ::grpc::experimental::ServerWriteReactor< ::remote::StateChange>* ReceiveStateChanges(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/)
+    virtual ::grpc::experimental::ServerWriteReactor< ::remote::StateChangeBatch>* StateChanges(
+      ::grpc::experimental::CallbackServerContext* /*context*/, const ::remote::StateChangeRequest* /*request*/)
     #endif
       { return nullptr; }
   };
   #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-  typedef ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_Tx<ExperimentalWithCallbackMethod_ReceiveStateChanges<Service > > > CallbackService;
+  typedef ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_Tx<ExperimentalWithCallbackMethod_StateChanges<Service > > > CallbackService;
   #endif
 
-  typedef ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_Tx<ExperimentalWithCallbackMethod_ReceiveStateChanges<Service > > > ExperimentalCallbackService;
+  typedef ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_Tx<ExperimentalWithCallbackMethod_StateChanges<Service > > > ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Version : public BaseClass {
    private:
@@ -421,18 +433,18 @@ class KV final {
     }
   };
   template <class BaseClass>
-  class WithGenericMethod_ReceiveStateChanges : public BaseClass {
+  class WithGenericMethod_StateChanges : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithGenericMethod_ReceiveStateChanges() {
+    WithGenericMethod_StateChanges() {
       ::grpc::Service::MarkMethodGeneric(2);
     }
-    ~WithGenericMethod_ReceiveStateChanges() override {
+    ~WithGenericMethod_StateChanges() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ReceiveStateChanges(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::grpc::ServerWriter< ::remote::StateChange>* /*writer*/) override {
+    ::grpc::Status StateChanges(::grpc::ServerContext* /*context*/, const ::remote::StateChangeRequest* /*request*/, ::grpc::ServerWriter< ::remote::StateChangeBatch>* /*writer*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -478,22 +490,22 @@ class KV final {
     }
   };
   template <class BaseClass>
-  class WithRawMethod_ReceiveStateChanges : public BaseClass {
+  class WithRawMethod_StateChanges : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithRawMethod_ReceiveStateChanges() {
+    WithRawMethod_StateChanges() {
       ::grpc::Service::MarkMethodRaw(2);
     }
-    ~WithRawMethod_ReceiveStateChanges() override {
+    ~WithRawMethod_StateChanges() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ReceiveStateChanges(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::grpc::ServerWriter< ::remote::StateChange>* /*writer*/) override {
+    ::grpc::Status StateChanges(::grpc::ServerContext* /*context*/, const ::remote::StateChangeRequest* /*request*/, ::grpc::ServerWriter< ::remote::StateChangeBatch>* /*writer*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    void RequestReceiveStateChanges(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+    void RequestStateChanges(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncServerStreaming(2, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
@@ -574,11 +586,11 @@ class KV final {
       { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_ReceiveStateChanges : public BaseClass {
+  class ExperimentalWithRawCallbackMethod_StateChanges : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_ReceiveStateChanges() {
+    ExperimentalWithRawCallbackMethod_StateChanges() {
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       ::grpc::Service::
     #else
@@ -592,21 +604,21 @@ class KV final {
     #else
                    ::grpc::experimental::CallbackServerContext*
     #endif
-                     context, const::grpc::ByteBuffer* request) { return this->ReceiveStateChanges(context, request); }));
+                     context, const::grpc::ByteBuffer* request) { return this->StateChanges(context, request); }));
     }
-    ~ExperimentalWithRawCallbackMethod_ReceiveStateChanges() override {
+    ~ExperimentalWithRawCallbackMethod_StateChanges() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
-    ::grpc::Status ReceiveStateChanges(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::grpc::ServerWriter< ::remote::StateChange>* /*writer*/) override {
+    ::grpc::Status StateChanges(::grpc::ServerContext* /*context*/, const ::remote::StateChangeRequest* /*request*/, ::grpc::ServerWriter< ::remote::StateChangeBatch>* /*writer*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    virtual ::grpc::ServerWriteReactor< ::grpc::ByteBuffer>* ReceiveStateChanges(
+    virtual ::grpc::ServerWriteReactor< ::grpc::ByteBuffer>* StateChanges(
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
     #else
-    virtual ::grpc::experimental::ServerWriteReactor< ::grpc::ByteBuffer>* ReceiveStateChanges(
+    virtual ::grpc::experimental::ServerWriteReactor< ::grpc::ByteBuffer>* StateChanges(
       ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
     #endif
       { return nullptr; }
@@ -640,34 +652,34 @@ class KV final {
   };
   typedef WithStreamedUnaryMethod_Version<Service > StreamedUnaryService;
   template <class BaseClass>
-  class WithSplitStreamingMethod_ReceiveStateChanges : public BaseClass {
+  class WithSplitStreamingMethod_StateChanges : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithSplitStreamingMethod_ReceiveStateChanges() {
+    WithSplitStreamingMethod_StateChanges() {
       ::grpc::Service::MarkMethodStreamed(2,
         new ::grpc::internal::SplitServerStreamingHandler<
-          ::google::protobuf::Empty, ::remote::StateChange>(
+          ::remote::StateChangeRequest, ::remote::StateChangeBatch>(
             [this](::grpc_impl::ServerContext* context,
                    ::grpc_impl::ServerSplitStreamer<
-                     ::google::protobuf::Empty, ::remote::StateChange>* streamer) {
-                       return this->StreamedReceiveStateChanges(context,
+                     ::remote::StateChangeRequest, ::remote::StateChangeBatch>* streamer) {
+                       return this->StreamedStateChanges(context,
                          streamer);
                   }));
     }
-    ~WithSplitStreamingMethod_ReceiveStateChanges() override {
+    ~WithSplitStreamingMethod_StateChanges() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable regular version of this method
-    ::grpc::Status ReceiveStateChanges(::grpc::ServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::grpc::ServerWriter< ::remote::StateChange>* /*writer*/) override {
+    ::grpc::Status StateChanges(::grpc::ServerContext* /*context*/, const ::remote::StateChangeRequest* /*request*/, ::grpc::ServerWriter< ::remote::StateChangeBatch>* /*writer*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
     // replace default version of method with split streamed
-    virtual ::grpc::Status StreamedReceiveStateChanges(::grpc::ServerContext* context, ::grpc::ServerSplitStreamer< ::google::protobuf::Empty,::remote::StateChange>* server_split_streamer) = 0;
+    virtual ::grpc::Status StreamedStateChanges(::grpc::ServerContext* context, ::grpc::ServerSplitStreamer< ::remote::StateChangeRequest,::remote::StateChangeBatch>* server_split_streamer) = 0;
   };
-  typedef WithSplitStreamingMethod_ReceiveStateChanges<Service > SplitStreamedService;
-  typedef WithStreamedUnaryMethod_Version<WithSplitStreamingMethod_ReceiveStateChanges<Service > > StreamedService;
+  typedef WithSplitStreamingMethod_StateChanges<Service > SplitStreamedService;
+  typedef WithStreamedUnaryMethod_Version<WithSplitStreamingMethod_StateChanges<Service > > StreamedService;
 };
 
 }  // namespace remote

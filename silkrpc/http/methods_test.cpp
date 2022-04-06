@@ -18,9 +18,8 @@
 
 #include <catch2/catch.hpp>
 
-namespace silkrpc {
+namespace silkrpc::http::method {
 
 using Catch::Matchers::Message;
 
-} // namespace silkrpc
-
+} // namespace silkrpc::http::method

@@ -29,6 +29,8 @@
 #include <silkworm/common/base.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/transaction.hpp>
+#include <silkworm/core/silkworm/types/account.hpp>
+#include <silkworm/core/silkworm/types/bloom.hpp>
 
 namespace silkrpc {
 
@@ -36,6 +38,25 @@ struct KeyValue {
     silkworm::Bytes key;
     silkworm::Bytes value;
 };
+
+std::string base64_encode(const uint8_t* bytes_to_encode, size_t len, bool url);
+std::string to_dec(intx::uint256 number);
+bool check_tx_fee_less_cap(float cap, intx::uint256 max_fee_per_gas, uint64_t gas_limit);
+bool is_replay_protected(const silkworm::Transaction& txn);
+std::string decoding_result_to_string(silkworm::DecodingResult decode_result);
+
+template <unsigned N>
+silkworm::ByteView full_view(const uint8_t (&bytes)[N]) {
+    return {bytes, N};
+}
+
+inline silkworm::ByteView full_view(const evmc::address& address) { return {address.bytes, silkworm::kAddressLength}; }
+
+inline silkworm::ByteView full_view(const evmc::bytes32& hash) { return {hash.bytes, silkworm::kHashLength}; }
+
+inline silkworm::ByteView full_view(const silkworm::Bloom& bloom) { return {bloom.data(), silkworm::kBloomByteLength}; }
+
+inline silkworm::ByteView full_view(const ethash::hash256& hash) { return {hash.bytes, silkworm::kHashLength}; }
 
 } // namespace silkrpc
 
@@ -48,6 +69,20 @@ inline ByteView byte_view_of_string(const std::string& s) {
 inline Bytes bytes_of_string(const std::string& s) {
     return Bytes(s.begin(), s.end());
 }
+
+inline ByteView full_view(const ethash::hash256& hash) { return {hash.bytes, kHashLength}; }
+
+inline evmc::bytes32 bytes32_from_hex(const std::string& s) {
+    const auto b32_bytes = silkworm::from_hex(s);
+    return silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
+}
+
+inline std::ostream& operator<<(std::ostream& out, const Bytes& bytes) {
+    out << silkworm::to_hex(bytes);
+    return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const Account& account);
 
 } // namespace silkworm
 
@@ -69,15 +104,27 @@ inline std::ostream& operator<<(std::ostream& out, const silkworm::ByteView& byt
     return out;
 }
 
-inline std::ostream& operator<<(std::ostream& out, const evmc::address& addr) {
+namespace evmc {
+
+inline std::ostream& operator<<(std::ostream& out, const address& addr) {
     out << silkworm::to_hex(addr);
     return out;
 }
 
-inline std::ostream& operator<<(std::ostream& out, const evmc::bytes32& b32) {
+inline std::ostream& operator<<(std::ostream& out, const bytes32& b32) {
     out << silkworm::to_hex(b32);
     return out;
 }
+
+} // namespace evmc
+
+namespace intx {
+template <unsigned N>
+inline std::ostream& operator<<(std::ostream& out, const uint<N>& value) {
+    out << "0x" << intx::hex(value);
+    return out;
+}
+} // namespace intx
 
 inline std::ostream& operator<<(std::ostream& out, const asio::const_buffer& buffer) {
     out << std::string{static_cast<const char*>(buffer.data()), buffer.size()};

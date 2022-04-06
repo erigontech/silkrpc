@@ -16,7 +16,7 @@
 
 #include "stages.hpp"
 
-#include <exception>
+#include <stdexcept>
 
 #include <boost/endian/conversion.hpp>
 
@@ -26,25 +26,14 @@
 
 namespace silkrpc::stages {
 
-class Exception : public std::exception {
- public:
-    explicit Exception(const char* message) : message_{message} {};
-    explicit Exception(const std::string& message) : message_{message} {};
-    virtual ~Exception() noexcept {};
-    const char* what() const noexcept override { return message_.c_str(); }
-
- protected:
-    std::string message_;
-};
-
-asio::awaitable<uint64_t> get_sync_stage_progress(const core::rawdb::DatabaseReader& db_reader, const Bytes& stage_key) {
-    const auto kv_pair = co_await db_reader.get(silkrpc::db::table::kSyncStageProgress, stage_key);
+asio::awaitable<uint64_t> get_sync_stage_progress(const core::rawdb::DatabaseReader& db_reader, const silkworm::Bytes& stage_key) {
+    const auto kv_pair = co_await db_reader.get(db::table::kSyncStageProgress, stage_key);
     const auto value = kv_pair.value;
     if (value.length() == 0) {
         co_return 0;
     }
     if (value.length() < 8) {
-        throw Exception("data too short, expected 8 got " + std::to_string(value.length()));
+        throw std::runtime_error("data too short, expected 8 got " + std::to_string(value.length()));
     }
     uint64_t block_height = boost::endian::load_big_u64(value.substr(0, 8).data());
     co_return block_height;

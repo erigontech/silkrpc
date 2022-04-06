@@ -40,23 +40,19 @@ std::ostream& operator<<(std::ostream& out, const Block& b);
 
 class BlockNumberOrHash {
 public:
-    BlockNumberOrHash(BlockNumberOrHash &&bnoh) = default;
-    BlockNumberOrHash(BlockNumberOrHash const& bnoh)
-        : value_{bnoh.value_} {};
-    BlockNumberOrHash(std::string const& bnoh) { // NOLINT(runtime/explicit)
-        build(bnoh);
-    }
-    BlockNumberOrHash(std::uint64_t const& number) // NOLINT(runtime/explicit)
-        : value_{number} {};
+    explicit BlockNumberOrHash(std::string const& bnoh) { build(bnoh); }
+    explicit BlockNumberOrHash(std::uint64_t const& number) noexcept : value_{number} {}
 
     virtual ~BlockNumberOrHash() noexcept {}
+
+    BlockNumberOrHash(BlockNumberOrHash &&bnoh) = default;
+    BlockNumberOrHash(BlockNumberOrHash const& bnoh) noexcept : value_{bnoh.value_} {}
 
     BlockNumberOrHash& operator=(BlockNumberOrHash const& bnoh) = delete;
     BlockNumberOrHash& operator=(std::string const& bnoh)  {
         build(bnoh);
         return *this;
     }
-
     BlockNumberOrHash& operator=(std::uint64_t const number) {
         value_ = number;
         return *this;
