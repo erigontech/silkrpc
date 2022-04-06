@@ -1595,7 +1595,7 @@
             "jsonrpc":"2.0",
             "method":"debug_traceBlockByNumber",
             "params":[
-                "1024165",
+                1024165,
                 {
                     "disableStorage": false,
                     "disableMemory": false,
