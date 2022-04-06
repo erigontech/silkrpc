@@ -82,10 +82,10 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
         reply = make_json_error(request.at("id"), 100, error_msg);
         co_return;
     }
+    const auto cl_configuration = params[0].get<TransitionConfiguration>();
     #ifndef BUILD_COVERAGE
     try {
         #endif
-        const auto cl_configuration = params[0].get<TransitionConfiguration>();
         auto tx = co_await database_->begin();
         const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(ethdb::TransactionDatabase{*tx})};
         SILKRPC_DEBUG << "chain config: " << chain_config << "\n";
