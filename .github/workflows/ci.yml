@@ -15,16 +15,23 @@
 name: Continuous integration
 on: [ push ]
 jobs:
-  tests:
+  build-clang-and-test:
+    name: Build Clang and Test
     strategy:
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
         with:
           submodules: recursive
+      - name: Setup Clang and LLVM
+        uses: actions/setup-clang@v1
+        with:
+          version: 11
+          platform: x64
       # - uses: actions/setup-go@v2
       #   with:
       #     go-version: 1.16.x
@@ -49,13 +56,29 @@ jobs:
       #     go build -trimpath -o bin/rpctest.exe ./cmd/rpctest
       #     go build -trimpath -o bin/integration.exe ./cmd/integration
       #     go build -trimpath -o bin/headers.ext ./cmd/headers
-      - name: Install Linters
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get install -y python3-pip
-          sudo pip3 install -r requirements.txt
-      - name: Lint
-        if: matrix.os == 'ubuntu-latest'
-        run: ./run_linter.sh
       # - name: Unit Test
       #   run: cmd/unit_test
+  lint:
+    name: Lint
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install linter (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo python -m ensurepip --upgrade
+          sudo python -m pip install -r requirements.txt
+      - name: Run linter (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: ./run_linter.sh
+
+      - name: Install linter (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          py -m ensurepip --upgrade
+          py -m pip install -r requirements.txt
+      - name: Run linter (Windows)
+        if: matrix.os == 'windows-latest'
+        run: ./run_linter.bat
