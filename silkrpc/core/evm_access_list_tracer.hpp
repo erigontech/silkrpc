@@ -42,13 +42,13 @@ public:
     AccessListTracer& operator=(const AccessListTracer&) = delete;
 
     AccessList get_access_list() { return access_list_; }
-    bool compare(const AccessList& acl1, const AccessList& acl2);
 
     void on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept override;
     void on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {}
     void dump(const std::string& str, const AccessList& acl);
     void set_access_list(const AccessList& input_access_list);
+    static bool compare(const AccessList& acl1, const AccessList& acl2);
 
 private:
     inline bool exclude(const evmc::address& address);
@@ -67,6 +67,10 @@ private:
 
     const char* const* opcode_names_ = nullptr;
 };
+
+inline bool operator==(const AccessList& acl1, const AccessList& acl2) {
+    return AccessListTracer::compare(acl1, acl2);
+}
 
 
 } // namespace silkrpc
