@@ -288,7 +288,6 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         "83036383365386333313562666365393962326136656634376330353763303464"
         "6537383538227d")};
     silkworm::Bytes key(8, '\0');
-    silkworm::ByteView block_key = key;
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
@@ -306,7 +305,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         }
     ));
 
-    EXPECT_CALL(*mock_transaction, cursor(testing::_)).WillRepeatedly(InvokeWithoutArgs(
+    EXPECT_CALL(*mock_transaction, cursor(db::table::kCanonicalHashes)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
             co_return std::shared_ptr<ethdb::Cursor>{mock_cursor_1};
         }
@@ -342,7 +341,6 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
             "terminalBlockNumber":"0x0"
         }]
     })"_json;
-
     std::unique_ptr<ethbackend::BackEnd> backend_ptr;
     EngineRpcApiTest rpc(database_ptr, backend_ptr);
     auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
@@ -352,6 +350,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         );
     }, asio::use_future)};
     result.get();
+
     CHECK((reply == TransitionConfiguration{
         .terminal_total_difficulty = intx::from_string<intx::uint256>("1000000"),
         .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
