@@ -29,19 +29,18 @@
 #include <silkrpc/types/call.hpp>
 #include <silkrpc/types/transaction.hpp>
 
-namespace silkrpc::access_list {
+namespace silkrpc {
 
 class AccessListTracer : public silkworm::EvmTracer {
 public:
     explicit AccessListTracer(const std::optional<AccessList>& input_access_list, const evmc::address& from, const evmc::address& to): from_{from}, to_{to} {
        if (input_access_list) {
-          add_local_access_list(*input_access_list);
+          set_access_list(*input_access_list);
        }
     }
     AccessListTracer(const AccessListTracer&) = delete;
     AccessListTracer& operator=(const AccessListTracer&) = delete;
 
-    void set_access_list(AccessList ale) { access_list_ = ale; }
     AccessList get_access_list() { return access_list_; }
     bool compare(const AccessList& acl1, const AccessList& acl2);
 
@@ -49,9 +48,7 @@ public:
     void on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {}
     void dump(const std::string& str, const AccessList& acl);
-
-    //void dump(const std::string str);
-    //bool compare(std::shared_ptr<silkrpc::access_list::AccessListTracer> other);
+    void set_access_list(const AccessList& input_access_list);
 
 private:
     inline bool exclude(const evmc::address& address);
@@ -62,7 +59,6 @@ private:
 
     void add_storage(const evmc::address& address, const evmc::bytes32& storage);
     void add_address(const evmc::address& address);
-    void add_local_access_list(const AccessList& input_access_list);
 
 
     AccessList access_list_;
@@ -73,6 +69,6 @@ private:
 };
 
 
-} // namespace silkrpc::access_list
+} // namespace silkrpc
 
 #endif  // SILKRPC_CORE_EVM_ACCESS_LIST_TRACER_HPP_

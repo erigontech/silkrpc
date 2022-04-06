@@ -28,7 +28,7 @@
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/core/evm_executor.hpp>
 
-namespace silkrpc::access_list {
+namespace silkrpc {
 
 const char* SLOAD = evmone::instr::traits[evmc_opcode::OP_SLOAD].name;
 const char* SSTORE = evmone::instr::traits[evmc_opcode::OP_SSTORE].name;
@@ -61,7 +61,6 @@ void AccessListTracer::on_execution_start(evmc_revision rev, const evmc_message&
 void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
     assert(execution_state.msg);
     evmc::address recipient(execution_state.msg->recipient);
-    evmc::address sender(execution_state.msg->sender);
 
     const auto opcode = execution_state.code[pc];
     const auto opcode_name = get_opcode_name(opcode_names_, opcode);
@@ -71,7 +70,6 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::Execution
         << " opcode: 0x" << std::hex << evmc::hex(opcode)
         << " opcode_name: " << opcode_name
         << " recipient: " << recipient
-        << " sender: " << sender
         << " execution_state: {"
         << "   gas_left: " << std::dec << execution_state.gas_left
         << "   status: " << execution_state.status
@@ -145,7 +143,7 @@ void AccessListTracer::add_address(const evmc::address& address) {
     access_list_.push_back(item);
 }
 
-void AccessListTracer::add_local_access_list(const AccessList& input_access_list) {
+void AccessListTracer::set_access_list(const AccessList& input_access_list) {
     for (int i = 0; i < input_access_list.size(); i++) {
        if (!exclude(input_access_list[i].account)) {
           add_address(input_access_list[i].account);
@@ -200,49 +198,4 @@ bool AccessListTracer::compare(const AccessList& acl1, const AccessList& acl2) {
     return true;
 }
 
-#ifdef notdef
-
-void AccessListTracer::dump(std::string str) {
-   std::cout << str << "\n";
-   for (int i = 0; i < access_list_.size(); i++) {
-          std::cout << "AccessList Address: " << access_list_[i].account << "\n";
-   }
-}
-
-bool AccessListTracer::compare(std::shared_ptr<silkrpc::access_list::AccessListTracer> other) {
-    std::cout << "entering compare\n";
-    if (access_list_.size() != other->access_list_.size()) {
-       return false;
-    }
-
-    for (int i = 0; i < access_list_.size(); i++) {
-       bool match_address = false;
-       for (int j = 0; j < other->access_list_.size(); j++) {
-          if (other->access_list_[j].account == access_list_[i].account) {
-             match_address = true;
-             if (other->access_list_[j].storage_keys.size() != access_list_[i].storage_keys.size()) {
-                return false;
-             }
-             bool match_storage = false;
-             for (int z = 0; z < access_list_[i].storage_keys.size(); z++) {
-                for (int t = 0; t < other->access_list_[j].storage_keys.size(); t++) {
-                   if (other->access_list_[j].storage_keys[t] == access_list_[i].storage_keys[z]) {
-                      match_storage = true;
-                      break;
-                   }
-                }
-                if (!match_storage) {
-                   return false;
-                }
-             }
-             break;
-          }
-       }
-       if (!match_address) {
-          return false;
-       }
-    }
-    return true;
-}
-#endif
-} // namespace silkrpc::access_list
+} // namespace silkrpc
