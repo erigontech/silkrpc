@@ -117,13 +117,13 @@ void from_json(const nlohmann::json& json, std::vector<silkworm::AccessListEntry
     al.reserve(json.size());
     for (auto ale : json) {
        auto address = ale.at("address").get<evmc::address>();
-       //auto keys = ale.at("storageKeys").get<std::vector<evmc::bytes32>>();
-       //silkworm::AccessListEntry item;
-       //item.account = address;
-       //if (keys.size()) {
-       //   item.storage_keys = keys;
-       //}
-       //al.push_back(item);
+       auto keys = ale.at("storageKeys").get<std::vector<evmc::bytes32>>();
+       silkworm::AccessListEntry item;
+       item.account = address;
+       if (keys.size()) {
+          item.storage_keys = keys;
+       }
+       al.push_back(item);
     }
 }
 
