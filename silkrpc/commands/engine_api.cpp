@@ -73,10 +73,9 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
     #endif
 }
 
-
+// Format for params is a JSON list of TransitionConfiguration, i.e. [TransitionConfiguration]
 asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configuration_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
-    // params = [TransitionConfiguration]
     if(params.size() != 1) {
         auto error_msg = "invalid engine_exchangeTransitionConfigurationV1 params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
