@@ -23,6 +23,7 @@
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 #include <silkworm/common/util.hpp>
+#include <silkrpc/types/transaction.hpp>
 
 namespace silkrpc {
 
@@ -129,6 +130,37 @@ TEST_CASE("create call with no gas", "[silkrpc][types][call]") {
     CHECK(txn.gas_limit == 30000000);
     CHECK(txn.value == 0);
     CHECK(txn.data == silkworm::Bytes{});
+}
+
+AccessList access_list{
+        {0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae_address,
+         {
+             0x0000000000000000000000000000000000000000000000000000000000000003_bytes32,
+             0x0000000000000000000000000000000000000000000000000000000000000007_bytes32,
+         }},
+        {0xbb9bc244d798123fde783fcc1c72d3bb8c189413_address, {}},
+};
+
+TEST_CASE("create call with AccessList", "[silkrpc][types][call]") {
+    Call call{
+       std::nullopt,
+       std::nullopt,
+       235,                 // gas
+       21000,               // gas_price
+       std::nullopt,        // max_priority_fee_per_gas
+       std::nullopt,        // max_fee_per_gas
+       31337,               // value
+       {},                  // data
+       1,                   // nonce
+       access_list
+    };
+    silkworm::Transaction txn = call.to_transaction();
+    CHECK(txn.gas_limit == 235);
+    CHECK(txn.max_fee_per_gas == 21000);
+    CHECK(txn.max_priority_fee_per_gas == 21000);
+    CHECK(txn.nonce == 1);
+    CHECK(txn.access_list.size() != 0);
+    CHECK(txn.access_list == access_list);
 }
 
 } // namespace silkrpc
