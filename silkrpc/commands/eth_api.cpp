@@ -1081,7 +1081,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
         } else {
            uint64_t nonce = 0;
            if (!call.nonce) {
-              // 1. Retrieve nonce by txpool
+              // Retrieve nonce by txpool
               auto nonce_option = co_await tx_pool_->nonce(*call.from);
               if (!nonce_option) {
                  std::optional<silkworm::Account> account{co_await state_reader.read_account(*call.from,  block_with_hash.block.header.number + 1)};
