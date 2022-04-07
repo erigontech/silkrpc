@@ -171,7 +171,7 @@ public:
 
     asio::awaitable<std::optional<uint64_t>> nonce(const evmc::address& address) {
         const auto start_time = clock_time::now();
-        SILKRPC_DEBUG << "TransactionPool::nonce\n";
+        SILKRPC_DEBUG << "TransactionPool::nonce address=" << address << "\n";
         ::txpool::NonceRequest request{};
         request.set_allocated_address(H160_from_address(address));
         NonceAwaitable nonce_awaitable{executor_, stub_, queue_};
