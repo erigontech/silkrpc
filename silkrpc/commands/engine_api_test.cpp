@@ -293,38 +293,35 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
 
     MockDatabase mock_database;
-    MockTransaction* mock_transaction = new MockTransaction();
-    MockCursor* mock_cursor_1 = new MockCursor();
-    MockCursor* mock_cursor_2 = new MockCursor();
+    MockTransaction mock_transaction;
+    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
     std::unique_ptr<ethdb::Database> database_ptr{&mock_database};
-
 
     EXPECT_CALL(mock_database, begin()).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
-            co_return std::unique_ptr<ethdb::Transaction>{mock_transaction};
+            co_return std::unique_ptr<MockTransaction>{&mock_transaction};
         }
     ));
 
-    EXPECT_CALL(*mock_transaction, cursor(db::table::kCanonicalHashes)).WillOnce(InvokeWithoutArgs(
+    EXPECT_CALL(mock_transaction, cursor(db::table::kCanonicalHashes)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
-            co_return std::shared_ptr<ethdb::Cursor>{mock_cursor_1};
+            co_return mock_cursor;
         }
     ));
 
-    EXPECT_CALL(*mock_cursor_1, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
+    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, key};
         }
     ));
 
-    EXPECT_CALL(*mock_transaction, cursor(db::table::kConfig)).WillOnce(InvokeWithoutArgs(
+    EXPECT_CALL(mock_transaction, cursor(db::table::kConfig)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
-            co_return std::shared_ptr<ethdb::Cursor>{mock_cursor_2};
+            co_return std::shared_ptr<MockCursor>{mock_cursor};
         }
     ));
 
-
-    EXPECT_CALL(*mock_cursor_2, seek(testing::_)).WillOnce(InvokeWithoutArgs(
+    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
         }
@@ -342,7 +339,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         }]
     })"_json;
     std::unique_ptr<ethbackend::BackEnd> backend_ptr;
-    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+    EngineRpcApiTest rpc(database_ptr, backend_ptr); 
     auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
@@ -356,6 +353,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
         .terminal_block_number = 0
     }));
+
     context_pool.stop();
     context_pool_thread.join();
 }
