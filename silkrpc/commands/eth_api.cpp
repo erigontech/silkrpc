@@ -1109,6 +1109,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
            EVMExecutor executor{context_, tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number};
            txn = call.to_transaction();
            previous_access_list = tracer->get_access_list();
+           tracer->reset_access_list();
            execution_result = co_await executor.call(block_with_hash.block, txn, tracer);
            if (execution_result.pre_check_error) {
               error = true;
