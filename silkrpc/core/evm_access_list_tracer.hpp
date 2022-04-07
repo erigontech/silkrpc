@@ -48,6 +48,7 @@ public:
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {}
     void dump(const std::string& str, const AccessList& acl);
     void set_access_list(const AccessList& input_access_list);
+    void reset_access_list() { access_list_.clear(); }
     static bool compare(const AccessList& acl1, const AccessList& acl2);
 
 private:
@@ -67,6 +68,10 @@ private:
 
     const char* const* opcode_names_ = nullptr;
 };
+
+inline bool operator!=(const AccessList& acl1, const AccessList& acl2) {
+    return AccessListTracer::compare(acl1, acl2) == false;
+}
 
 inline bool operator==(const AccessList& acl1, const AccessList& acl2) {
     return AccessListTracer::compare(acl1, acl2);
