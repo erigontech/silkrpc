@@ -1213,7 +1213,7 @@ TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
         "accessList":[
             {
                "address":"0x52c24586c31cff0485a6208bb63859290fba5bce",
-               "storageKeys":[]
+               "storageKeys":["0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c"]
             },
             {
                "address": "0x62c24586c31cff0485a6208bb63859290fba5bce",
