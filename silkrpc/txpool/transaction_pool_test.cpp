@@ -306,7 +306,6 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
                 return ::grpc::Status::OK;
             }
         };
-        //EmptyTxpoolService service;
         TestSuccessTxpoolService service;
         asio::io_context io_context;
         const evmc::address recipient = {0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
@@ -323,7 +322,6 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
                 return ::grpc::Status::OK;
             }
         };
-        //EmptyTxpoolService service;
         TestSuccessTxpoolService service;
         asio::io_context io_context;
         const evmc::address recipient = {0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
