@@ -1198,7 +1198,7 @@ TEST_CASE("deserialize minimal call", "[silkrpc::json][from_json]") {
     CHECK(c1.value == std::nullopt);
     CHECK(c1.data == std::nullopt);
     CHECK(c1.nonce == std::nullopt);
-    CHECK(c1.access_list == std::nullopt);
+    CHECK(c1.access_list.size() == 0);
 }
 
 TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
@@ -1229,7 +1229,7 @@ TEST_CASE("deserialize full call", "[silkrpc::json][from_json]") {
     CHECK(c1.value == intx::uint256{4499999744});
     CHECK(c1.data == silkworm::from_hex("0xdaa6d5560000000000000000000000000000000000000000000000000000000000000000"));
     CHECK(c1.nonce == intx::uint256{1});
-    CHECK(c1.access_list->size() == 2);
+    CHECK(c1.access_list.size() == 2);
 
     auto j2 = R"({
         "from":"0x52c24586c31cff0485a6208bb63859290fba5bce",
