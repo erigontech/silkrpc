@@ -66,25 +66,26 @@ TEST_CASE("create call with gasprice", "[silkrpc][types][call]") {
 }
 
 AccessList access_list{
-        {0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae_address,
-         {
-             0x0000000000000000000000000000000000000000000000000000000000000003_bytes32,
-             0x0000000000000000000000000000000000000000000000000000000000000007_bytes32,
-         }},
-        {0xbb9bc244d798123fde783fcc1c72d3bb8c189413_address, {}},
+    {0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae_address,
+        {
+            0x0000000000000000000000000000000000000000000000000000000000000003_bytes32,
+            0x0000000000000000000000000000000000000000000000000000000000000007_bytes32,
+        }
+    },
+    {0xbb9bc244d798123fde783fcc1c72d3bb8c189413_address, {}},
 };
 
 TEST_CASE("create call without accessAccesslist and set it", "[silkrpc][types][call][set_access_list]") {
     Call call{
-       std::nullopt,
-       std::nullopt,
-       235,                 // gas
-       21000,               // gas_price
-       std::nullopt,
-       std::nullopt,
-       31337,               // value
-       {},                  // data
-       1,               // value
+        std::nullopt,
+        std::nullopt,
+        235,                 // gas
+        21000,               // gas_price
+        std::nullopt,
+        std::nullopt,
+        31337,               // value
+        {},                  // data
+        1,               // value
     };
     CHECK(call.access_list.size() == 0);
 
@@ -94,15 +95,15 @@ TEST_CASE("create call without accessAccesslist and set it", "[silkrpc][types][c
 
 TEST_CASE("create call with no gasprice & not max_fee_per_gas and max_priority_fee_per_gas ", "[silkrpc][types][call]") {
     Call call{
-       std::nullopt,
-       std::nullopt,
-       235,                 // gas
-       0,                   // gas_price
-       std::nullopt,
-       std::nullopt,
-       std::nullopt,
-       std::nullopt,
-       23,
+        std::nullopt,
+        std::nullopt,
+        235,                 // gas
+        0,                   // gas_price
+        std::nullopt,
+        std::nullopt,
+        std::nullopt,
+        std::nullopt,
+        23,
     };
     silkworm::Transaction txn = call.to_transaction();
     CHECK(txn.gas_limit == 235);
@@ -113,14 +114,14 @@ TEST_CASE("create call with no gasprice & not max_fee_per_gas and max_priority_f
 
 TEST_CASE("create call with no gasprice & valid max_fee_per_gas and max_priority_fee_per_gas ", "[silkrpc][types][call]") {
     Call call{
-       0x99f9b87991262f6ba471f09758cde1c0fc1de734_address,  // from
-       0x5df9b87991262f6ba471f09758cde1c0fc1de734_address,  // to
-       235,                 // gas
-       0,                   // gas_price
-       10000,               // max_fee_per_gas
-       10000,               // max_priority_fee_per_gas
-       31337,               // value
-       *silkworm::from_hex("001122aabbcc")
+        0x99f9b87991262f6ba471f09758cde1c0fc1de734_address,  // from
+        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address,  // to
+        235,                 // gas
+        0,                   // gas_price
+        10000,               // max_fee_per_gas
+        10000,               // max_priority_fee_per_gas
+        31337,               // value
+        *silkworm::from_hex("001122aabbcc")
     };
     silkworm::Transaction txn = call.to_transaction();
     CHECK(txn.from == 0x99f9b87991262f6ba471f09758cde1c0fc1de734_address);
@@ -142,16 +143,16 @@ TEST_CASE("create call with no gas", "[silkrpc][types][call]") {
 
 TEST_CASE("create call with AccessList", "[silkrpc][types][call]") {
     Call call{
-       std::nullopt,
-       std::nullopt,
-       235,                 // gas
-       21000,               // gas_price
-       std::nullopt,        // max_priority_fee_per_gas
-       std::nullopt,        // max_fee_per_gas
-       31337,               // value
-       {},                  // data
-       1,                   // nonce
-       access_list
+        std::nullopt,
+        std::nullopt,
+        235,                 // gas
+        21000,               // gas_price
+        std::nullopt,        // max_priority_fee_per_gas
+        std::nullopt,        // max_fee_per_gas
+        31337,               // value
+        {},                  // data
+        1,                   // nonce
+        access_list
     };
     silkworm::Transaction txn = call.to_transaction();
     CHECK(txn.gas_limit == 235);
@@ -163,4 +164,3 @@ TEST_CASE("create call with AccessList", "[silkrpc][types][call]") {
 }
 
 } // namespace silkrpc
-
