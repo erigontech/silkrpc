@@ -79,6 +79,7 @@ protected:
     asio::awaitable<void> handle_eth_get_transaction_count(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_get_storage_at(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_call(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_eth_create_access_list(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_new_filter(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_new_block_filter(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_new_pending_transaction_filter(const nlohmann::json& request, nlohmann::json& reply);

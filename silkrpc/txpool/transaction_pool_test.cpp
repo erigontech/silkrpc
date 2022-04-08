@@ -70,7 +70,7 @@ using testing::MockFunction;
 using testing::Return;
 using testing::_;
 
-using evmc::literals::operator""_bytes32;
+using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
 TEST_CASE("create AddClient", "[silkrpc][txpool][transaction_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -190,6 +190,7 @@ asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... arg
 
 auto test_add_transaction = test_comethod<&txpool::TransactionPool::add_transaction, txpool::TransactionPool::OperationResult, silkworm::ByteView>;
 auto test_get_transaction = test_comethod<&txpool::TransactionPool::get_transaction, std::optional<silkworm::Bytes>, evmc::bytes32>;
+auto test_nonce = test_comethod<&txpool::TransactionPool::nonce, std::optional<uint64_t>, evmc::address>;
 
 TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -294,6 +295,39 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         auto tx_rlp{asio::co_spawn(io_context, test_get_transaction(&service, tx_hash), asio::use_future)};
         io_context.run();
         CHECK(tx_rlp.get() == std::nullopt);
+    }
+
+    SECTION("call nonce and check result is 21") {
+        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
+        public:
+            ::grpc::Status Nonce(::grpc::ServerContext* context, const ::txpool::NonceRequest* request, ::txpool::NonceReply* response) override {
+                response->set_found(1);
+                response->set_nonce(21);
+                return ::grpc::Status::OK;
+            }
+        };
+        TestSuccessTxpoolService service;
+        asio::io_context io_context;
+        const auto recipient{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
+        auto result{asio::co_spawn(io_context, test_nonce(&service, recipient), asio::use_future)};
+        io_context.run();
+        CHECK(result.get() == 21);
+    }
+
+    SECTION("call nonce and check result is null") {
+        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
+        public:
+            ::grpc::Status Nonce(::grpc::ServerContext* context, const ::txpool::NonceRequest* request, ::txpool::NonceReply* response) override {
+                response->set_found(0);
+                return ::grpc::Status::OK;
+            }
+        };
+        TestSuccessTxpoolService service;
+        asio::io_context io_context;
+        const auto recipient{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
+        auto result{asio::co_spawn(io_context, test_nonce(&service, recipient), asio::use_future)};
+        io_context.run();
+        CHECK(result.get() == std::nullopt);
     }
 }
 

@@ -19,6 +19,8 @@
 
 #include <iostream>
 #include <optional>
+#include <vector>
+#include <string>
 
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
@@ -45,6 +47,14 @@ struct Rlp  {
 struct TransactionWithBlock {
     silkworm::BlockWithHash block_with_hash;
     Transaction transaction;
+};
+
+using AccessList = std::vector<silkworm::AccessListEntry>;
+
+struct AccessListResult {
+    AccessList access_list;
+    std::optional<std::string> error;
+    uint64_t gas_used;
 };
 
 std::ostream& operator<<(std::ostream& out, const Transaction& t);

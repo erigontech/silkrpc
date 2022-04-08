@@ -47,7 +47,7 @@ struct ExecutionResult {
 template<typename WorldState = silkworm::IntraBlockState, typename VM = silkworm::EVM>
 class EVMExecutor {
 public:
-    static std::string get_error_message(int64_t error_code, const silkworm::Bytes& error_data);
+    static std::string get_error_message(int64_t error_code, const silkworm::Bytes& error_data, const bool full_error = true);
 
     explicit EVMExecutor(const Context& context, const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config, asio::thread_pool& workers, uint64_t block_number)
     : context_(context), db_reader_(db_reader), config_(config), workers_{workers}, remote_state_{*context.io_context, db_reader, block_number}, state_{remote_state_} {}

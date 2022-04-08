@@ -73,7 +73,7 @@ std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data
 }
 
 template<typename WorldState, typename VM>
-std::string EVMExecutor<WorldState, VM>::get_error_message(int64_t error_code, const silkworm::Bytes& error_data) {
+std::string EVMExecutor<WorldState, VM>::get_error_message(int64_t error_code, const silkworm::Bytes& error_data, bool full_error) {
     SILKRPC_DEBUG << "EVMExecutor::get_error_message error_data: " << silkworm::to_hex(error_data) << "\n";
 
     std::string error_message;
@@ -142,12 +142,13 @@ std::string EVMExecutor<WorldState, VM>::get_error_message(int64_t error_code, c
             error_message = "unknown error code";
     }
 
-    const auto error_reason{decode_error_reason(error_data)};
-    if (error_reason) {
-        error_message += ": " + *error_reason;
+    if (full_error) {
+        const auto error_reason{decode_error_reason(error_data)};
+        if (error_reason) {
+           error_message += ": " + *error_reason;
+        }
     }
     SILKRPC_DEBUG << "EVMExecutor::get_error_message error_message: " << error_message << "\n";
-
     return error_message;
 }
 
@@ -188,9 +189,9 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
     std::ostringstream out;
 
     const auto exec_result = co_await asio::async_compose<decltype(asio::use_awaitable), void(ExecutionResult)>(
-        [this, &block, &txn, tracer, &out](auto&& self) {
+        [this, &block, &txn, &tracer, &out](auto&& self) {
             SILKRPC_TRACE << "EVMExecutor::call post block: " << block.header.number << " txn: " << &txn << "\n";
-            asio::post(workers_, [this, &block, &txn, tracer, &out, self = std::move(self)]() mutable {
+            asio::post(workers_, [this, &block, &txn, &tracer, &out, self = std::move(self)]() mutable {
                 VM evm{block, state_, config_};
                 if (tracer) {
                     evm.add_tracer(*tracer);

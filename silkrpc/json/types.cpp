@@ -113,6 +113,11 @@ void from_json(const nlohmann::json& json, uint256& ui256) {
 
 namespace silkworm {
 
+void from_json(const nlohmann::json& json, AccessListEntry& entry) {
+    entry.account =  json.at("address").get<evmc::address>();
+    entry.storage_keys = json.at("storageKeys").get<std::vector<evmc::bytes32>>();
+}
+
 void to_json(nlohmann::json& json, const BlockHeader& header) {
     const auto block_number = silkrpc::to_quantity(header.number);
     json["number"] = block_number;
@@ -136,8 +141,8 @@ void to_json(nlohmann::json& json, const BlockHeader& header) {
 }
 
 void to_json(nlohmann::json& json, const AccessListEntry& access_list) {
-    json["account"] = access_list.account;
-    json["storage_keys"] = access_list.storage_keys;
+    json["address"] = access_list.account;
+    json["storageKeys"] = access_list.storage_keys;
 }
 
 void to_json(nlohmann::json& json, const Transaction& transaction) {
@@ -184,6 +189,13 @@ void to_json(nlohmann::json& json, const Rlp& rlp) {
     json = "0x" + silkworm::to_hex(rlp.buffer);
 }
 
+void to_json(nlohmann::json& json, const AccessListResult& access_list_result) {
+    json["accessList"] = access_list_result.access_list;
+    if (access_list_result.error) {
+        json["error"] = *(access_list_result.error);
+    }
+    json["gasUsed"] = silkrpc::to_quantity(access_list_result.gas_used);
+}
 
 void to_json(nlohmann::json& json, const Block& b) {
     const auto block_number = silkrpc::to_quantity(b.block.header.number);
@@ -256,6 +268,14 @@ void from_json(const nlohmann::json& json, Call& call) {
             call.to = json.at("to").get<evmc::address>();
         }
     }
+    if (json.count("nonce") != 0) {
+        const auto json_nonce = json.at("nonce");
+        if (json_nonce.is_string()) {
+            call.nonce = std::stol(json_nonce.get<std::string>(), 0, 16);
+        } else {
+            call.nonce = json_nonce.get<uint64_t>();
+        }
+    }
     if (json.count("gas") != 0) {
         auto json_gas = json.at("gas");
         if (json_gas.is_string()) {
@@ -273,6 +293,9 @@ void from_json(const nlohmann::json& json, Call& call) {
     if (json.count("data") != 0) {
         const auto json_data = json.at("data").get<std::string>();
         call.data = silkworm::from_hex(json_data);
+    }
+    if (json.count("accessList") != 0) {
+       call.access_list = json.at("accessList").get<AccessList>();
     }
 }
 

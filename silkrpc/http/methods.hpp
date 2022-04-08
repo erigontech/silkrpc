@@ -58,6 +58,7 @@ constexpr const char* k_eth_getCode{"eth_getCode"};
 constexpr const char* k_eth_getTransactionCount{"eth_getTransactionCount"};
 constexpr const char* k_eth_getStorageAt{"eth_getStorageAt"};
 constexpr const char* k_eth_call{"eth_call"};
+constexpr const char* k_eth_createAccessList{"eth_createAccessList"};
 constexpr const char* k_eth_newFilter{"eth_newFilter"};
 constexpr const char* k_eth_newBlockFilter{"eth_newBlockFilter"};
 constexpr const char* k_eth_newPendingTransactionFilter{"eth_newPendingTransactionFilter"};

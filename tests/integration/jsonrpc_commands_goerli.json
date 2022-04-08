@@ -662,6 +662,29 @@
     {
         "request": {
             "jsonrpc":"2.0",
+            "method":"eth_createAccessList",
+            "params":[
+                {
+                  "data": "0x16934fc40000000000000000000000006e508ed8c6381e19668a17d9e0c2d4d2dd3c39f5",
+                  "from": "0x6e508ed8c6381e19668a17d9e0c2d4d2dd3c39f5",
+                  "to": "0x49a984490a7762b0e5d775f0ffa608899ebe2ee8"
+                },
+                "0x4D3FCC"
+            ],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "result": {
+               "accessList": [], 
+               "gasUsed":    "0x53b8"
+            }
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
             "method":"eth_call",
             "params":[
                 {
@@ -724,6 +747,32 @@
                 "code":3,
                 "message":"execution reverted: Ownable: caller is not the owner",
                 "data":"0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000204f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e6572"
+            }
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_createAccessList",
+            "params":[
+                {
+                  "data": "0xf2fde38b0000000000000000000000007b34bb3a00197e463acfd8556f7a9e1fc1b96b1f",
+                  "from": "0x3a9a5def01d7b14c14ef51996bf66f3047f0738f",
+                  "to": "0x900c8c0a1b609533762390254b58c5760e4d7405",
+                  "gas": "0x7855",
+                  "gasPrice": "0x3B9ACA00"
+                },
+                "0x4366B7"
+            ],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "result":{
+                "accessList":[{"address":"0x900c8c0a1b609533762390254b58c5760e4d7405","storageKeys":["0x0000000000000000000000000000000000000000000000000000000000000000"]}],
+                "error":"execution reverted",
+                "gasUsed":"0x6968"
             }
         }
     },
@@ -1546,7 +1595,7 @@
             "jsonrpc":"2.0",
             "method":"debug_traceBlockByNumber",
             "params":[
-                "1024165",
+                1024165,
                 {
                     "disableStorage": false,
                     "disableMemory": false,

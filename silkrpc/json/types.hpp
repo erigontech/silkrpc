@@ -61,10 +61,13 @@ void to_json(nlohmann::json& json, const BlockHeader& ommer);
 
 void to_json(nlohmann::json& json, const Transaction& transaction);
 
+void from_json(const nlohmann::json& json, AccessListEntry& entry);
 
 } // namespace silkworm
 
 namespace silkrpc {
+
+void to_json(nlohmann::json& json, const AccessListResult& access_list_result);
 
 void to_json(nlohmann::json& json, const Rlp& rlp);
 
