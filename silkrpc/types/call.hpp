@@ -27,6 +27,8 @@
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/transaction.hpp>
 
+#include <silkrpc/types/transaction.hpp>
+
 namespace silkrpc {
 
 // Gas limit cap for eth_call (increased wrt RPCDaemon)
@@ -42,9 +44,9 @@ struct Call {
     std::optional<intx::uint256> value;
     std::optional<silkworm::Bytes> data;
     std::optional<uint64_t> nonce;
-    std::optional<std::vector<silkworm::AccessListEntry>> access_list;
+    AccessList access_list;
 
-    void set_access_list(std::vector<silkworm::AccessListEntry> new_access_list) {
+    void set_access_list(const AccessList& new_access_list) {
        access_list = new_access_list;
     }
 
@@ -55,8 +57,8 @@ struct Call {
         if (nonce) {
            txn.nonce = *nonce;
         }
-        if (access_list) {
-           txn.access_list = *access_list;
+        if (access_list.size()) {
+           txn.access_list = access_list;
         }
         txn.gas_limit = gas.value_or(kDefaultGasLimit);
         if (gas_price) {

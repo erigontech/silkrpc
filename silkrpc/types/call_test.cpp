@@ -42,7 +42,7 @@ TEST_CASE("create empty call", "[silkrpc][types][call]") {
     CHECK(call.value == std::nullopt);
     CHECK(call.data == std::nullopt);
     CHECK(call.nonce == std::nullopt);
-    CHECK(call.access_list == std::nullopt);
+    CHECK(call.access_list.size() == 0);
 }
 
 TEST_CASE("create call with gasprice", "[silkrpc][types][call]") {
@@ -65,6 +65,15 @@ TEST_CASE("create call with gasprice", "[silkrpc][types][call]") {
     CHECK(txn.nonce == 1);
 }
 
+AccessList access_list{
+        {0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae_address,
+         {
+             0x0000000000000000000000000000000000000000000000000000000000000003_bytes32,
+             0x0000000000000000000000000000000000000000000000000000000000000007_bytes32,
+         }},
+        {0xbb9bc244d798123fde783fcc1c72d3bb8c189413_address, {}},
+};
+
 TEST_CASE("create call without accessAccesslist and set it", "[silkrpc][types][call][set_access_list]") {
     Call call{
        std::nullopt,
@@ -77,11 +86,10 @@ TEST_CASE("create call without accessAccesslist and set it", "[silkrpc][types][c
        {},                  // data
        1,               // value
     };
-    CHECK(call.access_list == std::nullopt);
+    CHECK(call.access_list.size() == 0);
 
-    std::vector<silkworm::AccessListEntry> access_list{};
     call.set_access_list(access_list);
-    CHECK(call.access_list != std::nullopt);
+    CHECK(call.access_list.size() == 2);
 }
 
 TEST_CASE("create call with no gasprice & not max_fee_per_gas and max_priority_fee_per_gas ", "[silkrpc][types][call]") {
@@ -131,15 +139,6 @@ TEST_CASE("create call with no gas", "[silkrpc][types][call]") {
     CHECK(txn.value == 0);
     CHECK(txn.data == silkworm::Bytes{});
 }
-
-AccessList access_list{
-        {0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae_address,
-         {
-             0x0000000000000000000000000000000000000000000000000000000000000003_bytes32,
-             0x0000000000000000000000000000000000000000000000000000000000000007_bytes32,
-         }},
-        {0xbb9bc244d798123fde783fcc1c72d3bb8c189413_address, {}},
-};
 
 TEST_CASE("create call with AccessList", "[silkrpc][types][call]") {
     Call call{
