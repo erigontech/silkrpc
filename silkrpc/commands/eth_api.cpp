@@ -1077,25 +1077,25 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
 
         evmc::address to{};
         if (call.to) {
-           to = *(call.to);
+            to = *(call.to);
         } else {
-           uint64_t nonce = 0;
-           if (!call.nonce) {
-              // Retrieve nonce by txpool
-              auto nonce_option = co_await tx_pool_->nonce(*call.from);
-              if (!nonce_option) {
-                 std::optional<silkworm::Account> account{co_await state_reader.read_account(*call.from,  block_with_hash.block.header.number + 1)};
-                 if (account) {
-                    nonce = (*account).nonce;
-                 }
-              } else {
-                 nonce = *nonce_option + 1;
-              }
-              call.nonce = nonce;
-           } else {
-              nonce = *(call.nonce);
-           }
-           to = silkworm::create_address(*call.from, nonce);
+            uint64_t nonce = 0;
+            if (!call.nonce) {
+                // Retrieve nonce by txpool
+                auto nonce_option = co_await tx_pool_->nonce(*call.from);
+                if (!nonce_option) {
+                    std::optional<silkworm::Account> account{co_await state_reader.read_account(*call.from,  block_with_hash.block.header.number + 1)};
+                    if (account) {
+                        nonce = (*account).nonce;
+                    }
+                } else {
+                    nonce = *nonce_option + 1;
+                }
+                call.nonce = nonce;
+            } else {
+                nonce = *(call.nonce);
+            }
+            to = silkworm::create_address(*call.from, nonce);
         }
 
         auto tracer = std::make_shared<AccessListTracer>(*call.from, to);
