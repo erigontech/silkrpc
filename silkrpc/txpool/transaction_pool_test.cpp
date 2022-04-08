@@ -308,7 +308,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         };
         TestSuccessTxpoolService service;
         asio::io_context io_context;
-        const evmc::address recipient = {0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
+        const auto recipient{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
         auto result{asio::co_spawn(io_context, test_nonce(&service, recipient), asio::use_future)};
         io_context.run();
         CHECK(result.get() == 21);
@@ -324,7 +324,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         };
         TestSuccessTxpoolService service;
         asio::io_context io_context;
-        const evmc::address recipient = {0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
+        const auto recipient{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
         auto result{asio::co_spawn(io_context, test_nonce(&service, recipient), asio::use_future)};
         io_context.run();
         CHECK(result.get() == std::nullopt);
