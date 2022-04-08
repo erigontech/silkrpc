@@ -95,8 +95,8 @@ TEST_CASE("serialize AccessListResult with gas_used", "[silkrpc][to_json]") {
     accessListResult.gas_used = 0x1234;
     nlohmann::json j = accessListResult;
     CHECK(j == R"({
-          "accessList":[],
-          "gasUsed":"0x1234"
+        "accessList":[],
+        "gasUsed":"0x1234"
     })"_json);
 }
 
@@ -106,9 +106,9 @@ TEST_CASE("serialize AccessListResult with error", "[silkrpc][to_json]") {
     accessListResult.error = "operation reverted";
     nlohmann::json j = accessListResult;
     CHECK(j == R"({
-          "accessList":[],
-          "error":"operation reverted",
-          "gasUsed":"0x1234"
+        "accessList":[],
+        "error":"operation reverted",
+        "gasUsed":"0x1234"
     })"_json);
 }
 
