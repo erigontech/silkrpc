@@ -192,7 +192,7 @@ void to_json(nlohmann::json& json, const Rlp& rlp) {
 void to_json(nlohmann::json& json, const AccessListResult& access_list_result) {
     json["accessList"] = access_list_result.access_list;
     if (access_list_result.error) {
-       json["error"] = *(access_list_result.error);
+        json["error"] = *(access_list_result.error);
     }
     json["gasUsed"] = silkrpc::to_quantity(access_list_result.gas_used);
 }
