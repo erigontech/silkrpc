@@ -293,17 +293,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
 
     MockDatabase mock_database;
-    MockTransaction mock_transaction;
+    MockTransaction* mock_transaction = new MockTransaction();
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
     std::unique_ptr<ethdb::Database> database_ptr{&mock_database};
 
     EXPECT_CALL(mock_database, begin()).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
-            co_return std::unique_ptr<MockTransaction>{&mock_transaction};
+            co_return std::unique_ptr<ethdb::Transaction>{mock_transaction};
         }
     ));
 
-    EXPECT_CALL(mock_transaction, cursor(db::table::kCanonicalHashes)).WillOnce(InvokeWithoutArgs(
+    EXPECT_CALL(*mock_transaction, cursor(db::table::kCanonicalHashes)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
             co_return mock_cursor;
         }
@@ -315,7 +315,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         }
     ));
 
-    EXPECT_CALL(mock_transaction, cursor(db::table::kConfig)).WillOnce(InvokeWithoutArgs(
+    EXPECT_CALL(*mock_transaction, cursor(db::table::kConfig)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
             co_return std::shared_ptr<MockCursor>{mock_cursor};
         }
@@ -326,20 +326,20 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
             co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
         }
     ));
-
+    
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
         "id":1,
         "method":"engine_transitionConfigurationV1",
-        "params": [{
+        "params":[{
             "terminalTotalDifficulty":"0xf4240",
             "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
             "terminalBlockNumber":"0x0"
         }]
     })"_json;
     std::unique_ptr<ethbackend::BackEnd> backend_ptr;
-    EngineRpcApiTest rpc(database_ptr, backend_ptr); 
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
     auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
@@ -348,7 +348,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     }, asio::use_future)};
     result.get();
 
-    CHECK((reply == TransitionConfiguration{
+    CHECK((reply == TransitionConfiguration {
         .terminal_total_difficulty = intx::from_string<intx::uint256>("1000000"),
         .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
         .terminal_block_number = 0
