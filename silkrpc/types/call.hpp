@@ -47,7 +47,7 @@ struct Call {
     AccessList access_list;
 
     void set_access_list(const AccessList& new_access_list) {
-       access_list = new_access_list;
+        access_list = new_access_list;
     }
 
     silkworm::Transaction to_transaction() const {
@@ -55,10 +55,10 @@ struct Call {
         txn.from = from;
         txn.to = to;
         if (nonce) {
-           txn.nonce = *nonce;
+            txn.nonce = *nonce;
         }
         if (access_list.size()) {
-           txn.access_list = access_list;
+            txn.access_list = access_list;
         }
         txn.gas_limit = gas.value_or(kDefaultGasLimit);
         if (gas_price) {
