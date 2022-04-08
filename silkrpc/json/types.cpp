@@ -113,9 +113,9 @@ void from_json(const nlohmann::json& json, uint256& ui256) {
 
 namespace silkworm {
 
-void from_json(const nlohmann::json& json, AccessListEntry& al) {
-    al.account =  json.at("address").get<evmc::address>();
-    al.storage_keys = json.at("storageKeys").get<std::vector<evmc::bytes32>>();
+void from_json(const nlohmann::json& json, AccessListEntry& entry) {
+    entry.account =  json.at("address").get<evmc::address>();
+    entry.storage_keys = json.at("storageKeys").get<std::vector<evmc::bytes32>>();
 }
 
 void to_json(nlohmann::json& json, const BlockHeader& header) {
