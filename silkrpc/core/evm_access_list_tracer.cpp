@@ -44,7 +44,7 @@ const char* CALLCODE = evmone::instr::traits[evmc_opcode::OP_CALLCODE].name;
 
 std::string get_opcode_name(const char* const* names, std::uint8_t opcode) {
     const auto name = names[opcode];
-    return (name != nullptr) ?name : "opcode 0x" + evmc::hex(opcode) + " not defined";
+    return (name != nullptr) ? name : "opcode 0x" + evmc::hex(opcode) + " not defined";
 }
 
 inline evmc::address AccessListTracer::address_from_hex_string(const std::string& s) {
@@ -78,18 +78,18 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::Execution
         << "}\n";
 
     if (is_storage_opcode(opcode_name) && execution_state.stack.size() >= 1) {
-       const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
-       add_storage(recipient, address);
+        const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
+        add_storage(recipient, address);
     } else if (is_contract_opcode(opcode_name) && execution_state.stack.size() >= 1) {
-       const auto address = address_from_hex_string(intx::hex(execution_state.stack[0]));
-       if (!exclude(address)) {
-          add_address(address);
-       }
+        const auto address = address_from_hex_string(intx::hex(execution_state.stack[0]));
+        if (!exclude(address)) {
+            add_address(address);
+        }
     } else if (is_call_opcode(opcode_name) && execution_state.stack.size() >= 5) {
-       const auto address = address_from_hex_string(intx::hex(execution_state.stack[1]));
-       if (!exclude(address)) {
-          add_address(address);
-       }
+        const auto address = address_from_hex_string(intx::hex(execution_state.stack[1]));
+        if (!exclude(address)) {
+            add_address(address);
+        }
     }
 }
 
@@ -99,7 +99,7 @@ inline bool AccessListTracer::is_storage_opcode(const std::string & opcode_name)
 
 inline bool AccessListTracer::is_contract_opcode(const std::string & opcode_name) {
     return (opcode_name == EXTCODECOPY || opcode_name == EXTCODEHASH || opcode_name == EXTCODESIZE ||
-                opcode_name == BALANCE || opcode_name == SELFDESTRUCT);
+            opcode_name == BALANCE || opcode_name == SELFDESTRUCT);
 }
 
 inline bool AccessListTracer::is_call_opcode(const std::string & opcode_name) {
@@ -108,22 +108,22 @@ inline bool AccessListTracer::is_call_opcode(const std::string & opcode_name) {
 
 
 inline bool AccessListTracer::exclude(const evmc::address& address) {
-       // return (address == from_ || address == to_ || is_precompiled(address)); // ADD check on precompiled when available from silkworm
-       return (address == from_ || address == to_);
+    // return (address == from_ || address == to_ || is_precompiled(address)); // ADD check on precompiled when available from silkworm
+    return (address == from_ || address == to_);
 }
 
 void AccessListTracer::add_storage(const evmc::address& address, const evmc::bytes32& storage) {
     SILKRPC_TRACE << "add_storage:" << address << " storage: " << storage << "\n";
     for (int i = 0; i < access_list_.size(); i++) {
-       if (access_list_[i].account == address) {
-          for (int j = 0; j < access_list_[i].storage_keys.size(); j++) {
-            if (access_list_[i].storage_keys[j] == storage) {
-               return;
+        if (access_list_[i].account == address) {
+            for (int j = 0; j < access_list_[i].storage_keys.size(); j++) {
+                if (access_list_[i].storage_keys[j] == storage) {
+                    return;
+                }
             }
-          }
-          access_list_[i].storage_keys.push_back(storage);
-          return;
-       }
+            access_list_[i].storage_keys.push_back(storage);
+            return;
+        }
     }
     silkworm::AccessListEntry item;
     item.account = address;
@@ -134,9 +134,9 @@ void AccessListTracer::add_storage(const evmc::address& address, const evmc::byt
 void AccessListTracer::add_address(const evmc::address& address) {
     SILKRPC_TRACE << "add_address:" << address << "\n";
     for (int i = 0; i < access_list_.size(); i++) {
-       if (access_list_[i].account == address) {
-          return;
-       }
+        if (access_list_[i].account == address) {
+            return;
+        }
     }
     silkworm::AccessListEntry item;
     item.account = address;
@@ -144,45 +144,45 @@ void AccessListTracer::add_address(const evmc::address& address) {
 }
 
 void AccessListTracer::dump(const std::string& user_string, const AccessList& acl) {
-   std::cout << user_string << "\n";
-   for (int i = 0; i < acl.size(); i++) {
-       std::cout << "Address: " << acl[i].account << "\n";
-       for (int z = 0; z < acl[i].storage_keys.size(); z++) {
-          std::cout << "-> StorageKeys: " << acl[i].storage_keys[z] << "\n";
-       }
-   }
+    std::cout << user_string << "\n";
+    for (int i = 0; i < acl.size(); i++) {
+        std::cout << "Address: " << acl[i].account << "\n";
+        for (int z = 0; z < acl[i].storage_keys.size(); z++) {
+            std::cout << "-> StorageKeys: " << acl[i].storage_keys[z] << "\n";
+        }
+    }
 }
 
 bool AccessListTracer::compare(const AccessList& acl1, const AccessList& acl2) {
     if (acl1.size() != acl2.size()) {
-       return false;
+        return false;
     }
     for (int i = 0; i < acl1.size(); i++) {
-       bool match_address = false;
-       for (int j = 0; j < acl2.size(); j++) {
-          if (acl2[j].account == acl1[i].account) {
-             match_address = true;
-             if (acl2[j].storage_keys.size() != acl1[i].storage_keys.size()) {
-                return false;
-             }
-             bool match_storage = false;
-             for (int z = 0; z < acl1[i].storage_keys.size(); z++) {
-                for (int t = 0; t < acl2[j].storage_keys.size(); t++) {
-                   if (acl2[j].storage_keys[t] == acl1[i].storage_keys[z]) {
-                      match_storage = true;
-                      break;
-                   }
+        bool match_address = false;
+        for (int j = 0; j < acl2.size(); j++) {
+            if (acl2[j].account == acl1[i].account) {
+                match_address = true;
+                if (acl2[j].storage_keys.size() != acl1[i].storage_keys.size()) {
+                    return false;
                 }
-                if (!match_storage) {
-                   return false;
+                bool match_storage = false;
+                for (int z = 0; z < acl1[i].storage_keys.size(); z++) {
+                    for (int t = 0; t < acl2[j].storage_keys.size(); t++) {
+                        if (acl2[j].storage_keys[t] == acl1[i].storage_keys[z]) {
+                            match_storage = true;
+                            break;
+                        }
+                    }
+                    if (!match_storage) {
+                        return false;
+                    }
                 }
-             }
-             break;
-          }
-       }
-       if (!match_address) {
-          return false;
-       }
+                break;
+            }
+        }
+        if (!match_address) {
+            return false;
+        }
     }
     return true;
 }
