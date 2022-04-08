@@ -56,7 +56,6 @@ void AccessListTracer::on_execution_start(evmc_revision rev, const evmc_message&
     if (opcode_names_ == nullptr) {
         opcode_names_ = evmc_get_instruction_names_table(rev);
     }
-    std::cout << "on_execution_start\n";
 }
 
 void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
