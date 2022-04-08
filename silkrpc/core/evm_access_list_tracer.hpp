@@ -42,7 +42,7 @@ public:
 
     void on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept override;
     void on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
-    void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {std::cout << "on_execution_end\n"; }
+    void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {}
     void reset_access_list() {access_list_.clear();}
     static void dump(const std::string& str, const AccessList& acl);
     static bool compare(const AccessList& acl1, const AccessList& acl2);
