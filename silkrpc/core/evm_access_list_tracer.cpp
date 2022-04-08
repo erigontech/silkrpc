@@ -56,6 +56,7 @@ void AccessListTracer::on_execution_start(evmc_revision rev, const evmc_message&
     if (opcode_names_ == nullptr) {
         opcode_names_ = evmc_get_instruction_names_table(rev);
     }
+    std::cout << "on_execution_start\n";
 }
 
 void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
@@ -141,17 +142,6 @@ void AccessListTracer::add_address(const evmc::address& address) {
     silkworm::AccessListEntry item;
     item.account = address;
     access_list_.push_back(item);
-}
-
-void AccessListTracer::set_access_list(const AccessList& input_access_list) {
-    for (int i = 0; i < input_access_list.size(); i++) {
-       if (!exclude(input_access_list[i].account)) {
-          add_address(input_access_list[i].account);
-       }
-       for (int z = 0; z < input_access_list[i].storage_keys.size(); z++) {
-          add_storage(input_access_list[i].account, input_access_list[i].storage_keys[z]);
-       }
-    }
 }
 
 void AccessListTracer::dump(const std::string& user_string, const AccessList& acl) {

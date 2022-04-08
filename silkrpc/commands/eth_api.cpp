@@ -1098,39 +1098,32 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
            to = silkworm::create_address(*call.from, nonce);
         }
 
-        AccessList previous_access_list;
-        AccessList current_access_list;
-        ExecutionResult execution_result{};
-        silkworm::Transaction txn {};
-        bool error = false;
-
-        auto tracer = std::make_shared<AccessListTracer>(call.access_list, *call.from, to);
+        auto tracer = std::make_shared<AccessListTracer>(*call.from, to);
+        bool access_lists_match{false};
         do {
-           EVMExecutor executor{context_, tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number};
-           txn = call.to_transaction();
-           previous_access_list = tracer->get_access_list();
-           tracer->reset_access_list();
-           execution_result = co_await executor.call(block_with_hash.block, txn, tracer);
-           if (execution_result.pre_check_error) {
-              error = true;
-              break;
-           }
-           current_access_list = tracer->get_access_list();
-           call.set_access_list(current_access_list);
-        } while (current_access_list != previous_access_list);
-
-        if (error) {
-            reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
-        } else {
-           AccessListResult access_list_result;
-           access_list_result.access_list = current_access_list;
-           access_list_result.gas_used = txn.gas_limit - execution_result.gas_left;
-           if (execution_result.error_code != evmc_status_code::EVMC_SUCCESS) {
-               const auto error_message = EVMExecutor<>::get_error_message(execution_result.error_code, execution_result.data, false /* full_error */);
-               access_list_result.error = error_message;
-           }
-           reply = make_json_content(request["id"], access_list_result);
-        }
+            EVMExecutor executor{context_, tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number};
+            const auto txn = call.to_transaction();
+            tracer->reset_access_list();
+            const auto execution_result = co_await executor.call(block_with_hash.block, txn, tracer);
+            if (execution_result.pre_check_error) {
+                reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
+                break;
+            }
+            const AccessList& current_access_list = tracer->get_access_list();
+            if (call.access_list == current_access_list) {
+                access_lists_match = true;
+                AccessListResult access_list_result;
+                access_list_result.access_list = current_access_list;
+                access_list_result.gas_used = txn.gas_limit - execution_result.gas_left;
+                if (execution_result.error_code != evmc_status_code::EVMC_SUCCESS) {
+                    const auto error_message = EVMExecutor<>::get_error_message(execution_result.error_code, execution_result.data, false /* full_error */);
+                    access_list_result.error = error_message;
+                }
+                reply = make_json_content(request["id"], access_list_result);
+                break;
+            }
+            call.set_access_list(current_access_list);
+        } while (!access_lists_match);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());

@@ -33,22 +33,18 @@ namespace silkrpc {
 
 class AccessListTracer : public silkworm::EvmTracer {
 public:
-    explicit AccessListTracer(const std::optional<AccessList>& input_access_list, const evmc::address& from, const evmc::address& to): from_{from}, to_{to} {
-       if (input_access_list) {
-          set_access_list(*input_access_list);
-       }
+    explicit AccessListTracer(const evmc::address& from, const evmc::address& to): from_{from}, to_{to} {
     }
     AccessListTracer(const AccessListTracer&) = delete;
     AccessListTracer& operator=(const AccessListTracer&) = delete;
 
-    AccessList get_access_list() { return access_list_; }
+    const AccessList& get_access_list() { return access_list_; }
 
     void on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept override;
     void on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
-    void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {}
-    void dump(const std::string& str, const AccessList& acl);
-    void set_access_list(const AccessList& input_access_list);
-    void reset_access_list() { access_list_.clear(); }
+    void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {std::cout << "on_execution_end\n"; }
+    void reset_access_list() {access_list_.clear();}
+    static void dump(const std::string& str, const AccessList& acl);
     static bool compare(const AccessList& acl1, const AccessList& acl2);
 
 private:
