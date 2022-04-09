@@ -309,7 +309,9 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std:
     for (auto idx = 0; idx < index; idx++) {
         silkrpc::Transaction txn{block.transactions[idx]};
 
-        txn.recover_sender();
+        if (!txn.from) {
+            txn.recover_sender();
+        }
         const auto execution_result = co_await executor.call(block, txn);
     }
 
