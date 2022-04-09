@@ -28,6 +28,7 @@
 #include <asio/awaitable.hpp>
 #include <asio/use_future.hpp>
 #include <asio/co_spawn.hpp>
+
 #include <utility>
 #include <string>
 
@@ -294,34 +295,31 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
 
     MockDatabase mock_database;
     MockTransaction* mock_transaction = new MockTransaction();
-    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
+    MockCursor mock_cursor;
+    
     std::unique_ptr<ethdb::Database> database_ptr{&mock_database};
+    std::shared_ptr<MockCursor> mock_cursor_ptr{&mock_cursor};
 
     EXPECT_CALL(mock_database, begin()).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
-            co_return std::unique_ptr<ethdb::Transaction>{mock_transaction};
+            std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
+            co_return mock_transaction_ptr;
         }
     ));
 
-    EXPECT_CALL(*mock_transaction, cursor(db::table::kCanonicalHashes)).WillOnce(InvokeWithoutArgs(
+    EXPECT_CALL(*mock_transaction, cursor(testing::_)).WillRepeatedly(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
-            co_return mock_cursor;
+            co_return mock_cursor_ptr;
         }
     ));
 
-    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
+    EXPECT_CALL(mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, key};
         }
     ));
 
-    EXPECT_CALL(*mock_transaction, cursor(db::table::kConfig)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
-            co_return std::shared_ptr<MockCursor>{mock_cursor};
-        }
-    ));
-
-    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
+    EXPECT_CALL(mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
         }
