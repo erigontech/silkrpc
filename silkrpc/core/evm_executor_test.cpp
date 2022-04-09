@@ -251,7 +251,7 @@ TEST_CASE("EVMexecutor") {
         pool_thread.join();
         CHECK(error_message == "execution failed");
     }
- 
+
     SECTION("get_error_message(EVMC_REVERT)") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
@@ -323,7 +323,6 @@ TEST_CASE("EVMexecutor") {
         pool_thread.join();
         CHECK(error_message == "invalid instruction");
     }
-
 }
 
 } // namespace silkrpc
