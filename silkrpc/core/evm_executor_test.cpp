@@ -27,10 +27,12 @@
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 
+#include <silkrpc/types/transaction.hpp>
+
 namespace silkrpc {
 
 using Catch::Matchers::Message;
-using evmc::literals::operator""_address;
+using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
 TEST_CASE("EVMexecutor") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
@@ -161,6 +163,16 @@ TEST_CASE("EVMexecutor") {
         CHECK(result.pre_check_error.value() == "insufficient funds for gas * price + value: address 0xa872626373628737383927236382161739290870 have 0 want 60000");
     }
 
+    AccessList access_list{
+        {0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae_address,
+            {
+                0x0000000000000000000000000000000000000000000000000000000000000003_bytes32,
+                0x0000000000000000000000000000000000000000000000000000000000000007_bytes32,
+            }
+        },
+        {0xbb9bc244d798123fde783fcc1c72d3bb8c189413_address, {}},
+    };
+
     SECTION("call returns SUCCESS") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
@@ -175,8 +187,9 @@ TEST_CASE("EVMexecutor") {
         silkworm::Block block{};
         block.header.number = block_number;
         silkworm::Transaction txn{};
-        txn.gas_limit = 60000;
+        txn.gas_limit = 600000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
+        txn.access_list = access_list;
 
         EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn), asio::use_future);
@@ -215,7 +228,6 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "execution failed: Ownable: caller is not the owner");
     }
 
-
     SECTION("get_error_message(EVMC_FAILURE) short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
@@ -238,7 +250,80 @@ TEST_CASE("EVMexecutor") {
         my_pool.stop();
         pool_thread.join();
         CHECK(error_message == "execution failed");
-   }
+    }
+ 
+    SECTION("get_error_message(EVMC_REVERT)") {
+        StubDatabase tx_database;
+        const uint64_t chain_id = 5;
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+
+        ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
+        ContextPool my_pool{1, my_channel};
+        asio::thread_pool workers{1};
+        auto pool_thread = std::thread([&]() { my_pool.run(); });
+
+        const auto block_number = 6000000;
+        silkworm::Block block{};
+        block.header.number = block_number;
+        silkworm::Transaction txn{};
+        txn.gas_limit = 60000;
+        txn.from = 0xa872626373628737383927236382161739290870_address;
+
+        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        auto error_message = executor.get_error_message(evmc_status_code::EVMC_REVERT, error_data, false);
+        my_pool.stop();
+        pool_thread.join();
+        CHECK(error_message == "execution reverted");
+    }
+
+    SECTION("get_error_message(EVMC_OUT_OF_GAS)") {
+        StubDatabase tx_database;
+        const uint64_t chain_id = 5;
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+
+        ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
+        ContextPool my_pool{1, my_channel};
+        asio::thread_pool workers{1};
+        auto pool_thread = std::thread([&]() { my_pool.run(); });
+
+        const auto block_number = 6000000;
+        silkworm::Block block{};
+        block.header.number = block_number;
+        silkworm::Transaction txn{};
+        txn.gas_limit = 60000;
+        txn.from = 0xa872626373628737383927236382161739290870_address;
+
+        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        auto error_message = executor.get_error_message(evmc_status_code::EVMC_OUT_OF_GAS, error_data, false);
+        my_pool.stop();
+        pool_thread.join();
+        CHECK(error_message == "out of gas");
+    }
+
+    SECTION("get_error_message(EVMC_INVALID_INSTRUCTION)") {
+        StubDatabase tx_database;
+        const uint64_t chain_id = 5;
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+
+        ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
+        ContextPool my_pool{1, my_channel};
+        asio::thread_pool workers{1};
+        auto pool_thread = std::thread([&]() { my_pool.run(); });
+
+        const auto block_number = 6000000;
+        silkworm::Block block{};
+        block.header.number = block_number;
+        silkworm::Transaction txn{};
+        txn.gas_limit = 60000;
+        txn.from = 0xa872626373628737383927236382161739290870_address;
+
+        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        auto error_message = executor.get_error_message(evmc_status_code::EVMC_INVALID_INSTRUCTION, error_data, false);
+        my_pool.stop();
+        pool_thread.join();
+        CHECK(error_message == "invalid instruction");
+    }
+
 }
 
 } // namespace silkrpc
