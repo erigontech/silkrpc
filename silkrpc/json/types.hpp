@@ -69,6 +69,10 @@ namespace silkrpc {
 
 void to_json(nlohmann::json& json, const AccessListResult& access_list_result);
 
+void to_json(nlohmann::json& json, const struct call_bundle_tx_info& tx_info);
+
+void to_json(nlohmann::json& json, const struct call_bundle_info& bundle_info);
+
 void to_json(nlohmann::json& json, const Rlp& rlp);
 
 void to_json(nlohmann::json& json, const Block& b);
