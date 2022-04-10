@@ -640,22 +640,28 @@ TEST_CASE("serialize empty transaction", "[silkrpc][to_json]") {
     })"_json);
 }
 
-TEST_CASE("serialize transaction from zero address", "[silkrpc][to_json]") {
-    silkworm::Transaction txn{};
-    txn.from = 0x0000000000000000000000000000000000000000_address;
-    nlohmann::json j = txn;
+TEST_CASE("serialize empty call_bundle", "[silkrpc][to_json]") {
+    struct call_bundle_info bundle_info{};
+
+    nlohmann::json j = bundle_info;
     CHECK(j == R"({
-        "nonce":"0x0",
-        "gas":"0x0",
-        "to":null,
-        "from":"0x0000000000000000000000000000000000000000",
-        "type":"0x0",
-        "value":"0x0",
-        "input":"0x",
-        "hash":"0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5",
-        "r":"0x",
-        "s":"0x",
-        "v":"0x1b"
+        "bundleHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "results":[]
+    })"_json);
+}
+
+TEST_CASE("serialize call_bundle", "[silkrpc][to_json]") {
+    struct call_bundle_info bundle_info{};
+    struct call_bundle_tx_info tx_info{};
+    tx_info.gas_used = 0x234;
+    tx_info.error_message = "operation reverted";
+    bundle_info.txs_info.push_back(tx_info);
+
+    nlohmann::json j = bundle_info;
+    CHECK(j == R"({
+        "bundleHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "results":[{"error": "operation reverted", "gasUsed": 564,
+                    "txHash": "0x0000000000000000000000000000000000000000000000000000000000000000"}]
     })"_json);
 }
 
