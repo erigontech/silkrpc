@@ -189,6 +189,21 @@ void to_json(nlohmann::json& json, const Rlp& rlp) {
     json = "0x" + silkworm::to_hex(rlp.buffer);
 }
 
+void to_json(nlohmann::json& json, const struct call_bundle_tx_info& tx_info) {
+    json["gasUsed"] = tx_info.gas_used;
+    json["txHash"] = silkworm::to_bytes32({tx_info.hash.bytes, silkworm::kHashLength});
+    if (tx_info.error_message.size() != 0)
+       json["error"] = tx_info.error_message;
+    else
+       json["value"] = silkworm::to_bytes32({tx_info.value.bytes, silkworm::kHashLength});
+}
+
+void to_json(nlohmann::json& json, const struct call_bundle_info& bundle_info) {
+    json["bundleHash"] = silkworm::to_bytes32({bundle_info.bundle_hash.bytes, silkworm::kHashLength});
+    json["results"] = bundle_info.txs_info;
+}
+
+
 void to_json(nlohmann::json& json, const AccessListResult& access_list_result) {
     json["accessList"] = access_list_result.access_list;
     if (access_list_result.error) {
