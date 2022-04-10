@@ -57,6 +57,18 @@ struct AccessListResult {
     uint64_t gas_used;
 };
 
+struct call_bundle_tx_info {
+   ethash_hash256 hash;
+   uint64_t gas_used;
+   evmc::bytes32 value;
+   std::string error_message;
+};
+
+struct call_bundle_info {
+   ethash_hash256 bundle_hash;
+   std::vector<call_bundle_tx_info> txs_info;
+};
+
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
 
 } // namespace silkrpc
