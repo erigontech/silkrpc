@@ -641,7 +641,7 @@ TEST_CASE("serialize empty transaction", "[silkrpc][to_json]") {
 }
 
 TEST_CASE("serialize empty call_bundle", "[silkrpc][to_json]") {
-    struct call_bundle_info bundle_info{};
+    struct callBundleInfo bundle_info{};
 
     nlohmann::json j = bundle_info;
     CHECK(j == R"({
@@ -651,8 +651,8 @@ TEST_CASE("serialize empty call_bundle", "[silkrpc][to_json]") {
 }
 
 TEST_CASE("serialize call_bundle with error", "[silkrpc][to_json]") {
-    struct call_bundle_info bundle_info{};
-    struct call_bundle_tx_info tx_info{};
+    struct callBundleInfo bundle_info{};
+    struct callBundleTxInfo tx_info{};
     tx_info.gas_used = 0x234;
     tx_info.error_message = "operation reverted";
     bundle_info.txs_info.push_back(tx_info);
@@ -666,8 +666,8 @@ TEST_CASE("serialize call_bundle with error", "[silkrpc][to_json]") {
 }
 
 TEST_CASE("serialize call_bundle with value", "[silkrpc][to_json]") {
-    struct call_bundle_info bundle_info{};
-    struct call_bundle_tx_info tx_info{};
+    struct callBundleInfo bundle_info{};
+    struct callBundleTxInfo tx_info{};
     tx_info.gas_used = 0x234;
     tx_info.value = 0x1230000000000000000000000000000000000000000000000000000000000321_bytes32;
     bundle_info.txs_info.push_back(tx_info);

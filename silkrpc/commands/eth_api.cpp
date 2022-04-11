@@ -1029,6 +1029,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
         if (execution_result.pre_check_error) {
             reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
         } else if (execution_result.error_code == evmc_status_code::EVMC_SUCCESS) {
+            std::cout << "GasUsed: " << txn.gas_limit - execution_result.gas_left << "\n";
             reply = make_json_content(request["id"], "0x" + silkworm::to_hex(execution_result.data));
         } else {
             const auto error_message = EVMExecutor<>::get_error_message(execution_result.error_code, execution_result.data);
@@ -1173,13 +1174,13 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohmann::jso
 
         const auto start_time = clock_time::now();
 
-        struct call_bundle_info bundle_info{};
+        struct callBundleInfo bundle_info{};
         bool error{false};
 
         silkworm::Bytes hash_data{};
 
         for (int i = 0; i < tx_hash_list.size(); i++) {
-            struct call_bundle_tx_info tx_info{};
+            struct callBundleTxInfo tx_info{};
             const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache, tx_database, tx_hash_list[i]);
             if (!tx_with_block) {
                  auto error_msg = "invalid trnsaction hash";

@@ -57,16 +57,16 @@ struct AccessListResult {
     uint64_t gas_used;
 };
 
-struct call_bundle_tx_info {
+struct callBundleTxInfo {
    ethash_hash256 hash;
    uint64_t gas_used;
    evmc::bytes32 value;
    std::string error_message;
 };
 
-struct call_bundle_info {
+struct callBundleInfo {
    ethash_hash256 bundle_hash;
-   std::vector<call_bundle_tx_info> txs_info;
+   std::vector<callBundleTxInfo> txs_info;
 };
 
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
