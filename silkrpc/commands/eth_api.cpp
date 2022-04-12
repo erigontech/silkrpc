@@ -1174,13 +1174,13 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohmann::jso
 
         const auto start_time = clock_time::now();
 
-        struct callBundleInfo bundle_info{};
+        struct CallBundleInfo bundle_info{};
         bool error{false};
 
         silkworm::Bytes hash_data{};
 
         for (int i = 0; i < tx_hash_list.size(); i++) {
-            struct callBundleTxInfo tx_info{};
+            struct CallBundleTxInfo tx_info{};
             const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache, tx_database, tx_hash_list[i]);
             if (!tx_with_block) {
                  auto error_msg = "invalid trnsaction hash";
