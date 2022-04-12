@@ -191,6 +191,7 @@ asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... arg
 auto test_add_transaction = test_comethod<&txpool::TransactionPool::add_transaction, txpool::TransactionPool::OperationResult, silkworm::ByteView>;
 auto test_get_transaction = test_comethod<&txpool::TransactionPool::get_transaction, std::optional<silkworm::Bytes>, evmc::bytes32>;
 auto test_nonce = test_comethod<&txpool::TransactionPool::nonce, std::optional<uint64_t>, evmc::address>;
+auto test_status = test_comethod<&txpool::TransactionPool::get_status, struct txpool::StatusInfo>;
 
 TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -329,6 +330,25 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         io_context.run();
         CHECK(result.get() == std::nullopt);
     }
-}
 
+    SECTION("call Status") {
+        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
+        public:
+            ::grpc::Status Status(::grpc::ServerContext* context, const ::txpool::StatusRequest* request, ::txpool::StatusReply* response) override {
+                response->set_basefeecount(0x4);
+                response->set_pendingcount(0x5);
+                response->set_queuedcount(0x6);
+                return ::grpc::Status::OK;
+            }
+        };
+        TestSuccessTxpoolService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_status(&service), asio::use_future)};
+        io_context.run();
+        auto status_info = result.get();
+        CHECK(status_info.base_fee == 0x4);
+        CHECK(status_info.pending == 0x5);
+        CHECK(status_info.queued == 0x6);
+   }
+ }
 } // namespace silkrpc
