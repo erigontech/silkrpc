@@ -57,6 +57,12 @@ struct AccessListResult {
     uint64_t gas_used;
 };
 
+struct TxPoolStatusInfo {
+   unsigned int base_fee;
+   unsigned int pending;
+   unsigned int queued;
+};
+
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
 
 } // namespace silkrpc
