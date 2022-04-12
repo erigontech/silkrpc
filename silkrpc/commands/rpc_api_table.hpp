@@ -52,6 +52,7 @@ private:
     void add_trace_handlers();
     void add_web3_handlers();
     void add_engine_handlers();
+    void add_txpool_handlers();
 
     std::map<std::string, HandleMethod> handlers_;
 };
