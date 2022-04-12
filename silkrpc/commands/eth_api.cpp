@@ -1446,11 +1446,10 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
 
 // https://eth.wiki/json-rpc/API#txpool_status
 asio::awaitable<void> EthereumRpcApi::handle_txpool_status(const nlohmann::json& request, nlohmann::json& reply) {
-
     try {
-        struct TxPoolStatusInfo txpool_status; 
+        struct TxPoolStatusInfo txpool_status;
         auto status_info = co_await tx_pool_->get_status();
-        txpool_status.pending = status_info.pending; 
+        txpool_status.pending = status_info.pending;
         txpool_status.queued = status_info.queued;
         txpool_status.base_fee = status_info.base_fee;
 
