@@ -298,11 +298,11 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     MockDatabase* mock_database = new MockDatabase();
     MockTransaction* mock_transaction = new MockTransaction();
     MockCursor* mock_cursor = new MockCursor();
-    
+ 
     std::unique_ptr<ethdb::Database> database_ptr{mock_database};
     std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
 
-    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(       
+    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
             std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
             co_return mock_transaction_ptr;
@@ -326,7 +326,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
             co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
         }
     ));
-    
+
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
@@ -381,11 +381,11 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
     MockDatabase* mock_database = new MockDatabase();
     MockTransaction* mock_transaction = new MockTransaction();
     MockCursor* mock_cursor = new MockCursor();
-    
+
     std::unique_ptr<ethdb::Database> database_ptr{mock_database};
     std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
 
-    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(       
+    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
             std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
             co_return mock_transaction_ptr;
@@ -409,7 +409,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
             co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
         }
     ));
-    
+
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
@@ -465,11 +465,11 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
     MockDatabase* mock_database = new MockDatabase();
     MockTransaction* mock_transaction = new MockTransaction();
     MockCursor* mock_cursor = new MockCursor();
-    
+
     std::unique_ptr<ethdb::Database> database_ptr{mock_database};
     std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
 
-    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(       
+    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
             std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
             co_return mock_transaction_ptr;
@@ -493,7 +493,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
             co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
         }
     ));
-    
+
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
@@ -551,11 +551,11 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
     MockDatabase* mock_database = new MockDatabase();
     MockTransaction* mock_transaction = new MockTransaction();
     MockCursor* mock_cursor = new MockCursor();
-    
+
     std::unique_ptr<ethdb::Database> database_ptr{mock_database};
     std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
 
-    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(       
+    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
             std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
             co_return mock_transaction_ptr;
@@ -579,7 +579,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
             co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
         }
     ));
-    
+
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
@@ -638,11 +638,11 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
     MockDatabase* mock_database = new MockDatabase();
     MockTransaction* mock_transaction = new MockTransaction();
     MockCursor* mock_cursor = new MockCursor();
-    
+
     std::unique_ptr<ethdb::Database> database_ptr{mock_database};
     std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
 
-    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(       
+    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
             std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
             co_return mock_transaction_ptr;
@@ -666,7 +666,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
             co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
         }
     ));
-    
+
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
@@ -721,11 +721,11 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
     MockDatabase* mock_database = new MockDatabase();
     MockTransaction* mock_transaction = new MockTransaction();
     MockCursor* mock_cursor = new MockCursor();
-    
+
     std::unique_ptr<ethdb::Database> database_ptr{mock_database};
     std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
 
-    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(       
+    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
             std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
             co_return mock_transaction_ptr;
@@ -749,7 +749,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
             co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
         }
     ));
-    
+
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
