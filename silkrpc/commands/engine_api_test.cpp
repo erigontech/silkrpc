@@ -298,7 +298,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     MockDatabase* mock_database = new MockDatabase();
     MockTransaction* mock_transaction = new MockTransaction();
     MockCursor* mock_cursor = new MockCursor();
- 
+
     std::unique_ptr<ethdb::Database> database_ptr{mock_database};
     std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
 
