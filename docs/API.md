@@ -41,7 +41,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getTransactionCount                    | Yes          |                                            |
 | eth_getStorageAt                           | Yes          |                                            |
 | eth_call                                   | Yes          |                                            |
-| eth_callBundle                             | -            | not yet implemented                        |
+| eth_callBundle                             | Yes          |                                            |
 | eth_createAccessList                       | Yes          |                                            |
 |                                            |              |                                            |
 | eth_newFilter                              | -            | not yet implemented                        |
