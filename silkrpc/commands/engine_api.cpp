@@ -83,11 +83,15 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
         co_return;
     }
     const auto cl_configuration = params[0].get<TransitionConfiguration>();
+
+    auto tx = co_await database_->begin();
+
     #ifndef BUILD_COVERAGE
     try {
-        #endif
-        auto tx = co_await database_->begin();
-        const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(ethdb::TransactionDatabase{*tx})};
+    #endif
+        ethdb::TransactionDatabase tx_database{*tx};
+
+        const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
         SILKRPC_DEBUG << "chain config: " << chain_config << "\n";
         auto config = silkworm::ChainConfig::from_json(chain_config.config).value();
         if (cl_configuration.terminal_block_number != 0) {
@@ -122,7 +126,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
             .terminal_block_hash = config.terminal_block_hash.value(),
             .terminal_block_number = config.terminal_block_number.value_or(0)
         };
-        #ifndef BUILD_COVERAGE
+    #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request.at("id"), 100, e.what());
@@ -131,6 +135,9 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
         reply = make_json_error(request.at("id"), 100, "unexpected exception");
     }
     #endif
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
 }
 
 } // namespace silkrpc::commands

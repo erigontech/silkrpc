@@ -16,21 +16,22 @@
 
 #include "engine_api.hpp"
 
-#include <silkrpc/json/types.hpp>
-#include <silkrpc/http/methods.hpp>
-#include <silkrpc/ethdb/transaction_database.hpp>
-#include <silkrpc/core/rawdb/chain.hpp>
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkworm/common/base.hpp>
-#include <catch2/catch.hpp>
-#include <nlohmann/json.hpp>
-#include <gmock/gmock.h>
-#include <asio/awaitable.hpp>
-#include <asio/use_future.hpp>
-#include <asio/co_spawn.hpp>
-
-#include <utility>
 #include <string>
+#include <utility>
+
+#include <asio/awaitable.hpp>
+#include <asio/co_spawn.hpp>
+#include <asio/use_future.hpp>
+#include <catch2/catch.hpp>
+#include <gmock/gmock.h>
+#include <nlohmann/json.hpp>
+#include <silkworm/common/base.hpp>
+
+#include <silkrpc/core/rawdb/chain.hpp>
+#include <silkrpc/ethdb/transaction_database.hpp>
+#include <silkrpc/ethdb/tables.hpp>
+#include <silkrpc/http/methods.hpp>
+#include <silkrpc/json/types.hpp>
 
 namespace silkrpc::commands {
 
@@ -49,29 +50,51 @@ public:
     MOCK_METHOD((asio::awaitable<PayloadStatus>), engine_new_payload_v1, (ExecutionPayload payload));
 };
 
-class MockDatabase : public ethdb::Database {
-public:
-    MOCK_METHOD((asio::awaitable<std::unique_ptr<ethdb::Transaction>>), begin, ());
-};
-
-
-class MockTransaction : public ethdb::Transaction {
-public:
-    MOCK_METHOD((uint64_t), tx_id, (), (const));
-    MOCK_METHOD((asio::awaitable<void>), open, ());
-    MOCK_METHOD((asio::awaitable<std::shared_ptr<ethdb::Cursor>>), cursor, (const std::string& table));
-    MOCK_METHOD((asio::awaitable<std::shared_ptr<ethdb::CursorDupSort>>), cursor_dup_sort, (const std::string& table));
-    MOCK_METHOD((asio::awaitable<void>), close, ());
-};
-
 class MockCursor : public ethdb::Cursor {
 public:
-    MOCK_METHOD((uint32_t), cursor_id, (), (const));
+    uint32_t cursor_id() const override { return 0; }
+
     MOCK_METHOD((asio::awaitable<void>), open_cursor, (const std::string& table_name));
     MOCK_METHOD((asio::awaitable<KeyValue>), seek, (silkworm::ByteView key));
     MOCK_METHOD((asio::awaitable<KeyValue>), seek_exact, (silkworm::ByteView key));
     MOCK_METHOD((asio::awaitable<KeyValue>), next, ());
     MOCK_METHOD((asio::awaitable<void>), close_cursor, ());
+};
+
+//! This dummy transaction just gives you the same cursor over and over again.
+class DummyTransaction : public ethdb::Transaction {
+public:
+    DummyTransaction(std::shared_ptr<ethdb::Cursor> cursor) : cursor_(cursor) {}
+
+    uint64_t tx_id() const override { return 0; }
+
+    asio::awaitable<void> open() override { co_return; }
+
+    asio::awaitable<std::shared_ptr<ethdb::Cursor>> cursor(const std::string& /*table*/) override {
+        co_return cursor_;
+    }
+
+    asio::awaitable<std::shared_ptr<ethdb::CursorDupSort>> cursor_dup_sort(const std::string& /*table*/) override {
+        co_return nullptr;
+    }
+
+    asio::awaitable<void> close() override { co_return; }
+
+private:
+    std::shared_ptr<ethdb::Cursor> cursor_;
+};
+
+//! This dummy database acts as a factory for dummy transactions using the same cursor.
+class DummyDatabase : public ethdb::Database {
+public:
+    DummyDatabase(std::shared_ptr<ethdb::Cursor> cursor) : cursor_(cursor) {}
+
+    asio::awaitable<std::unique_ptr<ethdb::Transaction>> begin() override {
+        co_return std::make_unique<DummyTransaction>(cursor_);
+    }
+private:
+    ethdb::Transaction* transaction_;
+    std::shared_ptr<ethdb::Cursor> cursor_;
 };
 
 } // namespace
@@ -294,26 +317,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         "6537383538227d")};
     silkworm::Bytes key(8, '\0');
 
-
-    MockDatabase* mock_database = new MockDatabase();
-    MockTransaction* mock_transaction = new MockTransaction();
-    MockCursor* mock_cursor = new MockCursor();
-
-    std::unique_ptr<ethdb::Database> database_ptr{mock_database};
-    std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
-
-    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
-            std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
-            co_return mock_transaction_ptr;
-        }
-    ));
-
-    EXPECT_CALL(*mock_transaction, cursor(testing::_)).WillRepeatedly(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
-            co_return mock_cursor_ptr;
-        }
-    ));
+    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
@@ -327,6 +331,10 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         }
     ));
 
+    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
@@ -338,8 +346,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
             "terminalBlockNumber":"0x0"
         }]
     })"_json;
-    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
-    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
     auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
@@ -377,26 +384,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
         "763303537633034646537383538227d")};
     silkworm::Bytes key(8, '\0');
 
-
-    MockDatabase* mock_database = new MockDatabase();
-    MockTransaction* mock_transaction = new MockTransaction();
-    MockCursor* mock_cursor = new MockCursor();
-
-    std::unique_ptr<ethdb::Database> database_ptr{mock_database};
-    std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
-
-    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
-            std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
-            co_return mock_transaction_ptr;
-        }
-    ));
-
-    EXPECT_CALL(*mock_transaction, cursor(testing::_)).WillRepeatedly(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
-            co_return mock_cursor_ptr;
-        }
-    ));
+    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
@@ -410,6 +398,10 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
         }
     ));
 
+    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
@@ -421,8 +413,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
             "terminalBlockNumber":"0x0"
         }]
     })"_json;
-    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
-    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
     auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
@@ -461,26 +452,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
         "6537383538227d")};
     silkworm::Bytes key(8, '\0');
 
-
-    MockDatabase* mock_database = new MockDatabase();
-    MockTransaction* mock_transaction = new MockTransaction();
-    MockCursor* mock_cursor = new MockCursor();
-
-    std::unique_ptr<ethdb::Database> database_ptr{mock_database};
-    std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
-
-    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
-            std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
-            co_return mock_transaction_ptr;
-        }
-    ));
-
-    EXPECT_CALL(*mock_transaction, cursor(testing::_)).WillRepeatedly(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
-            co_return mock_cursor_ptr;
-        }
-    ));
+    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
@@ -494,6 +466,10 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
         }
     ));
 
+    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
@@ -505,8 +481,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
             "terminalBlockNumber":"0x0"
         }]
     })"_json;
-    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
-    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
     auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
@@ -547,26 +522,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
         "6537383538227d")};
     silkworm::Bytes key(8, '\0');
 
-
-    MockDatabase* mock_database = new MockDatabase();
-    MockTransaction* mock_transaction = new MockTransaction();
-    MockCursor* mock_cursor = new MockCursor();
-
-    std::unique_ptr<ethdb::Database> database_ptr{mock_database};
-    std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
-
-    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
-            std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
-            co_return mock_transaction_ptr;
-        }
-    ));
-
-    EXPECT_CALL(*mock_transaction, cursor(testing::_)).WillRepeatedly(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
-            co_return mock_cursor_ptr;
-        }
-    ));
+    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
@@ -580,6 +536,10 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
         }
     ));
 
+    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
@@ -591,8 +551,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
             "terminalBlockNumber":"0x0"
         }]
     })"_json;
-    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
-    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
     auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
@@ -634,26 +593,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
         "763303537633034646537383538227d")};
     silkworm::Bytes key(8, '\0');
 
-
-    MockDatabase* mock_database = new MockDatabase();
-    MockTransaction* mock_transaction = new MockTransaction();
-    MockCursor* mock_cursor = new MockCursor();
-
-    std::unique_ptr<ethdb::Database> database_ptr{mock_database};
-    std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
-
-    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
-            std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
-            co_return mock_transaction_ptr;
-        }
-    ));
-
-    EXPECT_CALL(*mock_transaction, cursor(testing::_)).WillRepeatedly(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
-            co_return mock_cursor_ptr;
-        }
-    ));
+    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
@@ -667,6 +607,10 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
         }
     ));
 
+    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
@@ -678,8 +622,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
             "terminalBlockNumber":"0x0"
         }]
     })"_json;
-    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
-    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
     auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
@@ -717,26 +660,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
         "636b4e756d626572223a307d")};
     silkworm::Bytes key(8, '\0');
 
-
-    MockDatabase* mock_database = new MockDatabase();
-    MockTransaction* mock_transaction = new MockTransaction();
-    MockCursor* mock_cursor = new MockCursor();
-
-    std::unique_ptr<ethdb::Database> database_ptr{mock_database};
-    std::shared_ptr<MockCursor> mock_cursor_ptr{mock_cursor};
-
-    EXPECT_CALL(*mock_database, begin()).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::unique_ptr<ethdb::Transaction>> {
-            std::unique_ptr<MockTransaction> mock_transaction_ptr{mock_transaction};
-            co_return mock_transaction_ptr;
-        }
-    ));
-
-    EXPECT_CALL(*mock_transaction, cursor(testing::_)).WillRepeatedly(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<std::shared_ptr<ethdb::Cursor>> {
-            co_return mock_cursor_ptr;
-        }
-    ));
+    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
@@ -750,6 +674,10 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
         }
     ));
 
+    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
     nlohmann::json reply;
     nlohmann::json request = R"({
         "jsonrpc":"2.0",
@@ -761,8 +689,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
             "terminalBlockNumber":"0x0"
         }]
     })"_json;
-    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
-    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
     auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
