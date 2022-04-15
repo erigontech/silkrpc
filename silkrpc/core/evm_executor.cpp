@@ -183,17 +183,17 @@ std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm,
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn, std::shared_ptr<silkworm::EvmTracer> tracer) {
+asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn, const Tracers& tracers) {
     SILKRPC_DEBUG << "EVMExecutor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " start\n";
 
     std::ostringstream out;
 
     const auto exec_result = co_await asio::async_compose<decltype(asio::use_awaitable), void(ExecutionResult)>(
-        [this, &block, &txn, &tracer, &out](auto&& self) {
+        [this, &block, &txn, &tracers, &out](auto&& self) {
             SILKRPC_TRACE << "EVMExecutor::call post block: " << block.header.number << " txn: " << &txn << "\n";
-            asio::post(workers_, [this, &block, &txn, &tracer, &out, self = std::move(self)]() mutable {
+            asio::post(workers_, [this, &block, &txn, &tracers, &out, self = std::move(self)]() mutable {
                 VM evm{block, state_, config_};
-                if (tracer) {
+                for (auto& tracer : tracers) {
                     evm.add_tracer(*tracer);
                 }
 

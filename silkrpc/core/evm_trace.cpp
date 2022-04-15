@@ -513,20 +513,26 @@ asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std:
         const auto execution_result = co_await executor.call(block, txn);
     }
 
-    std::shared_ptr<silkworm::EvmTracer> tracer;
+    silkrpc::Tracers tracers;
+
     TraceCallResult result;
     TraceCallTraces& traces = result.traces;
     if (config_.vm_trace) {
         traces.vm_trace.emplace();
-        tracer = std::make_shared<trace::VmTraceTracer>(traces.vm_trace.value());
+        std::shared_ptr<silkworm::EvmTracer> tracer = std::make_shared<trace::VmTraceTracer>(traces.vm_trace.value());
+        tracers.push_back(tracer);
     }
     if (config_.trace) {
         traces.trace.emplace();
+        std::shared_ptr<silkworm::EvmTracer> tracer = std::make_shared<trace::TraceTracer>(traces.trace.value());
+        tracers.push_back(tracer);
     }
     if (config_.state_diff) {
         traces.state_diff.emplace();
+        std::shared_ptr<silkworm::EvmTracer> tracer = std::make_shared<trace::StateDiffTracer>(traces.state_diff.value());
+        tracers.push_back(tracer);
     }
-    auto execution_result = co_await executor.call(block, transaction, tracer);
+    auto execution_result = co_await executor.call(block, transaction, tracers);
 
     if (execution_result.pre_check_error) {
         result.pre_check_error = execution_result.pre_check_error.value();

@@ -269,7 +269,10 @@ asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::execute(
         debug_trace.debug_config = config_;
         auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_);
 
-        const auto execution_result = co_await executor.call(block, txn, debug_tracer);
+        silkrpc::Tracers tracers;
+        tracers.push_back(debug_tracer);
+
+        const auto execution_result = co_await executor.call(block, txn, tracers);
 
         if (execution_result.pre_check_error) {
             SILKRPC_DEBUG << "debug failed: " << execution_result.pre_check_error.value() << "\n";
@@ -322,7 +325,11 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std:
     debug_trace.debug_config = config_;
 
     auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_);
-    const auto execution_result = co_await executor.call(block, transaction, debug_tracer);
+
+    silkrpc::Tracers tracers;
+    tracers.push_back(debug_tracer);
+
+    const auto execution_result = co_await executor.call(block, transaction, tracers);
 
     if (execution_result.pre_check_error) {
         result.pre_check_error = "tracing failed: " + execution_result.pre_check_error.value();
