@@ -41,6 +41,12 @@
 
 namespace silkrpc::txpool {
 
+struct StatusInfo {
+   unsigned int queued;
+   unsigned int pending;
+   unsigned int base_fee;
+};
+
 using AddClient = AsyncUnaryClient<
     ::txpool::Txpool::StubInterface,
     ::txpool::AddRequest,
@@ -84,6 +90,21 @@ using NonceAwaitable = unary_awaitable<
     ::txpool::Txpool::StubInterface,
     ::txpool::NonceRequest,
     ::txpool::NonceReply
+>;
+
+using StatusClient = AsyncUnaryClient<
+    ::txpool::Txpool::StubInterface,
+    ::txpool::StatusRequest,
+    ::txpool::StatusReply,
+    &::txpool::Txpool::StubInterface::PrepareAsyncStatus
+>;
+
+using StatusAwaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    StatusClient,
+    ::txpool::Txpool::StubInterface,
+    ::txpool::StatusRequest,
+    ::txpool::StatusReply
 >;
 
 class TransactionPool final {
@@ -179,6 +200,19 @@ public:
         SILKRPC_DEBUG << "TransactionPool::nonce found:" << reply.found() << " nonce: " << reply.nonce() <<
                          " t=" << clock_time::since(start_time) << "\n";
         co_return reply.found() ? std::optional<uint64_t>{reply.nonce()} : std::nullopt;
+    }
+
+    asio::awaitable<struct StatusInfo> get_status() {
+        StatusInfo status_info{};
+        const auto start_time = clock_time::now();
+        SILKRPC_DEBUG << "TransactionPool::getStatus\n";
+        ::txpool::StatusRequest request{};
+        StatusAwaitable status_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await status_awaitable.async_call(request, asio::use_awaitable);
+        status_info.base_fee = reply.basefeecount();
+        status_info.queued = reply.queuedcount();
+        status_info.pending = reply.pendingcount();
+        co_return status_info;
     }
 
 

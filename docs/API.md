@@ -95,7 +95,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | trace_transaction                          | -            | not yet implemented                        |
 |                                            |              |                                            |
 | txpool_content                             | -            | not yet implemented                        |
-| txpool_status                              | -            | not yet implemented                        |
+| txpool_status                              | Yes          |                                            |
 |                                            |              |                                            |
 | eth_getCompilers                           | No           | deprecated                                 |
 | eth_compileLLL                             | No           | deprecated                                 |

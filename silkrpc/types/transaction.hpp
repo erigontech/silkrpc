@@ -57,6 +57,13 @@ struct AccessListResult {
     uint64_t gas_used;
 };
 
+
+struct TxPoolStatusInfo {
+   unsigned int base_fee;
+   unsigned int pending;
+   unsigned int queued;
+};
+
 struct CallBundleTxInfo {
    ethash_hash256 hash;
    uint64_t gas_used;

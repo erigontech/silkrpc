@@ -113,6 +113,8 @@ constexpr const char* k_parity_getBlockReceipts{"parity_getBlockReceipts"};
 
 constexpr const char* k_engine_getPayloadV1{"engine_getPayloadV1"};
 constexpr const char* k_engine_newPayloadV1{"engine_newPayloadV1"};
+
+constexpr const char* k_txpool_status{"txpool_status"};
 } // namespace silkrpc::http::method
 
 #endif // SILKRPC_HTTP_METHODS_HPP_

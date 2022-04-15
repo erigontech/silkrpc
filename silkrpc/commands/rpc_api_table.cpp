@@ -64,6 +64,8 @@ void RpcApiTable::add_handlers(const std::string& api_namespace) {
         add_web3_handlers();
     } else if (api_namespace == kEngineApiNamespace) {
         add_engine_handlers();
+    } else if (api_namespace == kTxPoolApiNamespace) {
+        add_txpool_handlers();
     } else {
         SILKRPC_WARN << "Server::add_handlers invalid namespace [" << api_namespace << "] ignored\n";
     }
@@ -168,6 +170,10 @@ void RpcApiTable::add_web3_handlers() {
 void RpcApiTable::add_engine_handlers() {
     handlers_[http::method::k_engine_getPayloadV1] = &commands::RpcApi::handle_engine_get_payload_v1;
     handlers_[http::method::k_engine_newPayloadV1] = &commands::RpcApi::handle_engine_new_payload_v1;
+}
+
+void RpcApiTable::add_txpool_handlers() {
+    handlers_[http::method::k_txpool_status] = &commands::RpcApi::handle_txpool_status;
 }
 
 } // namespace silkrpc::commands

@@ -112,6 +112,19 @@ TEST_CASE("serialize AccessListResult with error", "[silkrpc][to_json]") {
     })"_json);
 }
 
+TEST_CASE("serialize TxPoolStatusInfo", "[silkrpc][to_json]") {
+    TxPoolStatusInfo status_info;
+    status_info.pending = 0x7;
+    status_info.queued = 0x8;
+    status_info.base_fee = 0x9;
+    nlohmann::json j = status_info;
+    CHECK(j == R"({
+        "baseFee":"0x9",
+        "pending":"0x7",
+        "queued":"0x8"
+    })"_json);
+}
+
 TEST_CASE("serialize non-empty bytes32", "[silkrpc][to_json]") {
     evmc::bytes32 b32{0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32};
     nlohmann::json j = b32;

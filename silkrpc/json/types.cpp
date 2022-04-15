@@ -185,6 +185,12 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
 
 namespace silkrpc {
 
+void to_json(nlohmann::json& json, const struct TxPoolStatusInfo& status_info) {
+    json["queued"] = silkrpc::to_quantity(status_info.queued);
+    json["pending"] = silkrpc::to_quantity(status_info.pending);
+    json["baseFee"] = silkrpc::to_quantity(status_info.base_fee);
+}
+
 void to_json(nlohmann::json& json, const Rlp& rlp) {
     json = "0x" + silkworm::to_hex(rlp.buffer);
 }
