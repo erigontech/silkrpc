@@ -41,6 +41,12 @@
 
 namespace silkrpc::txpool {
 
+struct StatusInfo {
+   unsigned int queued;
+   unsigned int pending;
+   unsigned int base_fee;
+};
+
 using AddClient = AsyncUnaryClient<
     ::txpool::Txpool::StubInterface,
     ::txpool::AddRequest,
@@ -69,6 +75,36 @@ using TransactionsAwaitable = unary_awaitable<
     ::txpool::Txpool::StubInterface,
     ::txpool::TransactionsRequest,
     ::txpool::TransactionsReply
+>;
+
+using NonceClient = AsyncUnaryClient<
+    ::txpool::Txpool::StubInterface,
+    ::txpool::NonceRequest,
+    ::txpool::NonceReply,
+    &::txpool::Txpool::StubInterface::PrepareAsyncNonce
+>;
+
+using NonceAwaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    NonceClient,
+    ::txpool::Txpool::StubInterface,
+    ::txpool::NonceRequest,
+    ::txpool::NonceReply
+>;
+
+using StatusClient = AsyncUnaryClient<
+    ::txpool::Txpool::StubInterface,
+    ::txpool::StatusRequest,
+    ::txpool::StatusReply,
+    &::txpool::Txpool::StubInterface::PrepareAsyncStatus
+>;
+
+using StatusAwaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    StatusClient,
+    ::txpool::Txpool::StubInterface,
+    ::txpool::StatusRequest,
+    ::txpool::StatusReply
 >;
 
 class TransactionPool final {
@@ -154,7 +190,47 @@ public:
         }
     }
 
+    asio::awaitable<std::optional<uint64_t>> nonce(const evmc::address& address) {
+        const auto start_time = clock_time::now();
+        SILKRPC_DEBUG << "TransactionPool::nonce address=" << address << "\n";
+        ::txpool::NonceRequest request{};
+        request.set_allocated_address(H160_from_address(address));
+        NonceAwaitable nonce_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await nonce_awaitable.async_call(request, asio::use_awaitable);
+        SILKRPC_DEBUG << "TransactionPool::nonce found:" << reply.found() << " nonce: " << reply.nonce() <<
+                         " t=" << clock_time::since(start_time) << "\n";
+        co_return reply.found() ? std::optional<uint64_t>{reply.nonce()} : std::nullopt;
+    }
+
+    asio::awaitable<struct StatusInfo> get_status() {
+        StatusInfo status_info{};
+        const auto start_time = clock_time::now();
+        SILKRPC_DEBUG << "TransactionPool::getStatus\n";
+        ::txpool::StatusRequest request{};
+        StatusAwaitable status_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await status_awaitable.async_call(request, asio::use_awaitable);
+        status_info.base_fee = reply.basefeecount();
+        status_info.queued = reply.queuedcount();
+        status_info.pending = reply.pendingcount();
+        co_return status_info;
+    }
+
+
 private:
+    types::H160* H160_from_address(const evmc::address& address) {
+        auto h160{new types::H160()};
+        auto hi{H128_from_bytes(address.bytes)};
+        h160->set_allocated_hi(hi);
+        h160->set_lo(boost::endian::load_big_u32(address.bytes + 16));
+        return h160;
+    }
+    types::H128* H128_from_bytes(const uint8_t* bytes) {
+        auto h128{new types::H128()};
+        h128->set_hi(boost::endian::load_big_u64(bytes));
+        h128->set_lo(boost::endian::load_big_u64(bytes + 8));
+        return h128;
+    }
+
     asio::io_context::executor_type executor_;
     std::unique_ptr<::txpool::Txpool::StubInterface> stub_;
     grpc::CompletionQueue* queue_;

@@ -662,6 +662,29 @@
     {
         "request": {
             "jsonrpc":"2.0",
+            "method":"eth_createAccessList",
+            "params":[
+                {
+                  "data": "0x16934fc40000000000000000000000006e508ed8c6381e19668a17d9e0c2d4d2dd3c39f5",
+                  "from": "0x6e508ed8c6381e19668a17d9e0c2d4d2dd3c39f5",
+                  "to": "0x49a984490a7762b0e5d775f0ffa608899ebe2ee8"
+                },
+                "0x4D3FCC"
+            ],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "result": {
+               "accessList": [], 
+               "gasUsed":    "0x53b8"
+            }
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
             "method":"eth_call",
             "params":[
                 {
@@ -724,6 +747,32 @@
                 "code":3,
                 "message":"execution reverted: Ownable: caller is not the owner",
                 "data":"0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000204f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e6572"
+            }
+        }
+    },
+    {
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"eth_createAccessList",
+            "params":[
+                {
+                  "data": "0xf2fde38b0000000000000000000000007b34bb3a00197e463acfd8556f7a9e1fc1b96b1f",
+                  "from": "0x3a9a5def01d7b14c14ef51996bf66f3047f0738f",
+                  "to": "0x900c8c0a1b609533762390254b58c5760e4d7405",
+                  "gas": "0x7855",
+                  "gasPrice": "0x3B9ACA00"
+                },
+                "0x4366B7"
+            ],
+            "id":1
+        },
+        "response": {
+            "id":1,
+            "jsonrpc":"2.0",
+            "result":{
+                "accessList":[{"address":"0x900c8c0a1b609533762390254b58c5760e4d7405","storageKeys":["0x0000000000000000000000000000000000000000000000000000000000000000"]}],
+                "error":"execution reverted",
+                "gasUsed":"0x6968"
             }
         }
     },
@@ -891,7 +940,7 @@
     {
         "request": {
             "jsonrpc":"2.0",
-            "method":"tg_getHeaderByNumber",
+            "method":"erigon_getHeaderByNumber",
             "params":["0x41b57c"],
             "id":1
         },
@@ -920,7 +969,7 @@
     {
         "request": {
             "jsonrpc":"2.0",
-            "method":"tg_getHeaderByHash",
+            "method":"erigon_getHeaderByHash",
             "params":["0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8"],
             "id":1
         },
@@ -949,7 +998,7 @@
     {
         "request": {
             "jsonrpc":"2.0",
-            "method":"tg_forks",
+            "method":"erigon_forks",
             "params":[],
             "id":1
         },
@@ -965,7 +1014,7 @@
     {
         "request": {
             "jsonrpc":"2.0",
-            "method":"tg_issuance",
+            "method":"erigon_issuance",
             "params":["0x49BDEF"],
             "id":1
         },
@@ -978,7 +1027,7 @@
     {
         "request": {
             "jsonrpc":"2.0",
-            "method":"tg_getLogsByHash",
+            "method":"erigon_getLogsByHash",
             "params":["0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8"],
             "id":1
         },
@@ -1546,7 +1595,7 @@
             "jsonrpc":"2.0",
             "method":"debug_traceBlockByNumber",
             "params":[
-                "1024165",
+                1024165,
                 {
                     "disableStorage": false,
                     "disableMemory": false,
@@ -2310,5 +2359,56 @@
             "id": 1,
             "jsonrpc": "2.0"
         }
-    }
+   },
+   {
+        "request": {
+            "jsonrpc": "2.0",
+            "method": "eth_callBundle",
+            "params": [["0x1b9bdc90d60022e1f0f7d5fddc6b31bdcbe7e8014ba2a3601176beae2711d771"], "0x2DC6D7", 1000], 
+            "id": 1
+        },
+        "response": {
+             "result":{"bundleHash":"0x0281812e9ed53b2096bfda7e2c041263b8bfd428b75c3a1eafa13740bdee6804",
+                        "results":[{"gasUsed":746070,
+                                    "txHash":"0x1b9bdc90d60022e1f0f7d5fddc6b31bdcbe7e8014ba2a3601176beae2711d771",
+                                    "value":"0x0000000000000000000000000000000000000000000000000000000000000000"
+                                  }]
+                      },
+            "id": 1,
+            "jsonrpc": "2.0"
+        }
+   },
+   {
+        "request": {
+            "jsonrpc": "2.0",
+            "method": "eth_callBundle",
+            "params": [["0x1b9bdc90d60022e1f0f7d5fddc6b31bdcbe7e8014ba2a3601176beae2711d771"], "0x2DC6D7", 1], 
+            "id": 1
+        },
+        "response": {
+            "error":{"code":-32000,"message":"execution aborted (timeout)"},
+            "id": 1,
+            "jsonrpc": "2.0"
+        }
+   },
+   {
+        "request": {
+            "jsonrpc": "2.0",
+            "method": "eth_callBundle",
+            "params": [["0xf982ae6b23dfc23623ae88306360bf2d9a3dd5318469a2bbb33d5481d54ae38a"], "0x2DC7D7", 1000],
+            "id": 1
+        },
+        "response": {
+            "result":{"bundleHash":"0xb3c06f0375eb93591e6789a2856739d2890478e97560077f4c65dba24eeed2ce",
+                      "results":[
+                                 {"error":"execution reverted",
+                                  "gasUsed":37419,
+                                  "txHash":"0xf982ae6b23dfc23623ae88306360bf2d9a3dd5318469a2bbb33d5481d54ae38a"
+                                 }
+                                ]
+                     },
+            "id": 1,
+            "jsonrpc": "2.0"
+        }
+  }
 ]

@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "evm_tracing.hpp"
+#include "evm_debug.hpp"
 
 #include <string>
 
@@ -31,7 +31,7 @@
 #include <silkrpc/ethdb/tables.hpp>
 #include <silkrpc/types/transaction.hpp>
 
-namespace silkrpc::trace {
+namespace silkrpc::debug {
 
 using Catch::Matchers::Message;
 using evmc::literals::operator""_address;
@@ -53,7 +53,7 @@ static silkworm::Bytes kConfigValue{*silkworm::from_hex(
     "223a302c22697374616e62756c426c6f636b223a313536313635312c226265726c696e426c6f636b223a343436303634342c226c6f6e646f6e"
     "426c6f636b223a353036323630352c22636c69717565223a7b22706572696f64223a31352c2265706f6368223a33303030307d7d")};
 
-class EvmTracingMockDatabaseReader : public core::rawdb::DatabaseReader {
+class EvmDebugMockDatabaseReader : public core::rawdb::DatabaseReader {
   public:
     MOCK_CONST_METHOD2(get, asio::awaitable<KeyValue>(const std::string&, const silkworm::ByteView&));
     MOCK_CONST_METHOD2(get_one, asio::awaitable<silkworm::Bytes>(const std::string&, const silkworm::ByteView&));
@@ -62,7 +62,7 @@ class EvmTracingMockDatabaseReader : public core::rawdb::DatabaseReader {
     MOCK_CONST_METHOD3(for_prefix, asio::awaitable<void>(const std::string&, const silkworm::ByteView&, core::rawdb::Walker));
 };
 
-TEST_CASE("TraceExecutor::execute call 1") {
+TEST_CASE("DebugExecutor::execute call 1") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -114,7 +114,7 @@ TEST_CASE("TraceExecutor::execute call 1") {
     static silkworm::Bytes kPlainStateKey1{*silkworm::from_hex("e0a2bd4258d2768837baa26a28fe71dc079f84c7")};
     static silkworm::Bytes kPlainStateKey2{*silkworm::from_hex("52728289eba496b6080d57d0250a90663a07e556")};
 
-    EvmTracingMockDatabaseReader db_reader;
+    EvmDebugMockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -156,7 +156,7 @@ TEST_CASE("TraceExecutor::execute call 1") {
         block.header.number = block_number;
 
         asio::io_context& io_context = context_pool.get_io_context();
-        TraceExecutor executor{context_pool.get_context(), db_reader, workers};
+        DebugExecutor executor{context_pool.get_context(), db_reader, workers};
         auto execution_result = asio::co_spawn(io_context, executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -165,7 +165,7 @@ TEST_CASE("TraceExecutor::execute call 1") {
         pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == true);
-        CHECK(result.pre_check_error.value() == "tracing failed: intrinsic gas too low: have 50000 want 53072");
+        CHECK(result.pre_check_error.value() == "debug failed: intrinsic gas too low: have 50000 want 53072");
     }
 
     SECTION("Call: full output") {
@@ -204,7 +204,7 @@ TEST_CASE("TraceExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        TraceExecutor executor{context_pool.get_context(), db_reader, workers};
+        DebugExecutor executor{context_pool.get_context(), db_reader, workers};
         asio::io_context& io_context = context_pool.get_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
@@ -306,8 +306,8 @@ TEST_CASE("TraceExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        TraceConfig config{false, false, true};
-        TraceExecutor executor{context_pool.get_context(), db_reader, workers, config};
+        DebugConfig config{false, false, true};
+        DebugExecutor executor{context_pool.get_context(), db_reader, workers, config};
         asio::io_context& io_context = context_pool.get_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
@@ -400,8 +400,8 @@ TEST_CASE("TraceExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        TraceConfig config{false, true, false};
-        TraceExecutor executor{context_pool.get_context(), db_reader, workers, config};
+        DebugConfig config{false, true, false};
+        DebugExecutor executor{context_pool.get_context(), db_reader, workers, config};
         asio::io_context& io_context = context_pool.get_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
@@ -499,8 +499,8 @@ TEST_CASE("TraceExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        TraceConfig config{true, false, false};
-        TraceExecutor executor{context_pool.get_context(), db_reader, workers, config};
+        DebugConfig config{true, false, false};
+        DebugExecutor executor{context_pool.get_context(), db_reader, workers, config};
         asio::io_context& io_context = context_pool.get_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
@@ -515,9 +515,6 @@ TEST_CASE("TraceExecutor::execute call 1") {
 
         CHECK(trace == R"({
             "failed": false,
-            "gas": 75178,
-            "returnValue": "",
-            "structLogs": [
                 {
                     "depth": 1,
                     "gas": 65864,
@@ -599,8 +596,8 @@ TEST_CASE("TraceExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        TraceConfig config{true, true, true};
-        TraceExecutor executor{context_pool.get_context(), db_reader, workers, config};
+        DebugConfig config{true, true, true};
+        DebugExecutor executor{context_pool.get_context(), db_reader, workers, config};
         asio::io_context& io_context = context_pool.get_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
@@ -651,7 +648,7 @@ TEST_CASE("TraceExecutor::execute call 1") {
     }
 }
 
-TEST_CASE("TraceExecutor::execute call 2") {
+TEST_CASE("DebugExecutor::execute call 2") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -707,7 +704,7 @@ TEST_CASE("TraceExecutor::execute call 2") {
     static silkworm::Bytes kAccountChangeSetSubkey2{*silkworm::from_hex("5e1f0c9ddbe3cb57b80c933fab5151627d7966fa")};
     static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("03010408014219564ff26a00")};
 
-    EvmTracingMockDatabaseReader db_reader;
+    EvmDebugMockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -791,7 +788,7 @@ TEST_CASE("TraceExecutor::execute call 2") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        TraceExecutor executor{context_pool.get_context(), db_reader, workers};
+        DebugExecutor executor{context_pool.get_context(), db_reader, workers};
         asio::io_context& io_context = context_pool.get_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
@@ -813,7 +810,7 @@ TEST_CASE("TraceExecutor::execute call 2") {
     }
 }
 
-TEST_CASE("TraceExecutor::execute call with error") {
+TEST_CASE("DebugExecutor::execute call with error") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -841,7 +838,7 @@ TEST_CASE("TraceExecutor::execute call with error") {
     static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("6951c35e335fa18c97cb207119133cd8009580cd")};
     static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("00000000005279a8")};
 
-    EvmTracingMockDatabaseReader db_reader;
+    EvmDebugMockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -937,7 +934,7 @@ TEST_CASE("TraceExecutor::execute call with error") {
     silkworm::Block block{};
     block.header.number = block_number;
 
-    TraceExecutor executor{context_pool.get_context(), db_reader, workers};
+    DebugExecutor executor{context_pool.get_context(), db_reader, workers};
     asio::io_context& io_context = context_pool.get_io_context();
     auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
     auto result = execution_result.get();
@@ -978,7 +975,7 @@ TEST_CASE("TraceExecutor::execute call with error") {
     })"_json);
 }
 
-TEST_CASE("TraceExecutor::execute block") {
+TEST_CASE("DebugExecutor::execute block") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -998,7 +995,7 @@ TEST_CASE("TraceExecutor::execute block") {
     static silkworm::Bytes kAccountChangeSetSubkey2{*silkworm::from_hex("a85b4c37cd8f447848d49851a1bb06d10d410c13")};
     static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("")};
 
-    EvmTracingMockDatabaseReader db_reader;
+    EvmDebugMockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -1088,7 +1085,7 @@ TEST_CASE("TraceExecutor::execute block") {
         "8190555050565b6000805490509056fea265627a7a72305820ca7603d2458ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60"
         "af2c64736f6c634300050a0032");
 
-    TraceExecutor executor{context_pool.get_context(), db_reader, workers};
+    DebugExecutor executor{context_pool.get_context(), db_reader, workers};
 
     asio::io_context& io_context = context_pool.get_io_context();
     auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block), asio::use_future);
@@ -1422,11 +1419,11 @@ TEST_CASE("TraceExecutor::execute block") {
 }
 
 
-TEST_CASE("Trace json serialization") {
+TEST_CASE("DebugTrace json serialization") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    TraceLog log;
+    DebugLog log;
     log.pc = 1;
     log.op = "PUSH1";
     log.gas = 3;
@@ -1437,16 +1434,16 @@ TEST_CASE("Trace json serialization") {
     log.stack.push_back("0x80");
     log.storage["804292fe56769f4b9f0e91cf85875f67487cd9e85a084cbba2188be4466c4f23"] = "0000000000000000000000000000000000000000000000000000000000000008";
 
-    SECTION("Trace: no memory, stack and storage") {
-        Trace trace;
-        trace.failed = false;
-        trace.gas = 20;
-        trace.return_value = "deadbeaf";
-        trace.trace_logs.push_back(log);
+    SECTION("DebugTrace: no memory, stack and storage") {
+        DebugTrace debug_trace;
+        debug_trace.failed = false;
+        debug_trace.gas = 20;
+        debug_trace.return_value = "deadbeaf";
+        debug_trace.debug_logs.push_back(log);
 
-        trace.trace_config.disableStorage = true;
-        trace.trace_config.disableMemory = true;
-        trace.trace_config.disableStack = true;
+        debug_trace.debug_config.disableStorage = true;
+        debug_trace.debug_config.disableMemory = true;
+        debug_trace.debug_config.disableStack = true;
 
         nlohmann::json json = trace;
 
@@ -1464,16 +1461,16 @@ TEST_CASE("Trace json serialization") {
         })"_json);
     }
 
-    SECTION("Trace: only memory") {
-        Trace trace;
-        trace.failed = false;
-        trace.gas = 20;
-        trace.return_value = "deadbeaf";
-        trace.trace_logs.push_back(log);
+    SECTION("DebugTrace: only memory") {
+        DebugTrace debug_trace;
+        debug_trace.failed = false;
+        debug_trace.gas = 20;
+        debug_trace.return_value = "deadbeaf";
+        debug_trace.debug_logs.push_back(log);
 
-        trace.trace_config.disableStorage = true;
-        trace.trace_config.disableMemory = false;
-        trace.trace_config.disableStack = true;
+        debug_trace.debug_config.disableStorage = true;
+        debug_trace.debug_config.disableMemory = false;
+        debug_trace.debug_config.disableStack = true;
 
         nlohmann::json json = trace;
 
@@ -1492,16 +1489,16 @@ TEST_CASE("Trace json serialization") {
         })"_json);
     }
 
-    SECTION("Trace: only stack") {
-        Trace trace;
-        trace.failed = false;
-        trace.gas = 20;
-        trace.return_value = "deadbeaf";
-        trace.trace_logs.push_back(log);
+    SECTION("DebugTrace: only stack") {
+        DebugTrace debug_trace;
+        debug_trace.failed = false;
+        debug_trace.gas = 20;
+        debug_trace.return_value = "deadbeaf";
+        debug_trace.debug_logs.push_back(log);
 
-        trace.trace_config.disableStorage = true;
-        trace.trace_config.disableMemory = true;
-        trace.trace_config.disableStack = false;
+        debug_trace.debug_config.disableStorage = true;
+        debug_trace.debug_config.disableMemory = true;
+        debug_trace.debug_config.disableStack = false;
 
         nlohmann::json json = trace;
 
@@ -1520,16 +1517,16 @@ TEST_CASE("Trace json serialization") {
         })"_json);
     }
 
-    SECTION("Trace: only storage") {
-        Trace trace;
-        trace.failed = false;
-        trace.gas = 20;
-        trace.return_value = "deadbeaf";
-        trace.trace_logs.push_back(log);
+    SECTION("DebugTrace: only storage") {
+        DebugTrace debug_trace;
+        debug_trace.failed = false;
+        debug_trace.gas = 20;
+        debug_trace.return_value = "deadbeaf";
+        debug_trace.debug_logs.push_back(log);
 
-        trace.trace_config.disableStorage = false;
-        trace.trace_config.disableMemory = true;
-        trace.trace_config.disableStack = true;
+        debug_trace.debug_config.disableStorage = false;
+        debug_trace.debug_config.disableMemory = true;
+        debug_trace.debug_config.disableStack = true;
 
         nlohmann::json json = trace;
 
@@ -1550,16 +1547,16 @@ TEST_CASE("Trace json serialization") {
         })"_json);
     }
 
-    SECTION("Trace: full") {
-        Trace trace;
-        trace.failed = false;
-        trace.gas = 20;
-        trace.return_value = "deadbeaf";
-        trace.trace_logs.push_back(log);
+    SECTION("DebugTrace: full") {
+        DebugTrace debug_trace;
+        debug_trace.failed = false;
+        debug_trace.gas = 20;
+        debug_trace.return_value = "deadbeaf";
+        debug_trace.debug_logs.push_back(log);
 
-        trace.trace_config.disableStorage = false;
-        trace.trace_config.disableMemory = false;
-        trace.trace_config.disableStack = false;
+        debug_trace.debug_config.disableStorage = false;
+        debug_trace.debug_config.disableMemory = false;
+        debug_trace.debug_config.disableStack = false;
 
         nlohmann::json json = trace;
 
@@ -1582,19 +1579,19 @@ TEST_CASE("Trace json serialization") {
         })"_json);
     }
 
-    SECTION("Trace vector") {
-        Trace trace;
-        trace.failed = false;
-        trace.gas = 20;
-        trace.return_value = "deadbeaf";
-        trace.trace_logs.push_back(log);
+    SECTION("DebugTrace vector") {
+        DebugTrace debug_trace;
+        debug_trace.failed = false;
+        debug_trace.gas = 20;
+        debug_trace.return_value = "deadbeaf";
+        debug_trace.debug_logs.push_back(log);
 
-        trace.trace_config.disableStorage = false;
-        trace.trace_config.disableMemory = false;
-        trace.trace_config.disableStack = false;
+        debug_trace.debug_config.disableStorage = false;
+        debug_trace.debug_config.disableMemory = false;
+        debug_trace.debug_config.disableStack = false;
 
-        std::vector<Trace> traces;
-        traces.push_back(trace);
+        std::vector<DebugTrace> debug_traces;
+        debug_traces.push_back(debug_trace);
 
         nlohmann::json json = trace;
 
@@ -1618,7 +1615,7 @@ TEST_CASE("Trace json serialization") {
     }
 }
 
-TEST_CASE("TraceConfig") {
+TEST_CASE("DebugConfig") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -1629,7 +1626,7 @@ TEST_CASE("TraceConfig") {
             "disableStack": true
             })"_json;
 
-        TraceConfig config;
+        DebugConfig config;
         from_json(json, config);
 
         CHECK(config.disableStorage == true);
@@ -1637,11 +1634,11 @@ TEST_CASE("TraceConfig") {
         CHECK(config.disableStack == true);
     }
     SECTION("dump on stream") {
-        TraceConfig config{true, false, true};
+        DebugConfig config{true, false, true};
 
         std::ostringstream os;
         os << config;
         CHECK(os.str() == "disableStorage: true disableMemory: false disableStack: true");
     }
 }
-}  // namespace silkrpc::trace
+}  // namespace silkrpc::debug

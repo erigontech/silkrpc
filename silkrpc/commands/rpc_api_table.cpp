@@ -56,14 +56,16 @@ void RpcApiTable::add_handlers(const std::string& api_namespace) {
         add_net_handlers();
     } else if (api_namespace == kParityApiNamespace) {
         add_parity_handlers();
-    } else if (api_namespace == kTgApiNamespace) {
-        add_tg_handlers();
+    } else if (api_namespace == kErigonApiNamespace) {
+        add_erigon_handlers();
     } else if (api_namespace == kTraceApiNamespace) {
         add_trace_handlers();
     } else if (api_namespace == kWeb3ApiNamespace) {
         add_web3_handlers();
     } else if (api_namespace == kEngineApiNamespace) {
         add_engine_handlers();
+    } else if (api_namespace == kTxPoolApiNamespace) {
+        add_txpool_handlers();
     } else {
         SILKRPC_WARN << "Server::add_handlers invalid namespace [" << api_namespace << "] ignored\n";
     }
@@ -107,6 +109,8 @@ void RpcApiTable::add_eth_handlers() {
     handlers_[http::method::k_eth_getTransactionCount] = &commands::RpcApi::handle_eth_get_transaction_count;
     handlers_[http::method::k_eth_getStorageAt] = &commands::RpcApi::handle_eth_get_storage_at;
     handlers_[http::method::k_eth_call] = &commands::RpcApi::handle_eth_call;
+    handlers_[http::method::k_eth_callBundle] = &commands::RpcApi::handle_eth_call_bundle;
+    handlers_[http::method::k_eth_createAccessList] = &commands::RpcApi::handle_eth_create_access_list;
     handlers_[http::method::k_eth_newFilter] = &commands::RpcApi::handle_eth_new_filter;
     handlers_[http::method::k_eth_newBlockFilter] = &commands::RpcApi::handle_eth_new_block_filter;
     handlers_[http::method::k_eth_newPendingTransactionFilter] = &commands::RpcApi::handle_eth_new_pending_transaction_filter;
@@ -138,12 +142,12 @@ void RpcApiTable::add_parity_handlers() {
     handlers_[http::method::k_parity_getBlockReceipts] = &commands::RpcApi::handle_parity_get_block_receipts;
 }
 
-void RpcApiTable::add_tg_handlers() {
-    handlers_[http::method::k_tg_getHeaderByHash] = &commands::RpcApi::handle_tg_get_header_by_hash;
-    handlers_[http::method::k_tg_getHeaderByNumber] = &commands::RpcApi::handle_tg_get_header_by_number;
-    handlers_[http::method::k_tg_getLogsByHash] = &commands::RpcApi::handle_tg_get_logs_by_hash;
-    handlers_[http::method::k_tg_forks] = &commands::RpcApi::handle_tg_forks;
-    handlers_[http::method::k_tg_issuance] = &commands::RpcApi::handle_tg_issuance;
+void RpcApiTable::add_erigon_handlers() {
+    handlers_[http::method::k_erigon_getHeaderByHash] = &commands::RpcApi::handle_erigon_get_header_by_hash;
+    handlers_[http::method::k_erigon_getHeaderByNumber] = &commands::RpcApi::handle_erigon_get_header_by_number;
+    handlers_[http::method::k_erigon_getLogsByHash] = &commands::RpcApi::handle_erigon_get_logs_by_hash;
+    handlers_[http::method::k_erigon_forks] = &commands::RpcApi::handle_erigon_forks;
+    handlers_[http::method::k_erigon_issuance] = &commands::RpcApi::handle_erigon_issuance;
 }
 
 void RpcApiTable::add_trace_handlers() {
@@ -166,6 +170,10 @@ void RpcApiTable::add_web3_handlers() {
 void RpcApiTable::add_engine_handlers() {
     handlers_[http::method::k_engine_getPayloadV1] = &commands::RpcApi::handle_engine_get_payload_v1;
     handlers_[http::method::k_engine_newPayloadV1] = &commands::RpcApi::handle_engine_new_payload_v1;
+}
+
+void RpcApiTable::add_txpool_handlers() {
+    handlers_[http::method::k_txpool_status] = &commands::RpcApi::handle_txpool_status;
 }
 
 } // namespace silkrpc::commands

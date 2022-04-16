@@ -216,7 +216,7 @@ TEST_CASE("silkrpc::core::read_block_by_number") {
         check_expected_block_with_hash(bwh);
     }
 
-    SECTION("using valid block_number") {
+    SECTION("using valid block_number and hit cache") {
         BlockCache cache(10, true);
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<silkworm::Bytes> { co_return kBlockHash; }
@@ -264,6 +264,26 @@ TEST_CASE("silkrpc::core::read_block_by_hash") {
         auto result = asio::co_spawn(pool, silkrpc::core::read_block_by_hash(cache, db_reader, bh), asio::use_future);
         const silkworm::BlockWithHash bwh = result.get();
         check_expected_block_with_hash(bwh);
+    }
+
+    SECTION("using valid block_hash and hit cache") {
+        EXPECT_CALL(db_reader, get(db::table::kHeaderNumbers, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kNumber}; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
+        ));
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kBody}; }
+        ));
+        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<void> { co_return; }
+        ));
+        auto result = asio::co_spawn(pool, silkrpc::core::read_block_by_hash(cache, db_reader, bh), asio::use_future);
+        const silkworm::BlockWithHash bwh = result.get();
+        check_expected_block_with_hash(bwh);
+        auto result1 = asio::co_spawn(pool, silkrpc::core::read_block_by_hash(cache, db_reader, bh), asio::use_future);
+        const silkworm::BlockWithHash bwh1 = result1.get();
     }
 }
 
