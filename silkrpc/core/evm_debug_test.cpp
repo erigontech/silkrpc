@@ -215,7 +215,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
         CHECK(result.pre_check_error.has_value() == false);
 
-        nlohmann::json trace = result.trace;
+        nlohmann::json trace = result.debug_trace;
 
         CHECK(trace == R"({
             "failed": false,
@@ -318,7 +318,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
         CHECK(result.pre_check_error.has_value() == false);
 
-        nlohmann::json trace = result.trace;
+        nlohmann::json trace = result.debug_trace;
 
         CHECK(trace == R"({
             "failed": false,
@@ -412,7 +412,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
         CHECK(result.pre_check_error.has_value() == false);
 
-        nlohmann::json trace = result.trace;
+        nlohmann::json trace = result.debug_trace;
 
         CHECK(trace == R"({
             "failed": false,
@@ -511,7 +511,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
         CHECK(result.pre_check_error.has_value() == false);
 
-        nlohmann::json trace = result.trace;
+        nlohmann::json trace = result.debug_trace;
 
         CHECK(trace == R"({
             "failed": false,
@@ -608,7 +608,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
         CHECK(result.pre_check_error.has_value() == false);
 
-        nlohmann::json trace = result.trace;
+        nlohmann::json trace = result.debug_trace;
 
         CHECK(trace == R"({
             "failed": false,
@@ -799,7 +799,7 @@ TEST_CASE("DebugExecutor::execute call 2") {
 
         CHECK(result.pre_check_error.has_value() == false);
         
-        nlohmann::json trace = result.trace;
+        nlohmann::json trace = result.debug_trace;
 
         CHECK(trace == R"({
             "failed": false,
@@ -944,7 +944,7 @@ TEST_CASE("DebugExecutor::execute call with error") {
     pool_thread.join();
 
     CHECK(result.pre_check_error.has_value() == false);
-    nlohmann::json trace = result.trace;
+    nlohmann::json trace = result.debug_trace;
     CHECK(trace == R"({
         "failed": true,
         "gas": 211190,
@@ -1445,7 +1445,7 @@ TEST_CASE("DebugTrace json serialization") {
         debug_trace.debug_config.disableMemory = true;
         debug_trace.debug_config.disableStack = true;
 
-        nlohmann::json json = trace;
+        nlohmann::json json = debug_trace;
 
         CHECK(json == R"({
             "failed": false,
@@ -1472,7 +1472,7 @@ TEST_CASE("DebugTrace json serialization") {
         debug_trace.debug_config.disableMemory = false;
         debug_trace.debug_config.disableStack = true;
 
-        nlohmann::json json = trace;
+        nlohmann::json json = debug_trace;
 
         CHECK(json == R"({
             "failed": false,
@@ -1500,7 +1500,7 @@ TEST_CASE("DebugTrace json serialization") {
         debug_trace.debug_config.disableMemory = true;
         debug_trace.debug_config.disableStack = false;
 
-        nlohmann::json json = trace;
+        nlohmann::json json = debug_trace;
 
         CHECK(json == R"({
             "failed": false,
@@ -1528,7 +1528,7 @@ TEST_CASE("DebugTrace json serialization") {
         debug_trace.debug_config.disableMemory = true;
         debug_trace.debug_config.disableStack = true;
 
-        nlohmann::json json = trace;
+        nlohmann::json json = debug_trace;
 
         CHECK(json == R"({
             "failed": false,
@@ -1558,7 +1558,7 @@ TEST_CASE("DebugTrace json serialization") {
         debug_trace.debug_config.disableMemory = false;
         debug_trace.debug_config.disableStack = false;
 
-        nlohmann::json json = trace;
+        nlohmann::json json = debug_trace;
 
         CHECK(json == R"({
             "failed": false,
@@ -1593,7 +1593,7 @@ TEST_CASE("DebugTrace json serialization") {
         std::vector<DebugTrace> debug_traces;
         debug_traces.push_back(debug_trace);
 
-        nlohmann::json json = trace;
+        nlohmann::json json = debug_trace;
 
         CHECK(json == R"({
             "failed": false,

@@ -64,6 +64,7 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::Execution
 
     const auto opcode = execution_state.code[pc];
     const auto opcode_name = get_opcode_name(opcode_names_, opcode);
+    auto stack_space = execution_state.stack_space;
 
     SILKRPC_DEBUG << "on_instruction_start:"
         << " pc: " << std::dec << pc
@@ -77,16 +78,16 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::Execution
         << "   msg.depth: " << std::dec << execution_state.msg->depth
         << "}\n";
 
-    if (is_storage_opcode(opcode_name) && execution_state.stack.size() >= 1) {
-        const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
+    if (is_storage_opcode(opcode_name) && sizeof(stack_space) >= 1) {
+        const auto address = silkworm::bytes32_from_hex(intx::hex(stack_space.bottom()[0]));
         add_storage(recipient, address);
-    } else if (is_contract_opcode(opcode_name) && execution_state.stack.size() >= 1) {
-        const auto address = address_from_hex_string(intx::hex(execution_state.stack[0]));
+    } else if (is_contract_opcode(opcode_name) && sizeof(stack_space) >= 1) {
+        const auto address = address_from_hex_string(intx::hex(stack_space.bottom()[0]));
         if (!exclude(address)) {
             add_address(address);
         }
-    } else if (is_call_opcode(opcode_name) && execution_state.stack.size() >= 5) {
-        const auto address = address_from_hex_string(intx::hex(execution_state.stack[1]));
+    } else if (is_call_opcode(opcode_name) && sizeof(stack_space) >= 5) {
+        const auto address = address_from_hex_string(intx::hex(stack_space.bottom()[1]));
         if (!exclude(address)) {
             add_address(address);
         }
