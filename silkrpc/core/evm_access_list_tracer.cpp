@@ -59,7 +59,8 @@ void AccessListTracer::on_execution_start(evmc_revision rev, const evmc_message&
     }
 }
 
-void AccessListTracer::on_instruction_start(uint32_t pc, const intx::uint256 *stack_top, const int stack_height, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
+void AccessListTracer::on_instruction_start(uint32_t pc, const intx::uint256 *stack_top, const int stack_height,
+                 const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
     assert(execution_state.msg);
     evmc::address recipient(execution_state.msg->recipient);
 
