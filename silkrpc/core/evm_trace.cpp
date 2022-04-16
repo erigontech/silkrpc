@@ -58,7 +58,11 @@ void to_json(nlohmann::json& json, const TraceOp& trace_op) {
     json["idx"] = std::to_string(trace_op.idx);
     json["op"] = trace_op.op_name;
     json["pc"] = trace_op.pc;
-    json["sub"] = nlohmann::json::value_t::null;
+    if (trace_op.sub) {
+        json["sub"] = *trace_op.sub;
+    } else {
+        json["sub"] = nlohmann::json::value_t::null;
+    }
 }
 
 void to_json(nlohmann::json& json, const TraceEx& trace_ex) {
@@ -219,6 +223,12 @@ int get_stack_count(std::uint8_t op_code) {
         case evmc_opcode::OP_GASPRICE:
         case evmc_opcode::OP_MSIZE:
         case evmc_opcode::OP_EXTCODEHASH:
+        case evmc_opcode::OP_STATICCALL:
+        case evmc_opcode::OP_DELEGATECALL:
+        case evmc_opcode::OP_CALL:
+        case evmc_opcode::OP_CALLCODE:
+        case evmc_opcode::OP_CREATE:
+        case evmc_opcode::OP_CREATE2:
             count = 1;
             break;
         default:
@@ -317,7 +327,7 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
     }
     start_gas_.push(msg.gas);
 
-    SILKRPC_LOG << "VmTraceTracer::on_execution_start:"
+    SILKRPC_DEBUG << "VmTraceTracer::on_execution_start:"
         << " depth: " << msg.depth
         << " gas: " << std::dec << msg.gas
         << " recipient: " << evmc::address{msg.recipient}
@@ -327,7 +337,15 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
         << " input_size: " << msg.input_size
         << "\n";
 
-    vm_trace_.code = "0x" + silkworm::to_hex(code);
+    if (msg.depth == 0) {
+        vm_trace_.code = "0x" + silkworm::to_hex(code);
+        trace_stack_.push(vm_trace_);
+    } else if (vm_trace_.ops.size() > 0) {
+        auto& op = vm_trace_.ops[vm_trace_.ops.size() - 1];
+        op.sub = std::make_shared<VmTrace>();
+        trace_stack_.push(*op.sub);
+        op.sub->code = "0x" + silkworm::to_hex(code);
+    }
 }
 
 void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
@@ -335,7 +353,7 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     const auto op_code = execution_state.code[pc];
     auto op_name = get_op_name(opcode_names_, op_code);
 
-    SILKRPC_LOG << "VmTraceTracer::on_instruction_start:"
+    SILKRPC_DEBUG << "VmTraceTracer::on_instruction_start:"
         << " pc: " << std::dec << pc
         << " opcode: 0x" << std::hex << evmc::hex(op_code)
         << " opcode_name: " << op_name
@@ -346,8 +364,10 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
         << "   msg.depth: " << std::dec << execution_state.msg->depth
         << "}\n";
 
-    if (vm_trace_.ops.size() > 0) {
-        auto& op = vm_trace_.ops[vm_trace_.ops.size() - 1];
+    auto& vm_trace = trace_stack_.top().get();
+
+    if (vm_trace.ops.size() > 0) {
+        auto& op = vm_trace.ops[vm_trace.ops.size() - 1];
         op.gas_cost = op.gas_cost - execution_state.gas_left;
         op.trace_ex.used = execution_state.gas_left;
 
@@ -365,10 +385,13 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     copy_memory_offset_len(op_code, stack_top, trace_op.trace_ex.memory);
     copy_store(op_code, stack_top, trace_op.trace_ex.storage);
 
-    vm_trace_.ops.push_back(trace_op);
+    vm_trace.ops.push_back(trace_op);
 }
 
 void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
+    auto& vm_trace = trace_stack_.top().get();
+    trace_stack_.pop();
+
     std::uint64_t start_gas = start_gas_.top();
     start_gas_.pop();
 
@@ -378,12 +401,12 @@ void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::
         << " gas_left: " << std::dec << result.gas_left
         << "\n";
 
-    if (vm_trace_.ops.size() == 0) {
+    if (vm_trace.ops.size() == 0) {
         return;
     }
-    auto& op = vm_trace_.ops[vm_trace_.ops.size() - 1];
-    if (op.op_code == evmc_opcode::OP_STOP && vm_trace_.ops.size() == 1) {
-        vm_trace_.ops.clear();
+    auto& op = vm_trace.ops[vm_trace.ops.size() - 1];
+    if (op.op_code == evmc_opcode::OP_STOP && vm_trace.ops.size() == 1) {
+        vm_trace.ops.clear();
         return;
     }
     switch (result.status_code) {

@@ -126,11 +126,11 @@ void DebugTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
     start_gas_ = msg.gas;
     evmc::address recipient(msg.recipient);
     evmc::address sender(msg.sender);
-    SILKRPC_LOG << "on_execution_start: gas: " << std::dec << msg.gas
+    SILKRPC_DEBUG << "on_execution_start: gas: " << std::dec << msg.gas
         << " depth: " << msg.depth
         << " recipient: " << recipient
-        << " code: " << silkworm::to_hex(code)
         << " sender: " << sender
+        << " code: " << silkworm::to_hex(code)
         << "\n";
 }
 
@@ -297,7 +297,7 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(cons
 template<typename WorldState, typename VM>
 asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
         const silkrpc::Transaction& transaction, std::int32_t index) {
-    SILKRPC_DEBUG << "execute: "
+    SILKRPC_LOG << "execute: "
         << " block_number: " << block_number
         << " transaction: {" << transaction << "}"
         << " index: " << std::dec << index

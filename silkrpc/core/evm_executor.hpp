@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 

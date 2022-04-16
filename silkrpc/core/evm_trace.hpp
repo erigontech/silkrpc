@@ -17,6 +17,7 @@
 #ifndef SILKRPC_CORE_EVM_TRACE_HPP_
 #define SILKRPC_CORE_EVM_TRACE_HPP_
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <stack>
@@ -101,6 +102,7 @@ public:
 
 private:
     VmTrace& vm_trace_;
+    std::stack<std::reference_wrapper<VmTrace>> trace_stack_;
     const char* const* opcode_names_ = nullptr;
     std::int32_t next_index_{0};
     std::stack<std::uint64_t> start_gas_;
