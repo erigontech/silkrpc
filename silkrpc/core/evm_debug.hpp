@@ -72,7 +72,8 @@ public:
 
     void on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept override;
 
-    void on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
+    void on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
+            const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
 
 private:
@@ -91,7 +92,8 @@ public:
     NullTracer& operator=(const NullTracer&) = delete;
 
     void on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept override {};
-    void on_instruction_start(uint32_t pc, const intx::uint256* stack_top, const int stack_size,  const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
+    void on_instruction_start(uint32_t pc, const intx::uint256* stack_top, const int stack_size,
+         const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
 
     std::int64_t get_end_gas() const {return 0;}
