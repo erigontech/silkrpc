@@ -88,7 +88,7 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const intx::uint256 *st
             add_address(address);
         }
     } else if (is_call_opcode(opcode_name) && stack_height  >= 5) {
-        const auto address = address_from_hex_string(intx::hex(stack_top[1]));
+        const auto address = address_from_hex_string(intx::hex(stack_top[-1]));
         if (!exclude(address)) {
             add_address(address);
         }
