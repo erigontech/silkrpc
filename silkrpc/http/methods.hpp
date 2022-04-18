@@ -58,6 +58,8 @@ constexpr const char* k_eth_getCode{"eth_getCode"};
 constexpr const char* k_eth_getTransactionCount{"eth_getTransactionCount"};
 constexpr const char* k_eth_getStorageAt{"eth_getStorageAt"};
 constexpr const char* k_eth_call{"eth_call"};
+constexpr const char* k_eth_callBundle{"eth_callBundle"};
+constexpr const char* k_eth_createAccessList{"eth_createAccessList"};
 constexpr const char* k_eth_newFilter{"eth_newFilter"};
 constexpr const char* k_eth_newBlockFilter{"eth_newBlockFilter"};
 constexpr const char* k_eth_newPendingTransactionFilter{"eth_newPendingTransactionFilter"};
@@ -103,7 +105,7 @@ constexpr const char* k_trace_transaction{"trace_transaction"};
 
 constexpr const char* k_erigon_getHeaderByHash{"erigon_getHeaderByHash"};
 constexpr const char* k_erigon_getHeaderByNumber{"erigon_getHeaderByNumber"};
-constexpr const char* k_erigon_getLogsByHash{"erigon_getlogsbyhash"};
+constexpr const char* k_erigon_getLogsByHash{"erigon_getLogsByHash"};
 constexpr const char* k_erigon_forks{"erigon_forks"};
 constexpr const char* k_erigon_issuance{"erigon_issuance"};
 
@@ -112,6 +114,9 @@ constexpr const char* k_parity_getBlockReceipts{"parity_getBlockReceipts"};
 constexpr const char* k_engine_getPayloadV1{"engine_getPayloadV1"};
 constexpr const char* k_engine_newPayloadV1{"engine_newPayloadV1"};
 constexpr const char* k_engine_exchangeTransitionConfiguration{"engine_exchangeTransitionConfigurationV1"};
+
+constexpr const char* k_txpool_status{"txpool_status"};
+
 } // namespace silkrpc::http::method
 
 #endif // SILKRPC_HTTP_METHODS_HPP_

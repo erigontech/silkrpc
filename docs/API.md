@@ -41,8 +41,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getTransactionCount                    | Yes          |                                            |
 | eth_getStorageAt                           | Yes          |                                            |
 | eth_call                                   | Yes          |                                            |
-| eth_callBundle                             | -            | not yet implemented                        |
-| eth_createAccessList                       | -            | not yet implemented                        |
+| eth_callBundle                             | Yes          |                                            |
+| eth_createAccessList                       | Yes          |                                            |
 |                                            |              |                                            |
 | eth_newFilter                              | -            | not yet implemented                        |
 | eth_newBlockFilter                         | -            | not yet implemented                        |
@@ -95,7 +95,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | trace_transaction                          | -            | not yet implemented                        |
 |                                            |              |                                            |
 | txpool_content                             | -            | not yet implemented                        |
-| txpool_status                              | -            | not yet implemented                        |
+| txpool_status                              | Yes          |                                            |
 |                                            |              |                                            |
 | eth_getCompilers                           | No           | deprecated                                 |
 | eth_compileLLL                             | No           | deprecated                                 |

@@ -25,7 +25,7 @@ find_program(PROTOBUF_PROTOC protoc REQUIRED)
 # Find gRPC installation
 find_package(gRPC CONFIG REQUIRED)
 find_program(GRPC_CPP_PLUGIN_EXECUTABLE grpc_cpp_plugin REQUIRED)
-find_package(mimalloc 1.4 REQUIRED)
+find_package(mimalloc 2.0 REQUIRED)
 
 # Define gRPC proto files
 set(IF_PROTO_PATH "${CMAKE_SOURCE_DIR}/interfaces")

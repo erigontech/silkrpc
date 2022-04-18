@@ -19,6 +19,8 @@
 
 #include <iostream>
 #include <optional>
+#include <vector>
+#include <string>
 
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
@@ -45,6 +47,33 @@ struct Rlp  {
 struct TransactionWithBlock {
     silkworm::BlockWithHash block_with_hash;
     Transaction transaction;
+};
+
+using AccessList = std::vector<silkworm::AccessListEntry>;
+
+struct AccessListResult {
+    AccessList access_list;
+    std::optional<std::string> error;
+    uint64_t gas_used;
+};
+
+
+struct TxPoolStatusInfo {
+   unsigned int base_fee;
+   unsigned int pending;
+   unsigned int queued;
+};
+
+struct CallBundleTxInfo {
+   ethash_hash256 hash;
+   uint64_t gas_used;
+   evmc::bytes32 value;
+   std::string error_message;
+};
+
+struct CallBundleInfo {
+   ethash_hash256 bundle_hash;
+   std::vector<CallBundleTxInfo> txs_info;
 };
 
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
