@@ -64,7 +64,7 @@ public:
 //! This dummy transaction just gives you the same cursor over and over again.
 class DummyTransaction : public ethdb::Transaction {
 public:
-    DummyTransaction(std::shared_ptr<ethdb::Cursor> cursor) : cursor_(cursor) {}
+    explicit DummyTransaction(std::shared_ptr<ethdb::Cursor> cursor) : cursor_(cursor) {}
 
     uint64_t tx_id() const override { return 0; }
 
@@ -87,7 +87,7 @@ private:
 //! This dummy database acts as a factory for dummy transactions using the same cursor.
 class DummyDatabase : public ethdb::Database {
 public:
-    DummyDatabase(std::shared_ptr<ethdb::Cursor> cursor) : cursor_(cursor) {}
+    explicit DummyDatabase(std::shared_ptr<ethdb::Cursor> cursor) : cursor_(cursor) {}
 
     asio::awaitable<std::unique_ptr<ethdb::Transaction>> begin() override {
         co_return std::make_unique<DummyTransaction>(cursor_);
