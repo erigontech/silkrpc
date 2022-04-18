@@ -41,7 +41,8 @@ public:
     const AccessList& get_access_list() { return access_list_; }
 
     void on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept override;
-    void on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
+    void on_instruction_start(uint32_t pc, const intx::uint256 *stack_top, const int stack_height,
+            const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {}
     void reset_access_list() {access_list_.clear();}
     static void dump(const std::string& str, const AccessList& acl);

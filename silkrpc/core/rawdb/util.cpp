@@ -20,7 +20,7 @@
 #include <cstring>
 
 #include <boost/endian/conversion.hpp>
-#include <intx/int128.hpp>
+#include <intx/intx.hpp>
 
 #include <silkworm/common/base.hpp>
 #include <silkworm/common/util.hpp>

@@ -24,6 +24,7 @@
 #include <silkworm/third_party/evmone/lib/evmone/execution_state.hpp>
 #include <silkworm/third_party/evmone/lib/evmone/instructions.hpp>
 
+
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/core/evm_executor.hpp>
@@ -58,7 +59,8 @@ void AccessListTracer::on_execution_start(evmc_revision rev, const evmc_message&
     }
 }
 
-void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
+void AccessListTracer::on_instruction_start(uint32_t pc, const intx::uint256 *stack_top, const int stack_height,
+                 const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
     assert(execution_state.msg);
     evmc::address recipient(execution_state.msg->recipient);
 
@@ -77,16 +79,16 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const evmone::Execution
         << "   msg.depth: " << std::dec << execution_state.msg->depth
         << "}\n";
 
-    if (is_storage_opcode(opcode_name) && execution_state.stack.size() >= 1) {
-        const auto address = silkworm::bytes32_from_hex(intx::hex(execution_state.stack[0]));
+    if (is_storage_opcode(opcode_name) && stack_height >= 1 ) {
+        const auto address = silkworm::bytes32_from_hex(intx::hex(stack_top[0]));
         add_storage(recipient, address);
-    } else if (is_contract_opcode(opcode_name) && execution_state.stack.size() >= 1) {
-        const auto address = address_from_hex_string(intx::hex(execution_state.stack[0]));
+    } else if (is_contract_opcode(opcode_name) && stack_height >= 1 ) {
+        const auto address = address_from_hex_string(intx::hex(stack_top[0]));
         if (!exclude(address)) {
             add_address(address);
         }
-    } else if (is_call_opcode(opcode_name) && execution_state.stack.size() >= 5) {
-        const auto address = address_from_hex_string(intx::hex(execution_state.stack[1]));
+    } else if (is_call_opcode(opcode_name) && stack_height  >= 5) {
+        const auto address = address_from_hex_string(intx::hex(stack_top[-1]));
         if (!exclude(address)) {
             add_address(address);
         }
