@@ -142,6 +142,16 @@ static silkworm::Bytes kChainConfigNoTerminalBlockHash{*silkworm::from_hex(
         "302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c546f74616c44"
         "6966666963756c7479223a2231303030303030222c227465726d696e616c426c6f"
         "636b4e756d626572223a307d")};
+static silkworm::Bytes kChainConfigNoTerminalBlockNumber{*silkworm::from_hex(
+        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f636b223"
+        "a302c22656970313530426c6f636b223a302c22656970313535426c6f636b223a302c22"
+        "62797a616e7469756d426c6f636b223a302c22636f6e7374616e74696e6f706c65426c6"
+        "f636b223a302c2270657465727362757267426c6f636b223a302c22697374616e62756c"
+        "426c6f636b223a302c226265726c696e426c6f636b223a302c226c6f6e646f6e426c6f6"
+        "36b223a302c227465726d696e616c546f74616c446966666963756c7479223a22313030"
+        "30303030222c227465726d696e616c426c6f636b48617368223a2230783335353965383"
+        "53134373066366537626265643164623437343938303638336538633331356266636539"
+        "39623261366566343763303537633034646537383538227d")};
 
 TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -662,4 +672,112 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
     context_pool_thread.join();
 }
 
+TEST_CASE("handle_engine_transition_configuration_v1 fails if consensus layer sends block number different from zero", "[silkrpc][engine_api]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+
+    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
+
+    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
+        [&]() -> asio::awaitable<KeyValue> {
+            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
+        }
+    ));
+
+    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
+        [&]() -> asio::awaitable<KeyValue> {
+            co_return KeyValue{silkworm::Bytes{}, kChainConfig};
+        }
+    ));
+
+    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
+    nlohmann::json reply;
+    nlohmann::json request = R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":"engine_transitionConfigurationV1",
+        "params":[{
+            "terminalTotalDifficulty":"0xf4240",
+            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+            "terminalBlockNumber":"0x1"
+        }]
+    })"_json;
+
+    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_exchange_transition_configuration_v1(
+            request,
+            reply
+        );
+    }, asio::use_future)};
+    result.get();
+
+    CHECK(reply == R"({
+        "error":{
+            "code":100,
+            "message":"consensus layer terminal block number is not zero"
+            },
+            "id":1,
+            "jsonrpc":"2.0"
+        })"_json);
+    context_pool.stop();
+    context_pool_thread.join();
+}
+
+TEST_CASE("handle_engine_transition_configuration_v1 succeeds if chain config doesn't have terminal block number", "[silkrpc][engine_api]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+
+    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
+
+    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
+        [&]() -> asio::awaitable<KeyValue> {
+            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
+        }
+    ));
+
+    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
+        [&]() -> asio::awaitable<KeyValue> {
+            co_return KeyValue{silkworm::Bytes{}, kChainConfigNoTerminalBlockNumber};
+        }
+    ));
+
+    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
+    nlohmann::json reply;
+    nlohmann::json request = R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":"engine_transitionConfigurationV1",
+        "params":[{
+            "terminalTotalDifficulty":"0xf4240",
+            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+            "terminalBlockNumber":"0x0"
+        }]
+    })"_json;
+
+    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_exchange_transition_configuration_v1(
+            request,
+            reply
+        );
+    }, asio::use_future)};
+    result.get();
+
+    CHECK((reply == TransitionConfiguration {
+        .terminal_total_difficulty = intx::from_string<intx::uint256>("1000000"),
+        .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+        .terminal_block_number = 0
+    }));
+    context_pool.stop();
+    context_pool_thread.join();
+}
 } // namespace silkrpc::commands
