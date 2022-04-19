@@ -81,8 +81,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
         auto error_msg = "invalid engine_exchangeTransitionConfigurationV1 params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request.at("id"), 100, error_msg);
-        co_return;
-    }
+        co_return; }
     auto tx = co_await database_->begin();
     #ifndef BUILD_COVERAGE
     try {
