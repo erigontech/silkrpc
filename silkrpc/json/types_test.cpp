@@ -1491,7 +1491,7 @@ TEST_CASE("serialize payload status", "[silkrpc::json][to_json]") {
     })"_json);
 }
 
-TEST_CASE("serialize transition configuratin", "[silkrpc::json][to_json]") {
+TEST_CASE("serialize transition configuration", "[silkrpc::json][to_json]") {
     silkrpc::TransitionConfiguration transition_configuration{
         .terminal_total_difficulty = 0xf4240,
         .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
