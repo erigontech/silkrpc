@@ -81,12 +81,13 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
         auto error_msg = "invalid engine_exchangeTransitionConfigurationV1 params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request.at("id"), 100, error_msg);
-        co_return; }
+        co_return;
+    }
+    const auto cl_configuration = params[0].get<TransitionConfiguration>();
     auto tx = co_await database_->begin();
     #ifndef BUILD_COVERAGE
     try {
     #endif
-        const auto cl_configuration = params[0].get<TransitionConfiguration>();
         ethdb::TransactionDatabase tx_database{*tx};
         const auto chain_config{co_await core::rawdb::read_chain_config(tx_database)};
         SILKRPC_DEBUG << "chain config: " << chain_config << "\n";
@@ -118,7 +119,11 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
             reply = make_json_error(request.at("id"), 100, "incorrect terminal block hash");
             co_return;
         }
-        reply = TransitionConfiguration{config.terminal_total_difficulty.value(), config.terminal_block_hash.value(), config.terminal_block_number.value_or(0)};
+        reply = TransitionConfiguration{
+            .terminal_total_difficulty = config.terminal_total_difficulty.value(), 
+            .terminal_block_hash = config.terminal_block_hash.value(), 
+            .terminal_block_number = config.terminal_block_number.value_or(0)
+        };
     #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
