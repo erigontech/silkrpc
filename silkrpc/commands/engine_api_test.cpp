@@ -728,6 +728,46 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if consensus layer se
     context_pool_thread.join();
 }
 
+TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params", "[silkrpc][engine_api]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+
+    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
+
+    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
+    EngineRpcApiTest rpc(database_ptr, backend_ptr);
+
+    nlohmann::json reply;
+    nlohmann::json request = R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":"engine_transitionConfigurationV1",
+        "params":[]
+    })"_json;
+
+    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_exchange_transition_configuration_v1(
+            request,
+            reply
+        );
+    }, asio::use_future)};
+    result.get();
+
+    CHECK(reply == R"({
+        "error":{
+            "code":100,
+            "message":"invalid engine_exchangeTransitionConfigurationV1 params: []"
+            },
+            "id":1,
+            "jsonrpc":"2.0"
+        })"_json);
+    context_pool.stop();
+    context_pool_thread.join();
+}
+
 TEST_CASE("handle_engine_transition_configuration_v1 succeeds if chain config doesn't have terminal block number", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
