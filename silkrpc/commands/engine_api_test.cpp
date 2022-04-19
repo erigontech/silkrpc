@@ -110,6 +110,39 @@ public:
 
 using testing::InvokeWithoutArgs;
 
+static silkworm::Bytes kBlockHash(32, '\0');
+static silkworm::Bytes kChainConfig{*silkworm::from_hex(
+        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f6"
+        "36b223a302c22656970313530426c6f636b223a302c22656970313535426c6f63"
+        "6b223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e7"
+        "4696e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b22"
+        "3a302c22697374616e62756c426c6f636b223a302c226265726c696e426c6f636"
+        "b223a302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c546f74"
+        "616c446966666963756c7479223a2231303030303030222c227465726d696e616"
+        "c426c6f636b4e756d626572223a302c227465726d696e616c426c6f636b486173"
+        "68223a22307833353539653835313437306636653762626564316462343734393"
+        "83036383365386333313562666365393962326136656634376330353763303464"
+        "6537383538227d")};
+static silkworm::Bytes kChainConfigNoTerminalTotalDifficulty{*silkworm::from_hex(
+        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f63"
+        "6b223a302c22656970313530426c6f636b223a302c22656970313535426c6f636b"
+        "223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e7469"
+        "6e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b223a30"
+        "2c22697374616e62756c426c6f636b223a302c226265726c696e426c6f636b223a"
+        "302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c426c6f636b4e"
+        "756d626572223a302c227465726d696e616c426c6f636b48617368223a22307833"
+        "353539653835313437306636653762626564316462343734393830363833653863"
+        "333135626663653939623261366566343763303537633034646537383538227d")};
+static silkworm::Bytes kChainConfigNoTerminalBlockHash{*silkworm::from_hex(
+        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f63"
+        "6b223a302c22656970313530426c6f636b223a302c22656970313535426c6f636b"
+        "223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e7469"
+        "6e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b223a30"
+        "2c22697374616e62756c426c6f636b223a302c226265726c696e426c6f636b223a"
+        "302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c546f74616c44"
+        "6966666963756c7479223a2231303030303030222c227465726d696e616c426c6f"
+        "636b4e756d626572223a307d")};
+
 TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -303,31 +336,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
 
-    silkworm::Bytes chain_config_bytes{*silkworm::from_hex(
-        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f6"
-        "36b223a302c22656970313530426c6f636b223a302c22656970313535426c6f63"
-        "6b223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e7"
-        "4696e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b22"
-        "3a302c22697374616e62756c426c6f636b223a302c226265726c696e426c6f636"
-        "b223a302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c546f74"
-        "616c446966666963756c7479223a2231303030303030222c227465726d696e616"
-        "c426c6f636b4e756d626572223a302c227465726d696e616c426c6f636b486173"
-        "68223a22307833353539653835313437306636653762626564316462343734393"
-        "83036383365386333313562666365393962326136656634376330353763303464"
-        "6537383538227d")};
-    silkworm::Bytes key(8, '\0');
-
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, key};
+            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
+            co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
     ));
 
@@ -371,30 +390,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
 
-    silkworm::Bytes chain_config_bytes{*silkworm::from_hex(
-        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f6"
-        "36b223a302c22656970313530426c6f636b223a302c22656970313535426c6f63"
-        "6b223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e7"
-        "4696e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b22"
-        "3a302c22697374616e62756c426c6f636b223a302c226265726c696e426c6f636"
-        "b223a302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c546f74"
-        "616c446966666963756c7479223a2231303030303030222c227465726d696e616"
-        "c426c6f636b48617368223a223078333535396538353134373066366537626265"
-        "64316462343734393830363833653863333135626663653939623261366566343"
-        "763303537633034646537383538227d")};
-    silkworm::Bytes key(8, '\0');
-
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, key};
+            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
+            co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
     ));
 
@@ -438,31 +444,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
 
-    silkworm::Bytes chain_config_bytes{*silkworm::from_hex(
-        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f6"
-        "36b223a302c22656970313530426c6f636b223a302c22656970313535426c6f63"
-        "6b223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e7"
-        "4696e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b22"
-        "3a302c22697374616e62756c426c6f636b223a302c226265726c696e426c6f636"
-        "b223a302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c546f74"
-        "616c446966666963756c7479223a2231303030303030222c227465726d696e616"
-        "c426c6f636b4e756d626572223a302c227465726d696e616c426c6f636b486173"
-        "68223a22307833353539653835313437306636653762626564316462343734393"
-        "83036383365386333313562666365393962326136656634376330353763303464"
-        "6537383538227d")};
-    silkworm::Bytes key(8, '\0');
-
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, key};
+            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
+            co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
     ));
 
@@ -508,31 +500,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
 
-    silkworm::Bytes chain_config_bytes{*silkworm::from_hex(
-        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f6"
-        "36b223a302c22656970313530426c6f636b223a302c22656970313535426c6f63"
-        "6b223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e7"
-        "4696e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b22"
-        "3a302c22697374616e62756c426c6f636b223a302c226265726c696e426c6f636"
-        "b223a302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c546f74"
-        "616c446966666963756c7479223a2231303030303030222c227465726d696e616"
-        "c426c6f636b4e756d626572223a302c227465726d696e616c426c6f636b486173"
-        "68223a22307833353539653835313437306636653762626564316462343734393"
-        "83036383365386333313562666365393962326136656634376330353763303464"
-        "6537383538227d")};
-    silkworm::Bytes key(8, '\0');
-
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, key};
+            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
+            co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
     ));
 
@@ -578,32 +556,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
 
-    silkworm::Bytes chain_config_bytes{*silkworm::from_hex(
-        "7b22636861696e4964223a313333373330322c22686f6d65737"
-        "4656164426c6f636b223a302c22656970313530426c6f636b22"
-        "3a302c22656970313535426c6f636b223a302c2262797a616e7"
-        "469756d426c6f636b223a302c22636f6e7374616e74696e6f70"
-        "6c65426c6f636b223a302c2270657465727362757267426c6f6"
-        "36b223a302c22697374616e62756c426c6f636b223a302c2262"
-        "65726c696e426c6f636b223a302c226c6f6e646f6e426c6f636"
-        "b223a302c227465726d696e616c426c6f636b4e756d62657222"
-        "3a302c227465726d696e616c426c6f636b48617368223a22307"
-        "833353539653835313437306636653762626564316462343734"
-        "393830363833653863333135626663653939623261366566343"
-        "763303537633034646537383538227d")};
-    silkworm::Bytes key(8, '\0');
-
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, key};
+            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
+            co_return KeyValue{silkworm::Bytes{}, kChainConfigNoTerminalTotalDifficulty};
         }
     ));
 
@@ -649,28 +612,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { context_pool.run(); });
 
-    silkworm::Bytes chain_config_bytes{*silkworm::from_hex(
-        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f63"
-        "6b223a302c22656970313530426c6f636b223a302c22656970313535426c6f636b"
-        "223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e7469"
-        "6e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b223a30"
-        "2c22697374616e62756c426c6f636b223a302c226265726c696e426c6f636b223a"
-        "302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c546f74616c44"
-        "6966666963756c7479223a2231303030303030222c227465726d696e616c426c6f"
-        "636b4e756d626572223a307d")};
-    silkworm::Bytes key(8, '\0');
-
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, key};
+            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
         [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, chain_config_bytes};
+            co_return KeyValue{silkworm::Bytes{}, kChainConfigNoTerminalBlockHash};
         }
     ));
 
@@ -709,4 +661,5 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
     context_pool.stop();
     context_pool_thread.join();
 }
+
 } // namespace silkrpc::commands

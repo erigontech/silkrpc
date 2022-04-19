@@ -21,6 +21,7 @@
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/types/execution_payload.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
+
 namespace silkrpc::commands {
 
 asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
@@ -91,7 +92,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
     #endif
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(tx_database)};
+        const auto chain_config{co_await core::rawdb::read_chain_config(tx_database)};
         SILKRPC_DEBUG << "chain config: " << chain_config << "\n";
         auto config = silkworm::ChainConfig::from_json(chain_config.config).value();
         if (cl_configuration.terminal_block_number != 0) {
