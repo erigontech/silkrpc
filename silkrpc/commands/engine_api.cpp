@@ -120,8 +120,8 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
             co_return;
         }
         reply = TransitionConfiguration{
-            .terminal_total_difficulty = config.terminal_total_difficulty.value(), 
-            .terminal_block_hash = config.terminal_block_hash.value(), 
+            .terminal_total_difficulty = config.terminal_total_difficulty.value(),
+            .terminal_block_hash = config.terminal_block_hash.value(),
             .terminal_block_number = config.terminal_block_number.value_or(0)
         };
     #ifndef BUILD_COVERAGE
