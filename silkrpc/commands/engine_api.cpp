@@ -74,6 +74,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
     #endif
 }
 
+// Returns check if the transition configurations of the Execution Layer is equal to the ones in the Consensus Layer
 // Format for params is a JSON list of TransitionConfiguration, i.e. [TransitionConfiguration]
 asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configuration_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
@@ -92,6 +93,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
         const auto chain_config{co_await core::rawdb::read_chain_config(tx_database)};
         SILKRPC_DEBUG << "chain config: " << chain_config << "\n";
         auto config = silkworm::ChainConfig::from_json(chain_config.config).value();
+        // CL will always pass in 0 as the terminal block number
         if (cl_configuration.terminal_block_number != 0) {
             SILKRPC_ERROR << "consensus layer has the wrong terminal block number expected zero but instead got: "
                 << cl_configuration.terminal_block_number << "\n";
@@ -123,7 +125,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
         reply = TransitionConfiguration{
             .terminal_total_difficulty = config.terminal_total_difficulty.value(),
             .terminal_block_hash = config.terminal_block_hash.value(),
-            .terminal_block_number = config.terminal_block_number.value_or(0)
+            .terminal_block_number = config.terminal_block_number.value_or(0) // we default to returning zero if we dont have terminal_block_number
         };
     #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
