@@ -1102,6 +1102,13 @@ TEST_CASE("VmTrace json serialization") {
             "used":5000
         })"_json);
     }
+    SECTION("TraceStorage") {
+        const auto& storage = trace_ex.storage.value();
+        CHECK(storage == R"({
+            "key":"key",
+            "val":"value"
+        })"_json);
+    }
 }
 
 TEST_CASE("TraceAction json serialization") {
@@ -1276,6 +1283,319 @@ TEST_CASE("TraceConfig") {
         std::ostringstream os;
         os << config;
         CHECK(os.str() == "vmTrace: true Trace: false stateDiff: true");
+    }
+}
+
+TEST_CASE("copy_stack") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    const std::size_t stack_size{32};
+    evmone::uint256 stack[stack_size] = {
+        {0x00}, {0x01}, {0x02}, {0x03}, {0x04}, {0x05}, {0x06}, {0x07},
+        {0x08}, {0x09}, {0x0A}, {0x0B}, {0x0C}, {0x0D}, {0x0E}, {0x0F},
+        {0x10}, {0x11}, {0x12}, {0x13}, {0x14}, {0x15}, {0x16}, {0x17},
+        {0x18}, {0x19}, {0x1A}, {0x1B}, {0x1C}, {0x1D}, {0x1E}, {0x1F}
+    };
+    evmone::uint256* top_stack = &stack[stack_size - 1];
+
+    SECTION("PUSHX") {
+        for (std::uint8_t op_code = evmc_opcode::OP_PUSH1; op_code < evmc_opcode::OP_PUSH32 + 1; op_code++) {
+            std::vector<std::string> trace_stack;
+            copy_stack(op_code, top_stack, trace_stack);
+
+            CHECK(trace_stack.size() == 1);
+            CHECK(trace_stack[0] == "0x1f");
+        }
+    }
+
+    SECTION("OP_SWAPX") {
+        for (std::uint8_t op_code = evmc_opcode::OP_SWAP1; op_code < evmc_opcode::OP_SWAP16 + 1; op_code++) {
+            std::vector<std::string> trace_stack;
+            copy_stack(op_code, top_stack, trace_stack);
+
+            std::uint8_t size = op_code - evmc_opcode::OP_SWAP1 + 2;
+            CHECK(trace_stack.size() == size);
+            for (auto idx = 0; idx < size; idx++) {
+                CHECK(trace_stack[idx] == "0x" + intx::to_string(stack[stack_size-size+idx], 16));
+            }
+        }
+    }
+
+    SECTION("OP_DUPX") {
+        for (std::uint8_t op_code = evmc_opcode::OP_DUP1; op_code < evmc_opcode::OP_DUP16 + 1; op_code++) {
+            std::vector<std::string> trace_stack;
+            copy_stack(op_code, top_stack, trace_stack);
+
+            std::uint8_t size = op_code - evmc_opcode::OP_DUP1 + 2;
+            CHECK(trace_stack.size() == size);
+            for (auto idx = 0; idx < size; idx++) {
+                CHECK(trace_stack[idx] == "0x" + intx::to_string(stack[stack_size-size+idx], 16));
+            }
+        }
+    }
+
+    SECTION("OP_OTHER") {
+        for (std::uint8_t op_code = evmc_opcode::OP_STOP; op_code < evmc_opcode::OP_SELFDESTRUCT; op_code++) {
+            std::vector<std::string> trace_stack;
+            switch (op_code) {
+                case evmc_opcode::OP_PUSH1 ... evmc_opcode::OP_PUSH32:
+                case evmc_opcode::OP_SWAP1 ... evmc_opcode::OP_SWAP16:
+                case evmc_opcode::OP_DUP1 ... evmc_opcode::OP_DUP16:
+                    break;
+                case evmc_opcode::OP_CALLDATALOAD:
+                case evmc_opcode::OP_SLOAD:
+                case evmc_opcode::OP_MLOAD:
+                case evmc_opcode::OP_CALLDATASIZE:
+                case evmc_opcode::OP_LT:
+                case evmc_opcode::OP_GT:
+                case evmc_opcode::OP_DIV:
+                case evmc_opcode::OP_SDIV:
+                case evmc_opcode::OP_SAR:
+                case evmc_opcode::OP_AND:
+                case evmc_opcode::OP_EQ:
+                case evmc_opcode::OP_CALLVALUE:
+                case evmc_opcode::OP_ISZERO:
+                case evmc_opcode::OP_ADD:
+                case evmc_opcode::OP_EXP:
+                case evmc_opcode::OP_CALLER:
+                case evmc_opcode::OP_KECCAK256:
+                case evmc_opcode::OP_SUB:
+                case evmc_opcode::OP_ADDRESS:
+                case evmc_opcode::OP_GAS:
+                case evmc_opcode::OP_MUL:
+                case evmc_opcode::OP_RETURNDATASIZE:
+                case evmc_opcode::OP_NOT:
+                case evmc_opcode::OP_SHR:
+                case evmc_opcode::OP_SHL:
+                case evmc_opcode::OP_EXTCODESIZE:
+                case evmc_opcode::OP_SLT:
+                case evmc_opcode::OP_OR:
+                case evmc_opcode::OP_NUMBER:
+                case evmc_opcode::OP_PC:
+                case evmc_opcode::OP_TIMESTAMP:
+                case evmc_opcode::OP_BALANCE:
+                case evmc_opcode::OP_SELFBALANCE:
+                case evmc_opcode::OP_MULMOD:
+                case evmc_opcode::OP_ADDMOD:
+                case evmc_opcode::OP_BASEFEE:
+                case evmc_opcode::OP_BLOCKHASH:
+                case evmc_opcode::OP_BYTE:
+                case evmc_opcode::OP_XOR:
+                case evmc_opcode::OP_ORIGIN:
+                case evmc_opcode::OP_CODESIZE:
+                case evmc_opcode::OP_MOD:
+                case evmc_opcode::OP_SIGNEXTEND:
+                case evmc_opcode::OP_GASLIMIT:
+                case evmc_opcode::OP_DIFFICULTY:
+                case evmc_opcode::OP_SGT:
+                case evmc_opcode::OP_GASPRICE:
+                case evmc_opcode::OP_MSIZE:
+                case evmc_opcode::OP_EXTCODEHASH:
+                case evmc_opcode::OP_STATICCALL:
+                case evmc_opcode::OP_DELEGATECALL:
+                case evmc_opcode::OP_CALL:
+                case evmc_opcode::OP_CALLCODE:
+                case evmc_opcode::OP_CREATE:
+                case evmc_opcode::OP_CREATE2:
+                    copy_stack(op_code, top_stack, trace_stack);
+
+                    CHECK(trace_stack.size() == 1);
+                    CHECK(trace_stack[0] == "0x1f");
+                    break;
+                default:
+                    copy_stack(op_code, top_stack, trace_stack);
+
+                    CHECK(trace_stack.size() == 0);
+                    break;
+            }
+        }
+    }
+}
+
+TEST_CASE("copy_memory") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    evmone::Memory memory;
+    for (auto idx = 0; idx < 16; idx++) {
+        memory[idx] = idx;
+    }
+
+    SECTION("TRACE_MEMORY NOT SET") {
+        std::optional<TraceMemory> trace_memory;
+        copy_memory(memory, trace_memory);
+
+        CHECK(trace_memory.has_value() == false);
+    }
+    SECTION("TRACE_MEMORY LEN == 0") {
+        std::optional<TraceMemory> trace_memory = TraceMemory{0, 0};
+        copy_memory(memory, trace_memory);
+
+        CHECK(trace_memory.has_value() == false);
+    }
+    SECTION("TRACE_MEMORY LEN != 0") {
+        std::optional<TraceMemory> trace_memory = TraceMemory{0, 10};
+        copy_memory(memory, trace_memory);
+
+        CHECK(trace_memory.has_value() == true);
+        CHECK(trace_memory.value() == R"({
+            "off":0,
+            "data":"0x00010203040506070809"
+        })"_json);
+    }
+}
+
+TEST_CASE("copy_store") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    const std::size_t stack_size{32};
+    evmone::uint256 stack[stack_size] = {
+        {0x00}, {0x01}, {0x02}, {0x03}, {0x04}, {0x05}, {0x06}, {0x07},
+        {0x08}, {0x09}, {0x0A}, {0x0B}, {0x0C}, {0x0D}, {0x0E}, {0x0F},
+        {0x10}, {0x11}, {0x12}, {0x13}, {0x14}, {0x15}, {0x16}, {0x17},
+        {0x18}, {0x19}, {0x1A}, {0x1B}, {0x1C}, {0x1D}, {0x1E}, {0x1F}
+    };
+    evmone::uint256* top_stack = &stack[stack_size - 1];
+
+    SECTION("op_code == OP_SSTORE") {
+        std::optional<TraceStorage> trace_storage;
+        copy_store(evmc_opcode::OP_SSTORE, top_stack, trace_storage);
+
+        CHECK(trace_storage.has_value() == true);
+        CHECK(trace_storage.value() == R"({
+            "key":"0x1f",
+            "val":"0x1e"
+        })"_json);
+    }
+    SECTION("op_code != OP_SSTORE") {
+        std::optional<TraceStorage> trace_storage;
+        copy_store(evmc_opcode::OP_CALLDATASIZE, top_stack, trace_storage);
+
+        CHECK(trace_storage.has_value() == false);
+    }
+}
+
+TEST_CASE("copy_memory_offset_len") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    const std::size_t stack_size{32};
+    evmone::uint256 stack[stack_size] = {
+        {0x00}, {0x01}, {0x02}, {0x03}, {0x04}, {0x05}, {0x06}, {0x07},
+        {0x08}, {0x09}, {0x0A}, {0x0B}, {0x0C}, {0x0D}, {0x0E}, {0x0F},
+        {0x10}, {0x11}, {0x12}, {0x13}, {0x14}, {0x15}, {0x16}, {0x17},
+        {0x18}, {0x19}, {0x1A}, {0x1B}, {0x1C}, {0x1D}, {0x1E}, {0x1F}
+    };
+    evmone::uint256* top_stack = &stack[stack_size - 1];
+
+    for (std::uint8_t op_code = evmc_opcode::OP_STOP; op_code < evmc_opcode::OP_SELFDESTRUCT; op_code++) {
+        std::optional<TraceMemory> trace_memory;
+        copy_memory_offset_len(op_code, top_stack, trace_memory);
+
+        switch (op_code) {
+            case evmc_opcode::OP_MSTORE:
+            case evmc_opcode::OP_MLOAD:
+                CHECK(trace_memory.has_value() == true);
+                CHECK(trace_memory.value() == R"({
+                    "data":"",
+                    "off": 31
+                })"_json);
+                break;
+            case evmc_opcode::OP_MSTORE8:
+                CHECK(trace_memory.has_value() == true);
+                CHECK(trace_memory.value() == R"({
+                    "data":"",
+                    "off": 31
+                })"_json);
+                break;
+            case evmc_opcode::OP_RETURNDATACOPY:
+            case evmc_opcode::OP_CALLDATACOPY:
+            case evmc_opcode::OP_CODECOPY:
+                CHECK(trace_memory.has_value() == true);
+                CHECK(trace_memory.value() == R"({
+                    "data":"",
+                    "off": 31
+                })"_json);
+                break;
+            case evmc_opcode::OP_STATICCALL:
+            case evmc_opcode::OP_DELEGATECALL:
+                CHECK(trace_memory.has_value() == true);
+                CHECK(trace_memory.value() == R"({
+                    "data":"",
+                    "off": 27
+                })"_json);
+                break;
+            case evmc_opcode::OP_CALL:
+            case evmc_opcode::OP_CALLCODE:
+                CHECK(trace_memory.has_value() == true);
+                CHECK(trace_memory.value() == R"({
+                    "data":"",
+                    "off": 26
+                })"_json);
+                break;
+            case evmc_opcode::OP_CREATE:
+            case evmc_opcode::OP_CREATE2:
+                CHECK(trace_memory.has_value() == true);
+                CHECK(trace_memory.value() == R"({
+                    "data":"",
+                    "off": 0
+                })"_json);
+                break;
+            default:
+                CHECK(trace_memory.has_value() == false);
+                break;
+        }
+    }
+}
+
+TEST_CASE("push_memory_offset_len") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    const std::size_t stack_size{32};
+    evmone::uint256 stack[stack_size] = {
+        {0x00}, {0x01}, {0x02}, {0x03}, {0x04}, {0x05}, {0x06}, {0x07},
+        {0x08}, {0x09}, {0x0A}, {0x0B}, {0x0C}, {0x0D}, {0x0E}, {0x0F},
+        {0x10}, {0x11}, {0x12}, {0x13}, {0x14}, {0x15}, {0x16}, {0x17},
+        {0x18}, {0x19}, {0x1A}, {0x1B}, {0x1C}, {0x1D}, {0x1E}, {0x1F}
+    };
+    evmone::uint256* top_stack = &stack[stack_size - 1];
+
+    for (std::uint8_t op_code = evmc_opcode::OP_STOP; op_code < evmc_opcode::OP_SELFDESTRUCT; op_code++) {
+        std::stack<TraceMemory> tms;
+        push_memory_offset_len(op_code, top_stack, tms);
+
+        switch (op_code) {
+            case evmc_opcode::OP_STATICCALL:
+            case evmc_opcode::OP_DELEGATECALL:
+                CHECK(tms.size() == 1);
+                CHECK(tms.top() == R"({
+                    "data":"",
+                    "off": 27
+                })"_json);
+                break;
+            case evmc_opcode::OP_CALL:
+            case evmc_opcode::OP_CALLCODE:
+                CHECK(tms.size() == 1);
+                CHECK(tms.top() == R"({
+                    "data":"",
+                    "off": 26
+                })"_json);
+                break;
+            case evmc_opcode::OP_CREATE:
+            case evmc_opcode::OP_CREATE2:
+                CHECK(tms.size() == 1);
+                CHECK(tms.top() == R"({
+                    "data":"",
+                    "off": 0
+                })"_json);
+                break;
+            default:
+                CHECK(tms.size() == 0);
+                break;
+        }
     }
 }
 }  // namespace silkrpc::trace

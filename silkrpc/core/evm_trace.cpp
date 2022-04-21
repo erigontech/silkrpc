@@ -68,10 +68,7 @@ void to_json(nlohmann::json& json, const TraceOp& trace_op) {
 void to_json(nlohmann::json& json, const TraceEx& trace_ex) {
     if (trace_ex.memory) {
         const auto& memory = trace_ex.memory.value();
-        json["mem"] = {
-            {"data", memory.data},
-            {"off", memory.offset}
-        };
+        json["mem"] = memory;
     } else {
         json["mem"] = nlohmann::json::value_t::null;
     }
@@ -79,14 +76,25 @@ void to_json(nlohmann::json& json, const TraceEx& trace_ex) {
     json["push"] = trace_ex.stack;
     if (trace_ex.storage) {
         const auto& storage = trace_ex.storage.value();
-        json["store"] = {
-            {"key", storage.key},
-            {"val", storage.value}
-        };
+        json["store"] = storage;
     } else {
         json["store"] = nlohmann::json::value_t::null;
     }
     json["used"] = trace_ex.used;
+}
+
+void to_json(nlohmann::json& json, const TraceMemory& trace_memory) {
+    json = {
+        {"data", trace_memory.data},
+        {"off", trace_memory.offset}
+    };
+}
+
+void to_json(nlohmann::json& json, const TraceStorage& trace_storage) {
+    json = {
+        {"key", trace_storage.key},
+        {"val", trace_storage.value}
+    };
 }
 
 void to_json(nlohmann::json& json, const TraceAction& trace_action) {
@@ -296,10 +304,12 @@ void copy_memory_offset_len(std::uint8_t op_code, const evmone::uint256* stack, 
         case evmc_opcode::OP_CREATE2:
             trace_memory = TraceMemory{0, 0};
             break;
+        default:
+            break;
     }
 }
 
-void push_memory_offset_len(std::uint8_t op_code, const evmone::uint256* stack, std::stack<TraceMemory> tms) {
+void push_memory_offset_len(std::uint8_t op_code, const evmone::uint256* stack, std::stack<TraceMemory>& tms) {
     switch (op_code) {
         case evmc_opcode::OP_STATICCALL:
         case evmc_opcode::OP_DELEGATECALL:
@@ -312,6 +322,8 @@ void push_memory_offset_len(std::uint8_t op_code, const evmone::uint256* stack, 
         case evmc_opcode::OP_CREATE:
         case evmc_opcode::OP_CREATE2:
             tms.push(TraceMemory{0, 0});
+            break;
+        default:
             break;
     }
 }

@@ -87,6 +87,15 @@ struct VmTrace {
 void to_json(nlohmann::json& json, const VmTrace& vm_trace);
 void to_json(nlohmann::json& json, const TraceOp& trace_op);
 void to_json(nlohmann::json& json, const TraceEx& trace_ex);
+void to_json(nlohmann::json& json, const TraceMemory& trace_memory);
+void to_json(nlohmann::json& json, const TraceStorage& trace_storage);
+
+
+void copy_stack(std::uint8_t op_code, const evmone::uint256* stack, std::vector<std::string>& trace_stack);
+void copy_memory(const evmone::Memory& memory, std::optional<TraceMemory>& trace_memory);
+void copy_store(std::uint8_t op_code, const evmone::uint256* stack, std::optional<TraceStorage>& trace_storage);
+void copy_memory_offset_len(std::uint8_t op_code, const evmone::uint256* stack, std::optional<TraceMemory>& trace_memory);
+void push_memory_offset_len(std::uint8_t op_code, const evmone::uint256* stack, std::stack<TraceMemory>& tms);
 
 class VmTraceTracer : public silkworm::EvmTracer {
 public:
