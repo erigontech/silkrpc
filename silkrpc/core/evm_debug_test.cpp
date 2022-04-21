@@ -1625,7 +1625,7 @@ TEST_CASE("ByteView hex") {
 
     silkworm::Bytes code{*silkworm::from_hex("0000000000000000")};
     silkworm::ByteView view{code};
-    
+
     auto hex = silkworm::to_hex(view);
 
     CHECK(hex == "0000000000000000");
