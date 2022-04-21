@@ -56,7 +56,8 @@ public:
     EVMExecutor(const EVMExecutor&) = delete;
     EVMExecutor& operator=(const EVMExecutor&) = delete;
 
-    asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, bool refund = true, std::shared_ptr<silkworm::EvmTracer> tracer = {});
+    asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, bool refund = true,
+                                          bool gas_bailout = false, std::shared_ptr<silkworm::EvmTracer> tracer = {});
 
 private:
     std::optional<std::string> pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0);

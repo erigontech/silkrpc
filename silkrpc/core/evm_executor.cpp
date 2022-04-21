@@ -16,6 +16,7 @@
 
 #include "evm_executor.hpp"
 
+#include <algorithm>
 #include <array>
 #include <optional>
 #include <string>
@@ -204,15 +205,17 @@ std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm,
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn, bool refund, std::shared_ptr<silkworm::EvmTracer> tracer) {
-    SILKRPC_DEBUG << "EVMExecutor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " start\n";
+asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn,
+                                                                   bool refund, bool gas_bailout, std::shared_ptr<silkworm::EvmTracer> tracer) {
+    SILKRPC_DEBUG << "EVMExecutor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " refund: " << refund <<
+                                                    " gasBailout: " << gas_bailout << " start\n";
 
     std::ostringstream out;
 
     const auto exec_result = co_await asio::async_compose<decltype(asio::use_awaitable), void(ExecutionResult)>(
-        [this, &block, &txn, &tracer, &out, &refund](auto&& self) {
+        [this, &block, &txn, &tracer, &out, &refund, &gas_bailout](auto&& self) {
             SILKRPC_TRACE << "EVMExecutor::call post block: " << block.header.number << " txn: " << &txn << "\n";
-            asio::post(workers_, [this, &block, &txn, &tracer, &out, &refund, self = std::move(self)]() mutable {
+            asio::post(workers_, [this, &block, &txn, &tracer, &out, &refund, &gas_bailout, self = std::move(self)]() mutable {
                 VM evm{block, state_, config_};
                 if (tracer) {
                     evm.add_tracer(*tracer);
@@ -245,7 +248,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                    want = 0;
                 }
                 const auto have = state_.get_balance(*txn.from);
-                if (have < want + txn.value) {
+                if (have < want + txn.value && !gas_bailout) {
                    silkworm::Bytes data{};
                    std::string from = silkworm::to_hex(*txn.from);
                    std::string error = "insufficient funds for gas * price + value: address 0x" + from + " have " + intx::to_string(have) + " want " + intx::to_string(want+txn.value);

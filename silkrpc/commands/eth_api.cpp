@@ -1104,7 +1104,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
             EVMExecutor executor{context_, tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number};
             const auto txn = call.to_transaction();
             tracer->reset_access_list();
-            const auto execution_result = co_await executor.call(block_with_hash.block, txn, true, tracer);
+            const auto execution_result = co_await executor.call(block_with_hash.block, txn, /* refund */true, /* gasBailout */false, tracer);
             if (execution_result.pre_check_error) {
                 reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
                 break;
