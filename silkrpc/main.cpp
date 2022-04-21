@@ -193,8 +193,8 @@ int main(int argc, char* argv[]) {
         silkrpc::ContextPool context_pool{numContexts, create_channel};
         asio::thread_pool worker_pool{numWorkers};
 
-        silkrpc::http::Server eth_rpc_service{eth1_local, api_spec, context_pool, worker_pool};
-        silkrpc::http::Server engine_rpc_service{eth2_local, kDefaultEth2ApiSpec, context_pool, worker_pool};
+        silkrpc::http::Server eth_rpc_service{http_port, api_spec, context_pool, worker_pool};
+        silkrpc::http::Server engine_rpc_service{engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool};
 
         auto& io_context = context_pool.get_io_context();
         asio::signal_set signals{io_context, SIGINT, SIGTERM};
@@ -207,10 +207,10 @@ int main(int argc, char* argv[]) {
             engine_rpc_service.stop();
         });
 
-        SILKRPC_LOG << "Silkrpc starting Ethereum RPC API service at " << eth1_local << "\n";
+        SILKRPC_LOG << "Silkrpc starting Ethereum RPC API service at " << http_port << "\n";
         eth_rpc_service.start();
 
-        SILKRPC_LOG << "Silkrpc running Engine RPC API service at " << eth2_local << "\n";
+        SILKRPC_LOG << "Silkrpc running Engine RPC API service at " << engine_port << "\n";
         engine_rpc_service.start();
 
         SILKRPC_LOG << "Silkrpc is now running [pid=" << pid << ", main thread=" << tid << "]\n";
