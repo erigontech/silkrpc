@@ -28,6 +28,7 @@
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 #include <silkworm/chain/intrinsic_gas.hpp>
+#include <silkworm/chain/protocol_param.hpp>
 #include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/log.hpp>
@@ -153,6 +154,26 @@ std::string EVMExecutor<WorldState, VM>::get_error_message(int64_t error_code, c
 }
 
 template<typename WorldState, typename VM>
+uint64_t EVMExecutor<WorldState, VM>::refund_gas(const VM& evm, const silkworm::Transaction& txn, uint64_t gas_left) {
+    const evmc_revision rev{evm.revision()};
+    uint64_t refund{state_.get_refund()};
+    if (rev < EVMC_LONDON) {
+        refund += silkworm::fee::kRSelfDestruct * state_.number_of_self_destructs();
+    }
+    const uint64_t max_refund_quotient{rev >= EVMC_LONDON ? silkworm::param::kMaxRefundQuotientLondon
+                                                          : silkworm::param::kMaxRefundQuotientFrontier};
+    const uint64_t max_refund{(txn.gas_limit - gas_left) / max_refund_quotient};
+    refund = std::min(refund, max_refund);
+    gas_left += refund;
+
+    const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
+    const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
+    state_.add_to_balance(*txn.from, gas_left * effective_gas_price);
+
+    return gas_left;
+}
+
+template<typename WorldState, typename VM>
 std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0) {
     const evmc_revision rev{evm.revision()};
 
@@ -183,15 +204,15 @@ std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm,
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn, std::shared_ptr<silkworm::EvmTracer> tracer) {
+asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn, bool refund, std::shared_ptr<silkworm::EvmTracer> tracer) {
     SILKRPC_DEBUG << "EVMExecutor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " start\n";
 
     std::ostringstream out;
 
     const auto exec_result = co_await asio::async_compose<decltype(asio::use_awaitable), void(ExecutionResult)>(
-        [this, &block, &txn, &tracer, &out](auto&& self) {
+        [this, &block, &txn, &tracer, &out, &refund](auto&& self) {
             SILKRPC_TRACE << "EVMExecutor::call post block: " << block.header.number << " txn: " << &txn << "\n";
-            asio::post(workers_, [this, &block, &txn, &tracer, &out, self = std::move(self)]() mutable {
+            asio::post(workers_, [this, &block, &txn, &tracer, &out, &refund, self = std::move(self)]() mutable {
                 VM evm{block, state_, config_};
                 if (tracer) {
                     evm.add_tracer(*tracer);
@@ -252,7 +273,15 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
                 SILKRPC_DEBUG << "EVMExecutor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
 
-                ExecutionResult exec_result{result.status, result.gas_left, result.data};
+                uint64_t gas_left = 0;
+                if (refund) {
+                    const uint64_t gas_used{txn.gas_limit - refund_gas(evm, txn, result.gas_left)};
+                    gas_left = txn.gas_limit - gas_used;
+                } else {
+                    gas_left = result.gas_left;
+                }
+
+                ExecutionResult exec_result{result.status, gas_left, result.data};
                 asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
                     self.complete(exec_result);
                 });
