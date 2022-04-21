@@ -28,9 +28,7 @@
 
 namespace silkrpc {
 
-/*
-*   Execution Payload as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
-*/
+//! ExecutionPayload as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
 struct ExecutionPayload {
     uint64_t number;
     uint64_t timestamp;
@@ -48,17 +46,23 @@ struct ExecutionPayload {
     std::vector<silkworm::Bytes> transactions;
 };
 
-/*
-*   Payload Status as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
-*/
+//! PayloadStatus as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
 struct PayloadStatus {
     std::string status;
     std::optional<evmc::bytes32> latest_valid_hash;
     std::optional<std::string> validation_error;
 };
 
+//! TransitionConfiguration as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
+struct TransitionConfiguration {
+    intx::uint256 terminal_total_difficulty;
+    evmc::bytes32 terminal_block_hash;
+    uint64_t terminal_block_number;
+};
+
 std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload);
 std::ostream& operator<<(std::ostream& out, const PayloadStatus& payload_status);
+std::ostream& operator<<(std::ostream& out, const TransitionConfiguration& transition_configuration);
 
 } // namespace silkrpc
 

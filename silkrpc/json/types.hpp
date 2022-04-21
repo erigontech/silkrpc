@@ -97,6 +97,9 @@ void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload);
 
 void to_json(nlohmann::json& json, const PayloadStatus& payload_status);
 
+void to_json(nlohmann::json& json, const TransitionConfiguration& transition_configuration);
+void from_json(const nlohmann::json& json, TransitionConfiguration& transition_configuration);
+
 void to_json(nlohmann::json& json, const Forks& forks);
 
 void to_json(nlohmann::json& json, const Issuance& issuance);

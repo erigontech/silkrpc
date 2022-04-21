@@ -32,6 +32,7 @@ namespace silkrpc::ethdb {
 class Cursor {
 public:
     Cursor() = default;
+    virtual ~Cursor() = default;
 
     Cursor(const Cursor&) = delete;
     Cursor& operator=(const Cursor&) = delete;
