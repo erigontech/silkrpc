@@ -43,8 +43,8 @@
 #include <silkrpc/protocol/version.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::kEmptyChainData, "chain data path as string");
-ABSL_FLAG(std::string, eth1_local, silkrpc::kDefaultEth1Local, "Ethereum JSON RPC API local end-point as string <address>:<port>");
-ABSL_FLAG(std::string, eth2_local, silkrpc::kDefaultEth2Local, "Engine JSON RPC API local end-point as string <address>:<port>");
+ABSL_FLAG(std::string, http_port, silkrpc::kDefaultHttpPort, "Ethereum JSON RPC API local end-point as string <address>:<port>");
+ABSL_FLAG(std::string, engine_port, silkrpc::kDefaultEnginePort, "Engine JSON RPC API local end-point as string <address>:<port>");
 ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "Erigon Core gRPC service location as string <address>:<port>");
 ABSL_FLAG(std::string, api_spec, silkrpc::kDefaultEth1ApiSpec, "JSON RPC API namespaces as comma-separated list of strings");
 ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "number of running I/O contexts as 32-bit integer");
@@ -100,17 +100,17 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        auto eth1_local{absl::GetFlag(FLAGS_eth1_local)};
-        if (!eth1_local.empty() && eth1_local.find(kAddressPortSeparator) == std::string::npos) {
-            SILKRPC_ERROR << "Parameter eth1_local is invalid: [" << eth1_local << "]\n";
-            SILKRPC_ERROR << "Use --eth1_local flag to specify the local binding for Ethereum JSON RPC service\n";
+        auto http_port{absl::GetFlag(FLAGS_http_port)};
+        if (!http_port.empty() && http_port.find(kAddressPortSeparator) == std::string::npos) {
+            SILKRPC_ERROR << "Parameter http_port is invalid: [" << http_port << "]\n";
+            SILKRPC_ERROR << "Use --http_port flag to specify the local binding for Ethereum JSON RPC service\n";
             return -1;
         }
 
-        auto eth2_local{absl::GetFlag(FLAGS_eth2_local)};
-        if (!eth2_local.empty() && eth2_local.find(kAddressPortSeparator) == std::string::npos) {
-            SILKRPC_ERROR << "Parameter eth2_local is invalid: [" << eth2_local << "]\n";
-            SILKRPC_ERROR << "Use --eth2_local flag to specify the local binding for Engine JSON RPC service\n";
+        auto engine_port{absl::GetFlag(FLAGS_engine_port)};
+        if (!engine_port.empty() && engine_port.find(kAddressPortSeparator) == std::string::npos) {
+            SILKRPC_ERROR << "Parameter engine_port is invalid: [" << engine_port << "]\n";
+            SILKRPC_ERROR << "Use --engine_port flag to specify the local binding for Engine JSON RPC service\n";
             return -1;
         }
 
