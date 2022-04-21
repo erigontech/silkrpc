@@ -1618,4 +1618,16 @@ TEST_CASE("DebugConfig") {
         CHECK(os.str() == "disableStorage: true disableMemory: false disableStack: true");
     }
 }
+
+TEST_CASE("ByteView hex") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    silkworm::Bytes code{*silkworm::from_hex("0000000000000000")};
+    silkworm::ByteView view{code};
+    
+    auto hex = silkworm::to_hex(view);
+
+    CHECK(hex == "0000000000000000");
+}
 }  // namespace silkrpc::debug

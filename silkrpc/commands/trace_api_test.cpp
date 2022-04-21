@@ -18,9 +18,18 @@
 
 #include <catch2/catch.hpp>
 
-namespace silkrpc {
+namespace silkrpc::commands {
 
 using Catch::Matchers::Message;
 
-} // namespace silkrpc
+TEST_CASE("TraceRpcApi") {
+    Context context;
+    asio::thread_pool workers{1};
+
+    SECTION("CTOR") {
+        CHECK_NOTHROW(TraceRpcApi{context, workers});
+    }
+}
+
+} // namespace silkrpc::commands
 
