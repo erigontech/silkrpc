@@ -37,15 +37,15 @@
 
 namespace silkrpc {
 
-silkworm::Bytes build_abi_selector(const std::string& signature) {
+static silkworm::Bytes build_abi_selector(const std::string& signature) {
     const auto signature_hash = hash_of(silkworm::byte_view_of_string(signature));
     return {std::begin(signature_hash.bytes), std::begin(signature_hash.bytes) + 4};
 }
 
-const auto kRevertSelector{build_abi_selector("Error(string)")};
-const auto kAbiStringOffsetSize{32};
+static const auto kRevertSelector{build_abi_selector("Error(string)")};
+static const auto kAbiStringOffsetSize{32};
 
-std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data) {
+static std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data) {
     if (error_data.size() < kRevertSelector.size() || error_data.substr(0, kRevertSelector.size()) != kRevertSelector) {
         return std::nullopt;
     }
