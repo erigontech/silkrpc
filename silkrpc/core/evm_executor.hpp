@@ -59,6 +59,7 @@ public:
     asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, bool refund = true,
                                           bool gas_bailout = false, std::shared_ptr<silkworm::EvmTracer> tracer = {});
 
+protected:
     uint64_t refund_gas(const VM& evm, const silkworm::Transaction& txn, uint64_t gas_left);
 
 private:
