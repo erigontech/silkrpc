@@ -629,8 +629,6 @@ TEST_CASE("EVMexecutor") {
         pool_thread.join();
         CHECK(error_message == "unknown error code");
     }
-
-
 }
 
 } // namespace silkrpc
