@@ -17,6 +17,7 @@
 #include "evm_trace.hpp"
 
 #include <string>
+#include <utility>
 
 #include <asio/co_spawn.hpp>
 #include <asio/thread_pool.hpp>
@@ -1102,6 +1103,13 @@ TEST_CASE("VmTrace json serialization") {
             "used":5000
         })"_json);
     }
+    SECTION("TraceMemory") {
+        const auto& memory = trace_ex.memory.value();
+        CHECK(memory == R"({
+            "data":"data",
+            "off":10
+        })"_json);
+    }
     SECTION("TraceStorage") {
         const auto& storage = trace_ex.storage.value();
         CHECK(storage == R"({
@@ -1229,6 +1237,21 @@ TEST_CASE("Trace json serialization") {
             }
         })"_json);
     }
+    SECTION("with error") {
+        trace.error = "error";
+
+        CHECK(trace == R"({
+            "action": {
+                "from": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c7",
+                "gas": 1000,
+                "value": "0x1234567890abcdef"
+            },
+            "error": "error",
+            "subtraces": 0,
+            "traceAddress": [],
+            "type": "CALL"
+        })"_json);
+    }
 }
 
 TEST_CASE("StateDiff json serialization") {
@@ -1239,6 +1262,20 @@ TEST_CASE("StateDiff json serialization") {
 
     SECTION("basic") {
         CHECK(state_diff == R"({
+        })"_json);
+    }
+    SECTION("with 1 entry") {
+        StateDiffEntry entry;
+
+        state_diff.insert(std::pair<std::string, StateDiffEntry>("item", entry));
+
+        CHECK(state_diff == R"({
+            "item": {
+                "balance": {},
+                "code": "=",
+                "nonce": "=",
+                "storage": {}
+            }
         })"_json);
     }
 }
