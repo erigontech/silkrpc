@@ -163,6 +163,34 @@ TEST_CASE("EVMexecutor") {
         CHECK(result.pre_check_error.value() == "insufficient funds for gas * price + value: address 0xa872626373628737383927236382161739290870 have 0 want 60000");
     }
 
+    SECTION("doesnt failed if transaction cost greater user amount && gasBailout == true") {
+        StubDatabase tx_database;
+        const uint64_t chain_id = 5;
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+
+        ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
+        ContextPool my_pool{1, my_channel};
+        asio::thread_pool workers{1};
+        auto pool_thread = std::thread([&]() { my_pool.run(); });
+
+        const auto block_number = 6000000;
+        silkworm::Block block{};
+        block.header.base_fee_per_gas = 0x1;
+        block.header.number = block_number;
+        silkworm::Transaction txn{};
+        txn.max_fee_per_gas = 0x2;
+        txn.gas_limit = 60000;
+        txn.from = 0xa872626373628737383927236382161739290870_address;
+
+        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn, false, /* gasBailout */true), asio::use_future);
+        auto result = execution_result.get();
+        my_pool.stop();
+        pool_thread.join();
+        CHECK(result.error_code == 0);
+    }
+
+
     AccessList access_list{
         {0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae_address,
             {
