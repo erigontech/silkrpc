@@ -163,7 +163,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(result.pre_check_error.value() == "insufficient funds for gas * price + value: address 0xa872626373628737383927236382161739290870 have 0 want 60000");
     }
 
-    SECTION("doesnt failed if transaction cost greater user amount && gasBailout == true") {
+    SECTION("doesn t fail if transaction cost greater user amount && gasBailout == true") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -183,7 +183,7 @@ TEST_CASE("EVMexecutor") {
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
         EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn, false, /* gasBailout */true), asio::use_future);
+        auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn, false, /* gasBailout */true, {}), asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         pool_thread.join();
