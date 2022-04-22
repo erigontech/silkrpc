@@ -251,7 +251,7 @@ TEST_CASE("EVMexecutor") {
         silkworm::IntraBlockState state{remote_state};
         EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
         silkworm::EVM evm{block, state, *chain_config_ptr};
-        uint64_t gas_left = 100;
+        uint64_t gas_left = 0;
         auto ret_gas_left = executor.refund_gas(evm, txn, gas_left);
         my_pool.stop();
         pool_thread.join();
