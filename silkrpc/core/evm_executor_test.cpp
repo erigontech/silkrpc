@@ -204,6 +204,60 @@ TEST_CASE("EVMexecutor") {
                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x4f, 0x77, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x3a, 0x20, 0x63,
                                0x61, 0x6c, 0x6c, 0x65, 0x72, 0x20, 0x69, 0x73, 0x20, 0x6e, 0x6f, 0x74, 0x20, 0x74, 0x68, 0x65, 0x20, 0x6f, 0x77, 0x6e, 0x65, 0x72};
 
+    silkworm::Bytes short_error_data{0x08, 0xc3};
+
+    SECTION("get_error_message(EVMC_FAILURE) with short error_data") {
+        StubDatabase tx_database;
+        const uint64_t chain_id = 5;
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+
+        ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
+        ContextPool my_pool{1, my_channel};
+        asio::thread_pool workers{1};
+        auto pool_thread = std::thread([&]() { my_pool.run(); });
+
+        const auto block_number = 6000000;
+        silkworm::Block block{};
+        block.header.number = block_number;
+        silkworm::Transaction txn{};
+        txn.gas_limit = 60000;
+        txn.from = 0xa872626373628737383927236382161739290870_address;
+
+        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, short_error_data);
+        my_pool.stop();
+        pool_thread.join();
+        CHECK(error_message == "execution failed"); // only short answer because error_data is too short */
+    }
+
+    SECTION("verify refund") {
+        StubDatabase tx_database;
+        const uint64_t chain_id = 5;
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+
+        ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
+        ContextPool my_pool{1, my_channel};
+        asio::thread_pool workers{1};
+        auto pool_thread = std::thread([&]() { my_pool.run(); });
+
+        const auto block_number = 6000000;
+        silkworm::Block block{};
+        block.header.number = block_number;
+        silkworm::Transaction txn{};
+        txn.gas_limit = 60000;
+        txn.from = 0xa872626373628737383927236382161739290870_address;
+
+        state::RemoteState remote_state{*(my_pool.get_context().io_context), tx_database, block_number};
+        silkworm::IntraBlockState state{remote_state};
+        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        silkworm::EVM evm{block, state, *chain_config_ptr};
+        uint64_t gas_left = 100;
+        auto ret_gas_left = executor.refund_gas(evm, txn, gas_left);
+        my_pool.stop();
+        pool_thread.join();
+        CHECK(ret_gas_left == 0);
+    }
+
     SECTION("get_error_message(EVMC_FAILURE)") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
@@ -370,6 +424,54 @@ TEST_CASE("EVMexecutor") {
         my_pool.stop();
         pool_thread.join();
         CHECK(error_message == "stack overflow");
+    }
+
+    SECTION("get_error_message(EVMC_STACK_UNDERFLOW)") {
+        StubDatabase tx_database;
+        const uint64_t chain_id = 5;
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+
+        ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
+        ContextPool my_pool{1, my_channel};
+        asio::thread_pool workers{1};
+        auto pool_thread = std::thread([&]() { my_pool.run(); });
+
+        const auto block_number = 6000000;
+        silkworm::Block block{};
+        block.header.number = block_number;
+        silkworm::Transaction txn{};
+        txn.gas_limit = 60000;
+        txn.from = 0xa872626373628737383927236382161739290870_address;
+
+        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        auto error_message = executor.get_error_message(evmc_status_code::EVMC_STACK_UNDERFLOW, error_data, false);
+        my_pool.stop();
+        pool_thread.join();
+        CHECK(error_message == "stack underflow");
+    }
+
+    SECTION("get_error_message(EVMC_BAD_JUMP_DESTINATION)") {
+        StubDatabase tx_database;
+        const uint64_t chain_id = 5;
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+
+        ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
+        ContextPool my_pool{1, my_channel};
+        asio::thread_pool workers{1};
+        auto pool_thread = std::thread([&]() { my_pool.run(); });
+
+        const auto block_number = 6000000;
+        silkworm::Block block{};
+        block.header.number = block_number;
+        silkworm::Transaction txn{};
+        txn.gas_limit = 60000;
+        txn.from = 0xa872626373628737383927236382161739290870_address;
+
+        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        auto error_message = executor.get_error_message(evmc_status_code::EVMC_BAD_JUMP_DESTINATION, error_data, false);
+        my_pool.stop();
+        pool_thread.join();
+        CHECK(error_message == "invalid jump destination");
     }
 }
 
