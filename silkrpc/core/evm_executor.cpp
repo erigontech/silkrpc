@@ -16,7 +16,6 @@
 
 #include "evm_executor.hpp"
 
-#include <algorithm>
 #include <array>
 #include <optional>
 #include <string>
@@ -37,15 +36,16 @@
 
 namespace silkrpc {
 
-static silkworm::Bytes build_abi_selector(const std::string& signature) {
+silkworm::Bytes build_abi_selector(const std::string& signature) {
     const auto signature_hash = hash_of(silkworm::byte_view_of_string(signature));
     return {std::begin(signature_hash.bytes), std::begin(signature_hash.bytes) + 4};
 }
 
-static const auto kRevertSelector{build_abi_selector("Error(string)")};
-static const auto kAbiStringOffsetSize{32};
 
-static std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data) {
+std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data) {
+    static const auto kRevertSelector{build_abi_selector("Error(string)")};
+    static const auto kAbiStringOffsetSize{32};
+
     if (error_data.size() < kRevertSelector.size() || error_data.substr(0, kRevertSelector.size()) != kRevertSelector) {
         return std::nullopt;
     }
@@ -164,13 +164,12 @@ uint64_t EVMExecutor<WorldState, VM>::refund_gas(const VM& evm, const silkworm::
     const uint64_t max_refund_quotient{rev >= EVMC_LONDON ? silkworm::param::kMaxRefundQuotientLondon
                                                           : silkworm::param::kMaxRefundQuotientFrontier};
     const uint64_t max_refund{(txn.gas_limit - gas_left) / max_refund_quotient};
-    refund = std::min(refund, max_refund);
+    refund = refund < max_refund ? refund : max_refund; // min
     gas_left += refund;
 
     const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
     const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
     state_.add_to_balance(*txn.from, gas_left * effective_gas_price);
-
     return gas_left;
 }
 
