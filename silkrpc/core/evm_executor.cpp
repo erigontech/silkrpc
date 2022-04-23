@@ -276,7 +276,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 if (refund) {
                     const uint64_t gas_used{txn.gas_limit - refund_gas(evm, txn, result.gas_left)};
                     gas_left = txn.gas_limit - gas_used;
-                } 
+                }
 
                 ExecutionResult exec_result{result.status, gas_left, result.data};
                 asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
