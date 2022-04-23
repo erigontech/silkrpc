@@ -206,7 +206,7 @@ std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm,
 template<typename WorldState, typename VM>
 asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn,
                                                                    bool refund, bool gas_bailout, std::shared_ptr<silkworm::EvmTracer> tracer) {
-    SILKRPC_DEBUG << "EVMExecutor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " refund: " << refund <<
+    SILKRPC_DEBUG << "EVMExecutor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " refund: " << refund << \
                                                     " gasBailout: " << gas_bailout << " start\n";
 
     std::ostringstream out;
