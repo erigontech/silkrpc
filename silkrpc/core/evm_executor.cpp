@@ -33,16 +33,17 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/types/transaction.hpp>
 
 namespace silkrpc {
 
-silkworm::Bytes build_abi_selector(const std::string& signature) {
+static silkworm::Bytes build_abi_selector(const std::string& signature) {
     const auto signature_hash = hash_of(silkworm::byte_view_of_string(signature));
     return {std::begin(signature_hash.bytes), std::begin(signature_hash.bytes) + 4};
 }
 
 
-std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data) {
+static std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data) {
     static const auto kRevertSelector{build_abi_selector("Error(string)")};
     static const auto kAbiStringOffsetSize{32};
 
@@ -202,9 +203,9 @@ std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm,
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn,
-                                                                   bool refund, bool gas_bailout, std::shared_ptr<silkworm::EvmTracer> tracer) {
+asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn, bool refund, bool gas_bailout, EvmTracerCall tracer) {
     SILKRPC_DEBUG << "EVMExecutor::call: " << block.header.number << " gasLimit: " << txn.gas_limit << " refund: " << refund << " gasBailout: " << gas_bailout << "\n";
+    SILKRPC_DEBUG << "EVMExecutor::call:Transaction: " << &txn << "Txn: " << txn << "\n";
 
     std::ostringstream out;
     const auto exec_result = co_await asio::async_compose<decltype(asio::use_awaitable), void(ExecutionResult)>(
