@@ -220,28 +220,32 @@ TEST_CASE("EVMexecutor") {
         txn.access_list = access_list;
 
         EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn), asio::use_future);
+        auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn, true, true, {}), asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         pool_thread.join();
         CHECK(result.error_code == 0);
     }
 
-    silkworm::Bytes error_data{0x08, 0xc3, 0x79, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    static silkworm::Bytes error_data{
+                               0x08, 0xc3, 0x79, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x4f, 0x77, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x3a, 0x20, 0x63,
                                0x61, 0x6c, 0x6c, 0x65, 0x72, 0x20, 0x69, 0x73, 0x20, 0x6e, 0x6f, 0x74, 0x20, 0x74, 0x68, 0x65, 0x20, 0x6f, 0x77, 0x6e, 0x65, 0x72};
 
-    silkworm::Bytes short_error_data_1{0x08, 0xc3};
+    static silkworm::Bytes short_error_data_1{0x08, 0xc3};
 
-    silkworm::Bytes short_error_data_2{0x08, 0xc3, 0x79, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    static silkworm::Bytes short_error_data_2{
+                               0x08, 0xc3, 0x79, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-    silkworm::Bytes short_error_data_3{0x08, 0xc3, 0x79, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    static silkworm::Bytes short_error_data_3{
+                               0x08, 0xc3, 0x79, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                0x00, 0x00 };
 
-    silkworm::Bytes short_error_data_4{0x08, 0xc3, 0x79, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    static silkworm::Bytes short_error_data_4{
+                               0x08, 0xc3, 0x79, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x4f, 0x77, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x3a,
                                0x20, 0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72, 0x20, 0x69, 0x73, 0x20};
@@ -342,7 +346,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "execution failed"); // only short answer because error_data is too short */
     }
 
-    SECTION("get_error_message(EVMC_FAILURE)") {
+    SECTION("get_error_message(EVMC_FAILURE) with full error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -366,7 +370,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "execution failed: Ownable: caller is not the owner");
     }
 
-    SECTION("get_error_message(EVMC_FAILURE) short error") {
+    SECTION("get_error_message(EVMC_FAILURE) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -390,7 +394,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "execution failed");
     }
 
-    SECTION("get_error_message(EVMC_REVERT)") {
+    SECTION("get_error_message(EVMC_REVERT) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -414,7 +418,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "execution reverted");
     }
 
-    SECTION("get_error_message(EVMC_OUT_OF_GAS)") {
+    SECTION("get_error_message(EVMC_OUT_OF_GAS) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -438,7 +442,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "out of gas");
     }
 
-    SECTION("get_error_message(EVMC_INVALID_INSTRUCTION)") {
+    SECTION("get_error_message(EVMC_INVALID_INSTRUCTION) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -462,7 +466,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "invalid instruction");
     }
 
-    SECTION("get_error_message(EVMC_UNDEFINED_INSTRUCTION)") {
+    SECTION("get_error_message(EVMC_UNDEFINED_INSTRUCTION) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -486,7 +490,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "invalid opcode");
     }
 
-    SECTION("get_error_message(EVMC_STACK_OVERFLOW)") {
+    SECTION("get_error_message(EVMC_STACK_OVERFLOW) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -510,7 +514,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "stack overflow");
     }
 
-    SECTION("get_error_message(EVMC_STACK_UNDERFLOW)") {
+    SECTION("get_error_message(EVMC_STACK_UNDERFLOW) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -534,7 +538,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "stack underflow");
     }
 
-    SECTION("get_error_message(EVMC_BAD_JUMP_DESTINATION)") {
+    SECTION("get_error_message(EVMC_BAD_JUMP_DESTINATION) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -558,7 +562,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "invalid jump destination");
     }
 
-    SECTION("get_error_message(EVMC_INVALID_MEMORY_ACCESS)") {
+    SECTION("get_error_message(EVMC_INVALID_MEMORY_ACCESS) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -582,7 +586,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "invalid memory access");
     }
 
-    SECTION("get_error_message(EVMC_CALL_DEPTH_EXCEEDED)") {
+    SECTION("get_error_message(EVMC_CALL_DEPTH_EXCEEDED) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
@@ -606,7 +610,7 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "call depth exceeded");
     }
 
-    SECTION("get_error_message(unknown)") {
+    SECTION("get_error_message(wrong status_code) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
