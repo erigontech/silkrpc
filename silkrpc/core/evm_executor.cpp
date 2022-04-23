@@ -172,7 +172,6 @@ uint64_t EVMExecutor<WorldState, VM>::refund_gas(const VM& evm, const silkworm::
     state_.add_to_balance(*txn.from, gas_left * effective_gas_price);
     return gas_left;
 }
-
 template<typename WorldState, typename VM>
 std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0) {
     const evmc_revision rev{evm.revision()};
@@ -199,18 +198,15 @@ std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm,
         std::string error = "intrinsic gas too low: have " + std::to_string(txn.gas_limit) + " want " + intx::to_string(g0);
         return error;
     }
-
     return std::nullopt;
 }
 
 template<typename WorldState, typename VM>
 asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn,
                                                                    bool refund, bool gas_bailout, std::shared_ptr<silkworm::EvmTracer> tracer) {
-    SILKRPC_DEBUG << "EVMExecutor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " refund: " << refund << \
-                                                    " gasBailout: " << gas_bailout << " start\n";
+    SILKRPC_DEBUG << "EVMExecutor::call: " << block.header.number << " gasLimit: " << txn.gas_limit << " refund: " << refund << " gasBailout: " << gas_bailout << "\n";
 
     std::ostringstream out;
-
     const auto exec_result = co_await asio::async_compose<decltype(asio::use_awaitable), void(ExecutionResult)>(
         [this, &block, &txn, &tracer, &out, &refund, &gas_bailout](auto&& self) {
             SILKRPC_TRACE << "EVMExecutor::call post block: " << block.header.number << " txn: " << &txn << "\n";
