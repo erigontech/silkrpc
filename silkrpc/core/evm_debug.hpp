@@ -23,6 +23,7 @@
 #include <vector>
 
 #include <asio/awaitable.hpp>
+#include <asio/io_context.hpp>
 #include <asio/thread_pool.hpp>
 #include <nlohmann/json.hpp>
 
@@ -118,8 +119,8 @@ struct DebugExecutorResult {
 template<typename WorldState = silkworm::IntraBlockState, typename VM = silkworm::EVM>
 class DebugExecutor {
 public:
-    explicit DebugExecutor(const Context& context, const core::rawdb::DatabaseReader& database_reader, asio::thread_pool& workers, const DebugConfig& config = DEFAULT_DEBUG_CONFIG)
-        : context_(context), database_reader_(database_reader), workers_{workers}, config_{config} {}
+    explicit DebugExecutor(asio::io_context& io_context, const core::rawdb::DatabaseReader& database_reader, asio::thread_pool& workers, const DebugConfig& config = DEFAULT_DEBUG_CONFIG)
+    : io_context_(io_context), database_reader_(database_reader), workers_{workers}, config_{config} {}
     virtual ~DebugExecutor() {}
 
     DebugExecutor(const DebugExecutor&) = delete;
@@ -134,7 +135,7 @@ public:
 private:
     asio::awaitable<DebugExecutorResult> execute(std::uint64_t block_number, const silkworm::Block& block, const silkrpc::Transaction& transaction, std::int32_t = -1);
 
-    const Context& context_;
+    asio::io_context& io_context_;
     const core::rawdb::DatabaseReader& database_reader_;
     asio::thread_pool& workers_;
     const DebugConfig& config_;

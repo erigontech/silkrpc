@@ -90,11 +90,13 @@ TEST_CASE("start context pool", "[silkrpc][context_pool]") {
         CHECK_NOTHROW(context_pool_thread.join());
     }
 
-    SECTION("with multiple runners") {
-        ContextPool cp{3, create_channel};
-        auto context_pool_thread1 = std::thread([&]() { cp.run(); });
-        auto context_pool_thread2 = std::thread([&]() { cp.run(); });
-        cp.stop();
+    SECTION("multiple runners require multiple pools") {
+        ContextPool cp1{3, create_channel};
+        ContextPool cp2{3, create_channel};
+        auto context_pool_thread1 = std::thread([&]() { cp1.run(); });
+        auto context_pool_thread2 = std::thread([&]() { cp2.run(); });
+        cp1.stop();
+        cp2.stop();
         CHECK_NOTHROW(context_pool_thread1.join());
         CHECK_NOTHROW(context_pool_thread2.join());
     }

@@ -253,7 +253,7 @@ asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::execute(
     const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
     const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
 
-    EVMExecutor<WorldState, VM> executor{context_, database_reader_, *chain_config_ptr, workers_, block_number-1};
+    EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number-1};
 
     std::vector<DebugTrace> debug_traces(transactions.size());
     for (std::uint64_t idx = 0; idx < transactions.size(); idx++) {
@@ -304,7 +304,7 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std:
 
     const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
 
-    EVMExecutor<WorldState, VM> executor{context_, database_reader_, *chain_config_ptr, workers_, block_number};
+    EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number};
 
     for (auto idx = 0; idx < index; idx++) {
         silkrpc::Transaction txn{block.transactions[idx]};

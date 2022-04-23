@@ -62,8 +62,8 @@ int ethbackend_coroutines(const std::string& target) {
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{1, create_channel};
         auto& context = context_pool.get_context();
-        auto& io_context = context.io_context;
-        auto& grpc_queue = context.grpc_queue;
+        auto io_context = context.io_context();
+        auto grpc_queue = context.grpc_queue();
 
         asio::signal_set signals(*io_context, SIGINT, SIGTERM);
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
@@ -74,7 +74,7 @@ int ethbackend_coroutines(const std::string& target) {
         const auto channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
 
         // Etherbase
-        silkrpc::ethbackend::BackEndGrpc eth_backend{*io_context, channel, grpc_queue.get()};
+        silkrpc::ethbackend::BackEndGrpc eth_backend{*io_context, channel, grpc_queue};
         asio::co_spawn(*io_context, ethbackend_etherbase(eth_backend), [&](std::exception_ptr exptr) {
             context_pool.stop();
         });

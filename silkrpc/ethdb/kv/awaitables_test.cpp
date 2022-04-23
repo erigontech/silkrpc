@@ -99,7 +99,7 @@ TEST_CASE("async_start") {
       int64_t txid;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_start(), asio::use_future)};
         txid = result.get();
        } catch (...) {
@@ -136,7 +136,7 @@ TEST_CASE("async_start") {
       int64_t txid;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_start(), asio::use_future)};
         txid = result.get();
        } catch (...) {
@@ -162,7 +162,7 @@ TEST_CASE("async_start") {
       auto context_pool_thread = std::thread([&]() { cp.run(); });
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_start(), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -190,7 +190,7 @@ TEST_CASE("async_start") {
       auto context_pool_thread = std::thread([&]() { cp.run(); });
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_start(), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -222,7 +222,7 @@ TEST_CASE("open_cursor") {
       int64_t cursorid;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.open_cursor("table1"), asio::use_future)};
         cursorid = result.get();
        } catch (...) {
@@ -257,7 +257,7 @@ TEST_CASE("open_cursor") {
       int64_t cursor_id;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.open_cursor("table"), asio::use_future)};
         cursor_id = result.get();
        } catch (...) {
@@ -286,7 +286,7 @@ TEST_CASE("open_cursor") {
       auto context_pool_thread = std::thread([&]() { cp.run(); });
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.open_cursor("table"), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -311,7 +311,7 @@ TEST_CASE("open_cursor") {
       auto context_pool_thread = std::thread([&]() { cp.run(); });
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.open_cursor("table"), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -343,7 +343,7 @@ TEST_CASE("async_seek") {
       remote::Pair seek_pair;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         silkworm::ByteView key;
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek(1, key), asio::use_future)};
         seek_pair = result.get();
@@ -381,7 +381,7 @@ TEST_CASE("async_seek") {
       try {
         MockStreamingClient sct;
         silkworm::ByteView key;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek(1, key), asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
@@ -411,7 +411,7 @@ TEST_CASE("async_seek") {
       try {
         MockStreamingClient sct;
         silkworm::ByteView key;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek(1, key), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -437,7 +437,7 @@ TEST_CASE("async_seek") {
       try {
         MockStreamingClient sct;
         silkworm::ByteView key;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek(1, key), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -469,7 +469,7 @@ TEST_CASE("async_seek_exact") {
       remote::Pair seek_pair;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         silkworm::ByteView key;
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek_exact(1, key), asio::use_future)};
         seek_pair = result.get();
@@ -507,7 +507,7 @@ TEST_CASE("async_seek_exact") {
       try {
         MockStreamingClient sct;
         silkworm::ByteView key;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek_exact(1, key), asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
@@ -537,7 +537,7 @@ TEST_CASE("async_seek_exact") {
       try {
         MockStreamingClient sct;
         silkworm::ByteView key;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek_exact(1, key), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -563,7 +563,7 @@ TEST_CASE("async_seek_exact") {
       try {
         MockStreamingClient sct;
         silkworm::ByteView key;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek_exact(1, key), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -596,7 +596,7 @@ TEST_CASE("async_seek_both") {
       remote::Pair seek_pair;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         silkworm::ByteView key;
         silkworm::ByteView value;
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek_both(1, key, value), asio::use_future)};
@@ -639,7 +639,7 @@ TEST_CASE("async_seek_both") {
         MockStreamingClient sct;
         silkworm::ByteView key;
         silkworm::ByteView value;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek_both(1, key, value), asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
@@ -671,7 +671,7 @@ TEST_CASE("async_seek_both") {
         MockStreamingClient sct;
         silkworm::ByteView key;
         silkworm::ByteView value;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek_both(1, key, value), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -698,7 +698,7 @@ TEST_CASE("async_seek_both") {
         MockStreamingClient sct;
         silkworm::ByteView key;
         silkworm::ByteView value;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek_both(1, key, value), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -731,7 +731,7 @@ TEST_CASE("async_seek_both_exact") {
       remote::Pair seek_pair;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         silkworm::ByteView key;
         silkworm::ByteView value;
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek_both_exact(1, key, value), asio::use_future)};
@@ -774,7 +774,7 @@ TEST_CASE("async_seek_both_exact") {
         MockStreamingClient sct;
         silkworm::ByteView key;
         silkworm::ByteView value;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek_both_exact(1, key, value), asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
@@ -806,7 +806,7 @@ TEST_CASE("async_seek_both_exact") {
         MockStreamingClient sct;
         silkworm::ByteView key;
         silkworm::ByteView value;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek_both_exact(1, key, value), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -833,7 +833,7 @@ TEST_CASE("async_seek_both_exact") {
         MockStreamingClient sct;
         silkworm::ByteView key;
         silkworm::ByteView value;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_seek_both_exact(1, key, value), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -864,7 +864,7 @@ TEST_CASE("async_seek_next") {
       remote::Pair seek_pair;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_next(1), asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
@@ -900,7 +900,7 @@ TEST_CASE("async_seek_next") {
       remote::Pair seek_pair;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_next(1), asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
@@ -929,7 +929,7 @@ TEST_CASE("async_seek_next") {
       auto context_pool_thread = std::thread([&]() { cp.run(); });
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_next(1), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -954,7 +954,7 @@ TEST_CASE("async_seek_next") {
       auto context_pool_thread = std::thread([&]() { cp.run(); });
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_next(1), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -986,7 +986,7 @@ TEST_CASE("async_close_cursor") {
       uint32_t cursor_id;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_close_cursor(2), asio::use_future)};
         cursor_id = result.get();
        } catch (...) {
@@ -1022,7 +1022,7 @@ TEST_CASE("async_close_cursor") {
       uint32_t cursor_id;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_close_cursor(2), asio::use_future)};
         cursor_id = result.get();
        } catch (...) {
@@ -1051,7 +1051,7 @@ TEST_CASE("async_close_cursor") {
       auto context_pool_thread = std::thread([&]() { cp.run(); });
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_close_cursor(2), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -1076,7 +1076,7 @@ TEST_CASE("async_close_cursor") {
       auto context_pool_thread = std::thread([&]() { cp.run(); });
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_close_cursor(2), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {
@@ -1103,7 +1103,7 @@ TEST_CASE("async_end") {
       auto context_pool_thread = std::thread([&]() { cp.run(); });
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_end(), asio::use_future)};
         result.get();
        } catch (...) {
@@ -1132,7 +1132,7 @@ TEST_CASE("async_end") {
       uint32_t cursor_id;
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_end(), asio::use_future)};
         result.get();
        } catch (...) {
@@ -1158,7 +1158,7 @@ TEST_CASE("async_end") {
       auto context_pool_thread = std::thread([&]() { cp.run(); });
       try {
         MockStreamingClient sct;
-        AwaitableWrap test{*(cp.get_context().io_context), sct };
+        AwaitableWrap test{*cp.get_context().io_context(), sct };
         auto result{asio::co_spawn(cp.get_io_context(), test.async_end(), asio::use_future)};
         result.get();
        } catch (const std::system_error& e) {

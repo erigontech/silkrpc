@@ -36,7 +36,7 @@ namespace silkrpc::commands {
 
 class Web3RpcApi {
 public:
-    explicit Web3RpcApi(Context& context) : database_(context.database), backend_(context.backend) {}
+    explicit Web3RpcApi(Context& context) : database_(context.database()), backend_(context.backend()) {}
     virtual ~Web3RpcApi() {}
 
     Web3RpcApi(const Web3RpcApi&) = delete;

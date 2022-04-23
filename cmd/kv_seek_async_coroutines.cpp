@@ -57,8 +57,8 @@ int kv_seek_async_coroutines(const std::string& target, const std::string& table
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{1, create_channel};
         auto& context = context_pool.get_context();
-        auto& io_context = context.io_context;
-        auto& database = context.database;
+        auto io_context = context.io_context();
+        auto& database = context.database();
 
         asio::co_spawn(*io_context, kv_seek(*database, table_name, key), [&](std::exception_ptr exptr) {
             context_pool.stop();

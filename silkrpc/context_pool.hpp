@@ -33,34 +33,60 @@
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/grpc/completion_runner.hpp>
 #include <silkrpc/txpool/miner.hpp>
+#include <silkworm/rpc/completion_end_point.hpp>
 
 namespace silkrpc {
 
-struct Context {
-    std::shared_ptr<asio::io_context> io_context;
-    std::unique_ptr<grpc::CompletionQueue> grpc_queue;
-    std::unique_ptr<CompletionRunner> grpc_runner;
-    std::unique_ptr<ethdb::Database> database;
-    std::unique_ptr<ethbackend::BackEnd> backend;
-    std::unique_ptr<txpool::Miner> miner;
-    std::unique_ptr<txpool::TransactionPool> tx_pool;
-    std::shared_ptr<BlockCache> block_cache;
+using ChannelFactory = std::function<std::shared_ptr<grpc::Channel>()>;
+
+//! Asynchronous client scheduler running an execution loop.
+class Context {
+  public:
+    explicit Context(ChannelFactory create_channel);
+
+    asio::io_context* io_context() const noexcept { return io_context_.get(); }
+    grpc::CompletionQueue* grpc_queue() const noexcept { return grpc_queue_.get(); }
+    silkworm::rpc::CompletionEndPoint* rpc_end_point() noexcept { return rpc_end_point_.get(); }
+    std::unique_ptr<ethdb::Database>& database() noexcept { return database_; }
+    std::unique_ptr<ethbackend::BackEnd>& backend() noexcept { return backend_; }
+    std::unique_ptr<txpool::Miner>& miner() noexcept { return miner_; }
+    std::unique_ptr<txpool::TransactionPool>& tx_pool() noexcept { return tx_pool_; }
+    std::shared_ptr<BlockCache>& block_cache() noexcept { return block_cache_; }
+
+    //! Execute the scheduler loop until stopped.
+    void execution_loop();
+
+    //! Stop the execution loop.
+    void stop();
+
+  private:
+    std::shared_ptr<asio::io_context> io_context_;
+    std::unique_ptr<grpc::CompletionQueue> grpc_queue_;
+    std::unique_ptr<silkworm::rpc::CompletionEndPoint> rpc_end_point_;
+    std::unique_ptr<ethdb::Database> database_;
+    std::unique_ptr<ethbackend::BackEnd> backend_;
+    std::unique_ptr<txpool::Miner> miner_;
+    std::unique_ptr<txpool::TransactionPool> tx_pool_;
+    std::shared_ptr<BlockCache> block_cache_;
 };
 
-std::ostream& operator<<(std::ostream& out, const Context& c);
-
-using ChannelFactory = std::function<std::shared_ptr<grpc::Channel>()>;
+std::ostream& operator<<(std::ostream& out, Context& c);
 
 class ContextPool {
 public:
     explicit ContextPool(std::size_t pool_size, ChannelFactory create_channel);
+    ~ContextPool();
 
     ContextPool(const ContextPool&) = delete;
     ContextPool& operator=(const ContextPool&) = delete;
 
-    void run();
+    void start();
+
+    void join();
 
     void stop();
+
+    void run();
 
     Context& get_context();
 
@@ -73,8 +99,14 @@ private:
     // The work-tracking executors that keep the io_contexts running
     std::list<asio::execution::any_executor<>> work_;
 
+    //! The pool of threads running the execution contexts.
+    asio::detail::thread_group context_threads_;
+
     // The next index to use for a context
     std::size_t next_index_;
+
+    //! Flag indicating if pool has been stopped.
+    bool stopped_{false};
 };
 
 } // namespace silkrpc

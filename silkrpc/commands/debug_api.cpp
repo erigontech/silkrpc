@@ -88,7 +88,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_account_range(const nlohmann::js
     try {
         auto start = std::chrono::system_clock::now();
         AccountDumper dumper{*tx};
-        DumpAccounts dump_accounts = co_await dumper.dump_accounts(*context_.block_cache, block_number_or_hash, start_address, max_result, exclude_code, exclude_storage);
+        DumpAccounts dump_accounts = co_await dumper.dump_accounts(*context_.block_cache(), block_number_or_hash, start_address, max_result, exclude_code, exclude_storage);
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end - start;
         SILKRPC_DEBUG << "dump_accounts: elapsed " << elapsed_seconds.count() << " sec\n";
@@ -287,13 +287,13 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache, tx_database, transaction_hash);
+        const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache(), tx_database, transaction_hash);
         if (!tx_with_block) {
             std::ostringstream oss;
             oss << "transaction 0x" << transaction_hash << " not found";
             reply = make_json_error(request["id"], -32000, oss.str());
         } else {
-            debug::DebugExecutor executor{context_, tx_database, workers_, config};
+            debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
             const auto result = co_await executor.execute(tx_with_block->block_with_hash.block, tx_with_block->transaction);
 
             if (result.pre_check_error) {
@@ -338,12 +338,12 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json&
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache, tx_database, block_number_or_hash);
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
         auto txn = call.to_transaction();
         silkrpc::Transaction transaction{txn};
 
-        debug::DebugExecutor executor{context_, tx_database, workers_, config};
+        debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
         const auto result = co_await executor.execute(block_with_hash.block, call);
 
         if (result.pre_check_error) {
@@ -389,9 +389,9 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(const nloh
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache, tx_database, block_number);
+        const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache(), tx_database, block_number);
 
-        debug::DebugExecutor executor{context_, tx_database, workers_, config};
+        debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
         const auto debug_traces = co_await executor.execute(block_with_hash.block);
 
         reply = make_json_content(request["id"], debug_traces);
@@ -433,9 +433,9 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const nlohma
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache, tx_database, block_hash);
+        const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache(), tx_database, block_hash);
 
-        debug::DebugExecutor executor{context_, tx_database, workers_, config};
+        debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
         const auto debug_traces = co_await executor.execute(block_with_hash.block);
 
         reply = make_json_content(request["id"], debug_traces);

@@ -71,7 +71,7 @@ TEST_CASE("EVMexecutor") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        EVMExecutor executor{my_pool.get_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn), asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
@@ -98,7 +98,7 @@ TEST_CASE("EVMexecutor") {
         txn.max_fee_per_gas = 0x2;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        EVMExecutor executor{my_pool.get_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn), asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
@@ -126,7 +126,7 @@ TEST_CASE("EVMexecutor") {
         txn.from = 0xa872626373628737383927236382161739290870_address;
         txn.max_priority_fee_per_gas = 0x18;
 
-        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        EVMExecutor executor{my_pool.get_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn), asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
@@ -154,7 +154,7 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        EVMExecutor executor{my_pool.get_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn), asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
@@ -191,7 +191,7 @@ TEST_CASE("EVMexecutor") {
         txn.from = 0xa872626373628737383927236382161739290870_address;
         txn.access_list = access_list;
 
-        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        EVMExecutor executor{my_pool.get_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto execution_result = asio::co_spawn(my_pool.get_io_context().get_executor(), executor.call(block, txn), asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
@@ -221,7 +221,7 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        EVMExecutor executor{my_pool.get_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, error_data);
         my_pool.stop();
         pool_thread.join();
@@ -245,7 +245,7 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        EVMExecutor executor{my_pool.get_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, error_data, false);
         my_pool.stop();
         pool_thread.join();
@@ -269,7 +269,7 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        EVMExecutor executor{my_pool.get_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_REVERT, error_data, false);
         my_pool.stop();
         pool_thread.join();
@@ -293,7 +293,7 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        EVMExecutor executor{my_pool.get_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_OUT_OF_GAS, error_data, false);
         my_pool.stop();
         pool_thread.join();
@@ -317,7 +317,7 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        EVMExecutor executor{my_pool.get_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_INVALID_INSTRUCTION, error_data, false);
         my_pool.stop();
         pool_thread.join();
@@ -341,7 +341,7 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        EVMExecutor executor{my_pool.get_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_UNDEFINED_INSTRUCTION, error_data, false);
         my_pool.stop();
         pool_thread.join();
@@ -365,7 +365,7 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.get_context(), tx_database, *chain_config_ptr, workers, block_number};
+        EVMExecutor executor{my_pool.get_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_STACK_OVERFLOW, error_data, false);
         my_pool.stop();
         pool_thread.join();

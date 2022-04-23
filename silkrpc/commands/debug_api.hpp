@@ -42,7 +42,7 @@ const int16_t kAccountRangeMaxResults = 256;
 class DebugRpcApi {
 public:
     explicit DebugRpcApi(Context& context, asio::thread_pool& workers)
-    : context_(context), database_(context.database), workers_{workers}, tx_pool_{context.tx_pool} {}
+    : context_(context), database_(context.database()), workers_{workers}, tx_pool_{context.tx_pool()} {}
     virtual ~DebugRpcApi() {}
 
     DebugRpcApi(const DebugRpcApi&) = delete;
