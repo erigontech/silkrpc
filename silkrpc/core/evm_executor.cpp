@@ -272,13 +272,11 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
                 SILKRPC_DEBUG << "EVMExecutor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
 
-                uint64_t gas_left = 0;
+                uint64_t gas_left = result.gas_left;
                 if (refund) {
                     const uint64_t gas_used{txn.gas_limit - refund_gas(evm, txn, result.gas_left)};
                     gas_left = txn.gas_limit - gas_used;
-                } else {
-                    gas_left = result.gas_left;
-                }
+                } 
 
                 ExecutionResult exec_result{result.status, gas_left, result.data};
                 asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
