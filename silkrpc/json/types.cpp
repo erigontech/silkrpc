@@ -185,6 +185,39 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
 
 namespace silkrpc {
 
+void to_json(nlohmann::json& json, const struct TransactionsInfo& txs_info)
+{
+   for (auto const& keyValue : txs_info.pending_transactions) {
+       auto from = keyValue.first;
+       auto transactions = keyValue.second;
+       for (int i = 0; i < transactions.size(); i++) {
+           auto transaction = transactions[i];
+           json["blockHash"] = silkworm::to_bytes32(silkworm::ByteView{});
+           json["blockNumber"] = nullptr;
+           if (from) {
+              json["from"] = from;
+           }
+           json["gasPrice"] = silkrpc::to_quantity(transaction.block_base_fee_per_gas.value_or(0));
+           json["gas"] = silkrpc::to_quantity(transaction.gas_limit);
+           auto ethash_hash{hash_of_transaction(transaction)};
+           json["hash"] = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
+           json["input"] = "0x" + silkworm::to_hex(transaction.data);
+           json["nonce"] = silkrpc::to_quantity(transaction.nonce);
+           if (transaction.to) {
+               json["to"] =  transaction.to.value();
+           } else {
+               json["to"] =  nullptr;
+           }
+           json["transactionIndex"] = nullptr;
+           json["value"] = silkrpc::to_quantity(transaction.value);
+       }
+   }
+   for (auto const& keyValue : txs_info.queued_transactions) {
+   }
+   for (auto const& keyValue : txs_info.base_fee_transactions) {
+   }
+}
+
 void to_json(nlohmann::json& json, const struct TxPoolStatusInfo& status_info) {
     json["queued"] = silkrpc::to_quantity(status_info.queued);
     json["pending"] = silkrpc::to_quantity(status_info.pending);
