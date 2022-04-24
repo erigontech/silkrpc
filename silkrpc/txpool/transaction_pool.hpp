@@ -39,12 +39,30 @@
 #include <silkrpc/interfaces/txpool/txpool.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
 
+namespace Txpool = txpool;
 namespace silkrpc::txpool {
 
 struct StatusInfo {
    unsigned int queued;
    unsigned int pending;
    unsigned int base_fee;
+};
+
+enum Type {
+   QUEUED,
+   PENDING,
+   BASE_FEE
+};
+
+struct ElementInfo {
+   enum Type type;
+   evmc::address sender;
+   silkworm::Bytes rlp;
+};
+
+
+struct TxPoolTransactions {
+   std::vector<ElementInfo> txs;
 };
 
 using AddClient = AsyncUnaryClient<
@@ -105,6 +123,21 @@ using StatusAwaitable = unary_awaitable<
     ::txpool::Txpool::StubInterface,
     ::txpool::StatusRequest,
     ::txpool::StatusReply
+>;
+
+using AllClient = AsyncUnaryClient<
+    ::txpool::Txpool::StubInterface,
+    ::txpool::AllRequest,
+    ::txpool::AllReply,
+    &::txpool::Txpool::StubInterface::PrepareAsyncAll
+>;
+
+using AllAwaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    AllClient,
+    ::txpool::Txpool::StubInterface,
+    ::txpool::AllRequest,
+    ::txpool::AllReply
 >;
 
 class TransactionPool final {
@@ -213,6 +246,34 @@ public:
         status_info.queued = reply.queuedcount();
         status_info.pending = reply.pendingcount();
         co_return status_info;
+    }
+
+    asio::awaitable<TxPoolTransactions> get_transactions() {
+        TxPoolTransactions txpool_transactions{};
+        const auto start_time = clock_time::now();
+        SILKRPC_DEBUG << "TransactionPool::get_transactions\n";
+        ::txpool::AllRequest request{};
+        AllAwaitable all_awaitable{executor_, stub_, queue_};
+        const auto reply = co_await all_awaitable.async_call(request, asio::use_awaitable);
+        const auto txs_size = reply.txs_size();
+        for (int i = 0; i < txs_size; i++) {
+           struct ElementInfo element{};
+           const auto tx = reply.txs(i);
+           const auto rlptx = tx.rlptx();
+           const auto tx_sender = tx.sender();
+           const auto address_bytes = silkworm::from_hex(tx.sender());
+           element.sender  = silkworm::to_evmc_address(address_bytes.value());
+           element.rlp = silkworm::Bytes{rlptx.begin(), rlptx.end()};
+           if (tx.type() == Txpool::AllReply_Type_PENDING)
+              element.type = PENDING;
+           else if (tx.type() == Txpool::AllReply_Type_QUEUED)
+              element.type = QUEUED;
+           else
+              element.type = BASE_FEE;
+     
+           txpool_transactions.txs.push_back(element);
+        }
+        co_return txpool_transactions;
     }
 
 
