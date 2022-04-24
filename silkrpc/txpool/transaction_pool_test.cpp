@@ -402,7 +402,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         const auto sender{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
         const auto sender1{0x9988b87991262f6ba471f09758cde1c0fc1de735_address};
         const auto sender2{0x9988b87991262f6ba471f09758cde1c0fc1de736_address};
-        CHECK(get_transactions.txs.size() == 2);
+        CHECK(get_transactions.txs.size() == 3);
         CHECK(get_transactions.txs[0].type == silkrpc::txpool::Type::QUEUED);
         CHECK(get_transactions.txs[0].sender == sender);
         CHECK(get_transactions.txs[0].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
