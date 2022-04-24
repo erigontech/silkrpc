@@ -21,6 +21,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <silkrpc/config.hpp>
 
@@ -270,7 +271,6 @@ public:
               element.type = QUEUED;
            else
               element.type = BASE_FEE;
-     
            txpool_transactions.txs.push_back(element);
         }
         co_return txpool_transactions;
