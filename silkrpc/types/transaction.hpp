@@ -76,6 +76,13 @@ struct CallBundleInfo {
    std::vector<CallBundleTxInfo> txs_info;
 };
 
+using TransactionList = std::vector<struct Transaction>;
+struct TransactionsInfo {
+   std::map<evmc::address,TransactionList>queued_transactions;
+   std::map<evmc::address,TransactionList>pending_transactions;
+   std::map<evmc::address,TransactionList>base_fee_transactions;
+};
+
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
 
 } // namespace silkrpc
