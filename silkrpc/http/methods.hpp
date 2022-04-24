@@ -116,6 +116,7 @@ constexpr const char* k_engine_newPayloadV1{"engine_newPayloadV1"};
 constexpr const char* k_engine_exchangeTransitionConfiguration{"engine_exchangeTransitionConfigurationV1"};
 
 constexpr const char* k_txpool_status{"txpool_status"};
+constexpr const char* k_txpool_content{"txpool_content"};
 
 } // namespace silkrpc::http::method
 

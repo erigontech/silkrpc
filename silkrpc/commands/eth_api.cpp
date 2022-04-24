@@ -1562,6 +1562,30 @@ asio::awaitable<void> EthereumRpcApi::handle_txpool_status(const nlohmann::json&
     co_return;
 }
 
+// https://geth.ethereum.org/docs/rpc/ns-txpool
+asio::awaitable<void> EthereumRpcApi::handle_txpool_content(const nlohmann::json& request, nlohmann::json& reply) {
+    try {
+        auto txpool_transactions = co_await tx_pool_->get_transactions();
+
+        for (int i = 0; i < txpool_transactions.txs.size(); i++) {
+           if (txpool_transactions.txs[i].type == silkrpc::txpool::Type::QUEUED) {
+           } else if (txpool_transactions.txs[i].type == silkrpc::txpool::Type::PENDING) {
+           } else {
+           }
+        }
+
+        //reply = make_json_content(request["id"], txpool_status);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    co_return;
+}
+
 // https://eth.wiki/json-rpc/API#eth_sendtransaction
 asio::awaitable<void> EthereumRpcApi::handle_eth_send_transaction(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
