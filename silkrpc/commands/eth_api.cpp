@@ -1565,6 +1565,8 @@ asio::awaitable<void> EthereumRpcApi::handle_txpool_status(const nlohmann::json&
 // https://geth.ethereum.org/docs/rpc/ns-txpool
 asio::awaitable<void> EthereumRpcApi::handle_txpool_content(const nlohmann::json& request, nlohmann::json& reply) {
     try {
+        struct AllTransactionsInfo all_transaction_info{};
+/*
         auto txpool_transactions = co_await tx_pool_->get_transactions();
 
         for (int i = 0; i < txpool_transactions.txs.size(); i++) {
@@ -1573,8 +1575,18 @@ asio::awaitable<void> EthereumRpcApi::handle_txpool_content(const nlohmann::json
            } else {
            }
         }
+*/
+        struct UserTransactionInfo user_transaction_info{};
+        user_transaction_info.nonce = 1;
+        user_transaction_info.tx_info.transaction.nonce = 1;
 
-        //reply = make_json_content(request["id"], txpool_status);
+        struct UserTransactionsInfo user_transactions_info{};
+        user_transactions_info.from = evmc::address{};
+        user_transactions_info.transactionsInfo.push_back(user_transaction_info);
+
+        all_transaction_info.queued_transaction_list.queued_transactions.push_back(user_transactions_info);
+
+        reply = make_json_content(request["id"], all_transaction_info);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
