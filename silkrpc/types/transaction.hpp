@@ -76,11 +76,35 @@ struct CallBundleInfo {
    std::vector<CallBundleTxInfo> txs_info;
 };
 
-using TransactionList = std::vector<struct Transaction>;
-struct TransactionsInfo {
-   std::map<evmc::address,TransactionList>queued_transactions;
-   std::map<evmc::address,TransactionList>pending_transactions;
-   std::map<evmc::address,TransactionList>base_fee_transactions;
+struct TransactionInfo {
+   struct Transaction transaction;
+};
+
+struct UserTransactionInfo {
+   uint64_t nonce;
+   struct TransactionInfo tx_info;
+};
+
+struct UserTransactionsInfo {
+   evmc::address from;
+   std::vector <struct UserTransactionInfo> transactionsInfo;
+};
+
+struct abc {
+   int a;
+   int b;
+   int c;
+};
+
+struct QueuedTransactionList {
+   std::vector <struct UserTransactionsInfo> queued_transactions;
+};
+
+struct AllTransactionsInfo {
+   std::vector <struct UserTransactionsInfo> pending_transactions;
+   struct QueuedTransactionList queued_transaction_list;
+   struct abc abc;
+   std::vector <struct UserTransactionsInfo> base_fee_transactions;
 };
 
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
