@@ -46,19 +46,26 @@ struct ExecutionPayload {
     std::vector<silkworm::Bytes> transactions;
 };
 
-//! PayloadStatus as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
-struct PayloadStatus {
-    std::string status;
-    std::optional<evmc::bytes32> latest_valid_hash;
-    std::optional<std::string> validation_error;
-};
-
 //! ForkChoiceState as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#ForkchoiceStateV1
 struct ForkChoiceState {
     evmc::bytes32 head_block_hash;
     evmc::bytes32 safe_block_hash;
     evmc::bytes32 finalized_block_hash;
 };
+
+//! PayloadAttributes as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#payloadattributesv1
+struct PayloadAttributes {
+    uint64_t timestamp;
+    evmc::bytes32 prev_randao;
+    evmc::address suggested_fee_recipient;
+}
+
+//! PayloadStatus as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
+struct PayloadStatus {
+    std::string status;
+    std::optional<evmc::bytes32> latest_valid_hash;
+    std::optional<std::string> validation_error;
+}
 
 //! TransitionConfiguration as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
 struct TransitionConfiguration {
