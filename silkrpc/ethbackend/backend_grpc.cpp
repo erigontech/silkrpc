@@ -326,6 +326,28 @@ ForkChoiceState BackEndGrpc::decode_fork_choice_state(const types::ForkChoiceSta
     };
 }
 
+types::PayloadAttributes BackEndGrpc::encode_payload_attributes(const PayloadAttributes& payload_attributes) {
+    types::PayloadAttributes payload_attributes_grpc;
+    // Numerical parameters
+    payload_attributes_grpc.set_timestamp(payload_attributes.timestamp);
+    //32-bytes parameters
+    payload_attributes_grpc.set_prevrandao(H256_from_bytes(payload_attributes.prev_randao));
+    // Address parameters
+    payload_attributes_grpc.set_suggestedfeerecipient(H160_from_address(payload_attributes.suggested_fee_recipient));
+
+    return payload_attributes_grpc;
+}
+
+PayloadAttributes BackEndGrpc::decode_payload_attributes(const types::PayloadAttributes& payload_attributes_grpc) {
+    auto prev_randao_256{payload_attributes_grpc.prev_randao};
+
+    return PayloadAttributes{
+        .prev_randao = bytes32_from_H256(prev_rando_256),
+        .timestamp = payload_attributes_grpc.timestamp(),
+        .suggested_fee_recipient = address_from_H160(payload_attributes_grpc.coinbase())
+    };
+}
+
 std::string BackEndGrpc::decode_status_message(const remote::EngineStatus& status) {
     switch (status) {
         case remote::EngineStatus::VALID:
