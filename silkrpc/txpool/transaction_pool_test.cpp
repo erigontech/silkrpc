@@ -31,8 +31,8 @@
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/base.hpp>
 
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/grpc/completion_runner.hpp>
 #include <silkrpc/interfaces/txpool/txpool.grpc.pb.h>
 #include <silkrpc/interfaces/txpool/txpool_mock_fix24351.grpc.pb.h>
 
@@ -158,32 +158,26 @@ auto make_method_proxy(T&& obj) {
     };
 }
 
+constexpr const char* kTestAddressUri{"localhost:12345"}; // TODO(canepat): grpc_pick_unused_port_or_die
+
 template<auto mf, typename R, typename ...Args>
 asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... args) {
-    std::ostringstream server_address;
-    server_address << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
     grpc::ServerBuilder builder;
-    builder.AddListeningPort(server_address.str(), grpc::InsecureServerCredentials());
+    builder.AddListeningPort(kTestAddressUri, grpc::InsecureServerCredentials());
     builder.RegisterService(service);
     const auto server_ptr = builder.BuildAndStart();
-    asio::io_context io_context;
-    asio::io_context::work work{io_context};
-    grpc::CompletionQueue queue;
-    CompletionRunner completion_runner{queue, io_context};
-    auto io_context_thread = std::thread([&]() { io_context.run(); });
-    auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
-    const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
-    txpool::TransactionPool transaction_pool{io_context, channel, &queue};
+    auto create_channel = []() {
+        return grpc::CreateChannel(kTestAddressUri, grpc::InsecureChannelCredentials());
+    };
+    Context context{create_channel, std::make_shared<BlockCache>()};
+    auto context_thread = std::thread([&]() { context.execution_loop(); });
+    txpool::TransactionPool transaction_pool{*context.io_context(), create_channel(), context.grpc_queue()};
     auto method_proxy{make_method_proxy<mf, txpool::TransactionPool>(std::move(transaction_pool))};
     const auto result = co_await method_proxy(args...);
     server_ptr->Shutdown();
-    io_context.stop();
-    completion_runner.stop();
-    if (io_context_thread.joinable()) {
-        io_context_thread.join();
-    }
-    if (completion_runner_thread.joinable()) {
-        completion_runner_thread.join();
+    context.stop();
+    if (context_thread.joinable()) {
+        context_thread.join();
     }
     co_return result;
 }

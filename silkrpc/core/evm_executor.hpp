@@ -25,7 +25,10 @@
 #include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
 #include <asio/thread_pool.hpp>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattributes"
 #include <silkworm/execution/evm.hpp>
+#pragma GCC diagnostic pop
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/block.hpp>

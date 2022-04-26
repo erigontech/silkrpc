@@ -32,13 +32,17 @@ std::ostream& operator<<(std::ostream& out, Context& c) {
 }
 
 Context::Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache)
-: io_context_{std::make_shared<asio::io_context>()}, grpc_queue_{std::make_unique<grpc::CompletionQueue>()}, block_cache_(block_cache) {
-    auto grpc_channel = create_channel();
-    rpc_end_point_ = std::make_unique<silkworm::rpc::CompletionEndPoint>(*grpc_queue_);
-    database_ = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context_, grpc_channel, grpc_queue_.get());
-    backend_ = std::make_unique<ethbackend::BackEndGrpc>(*io_context_, grpc_channel, grpc_queue_.get());
-    miner_ = std::make_unique<txpool::Miner>(*io_context_, grpc_channel, grpc_queue_.get());
-    tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, grpc_channel, grpc_queue_.get());
+    : io_context_{std::make_shared<asio::io_context>()},
+      work_{asio::require(io_context_->get_executor(), asio::execution::outstanding_work.tracked)},
+      queue_{std::make_unique<grpc::CompletionQueue>()},
+      block_cache_(block_cache) {
+
+    std::shared_ptr<grpc::Channel> channel = create_channel();
+    rpc_end_point_ = std::make_unique<silkworm::rpc::CompletionEndPoint>(*queue_);
+    database_ = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context_, channel, queue_.get());
+    backend_ = std::make_unique<ethbackend::BackEndGrpc>(*io_context_, channel, queue_.get());
+    miner_ = std::make_unique<txpool::Miner>(*io_context_, channel, queue_.get());
+    tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, channel, queue_.get());
 }
 
 void Context::execution_loop() {
@@ -60,13 +64,13 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) :
     }
     SILKRPC_INFO << "ContextPool::ContextPool creating pool with size: " << pool_size << "\n";
 
-    auto block_cache = std::make_shared<silkrpc::BlockCache>(1024);
+    // Create the unique block cache to be shared among the execution contexts.
+    auto block_cache = std::make_shared<silkrpc::BlockCache>();
 
-    // Create all the io_contexts and give them work to do so that their event loop will not exit until they are explicitly stopped.
+    // Create as many execution contexts according as required by the pool size.
     for (std::size_t i{0}; i < pool_size; ++i) {
         contexts_.push_back(Context{create_channel, block_cache});
         SILKRPC_DEBUG << "ContextPool::ContextPool context[" << i << "] " << contexts_[i] << "\n";
-        work_.push_back(asio::require(contexts_[i].io_context()->get_executor(), asio::execution::outstanding_work.tracked));
     }
 }
 

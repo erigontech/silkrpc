@@ -27,7 +27,10 @@
 #include <asio/thread_pool.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkworm/core/silkworm/execution/evm.hpp>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattributes"
+#include <silkworm/execution/evm.hpp>
+#pragma GCC diagnostic pop
 #include <silkworm/state/intra_block_state.hpp>
 
 #include <silkrpc/context_pool.hpp>

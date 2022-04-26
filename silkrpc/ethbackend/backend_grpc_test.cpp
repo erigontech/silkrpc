@@ -30,8 +30,8 @@
 #include <grpcpp/grpcpp.h>
 #include <boost/endian/conversion.hpp>
 
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/grpc/completion_runner.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 
 namespace silkrpc {
@@ -222,22 +222,25 @@ public:
     }
 };
 
+static auto create_channel = []() {
+    return grpc::CreateChannel("localhost:12345", grpc::InsecureChannelCredentials());
+};
+
 class ClientServerTestBox {
 public:
-    explicit ClientServerTestBox(grpc::Service* service) : completion_runner_{queue_, io_context_} {
+    explicit ClientServerTestBox(grpc::Service* service) : context_{create_channel, std::make_shared<BlockCache>()} {
         server_address_ << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
         grpc::ServerBuilder builder;
         builder.AddListeningPort(server_address_.str(), grpc::InsecureServerCredentials());
         builder.RegisterService(service);
         server_ = builder.BuildAndStart();
-        io_context_thread_ = std::thread([&]() { io_context_.run(); });
-        completion_runner_thread_ = std::thread([&]() { completion_runner_.run(); });
+        context_thread_ = std::thread([&]() { context_.execution_loop(); });
     }
 
     template<auto method, typename T>
     auto make_method_proxy() {
         const auto channel = grpc::CreateChannel(server_address_.str(), grpc::InsecureChannelCredentials());
-        std::unique_ptr<T> target{std::make_unique<T>(io_context_, channel, &queue_)};
+        std::unique_ptr<T> target{std::make_unique<T>(*context_.io_context(), channel, context_.grpc_queue())};
         return [target = std::move(target)](auto&&... args) {
             return (target.get()->*method)(std::forward<decltype(args)>(args)...);
         };
@@ -245,25 +248,17 @@ public:
 
     ~ClientServerTestBox() {
         server_->Shutdown();
-        io_context_.stop();
-        completion_runner_.stop();
-        if (io_context_thread_.joinable()) {
-            io_context_thread_.join();
-        }
-        if (completion_runner_thread_.joinable()) {
-            completion_runner_thread_.join();
+        context_.stop();
+        if (context_thread_.joinable()) {
+            context_thread_.join();
         }
     }
 
 private:
-    asio::io_context io_context_;
-    asio::io_context::work work_{io_context_};
-    grpc::CompletionQueue queue_;
-    CompletionRunner completion_runner_;
+    Context context_;
     std::ostringstream server_address_;
     std::unique_ptr<grpc::Server> server_;
-    std::thread io_context_thread_;
-    std::thread completion_runner_thread_;
+    std::thread context_thread_;
 };
 
 template<typename T, auto method, typename R, typename ...Args>

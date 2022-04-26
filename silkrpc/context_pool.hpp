@@ -45,7 +45,7 @@ class Context {
     explicit Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache);
 
     asio::io_context* io_context() const noexcept { return io_context_.get(); }
-    grpc::CompletionQueue* grpc_queue() const noexcept { return grpc_queue_.get(); }
+    grpc::CompletionQueue* grpc_queue() const noexcept { return queue_.get(); }
     silkworm::rpc::CompletionEndPoint* rpc_end_point() noexcept { return rpc_end_point_.get(); }
     std::unique_ptr<ethdb::Database>& database() noexcept { return database_; }
     std::unique_ptr<ethbackend::BackEnd>& backend() noexcept { return backend_; }
@@ -60,8 +60,13 @@ class Context {
     void stop();
 
   private:
+    //! The asynchronous event loop scheduler.
     std::shared_ptr<asio::io_context> io_context_;
-    std::unique_ptr<grpc::CompletionQueue> grpc_queue_;
+
+    //! The work-tracking executor that keep the scheduler running.
+    asio::execution::any_executor<> work_;
+
+    std::unique_ptr<grpc::CompletionQueue> queue_;
     std::unique_ptr<silkworm::rpc::CompletionEndPoint> rpc_end_point_;
     std::unique_ptr<ethdb::Database> database_;
     std::unique_ptr<ethbackend::BackEnd> backend_;
@@ -95,9 +100,6 @@ public:
 private:
     // The pool of contexts
     std::vector<Context> contexts_;
-
-    // The work-tracking executors that keep the io_contexts running
-    std::list<asio::execution::any_executor<>> work_;
 
     //! The pool of threads running the execution contexts.
     asio::detail::thread_group context_threads_;
