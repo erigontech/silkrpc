@@ -31,7 +31,6 @@
 #include <silkrpc/common/block_cache.hpp>
 #include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
-#include <silkrpc/grpc/completion_runner.hpp>
 #include <silkrpc/txpool/miner.hpp>
 #include <silkworm/rpc/completion_end_point.hpp>
 
