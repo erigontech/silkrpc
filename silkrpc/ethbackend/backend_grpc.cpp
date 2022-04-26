@@ -108,6 +108,8 @@ asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPaylo
     co_return payload_status;
 }
 
+asio::awaitable<ForkChoiceState> BackEndGrpc::engine_get_forkchoice_updated_v1
+
 evmc::address BackEndGrpc::address_from_H160(const types::H160& h160) {
     uint64_t hi_hi = h160.hi().hi();
     uint64_t hi_lo = h160.hi().lo();
@@ -305,8 +307,8 @@ types::ExecutionPayload BackEndGrpc::encode_execution_payload(const ExecutionPay
     return execution_payload_grpc;
 }
 
-types::ForkChoiceState BackEndGrpc::encode_fork_choice_state(const ForkChoiceState& fork_choice_state) {
-    types::ForkChoiceState fork_choice_state_grpc;
+types::ForkchoiceState BackEndGrpc::encode_fork_choice_state(const ForkchoiceState& fork_choice_state) {
+    types::ForkchoiceState fork_choice_state_grpc;
     // 32-bytes parameters
     fork_choice_state_grpc.set_allocated_headhash(H256_from_bytes(fork_choice_state.parent_hash.bytes));
     fork_choice_state_grpc.set_allocated_safeblockhash(H256_from_bytes(fork_choice_state.safe_block_hash.bytes));
@@ -314,7 +316,7 @@ types::ForkChoiceState BackEndGrpc::encode_fork_choice_state(const ForkChoiceSta
     return fork_choice_state_grpc;
 }
 
-ForkChoiceState BackEndGrpc::decode_fork_choice_state(const types::ForkChoiceState& fork_choice_state_grpc) {
+ForkchoiceState BackEndGrpc::decode_fork_choice_state(const types::ForkChoiceState& fork_choice_state_grpc) {
     auto parent_hash_256{fork_choice_state_grpc.parent_hash};
     auto safe_block_hash_256{fork_choice_state_grpc.safe_block_hash};
     auto finalized_block_hash_256{fork_choice_state_grpc.finalized_block_hash};

@@ -47,7 +47,7 @@ struct ExecutionPayload {
 };
 
 //! ForkChoiceState as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#ForkchoiceStateV1
-struct ForkChoiceState {
+struct ForkchoiceState {
     evmc::bytes32 head_block_hash;
     evmc::bytes32 safe_block_hash;
     evmc::bytes32 finalized_block_hash;

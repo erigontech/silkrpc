@@ -75,8 +75,8 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
 }
 
 // Format for params is a JSON list containing two objects
-// one ForkChoiceState and one PayloadAttributes, i.e. [ForkChoiceState, PayloadAttributes]
-asio::awaitable<void> EngineRpcApi::handle_engine_fork_choice_update_v1(const nlohmann::json& request, nlohmann::json& reply) {
+// one ForkchoiceState and one PayloadAttributes, i.e. [ForkchoiceState, PayloadAttributes]
+asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
     if (params.size() != 2) {
@@ -90,7 +90,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_fork_choice_update_v1(const nl
     #endif
         const auto fork_choice_state = params[0].get<ForkChoiceState>();
         const auto payload_attributes = params[1].get<PayloadAttributes>();
-        reply = co_await backend_->engine_fork_choice_update_v1(fork_choice_state, payload_attributes);
+        reply = co_await backend_->engine_forkchoice_updated_v1(fork_choice_state, payload_attributes);
     #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
