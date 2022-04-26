@@ -31,6 +31,13 @@ using Catch::Matchers::Message;
 
 ChannelFactory create_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
 
+TEST_CASE("Context::Context", "[silkrpc][context_pool]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    Context context{create_channel, std::make_shared<BlockCache>()};
+    CHECK_NOTHROW(context.io_context() != nullptr);
+    CHECK_NOTHROW(context.rpc_end_point() != nullptr);
+}
+
 TEST_CASE("create context pool", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
