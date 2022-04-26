@@ -35,7 +35,7 @@ namespace silkrpc {
 
 class BlockCache {
 public:
-    explicit BlockCache(std::size_t capacity=1024, bool shared_cache=true)
+    explicit BlockCache(std::size_t capacity = 1024, bool shared_cache = true)
         : block_cache_(capacity), shared_cache_(shared_cache) {}
 
     boost::optional <silkworm::BlockWithHash> get(const evmc::bytes32& key) {
