@@ -53,6 +53,13 @@ struct PayloadStatus {
     std::optional<std::string> validation_error;
 };
 
+//! ForkChoiceState as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#ForkchoiceStateV1
+struct ForkChoiceState {
+    evmc::bytes32 head_block_hash;
+    evmc::bytes32 safe_block_hash;
+    evmc::bytes32 finalized_block_hash;
+};
+
 //! TransitionConfiguration as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
 struct TransitionConfiguration {
     intx::uint256 terminal_total_difficulty;
