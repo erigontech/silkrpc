@@ -69,13 +69,7 @@ namespace silkrpc {
 
 void to_json(nlohmann::json& json, const struct AllTransactionsInfo& txs_info);
 
-void to_json(nlohmann::json& json, const struct abc& abc); // TEST
-
-void to_json(nlohmann::json& json, const struct QueuedTransactionList& queued_list);
-
-void to_json(nlohmann::json& json, const struct UserTransactionsInfo& user_transactions_info);
-
-void to_json(nlohmann::json& json, const struct UserTransactionInfo& transaction_info);
+void to_json(nlohmann::json& json, const struct QueuedTransactionMap& map);
 
 void to_json(nlohmann::json& json, const struct TransactionInfo& transaction_info);
 
