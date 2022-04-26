@@ -29,16 +29,16 @@
 namespace silkrpc::ethbackend {
 
 asio::awaitable<evmc::address> BackEndGrpc::etherbase() {
-        const auto start_time = clock_time::now();
-        EtherbaseAwaitable eb_awaitable{executor_, stub_, queue_};
-        const auto reply = co_await eb_awaitable.async_call(::remote::EtherbaseRequest{}, asio::use_awaitable);
-        evmc::address evmc_address;
-        if (reply.has_address()) {
-            const auto h160_address = reply.address();
-            evmc_address = address_from_H160(h160_address);
-        }
-        SILKRPC_DEBUG << "BackEnd::etherbase address=" << evmc_address << " t=" << clock_time::since(start_time) << "\n";
-        co_return evmc_address;
+    const auto start_time = clock_time::now();
+    EtherbaseAwaitable eb_awaitable{executor_, stub_, queue_};
+    const auto reply = co_await eb_awaitable.async_call(::remote::EtherbaseRequest{}, asio::use_awaitable);
+    evmc::address evmc_address;
+    if (reply.has_address()) {
+        const auto h160_address = reply.address();
+        evmc_address = address_from_H160(h160_address);
+    }
+    SILKRPC_DEBUG << "BackEnd::etherbase address=" << evmc_address << " t=" << clock_time::since(start_time) << "\n";
+    co_return evmc_address;
 }
 
 asio::awaitable<uint64_t> BackEndGrpc::protocol_version() {

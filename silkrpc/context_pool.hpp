@@ -42,7 +42,7 @@ using ChannelFactory = std::function<std::shared_ptr<grpc::Channel>()>;
 //! Asynchronous client scheduler running an execution loop.
 class Context {
   public:
-    explicit Context(ChannelFactory create_channel);
+    explicit Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache);
 
     asio::io_context* io_context() const noexcept { return io_context_.get(); }
     grpc::CompletionQueue* grpc_queue() const noexcept { return grpc_queue_.get(); }

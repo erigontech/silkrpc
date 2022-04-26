@@ -27,6 +27,7 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/async_completion_handler.hpp>
+#include <silkworm/rpc/completion_tag.hpp>
 
 namespace silkrpc {
 
@@ -44,7 +45,9 @@ class AsyncUnaryClient final : public AsyncCompletionHandler {
 public:
     explicit AsyncUnaryClient(std::unique_ptr<StubInterface>& stub, grpc::CompletionQueue* queue)
     : stub_(stub), queue_(queue) {
-        SILKRPC_TRACE << "AsyncUnaryClient::ctor " << this << " state: " << magic_enum::enum_name(state_) << "\n";
+        SILKRPC_TRACE << "AsyncUnaryClient::ctor " << this << " state: " << magic_enum::enum_name(state_) << " start\n";
+        finish_processor_ = [this](bool ok) { completed(ok); };
+        SILKRPC_TRACE << "AsyncUnaryClient::ctor " << this << " state: " << magic_enum::enum_name(state_) << " end\n";
     }
 
     ~AsyncUnaryClient() {
@@ -57,7 +60,7 @@ public:
         client_ = (stub_.get()->*PrepareAsync)(&context_, request, queue_);
         state_ = CALL_STARTED;
         client_->StartCall();
-        client_->Finish(&reply_, &result_, AsyncCompletionHandler::tag(this));
+        client_->Finish(&reply_, &result_, &finish_processor_);
         SILKRPC_TRACE << "AsyncUnaryClient::async_call " << this << " state: " << magic_enum::enum_name(state_) << " end\n";
     }
 
@@ -85,6 +88,7 @@ private:
     Reply reply_;
     grpc::Status result_;
     CallStatus state_{CALL_IDLE};
+    silkworm::rpc::TagProcessor finish_processor_;
     std::function<void(const grpc::Status&, const Reply&)> completed_;
 };
 

@@ -23,6 +23,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/async_streaming_client.hpp>
 #include <silkrpc/interfaces/remote/kv.grpc.pb.h>
+#include <silkworm/rpc/completion_tag.hpp>
 
 namespace silkrpc::ethdb::kv {
 
@@ -37,6 +38,7 @@ public:
     : stub_(stub), stream_{stub_->PrepareAsyncTx(&context_, queue)} {
         SILKRPC_TRACE << "TxStreamingClient::ctor " << this << " start\n";
         status_ = CALL_IDLE;
+        completion_processor_ = [this](bool ok) { completed(ok); };
         SILKRPC_TRACE << "TxStreamingClient::ctor " << this << " status: " << status_ << " end\n";
     }
 
@@ -48,7 +50,7 @@ public:
         SILKRPC_TRACE << "TxStreamingClient::start_call " << this << " status: " << status_ << " start\n";
         start_completed_ = start_completed;
         status_ = CALL_STARTED;
-        stream_->StartCall(AsyncCompletionHandler::tag(this));
+        stream_->StartCall(&completion_processor_);
         SILKRPC_TRACE << "TxStreamingClient::start_call " << this << " status: " << status_ << " end\n";
     }
 
@@ -56,7 +58,7 @@ public:
         SILKRPC_TRACE << "TxStreamingClient::end_call " << this << " status: " << status_ << " start\n";
         end_completed_ = end_completed;
         status_ = DONE_STARTED;
-        stream_->WritesDone(this);
+        stream_->WritesDone(&completion_processor_);
         SILKRPC_TRACE << "TxStreamingClient::end_call " << this << " status: " << status_ << " end\n";
     }
 
@@ -65,7 +67,7 @@ public:
         read_completed_ = read_completed;
         status_ = READ_STARTED;
         SILKRPC_TRACE << "TxStreamingClient::read_start " << this << " stream: " << stream_.get() << " BEFORE Read\n";
-        stream_->Read(&pair_, AsyncCompletionHandler::tag(this));
+        stream_->Read(&pair_, &completion_processor_);
         SILKRPC_TRACE << "TxStreamingClient::read_start " << this << " AFTER Read\n";
         SILKRPC_TRACE << "TxStreamingClient::read_start " << this << " status: " << status_ << " end\n";
     }
@@ -74,7 +76,7 @@ public:
         SILKRPC_TRACE << "TxStreamingClient::write_start " << this << " stream: " << stream_.get() << " status: " << status_ << " start\n";
         write_completed_ = write_completed;
         status_ = WRITE_STARTED;
-        stream_->Write(cursor, AsyncCompletionHandler::tag(this));
+        stream_->Write(cursor, &completion_processor_);
         SILKRPC_TRACE << "TxStreamingClient::write_start " << this << " status: " << status_ << " end\n";
     }
 
@@ -82,7 +84,7 @@ public:
         SILKRPC_TRACE << "TxStreamingClient::completed " << this << " status: " << status_ << " ok: " << ok << " start\n";
         if (!ok && !finishing_) {
             finishing_ = true;
-            stream_->Finish(&result_, AsyncCompletionHandler::tag(this));
+            stream_->Finish(&result_, &completion_processor_);
             return;
         }
         SILKRPC_TRACE << "TxStreamingClient::completed result: " << result_.ok() << "\n";
@@ -106,7 +108,7 @@ public:
                 status_ = CALL_ENDED;
                 if (!finishing_) {
                     finishing_ = true;
-                    stream_->Finish(&result_, AsyncCompletionHandler::tag(this));
+                    stream_->Finish(&result_, &completion_processor_);
                 } else {
                     end_completed_(result_);
                 }
@@ -128,6 +130,7 @@ private:
     grpc::Status result_;
     CallStatus status_;
     bool finishing_{false};
+    silkworm::rpc::TagProcessor completion_processor_;
     std::function<void(const grpc::Status&)> start_completed_;
     std::function<void(const grpc::Status&, const remote::Pair&)> read_completed_;
     std::function<void(const grpc::Status&)> write_completed_;

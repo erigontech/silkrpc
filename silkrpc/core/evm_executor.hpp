@@ -28,7 +28,6 @@
 #include <silkworm/execution/evm.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
-#include <silkworm/core/silkworm/execution/evm.hpp>
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 

@@ -167,6 +167,8 @@ int main(int argc, char* argv[]) {
         };
 
         // Check protocol version compatibility with Core Services
+        SILKRPC_LOG << "Checking protocol version compatibility with core services...\n";
+
         const auto core_service_channel{create_channel()};
         const auto kv_protocol_check{silkrpc::wait_for_kv_protocol_check(core_service_channel)};
         if (!kv_protocol_check.compatible) {
