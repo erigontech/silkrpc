@@ -185,33 +185,16 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
 
 namespace silkrpc {
 
-void to_json(nlohmann::json& json, const struct abc& abc)
-{
-   json = {{"a", abc.a},{"b", abc.b}, {"c", abc.c}};
-}
-
-void to_json(nlohmann::json& json, const struct QueuedTransactionList& queued_list)
-{
-    json = queued_list.queued_transactions;
-}
-
-
 void to_json(nlohmann::json& json, const struct AllTransactionsInfo& txs_info)
 {
-    json = {{"queued", txs_info.queued_transaction_list}, 
+    json = {{"queued", txs_info.queued_transaction_map}, 
             {"pending",txs_info.pending_transactions}, 
-            {"ulla",txs_info.abc}, 
             {"baseFee",txs_info.base_fee_transactions}};
 }
 
-void to_json(nlohmann::json& json, const struct UserTransactionsInfo& user_transactions_info)
+void to_json(nlohmann::json& json, const struct QueuedTransactionMap& map)
 {
-   json = {{user_transactions_info.from, user_transactions_info.transactionsInfo}};
-}
-
-void to_json(nlohmann::json& json, const struct UserTransactionInfo& user_transaction_info)
-{
-   json = {user_transaction_info.nonce, user_transaction_info.tx_info};
+   json = map.queued_transactions;
 }
 
 void to_json(nlohmann::json& json, const struct TransactionInfo& transaction_info)
