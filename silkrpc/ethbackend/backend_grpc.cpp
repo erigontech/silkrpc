@@ -305,6 +305,27 @@ types::ExecutionPayload BackEndGrpc::encode_execution_payload(const ExecutionPay
     return execution_payload_grpc;
 }
 
+types::ForkChoiceState BackEndGrpc::encode_fork_choice_state(const ForkChoiceState& fork_choice_state) {
+    types::ForkChoiceState fork_choice_state_grpc;
+    // 32-bytes parameters
+    fork_choice_state_grpc.set_allocated_headhash(H256_from_bytes(fork_choice_state.parent_hash.bytes));
+    fork_choice_state_grpc.set_allocated_safeblockhash(H256_from_bytes(fork_choice_state.safe_block_hash.bytes));
+    fork_choice_state_grpc.set_allocated_finalizedblockhash(H256_from_bytes(fork_choice_state.finalized_block_hash.bytes));
+    return fork_choice_state_grpc;
+}
+
+ForkChoiceState BackEndGrpc::decode_fork_choice_state(const types::ForkChoiceState& fork_choice_state_grpc) {
+    auto parent_hash_256{fork_choice_state_grpc.parent_hash};
+    auto safe_block_hash_256{fork_choice_state_grpc.safe_block_hash};
+    auto finalized_block_hash_256{fork_choice_state_grpc.finalized_block_hash};
+
+    return ForkChoiceState {
+        .parent_hash = bytes32_from_H256(parent_hash_256),
+        .safe_block_hash = bytes32_from_H256(safe_block_hash_256),
+        .finalized_block_hash = bytes32_from_H256(finalized_block_hash_256)
+    };
+}
+
 std::string BackEndGrpc::decode_status_message(const remote::EngineStatus& status) {
     switch (status) {
         case remote::EngineStatus::VALID:
