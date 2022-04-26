@@ -58,14 +58,14 @@ struct PayloadAttributes {
     uint64_t timestamp;
     evmc::bytes32 prev_randao;
     evmc::address suggested_fee_recipient;
-}
+};
 
 //! PayloadStatus as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
 struct PayloadStatus {
     std::string status;
     std::optional<evmc::bytes32> latest_valid_hash;
     std::optional<std::string> validation_error;
-}
+};
 
 //! TransitionConfiguration as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
 struct TransitionConfiguration {
