@@ -49,7 +49,6 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
                 });
             }
             void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -84,7 +83,6 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
                 });
             }
             void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -117,7 +115,6 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
                 });
             }
             void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());

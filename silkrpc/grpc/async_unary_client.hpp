@@ -26,7 +26,6 @@
 #include <magic_enum.hpp>
 
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/grpc/async_completion_handler.hpp>
 #include <silkworm/rpc/completion_tag.hpp>
 
 namespace silkrpc {
@@ -37,7 +36,7 @@ template<
     typename Reply,
     std::unique_ptr<grpc::ClientAsyncResponseReaderInterface<Reply>>(StubInterface::*PrepareAsync)(grpc::ClientContext*, const Request&, grpc::CompletionQueue*)
 >
-class AsyncUnaryClient final : public AsyncCompletionHandler {
+class AsyncUnaryClient final {
     using AsyncResponseReaderPtr = std::unique_ptr<grpc::ClientAsyncResponseReaderInterface<Reply>>;
 
     enum CallStatus { CALL_IDLE, CALL_STARTED, CALL_ENDED };
@@ -46,7 +45,7 @@ public:
     explicit AsyncUnaryClient(std::unique_ptr<StubInterface>& stub, grpc::CompletionQueue* queue)
     : stub_(stub), queue_(queue) {
         SILKRPC_TRACE << "AsyncUnaryClient::ctor " << this << " state: " << magic_enum::enum_name(state_) << " start\n";
-        finish_processor_ = [this](bool ok) { completed(ok); };
+        completion_processor_ = [this](bool ok) { completed(ok); };
         SILKRPC_TRACE << "AsyncUnaryClient::ctor " << this << " state: " << magic_enum::enum_name(state_) << " end\n";
     }
 
@@ -60,11 +59,11 @@ public:
         client_ = (stub_.get()->*PrepareAsync)(&context_, request, queue_);
         state_ = CALL_STARTED;
         client_->StartCall();
-        client_->Finish(&reply_, &result_, &finish_processor_);
+        client_->Finish(&reply_, &result_, &completion_processor_);
         SILKRPC_TRACE << "AsyncUnaryClient::async_call " << this << " state: " << magic_enum::enum_name(state_) << " end\n";
     }
 
-    void completed(bool ok) override {
+    void completed(bool ok) {
         SILKRPC_TRACE << "AsyncUnaryClient::completed " << this << " state: " << magic_enum::enum_name(state_) << " ok: " << ok << " start\n";
         if (state_ != CALL_STARTED) {
             throw std::runtime_error("AsyncUnaryClient::completed unexpected state");
@@ -88,7 +87,7 @@ private:
     Reply reply_;
     grpc::Status result_;
     CallStatus state_{CALL_IDLE};
-    silkworm::rpc::TagProcessor finish_processor_;
+    silkworm::rpc::TagProcessor completion_processor_;
     std::function<void(const grpc::Status&, const Reply&)> completed_;
 };
 

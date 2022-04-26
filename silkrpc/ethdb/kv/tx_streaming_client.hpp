@@ -80,7 +80,7 @@ public:
         SILKRPC_TRACE << "TxStreamingClient::write_start " << this << " status: " << status_ << " end\n";
     }
 
-    void completed(bool ok) override {
+    void completed(bool ok) {
         SILKRPC_TRACE << "TxStreamingClient::completed " << this << " status: " << status_ << " ok: " << ok << " start\n";
         if (!ok && !finishing_) {
             finishing_ = true;

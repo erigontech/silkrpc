@@ -34,47 +34,54 @@ using Catch::Matchers::Message;
 
 class AwaitableWrap {
 public:
-   AwaitableWrap(asio::io_context& context, AsyncTxStreamingClient& client) : kv_awaitable_{context, client} {} // tipo interfaccia
-   virtual ~AwaitableWrap() {}
-   asio::awaitable<int64_t> async_start() {
-      int64_t tx_id = co_await kv_awaitable_.async_start(asio::use_awaitable);
-      co_return tx_id;
-   }
-   asio::awaitable<int64_t> open_cursor(const std::string& table_name) {
-      uint32_t cursor_id = co_await kv_awaitable_.async_open_cursor(table_name, asio::use_awaitable);
-      co_return cursor_id;
-   }
-   asio::awaitable<remote::Pair> async_seek(uint32_t cursor_id, const silkworm::ByteView& key) {
-      remote::Pair seek_pair = co_await kv_awaitable_.async_seek(cursor_id, key, asio::use_awaitable);
-      co_return seek_pair;
-   }
-   asio::awaitable<remote::Pair> async_seek_exact(uint32_t cursor_id, const silkworm::ByteView& key) {
-      remote::Pair seek_pair = co_await kv_awaitable_.async_seek_exact(cursor_id, key, asio::use_awaitable);
-      co_return seek_pair;
-   }
-   asio::awaitable<remote::Pair> async_seek_both(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value) {
-      remote::Pair seek_pair = co_await kv_awaitable_.async_seek_both(cursor_id, key, value, asio::use_awaitable);
-      co_return seek_pair;
-   }
-   asio::awaitable<remote::Pair> async_seek_both_exact(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value) {
-      remote::Pair seek_pair = co_await kv_awaitable_.async_seek_both_exact(cursor_id, key, value, asio::use_awaitable);
-      co_return seek_pair;
-   }
-   asio::awaitable<remote::Pair> async_next(uint32_t cursor_id) {
-      remote::Pair seek_pair = co_await kv_awaitable_.async_next(cursor_id, asio::use_awaitable);
-      co_return seek_pair;
-   }
-   asio::awaitable<uint32_t> async_close_cursor(uint32_t cursor_id) {
-      uint32_t ret_cursor_id = co_await kv_awaitable_.async_close_cursor(cursor_id, asio::use_awaitable);
-      co_return ret_cursor_id;
-   }
-   asio::awaitable<void> async_end() {
-      co_await kv_awaitable_.async_end(asio::use_awaitable);
-      co_return;
-   }
+    AwaitableWrap(asio::io_context& context, AsyncTxStreamingClient& client) : kv_awaitable_{context, client} {}
+
+    asio::awaitable<int64_t> async_start() {
+        int64_t tx_id = co_await kv_awaitable_.async_start(asio::use_awaitable);
+        co_return tx_id;
+    }
+
+    asio::awaitable<int64_t> open_cursor(const std::string& table_name) {
+        uint32_t cursor_id = co_await kv_awaitable_.async_open_cursor(table_name, asio::use_awaitable);
+        co_return cursor_id;
+    }
+
+    asio::awaitable<remote::Pair> async_seek(uint32_t cursor_id, const silkworm::ByteView& key) {
+        remote::Pair seek_pair = co_await kv_awaitable_.async_seek(cursor_id, key, asio::use_awaitable);
+        co_return seek_pair;
+    }
+
+    asio::awaitable<remote::Pair> async_seek_exact(uint32_t cursor_id, const silkworm::ByteView& key) {
+        remote::Pair seek_pair = co_await kv_awaitable_.async_seek_exact(cursor_id, key, asio::use_awaitable);
+        co_return seek_pair;
+    }
+
+    asio::awaitable<remote::Pair> async_seek_both(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value) {
+        remote::Pair seek_pair = co_await kv_awaitable_.async_seek_both(cursor_id, key, value, asio::use_awaitable);
+        co_return seek_pair;
+    }
+
+    asio::awaitable<remote::Pair> async_seek_both_exact(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value) {
+        remote::Pair seek_pair = co_await kv_awaitable_.async_seek_both_exact(cursor_id, key, value, asio::use_awaitable);
+        co_return seek_pair;
+    }
+
+    asio::awaitable<remote::Pair> async_next(uint32_t cursor_id) {
+        remote::Pair seek_pair = co_await kv_awaitable_.async_next(cursor_id, asio::use_awaitable);
+        co_return seek_pair;
+    }
+
+    asio::awaitable<uint32_t> async_close_cursor(uint32_t cursor_id) {
+        uint32_t ret_cursor_id = co_await kv_awaitable_.async_close_cursor(cursor_id, asio::use_awaitable);
+        co_return ret_cursor_id;
+    }
+
+    asio::awaitable<void> async_end() {
+        co_return co_await kv_awaitable_.async_end(asio::use_awaitable);
+    }
 
 private:
-   KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
+    KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
 };
 
 
@@ -91,7 +98,6 @@ TEST_CASE("async_start") {
                read_completed(::grpc::Status::OK, pair);
           }
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -128,7 +134,6 @@ TEST_CASE("async_start") {
             });
           }
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -155,7 +160,6 @@ TEST_CASE("async_start") {
           void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
           void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-          void completed(bool ok) override {}
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -183,7 +187,6 @@ TEST_CASE("async_start") {
              read_completed(::grpc::Status::CANCELLED, pair);
           }
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-          void completed(bool ok) override {}
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -214,7 +217,6 @@ TEST_CASE("open_cursor") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                write_completed(::grpc::Status::OK);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -249,7 +251,6 @@ TEST_CASE("open_cursor") {
                   write_completed(::grpc::Status::OK);
                });
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -279,7 +280,6 @@ TEST_CASE("open_cursor") {
                ::remote::Pair pair;
                read_completed(::grpc::Status::CANCELLED, pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -304,7 +304,6 @@ TEST_CASE("open_cursor") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -335,7 +334,6 @@ TEST_CASE("async_seek") {
                seek_pair.set_k("KEY1");
                read_completed(::grpc::Status::OK, seek_pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -370,7 +368,6 @@ TEST_CASE("async_seek") {
                   read_completed(::grpc::Status::OK, seek_pair);
                });
           }
-          void completed(bool ok) override { }
        private:
            ::remote::Pair seek_pair;
       };
@@ -403,7 +400,6 @@ TEST_CASE("async_seek") {
                ::remote::Pair pair;
                read_completed(::grpc::Status::CANCELLED, pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -429,7 +425,6 @@ TEST_CASE("async_seek") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -461,7 +456,6 @@ TEST_CASE("async_seek_exact") {
                seek_pair.set_k("KEY1");
                read_completed(::grpc::Status::OK, seek_pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -496,7 +490,6 @@ TEST_CASE("async_seek_exact") {
                   read_completed(::grpc::Status::OK, seek_pair);
                });
           }
-          void completed(bool ok) override { }
         private:
           ::remote::Pair seek_pair;
       };
@@ -529,7 +522,6 @@ TEST_CASE("async_seek_exact") {
                ::remote::Pair pair;
                read_completed(::grpc::Status::CANCELLED, pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -555,7 +547,6 @@ TEST_CASE("async_seek_exact") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -588,7 +579,6 @@ TEST_CASE("async_seek_both") {
                seek_pair.set_v("VALUE112");
                read_completed(::grpc::Status::OK, seek_pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -626,7 +616,6 @@ TEST_CASE("async_seek_both") {
                   read_completed(::grpc::Status::OK, seek_pair);
                });
           }
-          void completed(bool ok) override { }
 
           private:
               ::remote::Pair seek_pair;
@@ -662,7 +651,6 @@ TEST_CASE("async_seek_both") {
                ::remote::Pair pair;
                read_completed(::grpc::Status::CANCELLED, pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -689,7 +677,6 @@ TEST_CASE("async_seek_both") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -723,7 +710,6 @@ TEST_CASE("async_seek_both_exact") {
                seek_pair.set_v("VALUE112");
                read_completed(::grpc::Status::OK, seek_pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -761,7 +747,6 @@ TEST_CASE("async_seek_both_exact") {
                   read_completed(::grpc::Status::OK, seek_pair);
                });
           }
-          void completed(bool ok) override { }
 
         private:
           ::remote::Pair seek_pair;
@@ -797,7 +782,6 @@ TEST_CASE("async_seek_both_exact") {
                ::remote::Pair pair;
                read_completed(::grpc::Status::CANCELLED, pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -824,7 +808,6 @@ TEST_CASE("async_seek_both_exact") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -856,7 +839,6 @@ TEST_CASE("async_seek_next") {
                ::remote::Pair next_pair;
                read_completed(::grpc::Status::OK, next_pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -889,7 +871,6 @@ TEST_CASE("async_seek_next") {
                   read_completed(::grpc::Status::OK, next_pair);
                });
           }
-          void completed(bool ok) override { }
 
         private:
           ::remote::Pair next_pair;
@@ -922,7 +903,6 @@ TEST_CASE("async_seek_next") {
                ::remote::Pair next_pair;
                read_completed(::grpc::Status::CANCELLED, next_pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -947,7 +927,6 @@ TEST_CASE("async_seek_next") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -978,7 +957,6 @@ TEST_CASE("async_close_cursor") {
                close_pair.set_cursorid(2);
                read_completed(::grpc::Status::OK, close_pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -1012,7 +990,6 @@ TEST_CASE("async_close_cursor") {
                   read_completed(::grpc::Status::OK, close_pair);
                });
           }
-          void completed(bool ok) override { }
        private:
            ::remote::Pair close_pair;
       };
@@ -1044,7 +1021,6 @@ TEST_CASE("async_close_cursor") {
                ::remote::Pair close_pair;
                read_completed(::grpc::Status::CANCELLED, close_pair);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -1069,7 +1045,6 @@ TEST_CASE("async_close_cursor") {
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
              write_completed(::grpc::Status::CANCELLED);
           }
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -1096,7 +1071,6 @@ TEST_CASE("async_end") {
           }
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
           void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -1124,7 +1098,6 @@ TEST_CASE("async_end") {
           }
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
           void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
-          void completed(bool ok) override { }
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
@@ -1151,7 +1124,6 @@ TEST_CASE("async_end") {
           }
           void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
           void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
-          void completed(bool ok) override {}
       };
 
       ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
