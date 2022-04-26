@@ -16,6 +16,7 @@
 
 #include "context_pool.hpp"
 
+#include <atomic>
 #include <stdexcept>
 #include <thread>
 
@@ -31,11 +32,26 @@ using Catch::Matchers::Message;
 
 ChannelFactory create_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
 
-TEST_CASE("Context::Context", "[silkrpc][context_pool]") {
+TEST_CASE("Context", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     Context context{create_channel, std::make_shared<BlockCache>()};
-    CHECK_NOTHROW(context.io_context() != nullptr);
-    CHECK_NOTHROW(context.rpc_end_point() != nullptr);
+
+    SECTION("Context::Context", "[silkrpc][context_pool]") {
+        CHECK_NOTHROW(context.io_context() != nullptr);
+        CHECK_NOTHROW(context.rpc_end_point() != nullptr);
+    }
+
+    SECTION("Context::execution_loop", "[silkrpc][context_pool]") {
+        std::atomic_bool processed{false};
+        auto io_context = context.io_context();
+        io_context->post([&]() {
+            processed = true;
+            io_context->stop();
+        });
+        auto context_thread = std::thread([&]() { context.execution_loop(); });
+        CHECK_NOTHROW(context_thread.join());
+        CHECK(processed);
+    }
 }
 
 TEST_CASE("create context pool", "[silkrpc][context_pool]") {
