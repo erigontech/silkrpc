@@ -74,8 +74,32 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
     #endif
 }
 
+// Format for params is a JSON list containing two objects 
+// one ForkChoiceState and one PayloadAttributes, i.e. [ForkChoiceState, PayloadAttributes]
 asio::awaitable<void> EngineRpcApi::handle_engine_fork_choice_update_v1(const nlohmann::json& request, nlohmann::json& reply){
-    
+    auto params = request.at("params");
+
+    if (params.size() != 2) {
+        auto error_msg = "invalid engine_forkChoiceUpdateV1 params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request.at("id"), 100, error_msg);
+        co_return;
+    }
+    #endif BUILD_COVERAGE
+    try {
+    #endif
+        const auto fork_choice_state = params[0].get<ForkChoiceState>();
+        const auto payload_attributes = params[1].get<PayloadAttributes>();
+        reply = co_await backend_->engine_fork_choice_update_v1(fork_choice_state, payload_attributes);
+    #ifndef BUILD_COVERAGE
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request.at("id"), 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request.at("id"), 100, "unexpected exception");
+    }
+    #endif
 }
 
 // Checks if the transition configurations of the Execution Layer is equal to the ones in the Consensus Layer
