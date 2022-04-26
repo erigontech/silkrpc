@@ -1576,15 +1576,8 @@ asio::awaitable<void> EthereumRpcApi::handle_txpool_content(const nlohmann::json
            }
         }
 */
-        struct UserTransactionInfo user_transaction_info{};
-        user_transaction_info.nonce = 1;
-        user_transaction_info.tx_info.transaction.nonce = 1;
-
-        struct UserTransactionsInfo user_transactions_info{};
-        user_transactions_info.from = evmc::address{};
-        user_transactions_info.transactionsInfo.push_back(user_transaction_info);
-
-        all_transaction_info.queued_transaction_list.queued_transactions.push_back(user_transactions_info);
+        struct TransactionInfo txInfo{};
+        all_transaction_info.queued_transaction_map.queued_transactions[evmc::address{}].insert(std::make_pair(1, txInfo));
 
         reply = make_json_content(request["id"], all_transaction_info);
     } catch (const std::exception& e) {
