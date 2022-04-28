@@ -28,22 +28,25 @@
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 #include <silkworm/chain/intrinsic_gas.hpp>
+#include <silkworm/chain/protocol_param.hpp>
 #include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/types/transaction.hpp>
 
 namespace silkrpc {
 
-silkworm::Bytes build_abi_selector(const std::string& signature) {
+static silkworm::Bytes build_abi_selector(const std::string& signature) {
     const auto signature_hash = hash_of(silkworm::byte_view_of_string(signature));
     return {std::begin(signature_hash.bytes), std::begin(signature_hash.bytes) + 4};
 }
 
-const auto kRevertSelector{build_abi_selector("Error(string)")};
-const auto kAbiStringOffsetSize{32};
 
-std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data) {
+static std::optional<std::string> decode_error_reason(const silkworm::Bytes& error_data) {
+    static const auto kRevertSelector{build_abi_selector("Error(string)")};
+    static const auto kAbiStringOffsetSize{32};
+
     if (error_data.size() < kRevertSelector.size() || error_data.substr(0, kRevertSelector.size()) != kRevertSelector) {
         return std::nullopt;
     }
@@ -153,6 +156,24 @@ std::string EVMExecutor<WorldState, VM>::get_error_message(int64_t error_code, c
 }
 
 template<typename WorldState, typename VM>
+uint64_t EVMExecutor<WorldState, VM>::refund_gas(const VM& evm, const silkworm::Transaction& txn, uint64_t gas_left) {
+    const evmc_revision rev{evm.revision()};
+    uint64_t refund{state_.get_refund()};
+    if (rev < EVMC_LONDON) {
+        refund += silkworm::fee::kRSelfDestruct * state_.number_of_self_destructs();
+    }
+    const uint64_t max_refund_quotient{rev >= EVMC_LONDON ? silkworm::param::kMaxRefundQuotientLondon
+                                                          : silkworm::param::kMaxRefundQuotientFrontier};
+    const uint64_t max_refund{(txn.gas_limit - gas_left) / max_refund_quotient};
+    refund = refund < max_refund ? refund : max_refund; // min
+    gas_left += refund;
+
+    const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
+    const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
+    state_.add_to_balance(*txn.from, gas_left * effective_gas_price);
+    return gas_left;
+}
+template<typename WorldState, typename VM>
 std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0) {
     const evmc_revision rev{evm.revision()};
 
@@ -178,20 +199,19 @@ std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm,
         std::string error = "intrinsic gas too low: have " + std::to_string(txn.gas_limit) + " want " + intx::to_string(g0);
         return error;
     }
-
     return std::nullopt;
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn, std::shared_ptr<silkworm::EvmTracer> tracer) {
-    SILKRPC_DEBUG << "EVMExecutor::call block: " << block.header.number << " txn: " << &txn << " gas_limit: " << txn.gas_limit << " start\n";
+asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkworm::Block& block, const silkworm::Transaction& txn, bool refund, bool gas_bailout, EvmTracerCall tracer) {
+    SILKRPC_DEBUG << "EVMExecutor::call: " << block.header.number << " gasLimit: " << txn.gas_limit << " refund: " << refund << " gasBailout: " << gas_bailout << "\n";
+    SILKRPC_DEBUG << "EVMExecutor::call:Transaction: " << &txn << "Txn: " << txn << "\n";
 
     std::ostringstream out;
-
     const auto exec_result = co_await asio::async_compose<decltype(asio::use_awaitable), void(ExecutionResult)>(
-        [this, &block, &txn, &tracer, &out](auto&& self) {
+        [this, &block, &txn, &tracer, &out, &refund, &gas_bailout](auto&& self) {
             SILKRPC_TRACE << "EVMExecutor::call post block: " << block.header.number << " txn: " << &txn << "\n";
-            asio::post(workers_, [this, &block, &txn, &tracer, &out, self = std::move(self)]() mutable {
+            asio::post(workers_, [this, &block, &txn, &tracer, &out, &refund, &gas_bailout, self = std::move(self)]() mutable {
                 VM evm{block, state_, config_};
                 if (tracer) {
                     evm.add_tracer(*tracer);
@@ -224,7 +244,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                    want = 0;
                 }
                 const auto have = state_.get_balance(*txn.from);
-                if (have < want + txn.value) {
+                if (have < want + txn.value && !gas_bailout) {
                    silkworm::Bytes data{};
                    std::string from = silkworm::to_hex(*txn.from);
                    std::string error = "insufficient funds for gas * price + value: address 0x" + from + " have " + intx::to_string(have) + " want " + intx::to_string(want+txn.value);
@@ -252,8 +272,14 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 const auto result{evm.execute(txn, txn.gas_limit - static_cast<uint64_t>(g0))};
                 SILKRPC_DEBUG << "EVMExecutor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
 
-                ExecutionResult exec_result{result.status, result.gas_left, result.data};
-                asio::post(io_context_, [exec_result, self = std::move(self)]() mutable {
+                uint64_t gas_left = result.gas_left;
+                if (refund) {
+                    const uint64_t gas_used{txn.gas_limit - refund_gas(evm, txn, result.gas_left)};
+                    gas_left = txn.gas_limit - gas_used;
+                }
+
+                ExecutionResult exec_result{result.status, gas_left, result.data};
+                asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
                     self.complete(exec_result);
                 });
             });
