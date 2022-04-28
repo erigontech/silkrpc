@@ -2,4 +2,4 @@
 
 cd build_gcc_release
 cmake --build .
-cmd/unit_test
+cmd/unit_test "$*"
