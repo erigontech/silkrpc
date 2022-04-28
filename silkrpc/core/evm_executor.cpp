@@ -279,7 +279,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 }
 
                 ExecutionResult exec_result{result.status, gas_left, result.data};
-                asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                asio::post(io_context, [exec_result, self = std::move(self)]() mutable {
                     self.complete(exec_result);
                 });
             });
