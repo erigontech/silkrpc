@@ -42,28 +42,6 @@ struct WaitStrategy {
     virtual void wait_once(uint32_t executed_count) = 0;
 };
 
-struct YieldingWaitStrategy : public WaitStrategy {
-    void wait_once(uint32_t executed_count) override {
-        if (executed_count > 0) {
-            if (counter_ != kSpinTries) {
-                counter_ = kSpinTries;
-            }
-            return;
-        }
-
-        if (counter_ == 0) {
-            std::this_thread::yield();
-        } else {
-            --counter_;
-        }
-    }
-
-  private:
-    inline static const uint32_t kSpinTries{100};
-
-    uint32_t counter_{kSpinTries};
-};
-
 struct SleepingWaitStrategy : public WaitStrategy {
     void wait_once(uint32_t executed_count) override {
         if (executed_count > 0) {
@@ -87,6 +65,28 @@ struct SleepingWaitStrategy : public WaitStrategy {
     inline static const uint32_t kRetries{200};
 
     uint32_t counter_{kRetries};
+};
+
+struct YieldingWaitStrategy : public WaitStrategy {
+    void wait_once(uint32_t executed_count) override {
+        if (executed_count > 0) {
+            if (counter_ != kSpinTries) {
+                counter_ = kSpinTries;
+            }
+            return;
+        }
+
+        if (counter_ == 0) {
+            std::this_thread::yield();
+        } else {
+            --counter_;
+        }
+    }
+
+  private:
+    inline static const uint32_t kSpinTries{100};
+
+    uint32_t counter_{kSpinTries};
 };
 
 struct SpinWaitWaitStrategy : public WaitStrategy {
@@ -136,8 +136,8 @@ struct BusySpinWaitStrategy : public WaitStrategy {
 };
 
 enum class WaitMode {
-    yielding,
     sleeping,
+    yielding,
     spin_wait,
     busy_spin
 };
@@ -187,7 +187,7 @@ std::ostream& operator<<(std::ostream& out, Context& c);
 
 class ContextPool {
 public:
-    explicit ContextPool(std::size_t pool_size, ChannelFactory create_channel, WaitMode wait_mode = WaitMode::yielding);
+    explicit ContextPool(std::size_t pool_size, ChannelFactory create_channel, WaitMode wait_mode = WaitMode::busy_spin);
     ~ContextPool();
 
     ContextPool(const ContextPool&) = delete;
