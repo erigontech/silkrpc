@@ -52,6 +52,16 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
         CHECK_NOTHROW(context_thread.join());
         CHECK(processed);
     }
+
+    SECTION("Context::stop", "[silkrpc][context_pool]") {
+        std::atomic_bool processed{false};
+        context.io_context()->post([&]() {
+            processed = true;
+        });
+        auto context_thread = std::thread([&]() { context.execution_loop(); });
+        CHECK_NOTHROW(context.stop());
+        CHECK_NOTHROW(context_thread.join());
+    }
 }
 
 TEST_CASE("create context pool", "[silkrpc][context_pool]") {

@@ -23,6 +23,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 #include <silkrpc/ethbackend/backend_grpc.hpp>
+#include <silkworm/common/assert.hpp>
 
 namespace silkrpc {
 
@@ -31,7 +32,27 @@ std::ostream& operator<<(std::ostream& out, Context& c) {
     return out;
 }
 
-Context::Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache)
+std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode) {
+    switch (wait_mode) {
+        case WaitMode::yielding: {
+            return std::make_unique<YieldingWaitStrategy>();
+        }
+        case WaitMode::sleeping: {
+            return std::make_unique<SleepingWaitStrategy>();
+        }
+        case WaitMode::spin_wait: {
+            return std::make_unique<SpinWaitWaitStrategy>();
+        }
+        case WaitMode::busy_spin: {
+            return std::make_unique<BusySpinWaitStrategy>();
+        }
+        default:
+            SILKWORM_ASSERT(false);
+            return nullptr;
+    }
+}
+
+Context::Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache, WaitMode wait_mode)
     : io_context_{std::make_shared<asio::io_context>()},
       work_{asio::require(io_context_->get_executor(), asio::execution::outstanding_work.tracked)},
       queue_{std::make_unique<grpc::CompletionQueue>()},
@@ -43,13 +64,15 @@ Context::Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> bloc
     backend_ = std::make_unique<ethbackend::BackEndGrpc>(*io_context_, channel, queue_.get());
     miner_ = std::make_unique<txpool::Miner>(*io_context_, channel, queue_.get());
     tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, channel, queue_.get());
+    wait_strategy_ = make_wait_strategy(wait_mode);
 }
 
 void Context::execution_loop() {
     //TODO(canepat): add counter for served tasks and plug some wait strategy
     while (!io_context_->stopped()) {
-        rpc_end_point_->poll_one();
-        io_context_->poll_one();
+        uint32_t executed_count = rpc_end_point_->poll_one();
+        executed_count += io_context_->poll_one();
+        wait_strategy_->wait_once(executed_count);
     }
     rpc_end_point_->shutdown();
 }
@@ -58,7 +81,7 @@ void Context::stop() {
     io_context_->stop();
 }
 
-ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) : next_index_{0} {
+ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, WaitMode wait_mode) : next_index_{0} {
     if (pool_size == 0) {
         throw std::logic_error("ContextPool::ContextPool pool_size is 0");
     }
@@ -69,7 +92,7 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) :
 
     // Create as many execution contexts according as required by the pool size.
     for (std::size_t i{0}; i < pool_size; ++i) {
-        contexts_.push_back(Context{create_channel, block_cache});
+        contexts_.push_back(Context{create_channel, block_cache, wait_mode});
         SILKRPC_DEBUG << "ContextPool::ContextPool context[" << i << "] " << contexts_[i] << "\n";
     }
 }

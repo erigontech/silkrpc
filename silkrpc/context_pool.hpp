@@ -36,12 +36,120 @@
 
 namespace silkrpc {
 
+struct WaitStrategy {
+    virtual ~WaitStrategy() = default;
+
+    virtual void wait_once(uint32_t executed_count) = 0;
+};
+
+struct YieldingWaitStrategy : public WaitStrategy {
+    void wait_once(uint32_t executed_count) override {
+        if (executed_count > 0) {
+            if (counter_ != kSpinTries) {
+                counter_ = kSpinTries;
+            }
+            return;
+        }
+
+        if (counter_ == 0) {
+            std::this_thread::yield();
+        } else {
+            --counter_;
+        }
+    }
+
+  private:
+    inline static const uint32_t kSpinTries{100};
+
+    uint32_t counter_{kSpinTries};
+};
+
+struct SleepingWaitStrategy : public WaitStrategy {
+    void wait_once(uint32_t executed_count) override {
+        if (executed_count > 0) {
+            if (counter_ != kRetries) {
+                counter_ = kRetries;
+            }
+            return;
+        }
+
+        if (counter_ > 100) {
+            --counter_;
+        } else if (counter_ > 0) {
+            --counter_;
+            std::this_thread::yield();
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(0));
+        }
+    }
+
+  private:
+    inline static const uint32_t kRetries{200};
+
+    uint32_t counter_{kRetries};
+};
+
+struct SpinWaitWaitStrategy : public WaitStrategy {
+    void wait_once(uint32_t executed_count) override {
+        if (executed_count > 0) {
+            if (counter_ != 0) {
+                counter_ = 0;
+            }
+            return;
+        }
+
+        if (counter_ > kYieldThreshold) {
+            auto delta = counter_ - kYieldThreshold;
+            if (delta % kSleep1EveryHowManyTimes == kSleep1EveryHowManyTimes - 1) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            } else if (delta % kSleep0EveryHowManyTimes == kSleep0EveryHowManyTimes - 1) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(0));
+            } else {
+                std::this_thread::yield();
+            }
+        } else {
+            for (auto i{0}; i < (4 << counter_); i++) {
+                spin_wait();
+            }
+        }
+    }
+
+  private:
+    void spin_wait() {
+        asm volatile
+        (
+            "rep\n"
+            "nop"
+        );
+    }
+
+    inline static const uint32_t kYieldThreshold{10};
+    inline static const uint32_t kSleep0EveryHowManyTimes{5};
+    inline static const uint32_t kSleep1EveryHowManyTimes{20};
+
+    uint32_t counter_{0};
+};
+
+struct BusySpinWaitStrategy : public WaitStrategy {
+    void wait_once(uint32_t /*executed_count*/) override {
+    }
+};
+
+enum class WaitMode {
+    yielding,
+    sleeping,
+    spin_wait,
+    busy_spin
+};
+
+std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode);
+
 using ChannelFactory = std::function<std::shared_ptr<grpc::Channel>()>;
 
 //! Asynchronous client scheduler running an execution loop.
 class Context {
   public:
-    explicit Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache);
+    explicit Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache, WaitMode wait_mode = WaitMode::busy_spin);
 
     asio::io_context* io_context() const noexcept { return io_context_.get(); }
     grpc::CompletionQueue* grpc_queue() const noexcept { return queue_.get(); }
@@ -71,6 +179,7 @@ class Context {
     std::unique_ptr<ethbackend::BackEnd> backend_;
     std::unique_ptr<txpool::Miner> miner_;
     std::unique_ptr<txpool::TransactionPool> tx_pool_;
+    std::unique_ptr<WaitStrategy> wait_strategy_;
     std::shared_ptr<BlockCache> block_cache_;
 };
 
@@ -78,7 +187,7 @@ std::ostream& operator<<(std::ostream& out, Context& c);
 
 class ContextPool {
 public:
-    explicit ContextPool(std::size_t pool_size, ChannelFactory create_channel);
+    explicit ContextPool(std::size_t pool_size, ChannelFactory create_channel, WaitMode wait_mode = WaitMode::yielding);
     ~ContextPool();
 
     ContextPool(const ContextPool&) = delete;
