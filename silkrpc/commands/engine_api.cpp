@@ -80,7 +80,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nl
     auto params = request.at("params");
 
     if (params.size() != 1 && params.size() != 2) {
-        auto error_msg = "invalid engine_forkChoiceUpdateV1 params: " + params.dump();
+        auto error_msg = "invalid engine_forkchoiceUpdateV1 params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request.at("id"), 100, error_msg);
         co_return;
@@ -96,8 +96,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nl
                 .payload_attributes = std::optional<PayloadAttributes>{payload_attributes}
             };
             reply = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
-        }
-        else{
+        } else {
             const ForkchoiceUpdatedRequest forkchoice_update_request{
                 .forkchoice_state = forkchoice_state,
                 .payload_attributes = std::nullopt

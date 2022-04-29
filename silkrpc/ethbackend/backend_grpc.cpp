@@ -358,7 +358,7 @@ remote::EngineForkChoiceUpdatedRequest BackEndGrpc::encode_forkchoice_updated_re
 
     forkchoice_updated_request_grpc.set_allocated_forkchoicestate(&forkchoice_state_grpc);
     if (forkchoice_updated_request.payload_attributes != std::nullopt) {
-        remote::EnginePayloadAttributes payload_attributes_grpc = 
+        remote::EnginePayloadAttributes payload_attributes_grpc =
             BackEndGrpc::encode_payload_attributes(forkchoice_updated_request.payload_attributes.value());
         forkchoice_updated_request_grpc.set_allocated_payloadattributes(&payload_attributes_grpc);
     }

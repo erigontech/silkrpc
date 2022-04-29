@@ -1554,7 +1554,6 @@ TEST_CASE("serialize forkchoice updated reply", "[silkrpc::json][to_json]") {
         },
         "payloadId":"0x1"
     })"_json);
-
 }
 
 TEST_CASE("serialize payload status", "[silkrpc::json][to_json]") {
