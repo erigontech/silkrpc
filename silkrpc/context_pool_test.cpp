@@ -48,7 +48,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
             processed = true;
             io_context->stop();
         });
-        auto context_thread = std::thread([&]() { context.execution_loop(); });
+        auto context_thread = std::thread([&]() { context.execute_loop(); });
         CHECK_NOTHROW(context_thread.join());
         CHECK(processed);
     }
@@ -58,7 +58,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
         context.io_context()->post([&]() {
             processed = true;
         });
-        auto context_thread = std::thread([&]() { context.execution_loop(); });
+        auto context_thread = std::thread([&]() { context.execute_loop(); });
         CHECK_NOTHROW(context.stop());
         CHECK_NOTHROW(context_thread.join());
     }

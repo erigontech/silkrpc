@@ -234,7 +234,7 @@ public:
         builder.AddListeningPort(server_address_.str(), grpc::InsecureServerCredentials());
         builder.RegisterService(service);
         server_ = builder.BuildAndStart();
-        context_thread_ = std::thread([&]() { context_.execution_loop(); });
+        context_thread_ = std::thread([&]() { context_.execute_loop(); });
     }
 
     template<auto method, typename T>

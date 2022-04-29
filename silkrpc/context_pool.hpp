@@ -32,7 +32,77 @@
 #include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/txpool/miner.hpp>
-#include <silkworm/rpc/completion_end_point.hpp>
+//#include <silkworm/rpc/completion_end_point.hpp>
+#include <silkrpc/common/log.hpp>
+
+// Temporary modified copy of CompletionEndPoint just for prototyping
+namespace silkworm::rpc {
+
+//! Application end-point dedicated to read completion notifications from one gRPC completion queue.
+class CompletionEndPoint {
+  public:
+    CompletionEndPoint(grpc::CompletionQueue& queue) : queue_(queue) {}
+
+    CompletionEndPoint(const CompletionEndPoint&) = delete;
+    CompletionEndPoint& operator=(const CompletionEndPoint&) = delete;
+
+    //! Run at most one execution cycle polling gRPC completion queue for one event.
+    int poll_one() {
+        SILKRPC_TRACE << "CompletionEndPoint::poll_one START";
+
+        int num_completed{0}; // returned when next_status == grpc::CompletionQueue::TIMEOUT
+
+        void* tag{nullptr};
+        bool ok{false};
+        const auto next_status = queue_.AsyncNext(&tag, &ok, gpr_time_0(GPR_CLOCK_MONOTONIC));
+        if (next_status == grpc::CompletionQueue::GOT_EVENT) {
+            num_completed = 1;
+            // Handle the event completion on the calling thread (*must* be the io_context scheduler).
+            CompletionTag completion_tag{reinterpret_cast<TagProcessor*>(tag), ok};
+            SILKRPC_DEBUG << "CompletionEndPoint::poll_one post operation: " << completion_tag.processor;
+            (*completion_tag.processor)(completion_tag.ok);
+        } else if (next_status == grpc::CompletionQueue::SHUTDOWN) {
+            num_completed = -1;
+        }
+
+        SILKRPC_TRACE << "CompletionEndPoint::poll_one next_status=" << next_status << " END";
+        return num_completed;
+    }
+
+    //! Post at most one execution task to scheduler polling gRPC completion queue for one event.
+    bool post_one(asio::io_context& scheduler) {
+        void* tag{nullptr};
+        bool ok{false};
+        const auto got_event = queue_.Next(&tag, &ok);
+        if (got_event) {
+            // Post the event completion on the passed io_context scheduler.
+            CompletionTag completion_tag{reinterpret_cast<TagProcessor*>(tag), ok};
+            SILKRPC_DEBUG << "CompletionEndPoint::post_one post operation: " << completion_tag.processor;
+            scheduler.post([completion_tag]() { (*completion_tag.processor)(completion_tag.ok); });
+        } else {
+            SILKRPC_DEBUG << "CompletionEndPoint::run shutdown\n";
+        }
+        return !got_event;
+    }
+
+    //! Shutdown and drain the gRPC completion queue.
+    void shutdown() {
+        SILKRPC_TRACE << "CompletionEndPoint::shutdown START";
+        queue_.Shutdown();
+        SILKRPC_DEBUG << "CompletionEndPoint::shutdown draining...";
+        void* ignored_tag;
+        bool ignored_ok;
+        while (queue_.Next(&ignored_tag, &ignored_ok)) {
+        }
+        SILKRPC_TRACE << "CompletionEndPoint::shutdown END";
+    }
+
+  private:
+    //! The gRPC completion queue to read async completion notifications from.
+    grpc::CompletionQueue& queue_;
+};
+
+} // namespace silkworm::rpc
 
 namespace silkrpc {
 
@@ -136,6 +206,7 @@ struct BusySpinWaitStrategy : public WaitStrategy {
 };
 
 enum class WaitMode {
+    blocking,
     sleeping,
     yielding,
     spin_wait,
@@ -149,7 +220,7 @@ using ChannelFactory = std::function<std::shared_ptr<grpc::Channel>()>;
 //! Asynchronous client scheduler running an execution loop.
 class Context {
   public:
-    explicit Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache, WaitMode wait_mode = WaitMode::busy_spin);
+    explicit Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache, WaitMode wait_mode = WaitMode::blocking);
 
     asio::io_context* io_context() const noexcept { return io_context_.get(); }
     grpc::CompletionQueue* grpc_queue() const noexcept { return queue_.get(); }
@@ -161,12 +232,18 @@ class Context {
     std::shared_ptr<BlockCache>& block_cache() noexcept { return block_cache_; }
 
     //! Execute the scheduler loop until stopped.
-    void execution_loop();
+    void execute_loop();
 
     //! Stop the execution loop.
     void stop();
 
   private:
+    //! Execute single-threaded loop until stopped.
+    void execute_loop_single_threaded();
+
+    //! Execute single-threaded loop until stopped.
+    void execute_loop_double_threaded();
+
     //! The asynchronous event loop scheduler.
     std::shared_ptr<asio::io_context> io_context_;
 
@@ -179,15 +256,15 @@ class Context {
     std::unique_ptr<ethbackend::BackEnd> backend_;
     std::unique_ptr<txpool::Miner> miner_;
     std::unique_ptr<txpool::TransactionPool> tx_pool_;
-    std::unique_ptr<WaitStrategy> wait_strategy_;
     std::shared_ptr<BlockCache> block_cache_;
+    WaitMode wait_mode_;
 };
 
 std::ostream& operator<<(std::ostream& out, Context& c);
 
 class ContextPool {
 public:
-    explicit ContextPool(std::size_t pool_size, ChannelFactory create_channel, WaitMode wait_mode = WaitMode::busy_spin);
+    explicit ContextPool(std::size_t pool_size, ChannelFactory create_channel, WaitMode wait_mode = WaitMode::blocking);
     ~ContextPool();
 
     ContextPool(const ContextPool&) = delete;

@@ -56,25 +56,48 @@ Context::Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> bloc
     : io_context_{std::make_shared<asio::io_context>()},
       work_{asio::require(io_context_->get_executor(), asio::execution::outstanding_work.tracked)},
       queue_{std::make_unique<grpc::CompletionQueue>()},
-      block_cache_(block_cache) {
-
+      block_cache_(block_cache),
+      wait_mode_(wait_mode) {
     std::shared_ptr<grpc::Channel> channel = create_channel();
     rpc_end_point_ = std::make_unique<silkworm::rpc::CompletionEndPoint>(*queue_);
     database_ = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context_, channel, queue_.get());
     backend_ = std::make_unique<ethbackend::BackEndGrpc>(*io_context_, channel, queue_.get());
     miner_ = std::make_unique<txpool::Miner>(*io_context_, channel, queue_.get());
     tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, channel, queue_.get());
-    wait_strategy_ = make_wait_strategy(wait_mode);
 }
 
-void Context::execution_loop() {
-    //TODO(canepat): add counter for served tasks and plug some wait strategy
+void Context::execute_loop() {
+    if (wait_mode_ == WaitMode::blocking) {
+        execute_loop_double_threaded();
+    } else {
+        execute_loop_single_threaded();
+    }
+}
+
+void Context::execute_loop_single_threaded() {
+    SILKRPC_INFO << "Single-thread execution loop start [" << this << "]\n";
+    std::unique_ptr<WaitStrategy> wait_strategy{make_wait_strategy(wait_mode_)};
     while (!io_context_->stopped()) {
         uint32_t executed_count = rpc_end_point_->poll_one();
         executed_count += io_context_->poll_one();
-        wait_strategy_->wait_once(executed_count);
+        wait_strategy->wait_once(executed_count);
     }
     rpc_end_point_->shutdown();
+    SILKRPC_INFO << "Single-thread execution loop end [" << this << "]\n";
+}
+
+void Context::execute_loop_double_threaded() {
+    SILKRPC_INFO << "Double-thread execution loop start [" << this << "]\n";
+    std::thread completion_runner_thread{[&]() {
+        bool stopped{false};
+        while (!stopped) {
+            stopped = rpc_end_point_->post_one(*io_context_);
+        }
+    }};
+    io_context_->run();
+    rpc_end_point_->shutdown();
+    completion_runner_thread.join();
+    SILKRPC_INFO << "Double-thread execution loop end [" << this << "]\n";
 }
 
 void Context::stop() {
@@ -112,7 +135,7 @@ void ContextPool::start() {
             auto& context = contexts_[i];
             context_threads_.create_thread([&, i = i]() {
                 SILKRPC_DEBUG << "thread start context[" << i << "] thread_id: " << std::this_thread::get_id() << "\n";
-                context.execution_loop();
+                context.execute_loop();
                 SILKRPC_DEBUG << "thread end context[" << i << "] thread_id: " << std::this_thread::get_id() << "\n";
             });
             SILKRPC_DEBUG << "ContextPool::start context[" << i << "].io_context started: " << &*context.io_context() << "\n";
