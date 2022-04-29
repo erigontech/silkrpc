@@ -42,6 +42,7 @@ public:
         EthereumRpcApi{context, workers}, NetRpcApi{context.backend()}, Web3RpcApi{context}, DebugRpcApi{context, workers},
         ParityRpcApi{context}, ErigonRpcApi{context}, TraceRpcApi{context.database()},
         EngineRpcApi(context.database(), context.backend()) {}
+
     virtual ~RpcApi() {}
 
     RpcApi(const RpcApi&) = delete;

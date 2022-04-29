@@ -1099,12 +1099,14 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
         }
 
         auto tracer = std::make_shared<AccessListTracer>(*call.from, to);
+
+        Tracers tracers{tracer};
         bool access_lists_match{false};
         do {
             EVMExecutor executor{*context_.io_context(), tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number};
             const auto txn = call.to_transaction();
             tracer->reset_access_list();
-            const auto execution_result = co_await executor.call(block_with_hash.block, txn, /* refund */true, /* gasBailout */false, tracer);
+            const auto execution_result = co_await executor.call(block_with_hash.block, txn, /* refund */true, /* gasBailout */false, tracers);
             if (execution_result.pre_check_error) {
                 reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
                 break;

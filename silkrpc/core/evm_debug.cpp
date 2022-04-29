@@ -130,6 +130,7 @@ void DebugTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
         << " depth: " << msg.depth
         << " recipient: " << recipient
         << " sender: " << sender
+        << " code: " << silkworm::to_hex(code)
         << "\n";
 }
 
@@ -268,7 +269,8 @@ asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::execute(
         debug_trace.debug_config = config_;
         auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_);
 
-        const auto execution_result = co_await executor.call(block, txn, /* refund */false, /* gasBailout */false, debug_tracer);
+        silkrpc::Tracers tracers{debug_tracer};
+        const auto execution_result = co_await executor.call(block, txn, /* refund */false, /* gasBailout */false, tracers);
 
         if (execution_result.pre_check_error) {
             SILKRPC_DEBUG << "debug failed: " << execution_result.pre_check_error.value() << "\n";
@@ -293,7 +295,7 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(cons
 template<typename WorldState, typename VM>
 asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
         const silkrpc::Transaction& transaction, std::int32_t index) {
-    SILKRPC_DEBUG << "execute: "
+    SILKRPC_INFO << "DebugExecutor::execute: "
         << " block_number: " << block_number
         << " transaction: {" << transaction << "}"
         << " index: " << std::dec << index
@@ -321,10 +323,12 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std:
     debug_trace.debug_config = config_;
 
     auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_);
-    const auto execution_result = co_await executor.call(block, transaction, /* refund */ false, /* gasBailout*/ false, debug_tracer);
+
+    silkrpc::Tracers tracers{debug_tracer};
+    const auto execution_result = co_await executor.call(block, transaction, /* refund */ false, /* gasBailout*/ false, tracers);
 
     if (execution_result.pre_check_error) {
-        result.pre_check_error = "debug failed: " + execution_result.pre_check_error.value();
+        result.pre_check_error = "tracing failed: " + execution_result.pre_check_error.value();
     } else {
         debug_trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
         debug_trace.gas = transaction.gas_limit - execution_result.gas_left;

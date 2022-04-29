@@ -340,10 +340,7 @@ asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json&
 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
-        auto txn = call.to_transaction();
-        silkrpc::Transaction transaction{txn};
-
-        debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
+        debug::DebugExecutor executor{context_, tx_database, workers_, config};
         const auto result = co_await executor.execute(block_with_hash.block, call);
 
         if (result.pre_check_error) {
