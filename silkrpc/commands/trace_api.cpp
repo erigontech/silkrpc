@@ -59,7 +59,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json& reque
         }
     }
 
-    SILKRPC_LOG << "call: " << call << " block_number_or_hash: " << block_number_or_hash << " config: " << config << "\n";
+    SILKRPC_INFO << "call: " << call << " block_number_or_hash: " << block_number_or_hash << " config: " << config << "\n";
 
     auto tx = co_await database_->begin();
 
