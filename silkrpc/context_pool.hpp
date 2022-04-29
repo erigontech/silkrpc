@@ -41,7 +41,7 @@ namespace silkworm::rpc {
 //! Application end-point dedicated to read completion notifications from one gRPC completion queue.
 class CompletionEndPoint {
   public:
-    CompletionEndPoint(grpc::CompletionQueue& queue) : queue_(queue) {}
+    explicit CompletionEndPoint(grpc::CompletionQueue& queue) : queue_(queue) {}
 
     CompletionEndPoint(const CompletionEndPoint&) = delete;
     CompletionEndPoint& operator=(const CompletionEndPoint&) = delete;
