@@ -108,8 +108,27 @@ asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPaylo
     co_return payload_status;
 }
 
-asio::awaitable<PayloadStatus> BackEndGrpc::engine_get_forkchoice_updated_v1(ForkchoiceState forkchoice_state, PayloadAttributes payload_attributes) {
-    co_return PayloadStatus{};
+asio::awaitable<PayloadStatus> BackEndGrpc::engine_forkchoice_updated_v1(ForkchoiceState forkchoice_state, PayloadAttributes payload_attributes) {
+    const auto start_time = clock_time::now();
+    EngineForkchoiceUpdatedV1Awaitable npc_awaitable{executor_, stub_, queue_};
+    auto req {
+        .ForkChoiceState = encode_forkchoice_state(forkchoice_state),
+        .PayloadAttritbues = encode_payload_attributes(payload_attributes)
+    };
+    const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
+    PayloadStatus payload_status;
+    payload_status.status = decode_status_message(reply.status());
+    // Set LatestValidHash (if there is one)
+    if (reply.has_latestvalidhash()) {
+        payload_status.latest_valid_hash = bytes32_from_H256(reply.latestvalidhash());
+    }
+    // Set ValidationError (if there is one)
+    const auto validation_error{reply.validationerror()};
+    if (validation_error != "") {
+        payload_status.validation_error = validation_error;
+    }
+    SILKRPC_DEBUG << "BackEnd::engine_forkchoice_updated_v1 data=" << payload_status << " t=" << clock_time::since(start_time) << "\n";
+    co_return payload_status;
 }
 
 evmc::address BackEndGrpc::address_from_H160(const types::H160& h160) {

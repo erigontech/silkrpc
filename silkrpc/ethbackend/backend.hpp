@@ -36,6 +36,7 @@ public:
     virtual asio::awaitable<uint64_t> net_peer_count() = 0;
     virtual asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id) = 0;
     virtual asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload) = 0;
+    virtual asio::awaitable<PayloadStatus> engine_forkchoice_updated_v1(ForkchoiceState fokchoice_state, PayloadAttributes payload_attributes) = 0;
 };
 
 } // namespace silkrpc::ethbackend
