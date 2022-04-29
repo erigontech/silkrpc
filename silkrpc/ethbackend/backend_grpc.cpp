@@ -111,10 +111,7 @@ asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPaylo
 asio::awaitable<PayloadStatus> BackEndGrpc::engine_forkchoice_updated_v1(ForkchoiceState forkchoice_state, PayloadAttributes payload_attributes) {
     const auto start_time = clock_time::now();
     EngineForkchoiceUpdatedV1Awaitable npc_awaitable{executor_, stub_, queue_};
-    auto req {
-        .ForkChoiceState = encode_forkchoice_state(forkchoice_state),
-        .PayloadAttritbues = encode_payload_attributes(payload_attributes)
-    };
+    auto req{encode_forkchoice_state(forkchoice_state),encode_payload_attributes(payload_attributes)};
     const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
     PayloadStatus payload_status;
     payload_status.status = decode_status_message(reply.status());
@@ -331,43 +328,43 @@ types::ExecutionPayload BackEndGrpc::encode_execution_payload(const ExecutionPay
 remote::EngineForkChoiceState BackEndGrpc::encode_forkchoice_state(const ForkchoiceState& forkchoice_state) {
     remote::EngineForkChoiceState forkchoice_state_grpc;
     // 32-bytes parameters
-    forkchoice_state_grpc.set_allocated_headhash(H256_from_bytes(forkchoice_state.parent_hash.bytes));
+    forkchoice_state_grpc.set_allocated_headblockhash(H256_from_bytes(forkchoice_state.head_block_hash.bytes));
     forkchoice_state_grpc.set_allocated_safeblockhash(H256_from_bytes(forkchoice_state.safe_block_hash.bytes));
     forkchoice_state_grpc.set_allocated_finalizedblockhash(H256_from_bytes(forkchoice_state.finalized_block_hash.bytes));
     return forkchoice_state_grpc;
 }
 
 ForkchoiceState BackEndGrpc::decode_forkchoice_state(const remote::EngineForkChoiceState& forkchoice_state_grpc) {
-    auto parent_hash_256{forkchoice_state_grpc.parent_hash};
-    auto safe_block_hash_256{forkchoice_state_grpc.safe_block_hash};
-    auto finalized_block_hash_256{forkchoice_state_grpc.finalized_block_hash};
+    auto head_block_hash_256{forkchoice_state_grpc.headblockhash()};
+    auto safe_block_hash_256{forkchoice_state_grpc.safeblockhash()};
+    auto finalized_block_hash_256{forkchoice_state_grpc.finalizedblockhash()};
 
     return ForkchoiceState {
-        .parent_hash = bytes32_from_H256(parent_hash_256),
+        .head_block_hash = bytes32_from_H256(head_block_hash_256),
         .safe_block_hash = bytes32_from_H256(safe_block_hash_256),
         .finalized_block_hash = bytes32_from_H256(finalized_block_hash_256)
     };
 }
 
-remote::EnginePayloadStatus BackEndGrpc::encode_payload_attributes(const PayloadAttributes& payload_attributes) {
-    remote::EnginePayloadStatus payload_attributes_grpc;
+remote::EnginePayloadAttributes BackEndGrpc::encode_payload_attributes(const PayloadAttributes& payload_attributes) {
+    remote::EnginePayloadAttributes payload_attributes_grpc;
     // Numerical parameters
     payload_attributes_grpc.set_timestamp(payload_attributes.timestamp);
     //32-bytes parameters
-    payload_attributes_grpc.set_prevrandao(H256_from_bytes(payload_attributes.prev_randao));
+    payload_attributes_grpc.set_allocated_prevrandao(H256_from_bytes(payload_attributes.prev_randao.bytes));
     // Address parameters
-    payload_attributes_grpc.set_suggestedfeerecipient(H160_from_address(payload_attributes.suggested_fee_recipient));
+    payload_attributes_grpc.set_allocated_suggestedfeerecipient(H160_from_address(payload_attributes.suggested_fee_recipient));
 
     return payload_attributes_grpc;
 }
 
-PayloadAttributes BackEndGrpc::decode_payload_attributes(const remote::EnginePayloadStatus& payload_attributes_grpc) {
-    auto prev_randao_256{payload_attributes_grpc.prev_randao};
+PayloadAttributes BackEndGrpc::decode_payload_attributes(const remote::EnginePayloadAttributes& payload_attributes_grpc) {
+    auto prev_randao_256{payload_attributes_grpc.prevrandao()};
 
     return PayloadAttributes{
-        .prev_randao = bytes32_from_H256(prev_rando_256),
+        .prev_randao = bytes32_from_H256(prev_randao_256),
         .timestamp = payload_attributes_grpc.timestamp(),
-        .suggested_fee_recipient = address_from_H160(payload_attributes_grpc.coinbase())
+        .suggested_fee_recipient = address_from_H160(payload_attributes_grpc.suggestedfeerecipient())
     };
 }
 

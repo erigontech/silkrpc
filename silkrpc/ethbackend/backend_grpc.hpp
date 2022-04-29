@@ -175,7 +175,7 @@ public:
     asio::awaitable<uint64_t> net_peer_count();
     asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id);
     asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload);
-    asio::awaitable<PayloadStatus> engine_forkchoice_update_V1(ForkchoiceState forkchoice_state, PayloadAttributes payload_attribute);
+    asio::awaitable<PayloadStatus> engine_forkchoice_updated_v1(ForkchoiceState forkchoice_state, PayloadAttributes payload_attributes);
 
 private:
     evmc::address address_from_H160(const types::H160& h160);
@@ -197,9 +197,9 @@ private:
     ExecutionPayload decode_execution_payload(const types::ExecutionPayload& execution_payload_grpc);
     types::ExecutionPayload encode_execution_payload(const ExecutionPayload& execution_payload);
     ForkchoiceState decode_forkchoice_state(const remote::EngineForkChoiceState& forkchoice_state_grpc);
-    remote::EngineForkChoiceState BackEndGrpc::encode_forkchoice_state(const ForkchoiceState& forkchoice_state);
-    PayloadAttributes BackEndGrpc::decode_payload_attributes(const remote::EnginePayloadStatus& payload_attributes_grpc);
-    remote::EnginePayloadStatus BackEndGrpc::encode_payload_attributes(const PayloadAttributes& payload_attributes);
+    remote::EngineForkChoiceState encode_forkchoice_state(const ForkchoiceState& forkchoice_state);
+    PayloadAttributes decode_payload_attributes(const remote::EnginePayloadAttributes& payload_attributes_grpc);
+    remote::EnginePayloadAttributes encode_payload_attributes(const PayloadAttributes& payload_attributes);
     std::string decode_status_message(const remote::EngineStatus& status);
 
     asio::io_context::executor_type executor_;
