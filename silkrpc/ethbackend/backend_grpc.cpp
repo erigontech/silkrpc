@@ -93,39 +93,23 @@ asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPaylo
     EngineNewPayloadV1Awaitable npc_awaitable{executor_, stub_, queue_};
     auto req{encode_execution_payload(payload)};
     const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
-    PayloadStatus payload_status;
-    payload_status.status = decode_status_message(reply.status());
-    // Set LatestValidHash (if there is one)
-    if (reply.has_latestvalidhash()) {
-        payload_status.latest_valid_hash = bytes32_from_H256(reply.latestvalidhash());
-    }
-    // Set ValidationError (if there is one)
-    const auto validation_error{reply.validationerror()};
-    if (validation_error != "") {
-        payload_status.validation_error = validation_error;
-    }
+    PayloadStatus payload_status = decode_payload_status(reply);
     SILKRPC_DEBUG << "BackEnd::engine_new_payload_v1 data=" << payload_status << " t=" << clock_time::since(start_time) << "\n";
     co_return payload_status;
 }
 
-asio::awaitable<PayloadStatus> BackEndGrpc::engine_forkchoice_updated_v1(ForkchoiceState forkchoice_state, PayloadAttributes payload_attributes) {
+asio::awaitable<ForkchoiceUpdatedReply> BackEndGrpc::engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request) {
     const auto start_time = clock_time::now();
     EngineForkchoiceUpdatedV1Awaitable npc_awaitable{executor_, stub_, queue_};
-    auto req{encode_forkchoice_state(forkchoice_state),encode_payload_attributes(payload_attributes)};
+    auto req{encode_forkchoice_updated_request(forkchoice_updated_request)};
     const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
-    PayloadStatus payload_status;
-    payload_status.status = decode_status_message(reply.status());
-    // Set LatestValidHash (if there is one)
-    if (reply.has_latestvalidhash()) {
-        payload_status.latest_valid_hash = bytes32_from_H256(reply.latestvalidhash());
-    }
-    // Set ValidationError (if there is one)
-    const auto validation_error{reply.validationerror()};
-    if (validation_error != "") {
-        payload_status.validation_error = validation_error;
-    }
+    PayloadStatus payload_status = decode_payload_status(reply.payloadstatus());
+    ForkchoiceUpdatedReply forkchoice_updated_reply {
+        .payload_status = payload_status,
+        .payload_id = reply.payloadid()
+    };
     SILKRPC_DEBUG << "BackEnd::engine_forkchoice_updated_v1 data=" << payload_status << " t=" << clock_time::since(start_time) << "\n";
-    co_return payload_status;
+    co_return forkchoice_updated_reply;
 }
 
 evmc::address BackEndGrpc::address_from_H160(const types::H160& h160) {
@@ -366,6 +350,34 @@ PayloadAttributes BackEndGrpc::decode_payload_attributes(const remote::EnginePay
         .timestamp = payload_attributes_grpc.timestamp(),
         .suggested_fee_recipient = address_from_H160(payload_attributes_grpc.suggestedfeerecipient())
     };
+}
+
+remote::EngineForkChoiceUpdatedRequest BackEndGrpc::encode_forkchoice_updated_request(const ForkchoiceUpdatedRequest& forkchoice_updated_request) {
+    remote::EngineForkChoiceUpdatedRequest forkchoice_updated_request_grpc;
+    remote::EngineForkChoiceState forkchoice_state_grpc = BackEndGrpc::encode_forkchoice_state(forkchoice_updated_request.forkchoice_state);
+
+    forkchoice_updated_request_grpc.set_allocated_forkchoicestate(&forkchoice_state_grpc);
+    if (forkchoice_updated_request.payload_attributes != std::nullopt) {
+        remote::EnginePayloadAttributes payload_attributes_grpc = 
+            BackEndGrpc::encode_payload_attributes(forkchoice_updated_request.payload_attributes.value());
+        forkchoice_updated_request_grpc.set_allocated_payloadattributes(&payload_attributes_grpc);
+    }
+    return forkchoice_updated_request_grpc;
+}
+
+PayloadStatus BackEndGrpc::decode_payload_status(const remote::EnginePayloadStatus& payload_status_grpc) {
+    PayloadStatus payload_status;
+    payload_status.status = decode_status_message(payload_status_grpc.status());
+    // Set LatestValidHash (if there is one)
+    if (payload_status_grpc.has_latestvalidhash()) {
+        payload_status.latest_valid_hash = bytes32_from_H256(payload_status_grpc.latestvalidhash());
+    }
+    // Set ValidationError (if there is one)
+    const auto validation_error{payload_status_grpc.validationerror()};
+    if (validation_error != "") {
+        payload_status.validation_error = validation_error;
+    }
+    return payload_status;
 }
 
 std::string BackEndGrpc::decode_status_message(const remote::EngineStatus& status) {

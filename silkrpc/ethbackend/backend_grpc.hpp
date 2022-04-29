@@ -200,6 +200,8 @@ private:
     remote::EngineForkChoiceState encode_forkchoice_state(const ForkchoiceState& forkchoice_state);
     PayloadAttributes decode_payload_attributes(const remote::EnginePayloadAttributes& payload_attributes_grpc);
     remote::EnginePayloadAttributes encode_payload_attributes(const PayloadAttributes& payload_attributes);
+    remote::EngineForkChoiceUpdatedRequest encode_forkchoice_updated_request(const ForkchoiceUpdatedRequest& forkchoice_updated_request);
+    PayloadStatus decode_payload_status(const remote::EnginePayloadStatus& payload_status_grpc);
     std::string decode_status_message(const remote::EngineStatus& status);
 
     asio::io_context::executor_type executor_;
