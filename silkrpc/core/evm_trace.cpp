@@ -527,7 +527,7 @@ asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(cons
 
 template<typename WorldState, typename VM>
 asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
-        const silkrpc::Transaction& transaction, std::int32_t index) {
+    const silkrpc::Transaction& transaction, std::int32_t index) {
     SILKRPC_INFO << "execute: "
         << " block_number: " << block_number
         << " transaction: {" << transaction << "}"
@@ -567,7 +567,7 @@ asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std:
         std::shared_ptr<silkworm::EvmTracer> tracer = std::make_shared<trace::StateDiffTracer>(traces.state_diff.value());
         tracers.push_back(tracer);
     }
-    auto execution_result = co_await executor.call(block, transaction, tracers);
+    auto execution_result = co_await executor.call(block, transaction, /*refund=*/true, /*gas_bailout=*/true, tracers);
 
     if (execution_result.pre_check_error) {
         result.pre_check_error = execution_result.pre_check_error.value();
