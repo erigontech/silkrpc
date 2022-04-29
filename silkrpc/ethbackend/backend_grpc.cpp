@@ -346,6 +346,7 @@ PayloadAttributes BackEndGrpc::decode_payload_attributes(const remote::EnginePay
     auto prev_randao_256{payload_attributes_grpc.prevrandao()};
 
     return PayloadAttributes{
+        .timestamp = payload_attributes_grpc.timestamp(),
         .prev_randao = bytes32_from_H256(prev_randao_256),
         .timestamp = payload_attributes_grpc.timestamp(),
         .suggested_fee_recipient = address_from_H160(payload_attributes_grpc.suggestedfeerecipient())
