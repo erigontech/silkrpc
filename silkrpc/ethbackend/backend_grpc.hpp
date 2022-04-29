@@ -151,7 +151,7 @@ using EngineForkchoiceUpdatedV1Awaitable = unary_awaitable<
     EngineForkchoiceUpdateV1Client,
     ::remote::ETHBACKEND::StubInterface,
     ::remote::EngineForkChoiceUpdatedRequest,
-    ::remote::EngineForkChoiceUpdatedReply,
+    ::remote::EngineForkChoiceUpdatedReply
 >;
 
 class BackEndGrpc final: public BackEnd {
