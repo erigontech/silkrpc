@@ -566,7 +566,9 @@ void from_json(const nlohmann::json& json, PayloadAttributes& payload_attributes
 void to_json(nlohmann::json& json, const ForkchoiceUpdatedReply& forkchoice_updated_reply) {
     nlohmann::json json_payload_status = forkchoice_updated_reply.payload_status;
     json["payloadStatus"] = json_payload_status;
-    json["payloadId"] = silkrpc::to_quantity(forkchoice_updated_reply.payload_id.value());
+    if (forkchoice_updated_reply.payload_id != std::nullopt) {
+        json["payloadId"] = silkrpc::to_quantity(forkchoice_updated_reply.payload_id.value());
+    }
 }
 
 void to_json(nlohmann::json& json, const PayloadStatus& payload_status) {

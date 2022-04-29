@@ -80,7 +80,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nl
     auto params = request.at("params");
 
     if (params.size() != 1 && params.size() != 2) {
-        auto error_msg = "invalid engine_forkchoiceUpdateV1 params: " + params.dump();
+        auto error_msg = "invalid engine_forkchoiceUpdatedV1 params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request.at("id"), 100, error_msg);
         co_return;
