@@ -1477,6 +1477,67 @@ TEST_CASE("deserialize execution_payload", "[silkrpc::json][to_json]") {
     CHECK(actual_payload.transactions == expected_payload.transactions);
 }
 
+TEST_CASE("serialize forkchoice state", "[silkrpc::json][to_json]") {
+    silkrpc::ForkchoiceState forkchoice_state{
+        .head_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+        .safe_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+        .finalized_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32
+    };
+
+    nlohmann::json j = forkchoice_state;
+    CHECK(j == R"({
+        "headBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+        "safeBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+        "finalizedBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+    })"_json);
+}
+
+TEST_CASE("deserialize forkchoice state", "[silkrpc::json][from_json]") {
+    nlohmann::json j = R"({
+        "headBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+        "safeBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+        "finalizedBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+    })"_json;
+
+    silkrpc::ForkchoiceState forkchoice_state = j;
+    CHECK(forkchoice_state == ForkchoiceState{
+        .head_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+        .safe_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+        .finalized_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32
+    });
+}
+
+TEST_CASE("serialize payload attributes", "[silkrpc::json][to_json]") {
+    silkrpc::PayloadAttributes payload_attributes{
+        .timestamp = 0x1,
+        .prev_rando = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+        .suggested_fee_recipient = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32
+    };
+
+    nlohmann::json j = payload_attributes;
+    CHECK(j == R"({
+        "timestamp":"0x1",
+        "prevRandao":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+        "suggestedFeeRecipient":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858"
+    })"_json);
+}
+
+TEST_CASE("serialize payload attributes", "[silkrpc::json][to_json]") {
+    nlohmann::json j = R"({
+        "timestamp":"0x1",
+        "prevRandao":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+        "suggestedFeeRecipient":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858"
+    })"_json;
+
+    silkrpc::PayloadAttributes payload_attributes = j;
+
+    CHECK(payload_attributes == silkrpc::PayloadAttributes{
+        .timestamp = 0x1,
+        .prev_rando = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
+        .suggested_fee_recipient = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32
+    });
+}
+
 TEST_CASE("serialize payload status", "[silkrpc::json][to_json]") {
     silkrpc::PayloadStatus payload_status{
         .status = "VALID",
