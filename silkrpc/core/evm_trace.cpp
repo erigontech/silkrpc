@@ -539,7 +539,7 @@ asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std:
 
     const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
 
-    EVMExecutor<WorldState, VM> executor{context_, database_reader_, *chain_config_ptr, workers_, block_number};
+    EVMExecutor<WorldState, VM> executor{*context_.io_context(), database_reader_, *chain_config_ptr, workers_, block_number};
 
     for (auto idx = 0; idx < index; idx++) {
         silkrpc::Transaction txn{block.transactions[idx]};

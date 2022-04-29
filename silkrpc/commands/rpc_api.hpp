@@ -40,7 +40,7 @@ class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, Par
 public:
     explicit RpcApi(Context& context, asio::thread_pool& workers) :
         EthereumRpcApi{context, workers}, NetRpcApi{context.backend()}, Web3RpcApi{context}, DebugRpcApi{context, workers},
-        ParityRpcApi{context}, ErigonRpcApi{context}, TraceRpcApi{context.database()},
+        ParityRpcApi{context}, ErigonRpcApi{context}, TraceRpcApi{context, workers},
         EngineRpcApi(context.database(), context.backend()) {}
 
     virtual ~RpcApi() {}

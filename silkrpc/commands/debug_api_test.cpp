@@ -25,6 +25,7 @@
 #include <catch2/catch.hpp>
 #include <nlohmann/json.hpp>
 
+#include <silkrpc/common/log.hpp>
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/stagedsync/stages.hpp>
 
@@ -184,7 +185,11 @@ private:
 };
 
 TEST_CASE("DebugRpcApi") {
-    Context context;
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    ChannelFactory create_channel = []() {
+        return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+    };
+    Context context{create_channel, std::make_shared<BlockCache>()};
     asio::thread_pool workers{1};
 
     SECTION("CTOR") {
