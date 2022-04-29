@@ -77,7 +77,7 @@ TEST_CASE("EVMexecutor") {
         my_pool.stop();
         pool_thread.join();
         CHECK(result.error_code == 1000);
-        CHECK(result.pre_check_error.value() == "intrinsic gas too low: have 0 want 53000");
+        CHECK(result.pre_check_error.value() == "intrinsic gas too low: have 0, want 53000");
     }
 
     SECTION("failed if base_fee_per_gas > max_fee_per_gas ") {

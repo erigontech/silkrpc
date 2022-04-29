@@ -183,6 +183,15 @@ private:
     const nlohmann::json& json_;
 };
 
+TEST_CASE("DebugRpcApi") {
+    Context context;
+    asio::thread_pool workers{1};
+
+    SECTION("CTOR") {
+        CHECK_NOTHROW(DebugRpcApi{context, workers});
+    }
+}
+
 #if !defined(__clang__)
 TEST_CASE("get_modified_accounts") {
     asio::thread_pool pool{1};
