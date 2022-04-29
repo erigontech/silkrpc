@@ -309,29 +309,29 @@ types::ExecutionPayload BackEndGrpc::encode_execution_payload(const ExecutionPay
     return execution_payload_grpc;
 }
 
-types::ForkchoiceState BackEndGrpc::encode_fork_choice_state(const ForkchoiceState& fork_choice_state) {
-    types::ForkchoiceState fork_choice_state_grpc;
+remote::EngineForkChoiceState BackEndGrpc::encode_forkchoice_state(const ForkchoiceState& forkchoice_state) {
+    remote::EngineForkChoiceState forkchoice_state_grpc;
     // 32-bytes parameters
-    fork_choice_state_grpc.set_allocated_headhash(H256_from_bytes(fork_choice_state.parent_hash.bytes));
-    fork_choice_state_grpc.set_allocated_safeblockhash(H256_from_bytes(fork_choice_state.safe_block_hash.bytes));
-    fork_choice_state_grpc.set_allocated_finalizedblockhash(H256_from_bytes(fork_choice_state.finalized_block_hash.bytes));
-    return fork_choice_state_grpc;
+    forkchoice_state_grpc.set_allocated_headhash(H256_from_bytes(forkchoice_state.parent_hash.bytes));
+    forkchoice_state_grpc.set_allocated_safeblockhash(H256_from_bytes(forkchoice_state.safe_block_hash.bytes));
+    forkchoice_state_grpc.set_allocated_finalizedblockhash(H256_from_bytes(forkchoice_state.finalized_block_hash.bytes));
+    return forkchoice_state_grpc;
 }
 
-ForkchoiceState BackEndGrpc::decode_fork_choice_state(const types::ForkChoiceState& fork_choice_state_grpc) {
-    auto parent_hash_256{fork_choice_state_grpc.parent_hash};
-    auto safe_block_hash_256{fork_choice_state_grpc.safe_block_hash};
-    auto finalized_block_hash_256{fork_choice_state_grpc.finalized_block_hash};
+ForkchoiceState BackEndGrpc::decode_forkchoice_state(const remote::EngineForkChoiceState& forkchoice_state_grpc) {
+    auto parent_hash_256{forkchoice_state_grpc.parent_hash};
+    auto safe_block_hash_256{forkchoice_state_grpc.safe_block_hash};
+    auto finalized_block_hash_256{forkchoice_state_grpc.finalized_block_hash};
 
-    return ForkChoiceState {
+    return ForkchoiceState {
         .parent_hash = bytes32_from_H256(parent_hash_256),
         .safe_block_hash = bytes32_from_H256(safe_block_hash_256),
         .finalized_block_hash = bytes32_from_H256(finalized_block_hash_256)
     };
 }
 
-types::PayloadAttributes BackEndGrpc::encode_payload_attributes(const PayloadAttributes& payload_attributes) {
-    types::PayloadAttributes payload_attributes_grpc;
+remote::EnginePayloadStatus BackEndGrpc::encode_payload_attributes(const PayloadAttributes& payload_attributes) {
+    remote::EnginePayloadStatus payload_attributes_grpc;
     // Numerical parameters
     payload_attributes_grpc.set_timestamp(payload_attributes.timestamp);
     //32-bytes parameters
@@ -342,7 +342,7 @@ types::PayloadAttributes BackEndGrpc::encode_payload_attributes(const PayloadAtt
     return payload_attributes_grpc;
 }
 
-PayloadAttributes BackEndGrpc::decode_payload_attributes(const types::PayloadAttributes& payload_attributes_grpc) {
+PayloadAttributes BackEndGrpc::decode_payload_attributes(const remote::EnginePayloadStatus& payload_attributes_grpc) {
     auto prev_randao_256{payload_attributes_grpc.prev_randao};
 
     return PayloadAttributes{

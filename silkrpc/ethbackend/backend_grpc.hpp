@@ -83,6 +83,13 @@ using EngineNewPayloadV1Client = AsyncUnaryClient<
     &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineNewPayloadV1
 >;
 
+using EngineForkchoiceUpdateV1Client = AsyncUnaryClient<
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::EngineForkChoiceUpdatedRequest,
+    ::remote::EngineForkChoiceUpdatedReply,
+    &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineForkChoiceUpdatedV1
+>;
+
 using EtherbaseAwaitable = unary_awaitable<
     asio::io_context::executor_type,
     EtherbaseClient,
@@ -139,6 +146,14 @@ using EngineNewPayloadV1Awaitable = unary_awaitable<
     ::remote::EnginePayloadStatus
 >;
 
+using EngineForkchoiceUpdatedV1Awaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    EngineForkchoiceUpdateV1Client,
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::EngineForkChoiceUpdatedRequest,
+    ::remote::EngineForkChoiceUpdatedReply,
+>;
+
 class BackEndGrpc final: public BackEnd {
 public:
     explicit BackEndGrpc(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
@@ -181,6 +196,10 @@ private:
 
     ExecutionPayload decode_execution_payload(const types::ExecutionPayload& execution_payload_grpc);
     types::ExecutionPayload encode_execution_payload(const ExecutionPayload& execution_payload);
+    ForkchoiceState decode_forkchoice_state(const remote::EngineForkChoiceState& forkchoice_state_grpc);
+    remote::EngineForkChoiceState BackEndGrpc::encode_forkchoice_state(const ForkchoiceState& forkchoice_state);
+    PayloadAttributes BackEndGrpc::decode_payload_attributes(const remote::EnginePayloadStatus& payload_attributes_grpc);
+    remote::EnginePayloadStatus BackEndGrpc::encode_payload_attributes(const PayloadAttributes& payload_attributes);
     std::string decode_status_message(const remote::EngineStatus& status);
 
     asio::io_context::executor_type executor_;
