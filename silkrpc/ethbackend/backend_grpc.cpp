@@ -108,7 +108,9 @@ asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPaylo
     co_return payload_status;
 }
 
-asio::awaitable<ForkChoiceState> BackEndGrpc::engine_get_forkchoice_updated_v1
+asio::awaitable<PayloadStatus> BackEndGrpc::engine_get_forkchoice_updated_v1(ForkchoiceState forkchoice_state, PayloadAttributes payload_attributes) {
+    co_return PayloadStatus{};
+}
 
 evmc::address BackEndGrpc::address_from_H160(const types::H160& h160) {
     uint64_t hi_hi = h160.hi().hi();
