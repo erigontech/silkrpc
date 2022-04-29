@@ -535,7 +535,7 @@ void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload) 
     };
 }
 
-void to_json(nlohmann::jso& json, const ForkchoiceState& forkchoice_state) {
+void to_json(nlohmann::json& json, const ForkchoiceState& forkchoice_state) {
     json["headBlockHash"] = forkchoice_state.head_block_hash;
     json["safeBlockHash"] = forkchoice_state.safe_block_hash;
     json["finalizedBlockHash"] = forkchoice_state.finalized_block_hash;
@@ -549,24 +549,24 @@ void from_json(const nlohmann::json& json, ForkchoiceState& forkchoice_state) {
     };
 }
 
-void to_json(nlohmann::jso& json, const PayloadAttributes& payload_attributes) {
+void to_json(nlohmann::json& json, const PayloadAttributes& payload_attributes) {
     json["timestamp"] = silkrpc::to_quantity(payload_attributes.timestamp);
     json["prevRandao"] = payload_attributes.prev_randao;
-    json["suggestedFeeRecipient"] = payload_attributes.suggested_fee_recipient
+    json["suggestedFeeRecipient"] = payload_attributes.suggested_fee_recipient;
 }
 
-void from_json(const nlohmann::jso& json, PayloadAttributes& payload_attributes) {
+void from_json(const nlohmann::json& json, PayloadAttributes& payload_attributes) {
     payload_attributes = PayloadAttributes{
         .timestamp = static_cast<uint64_t>(std::stol(json.at("timestamp").get<std::string>(), 0, 16)),
-        .prev_rando = json.at("prevRandao").get<evmc::bytes32>(),
-        .suggested_fee_recipient = json.at("suggestedFeeRecipient").get<evmc::bytes32>(),
+        .prev_randao = json.at("prevRandao").get<evmc::bytes32>(),
+        .suggested_fee_recipient = json.at("suggestedFeeRecipient").get<evmc::address>(),
     };
 }
 
-void to_json(nlohmann::json& json, const ForkChoiceUpdateReply& forkchoice_updated_reply) {
+void to_json(nlohmann::json& json, const ForkchoiceUpdatedReply& forkchoice_updated_reply) {
     nlohmann::json json_payload_status = forkchoice_updated_reply.payload_status;
     json["payloadStatus"] = json_payload_status;
-    json["payloadId"] = silkrpc::to_quantity(forkchoice_updated_reply.payload_id);
+    json["payloadId"] = silkrpc::to_quantity(forkchoice_updated_reply.payload_id.value());
 }
 
 void to_json(nlohmann::json& json, const PayloadStatus& payload_status) {
