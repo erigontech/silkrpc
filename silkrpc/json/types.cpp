@@ -555,7 +555,7 @@ void to_json(nlohmann::jso& json, const PayloadAttributes& payload_attributes) {
     json["suggestedFeeRecipient"] = payload_attributes.suggested_fee_recipient
 }
 
-void to_json(const nlohmann::jso& json, PayloadAttributes& payload_attributes) {
+void from_json(const nlohmann::jso& json, PayloadAttributes& payload_attributes) {
     payload_attributes = PayloadAttributes{
         .timestamp = static_cast<uint64_t>(std::stol(json.at("timestamp").get<std::string>(), 0, 16)),
         .prev_rando = json.at("prevRandao").get<evmc::bytes32>(),
@@ -563,6 +563,11 @@ void to_json(const nlohmann::jso& json, PayloadAttributes& payload_attributes) {
     };
 }
 
+void to_json(nlohmann::json& json, const ForkChoiceUpdateReply& forkchoice_updated_reply) {
+    nlohmann::json json_payload_status = forkchoice_updated_reply.payload_status;
+    json["payloadStatus"] = json_payload_status;
+    json["payloadId"] = silkrpc::to_quantity(forkchoice_updated_reply.payload_id);
+}
 
 void to_json(nlohmann::json& json, const PayloadStatus& payload_status) {
     json["status"] = payload_status.status;

@@ -79,7 +79,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
 asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
-    if (params.size() != 2) {
+    if (params.size() != 1 && params.size() != 2) {
         auto error_msg = "invalid engine_forkChoiceUpdateV1 params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request.at("id"), 100, error_msg);
@@ -88,9 +88,22 @@ asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nl
     #ifndef BUILD_COVERAGE
     try {
     #endif
-        const auto forkchoice_state = params[0].get<ForkchoiceState>();
-        const auto payload_attributes = params[1].get<PayloadAttributes>();
-        reply = co_await backend_->engine_forkchoice_updated_v1(forkchoice_state, payload_attributes);
+        const ForkchoiceState forkchoice_state = params[0].get<ForkchoiceState>();
+        if (params.size() == 2) {
+            const PayloadAttributes payload_attributes = params[1].get<PayloadAttributes>();
+            const ForkchoiceUpdatedRequest forkchoice_update_request{
+                .forkchoice_state = forkchoice_state,
+                .payload_attributes = std::optional<PayloadAttributes>{payload_attributes}
+            };
+            reply = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
+        }
+        else{
+            const ForkchoiceUpdatedRequest forkchoice_update_request{
+                .forkchoice_state = forkchoice_state,
+                .payload_attributes = std::nullopt
+            };
+            reply = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
+        }
     #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";

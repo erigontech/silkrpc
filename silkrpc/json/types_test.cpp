@@ -1522,7 +1522,7 @@ TEST_CASE("serialize payload attributes", "[silkrpc::json][to_json]") {
     })"_json);
 }
 
-TEST_CASE("serialize payload attributes", "[silkrpc::json][to_json]") {
+TEST_CASE("deserialize payload attributes", "[silkrpc::json][from_json]") {
     nlohmann::json j = R"({
         "timestamp":"0x1",
         "prevRandao":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
@@ -1536,6 +1536,29 @@ TEST_CASE("serialize payload attributes", "[silkrpc::json][to_json]") {
         .prev_rando = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
         .suggested_fee_recipient = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32
     });
+}
+
+TEST_CASE("serialize forkchoice updated reply", "[silkrpc::json][to_json]") {
+    silkrpc::PayloadStatus payload_status{
+        .status = "VALID",
+        .latest_valid_hash = 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32,
+        .validation_error = "some error"
+    };
+    silkrpc::ForkChoiceUpdatedRequest forkchoice_update_request{
+        .payload_status = payload_status,
+        .payload_id = 0x1
+    };
+
+    nlohmann::json j = forkchoice_update_request;
+    CHECK(j == R"({
+        "payloadStatus": {
+            "status":"VALID",
+            "latestValidHash":"0x0000000000000000000000000000000000000000000000000000000000000040",
+            "validationError":"some error"
+        },
+        "payloadId":"0x1"
+    })"_json)
+
 }
 
 TEST_CASE("serialize payload status", "[silkrpc::json][to_json]") {

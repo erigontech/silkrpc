@@ -67,6 +67,16 @@ struct PayloadStatus {
     std::optional<std::string> validation_error;
 };
 
+struct ForkchoiceUpdatedRequest {
+    ForkchoiceState forkchoice_state;
+    std::optional<PayloadAttributes> payload_attributes;
+};
+
+struct ForkchoiceUpdatedReply {
+    PayloadStatus payload_status;
+    std::optional<uint64_t> payload_id;
+};
+
 //! TransitionConfiguration as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
 struct TransitionConfiguration {
     intx::uint256 terminal_total_difficulty;
@@ -78,6 +88,8 @@ std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload);
 std::ostream& operator<<(std::ostream& out, const PayloadStatus& payload_status);
 std::ostream& operator<<(std::ostream& out, const ForkchoiceState& forkchoice_state);
 std::ostream& operator<<(std::ostream& out, const PayloadAttributes& payload_attribute);
+std::ostream& operator<<(std::ostream& out, const ForkchoiceUpdatedRequest& forkchoice_updated_request);
+std::ostream& operator<<(std::ostream& out, const ForkchoiceUpdatedReply& forkchoice_updated_reply);
 std::ostream& operator<<(std::ostream& out, const TransitionConfiguration& transition_configuration);
 
 } // namespace silkrpc
