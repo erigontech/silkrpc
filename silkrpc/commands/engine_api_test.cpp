@@ -399,6 +399,68 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds only with forkchoiceStat
     context_pool_thread.join();
 }
 
+TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[silkrpc][engine_api]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    BackEndMock *backend = new BackEndMock;
+    EXPECT_CALL(*backend, engine_forkchoice_updated_v1(testing::_)).WillOnce(InvokeWithoutArgs(
+        []() -> asio::awaitable<ForkchoiceUpdatedReply> {
+            co_return ForkchoiceUpdatedReply{
+                .payload_status = PayloadStatus{
+                    .status = "INVALID",
+                    .latest_valid_hash = 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32,
+                    .validation_error = "some error"
+                },
+                .payload_id = std::nullopt
+            };
+        }
+    ));
+
+    nlohmann::json reply;
+    nlohmann::json request = R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":"engine_forkchoiceUpdatedv1",
+        "params":[
+            {
+                "headBlockHash":"0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a",
+                "safeBlockHash":"0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a",
+                "finalizedBlockHash":"0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a"
+            },
+            {
+                "timestamp":"0x1",
+                "prevRandao":"0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a",
+                "suggestedFeeRecipient":"0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b"
+            }
+        ]
+    })"_json;
+    // Initialize contex pool
+    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    // Initialise components
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr(backend);
+    std::unique_ptr<ethdb::Database> database;
+    EngineRpcApiTest rpc(database, backend_ptr);
+
+    // spawn routine
+    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_forkchoice_updated_v1(
+            request,
+            reply
+        );
+    }, asio::use_future)};
+    result.get();
+    CHECK(reply ==  R"({
+        "payloadStatus":{
+            "latestValidHash":"0x0000000000000000000000000000000000000000000000000000000000000040",
+            "status":"INVALID",
+            "validationError":"some error"
+        }
+    })"_json);
+    cp.stop();
+    context_pool_thread.join();
+}
+
 TEST_CASE("handle_engine_forkchoice_updated_v1 fails with invalid amount of params", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
