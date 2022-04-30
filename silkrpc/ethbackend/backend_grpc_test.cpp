@@ -233,8 +233,7 @@ public:
     ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context, 
         const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
         // check if we have payloadattributes
-        std::cout << "here2\n";
-        // CHECK(request->has_payloadattributes());
+        CHECK(request->has_payloadattributes());
         ::remote::EnginePayloadAttributes payload_attributes_grpc = request->payloadattributes();
         ::remote::EngineForkChoiceState fork_choice_state_grpc = request->forkchoicestate();
         // check forkchoice state was converted into protobuf correctly
