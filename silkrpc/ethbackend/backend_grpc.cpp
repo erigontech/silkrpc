@@ -104,7 +104,7 @@ asio::awaitable<ForkchoiceUpdatedReply> BackEndGrpc::engine_forkchoice_updated_v
     auto req{encode_forkchoice_updated_request(forkchoice_updated_request)};
     const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
     PayloadStatus payload_status = decode_payload_status(reply.payloadstatus());
-    ForkchoiceUpdatedReply forkchoice_updated_reply {
+    ForkchoiceUpdatedReply forkchoice_updated_reply{
         .payload_status = payload_status,
         .payload_id = reply.payloadid()
     };
@@ -318,18 +318,6 @@ remote::EngineForkChoiceState BackEndGrpc::encode_forkchoice_state(const Forkcho
     return forkchoice_state_grpc;
 }
 
-ForkchoiceState BackEndGrpc::decode_forkchoice_state(const remote::EngineForkChoiceState& forkchoice_state_grpc) {
-    auto head_block_hash_256{forkchoice_state_grpc.headblockhash()};
-    auto safe_block_hash_256{forkchoice_state_grpc.safeblockhash()};
-    auto finalized_block_hash_256{forkchoice_state_grpc.finalizedblockhash()};
-
-    return ForkchoiceState {
-        .head_block_hash = bytes32_from_H256(head_block_hash_256),
-        .safe_block_hash = bytes32_from_H256(safe_block_hash_256),
-        .finalized_block_hash = bytes32_from_H256(finalized_block_hash_256)
-    };
-}
-
 remote::EnginePayloadAttributes BackEndGrpc::encode_payload_attributes(const PayloadAttributes& payload_attributes) {
     remote::EnginePayloadAttributes payload_attributes_grpc;
     // Numerical parameters
@@ -340,16 +328,6 @@ remote::EnginePayloadAttributes BackEndGrpc::encode_payload_attributes(const Pay
     payload_attributes_grpc.set_allocated_suggestedfeerecipient(H160_from_address(payload_attributes.suggested_fee_recipient));
 
     return payload_attributes_grpc;
-}
-
-PayloadAttributes BackEndGrpc::decode_payload_attributes(const remote::EnginePayloadAttributes& payload_attributes_grpc) {
-    auto prev_randao_256{payload_attributes_grpc.prevrandao()};
-
-    return PayloadAttributes{
-        .timestamp = payload_attributes_grpc.timestamp(),
-        .prev_randao = bytes32_from_H256(prev_randao_256),
-        .suggested_fee_recipient = address_from_H160(payload_attributes_grpc.suggestedfeerecipient())
-    };
 }
 
 remote::EngineForkChoiceUpdatedRequest BackEndGrpc::encode_forkchoice_updated_request(const ForkchoiceUpdatedRequest& forkchoice_updated_request) {
