@@ -120,7 +120,8 @@ public:
     ::grpc::Status EngineNewPayloadV1(::grpc::ServerContext* context, const ::types::ExecutionPayload* request, ::remote::EnginePayloadStatus* response) override {
         return ::grpc::Status::OK;
     }
-    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context, const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
+    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context,
+        const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
         return ::grpc::Status::OK;
     }
 };
@@ -149,7 +150,8 @@ public:
         return ::grpc::Status::CANCELLED;
     }
 
-    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context, const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
+    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context,
+        const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
         return ::grpc::Status::CANCELLED;
     }
 };
@@ -228,7 +230,8 @@ public:
         return ::grpc::Status::OK;
     }
 
-    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context, const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
+    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context, 
+        const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
         // check if we have payloadattributes
         std::cout << "here2\n";
         // CHECK(request->has_payloadattributes());
