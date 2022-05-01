@@ -100,14 +100,18 @@ asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPaylo
 
 asio::awaitable<ForkchoiceUpdatedReply> BackEndGrpc::engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request) {
     const auto start_time = clock_time::now();
-    EngineForkChoiceUpdatedV1Awaitable npc_awaitable{executor_, stub_, queue_};
+    EngineForkChoiceUpdatedV1Awaitable fcu_awaitable{executor_, stub_, queue_};
     auto req{encode_forkchoice_updated_request(forkchoice_updated_request)};
-    const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
+    const auto reply = co_await fcu_awaitable.async_call(req, asio::use_awaitable);
     PayloadStatus payload_status = decode_payload_status(reply.payloadstatus());
     ForkchoiceUpdatedReply forkchoice_updated_reply{
         .payload_status = payload_status,
-        .payload_id = reply.payloadid()
+        .payload_id = std::nullopt
     };
+    // set payload id (if there is one)
+    if (reply.payloadid() != 0) {
+        forkchoice_updated_reply.payload_id = reply.payloadid();
+    }
     SILKRPC_DEBUG << "BackEnd::engine_forkchoice_updated_v1 data=" << payload_status << " t=" << clock_time::since(start_time) << "\n";
     co_return forkchoice_updated_reply;
 }
@@ -340,6 +344,7 @@ remote::EngineForkChoiceUpdatedRequest BackEndGrpc::encode_forkchoice_updated_re
             BackEndGrpc::encode_payload_attributes(forkchoice_updated_request.payload_attributes.value());
         forkchoice_updated_request_grpc.set_allocated_payloadattributes(&payload_attributes_grpc);
     }
+    std::cout <<"done encoding\n";
     return forkchoice_updated_request_grpc;
 }
 
