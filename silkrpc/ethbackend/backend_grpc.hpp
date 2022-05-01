@@ -83,7 +83,7 @@ using EngineNewPayloadV1Client = AsyncUnaryClient<
     &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineNewPayloadV1
 >;
 
-using EngineForkchoiceUpdateV1Client = AsyncUnaryClient<
+using EngineForkChoiceUpdatedV1Client = AsyncUnaryClient<
     ::remote::ETHBACKEND::StubInterface,
     ::remote::EngineForkChoiceUpdatedRequest,
     ::remote::EngineForkChoiceUpdatedReply,
@@ -146,9 +146,9 @@ using EngineNewPayloadV1Awaitable = unary_awaitable<
     ::remote::EnginePayloadStatus
 >;
 
-using EngineForkchoiceUpdatedV1Awaitable = unary_awaitable<
+using EngineForkChoiceUpdatedV1Awaitable = unary_awaitable<
     asio::io_context::executor_type,
-    EngineForkchoiceUpdateV1Client,
+    EngineForkChoiceUpdatedV1Client,
     ::remote::ETHBACKEND::StubInterface,
     ::remote::EngineForkChoiceUpdatedRequest,
     ::remote::EngineForkChoiceUpdatedReply

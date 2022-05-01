@@ -149,7 +149,6 @@ public:
     ::grpc::Status EngineNewPayloadV1(::grpc::ServerContext* context, const ::types::ExecutionPayload* request, ::remote::EnginePayloadStatus* response) override {
         return ::grpc::Status::CANCELLED;
     }
-
     ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context,
         const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
         return ::grpc::Status::CANCELLED;
