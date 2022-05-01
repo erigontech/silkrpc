@@ -229,7 +229,7 @@ public:
         return ::grpc::Status::OK;
     }
 
-    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context, 
+    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context,
         const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
         // check if we have payloadattributes
         CHECK(request->has_payloadattributes());
@@ -238,7 +238,7 @@ public:
         // check forkchoice state was converted into protobuf correctly
         CHECK(h256_equal_bytes32(fork_choice_state_grpc.headblockhash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
         CHECK(h256_equal_bytes32(fork_choice_state_grpc.safeblockhash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
-        CHECK(h256_equal_bytes32(fork_choice_state_grpc.finalizedblockhash(),0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
+        CHECK(h256_equal_bytes32(fork_choice_state_grpc.finalizedblockhash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
         // check if payload attributes was converted into protobuf correctly
         CHECK(payload_attributes_grpc.timestamp() == 0x1);
         CHECK(h256_equal_bytes32(payload_attributes_grpc.prevrandao(), 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32));
