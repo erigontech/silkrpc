@@ -1,5 +1,5 @@
 /*
-   Copyright 2021 The Silkrpc Authors
+   Copyright 2022 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,9 +14,10 @@
    limitations under the License.
 */
 
-#include "evm_debug.hpp"
+#include "evm_trace.hpp"
 
 #include <string>
+#include <utility>
 
 #include <asio/co_spawn.hpp>
 #include <asio/thread_pool.hpp>
@@ -31,7 +32,7 @@
 #include <silkrpc/ethdb/tables.hpp>
 #include <silkrpc/types/transaction.hpp>
 
-namespace silkrpc::debug {
+namespace silkrpc::trace {
 
 using Catch::Matchers::Message;
 using evmc::literals::operator""_address;
@@ -53,7 +54,7 @@ static silkworm::Bytes kConfigValue{*silkworm::from_hex(
     "223a302c22697374616e62756c426c6f636b223a313536313635312c226265726c696e426c6f636b223a343436303634342c226c6f6e646f6e"
     "426c6f636b223a353036323630352c22636c69717565223a7b22706572696f64223a31352c2265706f6368223a33303030307d7d")};
 
-class EvmDebugMockDatabaseReader : public core::rawdb::DatabaseReader {
+class EvmTraceMockDatabaseReader : public core::rawdb::DatabaseReader {
   public:
     MOCK_CONST_METHOD2(get, asio::awaitable<KeyValue>(const std::string&, const silkworm::ByteView&));
     MOCK_CONST_METHOD2(get_one, asio::awaitable<silkworm::Bytes>(const std::string&, const silkworm::ByteView&));
@@ -62,7 +63,7 @@ class EvmDebugMockDatabaseReader : public core::rawdb::DatabaseReader {
     MOCK_CONST_METHOD3(for_prefix, asio::awaitable<void>(const std::string&, const silkworm::ByteView&, core::rawdb::Walker));
 };
 
-TEST_CASE("DebugExecutor::execute call 1") {
+TEST_CASE("TraceCallExecutor::execute call 1") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -114,7 +115,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
     static silkworm::Bytes kPlainStateKey1{*silkworm::from_hex("e0a2bd4258d2768837baa26a28fe71dc079f84c7")};
     static silkworm::Bytes kPlainStateKey2{*silkworm::from_hex("52728289eba496b6080d57d0250a90663a07e556")};
 
-    EvmDebugMockDatabaseReader db_reader;
+    EvmTraceMockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -156,7 +157,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
         block.header.number = block_number;
 
         asio::io_context& io_context = context_pool.get_io_context();
-        DebugExecutor executor{context_pool.get_context(), db_reader, workers};
+        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers};
         auto execution_result = asio::co_spawn(io_context, executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -165,7 +166,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
         pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == true);
-        CHECK(result.pre_check_error.value() == "tracing failed: intrinsic gas too low: have 50000, want 53072");
+        CHECK(result.pre_check_error.value() == "intrinsic gas too low: have 50000, want 53072");
     }
 
     SECTION("Call: full output") {
@@ -204,7 +205,8 @@ TEST_CASE("DebugExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        DebugExecutor executor{context_pool.get_context(), db_reader, workers};
+        TraceConfig config{true, true, true};
+        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
         asio::io_context& io_context = context_pool.get_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
@@ -214,61 +216,88 @@ TEST_CASE("DebugExecutor::execute call 1") {
         pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == false);
-
-        CHECK(result.debug_trace == R"({
-            "failed": false,
-            "gas": 75178,
-            "returnValue": "",
-            "structLogs": [
-                {
-                    "depth": 1,
-                    "gas": 65864,
-                    "gasCost": 3,
-                    "memory": [],
-                    "op": "PUSH1",
-                    "pc": 0,
-                    "stack": []
+        CHECK(result.traces == R"({
+            "output": "0x",
+            "stateDiff": {
+            },
+            "trace": {
+                "subtraces": 0,
+                "action": {
+                    "from": "0x0000000000000000000000000000000000000000",
+                    "gas": 0,
+                    "value": "0x"
                 },
-                {
-                    "depth": 1,
-                    "gas": 65861,
-                    "gasCost": 3,
-                    "memory": [],
-                    "op": "PUSH1",
-                    "pc": 2,
-                    "stack": [
-                        "0x2a"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 65858,
-                    "gasCost": 22100,
-                    "memory": [],
-                    "op": "SSTORE",
-                    "pc": 4,
-                    "stack": [
-                        "0x2a",
-                        "0x0"
-                    ],
-                    "storage": {
-                        "0000000000000000000000000000000000000000000000000000000000000000": "000000000000000000000000000000000000000000000000000000000000002a"
+                "traceAddress": [],
+                "type": ""
+            },
+            "vmTrace": {
+                "code": "0x602a60005500",
+                "ops": [
+                    {
+                        "cost": 3,
+                        "ex": {
+                            "mem": null,
+                            "push": [
+                                "0x2a"
+                            ],
+                            "store": null,
+                            "used": 65861
+                        },
+                        "idx": "0",
+                        "op": "PUSH1",
+                        "pc": 0,
+                        "sub": null
+                    },
+                    {
+                        "cost": 3,
+                        "ex": {
+                            "mem": null,
+                            "push": [
+                                "0x0"
+                            ],
+                            "store": null,
+                            "used": 65858
+                        },
+                        "idx": "1",
+                        "op": "PUSH1",
+                        "pc": 2,
+                        "sub": null
+                    },
+                    {
+                        "cost": 22100,
+                        "ex": {
+                            "mem": null,
+                            "push": [],
+                            "store": {
+                                "key": "0x0",
+                                "val": "0x2a"
+                            },
+                            "used": 43758
+                        },
+                        "idx": "2",
+                        "op": "SSTORE",
+                        "pc": 4,
+                        "sub": null
+                    },
+                    {
+                        "cost": 0,
+                        "ex": {
+                            "mem": null,
+                            "push": [],
+                            "store": null,
+                            "used": 43758
+                        },
+                        "idx": "3",
+                        "op": "STOP",
+                        "pc": 5,
+                        "sub": null
                     }
-                },
-                {
-                    "depth": 1,
-                    "gas": 43758,
-                    "gasCost": 0,
-                    "memory": [],
-                    "op": "STOP",
-                    "pc": 5,
-                    "stack": []
-                }
-            ]
+                ]
+            }
         })"_json);
     }
 
-    SECTION("Call: no stack") {
+    SECTION("Call: no vmTrace") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
@@ -304,8 +333,73 @@ TEST_CASE("DebugExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        DebugConfig config{false, false, true};
-        DebugExecutor executor{context_pool.get_context(), db_reader, workers, config};
+        TraceConfig config{false, true, true};
+        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
+        asio::io_context& io_context = context_pool.get_io_context();
+        auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
+        auto result = execution_result.get();
+
+        context_pool.stop();
+        io_context.stop();
+        pool_thread.join();
+
+        CHECK(result.pre_check_error.has_value() == false);
+        CHECK(result.traces == R"({
+            "output": "0x",
+            "stateDiff": {
+            },
+            "trace": {
+                "subtraces": 0,
+                "action": {
+                    "from": "0x0000000000000000000000000000000000000000",
+                    "gas": 0,
+                    "value": "0x"
+                },
+                "traceAddress": [],
+                "type": ""
+            },
+            "vmTrace": null
+        })"_json);
+    }
+
+    SECTION("Call: no trace") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+                co_return kZeroHeader;
+            }));
+        EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{kConfigKey, kConfigValue};
+            }));
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey}, silkworm::ByteView{kAccountChangeSetSubkey}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+                co_return kAccountChangeSetValue;
+            }));
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
+            }));
+        EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey2}))
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+                co_return silkworm::Bytes{};
+            }));
+
+        const auto block_number = 5'405'095; // 0x5279A7
+        silkrpc::Call call;
+        call.from = 0xe0a2Bd4258D2768837BAa26A28fE71Dc079f84c7_address;
+        call.gas = 118'936;
+        call.gas_price = 7;
+        call.data = *silkworm::from_hex("602a60005500");
+
+        silkworm::Block block{};
+        block.header.number = block_number;
+
+        TraceConfig config{true, false, true};
+        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
         asio::io_context& io_context = context_pool.get_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
@@ -316,51 +410,79 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
         CHECK(result.pre_check_error.has_value() == false);
 
-        CHECK(result.debug_trace == R"({
-            "failed": false,
-            "gas": 75178,
-            "returnValue": "",
-            "structLogs": [
-                {
-                    "depth": 1,
-                    "gas": 65864,
-                    "gasCost": 3,
-                    "memory": [],
-                    "op": "PUSH1",
-                    "pc": 0
-                },
-                {
-                    "depth": 1,
-                    "gas": 65861,
-                    "gasCost": 3,
-                    "memory": [],
-                    "op": "PUSH1",
-                    "pc": 2
-                },
-                {
-                    "depth": 1,
-                    "gas": 65858,
-                    "gasCost": 22100,
-                    "memory": [],
-                    "op": "SSTORE",
-                    "pc": 4,
-                    "storage": {
-                        "0000000000000000000000000000000000000000000000000000000000000000": "000000000000000000000000000000000000000000000000000000000000002a"
+        CHECK(result.traces == R"({
+            "output": "0x",
+            "stateDiff": {
+            },
+            "trace": null,
+            "vmTrace": {
+                "code": "0x602a60005500",
+                "ops": [
+                    {
+                        "cost": 3,
+                        "ex": {
+                            "mem": null,
+                            "push": [
+                                "0x2a"
+                            ],
+                            "store": null,
+                            "used": 65861
+                        },
+                        "idx": "0",
+                        "op": "PUSH1",
+                        "pc": 0,
+                        "sub": null
+                    },
+                    {
+                        "cost": 3,
+                        "ex": {
+                            "mem": null,
+                            "push": [
+                                "0x0"
+                            ],
+                            "store": null,
+                            "used": 65858
+                        },
+                        "idx": "1",
+                        "op": "PUSH1",
+                        "pc": 2,
+                        "sub": null
+                    },
+                    {
+                        "cost": 22100,
+                        "ex": {
+                            "mem": null,
+                            "push": [],
+                            "store": {
+                                "key": "0x0",
+                                "val": "0x2a"
+                            },
+                            "used": 43758
+                        },
+                        "idx": "2",
+                        "op": "SSTORE",
+                        "pc": 4,
+                        "sub": null
+                    },
+                    {
+                        "cost": 0,
+                        "ex": {
+                            "mem": null,
+                            "push": [],
+                            "store": null,
+                            "used": 43758
+                        },
+                        "idx": "3",
+                        "op": "STOP",
+                        "pc": 5,
+                        "sub": null
                     }
-                },
-                {
-                    "depth": 1,
-                    "gas": 43758,
-                    "gasCost": 0,
-                    "memory": [],
-                    "op": "STOP",
-                    "pc": 5
-                }
-            ]
+                ]
+            }
         })"_json);
     }
 
-    SECTION("Call: no memory") {
+    SECTION("Call: no stateDiff") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
@@ -396,8 +518,8 @@ TEST_CASE("DebugExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        DebugConfig config{false, true, false};
-        DebugExecutor executor{context_pool.get_context(), db_reader, workers, config};
+        TraceConfig config{true, true, false};
+        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
         asio::io_context& io_context = context_pool.get_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
@@ -407,57 +529,87 @@ TEST_CASE("DebugExecutor::execute call 1") {
         pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == false);
-
-        CHECK(result.debug_trace == R"({
-            "failed": false,
-            "gas": 75178,
-            "returnValue": "",
-            "structLogs": [
-                {
-                    "depth": 1,
-                    "gas": 65864,
-                    "gasCost": 3,
-                    "op": "PUSH1",
-                    "pc": 0,
-                    "stack": []
+        CHECK(result.traces == R"({
+            "output": "0x",
+            "stateDiff": null,
+            "trace": {
+                "subtraces": 0,
+                "action": {
+                    "from": "0x0000000000000000000000000000000000000000",
+                    "gas": 0,
+                    "value": "0x"
                 },
-                {
-                    "depth": 1,
-                    "gas": 65861,
-                    "gasCost": 3,
-                    "op": "PUSH1",
-                    "pc": 2,
-                    "stack": [
-                        "0x2a"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 65858,
-                    "gasCost": 22100,
-                    "op": "SSTORE",
-                    "pc": 4,
-                    "stack": [
-                        "0x2a",
-                        "0x0"
-                    ],
-                    "storage": {
-                        "0000000000000000000000000000000000000000000000000000000000000000": "000000000000000000000000000000000000000000000000000000000000002a"
+                "traceAddress": [],
+                "type": ""
+            },
+            "vmTrace": {
+                "code": "0x602a60005500",
+                "ops": [
+                    {
+                        "cost": 3,
+                        "ex": {
+                            "mem": null,
+                            "push": [
+                                "0x2a"
+                            ],
+                            "store": null,
+                            "used": 65861
+                        },
+                        "idx": "0",
+                        "op": "PUSH1",
+                        "pc": 0,
+                        "sub": null
+                    },
+                    {
+                        "cost": 3,
+                        "ex": {
+                            "mem": null,
+                            "push": [
+                                "0x0"
+                            ],
+                            "store": null,
+                            "used": 65858
+                        },
+                        "idx": "1",
+                        "op": "PUSH1",
+                        "pc": 2,
+                        "sub": null
+                    },
+                    {
+                        "cost": 22100,
+                        "ex": {
+                            "mem": null,
+                            "push": [],
+                            "store": {
+                                "key": "0x0",
+                                "val": "0x2a"
+                            },
+                            "used": 43758
+                        },
+                        "idx": "2",
+                        "op": "SSTORE",
+                        "pc": 4,
+                        "sub": null
+                    },
+                    {
+                        "cost": 0,
+                        "ex": {
+                            "mem": null,
+                            "push": [],
+                            "store": null,
+                            "used": 43758
+                        },
+                        "idx": "3",
+                        "op": "STOP",
+                        "pc": 5,
+                        "sub": null
                     }
-                },
-                {
-                    "depth": 1,
-                    "gas": 43758,
-                    "gasCost": 0,
-                    "op": "STOP",
-                    "pc": 5,
-                    "stack": []
-                }
-            ]
+                ]
+            }
         })"_json);
     }
 
-    SECTION("Call: no storage") {
+    SECTION("Call: no vmTrace, trace and stateDiff") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
@@ -493,8 +645,8 @@ TEST_CASE("DebugExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        DebugConfig config{true, false, false};
-        DebugExecutor executor{context_pool.get_context(), db_reader, workers, config};
+        TraceConfig config{false, false, false};
+        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
         asio::io_context& io_context = context_pool.get_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
@@ -504,144 +656,16 @@ TEST_CASE("DebugExecutor::execute call 1") {
         pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == false);
-
-        CHECK(result.debug_trace == R"({
-            "failed": false,
-            "gas": 75178,
-            "returnValue": "",
-            "structLogs": [
-                {
-                    "depth": 1,
-                    "gas": 65864,
-                    "gasCost": 3,
-                    "memory": [],
-                    "op": "PUSH1",
-                    "pc": 0,
-                    "stack": []
-                },
-                {
-                    "depth": 1,
-                    "gas": 65861,
-                    "gasCost": 3,
-                    "memory": [],
-                    "op": "PUSH1",
-                    "pc": 2,
-                    "stack": [
-                        "0x2a"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 65858,
-                    "gasCost": 22100,
-                    "memory": [],
-                    "op": "SSTORE",
-                    "pc": 4,
-                    "stack": [
-                        "0x2a",
-                        "0x0"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 43758,
-                    "gasCost": 0,
-                    "memory": [],
-                    "op": "STOP",
-                    "pc": 5,
-                    "stack": []
-                }
-            ]
-        })"_json);
-    }
-
-    SECTION("Call: no stack, memory and storage") {
-        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
-                co_return kZeroHeader;
-            }));
-        EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
-                co_return KeyValue{kConfigKey, kConfigValue};
-            }));
-        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
-                co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
-            }));
-        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey}, silkworm::ByteView{kAccountChangeSetSubkey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
-                co_return kAccountChangeSetValue;
-            }));
-        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
-                co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
-            }));
-        EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
-                co_return silkworm::Bytes{};
-            }));
-
-        const auto block_number = 5'405'095; // 0x5279A7
-        silkrpc::Call call;
-        call.from = 0xe0a2Bd4258D2768837BAa26A28fE71Dc079f84c7_address;
-        call.gas = 118'936;
-        call.gas_price = 7;
-        call.data = *silkworm::from_hex("602a60005500");
-
-        silkworm::Block block{};
-        block.header.number = block_number;
-
-        DebugConfig config{true, true, true};
-        DebugExecutor executor{context_pool.get_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.get_io_context();
-        auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
-        auto result = execution_result.get();
-
-        context_pool.stop();
-        io_context.stop();
-        pool_thread.join();
-
-        CHECK(result.pre_check_error.has_value() == false);
-
-        CHECK(result.debug_trace == R"({
-            "failed": false,
-            "gas": 75178,
-            "returnValue": "",
-            "structLogs": [
-                {
-                    "depth": 1,
-                    "gas": 65864,
-                    "gasCost": 3,
-                    "op": "PUSH1",
-                    "pc": 0
-                },
-                {
-                    "depth": 1,
-                    "gas": 65861,
-                    "gasCost": 3,
-                    "op": "PUSH1",
-                    "pc": 2
-                },
-                {
-                    "depth": 1,
-                    "gas": 65858,
-                    "gasCost": 22100,
-                    "op": "SSTORE",
-                    "pc": 4
-                },
-                {
-                    "depth": 1,
-                    "gas": 43758,
-                    "gasCost": 0,
-                    "op": "STOP",
-                    "pc": 5
-                }
-            ]
+        CHECK(result.traces == R"({
+            "output": "0x",
+            "stateDiff": null,
+            "trace": null,
+            "vmTrace": null
         })"_json);
     }
 }
 
-TEST_CASE("DebugExecutor::execute call 2") {
+TEST_CASE("TraceCallExecutor::execute call 2") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -697,7 +721,7 @@ TEST_CASE("DebugExecutor::execute call 2") {
     static silkworm::Bytes kAccountChangeSetSubkey2{*silkworm::from_hex("5e1f0c9ddbe3cb57b80c933fab5151627d7966fa")};
     static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("03010408014219564ff26a00")};
 
-    EvmDebugMockDatabaseReader db_reader;
+    EvmTraceMockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -781,7 +805,8 @@ TEST_CASE("DebugExecutor::execute call 2") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        DebugExecutor executor{context_pool.get_context(), db_reader, workers};
+        TraceConfig config{true, true, true};
+        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
         asio::io_context& io_context = context_pool.get_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
@@ -791,16 +816,29 @@ TEST_CASE("DebugExecutor::execute call 2") {
         pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == false);
-        CHECK(result.debug_trace == R"({
-            "failed": false,
-            "gas": 21004,
-            "returnValue": "",
-            "structLogs": []
+        CHECK(result.traces == R"({
+            "output": "0x",
+            "stateDiff": {
+            },
+            "trace": {
+                "subtraces": 0,
+                "action": {
+                    "from": "0x0000000000000000000000000000000000000000",
+                    "gas": 0,
+                    "value": "0x"
+                },
+                "traceAddress": [],
+                "type": ""
+            },
+            "vmTrace": {
+                "code": "0x",
+                "ops": []
+            }
         })"_json);
     }
 }
 
-TEST_CASE("DebugExecutor::execute call with error") {
+TEST_CASE("TraceCallExecutor::execute call with error") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -828,7 +866,7 @@ TEST_CASE("DebugExecutor::execute call with error") {
     static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("6951c35e335fa18c97cb207119133cd8009580cd")};
     static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("00000000005279a8")};
 
-    EvmDebugMockDatabaseReader db_reader;
+    EvmTraceMockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -924,7 +962,8 @@ TEST_CASE("DebugExecutor::execute call with error") {
     silkworm::Block block{};
     block.header.number = block_number;
 
-    DebugExecutor executor{context_pool.get_context(), db_reader, workers};
+    TraceConfig config{true, true, true};
+    TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
     asio::io_context& io_context = context_pool.get_io_context();
     auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
     auto result = execution_result.get();
@@ -934,688 +973,666 @@ TEST_CASE("DebugExecutor::execute call with error") {
     pool_thread.join();
 
     CHECK(result.pre_check_error.has_value() == false);
-    CHECK(result.debug_trace == R"({
-        "failed": true,
-        "gas": 211190,
-        "returnValue": "",
-        "structLogs": [
-            {
-                "depth": 1,
-                "gas": 156082,
-                "gasCost": 2,
-                "memory": [],
-                "op": "COINBASE",
-                "pc": 0,
-                "stack": []
+    CHECK(result.traces == R"({
+        "output": "0x",
+        "stateDiff": {
+        },
+        "trace": {
+            "subtraces": 0,
+            "action": {
+                "from": "0x0000000000000000000000000000000000000000",
+                "gas": 0,
+                "value": "0x"
             },
-            {
-                "depth": 1,
-                "error": {},
-                "gas": 156080,
-                "gasCost": 2,
-                "memory": [],
-                "op": "opcode 0x4b not defined",
-                "pc": 1,
-                "stack": [
-                    "0x0"
-                ]
-            }
-        ]
-    })"_json);
-}
-
-TEST_CASE("DebugExecutor::execute block") {
-    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
-
-    static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("daae090d53f9ed9e2e1fd25258c01bac4dd6d1c500000000000fa0a5")};
-    static silkworm::Bytes kAccountHistoryValue1{*silkworm::from_hex(
-        "0100000000000000000000003a300000020000000e0004000f0031001800000022000000eca7f4a7d3a9dea9dfa9fd1b191c301cb91cbe"
-        "1cf21cfc1c0f1d141d261d801d911da61d00440e4a485f4f5f427b537baf7bb17bb57bb97bbf7bc57bc97bd87bda7be17be47be97bfa7b"
-        "fe7b017c267c297c2c7c367c3a9d3b9d3d9d429d47a071a0a5a0aea0b4a0b8a0c3a0c9a0")};
-
-    static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("a85b4c37cd8f447848d49851a1bb06d10d410c1300000000000fa0a5")};
-    static silkworm::Bytes kAccountHistoryValue2{*silkworm::from_hex("0100000000000000000000003a300000010000000f00000010000000a5a0")};
-
-    static silkworm::Bytes kAccountChangeSetKey{*silkworm::from_hex("00000000000fa0a5")};
-    static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("daae090d53f9ed9e2e1fd25258c01bac4dd6d1c5")};
-    static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("030127080334e1d62a9e3440")};
-
-    static silkworm::Bytes kAccountChangeSetSubkey2{*silkworm::from_hex("a85b4c37cd8f447848d49851a1bb06d10d410c13")};
-    static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("")};
-
-    EvmDebugMockDatabaseReader db_reader;
-    asio::thread_pool workers{1};
-
-    ChannelFactory channel_factory = []() {
-        return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-    };
-    ContextPool context_pool{1, channel_factory};
-    auto pool_thread = std::thread([&]() { context_pool.run(); });
-
-    EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
-            SILKRPC_LOG << "EXPECT_CALL::get_one "
-                << " table: " << db::table::kCanonicalHashes
-                << " key: " << silkworm::to_hex(kZeroKey)
-                << " value: " << silkworm::to_hex(kZeroHeader)
-                << "\n";
-            co_return kZeroHeader;
-        }));
-    EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
-            SILKRPC_LOG << "EXPECT_CALL::get "
-                << " table: " << db::table::kConfig
-                << " key: " << silkworm::to_hex(kConfigKey)
-                << " value: " << silkworm::to_hex(kConfigValue)
-                << "\n";
-            co_return KeyValue{kConfigKey, kConfigValue};
-        }));
-    EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
-            SILKRPC_LOG << "EXPECT_CALL::get "
-                << " table: " << db::table::kAccountHistory
-                << " key: " << silkworm::to_hex(kAccountHistoryKey1)
-                << " value: " << silkworm::to_hex(kAccountHistoryValue1)
-                << "\n";
-            co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
-        }));
-    EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
-        .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
-            SILKRPC_LOG << "EXPECT_CALL::get "
-                << " table: " << db::table::kAccountHistory
-                << " key: " << silkworm::to_hex(kAccountHistoryKey2)
-                << " value: " << silkworm::to_hex(kAccountHistoryValue2)
-                << "\n";
-            co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
-        }));
-    EXPECT_CALL(db_reader,
-            get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey},
-                            silkworm::ByteView{kAccountChangeSetSubkey1}))
-        .WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<std::optional<silkworm::Bytes>> {
-            SILKRPC_LOG << "EXPECT_CALL::get_both_range "
-                << " table: " << db::table::kPlainAccountChangeSet
-                << " key: " << silkworm::to_hex(kAccountChangeSetKey)
-                << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey1)
-                << " value: " << silkworm::to_hex(kAccountChangeSetValue1)
-                << "\n";
-                co_return kAccountChangeSetValue1;
-            }));
-    EXPECT_CALL(db_reader,
-            get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey},
-                            silkworm::ByteView{kAccountChangeSetSubkey2}))
-        .WillRepeatedly(InvokeWithoutArgs(
-            []() -> asio::awaitable<std::optional<silkworm::Bytes>> {
-            SILKRPC_LOG << "EXPECT_CALL::get_both_range "
-                << " table: " << db::table::kPlainAccountChangeSet
-                << " key: " << silkworm::to_hex(kAccountChangeSetKey)
-                << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey2)
-                << " value: " << silkworm::to_hex(kAccountChangeSetValue2)
-                << "\n";
-                co_return kAccountChangeSetValue2;
-            }));
-
-    uint64_t block_number = 1'024'165;
-
-    silkworm::Block block{};
-    block.header.number = block_number;
-
-    block.transactions.resize(1);
-    auto& transaction = block.transactions.at(0);
-    transaction.from = 0xdaae090d53f9ed9e2e1fd25258c01bac4dd6d1c5_address;
-    transaction.gas_limit = 4700000;
-    transaction.max_fee_per_gas = 1'000'000'000;
-    transaction.max_priority_fee_per_gas = 1'000'000'000;
-    transaction.data = *silkworm::from_hex(
-        "60806040526000805534801561001457600080fd5b5060c6806100236000396000f3fe6080604052348015600f57600080fd5b50600436"
-        "1060325760003560e01c806360fe47b11460375780636d4ce63c146062575b600080fd5b606060048036036020811015604b57600080fd"
-        "5b8101908080359060200190929190505050607e565b005b60686088565b6040518082815260200191505060405180910390f35b806000"
-        "8190555050565b6000805490509056fea265627a7a72305820ca7603d2458ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60"
-        "af2c64736f6c634300050a0032");
-
-    DebugExecutor executor{context_pool.get_context(), db_reader, workers};
-
-    asio::io_context& io_context = context_pool.get_io_context();
-    auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block), asio::use_future);
-    auto result = execution_result.get();
-
-    context_pool.stop();
-    io_context.stop();
-    pool_thread.join();
-
-    CHECK(result == R"([
-        {
-            "failed": false,
-            "gas": 112583,
-            "returnValue": "6080604052348015600f57600080fd5b506004361060325760003560e01c806360fe47b11460375780636d4ce63c146062575b600080fd5b606060048036036020811015604b57600080fd5b8101908080359060200190929190505050607e565b005b60686088565b6040518082815260200191505060405180910390f35b8060008190555050565b6000805490509056fea265627a7a72305820ca7603d2458ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60af2c64736f6c634300050a0032",
-            "structLogs": [
+            "traceAddress": [],
+            "type": ""
+        },
+        "vmTrace": {
+            "code": "0x414bf3890000000000000000000000009d381f0b1637475f133c92d9b9fdc5493ae19b630000000000000000000000009b73fc193bfa16abe18d1ea30734e4a6444a753f0000000000000000000000000000000000000000000000000000000000002710000000000000000000000000578f0a154b23be77fc2033197fbc775637648ad400000000000000000000000000000000000000000000000000000000612ba19c00000000000000000000000000000000000000000001a784379d99db4200000000000000000000000000000000000000000000000002cdc48e6cca575707722c0000000000000000000000000000000000000000000000000000000000000000",
+            "ops": [
                 {
-                    "depth": 1,
-                    "gas": 4632116,
-                    "gasCost": 3,
-                    "memory": [],
-                    "op": "PUSH1",
+                    "cost": 2,
+                    "ex": {
+                        "mem": null,
+                        "push": [],
+                        "store": null,
+                        "used": 156080
+                    },
+                    "idx": "0",
+                    "op": "COINBASE",
                     "pc": 0,
-                    "stack": []
+                    "sub": null
                 },
                 {
-                    "depth": 1,
-                    "gas": 4632113,
-                    "gasCost": 3,
-                    "memory": [],
-                    "op": "PUSH1",
-                    "pc": 2,
-                    "stack": [
-                        "0x80"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4632110,
-                    "gasCost": 12,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000"
-                    ],
-                    "op": "MSTORE",
-                    "pc": 4,
-                    "stack": [
-                        "0x80",
-                        "0x40"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4632098,
-                    "gasCost": 3,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "PUSH1",
-                    "pc": 5,
-                    "stack": []
-                },
-                {
-                    "depth": 1,
-                    "gas": 4632095,
-                    "gasCost": 3,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "DUP1",
-                    "pc": 7,
-                    "stack": [
-                        "0x0"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4632092,
-                    "gasCost": 5000,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "SSTORE",
-                    "pc": 8,
-                    "stack": [
-                        "0x0",
-                        "0x0"
-                    ],
-                    "storage": {
-                        "0000000000000000000000000000000000000000000000000000000000000000": "0000000000000000000000000000000000000000000000000000000000000000"
-                    }
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627092,
-                    "gasCost": 2,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "CALLVALUE",
-                    "pc": 9,
-                    "stack": []
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627090,
-                    "gasCost": 3,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "DUP1",
-                    "pc": 10,
-                    "stack": [
-                        "0x0"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627087,
-                    "gasCost": 3,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "ISZERO",
-                    "pc": 11,
-                    "stack": [
-                        "0x0",
-                        "0x0"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627084,
-                    "gasCost": 3,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "PUSH2",
-                    "pc": 12,
-                    "stack": [
-                        "0x0",
-                        "0x1"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627081,
-                    "gasCost": 10,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "JUMPI",
-                    "pc": 15,
-                    "stack": [
-                        "0x0",
-                        "0x1",
-                        "0x14"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627071,
-                    "gasCost": 1,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "JUMPDEST",
-                    "pc": 20,
-                    "stack": [
-                        "0x0"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627070,
-                    "gasCost": 2,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "POP",
-                    "pc": 21,
-                    "stack": [
-                        "0x0"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627068,
-                    "gasCost": 3,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "PUSH1",
-                    "pc": 22,
-                    "stack": []
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627065,
-                    "gasCost": 3,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "DUP1",
-                    "pc": 24,
-                    "stack": [
-                        "0xc6"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627062,
-                    "gasCost": 3,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "PUSH2",
-                    "pc": 25,
-                    "stack": [
-                        "0xc6",
-                        "0xc6"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627059,
-                    "gasCost": 3,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080"
-                    ],
-                    "op": "PUSH1",
-                    "pc": 28,
-                    "stack": [
-                        "0xc6",
-                        "0xc6",
-                        "0x23"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627056,
-                    "gasCost": 36,
-                    "memory": [
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000080",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000",
-                        "0000000000000000000000000000000000000000000000000000000000000000"
-                    ],
-                    "op": "CODECOPY",
-                    "pc": 30,
-                    "stack": [
-                        "0xc6",
-                        "0xc6",
-                        "0x23",
-                        "0x0"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627020,
-                    "gasCost": 3,
-                    "memory": [
-                        "6080604052348015600f57600080fd5b506004361060325760003560e01c8063",
-                        "60fe47b11460375780636d4ce63c146062575b600080fd5b6060600480360360",
-                        "20811015604b57600080fd5b8101908080359060200190929190505050607e56",
-                        "5b005b60686088565b6040518082815260200191505060405180910390f35b80",
-                        "60008190555050565b6000805490509056fea265627a7a72305820ca7603d245",
-                        "8ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60af2c64736f6c63",
-                        "4300050a00320000000000000000000000000000000000000000000000000000"
-                    ],
-                    "op": "PUSH1",
-                    "pc": 31,
-                    "stack": [
-                        "0xc6"
-                    ]
-                },
-                {
-                    "depth": 1,
-                    "gas": 4627017,
-                    "gasCost": 0,
-                    "memory": [
-                        "6080604052348015600f57600080fd5b506004361060325760003560e01c8063",
-                        "60fe47b11460375780636d4ce63c146062575b600080fd5b6060600480360360",
-                        "20811015604b57600080fd5b8101908080359060200190929190505050607e56",
-                        "5b005b60686088565b6040518082815260200191505060405180910390f35b80",
-                        "60008190555050565b6000805490509056fea265627a7a72305820ca7603d245",
-                        "8ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60af2c64736f6c63",
-                        "4300050a00320000000000000000000000000000000000000000000000000000"
-                    ],
-                    "op": "RETURN",
-                    "pc": 33,
-                    "stack": [
-                        "0xc6",
-                        "0x0"
-                    ]
+                    "cost": 2,
+                    "ex": {
+                        "mem": null,
+                        "push": [],
+                        "store": null,
+                        "used": 156078
+                    },
+                    "idx": "1",
+                    "op": "opcode 0x4b not defined",
+                    "pc": 1,
+                    "sub": null
                 }
             ]
         }
-    ])"_json);
+    })"_json);
 }
 
-
-TEST_CASE("DebugTrace json serialization") {
+TEST_CASE("VmTrace json serialization") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    DebugLog log;
-    log.pc = 1;
-    log.op = "PUSH1";
-    log.gas = 3;
-    log.gas_cost = 4;
-    log.depth = 1;
-    log.error = false;
-    log.memory.push_back("0000000000000000000000000000000000000000000000000000000000000080");
-    log.stack.push_back("0x80");
-    log.storage["804292fe56769f4b9f0e91cf85875f67487cd9e85a084cbba2188be4466c4f23"] = "0000000000000000000000000000000000000000000000000000000000000008";
+    TraceEx trace_ex;
+    trace_ex.used = 5000;
+    trace_ex.stack.push_back("0xdeadbeaf");
+    trace_ex.memory = TraceMemory{10, 0, "data"};
+    trace_ex.storage = TraceStorage{"key", "value"};
 
-    SECTION("DebugTrace: no memory, stack and storage") {
-        DebugTrace debug_trace;
-        debug_trace.failed = false;
-        debug_trace.gas = 20;
-        debug_trace.return_value = "deadbeaf";
-        debug_trace.debug_logs.push_back(log);
+    TraceOp trace_op;
+    trace_op.gas_cost = 42;
+    trace_op.trace_ex = trace_ex;
+    trace_op.idx = 12;
+    trace_op.op_name = "PUSH1";
+    trace_op.pc = 27;
+    VmTrace vm_trace;
 
-        debug_trace.debug_config.disableStorage = true;
-        debug_trace.debug_config.disableMemory = true;
-        debug_trace.debug_config.disableStack = true;
+    vm_trace.code = "0xdeadbeaf";
+    vm_trace.ops.push_back(trace_op);
 
-        CHECK(debug_trace == R"({
-            "failed": false,
-            "gas": 20,
-            "returnValue": "deadbeaf",
-            "structLogs": [{
-                "depth": 1,
-                "gas": 3,
-                "gasCost": 4,
-                "op": "PUSH1",
-                "pc": 1
-            }]
-        })"_json);
-    }
-
-    SECTION("DebugTrace: only memory") {
-        DebugTrace debug_trace;
-        debug_trace.failed = false;
-        debug_trace.gas = 20;
-        debug_trace.return_value = "deadbeaf";
-        debug_trace.debug_logs.push_back(log);
-
-        debug_trace.debug_config.disableStorage = true;
-        debug_trace.debug_config.disableMemory = false;
-        debug_trace.debug_config.disableStack = true;
-
-        CHECK(debug_trace == R"({
-            "failed": false,
-            "gas": 20,
-            "returnValue": "deadbeaf",
-            "structLogs": [{
-                "depth": 1,
-                "gas": 3,
-                "gasCost": 4,
-                "op": "PUSH1",
-                "pc": 1,
-                "memory":["0000000000000000000000000000000000000000000000000000000000000080"]
-            }]
-        })"_json);
-    }
-
-    SECTION("DebugTrace: only stack") {
-        DebugTrace debug_trace;
-        debug_trace.failed = false;
-        debug_trace.gas = 20;
-        debug_trace.return_value = "deadbeaf";
-        debug_trace.debug_logs.push_back(log);
-
-        debug_trace.debug_config.disableStorage = true;
-        debug_trace.debug_config.disableMemory = true;
-        debug_trace.debug_config.disableStack = false;
-
-        CHECK(debug_trace == R"({
-            "failed": false,
-            "gas": 20,
-            "returnValue": "deadbeaf",
-            "structLogs": [{
-                "depth": 1,
-                "gas": 3,
-                "gasCost": 4,
-                "op": "PUSH1",
-                "pc": 1,
-                "stack":["0x80"]
-            }]
-        })"_json);
-    }
-
-    SECTION("DebugTrace: only storage") {
-        DebugTrace debug_trace;
-        debug_trace.failed = false;
-        debug_trace.gas = 20;
-        debug_trace.return_value = "deadbeaf";
-        debug_trace.debug_logs.push_back(log);
-
-        debug_trace.debug_config.disableStorage = false;
-        debug_trace.debug_config.disableMemory = true;
-        debug_trace.debug_config.disableStack = true;
-
-        CHECK(debug_trace == R"({
-            "failed": false,
-            "gas": 20,
-            "returnValue": "deadbeaf",
-            "structLogs": [{
-                "depth": 1,
-                "gas": 3,
-                "gasCost": 4,
-                "op": "PUSH1",
-                "pc": 1,
-                "storage": {
-                    "804292fe56769f4b9f0e91cf85875f67487cd9e85a084cbba2188be4466c4f23": "0000000000000000000000000000000000000000000000000000000000000008"
+    SECTION("VmTrace") {
+        CHECK(vm_trace == R"({
+            "code": "0xdeadbeaf",
+            "ops": [
+                {
+                    "cost":42,
+                    "ex":{
+                        "mem":{
+                            "data":"data",
+                            "off":10
+                        },
+                        "push":["0xdeadbeaf"],
+                        "store":{
+                            "key":"key",
+                            "val":"value"
+                        },
+                        "used":5000
+                    },
+                    "idx":"12",
+                    "op":"PUSH1",
+                    "pc":27,
+                    "sub":null
                 }
-            }]
+            ]
         })"_json);
     }
-
-    SECTION("DebugTrace: full") {
-        DebugTrace debug_trace;
-        debug_trace.failed = false;
-        debug_trace.gas = 20;
-        debug_trace.return_value = "deadbeaf";
-        debug_trace.debug_logs.push_back(log);
-
-        debug_trace.debug_config.disableStorage = false;
-        debug_trace.debug_config.disableMemory = false;
-        debug_trace.debug_config.disableStack = false;
-
-        CHECK(debug_trace == R"({
-            "failed": false,
-            "gas": 20,
-            "returnValue": "deadbeaf",
-            "structLogs": [{
-                "depth": 1,
-                "gas": 3,
-                "gasCost": 4,
-                "op": "PUSH1",
-                "pc": 1,
-                "stack":["0x80"],
-                "memory":["0000000000000000000000000000000000000000000000000000000000000080"],
-                "storage": {
-                    "804292fe56769f4b9f0e91cf85875f67487cd9e85a084cbba2188be4466c4f23": "0000000000000000000000000000000000000000000000000000000000000008"
-                }
-            }]
+    SECTION("TraceOp") {
+        CHECK(trace_op == R"({
+            "cost":42,
+            "ex":{
+                "mem":{
+                    "data":"data",
+                    "off":10
+                },
+                "push":["0xdeadbeaf"],
+                "store":{
+                    "key":"key",
+                    "val":"value"
+                },
+                "used":5000
+            },
+            "idx":"12",
+            "op":"PUSH1",
+            "pc":27,
+            "sub":null
         })"_json);
     }
-
-    SECTION("DebugTrace vector") {
-        DebugTrace debug_trace;
-        debug_trace.failed = false;
-        debug_trace.gas = 20;
-        debug_trace.return_value = "deadbeaf";
-        debug_trace.debug_logs.push_back(log);
-
-        debug_trace.debug_config.disableStorage = false;
-        debug_trace.debug_config.disableMemory = false;
-        debug_trace.debug_config.disableStack = false;
-
-        std::vector<DebugTrace> debug_traces;
-        debug_traces.push_back(debug_trace);
-
-        CHECK(debug_traces == R"([{
-            "failed": false,
-            "gas": 20,
-            "returnValue": "deadbeaf",
-            "structLogs": [{
-                "depth": 1,
-                "gas": 3,
-                "gasCost": 4,
-                "op": "PUSH1",
-                "pc": 1,
-                "stack":["0x80"],
-                "memory":["0000000000000000000000000000000000000000000000000000000000000080"],
-                "storage": {
-                    "804292fe56769f4b9f0e91cf85875f67487cd9e85a084cbba2188be4466c4f23": "0000000000000000000000000000000000000000000000000000000000000008"
-                }
-            }]
-        }])"_json);
+    SECTION("TraceEx") {
+        CHECK(trace_ex == R"({
+            "mem":{
+                "data":"data",
+                "off":10
+            },
+            "push":["0xdeadbeaf"],
+            "store":{
+                "key":"key",
+                "val":"value"
+            },
+            "used":5000
+        })"_json);
+    }
+    SECTION("TraceMemory") {
+        const auto& memory = trace_ex.memory.value();
+        CHECK(memory == R"({
+            "data":"data",
+            "off":10
+        })"_json);
+    }
+    SECTION("TraceStorage") {
+        const auto& storage = trace_ex.storage.value();
+        CHECK(storage == R"({
+            "key":"key",
+            "val":"value"
+        })"_json);
     }
 }
 
-TEST_CASE("DebugConfig") {
+TEST_CASE("TraceAction json serialization") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    SECTION("json deserialization") {
-        nlohmann::json json = R"({
-            "disableStorage": true,
-            "disableMemory": false,
-            "disableStack": true
-            })"_json;
+    TraceAction trace_action;
+    trace_action.from = 0xe0a2Bd4258D2768837BAa26A28fE71Dc079f84c7_address;
+    trace_action.gas = 1000;
+    trace_action.value = *silkworm::from_hex("0x1234567890abcdef");
 
-        DebugConfig config;
-        from_json(json, config);
-
-        CHECK(config.disableStorage == true);
-        CHECK(config.disableMemory == false);
-        CHECK(config.disableStack == true);
+    SECTION("basic") {
+        CHECK(trace_action == R"({
+            "from": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c7",
+            "gas": 1000,
+            "value": "0x1234567890abcdef"
+        })"_json);
     }
+    SECTION("with to") {
+        trace_action.to = 0xe0a2bd4258d2768837baa26a28fe71dc079f8aaa_address;
+        CHECK(trace_action == R"({
+            "from": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c7",
+            "to": "0xe0a2bd4258d2768837baa26a28fe71dc079f8aaa",
+            "gas": 1000,
+            "value": "0x1234567890abcdef"
+        })"_json);
+    }
+    SECTION("with input") {
+        trace_action.input = *silkworm::from_hex("0xdeadbeaf");
+        CHECK(trace_action == R"({
+            "from": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c7",
+            "gas": 1000,
+            "input": "0xdeadbeaf",
+            "value": "0x1234567890abcdef"
+        })"_json);
+    }
+    SECTION("with init") {
+        trace_action.init = *silkworm::from_hex("0xdeadbeaf");
+        CHECK(trace_action == R"({
+            "from": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c7",
+            "gas": 1000,
+            "init": "0xdeadbeaf",
+            "value": "0x1234567890abcdef"
+        })"_json);
+    }
+    SECTION("with value") {
+        trace_action.value = *silkworm::from_hex("0xdeadbeaf");
+        CHECK(trace_action == R"({
+            "from": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c7",
+            "gas": 1000,
+            "value": "0xdeadbeaf"
+        })"_json);
+    }
+}
+
+TEST_CASE("TraceResult json serialization") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    TraceResult trace_result;
+    trace_result.address = 0xe0a2Bd4258D2768837BAa26A28fE71Dc079f84c7_address;
+    trace_result.code = *silkworm::from_hex("0x1234567890abcdef");
+    trace_result.gas_used = 1000;
+
+    CHECK(trace_result == R"({
+        "address": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c7",
+        "code": "0x1234567890abcdef",
+        "gasUsed": 1000
+    })"_json);
+}
+
+TEST_CASE("Trace json serialization") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    TraceAction trace_action;
+    trace_action.from = 0xe0a2Bd4258D2768837BAa26A28fE71Dc079f84c7_address;
+    trace_action.gas = 1000;
+    trace_action.value = *silkworm::from_hex("0x1234567890abcdef");
+
+    Trace trace;
+    trace.trace_action = trace_action;
+    trace.type = "CALL";
+
+    SECTION("basic") {
+        CHECK(trace == R"({
+            "subtraces": 0,
+            "action": {
+                "from": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c7",
+                "gas": 1000,
+                "value": "0x1234567890abcdef"
+            },
+            "traceAddress": [],
+            "type": "CALL"
+        })"_json);
+    }
+    SECTION("with trace_result") {
+        TraceResult trace_result;
+        trace_result.address = 0xe0a2Bd4258D2768837BAa26A28fE71Dc079f84c8_address;
+        trace_result.code = *silkworm::from_hex("0x1234567890abcdef");
+        trace_result.gas_used = 1000;
+
+        trace.trace_result = trace_result;
+
+        CHECK(trace == R"({
+            "subtraces": 0,
+            "action": {
+                "from": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c7",
+                "gas": 1000,
+                "value": "0x1234567890abcdef"
+            },
+            "traceAddress": [],
+            "type": "CALL",
+            "result": {
+                "address": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c8",
+                "code": "0x1234567890abcdef",
+                "gasUsed": 1000
+            }
+        })"_json);
+    }
+    SECTION("with error") {
+        trace.error = "error";
+
+        CHECK(trace == R"({
+            "action": {
+                "from": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c7",
+                "gas": 1000,
+                "value": "0x1234567890abcdef"
+            },
+            "error": "error",
+            "subtraces": 0,
+            "traceAddress": [],
+            "type": "CALL"
+        })"_json);
+    }
+}
+
+TEST_CASE("StateDiff json serialization") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    StateDiff state_diff;
+
+    SECTION("basic") {
+        CHECK(state_diff == R"({
+        })"_json);
+    }
+    SECTION("with 1 entry") {
+        StateDiffEntry entry;
+
+        state_diff.insert(std::pair<std::string, StateDiffEntry>("item", entry));
+
+        CHECK(state_diff == R"({
+            "item": {
+                "balance": {},
+                "code": "=",
+                "nonce": "=",
+                "storage": {}
+            }
+        })"_json);
+    }
+}
+
+TEST_CASE("DiffBalanceEntry json serialization") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    DiffBalanceEntry dbe{
+        0xe0a2Bd4258D2768837BAa26A28fE71Dc079f84c7_address,
+        0xe0a2Bd4258D2768837BAa26A28fE71Dc079f84c8_address
+    };
+
+    SECTION("basic") {
+        CHECK(dbe == R"({
+            "from":"0xe0a2bd4258d2768837baa26a28fe71dc079f84c7",
+            "to":"0xe0a2bd4258d2768837baa26a28fe71dc079f84c8"
+        })"_json);
+    }
+}
+
+TEST_CASE("DiffCodeEntry json serialization") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    DiffCodeEntry dce{"0xe0a2bd4258d2768837baa26a28fe71dc079f84c7", "0xe0a2bd4258d2768837baa26a28fe71dc079f84c8"};
+
+    SECTION("basic") {
+        CHECK(dce == R"({
+            "from": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c7",
+            "to": "0xe0a2bd4258d2768837baa26a28fe71dc079f84c8"
+        })"_json);
+    }
+}
+
+TEST_CASE("TraceConfig") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
     SECTION("dump on stream") {
-        DebugConfig config{true, false, true};
+        TraceConfig config{true, false, true};
 
         std::ostringstream os;
         os << config;
-        CHECK(os.str() == "disableStorage: true disableMemory: false disableStack: true");
+        CHECK(os.str() == "vmTrace: true Trace: false stateDiff: true");
     }
 }
-}  // namespace silkrpc::debug
+
+TEST_CASE("copy_stack") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    const std::size_t stack_size{32};
+    evmone::uint256 stack[stack_size] = {
+        {0x00}, {0x01}, {0x02}, {0x03}, {0x04}, {0x05}, {0x06}, {0x07},
+        {0x08}, {0x09}, {0x0A}, {0x0B}, {0x0C}, {0x0D}, {0x0E}, {0x0F},
+        {0x10}, {0x11}, {0x12}, {0x13}, {0x14}, {0x15}, {0x16}, {0x17},
+        {0x18}, {0x19}, {0x1A}, {0x1B}, {0x1C}, {0x1D}, {0x1E}, {0x1F}
+    };
+    evmone::uint256* top_stack = &stack[stack_size - 1];
+
+    SECTION("PUSHX") {
+        for (std::uint8_t op_code = evmc_opcode::OP_PUSH1; op_code < evmc_opcode::OP_PUSH32 + 1; op_code++) {
+            std::vector<std::string> trace_stack;
+            copy_stack(op_code, top_stack, trace_stack);
+
+            CHECK(trace_stack.size() == 1);
+            CHECK(trace_stack[0] == "0x1f");
+        }
+    }
+
+    SECTION("OP_SWAPX") {
+        for (std::uint8_t op_code = evmc_opcode::OP_SWAP1; op_code < evmc_opcode::OP_SWAP16 + 1; op_code++) {
+            std::vector<std::string> trace_stack;
+            copy_stack(op_code, top_stack, trace_stack);
+
+            std::uint8_t size = op_code - evmc_opcode::OP_SWAP1 + 2;
+            CHECK(trace_stack.size() == size);
+            for (auto idx = 0; idx < size; idx++) {
+                CHECK(trace_stack[idx] == "0x" + intx::to_string(stack[stack_size-size+idx], 16));
+            }
+        }
+    }
+
+    SECTION("OP_DUPX") {
+        for (std::uint8_t op_code = evmc_opcode::OP_DUP1; op_code < evmc_opcode::OP_DUP16 + 1; op_code++) {
+            std::vector<std::string> trace_stack;
+            copy_stack(op_code, top_stack, trace_stack);
+
+            std::uint8_t size = op_code - evmc_opcode::OP_DUP1 + 2;
+            CHECK(trace_stack.size() == size);
+            for (auto idx = 0; idx < size; idx++) {
+                CHECK(trace_stack[idx] == "0x" + intx::to_string(stack[stack_size-size+idx], 16));
+            }
+        }
+    }
+
+    SECTION("OP_OTHER") {
+        for (std::uint8_t op_code = evmc_opcode::OP_STOP; op_code < evmc_opcode::OP_SELFDESTRUCT; op_code++) {
+            std::vector<std::string> trace_stack;
+            switch (op_code) {
+                case evmc_opcode::OP_PUSH1 ... evmc_opcode::OP_PUSH32:
+                case evmc_opcode::OP_SWAP1 ... evmc_opcode::OP_SWAP16:
+                case evmc_opcode::OP_DUP1 ... evmc_opcode::OP_DUP16:
+                    break;
+                case evmc_opcode::OP_CALLDATALOAD:
+                case evmc_opcode::OP_SLOAD:
+                case evmc_opcode::OP_MLOAD:
+                case evmc_opcode::OP_CALLDATASIZE:
+                case evmc_opcode::OP_LT:
+                case evmc_opcode::OP_GT:
+                case evmc_opcode::OP_DIV:
+                case evmc_opcode::OP_SDIV:
+                case evmc_opcode::OP_SAR:
+                case evmc_opcode::OP_AND:
+                case evmc_opcode::OP_EQ:
+                case evmc_opcode::OP_CALLVALUE:
+                case evmc_opcode::OP_ISZERO:
+                case evmc_opcode::OP_ADD:
+                case evmc_opcode::OP_EXP:
+                case evmc_opcode::OP_CALLER:
+                case evmc_opcode::OP_KECCAK256:
+                case evmc_opcode::OP_SUB:
+                case evmc_opcode::OP_ADDRESS:
+                case evmc_opcode::OP_GAS:
+                case evmc_opcode::OP_MUL:
+                case evmc_opcode::OP_RETURNDATASIZE:
+                case evmc_opcode::OP_NOT:
+                case evmc_opcode::OP_SHR:
+                case evmc_opcode::OP_SHL:
+                case evmc_opcode::OP_EXTCODESIZE:
+                case evmc_opcode::OP_SLT:
+                case evmc_opcode::OP_OR:
+                case evmc_opcode::OP_NUMBER:
+                case evmc_opcode::OP_PC:
+                case evmc_opcode::OP_TIMESTAMP:
+                case evmc_opcode::OP_BALANCE:
+                case evmc_opcode::OP_SELFBALANCE:
+                case evmc_opcode::OP_MULMOD:
+                case evmc_opcode::OP_ADDMOD:
+                case evmc_opcode::OP_BASEFEE:
+                case evmc_opcode::OP_BLOCKHASH:
+                case evmc_opcode::OP_BYTE:
+                case evmc_opcode::OP_XOR:
+                case evmc_opcode::OP_ORIGIN:
+                case evmc_opcode::OP_CODESIZE:
+                case evmc_opcode::OP_MOD:
+                case evmc_opcode::OP_SIGNEXTEND:
+                case evmc_opcode::OP_GASLIMIT:
+                case evmc_opcode::OP_DIFFICULTY:
+                case evmc_opcode::OP_SGT:
+                case evmc_opcode::OP_GASPRICE:
+                case evmc_opcode::OP_MSIZE:
+                case evmc_opcode::OP_EXTCODEHASH:
+                case evmc_opcode::OP_STATICCALL:
+                case evmc_opcode::OP_DELEGATECALL:
+                case evmc_opcode::OP_CALL:
+                case evmc_opcode::OP_CALLCODE:
+                case evmc_opcode::OP_CREATE:
+                case evmc_opcode::OP_CREATE2:
+                    copy_stack(op_code, top_stack, trace_stack);
+
+                    CHECK(trace_stack.size() == 1);
+                    CHECK(trace_stack[0] == "0x1f");
+                    break;
+                default:
+                    copy_stack(op_code, top_stack, trace_stack);
+
+                    CHECK(trace_stack.size() == 0);
+                    break;
+            }
+        }
+    }
+}
+
+TEST_CASE("copy_memory") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    evmone::Memory memory;
+    for (auto idx = 0; idx < 16; idx++) {
+        memory[idx] = idx;
+    }
+
+    SECTION("TRACE_MEMORY NOT SET") {
+        std::optional<TraceMemory> trace_memory;
+        copy_memory(memory, trace_memory);
+
+        CHECK(trace_memory.has_value() == false);
+    }
+    SECTION("TRACE_MEMORY LEN == 0") {
+        std::optional<TraceMemory> trace_memory = TraceMemory{0, 0};
+        copy_memory(memory, trace_memory);
+
+        CHECK(trace_memory.has_value() == false);
+    }
+    SECTION("TRACE_MEMORY LEN != 0") {
+        std::optional<TraceMemory> trace_memory = TraceMemory{0, 10};
+        copy_memory(memory, trace_memory);
+
+        CHECK(trace_memory.has_value() == true);
+        CHECK(trace_memory.value() == R"({
+            "off":0,
+            "data":"0x00010203040506070809"
+        })"_json);
+    }
+}
+
+TEST_CASE("copy_store") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    const std::size_t stack_size{32};
+    evmone::uint256 stack[stack_size] = {
+        {0x00}, {0x01}, {0x02}, {0x03}, {0x04}, {0x05}, {0x06}, {0x07},
+        {0x08}, {0x09}, {0x0A}, {0x0B}, {0x0C}, {0x0D}, {0x0E}, {0x0F},
+        {0x10}, {0x11}, {0x12}, {0x13}, {0x14}, {0x15}, {0x16}, {0x17},
+        {0x18}, {0x19}, {0x1A}, {0x1B}, {0x1C}, {0x1D}, {0x1E}, {0x1F}
+    };
+    evmone::uint256* top_stack = &stack[stack_size - 1];
+
+    SECTION("op_code == OP_SSTORE") {
+        std::optional<TraceStorage> trace_storage;
+        copy_store(evmc_opcode::OP_SSTORE, top_stack, trace_storage);
+
+        CHECK(trace_storage.has_value() == true);
+        CHECK(trace_storage.value() == R"({
+            "key":"0x1f",
+            "val":"0x1e"
+        })"_json);
+    }
+    SECTION("op_code != OP_SSTORE") {
+        std::optional<TraceStorage> trace_storage;
+        copy_store(evmc_opcode::OP_CALLDATASIZE, top_stack, trace_storage);
+
+        CHECK(trace_storage.has_value() == false);
+    }
+}
+
+TEST_CASE("copy_memory_offset_len") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    const std::size_t stack_size{32};
+    evmone::uint256 stack[stack_size] = {
+        {0x00}, {0x01}, {0x02}, {0x03}, {0x04}, {0x05}, {0x06}, {0x07},
+        {0x08}, {0x09}, {0x0A}, {0x0B}, {0x0C}, {0x0D}, {0x0E}, {0x0F},
+        {0x10}, {0x11}, {0x12}, {0x13}, {0x14}, {0x15}, {0x16}, {0x17},
+        {0x18}, {0x19}, {0x1A}, {0x1B}, {0x1C}, {0x1D}, {0x1E}, {0x1F}
+    };
+    evmone::uint256* top_stack = &stack[stack_size - 1];
+
+    for (std::uint8_t op_code = evmc_opcode::OP_STOP; op_code < evmc_opcode::OP_SELFDESTRUCT; op_code++) {
+        std::optional<TraceMemory> trace_memory;
+        copy_memory_offset_len(op_code, top_stack, trace_memory);
+
+        switch (op_code) {
+            case evmc_opcode::OP_MSTORE:
+            case evmc_opcode::OP_MLOAD:
+                CHECK(trace_memory.has_value() == true);
+                CHECK(trace_memory.value() == R"({
+                    "data":"",
+                    "off": 31
+                })"_json);
+                break;
+            case evmc_opcode::OP_MSTORE8:
+                CHECK(trace_memory.has_value() == true);
+                CHECK(trace_memory.value() == R"({
+                    "data":"",
+                    "off": 31
+                })"_json);
+                break;
+            case evmc_opcode::OP_RETURNDATACOPY:
+            case evmc_opcode::OP_CALLDATACOPY:
+            case evmc_opcode::OP_CODECOPY:
+                CHECK(trace_memory.has_value() == true);
+                CHECK(trace_memory.value() == R"({
+                    "data":"",
+                    "off": 31
+                })"_json);
+                break;
+            case evmc_opcode::OP_STATICCALL:
+            case evmc_opcode::OP_DELEGATECALL:
+                CHECK(trace_memory.has_value() == true);
+                CHECK(trace_memory.value() == R"({
+                    "data":"",
+                    "off": 27
+                })"_json);
+                break;
+            case evmc_opcode::OP_CALL:
+            case evmc_opcode::OP_CALLCODE:
+                CHECK(trace_memory.has_value() == true);
+                CHECK(trace_memory.value() == R"({
+                    "data":"",
+                    "off": 26
+                })"_json);
+                break;
+            case evmc_opcode::OP_CREATE:
+            case evmc_opcode::OP_CREATE2:
+                CHECK(trace_memory.has_value() == true);
+                CHECK(trace_memory.value() == R"({
+                    "data":"",
+                    "off": 0
+                })"_json);
+                break;
+            default:
+                CHECK(trace_memory.has_value() == false);
+                break;
+        }
+    }
+}
+
+TEST_CASE("push_memory_offset_len") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    const std::size_t stack_size{32};
+    evmone::uint256 stack[stack_size] = {
+        {0x00}, {0x01}, {0x02}, {0x03}, {0x04}, {0x05}, {0x06}, {0x07},
+        {0x08}, {0x09}, {0x0A}, {0x0B}, {0x0C}, {0x0D}, {0x0E}, {0x0F},
+        {0x10}, {0x11}, {0x12}, {0x13}, {0x14}, {0x15}, {0x16}, {0x17},
+        {0x18}, {0x19}, {0x1A}, {0x1B}, {0x1C}, {0x1D}, {0x1E}, {0x1F}
+    };
+    evmone::uint256* top_stack = &stack[stack_size - 1];
+
+    for (std::uint8_t op_code = evmc_opcode::OP_STOP; op_code < evmc_opcode::OP_SELFDESTRUCT; op_code++) {
+        std::stack<TraceMemory> tms;
+        push_memory_offset_len(op_code, top_stack, tms);
+
+        switch (op_code) {
+            case evmc_opcode::OP_STATICCALL:
+            case evmc_opcode::OP_DELEGATECALL:
+                CHECK(tms.size() == 1);
+                CHECK(tms.top() == R"({
+                    "data":"",
+                    "off": 27
+                })"_json);
+                break;
+            case evmc_opcode::OP_CALL:
+            case evmc_opcode::OP_CALLCODE:
+                CHECK(tms.size() == 1);
+                CHECK(tms.top() == R"({
+                    "data":"",
+                    "off": 26
+                })"_json);
+                break;
+            case evmc_opcode::OP_CREATE:
+            case evmc_opcode::OP_CREATE2:
+                CHECK(tms.size() == 1);
+                CHECK(tms.top() == R"({
+                    "data":"",
+                    "off": 0
+                })"_json);
+                break;
+            default:
+                CHECK(tms.size() == 0);
+                break;
+        }
+    }
+}
+}  // namespace silkrpc::trace

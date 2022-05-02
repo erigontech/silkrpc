@@ -91,6 +91,7 @@ struct AllTransactionsInfo {
 };
 
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
+std::ostream& operator<<(std::ostream& out, const silkworm::Transaction& t);
 
 } // namespace silkrpc
 
