@@ -621,5 +621,25 @@ TEST_CASE("Backend::engine_forkchoice_updated_v1", "[silkrpc][ethbackend][backen
         CHECK(payload_status.latest_valid_hash == 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32);
         CHECK(payload_status.validation_error == "some error");
     }
+
+    SECTION("call engine_forkchoice_updated_v1 and get error") {
+        EmptyBackEndService service;
+        asio::io_context io_context;
+        auto reply{asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), asio::use_future)};
+        io_context.run();
+        auto forkchoice_reply{reply.get()};
+        silkrpc::PayloadStatus payload_status = forkchoice_reply.payload_status;
+        CHECK(payload_status.status == "VALID"); // defaults to valid status
+        CHECK(payload_status.latest_valid_hash == std::nullopt);
+        CHECK(payload_status.validation_error == std::nullopt);
+    }
+
+    SECTION("call engine_forkchoice_updated_v1 and get VALID status with empty service") {
+        FailureBackEndService service;
+        asio::io_context io_context;
+        auto reply{asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(reply.get(), std::system_error);
+    }
 }
 } // namespace silkrpc
