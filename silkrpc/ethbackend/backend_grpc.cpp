@@ -313,36 +313,36 @@ types::ExecutionPayload BackEndGrpc::encode_execution_payload(const ExecutionPay
     return execution_payload_grpc;
 }
 
-remote::EngineForkChoiceState BackEndGrpc::encode_forkchoice_state(const ForkchoiceState& forkchoice_state) {
-    remote::EngineForkChoiceState forkchoice_state_grpc;
+remote::EngineForkChoiceState* BackEndGrpc::encode_forkchoice_state(const ForkchoiceState& forkchoice_state) {
+    remote::EngineForkChoiceState *forkchoice_state_grpc = new remote::EngineForkChoiceState();
     // 32-bytes parameters
-    forkchoice_state_grpc.set_allocated_headblockhash(H256_from_bytes(forkchoice_state.head_block_hash.bytes));
-    forkchoice_state_grpc.set_allocated_safeblockhash(H256_from_bytes(forkchoice_state.safe_block_hash.bytes));
-    forkchoice_state_grpc.set_allocated_finalizedblockhash(H256_from_bytes(forkchoice_state.finalized_block_hash.bytes));
+    forkchoice_state_grpc->set_allocated_headblockhash(H256_from_bytes(forkchoice_state.head_block_hash.bytes));
+    forkchoice_state_grpc->set_allocated_safeblockhash(H256_from_bytes(forkchoice_state.safe_block_hash.bytes));
+    forkchoice_state_grpc->set_allocated_finalizedblockhash(H256_from_bytes(forkchoice_state.finalized_block_hash.bytes));
     return forkchoice_state_grpc;
 }
 
-remote::EnginePayloadAttributes BackEndGrpc::encode_payload_attributes(const PayloadAttributes& payload_attributes) {
-    remote::EnginePayloadAttributes payload_attributes_grpc;
+remote::EnginePayloadAttributes* BackEndGrpc::encode_payload_attributes(const PayloadAttributes& payload_attributes) {
+    remote::EnginePayloadAttributes *payload_attributes_grpc = new remote::EnginePayloadAttributes();
     // Numerical parameters
-    payload_attributes_grpc.set_timestamp(payload_attributes.timestamp);
+    payload_attributes_grpc->set_timestamp(payload_attributes.timestamp);
     //32-bytes parameters
-    payload_attributes_grpc.set_allocated_prevrandao(H256_from_bytes(payload_attributes.prev_randao.bytes));
+    payload_attributes_grpc->set_allocated_prevrandao(H256_from_bytes(payload_attributes.prev_randao.bytes));
     // Address parameters
-    payload_attributes_grpc.set_allocated_suggestedfeerecipient(H160_from_address(payload_attributes.suggested_fee_recipient));
+    payload_attributes_grpc->set_allocated_suggestedfeerecipient(H160_from_address(payload_attributes.suggested_fee_recipient));
 
     return payload_attributes_grpc;
 }
 
 remote::EngineForkChoiceUpdatedRequest BackEndGrpc::encode_forkchoice_updated_request(const ForkchoiceUpdatedRequest& forkchoice_updated_request) {
     remote::EngineForkChoiceUpdatedRequest forkchoice_updated_request_grpc;
-    remote::EngineForkChoiceState forkchoice_state_grpc = BackEndGrpc::encode_forkchoice_state(forkchoice_updated_request.forkchoice_state);
+    remote::EngineForkChoiceState *forkchoice_state_grpc = BackEndGrpc::encode_forkchoice_state(forkchoice_updated_request.forkchoice_state);
 
-    forkchoice_updated_request_grpc.set_allocated_forkchoicestate(&forkchoice_state_grpc);
+    forkchoice_updated_request_grpc.set_allocated_forkchoicestate(forkchoice_state_grpc);
     if (forkchoice_updated_request.payload_attributes != std::nullopt) {
-        remote::EnginePayloadAttributes payload_attributes_grpc =
+        remote::EnginePayloadAttributes *payload_attributes_grpc =
             BackEndGrpc::encode_payload_attributes(forkchoice_updated_request.payload_attributes.value());
-        forkchoice_updated_request_grpc.set_allocated_payloadattributes(&payload_attributes_grpc);
+        forkchoice_updated_request_grpc.set_allocated_payloadattributes(payload_attributes_grpc);
     }
     std::cout <<"done encoding\n";
     return forkchoice_updated_request_grpc;

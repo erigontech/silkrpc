@@ -196,8 +196,8 @@ private:
 
     ExecutionPayload decode_execution_payload(const types::ExecutionPayload& execution_payload_grpc);
     types::ExecutionPayload encode_execution_payload(const ExecutionPayload& execution_payload);
-    remote::EngineForkChoiceState encode_forkchoice_state(const ForkchoiceState& forkchoice_state);
-    remote::EnginePayloadAttributes encode_payload_attributes(const PayloadAttributes& payload_attributes);
+    remote::EngineForkChoiceState* encode_forkchoice_state(const ForkchoiceState& forkchoice_state);
+    remote::EnginePayloadAttributes* encode_payload_attributes(const PayloadAttributes& payload_attributes);
     remote::EngineForkChoiceUpdatedRequest encode_forkchoice_updated_request(const ForkchoiceUpdatedRequest& forkchoice_updated_request);
     PayloadStatus decode_payload_status(const remote::EnginePayloadStatus& payload_status_grpc);
     std::string decode_status_message(const remote::EngineStatus& status);

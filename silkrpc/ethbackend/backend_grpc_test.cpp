@@ -244,7 +244,7 @@ public:
         CHECK(h256_equal_bytes32(payload_attributes_grpc.prevrandao(), 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32));
         CHECK(h160_equal_address(payload_attributes_grpc.suggestedfeerecipient(), 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address));
         // assemble payload status
-        ::remote::EnginePayloadStatus* payload_status_grpc;
+        ::remote::EnginePayloadStatus *payload_status_grpc = new ::remote::EnginePayloadStatus();
         payload_status_grpc->set_allocated_latestvalidhash(make_h256(0, 0, 0, 0x40));
         payload_status_grpc->set_validationerror("some error");
         payload_status_grpc->set_status(static_cast<::remote::EngineStatus>(0));
