@@ -71,7 +71,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_unsubscribe                            | -            | not yet implemented                        |
 |                                            |              |                                            |
 | engine_newPayloadV1                        | Yes          |                                            |
-| engine_forkchoiceUpdatedV1                 | -            | not yet implemented                        |
+| engine_forkchoiceUpdatedV1                 | Yes          |                                            |
 | engine_getPayloadV1                        | Yes          |                                            |
 | engine_exchangeTransitionConfigurationV1   | Yes          |                                            |
 |                                            |              |                                            |
