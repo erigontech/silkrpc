@@ -20,7 +20,9 @@
 #include <cstring>
 #include <exception>
 #include <iostream>
+#include <map>
 #include <string>
+#include <utility>
 
 #include <boost/endian/conversion.hpp>
 #include <evmc/evmc.hpp>
@@ -1566,7 +1568,6 @@ asio::awaitable<void> EthereumRpcApi::handle_txpool_status(const nlohmann::json&
 // https://geth.ethereum.org/docs/rpc/ns-txpool
 asio::awaitable<void> EthereumRpcApi::handle_txpool_content(const nlohmann::json& request, nlohmann::json& reply) {
     try {
-        struct AllTransactionsInfo all_transaction_info{};
 /*
         auto txpool_transactions = co_await tx_pool_->get_transactions();
 
@@ -1578,9 +1579,14 @@ asio::awaitable<void> EthereumRpcApi::handle_txpool_content(const nlohmann::json
         }
 */
         struct TransactionInfo txInfo{};
-        all_transaction_info.queued_transaction_map.queued_transactions[evmc::address{}].insert(std::make_pair(1, txInfo));
+        std::map <std::string, std::map<std::string, std::map<std::string, struct TransactionInfo>>> transactions_content;
+        transactions_content["queued"]["12345678901234567890"].insert(std::make_pair("1", txInfo));
+        transactions_content["queued"]["12345678901234567890"].insert(std::make_pair("2", txInfo));
+        transactions_content["queued"]["12345678901234567899"].insert(std::make_pair("100", txInfo));
+        transactions_content["pending"];
+        transactions_content["baseFee"];
 
-        reply = make_json_content(request["id"], all_transaction_info);
+        reply = make_json_content(request["id"], transactions_content);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());

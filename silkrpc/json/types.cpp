@@ -185,20 +185,7 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
 
 namespace silkrpc {
 
-void to_json(nlohmann::json& json, const struct AllTransactionsInfo& txs_info)
-{
-    json = {{"queued", txs_info.queued_transaction_map}, 
-            {"pending",txs_info.pending_transactions}, 
-            {"baseFee",txs_info.base_fee_transactions}};
-}
-
-void to_json(nlohmann::json& json, const struct QueuedTransactionMap& map)
-{
-   json = map.queued_transactions;
-}
-
-void to_json(nlohmann::json& json, const struct TransactionInfo& transaction_info)
-{
+void to_json(nlohmann::json& json, const struct TransactionInfo& transaction_info) {
     json["blockHash"] = silkworm::to_bytes32(silkworm::ByteView{});
     json["blockNumber"] = nullptr;
     if (transaction_info.transaction.from) {

@@ -80,16 +80,6 @@ struct TransactionInfo {
    struct Transaction transaction;
 };
 
-struct QueuedTransactionMap {
-   std::map <evmc::address, std::map<uint64_t, struct TransactionInfo>> queued_transactions;
-};
-
-struct AllTransactionsInfo {
-   struct QueuedTransactionMap queued_transaction_map;
-   std::map <evmc::address, std::map<uint64_t, struct TransactionInfo>> pending_transactions;
-   std::map <evmc::address, std::map<uint64_t, struct TransactionInfo>> base_fee_transactions;
-};
-
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
 std::ostream& operator<<(std::ostream& out, const silkworm::Transaction& t);
 
