@@ -22,11 +22,15 @@
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <asio/awaitable.hpp>
+#include <asio/io_context.hpp>
+#include <asio/thread_pool.hpp>
 #include <nlohmann/json.hpp>
 
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/database.hpp>
+#include <silkrpc/ethdb/transaction_database.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
@@ -34,7 +38,8 @@ namespace silkrpc::commands {
 
 class TraceRpcApi {
 public:
-    explicit TraceRpcApi(std::unique_ptr<ethdb::Database>& database) : database_(database) {}
+    explicit TraceRpcApi(Context& context, asio::thread_pool& workers)
+        : context_(context), database_(context.database), workers_{workers}, tx_pool_{context.tx_pool} {}
     virtual ~TraceRpcApi() {}
 
     TraceRpcApi(const TraceRpcApi&) = delete;
@@ -52,7 +57,10 @@ protected:
     asio::awaitable<void> handle_trace_transaction(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
+    Context& context_;
     std::unique_ptr<ethdb::Database>& database_;
+    std::unique_ptr<txpool::TransactionPool>& tx_pool_;
+    asio::thread_pool& workers_;
 
     friend class silkrpc::http::RequestHandler;
 };

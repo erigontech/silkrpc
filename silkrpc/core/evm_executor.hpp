@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
@@ -44,6 +45,8 @@ struct ExecutionResult {
     std::optional<std::string> pre_check_error{std::nullopt};
 };
 
+using Tracers = std::vector<std::shared_ptr<silkworm::EvmTracer>>;
+
 template<typename WorldState = silkworm::IntraBlockState, typename VM = silkworm::EVM>
 class EVMExecutor {
 public:
@@ -56,10 +59,11 @@ public:
     EVMExecutor(const EVMExecutor&) = delete;
     EVMExecutor& operator=(const EVMExecutor&) = delete;
 
-    asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, std::shared_ptr<silkworm::EvmTracer> tracer = {});
+    asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, bool refund = true, bool gas_bailout = false, const Tracers& tracers = {});
 
 private:
     std::optional<std::string> pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0);
+    uint64_t refund_gas(const VM& evm, const silkworm::Transaction& txn, uint64_t gas_left);
 
     const Context& context_;
     const core::rawdb::DatabaseReader& db_reader_;
