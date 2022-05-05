@@ -41,10 +41,14 @@
 #include <silkrpc/http/server.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 #include <silkrpc/protocol/version.hpp>
+#include <silkrpc/types/jwt_secret.cpp>
 
-ABSL_FLAG(std::string, chaindata, silkrpc::kEmptyChainData, "chain data path as string");
+ABSL_FLAG(std::string, chaindata, silkrpc::kEmptyPath, "chain data path as string");
 ABSL_FLAG(std::string, http_port, silkrpc::kDefaultHttpPort, "Ethereum JSON RPC API local end-point as string <address>:<port>");
 ABSL_FLAG(std::string, engine_port, silkrpc::kDefaultEnginePort, "Engine JSON RPC API local end-point as string <address>:<port>");
+ABSL_FLAG(std::string, auth_engine_port, silkrpc::kDefaultAuthEnginePort, "Engine JSON RPC API with JWT 
+    authentification local end-point as string <address>:<port>");
+ABSL_FLAG(std::string, auth_jwtsecret, silkrpc::kEmptyPath, "Token to ensure safe connection between CL and EL");
 ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "Erigon Core gRPC service location as string <address>:<port>");
 ABSL_FLAG(std::string, api_spec, silkrpc::kDefaultEth1ApiSpec, "JSON RPC API namespaces as comma-separated list of strings");
 ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "number of running I/O contexts as 32-bit integer");
@@ -114,6 +118,19 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
+        auto auth_engine_port{absl::GetFlag(FLAGS_auth_engine_port)};
+        if (!auth_engine_port.empty() && auth_engine_port.find(kAddressPortSeparator) == std::string::npos) {
+            SILKRPC_ERROR << "Parameter auth_engine_port is invalid: [" << auth_engine_port << "]\n";
+            SILKRPC_ERROR << "Use --auth_engine_port flag to specify the local binding for Engine JSON RPC service\n";
+            return -1;
+        }
+
+        auto jwt_secret{absl::GetFlag(FLAGS_auth_jwtsecret)};
+        std::string jwt_file_path = silkrpc::kDefaultJwtPath;
+        if (!jwt_secret.empty()) {
+            jwt_file_path = jwt_secret;
+        }
+
         auto target{absl::GetFlag(FLAGS_target)};
         if (!target.empty() && target.find(":") == std::string::npos) {
             SILKRPC_ERROR << "Parameter target is invalid: [" << target << "]\n";
@@ -160,7 +177,7 @@ int main(int argc, char* argv[]) {
         } else {
             SILKRPC_LOG << "Silkrpc launched with chaindata " << chaindata << " using " << numContexts << " contexts, " << numWorkers << " workers\n";
         }
-
+        silkrpc::generate_jwt_token(jwt_file_path);
         // TODO(canepat): handle also secure channel for remote
         silkrpc::ChannelFactory create_channel = [&]() {
             return grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
@@ -195,6 +212,7 @@ int main(int argc, char* argv[]) {
 
         silkrpc::http::Server eth_rpc_service{http_port, api_spec, context_pool, worker_pool};
         silkrpc::http::Server engine_rpc_service{engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool};
+        silkrpc::http::Server auth_engine_rpc_service{auth_engine_port, kDefaultEth2ApiSpec, jwt_file_path, context_pool, worker_pool};
 
         auto& io_context = context_pool.get_io_context();
         asio::signal_set signals{io_context, SIGINT, SIGTERM};

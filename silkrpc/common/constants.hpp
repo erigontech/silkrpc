@@ -35,9 +35,11 @@ constexpr const char* kWeb3ApiNamespace{"web3"};
 constexpr const char* kAddressPortSeparator{":"};
 constexpr const char* kApiSpecSeparator{","};
 
-constexpr const char* kEmptyChainData{""};
+constexpr const char* kEmptyPath{""};
 constexpr const char* kDefaultHttpPort{"localhost:8545"};
 constexpr const char* kDefaultEnginePort{"localhost:8550"};
+constexpr const char* kDefaultAuthEnginePort{"localhost:8551"};
+constexpr const char* kDefaultJwtPath{"jwt.hex"};
 constexpr const char* kDefaultTarget{"localhost:9090"};
 constexpr const char* kDefaultEth1ApiSpec{"debug,eth,net,parity,erigon,trace,web3,txpool"};
 constexpr const char* kDefaultEth2ApiSpec{"engine,eth"};
