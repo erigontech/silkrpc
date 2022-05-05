@@ -151,8 +151,8 @@ silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
 
   Flags from main.cpp:
     --chaindata (chain data path as string); default: "";
-    --eth1_local (Ethereum JSON RPC API local binding as string <address>:<port>); default: "localhost:8545";
-    --eth2_local (Engine JSON RPC API local binding as string <address>:<port>); default: "localhost:8550";
+    --http_port (Ethereum JSON RPC API local binding as string <address>:<port>); default: "localhost:8545";
+    --engine_port (Engine JSON RPC API local binding as string <address>:<port>); default: "localhost:8550";
     --logLevel (logging level); default: c;
     --numContexts (number of running I/O contexts as 32-bit integer); default: number of hardware thread contexts / 2;
     --numWorkers (number of worker threads as 32-bit integer); default: number of hardware thread contexts;
