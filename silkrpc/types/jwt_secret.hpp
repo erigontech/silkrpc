@@ -30,4 +30,7 @@ namespace silkrpc {
     // load a jwt secret token from provided file path
     // if the file doesn't contain the jwt secret token then we generate one
     bool obtain_jwt_token(const std::string& file_path, std::string& jwt_token);
+
 } // namespace silkrpc
+
+#endif // SILKRPC_TYPES_JWT_SECRET_HPP_
