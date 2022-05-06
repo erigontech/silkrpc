@@ -33,7 +33,7 @@
 
 namespace silkrpc::http {
 
-asio::awaitable<void> RequestHandler::handle_request(const http::Request& request, http::Reply& reply) {
+asio::awaitable<void> RequestHandler::handle_request(const http::Request& request, http::Reply& reply, std::string& jwt_token) {
     SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
     auto start = clock_time::now();
 
@@ -50,6 +50,26 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
         }
 
         const auto request_json = nlohmann::json::parse(request.content);
+        if (jwt_token.length() > 0) {
+            const auto header = request_json["Header"].get<nlohmann::json>();
+            const auto auth = header["Authorization"].get<std::string>();
+            std::string client_token = "";
+
+            if (auth.substr(0, 7) == "Bearer ") {
+                client_token = auth.substr(7);
+            }
+
+            if (client_token.length() == 0) {
+                reply.status = http::Reply::unauthorized;
+                reply.content = make_json_error(request_id, -32600, "missing token").dump() + "\n";
+                reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
+                reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
+                SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
+                co_return;
+            }
+
+        }
+
         request_id = request_json["id"].get<uint32_t>();
         if (!request_json.contains("method")) {
             reply.content = make_json_error(request_id, -32600, "method missing").dump() + "\n";

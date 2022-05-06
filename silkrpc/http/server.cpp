@@ -45,8 +45,8 @@ std::tuple<std::string, std::string> Server::parse_endpoint(const std::string& t
     return {host, port};
 }
 
-Server::Server(const std::string& end_point, const std::string& api_spec, ContextPool& context_pool, asio::thread_pool& workers)
-: context_pool_(context_pool), workers_(workers), acceptor_{context_pool.get_io_context()}, handler_table_{api_spec} {
+Server::Server(const std::string& end_point, const std::string& api_spec, ContextPool& context_pool, asio::thread_pool& workers, std::string jwt_token)
+: context_pool_(context_pool), workers_(workers), acceptor_{context_pool.get_io_context()}, handler_table_{api_spec}, jwt_token_{jwt_token} {
     const auto [host, port] = parse_endpoint(end_point);
 
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
@@ -74,7 +74,7 @@ asio::awaitable<void> Server::run() {
 
             SILKRPC_DEBUG << "Server::start accepting using io_context " << io_context << "...\n" << std::flush;
 
-            auto new_connection = std::make_shared<Connection>(context, workers_, handler_table_);
+            auto new_connection = std::make_shared<Connection>(context, workers_, handler_table_, jwt_token_);
             co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);
             if (!acceptor_.is_open()) {
                 SILKRPC_TRACE << "Server::start returning...\n";

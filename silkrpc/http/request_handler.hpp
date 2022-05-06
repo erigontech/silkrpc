@@ -42,7 +42,7 @@ public:
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
-    asio::awaitable<void> handle_request(const http::Request& request, http::Reply& reply);
+    asio::awaitable<void> handle_request(const http::Request& request, http::Reply& reply, std::string& jwt_token);
 
 private:
     commands::RpcApi rpc_api_;

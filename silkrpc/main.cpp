@@ -20,6 +20,7 @@
 #include <exception>
 #include <filesystem>
 #include <iostream>
+#include <string>
 #include <thread>
 
 #include <absl/flags/flag.h>
@@ -41,13 +42,12 @@
 #include <silkrpc/http/server.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 #include <silkrpc/protocol/version.hpp>
-#include <silkrpc/types/jwt_secret.cpp>
+#include <silkrpc/types/jwt_secret.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::kEmptyPath, "chain data path as string");
 ABSL_FLAG(std::string, http_port, silkrpc::kDefaultHttpPort, "Ethereum JSON RPC API local end-point as string <address>:<port>");
 ABSL_FLAG(std::string, engine_port, silkrpc::kDefaultEnginePort, "Engine JSON RPC API local end-point as string <address>:<port>");
-ABSL_FLAG(std::string, auth_engine_port, silkrpc::kDefaultAuthEnginePort, "Engine JSON RPC API with JWT 
-    authentification local end-point as string <address>:<port>");
+ABSL_FLAG(std::string, auth_engine_port, silkrpc::kDefaultAuthEnginePort, "Engine JSON RPC API with JWT authentification local end-point as string <address>:<port>");
 ABSL_FLAG(std::string, auth_jwtsecret, silkrpc::kEmptyPath, "Token to ensure safe connection between CL and EL");
 ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "Erigon Core gRPC service location as string <address>:<port>");
 ABSL_FLAG(std::string, api_spec, silkrpc::kDefaultEth1ApiSpec, "JSON RPC API namespaces as comma-separated list of strings");
@@ -177,7 +177,12 @@ int main(int argc, char* argv[]) {
         } else {
             SILKRPC_LOG << "Silkrpc launched with chaindata " << chaindata << " using " << numContexts << " contexts, " << numWorkers << " workers\n";
         }
-        silkrpc::generate_jwt_token(jwt_file_path);
+
+        std::string jwt_token = "";
+        if(!silkrpc::obtain_jwt_token(jwt_file_path, jwt_token)) {
+            SILKRPC_ERROR << "Jwt token is the wrong size with a size of: " << jwt_token.length() << "\n";
+            return -1;
+        }
         // TODO(canepat): handle also secure channel for remote
         silkrpc::ChannelFactory create_channel = [&]() {
             return grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
@@ -210,9 +215,9 @@ int main(int argc, char* argv[]) {
         silkrpc::ContextPool context_pool{numContexts, create_channel};
         asio::thread_pool worker_pool{numWorkers};
 
-        silkrpc::http::Server eth_rpc_service{http_port, api_spec, context_pool, worker_pool};
-        silkrpc::http::Server engine_rpc_service{engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool};
-        silkrpc::http::Server auth_engine_rpc_service{auth_engine_port, kDefaultEth2ApiSpec, jwt_file_path, context_pool, worker_pool};
+        silkrpc::http::Server eth_rpc_service{http_port, api_spec, context_pool, worker_pool, ""};
+        silkrpc::http::Server engine_rpc_service{engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool, ""};
+        silkrpc::http::Server auth_engine_rpc_service{auth_engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool, jwt_token};
 
         auto& io_context = context_pool.get_io_context();
         asio::signal_set signals{io_context, SIGINT, SIGTERM};

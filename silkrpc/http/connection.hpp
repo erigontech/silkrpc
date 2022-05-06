@@ -48,7 +48,7 @@ public:
     Connection& operator=(const Connection&) = delete;
 
     /// Construct a connection running within the given execution context.
-    Connection(Context& context, asio::thread_pool& workers, commands::RpcApiTable& handler_table);
+    Connection(Context& context, asio::thread_pool& workers, commands::RpcApiTable& handler_table, std::string& jwt_token);
 
     ~Connection();
 
@@ -84,6 +84,8 @@ private:
 
     /// The reply to be sent back to the client.
     Reply reply_;
+
+    std::string jwt_token_;
 };
 
 } // namespace silkrpc::http
