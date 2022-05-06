@@ -24,6 +24,7 @@
 #define SILKRPC_HTTP_CONNECTION_HPP_
 
 #include <array>
+#include <string>
 
 #include <silkrpc/config.hpp>
 

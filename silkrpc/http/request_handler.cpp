@@ -67,7 +67,6 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
                 SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
                 co_return;
             }
-
         }
 
         request_id = request_json["id"].get<uint32_t>();

@@ -26,6 +26,7 @@
 #include <system_error>
 #include <string_view>
 #include <utility>
+#include <string>
 #include <vector>
 
 #include <asio/write.hpp>
