@@ -1580,7 +1580,6 @@ asio::awaitable<void> EthereumRpcApi::handle_txpool_content(const nlohmann::json
            silkworm::ByteView from{txpool_transactions.txs[i].rlp};
            struct TransactionInfo txInfo{};
            silkworm::Transaction& silkworm_transaction = dynamic_cast<Transaction&>(txInfo.transaction);
-          
            auto result = silkworm::rlp::decode(from, silkworm_transaction);
            if (result != silkworm::DecodingResult::kOk) {
               break;
