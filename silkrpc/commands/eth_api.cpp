@@ -1568,25 +1568,39 @@ asio::awaitable<void> EthereumRpcApi::handle_txpool_status(const nlohmann::json&
 // https://geth.ethereum.org/docs/rpc/ns-txpool
 asio::awaitable<void> EthereumRpcApi::handle_txpool_content(const nlohmann::json& request, nlohmann::json& reply) {
     try {
-/*
+        silkworm::DecodingResult result = silkworm::DecodingResult::kOk;
         auto txpool_transactions = co_await tx_pool_->get_transactions();
 
-        for (int i = 0; i < txpool_transactions.txs.size(); i++) {
-           if (txpool_transactions.txs[i].type == silkrpc::txpool::Type::QUEUED) {
-           } else if (txpool_transactions.txs[i].type == silkrpc::txpool::Type::PENDING) {
-           } else {
-           }
-        }
-*/
-        struct TransactionInfo txInfo{};
         std::map <std::string, std::map<std::string, std::map<std::string, struct TransactionInfo>>> transactions_content;
-        transactions_content["queued"]["12345678901234567890"].insert(std::make_pair("1", txInfo));
-        transactions_content["queued"]["12345678901234567890"].insert(std::make_pair("2", txInfo));
-        transactions_content["queued"]["12345678901234567899"].insert(std::make_pair("100", txInfo));
+        transactions_content["queued"];
         transactions_content["pending"];
         transactions_content["baseFee"];
 
-        reply = make_json_content(request["id"], transactions_content);
+        for (int i = 0; i < txpool_transactions.txs.size(); i++) {
+           silkworm::ByteView from{txpool_transactions.txs[i].rlp};
+           struct TransactionInfo txInfo{};
+           silkworm::Transaction& silkworm_transaction = dynamic_cast<Transaction&>(txInfo.transaction);
+          
+           auto result = silkworm::rlp::decode(from, silkworm_transaction);
+           if (result != silkworm::DecodingResult::kOk) {
+              break;
+           }
+           silkworm::ByteView bv{txpool_transactions.txs[i].sender};
+           std::string sender_str =  silkworm::to_hex(bv, true);
+           if (txpool_transactions.txs[i].type == silkrpc::txpool::Type::QUEUED) {
+              transactions_content["queued"][sender_str].insert(std::make_pair(std::to_string(txInfo.transaction.nonce), txInfo));
+           } else if (txpool_transactions.txs[i].type == silkrpc::txpool::Type::PENDING) {
+              transactions_content["pending"][sender_str].insert(std::make_pair(std::to_string(txInfo.transaction.nonce), txInfo));
+           } else {
+              transactions_content["baseFee"][sender_str].insert(std::make_pair(std::to_string(txInfo.transaction.nonce), txInfo));
+           }
+        }
+
+        if (result == silkworm::DecodingResult::kOk) {
+           reply = make_json_content(request["id"], transactions_content);
+        } else {
+           reply = make_json_error(request["id"], 100, "RLP decoding error");
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
