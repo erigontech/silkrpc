@@ -20,6 +20,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#ifndef SILKRPC_TYPES_JWT_SECRET_HPP_
+#define SILKRPC_TYPES_JWT_SECRET_HPP_
+
 #include <string>
 
 namespace silkrpc {
