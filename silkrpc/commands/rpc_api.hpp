@@ -29,6 +29,7 @@
 #include <silkrpc/commands/trace_api.hpp>
 #include <silkrpc/commands/web3_api.hpp>
 #include <silkrpc/commands/engine_api.hpp>
+#include <silkrpc/commands/txpool_api.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
@@ -36,12 +37,13 @@ namespace silkrpc::commands {
 
 class RpcApiTable;
 
-class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, ErigonRpcApi, TraceRpcApi, EngineRpcApi {
+class RpcApi : protected EthereumRpcApi, NetRpcApi, Web3RpcApi, DebugRpcApi, ParityRpcApi, ErigonRpcApi, TraceRpcApi, EngineRpcApi, TxPoolRpcApi {
 public:
     explicit RpcApi(Context& context, asio::thread_pool& workers) :
         EthereumRpcApi{context, workers}, NetRpcApi{context.backend}, Web3RpcApi{context}, DebugRpcApi{context, workers},
         ParityRpcApi{context}, ErigonRpcApi{context}, TraceRpcApi{context, workers},
-        EngineRpcApi(context.database, context.backend) {}
+        EngineRpcApi(context.database, context.backend),
+        TxPoolRpcApi(context) {}
     virtual ~RpcApi() {}
 
     RpcApi(const RpcApi&) = delete;
