@@ -1,3 +1,4 @@
+
 /*
     Copyright 2022 The Silkrpc Authors
 
@@ -24,6 +25,8 @@
 
 namespace silkrpc::commands {
 
+// Format for params is a list which includes a payloadId ie. [payloadId]
+// https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_getpayloadv1
 asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
@@ -49,6 +52,8 @@ asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann:
     #endif
 }
 
+// Format for params is a JSON object ie [ExecutionPayload]
+// https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_newpayloadv1
 asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
@@ -76,6 +81,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
 
 // Format for params is a JSON list containing two objects
 // one ForkchoiceState and one PayloadAttributes, i.e. [ForkchoiceState, PayloadAttributes]
+// https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_forkchoiceupdatedv1
 asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
@@ -93,7 +99,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nl
             const PayloadAttributes payload_attributes = params[1].get<PayloadAttributes>();
             const ForkchoiceUpdatedRequest forkchoice_update_request{
                 .forkchoice_state = forkchoice_state,
-                .payload_attributes = std::optional<PayloadAttributes>{payload_attributes}
+                .payload_attributes = std::make_optional(payload_attributes);
             };
             reply = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
         } else {

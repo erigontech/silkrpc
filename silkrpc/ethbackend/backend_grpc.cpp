@@ -101,7 +101,7 @@ asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPaylo
 asio::awaitable<ForkchoiceUpdatedReply> BackEndGrpc::engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request) {
     const auto start_time = clock_time::now();
     EngineForkChoiceUpdatedV1Awaitable fcu_awaitable{executor_, stub_, queue_};
-    auto req{encode_forkchoice_updated_request(forkchoice_updated_request)};
+    const auto req{encode_forkchoice_updated_request(forkchoice_updated_request)};
     const auto reply = co_await fcu_awaitable.async_call(req, asio::use_awaitable);
     PayloadStatus payload_status = decode_payload_status(reply.payloadstatus());
     ForkchoiceUpdatedReply forkchoice_updated_reply{
