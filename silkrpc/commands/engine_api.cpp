@@ -99,7 +99,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nl
             const PayloadAttributes payload_attributes = params[1].get<PayloadAttributes>();
             const ForkchoiceUpdatedRequest forkchoice_update_request{
                 .forkchoice_state = forkchoice_state,
-                .payload_attributes = std::make_optional(payload_attributes);
+                .payload_attributes = std::make_optional(payload_attributes)
             };
             reply = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
         } else {
