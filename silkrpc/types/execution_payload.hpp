@@ -46,11 +46,35 @@ struct ExecutionPayload {
     std::vector<silkworm::Bytes> transactions;
 };
 
+//! ForkChoiceState as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#ForkchoiceStateV1
+struct ForkchoiceState {
+    evmc::bytes32 head_block_hash;
+    evmc::bytes32 safe_block_hash;
+    evmc::bytes32 finalized_block_hash;
+};
+
+//! PayloadAttributes as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#payloadattributesv1
+struct PayloadAttributes {
+    uint64_t timestamp;
+    evmc::bytes32 prev_randao;
+    evmc::address suggested_fee_recipient;
+};
+
 //! PayloadStatus as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
 struct PayloadStatus {
     std::string status;
     std::optional<evmc::bytes32> latest_valid_hash;
     std::optional<std::string> validation_error;
+};
+
+struct ForkchoiceUpdatedRequest {
+    ForkchoiceState forkchoice_state;
+    std::optional<PayloadAttributes> payload_attributes;
+};
+
+struct ForkchoiceUpdatedReply {
+    PayloadStatus payload_status;
+    std::optional<uint64_t> payload_id;
 };
 
 //! TransitionConfiguration as specified by https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md
@@ -62,6 +86,9 @@ struct TransitionConfiguration {
 
 std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload);
 std::ostream& operator<<(std::ostream& out, const PayloadStatus& payload_status);
+std::ostream& operator<<(std::ostream& out, const ForkchoiceState& forkchoice_state);
+std::ostream& operator<<(std::ostream& out, const PayloadAttributes& payload_attributes);
+std::ostream& operator<<(std::ostream& out, const ForkchoiceUpdatedReply& forkchoice_updated_reply);
 std::ostream& operator<<(std::ostream& out, const TransitionConfiguration& transition_configuration);
 
 } // namespace silkrpc

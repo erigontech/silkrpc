@@ -1,3 +1,4 @@
+
 /*
     Copyright 2022 The Silkrpc Authors
 
@@ -24,6 +25,8 @@
 
 namespace silkrpc::commands {
 
+// Format for params is a list which includes a payloadId ie. [payloadId]
+// https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_getpayloadv1
 asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
@@ -49,6 +52,8 @@ asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann:
     #endif
 }
 
+// Format for params is a JSON object ie [ExecutionPayload]
+// https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_newpayloadv1
 asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
@@ -63,6 +68,47 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
     #endif
         const auto payload = params[0].get<ExecutionPayload>();
         reply = co_await backend_->engine_new_payload_v1(payload);
+    #ifndef BUILD_COVERAGE
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request.at("id"), 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request.at("id"), 100, "unexpected exception");
+    }
+    #endif
+}
+
+// Format for params is a JSON list containing two objects
+// one ForkchoiceState and one PayloadAttributes, i.e. [ForkchoiceState, PayloadAttributes]
+// https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_forkchoiceupdatedv1
+asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request.at("params");
+
+    if (params.size() != 1 && params.size() != 2) {
+        auto error_msg = "invalid engine_forkchoiceUpdatedV1 params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request.at("id"), 100, error_msg);
+        co_return;
+    }
+    #ifndef BUILD_COVERAGE
+    try {
+    #endif
+        const ForkchoiceState forkchoice_state = params[0].get<ForkchoiceState>();
+        if (params.size() == 2) {
+            const PayloadAttributes payload_attributes = params[1].get<PayloadAttributes>();
+            const ForkchoiceUpdatedRequest forkchoice_update_request{
+                .forkchoice_state = forkchoice_state,
+                .payload_attributes = std::make_optional(payload_attributes)
+            };
+            reply = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
+        } else {
+            const ForkchoiceUpdatedRequest forkchoice_update_request{
+                .forkchoice_state = forkchoice_state,
+                .payload_attributes = std::nullopt
+            };
+            reply = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
+        }
     #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
