@@ -16,45 +16,8 @@
 
 #include "txpool_api.hpp"
 
-#include <algorithm>
-#include <cstring>
-#include <exception>
-#include <iostream>
-#include <map>
 #include <string>
 #include <utility>
-
-#include <boost/endian/conversion.hpp>
-#include <evmc/evmc.hpp>
-#include <silkworm/chain/config.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/common/base.hpp>
-#include <silkworm/execution/address.hpp>
-#include <silkworm/db/util.hpp>
-#include <silkworm/types/receipt.hpp>
-#include <silkworm/types/transaction.hpp>
-
-#include <silkrpc/common/constants.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/cached_chain.hpp>
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/core/evm_executor.hpp>
-#include <silkrpc/core/evm_access_list_tracer.hpp>
-#include <silkrpc/core/estimate_gas_oracle.hpp>
-#include <silkrpc/core/gas_price_oracle.hpp>
-#include <silkrpc/core/rawdb/chain.hpp>
-#include <silkrpc/core/receipts.hpp>
-#include <silkrpc/core/state_reader.hpp>
-#include <silkrpc/ethdb/bitmap.hpp>
-#include <silkrpc/ethdb/cbor.hpp>
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkrpc/ethdb/transaction_database.hpp>
-#include <silkrpc/json/types.hpp>
-#include <silkrpc/types/block.hpp>
-#include <silkrpc/types/call.hpp>
-#include <silkrpc/types/filter.hpp>
-#include <silkrpc/types/transaction.hpp>
 
 namespace silkrpc::commands {
 
@@ -83,33 +46,33 @@ asio::awaitable<void> TxPoolRpcApi::handle_txpool_status(const nlohmann::json& r
 asio::awaitable<void> TxPoolRpcApi::handle_txpool_content(const nlohmann::json& request, nlohmann::json& reply) {
     try {
         silkworm::DecodingResult result = silkworm::DecodingResult::kOk;
-        auto txpool_transactions = co_await tx_pool_->get_transactions();
+        const auto txpool_transactions = co_await tx_pool_->get_transactions();
+        TransactionContent transactions_content;
 
-        std::map <std::string, std::map<std::string, std::map<std::string, struct TransactionInfo>>> transactions_content;
         transactions_content["queued"];
         transactions_content["pending"];
         transactions_content["baseFee"];
+        bool error = false;
 
         for (int i = 0; i < txpool_transactions.txs.size(); i++) {
            silkworm::ByteView from{txpool_transactions.txs[i].rlp};
-           struct TransactionInfo txInfo{};
-           silkworm::Transaction& silkworm_transaction = dynamic_cast<Transaction&>(txInfo.transaction);
-           auto result = silkworm::rlp::decode(from, silkworm_transaction);
+           TransactionInfo tx_info{};
+           const auto result = silkworm::rlp::decode(from, dynamic_cast<silkworm::Transaction&>(tx_info.transaction));
            if (result != silkworm::DecodingResult::kOk) {
+              error = true;
               break;
            }
-           silkworm::ByteView bv{txpool_transactions.txs[i].sender};
-           std::string sender_str =  silkworm::to_hex(bv, true);
+           std::string sender =  silkworm::to_hex(txpool_transactions.txs[i].sender, true);
            if (txpool_transactions.txs[i].type == silkrpc::txpool::Type::QUEUED) {
-              transactions_content["queued"][sender_str].insert(std::make_pair(std::to_string(txInfo.transaction.nonce), txInfo));
+              transactions_content["queued"][sender].insert(std::make_pair(std::to_string(tx_info.transaction.nonce), tx_info));
            } else if (txpool_transactions.txs[i].type == silkrpc::txpool::Type::PENDING) {
-              transactions_content["pending"][sender_str].insert(std::make_pair(std::to_string(txInfo.transaction.nonce), txInfo));
+              transactions_content["pending"][sender].insert(std::make_pair(std::to_string(tx_info.transaction.nonce), tx_info));
            } else {
-              transactions_content["baseFee"][sender_str].insert(std::make_pair(std::to_string(txInfo.transaction.nonce), txInfo));
+              transactions_content["baseFee"][sender].insert(std::make_pair(std::to_string(tx_info.transaction.nonce), tx_info));
            }
         }
 
-        if (result == silkworm::DecodingResult::kOk) {
+        if (!error) {
            reply = make_json_content(request["id"], transactions_content);
         } else {
            reply = make_json_error(request["id"], 100, "RLP decoding error");
