@@ -18,6 +18,7 @@
 #define SILKRPC_TYPES_TRANSACTION_HPP_
 
 #include <iostream>
+#include <map>
 #include <optional>
 #include <vector>
 #include <string>
@@ -79,6 +80,9 @@ struct CallBundleInfo {
 struct TransactionInfo {
    struct Transaction transaction;
 };
+
+using TransactionContent = std::map <std::string, std::map<std::string, std::map<std::string, TransactionInfo>>>;
+
 
 std::ostream& operator<<(std::ostream& out, const Transaction& t);
 std::ostream& operator<<(std::ostream& out, const silkworm::Transaction& t);
