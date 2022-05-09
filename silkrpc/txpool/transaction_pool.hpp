@@ -56,7 +56,7 @@ enum Type {
 };
 
 struct ElementInfo {
-   enum Type type;
+   Type type;
    evmc::address sender;
    silkworm::Bytes rlp;
 };
@@ -258,19 +258,20 @@ public:
         const auto reply = co_await all_awaitable.async_call(request, asio::use_awaitable);
         const auto txs_size = reply.txs_size();
         for (int i = 0; i < txs_size; i++) {
-           struct ElementInfo element{};
+           ElementInfo element{};
            const auto tx = reply.txs(i);
            const auto rlptx = tx.rlptx();
            const auto tx_sender = tx.sender();
            const auto address_bytes = silkworm::from_hex(tx.sender());
            element.sender  = silkworm::to_evmc_address(address_bytes.value());
            element.rlp = silkworm::Bytes{rlptx.begin(), rlptx.end()};
-           if (tx.type() == Txpool::AllReply_Type_PENDING)
+           if (tx.type() == Txpool::AllReply_Type_PENDING) {
               element.type = PENDING;
-           else if (tx.type() == Txpool::AllReply_Type_QUEUED)
+           } else if (tx.type() == Txpool::AllReply_Type_QUEUED) {
               element.type = QUEUED;
-           else
+           } else {
               element.type = BASE_FEE;
+           }
            txpool_transactions.txs.push_back(element);
         }
         co_return txpool_transactions;
