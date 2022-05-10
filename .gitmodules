@@ -7,3 +7,6 @@
 [submodule "silkrpc/croaring"]
 	path = silkrpc/croaring
 	url = https://github.com/lemire/CRoaringUnityBuild
+[submodule "silkrpc/jwt-cpp"]
+	path = silkrpc/jwt-cpp
+	url = https://github.com/Thalhammer/jwt-cpp.git
