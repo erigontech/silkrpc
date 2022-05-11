@@ -67,8 +67,6 @@ void from_json(const nlohmann::json& json, AccessListEntry& entry);
 
 namespace silkrpc {
 
-void to_json(nlohmann::json& json, const struct TransactionInfo& transaction_info);
-
 void to_json(nlohmann::json& json, const struct TxPoolStatusInfo& status_info);
 
 void to_json(nlohmann::json& json, const AccessListResult& access_list_result);

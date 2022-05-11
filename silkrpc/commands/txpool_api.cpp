@@ -56,19 +56,20 @@ asio::awaitable<void> TxPoolRpcApi::handle_txpool_content(const nlohmann::json& 
 
         for (int i = 0; i < txpool_transactions.txs.size(); i++) {
            silkworm::ByteView from{txpool_transactions.txs[i].rlp};
-           TransactionInfo tx_info{};
-           const auto result = silkworm::rlp::decode(from, dynamic_cast<silkworm::Transaction&>(tx_info.transaction));
+           Transaction txn{};
+           const auto result = silkworm::rlp::decode(from, dynamic_cast<silkworm::Transaction&>(txn));
            if (result != silkworm::DecodingResult::kOk) {
               error = true;
               break;
            }
+           txn.queued_in_pool = true;
            std::string sender =  silkworm::to_hex(txpool_transactions.txs[i].sender, true);
            if (txpool_transactions.txs[i].type == silkrpc::txpool::Type::QUEUED) {
-              transactions_content["queued"][sender].insert(std::make_pair(std::to_string(tx_info.transaction.nonce), tx_info));
+              transactions_content["queued"][sender].insert(std::make_pair(std::to_string(txn.nonce), txn));
            } else if (txpool_transactions.txs[i].type == silkrpc::txpool::Type::PENDING) {
-              transactions_content["pending"][sender].insert(std::make_pair(std::to_string(tx_info.transaction.nonce), tx_info));
+              transactions_content["pending"][sender].insert(std::make_pair(std::to_string(txn.nonce), txn));
            } else {
-              transactions_content["baseFee"][sender].insert(std::make_pair(std::to_string(tx_info.transaction.nonce), tx_info));
+              transactions_content["baseFee"][sender].insert(std::make_pair(std::to_string(txn.nonce), txn));
            }
         }
 

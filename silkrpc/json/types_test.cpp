@@ -693,62 +693,6 @@ TEST_CASE("serialize call_bundle with value", "[silkrpc][to_json]") {
     })"_json);
 }
 
-TEST_CASE("serialize TransactionInfo", "[silkrpc][to_json]") {
-    TransactionInfo txn1 {
-    {
-        silkworm::Transaction::Type::kLegacy,               // type
-        0,                                                  // nonce
-        50'000 * kGiga,                                     // max_priority_fee_per_gas
-        50'000 * kGiga,                                     // max_fee_per_gas
-        21'000,                                             // gas_limit
-        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address, // to
-        31337,                                              // value
-        {},                                                 // data
-        true,                                               // odd_y_parity
-        std::nullopt,                                       // chain_id
-        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
-        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
-        {},
-        0x6df9b87991262f6ba471f09758cde1c0fc1de735_address, // from
-     }
-    };
-    nlohmann::json j1 = txn1;
-    CHECK(j1 == R"({
-       "blockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-       "blockNumber":null,"gas":"0x5208","gasPrice":"0x0",
-       "hash": "0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060",
-       "input": "0x","nonce":"0x0",
-       "to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",
-       "from":"0x6df9b87991262f6ba471f09758cde1c0fc1de735",
-       "transactionIndex":null,"value":"0x7a69"
-    })"_json);
-
-    TransactionInfo txn2 {
-    {
-        silkworm::Transaction::Type::kLegacy,               // type
-        0,                                                  // nonce
-        50'000 * kGiga,                                     // max_priority_fee_per_gas
-        50'000 * kGiga,                                     // max_fee_per_gas
-        21'000,                                             // gas_limit
-        {},                                                 // data
-        31337,                                              // value
-        {},                                                 // data
-        true,                                               // odd_y_parity
-        std::nullopt,                                       // chain_id
-        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
-        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
-    }
-    };
-    nlohmann::json j2 = txn2;
-    CHECK(j2 == R"({
-       "blockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-       "blockNumber":null,"gas":"0x5208","gasPrice":"0x0",
-       "hash": "0xfdb811a18df253e54a953c9b3adec18b786013807ac4d85a89bde3336445418e",
-       "input": "0x","nonce":"0x0","to":null,
-       "transactionIndex":null,"value":"0x7a69"
-    })"_json);
-}
-
 TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
     // https://etherscan.io/tx/0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060
     // Block 46147

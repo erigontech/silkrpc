@@ -185,27 +185,6 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
 
 namespace silkrpc {
 
-void to_json(nlohmann::json& json, const struct TransactionInfo& transaction_info) {
-    json["blockHash"] = silkworm::to_bytes32(silkworm::ByteView{});
-    json["blockNumber"] = nullptr;
-    if (transaction_info.transaction.from) {
-        json["from"] = transaction_info.transaction.from.value();
-    }
-    json["gasPrice"] = silkrpc::to_quantity(transaction_info.transaction.block_base_fee_per_gas.value_or(0));
-    json["gas"] = silkrpc::to_quantity(transaction_info.transaction.gas_limit);
-    auto ethash_hash{hash_of_transaction(transaction_info.transaction)};
-    json["hash"] = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
-    json["input"] = "0x" + silkworm::to_hex(transaction_info.transaction.data);
-    json["nonce"] = silkrpc::to_quantity(transaction_info.transaction.nonce);
-    if (transaction_info.transaction.to) {
-        json["to"] =  transaction_info.transaction.to.value();
-    } else {
-        json["to"] =  nullptr;
-    }
-    json["transactionIndex"] = nullptr;
-    json["value"] = silkrpc::to_quantity(transaction_info.transaction.value);
-}
-
 void to_json(nlohmann::json& json, const struct TxPoolStatusInfo& status_info) {
     json["queued"] = silkrpc::to_quantity(status_info.queued);
     json["pending"] = silkrpc::to_quantity(status_info.pending);
@@ -295,9 +274,15 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
     to_json(json, silkworm::Transaction(transaction));
 
     json["gasPrice"] = silkrpc::to_quantity(transaction.effective_gas_price());
-    json["blockHash"] = transaction.block_hash;
-    json["blockNumber"] = silkrpc::to_quantity(transaction.block_number);
-    json["transactionIndex"] = silkrpc::to_quantity(transaction.transaction_index);
+    if (transaction.queued_in_pool) {
+        json["blockHash"] = nullptr;
+        json["blockNumber"] = nullptr;
+        json["transactionIndex"] = nullptr;
+    } else {
+        json["blockHash"] = transaction.block_hash;
+        json["blockNumber"] = silkrpc::to_quantity(transaction.block_number);
+        json["transactionIndex"] = silkrpc::to_quantity(transaction.transaction_index);
+    }
 }
 
 void from_json(const nlohmann::json& json, Call& call) {
