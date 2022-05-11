@@ -2377,7 +2377,7 @@
         "response": {
             "error": {
                 "code": 100,
-                "message": "unknown method EngineForkchoiceUpdatedV1 for service remote.ETHBACKEND"
+                "message": "unknown method EngineForkChoiceUpdatedV1 for service remote.ETHBACKEND"
             },
             "id": 1,
             "jsonrpc": "2.0"
