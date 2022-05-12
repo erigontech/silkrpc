@@ -120,6 +120,10 @@ public:
     ::grpc::Status EngineNewPayloadV1(::grpc::ServerContext* context, const ::types::ExecutionPayload* request, ::remote::EnginePayloadStatus* response) override {
         return ::grpc::Status::OK;
     }
+    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context,
+        const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
+        return ::grpc::Status::OK;
+    }
 };
 
 class FailureBackEndService : public ::remote::ETHBACKEND::Service {
@@ -143,6 +147,10 @@ public:
         return ::grpc::Status::CANCELLED;
     }
     ::grpc::Status EngineNewPayloadV1(::grpc::ServerContext* context, const ::types::ExecutionPayload* request, ::remote::EnginePayloadStatus* response) override {
+        return ::grpc::Status::CANCELLED;
+    }
+    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context,
+        const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
         return ::grpc::Status::CANCELLED;
     }
 };
@@ -220,6 +228,31 @@ public:
         response->set_status(static_cast<::remote::EngineStatus>(request->blocknumber()));
         return ::grpc::Status::OK;
     }
+
+    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context,
+        const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
+        // check if we have payloadattributes
+        CHECK(request->has_payloadattributes());
+        ::remote::EnginePayloadAttributes payload_attributes_grpc = request->payloadattributes();
+        ::remote::EngineForkChoiceState fork_choice_state_grpc = request->forkchoicestate();
+        // check forkchoice state was converted into protobuf correctly
+        CHECK(h256_equal_bytes32(fork_choice_state_grpc.headblockhash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
+        CHECK(h256_equal_bytes32(fork_choice_state_grpc.safeblockhash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
+        CHECK(h256_equal_bytes32(fork_choice_state_grpc.finalizedblockhash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
+        // check if payload attributes was converted into protobuf correctly
+        CHECK(payload_attributes_grpc.timestamp() == 0x1);
+        CHECK(h256_equal_bytes32(payload_attributes_grpc.prevrandao(), 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32));
+        CHECK(h160_equal_address(payload_attributes_grpc.suggestedfeerecipient(), 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address));
+        // assemble payload status
+        ::remote::EnginePayloadStatus *payload_status_grpc = new ::remote::EnginePayloadStatus();
+        payload_status_grpc->set_allocated_latestvalidhash(make_h256(0, 0, 0, 0x40));
+        payload_status_grpc->set_validationerror("some error");
+        payload_status_grpc->set_status(static_cast<::remote::EngineStatus>(0));
+        response->set_allocated_payloadstatus(payload_status_grpc);
+        // assemble payload id
+        response->set_payloadid(1);
+        return ::grpc::Status::OK;
+    }
 };
 
 static auto create_channel = []() {
@@ -275,6 +308,7 @@ auto test_client_version = test_comethod<ethbackend::BackEndGrpc, &ethbackend::B
 auto test_net_peer_count = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::net_peer_count, uint64_t>;
 auto test_engine_get_payload_v1 = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::engine_get_payload_v1, ExecutionPayload, uint64_t>;
 auto test_engine_new_payload_v1 = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::engine_new_payload_v1, PayloadStatus, ExecutionPayload>;
+auto test_engine_forkchoice_updated_v1 = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::engine_forkchoice_updated_v1, ForkchoiceUpdatedReply, ForkchoiceUpdatedRequest>;
 
 TEST_CASE("BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -556,4 +590,51 @@ TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
     }
 }
 
+TEST_CASE("Backend::engine_forkchoice_updated_v1", "[silkrpc][ethbackend][backend]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    silkrpc::PayloadAttributes payload_attributes{
+        .timestamp = 0x1,
+        .prev_randao = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
+        .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address
+    };
+    silkrpc::ForkchoiceUpdatedRequest forkchoice_request{
+        .forkchoice_state = silkrpc::ForkchoiceState{
+            .head_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
+            .safe_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
+            .finalized_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32
+        },
+        .payload_attributes = std::optional<silkrpc::PayloadAttributes>{payload_attributes}
+    };
+    SECTION("call engine_forkchoice_updated_v1 and get VALID status") {
+        TestBackEndService service;
+        asio::io_context io_context;
+        auto reply{asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), asio::use_future)};
+        io_context.run();
+        auto forkchoice_reply{reply.get()};
+        silkrpc::PayloadStatus payload_status = forkchoice_reply.payload_status;
+        CHECK(payload_status.status == "VALID");
+        CHECK(payload_status.latest_valid_hash == 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32);
+        CHECK(payload_status.validation_error == "some error");
+    }
+
+    SECTION("call engine_forkchoice_updated_v1 and get error") {
+        EmptyBackEndService service;
+        asio::io_context io_context;
+        auto reply{asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), asio::use_future)};
+        io_context.run();
+        auto forkchoice_reply{reply.get()};
+        silkrpc::PayloadStatus payload_status = forkchoice_reply.payload_status;
+        CHECK(payload_status.status == "VALID"); // defaults to valid status
+        CHECK(payload_status.latest_valid_hash == std::nullopt);
+        CHECK(payload_status.validation_error == std::nullopt);
+    }
+
+    SECTION("call engine_forkchoice_updated_v1 and get VALID status with empty service") {
+        FailureBackEndService service;
+        asio::io_context io_context;
+        auto reply{asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), asio::use_future)};
+        io_context.run();
+        CHECK_THROWS_AS(reply.get(), std::system_error);
+    }
+}
 } // namespace silkrpc

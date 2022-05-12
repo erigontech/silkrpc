@@ -83,6 +83,13 @@ using EngineNewPayloadV1Client = AsyncUnaryClient<
     &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineNewPayloadV1
 >;
 
+using EngineForkChoiceUpdatedV1Client = AsyncUnaryClient<
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::EngineForkChoiceUpdatedRequest,
+    ::remote::EngineForkChoiceUpdatedReply,
+    &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineForkChoiceUpdatedV1
+>;
+
 using EtherbaseAwaitable = unary_awaitable<
     asio::io_context::executor_type,
     EtherbaseClient,
@@ -139,6 +146,14 @@ using EngineNewPayloadV1Awaitable = unary_awaitable<
     ::remote::EnginePayloadStatus
 >;
 
+using EngineForkChoiceUpdatedV1Awaitable = unary_awaitable<
+    asio::io_context::executor_type,
+    EngineForkChoiceUpdatedV1Client,
+    ::remote::ETHBACKEND::StubInterface,
+    ::remote::EngineForkChoiceUpdatedRequest,
+    ::remote::EngineForkChoiceUpdatedReply
+>;
+
 class BackEndGrpc final: public BackEnd {
 public:
     explicit BackEndGrpc(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
@@ -160,6 +175,7 @@ public:
     asio::awaitable<uint64_t> net_peer_count();
     asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id);
     asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload);
+    asio::awaitable<ForkchoiceUpdatedReply> engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request);
 
 private:
     evmc::address address_from_H160(const types::H160& h160);
@@ -180,6 +196,10 @@ private:
 
     ExecutionPayload decode_execution_payload(const types::ExecutionPayload& execution_payload_grpc);
     types::ExecutionPayload encode_execution_payload(const ExecutionPayload& execution_payload);
+    remote::EngineForkChoiceState* encode_forkchoice_state(const ForkchoiceState& forkchoice_state);
+    remote::EnginePayloadAttributes* encode_payload_attributes(const PayloadAttributes& payload_attributes);
+    remote::EngineForkChoiceUpdatedRequest encode_forkchoice_updated_request(const ForkchoiceUpdatedRequest& forkchoice_updated_request);
+    PayloadStatus decode_payload_status(const remote::EnginePayloadStatus& payload_status_grpc);
     std::string decode_status_message(const remote::EngineStatus& status);
 
     asio::io_context::executor_type executor_;
