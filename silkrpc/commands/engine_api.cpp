@@ -26,6 +26,7 @@
 #include <silkrpc/ethdb/transaction_database.hpp>
 
 namespace silkrpc::commands {
+using evmc::literals::operator""_bytes32;
 
 // Format for params is a list which includes a payloadId ie. [payloadId]
 // https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_getpayloadv1
