@@ -97,18 +97,18 @@ asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nl
     #ifndef BUILD_COVERAGE
     try {
     #endif
-        evmc::bytes32 empty_hash = 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32;
+        constexpr auto zero_hash = 0_bytes32;
         const ForkchoiceState forkchoice_state = params[0].get<ForkchoiceState>();
 
         if (forkchoice_state.safe_block_hash == empty_hash) {
-            auto error_msg = "safe block hash is empty";
+            const auto error_msg = "safe block hash is empty";
             SILKRPC_ERROR << error_msg << "\n";
             reply = make_json_error(request.at("id"), 100, error_msg);
             co_return;
         }
 
         if (forkchoice_state.finalized_block_hash == empty_hash) {
-            auto error_msg = "finalized block hash is empty";
+            const auto error_msg = "finalized block hash is empty";
             SILKRPC_ERROR << error_msg << "\n";
             reply = make_json_error(request.at("id"), 100, error_msg);
             co_return;
