@@ -344,7 +344,6 @@ remote::EngineForkChoiceUpdatedRequest BackEndGrpc::encode_forkchoice_updated_re
             BackEndGrpc::encode_payload_attributes(forkchoice_updated_request.payload_attributes.value());
         forkchoice_updated_request_grpc.set_allocated_payloadattributes(payload_attributes_grpc);
     }
-    std::cout <<"done encoding\n";
     return forkchoice_updated_request_grpc;
 }
 

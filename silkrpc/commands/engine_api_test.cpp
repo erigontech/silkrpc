@@ -381,7 +381,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds only with forkchoiceStat
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
@@ -443,7 +443,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[sil
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
@@ -480,7 +480,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with invalid amount of para
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
