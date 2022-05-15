@@ -24,11 +24,9 @@ namespace silkrpc::commands {
 // https://eth.wiki/json-rpc/API#txpool_status
 asio::awaitable<void> TxPoolRpcApi::handle_txpool_status(const nlohmann::json& request, nlohmann::json& reply) {
     try {
-        struct TxPoolStatusInfo txpool_status;
-        auto status_info = co_await tx_pool_->get_status();
-        txpool_status.pending = status_info.pending;
-        txpool_status.queued = status_info.queued;
-        txpool_status.base_fee = status_info.base_fee;
+        const auto status = co_await tx_pool_->get_status();
+
+        TxPoolStatusInfo txpool_status{status.pending, status.queued, status.base_fee};
 
         reply = make_json_content(request["id"], txpool_status);
     } catch (const std::exception& e) {
@@ -45,15 +43,14 @@ asio::awaitable<void> TxPoolRpcApi::handle_txpool_status(const nlohmann::json& r
 // https://geth.ethereum.org/docs/rpc/ns-txpool
 asio::awaitable<void> TxPoolRpcApi::handle_txpool_content(const nlohmann::json& request, nlohmann::json& reply) {
     try {
-        silkworm::DecodingResult result = silkworm::DecodingResult::kOk;
         const auto txpool_transactions = co_await tx_pool_->get_transactions();
-        TransactionContent transactions_content;
 
+        TransactionContent transactions_content;
         transactions_content["queued"];
         transactions_content["pending"];
         transactions_content["baseFee"];
+ 
         bool error = false;
-
         for (int i = 0; i < txpool_transactions.txs.size(); i++) {
            silkworm::ByteView from{txpool_transactions.txs[i].rlp};
            Transaction txn{};
