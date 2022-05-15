@@ -47,7 +47,7 @@ asio::awaitable<void> TxPoolRpcApi::handle_txpool_content(const nlohmann::json& 
         transactions_content["queued"];
         transactions_content["pending"];
         transactions_content["baseFee"];
- 
+
         bool error = false;
         for (int i = 0; i < txpool_transactions.txs.size(); i++) {
             silkworm::ByteView from{txpool_transactions.txs[i].rlp};
