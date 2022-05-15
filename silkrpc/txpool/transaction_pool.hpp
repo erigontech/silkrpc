@@ -40,7 +40,6 @@
 #include <silkrpc/interfaces/txpool/txpool.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
 
-namespace Txpool = txpool;
 namespace silkrpc::txpool {
 
 struct StatusInfo {
@@ -267,9 +266,9 @@ public:
             }
             const auto rlp = tx.rlptx();
             element.rlp = silkworm::Bytes{rlp.begin(), rlp.end()};
-            if (tx.type() == Txpool::AllReply_Type_PENDING) {
+            if (tx.type() == ::txpool::AllReply_Type_PENDING) {
                 element.type = PENDING;
-            } else if (tx.type() == Txpool::AllReply_Type_QUEUED) {
+            } else if (tx.type() == ::txpool::AllReply_Type_QUEUED) {
                 element.type = QUEUED;
             } else {
                 element.type = BASE_FEE;
