@@ -44,26 +44,26 @@ namespace Txpool = txpool;
 namespace silkrpc::txpool {
 
 struct StatusInfo {
-   unsigned int queued;
-   unsigned int pending;
-   unsigned int base_fee;
+    unsigned int queued;
+    unsigned int pending;
+    unsigned int base_fee;
 };
 
 enum Type {
-   QUEUED,
-   PENDING,
-   BASE_FEE
+    QUEUED,
+    PENDING,
+    BASE_FEE
 };
 
 struct ElementInfo {
-   Type type;
-   evmc::address sender;
-   silkworm::Bytes rlp;
+    Type type;
+    evmc::address sender;
+    silkworm::Bytes rlp;
 };
 
 
 struct TxPoolTransactions {
-   std::vector<ElementInfo> txs;
+    std::vector<ElementInfo> txs;
 };
 
 using AddClient = AsyncUnaryClient<
@@ -236,44 +236,47 @@ public:
         co_return reply.found() ? std::optional<uint64_t>{reply.nonce()} : std::nullopt;
     }
 
-    asio::awaitable<struct StatusInfo> get_status() {
-        StatusInfo status_info{};
+    asio::awaitable<StatusInfo> get_status() {
         const auto start_time = clock_time::now();
-        SILKRPC_DEBUG << "TransactionPool::getStatus\n";
+        SILKRPC_DEBUG << "TransactionPool::get_status\n";
+        StatusInfo status_info{};
         ::txpool::StatusRequest request{};
         StatusAwaitable status_awaitable{executor_, stub_, queue_};
         const auto reply = co_await status_awaitable.async_call(request, asio::use_awaitable);
         status_info.base_fee = reply.basefeecount();
         status_info.queued = reply.queuedcount();
         status_info.pending = reply.pendingcount();
+        SILKRPC_DEBUG << "TransactionPool::get_status t=" << clock_time::since(start_time) << "\n";
         co_return status_info;
     }
 
     asio::awaitable<TxPoolTransactions> get_transactions() {
-        TxPoolTransactions txpool_transactions{};
         const auto start_time = clock_time::now();
         SILKRPC_DEBUG << "TransactionPool::get_transactions\n";
+        TxPoolTransactions txpool_transactions{};
         ::txpool::AllRequest request{};
         AllAwaitable all_awaitable{executor_, stub_, queue_};
         const auto reply = co_await all_awaitable.async_call(request, asio::use_awaitable);
         const auto txs_size = reply.txs_size();
         for (int i = 0; i < txs_size; i++) {
-           ElementInfo element{};
-           const auto tx = reply.txs(i);
-           const auto rlptx = tx.rlptx();
-           const auto tx_sender = tx.sender();
-           const auto address_bytes = silkworm::from_hex(tx.sender());
-           element.sender  = silkworm::to_evmc_address(address_bytes.value());
-           element.rlp = silkworm::Bytes{rlptx.begin(), rlptx.end()};
-           if (tx.type() == Txpool::AllReply_Type_PENDING) {
-              element.type = PENDING;
-           } else if (tx.type() == Txpool::AllReply_Type_QUEUED) {
-              element.type = QUEUED;
-           } else {
-              element.type = BASE_FEE;
-           }
-           txpool_transactions.txs.push_back(element);
+            const auto tx = reply.txs(i);
+            const auto sender_bytes = silkworm::from_hex(tx.sender());
+            ElementInfo element{};
+            if (sender_bytes.has_value()) {
+                element.sender = silkworm::to_evmc_address(sender_bytes.value());
+            }
+            const auto rlp = tx.rlptx();
+            element.rlp = silkworm::Bytes{rlp.begin(), rlp.end()};
+            if (tx.type() == Txpool::AllReply_Type_PENDING) {
+                element.type = PENDING;
+            } else if (tx.type() == Txpool::AllReply_Type_QUEUED) {
+                element.type = QUEUED;
+            } else {
+                element.type = BASE_FEE;
+            }
+            txpool_transactions.txs.push_back(element);
         }
+        SILKRPC_DEBUG << "TransactionPool::get_transactions t=" << clock_time::since(start_time) << "\n";
         co_return txpool_transactions;
     }
 
