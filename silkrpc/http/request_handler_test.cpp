@@ -53,8 +53,8 @@ TEST_CASE("check handle_request  empty content ", "[silkrpc][handle_request]") {
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     asio::thread_pool workers{1};
     try {
-        silkrpc::http::RequestHandler h{cp.get_context(), workers};
-        auto result{asio::co_spawn(cp.get_io_context(), h.handle_request(req, reply), asio::use_future)};
+        silkrpc::http::RequestHandler h{cp.next_context(), workers};
+        auto result{asio::co_spawn(cp.next_io_context(), h.handle_request(req, reply), asio::use_future)};
         result.get();
     } catch (...) {
        CHECK(false);
@@ -90,8 +90,8 @@ TEST_CASE("check handle_request no method", "[silkrpc][handle_request]") {
     asio::thread_pool workers{1};
 
     try {
-        silkrpc::http::RequestHandler h{cp.get_context(), workers};
-        auto result{asio::co_spawn(cp.get_io_context(), h.handle_request(req, reply), asio::use_future)};
+        silkrpc::http::RequestHandler h{cp.next_context(), workers};
+        auto result{asio::co_spawn(cp.next_io_context(), h.handle_request(req, reply), asio::use_future)};
         result.get();
     } catch (...) {
        CHECK(false);
@@ -126,8 +126,8 @@ TEST_CASE("check handle_request invalid method", "[silkrpc][handle_request]") {
     asio::thread_pool workers{1};
 
     try {
-        silkrpc::http::RequestHandler h{cp.get_context(), workers};
-        auto result{asio::co_spawn(cp.get_io_context(), h.handle_request(req, reply), asio::use_future)};
+        silkrpc::http::RequestHandler h{cp.next_context(), workers};
+        auto result{asio::co_spawn(cp.next_io_context(), h.handle_request(req, reply), asio::use_future)};
         result.get();
     } catch (...) {
        CHECK(false);
@@ -161,10 +161,10 @@ TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     asio::thread_pool workers{1};
 
-    silkrpc::http::RequestHandler h{cp.get_context(), workers};
+    silkrpc::http::RequestHandler h{cp.next_context(), workers};
     try {
-        silkrpc::http::RequestHandler h{cp.get_context(), workers};
-        auto result{asio::co_spawn(cp.get_io_context(), h.handle_request(req, reply), asio::use_future)};
+        silkrpc::http::RequestHandler h{cp.next_context(), workers};
+        auto result{asio::co_spawn(cp.next_io_context(), h.handle_request(req, reply), asio::use_future)};
         result.get();
     } catch (...) {
        CHECK(false);

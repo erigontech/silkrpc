@@ -198,7 +198,7 @@ int main(int argc, char* argv[]) {
         silkrpc::http::Server eth_rpc_service{http_port, api_spec, context_pool, worker_pool};
         silkrpc::http::Server engine_rpc_service{engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool};
 
-        auto& io_context = context_pool.get_io_context();
+        auto& io_context = context_pool.next_io_context();
         asio::signal_set signals{io_context, SIGINT, SIGTERM};
         SILKRPC_DEBUG << "Signals registered on io_context " << &io_context << "\n" << std::flush;
         signals.async_wait([&](const asio::system_error& error, int signal_number) {

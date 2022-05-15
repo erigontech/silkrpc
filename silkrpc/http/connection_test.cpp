@@ -39,7 +39,7 @@ TEST_CASE("connection creation", "[silkrpc][http][connection]") {
         // error: cmd/unit_test: Failed to load coverage: Malformed coverage data
         /*
         commands::RpcApiTable handler_table{""};
-        Connection conn{context_pool.get_context(), workers, handler_table};
+        Connection conn{context_pool.next_context(), workers, handler_table};
         */
         context_pool.stop();
         CHECK_NOTHROW(context_pool_thread.join());

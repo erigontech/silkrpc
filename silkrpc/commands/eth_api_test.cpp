@@ -52,8 +52,8 @@ void test_eth_api(HandleTestMethod test_handle_method, const nlohmann::json& req
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     asio::thread_pool workers{1};
     try {
-        EthereumRpcApiTest eth_api{cp.get_context(), workers};
-        auto result{asio::co_spawn(cp.get_io_context(), [&]() {
+        EthereumRpcApiTest eth_api{cp.next_context(), workers};
+        auto result{asio::co_spawn(cp.next_io_context(), [&]() {
             return (&eth_api->*test_handle_method)(request, reply);
         }, asio::use_future)};
         result.get();

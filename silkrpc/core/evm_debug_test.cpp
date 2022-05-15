@@ -155,8 +155,8 @@ TEST_CASE("DebugExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        asio::io_context& io_context = context_pool.get_io_context();
-        DebugExecutor executor{context_pool.get_io_context(), db_reader, workers};
+        asio::io_context& io_context = context_pool.next_io_context();
+        DebugExecutor executor{context_pool.next_io_context(), db_reader, workers};
         auto execution_result = asio::co_spawn(io_context, executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -204,8 +204,8 @@ TEST_CASE("DebugExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        DebugExecutor executor{context_pool.get_io_context(), db_reader, workers};
-        asio::io_context& io_context = context_pool.get_io_context();
+        DebugExecutor executor{context_pool.next_io_context(), db_reader, workers};
+        asio::io_context& io_context = context_pool.next_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -305,8 +305,8 @@ TEST_CASE("DebugExecutor::execute call 1") {
         block.header.number = block_number;
 
         DebugConfig config{false, false, true};
-        DebugExecutor executor{context_pool.get_io_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.get_io_context();
+        DebugExecutor executor{context_pool.next_io_context(), db_reader, workers, config};
+        asio::io_context& io_context = context_pool.next_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -397,8 +397,8 @@ TEST_CASE("DebugExecutor::execute call 1") {
         block.header.number = block_number;
 
         DebugConfig config{false, true, false};
-        DebugExecutor executor{context_pool.get_io_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.get_io_context();
+        DebugExecutor executor{context_pool.next_io_context(), db_reader, workers, config};
+        asio::io_context& io_context = context_pool.next_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -494,8 +494,8 @@ TEST_CASE("DebugExecutor::execute call 1") {
         block.header.number = block_number;
 
         DebugConfig config{true, false, false};
-        DebugExecutor executor{context_pool.get_io_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.get_io_context();
+        DebugExecutor executor{context_pool.next_io_context(), db_reader, workers, config};
+        asio::io_context& io_context = context_pool.next_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -592,8 +592,8 @@ TEST_CASE("DebugExecutor::execute call 1") {
         block.header.number = block_number;
 
         DebugConfig config{true, true, true};
-        DebugExecutor executor{context_pool.get_io_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.get_io_context();
+        DebugExecutor executor{context_pool.next_io_context(), db_reader, workers, config};
+        asio::io_context& io_context = context_pool.next_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -781,8 +781,8 @@ TEST_CASE("DebugExecutor::execute call 2") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        DebugExecutor executor{context_pool.get_io_context(), db_reader, workers};
-        asio::io_context& io_context = context_pool.get_io_context();
+        DebugExecutor executor{context_pool.next_io_context(), db_reader, workers};
+        asio::io_context& io_context = context_pool.next_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -924,8 +924,8 @@ TEST_CASE("DebugExecutor::execute call with error") {
     silkworm::Block block{};
     block.header.number = block_number;
 
-    DebugExecutor executor{context_pool.get_io_context(), db_reader, workers};
-    asio::io_context& io_context = context_pool.get_io_context();
+    DebugExecutor executor{context_pool.next_io_context(), db_reader, workers};
+    asio::io_context& io_context = context_pool.next_io_context();
     auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
     auto result = execution_result.get();
 
@@ -1074,9 +1074,9 @@ TEST_CASE("DebugExecutor::execute block") {
         "8190555050565b6000805490509056fea265627a7a72305820ca7603d2458ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60"
         "af2c64736f6c634300050a0032");
 
-    DebugExecutor executor{context_pool.get_io_context(), db_reader, workers};
+    DebugExecutor executor{context_pool.next_io_context(), db_reader, workers};
 
-    asio::io_context& io_context = context_pool.get_io_context();
+    asio::io_context& io_context = context_pool.next_io_context();
     auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block), asio::use_future);
     auto result = execution_result.get();
 

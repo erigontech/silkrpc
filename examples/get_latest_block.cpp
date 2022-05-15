@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
         };
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{1, create_channel};
-        auto& context = context_pool.get_context();
+        auto& context = context_pool.next_context();
         auto io_context = context.io_context();
         auto& database = context.database();
         auto context_pool_thread = std::thread([&]() { context_pool.run(); });

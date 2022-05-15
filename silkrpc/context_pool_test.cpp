@@ -73,32 +73,32 @@ TEST_CASE("create context pool", "[silkrpc][context_pool]") {
 
     SECTION("accept size 1") {
         ContextPool cp{1, create_channel};
-        CHECK(&cp.get_context() == &cp.get_context());
-        CHECK(&cp.get_io_context() == &cp.get_io_context());
+        CHECK(&cp.next_context() == &cp.next_context());
+        CHECK(&cp.next_io_context() == &cp.next_io_context());
     }
 
     SECTION("accept size greater than 1") {
         ContextPool cp{3, create_channel};
 
-        const auto& context1 = cp.get_context();
-        const auto& context2 = cp.get_context();
-        const auto& context3 = cp.get_context();
+        const auto& context1 = cp.next_context();
+        const auto& context2 = cp.next_context();
+        const auto& context3 = cp.next_context();
 
-        const auto& context4 = cp.get_context();
-        const auto& context5 = cp.get_context();
-        const auto& context6 = cp.get_context();
+        const auto& context4 = cp.next_context();
+        const auto& context5 = cp.next_context();
+        const auto& context6 = cp.next_context();
 
         CHECK(&context1 == &context4);
         CHECK(&context2 == &context5);
         CHECK(&context3 == &context6);
 
-        const auto& io_context1 = cp.get_io_context();
-        const auto& io_context2 = cp.get_io_context();
-        const auto& io_context3 = cp.get_io_context();
+        const auto& io_context1 = cp.next_io_context();
+        const auto& io_context2 = cp.next_io_context();
+        const auto& io_context3 = cp.next_io_context();
 
-        const auto& io_context4 = cp.get_io_context();
-        const auto& io_context5 = cp.get_io_context();
-        const auto& io_context6 = cp.get_io_context();
+        const auto& io_context4 = cp.next_io_context();
+        const auto& io_context5 = cp.next_io_context();
+        const auto& io_context6 = cp.next_io_context();
 
         CHECK(&io_context1 == &io_context4);
         CHECK(&io_context2 == &io_context5);
@@ -180,7 +180,7 @@ TEST_CASE("restart context pool", "[silkrpc][context_pool]") {
 TEST_CASE("print context pool", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     ContextPool cp{1, create_channel};
-    CHECK_NOTHROW(null_stream() << cp.get_context());
+    CHECK_NOTHROW(null_stream() << cp.next_context());
 }
 
 } // namespace silkrpc

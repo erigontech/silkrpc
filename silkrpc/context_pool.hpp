@@ -278,9 +278,9 @@ public:
 
     void run();
 
-    Context& get_context();
+    Context& next_context();
 
-    asio::io_context& get_io_context();
+    asio::io_context& next_io_context();
 
 private:
     // The pool of contexts

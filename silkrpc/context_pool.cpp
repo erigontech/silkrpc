@@ -171,15 +171,15 @@ void ContextPool::run() {
     join();
 }
 
-Context& ContextPool::get_context() {
+Context& ContextPool::next_context() {
     // Use a round-robin scheme to choose the next context to use
     auto& context = contexts_[next_index_];
     next_index_ = ++next_index_ % contexts_.size();
     return context;
 }
 
-asio::io_context& ContextPool::get_io_context() {
-    auto& client_context = get_context();
+asio::io_context& ContextPool::next_io_context() {
+    auto& client_context = next_context();
     return *client_context.io_context();
 }
 

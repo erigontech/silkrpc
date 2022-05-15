@@ -61,7 +61,7 @@ int ethbackend_coroutines(const std::string& target) {
         };
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{1, create_channel};
-        auto& context = context_pool.get_context();
+        auto& context = context_pool.next_context();
         auto io_context = context.io_context();
         auto grpc_queue = context.grpc_queue();
 

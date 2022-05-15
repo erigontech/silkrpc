@@ -156,8 +156,8 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        asio::io_context& io_context = context_pool.get_io_context();
-        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers};
+        asio::io_context& io_context = context_pool.next_io_context();
+        TraceCallExecutor executor{context_pool.next_context(), db_reader, workers};
         auto execution_result = asio::co_spawn(io_context, executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -206,8 +206,8 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         block.header.number = block_number;
 
         TraceConfig config{true, true, true};
-        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.get_io_context();
+        TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
+        asio::io_context& io_context = context_pool.next_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -334,8 +334,8 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         block.header.number = block_number;
 
         TraceConfig config{false, true, true};
-        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.get_io_context();
+        TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
+        asio::io_context& io_context = context_pool.next_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -399,8 +399,8 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         block.header.number = block_number;
 
         TraceConfig config{true, false, true};
-        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.get_io_context();
+        TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
+        asio::io_context& io_context = context_pool.next_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -519,8 +519,8 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         block.header.number = block_number;
 
         TraceConfig config{true, true, false};
-        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.get_io_context();
+        TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
+        asio::io_context& io_context = context_pool.next_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -646,8 +646,8 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         block.header.number = block_number;
 
         TraceConfig config{false, false, false};
-        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.get_io_context();
+        TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
+        asio::io_context& io_context = context_pool.next_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -806,8 +806,8 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
         block.header.number = block_number;
 
         TraceConfig config{true, true, true};
-        TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.get_io_context();
+        TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
+        asio::io_context& io_context = context_pool.next_io_context();
         auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
         auto result = execution_result.get();
 
@@ -963,8 +963,8 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
     block.header.number = block_number;
 
     TraceConfig config{true, true, true};
-    TraceCallExecutor executor{context_pool.get_context(), db_reader, workers, config};
-    asio::io_context& io_context = context_pool.get_io_context();
+    TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
+    asio::io_context& io_context = context_pool.next_io_context();
     auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
     auto result = execution_result.get();
 
