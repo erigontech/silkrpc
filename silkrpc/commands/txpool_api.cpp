@@ -25,7 +25,7 @@ namespace silkrpc::commands {
 asio::awaitable<void> TxPoolRpcApi::handle_txpool_status(const nlohmann::json& request, nlohmann::json& reply) {
     try {
         const auto status = co_await tx_pool_->get_status();
-        TxPoolStatusInfo txpool_status{status.pending, status.queued, status.base_fee};
+        TxPoolStatusInfo txpool_status{status.pending_count, status.queued_count, status.base_fee_count};
         reply = make_json_content(request["id"], txpool_status);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -49,8 +49,8 @@ asio::awaitable<void> TxPoolRpcApi::handle_txpool_content(const nlohmann::json& 
         transactions_content["baseFee"];
 
         bool error = false;
-        for (int i = 0; i < txpool_transactions.txs.size(); i++) {
-            silkworm::ByteView from{txpool_transactions.txs[i].rlp};
+        for (int i = 0; i < txpool_transactions.size(); i++) {
+            silkworm::ByteView from{txpool_transactions[i].rlp};
             Transaction txn{};
             const auto result = silkworm::rlp::decode(from, dynamic_cast<silkworm::Transaction&>(txn));
             if (result != silkworm::DecodingResult::kOk) {
@@ -58,10 +58,10 @@ asio::awaitable<void> TxPoolRpcApi::handle_txpool_content(const nlohmann::json& 
                 break;
             }
             txn.queued_in_pool = true;
-            std::string sender = silkworm::to_hex(txpool_transactions.txs[i].sender, true);
-            if (txpool_transactions.txs[i].type == silkrpc::txpool::Type::QUEUED) {
+            std::string sender = silkworm::to_hex(txpool_transactions[i].sender, true);
+            if (txpool_transactions[i].transaction_type == silkrpc::txpool::TransactionType::QUEUED) {
                 transactions_content["queued"][sender].insert(std::make_pair(std::to_string(txn.nonce), txn));
-            } else if (txpool_transactions.txs[i].type == silkrpc::txpool::Type::PENDING) {
+            } else if (txpool_transactions[i].transaction_type == silkrpc::txpool::TransactionType::PENDING) {
                 transactions_content["pending"][sender].insert(std::make_pair(std::to_string(txn.nonce), txn));
             } else {
                 transactions_content["baseFee"][sender].insert(std::make_pair(std::to_string(txn.nonce), txn));
