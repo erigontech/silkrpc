@@ -501,6 +501,96 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with invalid amount of para
     context_pool_thread.join();
 }
 
+TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty finalized block hash", "[silkrpc][engine_api]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    BackEndMock *backend = new BackEndMock();
+    nlohmann::json reply;
+    nlohmann::json request = R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":"engine_forkchoiceUpdatedv1",
+        "params":[
+            {
+                "headBlockHash":"0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a",
+                "safeBlockHash":"0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a",
+                "finalizedBlockHash":"0x0000000000000000000000000000000000000000000000000000000000000000"
+            }
+        ]
+    })"_json;
+    // Initialize contex pool
+    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    // Initialise components
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr(backend);
+    std::unique_ptr<ethdb::Database> database;
+    EngineRpcApiTest rpc(database, backend_ptr);
+
+    // spawn routine
+    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_forkchoice_updated_v1(
+            request,
+            reply
+        );
+    }, asio::use_future)};
+    result.get();
+    CHECK(reply ==  R"({
+        "error":{
+            "code":100,
+            "message":"finalized block hash is empty"
+        },
+        "id":1,
+        "jsonrpc":"2.0" 
+    })"_json);
+    cp.stop();
+    context_pool_thread.join();
+}
+
+TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty safe block hash", "[silkrpc][engine_api]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    BackEndMock *backend = new BackEndMock();
+    nlohmann::json reply;
+    nlohmann::json request = R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":"engine_forkchoiceUpdatedv1",
+        "params":[
+            {
+                "headBlockHash":"0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a",
+                "safeBlockHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+                "finalizedBlockHash":"0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a"
+            }
+        ]
+    })"_json;
+    // Initialize contex pool
+    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    // Initialise components
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr(backend);
+    std::unique_ptr<ethdb::Database> database;
+    EngineRpcApiTest rpc(database, backend_ptr);
+
+    // spawn routine
+    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_forkchoice_updated_v1(
+            request,
+            reply
+        );
+    }, asio::use_future)};
+    result.get();
+    CHECK(reply ==  R"({
+        "error":{
+            "code":100,
+            "message":"safe block hash is empty"
+        },
+        "id":1,
+        "jsonrpc":"2.0" 
+    })"_json);
+    cp.stop();
+    context_pool_thread.join();
+}
+
 TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configurations has the same request configuration", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
