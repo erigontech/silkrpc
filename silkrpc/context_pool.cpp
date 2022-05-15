@@ -47,7 +47,6 @@ std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode) {
             return std::make_unique<BusySpinWaitStrategy>();
         }
         default:
-            SILKWORM_ASSERT(false);
             return nullptr;
     }
 }
@@ -77,6 +76,7 @@ void Context::execute_loop() {
 void Context::execute_loop_single_threaded() {
     SILKRPC_INFO << "Single-thread execution loop start [" << this << "]\n";
     std::unique_ptr<WaitStrategy> wait_strategy{make_wait_strategy(wait_mode_)};
+    SILKWORM_ASSERT(wait_strategy != nullptr);
     while (!io_context_->stopped()) {
         uint32_t executed_count = rpc_end_point_->poll_one();
         executed_count += io_context_->poll_one();

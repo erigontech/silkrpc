@@ -32,6 +32,14 @@ using Catch::Matchers::Message;
 
 ChannelFactory create_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
 
+TEST_CASE("make_wait_strategy", "[silkrpc][context_pool]") {
+    CHECK(dynamic_cast<SleepingWaitStrategy*>(make_wait_strategy(WaitMode::sleeping).get()) != nullptr);
+    CHECK(dynamic_cast<YieldingWaitStrategy*>(make_wait_strategy(WaitMode::yielding).get()) != nullptr);
+    CHECK(dynamic_cast<SpinWaitWaitStrategy*>(make_wait_strategy(WaitMode::spin_wait).get()) != nullptr);
+    CHECK(dynamic_cast<BusySpinWaitStrategy*>(make_wait_strategy(WaitMode::busy_spin).get()) != nullptr);
+    CHECK(make_wait_strategy(WaitMode::blocking).get() == nullptr);
+}
+
 TEST_CASE("Context", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     Context context{create_channel, std::make_shared<BlockCache>()};
