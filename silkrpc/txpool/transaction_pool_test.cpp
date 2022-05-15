@@ -357,7 +357,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         public:
             ::grpc::Status All(::grpc::ServerContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response) override {
                 auto tx = response->add_txs();
-                tx->set_type(Txpool::AllReply_Type_QUEUED);
+                tx->set_type(::txpool::AllReply_Type_QUEUED);
                 tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
                 tx->set_rlptx("0804");
                 return ::grpc::Status::OK;
@@ -380,15 +380,15 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         public:
             ::grpc::Status All(::grpc::ServerContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response) override {
                 auto tx = response->add_txs();
-                tx->set_type(Txpool::AllReply_Type_QUEUED);
+                tx->set_type(::txpool::AllReply_Type_QUEUED);
                 tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
                 tx->set_rlptx("0804");
                 tx = response->add_txs();
-                tx->set_type(Txpool::AllReply_Type_PENDING);
+                tx->set_type(::txpool::AllReply_Type_PENDING);
                 tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de735");
                 tx->set_rlptx("0806");
                 tx = response->add_txs();
-                tx->set_type(Txpool::AllReply_Type_BASE_FEE);
+                tx->set_type(::txpool::AllReply_Type_BASE_FEE);
                 tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de736");
                 tx->set_rlptx("0807");
                 return ::grpc::Status::OK;
@@ -403,13 +403,13 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         const auto sender1{0x9988b87991262f6ba471f09758cde1c0fc1de735_address};
         const auto sender2{0x9988b87991262f6ba471f09758cde1c0fc1de736_address};
         CHECK(get_transactions.txs.size() == 3);
-        CHECK(get_transactions.txs[0].type == silkrpc::txpool::Type::QUEUED);
+        CHECK(get_transactions.txs[0].type == txpool::Type::QUEUED);
         CHECK(get_transactions.txs[0].sender == sender);
         CHECK(get_transactions.txs[0].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
-        CHECK(get_transactions.txs[1].type == silkrpc::txpool::Type::PENDING);
+        CHECK(get_transactions.txs[1].type == txpool::Type::PENDING);
         CHECK(get_transactions.txs[1].sender == sender1);
         CHECK(get_transactions.txs[1].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x36});
-        CHECK(get_transactions.txs[2].type == silkrpc::txpool::Type::BASE_FEE);
+        CHECK(get_transactions.txs[2].type == txpool::Type::BASE_FEE);
         CHECK(get_transactions.txs[2].sender == sender2);
         CHECK(get_transactions.txs[2].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x37});
    }
