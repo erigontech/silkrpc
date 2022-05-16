@@ -176,30 +176,30 @@ inline void sleep_then_check_wait(WaitStrategy& w, const std::chrono::duration<R
 
 TEST_CASE("SleepingWaitStrategy", "[silkrpc][context_pool]") {
     SleepingWaitStrategy wait_strategy;
-    sleep_then_check_wait(wait_strategy, 1ms, 1);
-    sleep_then_check_wait(wait_strategy, 5ms, 0);
-    sleep_then_check_wait(wait_strategy, 5ms, 0);
+    sleep_then_check_wait(wait_strategy, 10ms, 1);
+    sleep_then_check_wait(wait_strategy, 20ms, 0);
+    sleep_then_check_wait(wait_strategy, 20ms, 0);
 }
 
 TEST_CASE("YieldingWaitStrategy", "[silkrpc][context_pool]") {
     YieldingWaitStrategy wait_strategy;
-    sleep_then_check_wait(wait_strategy, 1ms, 1);
-    sleep_then_check_wait(wait_strategy, 5ms, 0);
-    sleep_then_check_wait(wait_strategy, 5ms, 0);
+    sleep_then_check_wait(wait_strategy, 10ms, 1);
+    sleep_then_check_wait(wait_strategy, 20ms, 0);
+    sleep_then_check_wait(wait_strategy, 20ms, 0);
 }
 
 TEST_CASE("SpinWaitWaitStrategy", "[silkrpc][context_pool]") {
     SpinWaitWaitStrategy wait_strategy;
-    sleep_then_check_wait(wait_strategy, 1ms, 1);
-    sleep_then_check_wait(wait_strategy, 5ms, 0);
-    sleep_then_check_wait(wait_strategy, 5ms, 0);
+    sleep_then_check_wait(wait_strategy, 10ms, 1);
+    sleep_then_check_wait(wait_strategy, 20ms, 0);
+    sleep_then_check_wait(wait_strategy, 20ms, 0);
 }
 
 TEST_CASE("BusySpinWaitStrategy", "[silkrpc][context_pool]") {
     BusySpinWaitStrategy wait_strategy;
-    sleep_then_check_wait(wait_strategy, 1ms, 1);
-    sleep_then_check_wait(wait_strategy, 5ms, 0);
-    sleep_then_check_wait(wait_strategy, 5ms, 0);
+    sleep_then_check_wait(wait_strategy, 10ms, 1);
+    sleep_then_check_wait(wait_strategy, 20ms, 0);
+    sleep_then_check_wait(wait_strategy, 20ms, 0);
 }
 
 TEST_CASE("make_wait_strategy", "[silkrpc][context_pool]") {
