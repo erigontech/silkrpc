@@ -30,7 +30,7 @@
 #include <chrono>
 #include <grpcpp/alarm.h>
 
-using namespace std::chrono_literals;
+using namespace std::chrono_literals; // NOLINT(build/namespaces)
 
 namespace silkworm::rpc {
 
