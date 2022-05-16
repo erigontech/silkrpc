@@ -156,6 +156,7 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
         << "   msg.depth: " << std::dec << execution_state.msg->depth
         << "}\n";
 
+
     bool output_storage = false;
     if (!config_.disableStorage) {
         if (opcode_name == "SLOAD" && stack_height >= 1) {
@@ -183,6 +184,11 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
             auto gas_cost = log.gas - execution_state.gas_left;
             log.gas_cost = gas_cost;
 
+    if (log.op == "SLOAD") {
+       std::cout << gas_cost <<  "\n";
+    }
+
+
             if (!config_.disableMemory) {
                 auto& memory = log.memory;
                 for (int idx = memory.size(); idx < current_memory.size(); idx++) {
@@ -199,6 +205,11 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
     log.op = opcode_name == "KECCAK256" ? "SHA3" : opcode_name; // TODO(sixtysixter) for RPCDAEMON compatibility
     log.gas = execution_state.gas_left;
     log.depth = execution_state.msg->depth + 1;
+
+    if (opcode_name == "SLOAD") {
+       std::cout << opcode_name << " " << log.gas << "\n";
+    }
+
     if (!config_.disableStack) {
         output_stack(log.stack, stack_top, stack_height);
     }

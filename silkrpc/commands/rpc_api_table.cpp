@@ -176,6 +176,7 @@ void RpcApiTable::add_engine_handlers() {
 
 void RpcApiTable::add_txpool_handlers() {
     handlers_[http::method::k_txpool_status] = &commands::RpcApi::handle_txpool_status;
+    handlers_[http::method::k_txpool_content] = &commands::RpcApi::handle_txpool_content;
 }
 
 } // namespace silkrpc::commands

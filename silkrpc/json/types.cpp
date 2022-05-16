@@ -274,9 +274,15 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
     to_json(json, silkworm::Transaction(transaction));
 
     json["gasPrice"] = silkrpc::to_quantity(transaction.effective_gas_price());
-    json["blockHash"] = transaction.block_hash;
-    json["blockNumber"] = silkrpc::to_quantity(transaction.block_number);
-    json["transactionIndex"] = silkrpc::to_quantity(transaction.transaction_index);
+    if (transaction.queued_in_pool) {
+        json["blockHash"] = nullptr;
+        json["blockNumber"] = nullptr;
+        json["transactionIndex"] = nullptr;
+    } else {
+        json["blockHash"] = transaction.block_hash;
+        json["blockNumber"] = silkrpc::to_quantity(transaction.block_number);
+        json["transactionIndex"] = silkrpc::to_quantity(transaction.transaction_index);
+    }
 }
 
 void from_json(const nlohmann::json& json, Call& call) {
