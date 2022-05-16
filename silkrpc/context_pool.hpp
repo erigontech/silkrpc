@@ -35,7 +35,7 @@
 //#include <silkworm/rpc/completion_end_point.hpp>
 #include <silkrpc/common/log.hpp>
 
-// Temporary modified copy of CompletionEndPoint just for prototyping
+// TODO(canepat) Temporary modified copy of CompletionEndPoint just for prototyping
 namespace silkworm::rpc {
 
 //! Application end-point dedicated to read completion notifications from one gRPC completion queue.
