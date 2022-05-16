@@ -2377,7 +2377,7 @@
         "response": {
             "error": {
                 "code": 100,
-                "message": "unknown method EngineForkchoiceUpdatedV1 for service remote.ETHBACKEND"
+                "message": "unknown method EngineForkChoiceUpdatedV1 for service remote.ETHBACKEND"
             },
             "id": 1,
             "jsonrpc": "2.0"
@@ -2488,6 +2488,32 @@
         },
         "response": {
             "error":{"code":-32000,"message":"execution aborted (timeout)"},
+            "id": 1,
+            "jsonrpc": "2.0"
+        }
+   },
+   {
+        "request": {
+            "jsonrpc": "2.0",
+            "method": "txpool_status",
+            "params": [], 
+            "id": 1
+        },
+        "response": {
+            "result":{"baseFee":"0x0","pending":"0x0","queued":"0x0"},
+            "id": 1,
+            "jsonrpc": "2.0"
+        }
+   },
+   {
+        "request": {
+            "jsonrpc": "2.0",
+            "method": "txpool_content",
+            "params": [], 
+            "id": 1
+        },
+        "response": {
+            "result":{"baseFee":{},"pending":{},"queued":{}},
             "id": 1,
             "jsonrpc": "2.0"
         }

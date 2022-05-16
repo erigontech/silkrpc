@@ -20,7 +20,9 @@
 #include <cstring>
 #include <exception>
 #include <iostream>
+#include <map>
 #include <string>
+#include <utility>
 
 #include <boost/endian/conversion.hpp>
 #include <evmc/evmc.hpp>
@@ -1538,27 +1540,6 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
     }
 
     reply = make_json_content(request["id"], hash);
-
-    co_return;
-}
-
-// https://eth.wiki/json-rpc/API#txpool_status
-asio::awaitable<void> EthereumRpcApi::handle_txpool_status(const nlohmann::json& request, nlohmann::json& reply) {
-    try {
-        struct TxPoolStatusInfo txpool_status;
-        auto status_info = co_await tx_pool_->get_status();
-        txpool_status.pending = status_info.pending;
-        txpool_status.queued = status_info.queued;
-        txpool_status.base_fee = status_info.base_fee;
-
-        reply = make_json_content(request["id"], txpool_status);
-    } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
-    } catch (...) {
-        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, "unexpected exception");
-    }
 
     co_return;
 }
