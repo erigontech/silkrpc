@@ -168,28 +168,38 @@ namespace silkrpc {
 
 using Catch::Matchers::Message;
 
+template<typename R, typename P>
+inline void sleep_then_check_wait(WaitStrategy& w, const std::chrono::duration<R, P>& t, uint32_t executed_count) {
+    std::this_thread::sleep_for(t);
+    CHECK_NOTHROW(w.wait_once(executed_count));
+}
+
 TEST_CASE("SleepingWaitStrategy", "[silkrpc][context_pool]") {
     SleepingWaitStrategy wait_strategy;
-    CHECK_NOTHROW(wait_strategy.wait_once(0));
-    CHECK_NOTHROW(wait_strategy.wait_once(1));
+    sleep_then_check_wait(wait_strategy, 1ms, 1);
+    sleep_then_check_wait(wait_strategy, 5ms, 0);
+    sleep_then_check_wait(wait_strategy, 5ms, 0);
 }
 
 TEST_CASE("YieldingWaitStrategy", "[silkrpc][context_pool]") {
     YieldingWaitStrategy wait_strategy;
-    CHECK_NOTHROW(wait_strategy.wait_once(0));
-    CHECK_NOTHROW(wait_strategy.wait_once(1));
+    sleep_then_check_wait(wait_strategy, 1ms, 1);
+    sleep_then_check_wait(wait_strategy, 5ms, 0);
+    sleep_then_check_wait(wait_strategy, 5ms, 0);
 }
 
 TEST_CASE("SpinWaitWaitStrategy", "[silkrpc][context_pool]") {
     SpinWaitWaitStrategy wait_strategy;
-    CHECK_NOTHROW(wait_strategy.wait_once(0));
-    CHECK_NOTHROW(wait_strategy.wait_once(1));
+    sleep_then_check_wait(wait_strategy, 1ms, 1);
+    sleep_then_check_wait(wait_strategy, 5ms, 0);
+    sleep_then_check_wait(wait_strategy, 5ms, 0);
 }
 
 TEST_CASE("BusySpinWaitStrategy", "[silkrpc][context_pool]") {
     BusySpinWaitStrategy wait_strategy;
-    CHECK_NOTHROW(wait_strategy.wait_once(0));
-    CHECK_NOTHROW(wait_strategy.wait_once(1));
+    sleep_then_check_wait(wait_strategy, 1ms, 1);
+    sleep_then_check_wait(wait_strategy, 5ms, 0);
+    sleep_then_check_wait(wait_strategy, 5ms, 0);
 }
 
 TEST_CASE("make_wait_strategy", "[silkrpc][context_pool]") {
