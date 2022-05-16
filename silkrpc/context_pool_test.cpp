@@ -30,7 +30,29 @@ namespace silkrpc {
 
 using Catch::Matchers::Message;
 
-ChannelFactory create_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
+TEST_CASE("SleepingWaitStrategy", "[silkrpc][context_pool]") {
+    SleepingWaitStrategy wait_strategy;
+    CHECK_NOTHROW(wait_strategy.wait_once(0));
+    CHECK_NOTHROW(wait_strategy.wait_once(1));
+}
+
+TEST_CASE("YieldingWaitStrategy", "[silkrpc][context_pool]") {
+    YieldingWaitStrategy wait_strategy;
+    CHECK_NOTHROW(wait_strategy.wait_once(0));
+    CHECK_NOTHROW(wait_strategy.wait_once(1));
+}
+
+TEST_CASE("SpinWaitWaitStrategy", "[silkrpc][context_pool]") {
+    SpinWaitWaitStrategy wait_strategy;
+    CHECK_NOTHROW(wait_strategy.wait_once(0));
+    CHECK_NOTHROW(wait_strategy.wait_once(1));
+}
+
+TEST_CASE("BusySpinWaitStrategy", "[silkrpc][context_pool]") {
+    BusySpinWaitStrategy wait_strategy;
+    CHECK_NOTHROW(wait_strategy.wait_once(0));
+    CHECK_NOTHROW(wait_strategy.wait_once(1));
+}
 
 TEST_CASE("make_wait_strategy", "[silkrpc][context_pool]") {
     CHECK(dynamic_cast<SleepingWaitStrategy*>(make_wait_strategy(WaitMode::sleeping).get()) != nullptr);
@@ -40,6 +62,8 @@ TEST_CASE("make_wait_strategy", "[silkrpc][context_pool]") {
     CHECK(make_wait_strategy(WaitMode::blocking).get() == nullptr);
 }
 
+ChannelFactory create_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
+
 TEST_CASE("Context", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     Context context{create_channel, std::make_shared<BlockCache>()};
@@ -47,6 +71,9 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
     SECTION("Context::Context", "[silkrpc][context_pool]") {
         CHECK_NOTHROW(context.io_context() != nullptr);
         CHECK_NOTHROW(context.rpc_end_point() != nullptr);
+        CHECK_NOTHROW(context.backend() != nullptr);
+        CHECK_NOTHROW(context.miner() != nullptr);
+        CHECK_NOTHROW(context.block_cache() != nullptr);
     }
 
     SECTION("Context::execution_loop", "[silkrpc][context_pool]") {
