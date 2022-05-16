@@ -527,7 +527,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty finalized block 
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
@@ -572,7 +572,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty safe block hash"
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
