@@ -24,19 +24,19 @@
 #include <asio/use_future.hpp>
 #include <catch2/catch.hpp>
 
-namespace silkrpc {
+namespace silkrpc::commands {
 
 using Catch::Matchers::Message;
 
-class ErigonRpcApiTest : public commands::ErigonRpcApi {
+class ErigonRpcApiTest : public ErigonRpcApi {
 public:
-    explicit ErigonRpcApiTest(Context& context) : commands::ErigonRpcApi{context} {}
+    explicit ErigonRpcApiTest(Context& context) : ErigonRpcApi{context} {}
 
-    using commands::ErigonRpcApi::handle_erigon_get_header_by_hash;
-    using commands::ErigonRpcApi::handle_erigon_get_header_by_number;
-    using commands::ErigonRpcApi::handle_erigon_get_logs_by_hash;
-    using commands::ErigonRpcApi::handle_erigon_forks;
-    using commands::ErigonRpcApi::handle_erigon_issuance;
+    using ErigonRpcApi::handle_erigon_get_header_by_hash;
+    using ErigonRpcApi::handle_erigon_get_header_by_number;
+    using ErigonRpcApi::handle_erigon_get_logs_by_hash;
+    using ErigonRpcApi::handle_erigon_forks;
+    using ErigonRpcApi::handle_erigon_issuance;
 };
 
 using TestHandleMethod = asio::awaitable<void>(ErigonRpcApiTest::*)(const nlohmann::json&, nlohmann::json&);
@@ -67,6 +67,13 @@ void check_api_ko(TestHandleMethod method, const nlohmann::json& request, nlohma
     check_api(method, request, reply, /*success=*/false);
 }
 
+TEST_CASE("ErigonRpcApi::ErigonRpcApi", "[silkrpc][erigon_api]") {
+    ContextPool context_pool{1, []() {
+        return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+    }};
+    CHECK_NOTHROW(ErigonRpcApi{context_pool.next_context()});
+}
+
 TEST_CASE("handle_erigon_get_header_by_hash", "[silkrpc][erigon_api]") {
     nlohmann::json reply;
 
@@ -87,5 +94,4 @@ TEST_CASE("handle_erigon_get_header_by_hash", "[silkrpc][erigon_api]") {
     }*/
 }
 
-} // namespace silkrpc
-
+} // namespace silkrpc::commands

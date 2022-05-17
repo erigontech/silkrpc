@@ -34,18 +34,14 @@ std::ostream& operator<<(std::ostream& out, Context& c) {
 
 std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode) {
     switch (wait_mode) {
-        case WaitMode::yielding: {
+        case WaitMode::yielding:
             return std::make_unique<YieldingWaitStrategy>();
-        }
-        case WaitMode::sleeping: {
+        case WaitMode::sleeping:
             return std::make_unique<SleepingWaitStrategy>();
-        }
-        case WaitMode::spin_wait: {
+        case WaitMode::spin_wait:
             return std::make_unique<SpinWaitWaitStrategy>();
-        }
-        case WaitMode::busy_spin: {
+        case WaitMode::busy_spin:
             return std::make_unique<BusySpinWaitStrategy>();
-        }
         default:
             return nullptr;
     }
