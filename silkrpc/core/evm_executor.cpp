@@ -228,7 +228,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 if (error) {
                     silkworm::Bytes data{};
                     ExecutionResult exec_result{1000, txn.gas_limit, data, *error};
-                    asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                    asio::post(io_context_, [exec_result, self = std::move(self)]() mutable {
                         self.complete(exec_result);
                     });
                     return;
@@ -248,7 +248,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                    std::string from = silkworm::to_hex(*txn.from);
                    std::string error = "insufficient funds for gas * price + value: address 0x" + from + " have " + intx::to_string(have) + " want " + intx::to_string(want+txn.value);
                    ExecutionResult exec_result{1000, txn.gas_limit, data, error};
-                   asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                   asio::post(io_context_, [exec_result, self = std::move(self)]() mutable {
                        self.complete(exec_result);
                    });
                    return;
@@ -278,7 +278,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 }
 
                 ExecutionResult exec_result{result.status, gas_left, result.data};
-                asio::post(*context_.io_context, [exec_result, self = std::move(self)]() mutable {
+                asio::post(io_context_, [exec_result, self = std::move(self)]() mutable {
                     self.complete(exec_result);
                 });
             });

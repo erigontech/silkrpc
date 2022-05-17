@@ -89,9 +89,9 @@ int main(int argc, char* argv[]) {
         };
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{1, create_channel};
-        auto& context = context_pool.get_context();
-        auto& io_context = context.io_context;
-        auto& database = context.database;
+        auto& context = context_pool.next_context();
+        auto io_context = context.io_context();
+        auto& database = context.database();
         auto context_pool_thread = std::thread([&]() { context_pool.run(); });
 
         const auto latest_block_number = get_latest_block(*io_context, *database);
@@ -99,8 +99,7 @@ int main(int argc, char* argv[]) {
             std::cout << "latest_block_number: " << latest_block_number.value() << "\n" << std::flush;
         }
 
-        context_pool.stop();
-        context_pool_thread.join();
+        context_pool.run();
     } catch (const std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n" << std::flush;
     } catch (...) {

@@ -18,12 +18,18 @@
 
 #include <catch2/catch.hpp>
 
+#include <silkrpc/common/log.hpp>
+
 namespace silkrpc::commands {
 
 using Catch::Matchers::Message;
 
 TEST_CASE("TraceRpcApi") {
-    Context context;
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    ChannelFactory create_channel = []() {
+        return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+    };
+    Context context{create_channel, std::make_shared<BlockCache>()};
     asio::thread_pool workers{1};
 
     SECTION("CTOR") {

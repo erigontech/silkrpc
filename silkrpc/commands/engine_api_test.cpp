@@ -182,7 +182,7 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_get_payload_v1(
             request,
             reply
@@ -216,7 +216,7 @@ TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_get_payload_v1(
             request,
             reply
@@ -283,7 +283,7 @@ TEST_CASE("handle_engine_new_payload_v1 succeeds if request is expected payload 
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_new_payload_v1(
             request,
             reply
@@ -321,7 +321,7 @@ TEST_CASE("handle_engine_new_payload_v1 fails with invalid amount of params", "[
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_new_payload_v1(
             request,
             reply
@@ -381,7 +381,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds only with forkchoiceStat
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
@@ -443,7 +443,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[sil
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
@@ -480,7 +480,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with invalid amount of para
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
@@ -527,7 +527,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty finalized block 
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
@@ -572,7 +572,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty safe block hash"
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
@@ -627,7 +627,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
@@ -681,7 +681,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
@@ -735,7 +735,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
@@ -791,7 +791,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
@@ -847,7 +847,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
@@ -903,7 +903,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
@@ -959,7 +959,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if consensus layer se
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
@@ -999,7 +999,7 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params",
         "params":[]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.get_io_context(), [&rpc, &reply, &request]() {
+    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply

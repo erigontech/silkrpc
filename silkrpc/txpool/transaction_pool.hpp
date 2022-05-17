@@ -158,7 +158,7 @@ public:
 
     asio::awaitable<OperationResult> add_transaction(const silkworm::ByteView& rlp_tx) {
         const auto start_time = clock_time::now();
-        SILKRPC_DEBUG << "TransactionPool::add_transaction rlp_tx=" << rlp_tx << "\n";
+        SILKRPC_DEBUG << "TransactionPool::add_transaction rlp_tx=" << silkworm::to_hex(rlp_tx) << "\n";
         ::txpool::AddRequest request;
         request.add_rlptxs(rlp_tx.data(), rlp_tx.size());
         AddAwaitable add_awaitable{executor_, stub_, queue_};

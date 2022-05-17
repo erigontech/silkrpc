@@ -36,7 +36,7 @@ namespace silkrpc::commands {
 class TxPoolRpcApi {
 public:
     explicit TxPoolRpcApi(Context& context)
-    : context_(context), database_(context.database), tx_pool_{context.tx_pool} {}
+    : context_(context), database_(context.database()), tx_pool_{context.tx_pool()} {}
     virtual ~TxPoolRpcApi() {}
 
     TxPoolRpcApi(const TxPoolRpcApi&) = delete;

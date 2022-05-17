@@ -35,7 +35,7 @@ namespace silkrpc::commands {
 
 class ErigonRpcApi {
 public:
-    explicit ErigonRpcApi(Context& context) : database_(context.database), context_(context) {}
+    explicit ErigonRpcApi(Context& context) : database_(context.database()), context_(context) {}
     virtual ~ErigonRpcApi() {}
 
     ErigonRpcApi(const ErigonRpcApi&) = delete;

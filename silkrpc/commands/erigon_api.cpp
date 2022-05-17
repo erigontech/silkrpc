@@ -125,7 +125,7 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_logs_by_hash(const nlohman
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache, tx_database, block_hash);
+        const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache(), tx_database, block_hash);
         const auto receipts{co_await core::get_receipts(tx_database, block_with_hash)};
 
         SILKRPC_DEBUG << "receipts.size(): " << receipts.size() << "\n";

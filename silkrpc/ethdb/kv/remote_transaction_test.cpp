@@ -50,7 +50,6 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
                 });
             }
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -84,7 +83,6 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
                 });
             }
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -117,7 +115,6 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
                 });
             }
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -152,7 +149,6 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
                 read_completed(::grpc::Status::OK, pair);
             }
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -184,7 +180,6 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
             }
             void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -219,7 +214,6 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                 write_completed(::grpc::Status::OK);
             }
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -263,7 +257,6 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                 write_completed(::grpc::Status::OK);
             }
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -296,7 +289,6 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                write_completed(::grpc::Status::OK);
             }
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -327,7 +319,6 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                 write_completed(::grpc::Status::OK);
             }
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -363,7 +354,6 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                 write_completed(::grpc::Status::CANCELLED);
             }
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -394,7 +384,6 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                 write_completed(::grpc::Status::OK);
             }
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -427,7 +416,6 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                 write_completed(::grpc::Status::OK);
             }
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -458,7 +446,6 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                 write_completed(::grpc::Status::OK);
             }
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -494,7 +481,6 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                 write_completed(::grpc::Status::CANCELLED);
             }
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -525,7 +511,6 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
                 write_completed(::grpc::Status::OK);
             }
-            void completed(bool ok) override {}
         };
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());

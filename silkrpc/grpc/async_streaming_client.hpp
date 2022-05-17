@@ -21,12 +21,10 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/grpc/async_completion_handler.hpp>
-
 namespace silkrpc {
 
 template<typename Request, typename Response>
-class AsyncStreamingClient : public AsyncCompletionHandler  {
+class AsyncStreamingClient {
 public:
     virtual void start_call(std::function<void(const grpc::Status&)> start_completed) = 0;
 

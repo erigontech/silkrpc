@@ -35,7 +35,7 @@ namespace silkrpc::commands {
 
 class ParityRpcApi {
 public:
-    explicit ParityRpcApi(Context& context) : database_(context.database), context_(context) {}
+    explicit ParityRpcApi(Context& context) : database_(context.database()), context_(context) {}
     virtual ~ParityRpcApi() {}
 
     ParityRpcApi(const ParityRpcApi&) = delete;

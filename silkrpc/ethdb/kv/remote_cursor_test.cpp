@@ -37,8 +37,6 @@ public:
     void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {}
 
     void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-
-    void completed(bool ok) override {}
 };
 
 TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
