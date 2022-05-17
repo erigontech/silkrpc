@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <stdexcept>
+#include <string>
 #include <thread>
 
 #include <catch2/catch.hpp>
