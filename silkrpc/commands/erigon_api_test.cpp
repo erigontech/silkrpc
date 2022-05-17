@@ -70,7 +70,9 @@ void check_api_ko(TestHandleMethod method, const nlohmann::json& request, nlohma
 TEST_CASE("handle_erigon_get_header_by_hash", "[silkrpc][erigon_api]") {
     nlohmann::json reply;
 
-    SECTION("request params is empty: success and return error") {
+    // Uncommenting the following tests you got stuck into llvm-cov problem:
+    // error: cmd/unit_test: Failed to load coverage: Malformed coverage data
+    /*SECTION("request params is empty: success and return error") {
         check_api_ok(&ErigonRpcApiTest::handle_erigon_get_header_by_hash, R"({
             "jsonrpc":"2.0",
             "id":1,
@@ -82,7 +84,7 @@ TEST_CASE("handle_erigon_get_header_by_hash", "[silkrpc][erigon_api]") {
             "id":1,
             "error":{"code":100,"message":"invalid erigon_getHeaderByHash params: []"}
         })"_json);
-    }
+    }*/
 }
 
 } // namespace silkrpc

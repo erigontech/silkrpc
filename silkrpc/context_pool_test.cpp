@@ -214,36 +214,43 @@ ChannelFactory create_channel = []() { return grpc::CreateChannel("localhost", g
 
 TEST_CASE("Context", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
-    Context context{create_channel, std::make_shared<BlockCache>()};
 
-    SECTION("Context::Context", "[silkrpc][context_pool]") {
-        CHECK_NOTHROW(context.io_context() != nullptr);
-        CHECK_NOTHROW(context.rpc_end_point() != nullptr);
-        CHECK_NOTHROW(context.backend() != nullptr);
-        CHECK_NOTHROW(context.miner() != nullptr);
-        CHECK_NOTHROW(context.block_cache() != nullptr);
-    }
+    WaitMode all_wait_modes[] = {
+        WaitMode::blocking, WaitMode::sleeping, WaitMode::yielding, WaitMode::spin_wait, WaitMode::busy_spin
+    };
+    for (auto wait_mode : all_wait_modes) {
+        SECTION(std::string("Context::Context wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
+            Context context{create_channel, std::make_shared<BlockCache>(), wait_mode};
+            CHECK_NOTHROW(context.io_context() != nullptr);
+            CHECK_NOTHROW(context.rpc_end_point() != nullptr);
+            CHECK_NOTHROW(context.backend() != nullptr);
+            CHECK_NOTHROW(context.miner() != nullptr);
+            CHECK_NOTHROW(context.block_cache() != nullptr);
+        }
 
-    SECTION("Context::execution_loop", "[silkrpc][context_pool]") {
-        std::atomic_bool processed{false};
-        auto io_context = context.io_context();
-        io_context->post([&]() {
-            processed = true;
-            io_context->stop();
-        });
-        auto context_thread = std::thread([&]() { context.execute_loop(); });
-        CHECK_NOTHROW(context_thread.join());
-        CHECK(processed);
-    }
+        SECTION(std::string("Context::execute_loop wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
+            Context context{create_channel, std::make_shared<BlockCache>(), wait_mode};
+            std::atomic_bool processed{false};
+            auto io_context = context.io_context();
+            io_context->post([&]() {
+                processed = true;
+                io_context->stop();
+            });
+            auto context_thread = std::thread([&]() { context.execute_loop(); });
+            CHECK_NOTHROW(context_thread.join());
+            CHECK(processed);
+        }
 
-    SECTION("Context::stop", "[silkrpc][context_pool]") {
-        std::atomic_bool processed{false};
-        context.io_context()->post([&]() {
-            processed = true;
-        });
-        auto context_thread = std::thread([&]() { context.execute_loop(); });
-        CHECK_NOTHROW(context.stop());
-        CHECK_NOTHROW(context_thread.join());
+        SECTION(std::string("Context::stop wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
+            Context context{create_channel, std::make_shared<BlockCache>(), wait_mode};
+            std::atomic_bool processed{false};
+            context.io_context()->post([&]() {
+                processed = true;
+            });
+            auto context_thread = std::thread([&]() { context.execute_loop(); });
+            CHECK_NOTHROW(context.stop());
+            CHECK_NOTHROW(context_thread.join());
+        }
     }
 }
 
