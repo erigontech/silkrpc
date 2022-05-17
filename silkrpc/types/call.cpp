@@ -16,6 +16,8 @@
 
 #include "call.hpp"
 
+#include <string>
+
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkworm/common/endian.hpp>
