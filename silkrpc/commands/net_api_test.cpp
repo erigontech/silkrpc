@@ -17,10 +17,22 @@
 #include "net_api.hpp"
 
 #include <catch2/catch.hpp>
+#include <grpcpp/grpcpp.h>
 
-namespace silkrpc {
+#include <silkrpc/ethbackend/backend_grpc.hpp>
+
+namespace silkrpc::commands {
 
 using Catch::Matchers::Message;
 
-} // namespace silkrpc
+TEST_CASE("NetRpcApi::NetRpcApi", "[silkrpc][erigon_api]") {
+    asio::io_context io_context;
+    auto channel{grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials())};
+    grpc::CompletionQueue queue;
+    std::unique_ptr<ethbackend::BackEnd> backend{
+        std::make_unique<ethbackend::BackEndGrpc>(io_context, channel, &queue)
+    };
+    CHECK_NOTHROW(NetRpcApi{backend});
+}
 
+} // namespace silkrpc::commands
