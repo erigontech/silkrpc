@@ -48,7 +48,7 @@ class CompletionEndPoint {
 
     //! Run at most one execution cycle polling gRPC completion queue for one event.
     int poll_one() {
-        SILKRPC_TRACE << "CompletionEndPoint::poll_one START";
+        SILKRPC_TRACE << "CompletionEndPoint::poll_one START\n";
 
         int num_completed{0}; // returned when next_status == grpc::CompletionQueue::TIMEOUT
 
@@ -59,13 +59,13 @@ class CompletionEndPoint {
             num_completed = 1;
             // Handle the event completion on the calling thread (*must* be the io_context scheduler).
             CompletionTag completion_tag{reinterpret_cast<TagProcessor*>(tag), ok};
-            SILKRPC_DEBUG << "CompletionEndPoint::poll_one post operation: " << completion_tag.processor;
+            SILKRPC_DEBUG << "CompletionEndPoint::poll_one post operation: " << completion_tag.processor << "\n";
             (*completion_tag.processor)(completion_tag.ok);
         } else if (next_status == grpc::CompletionQueue::SHUTDOWN) {
             num_completed = -1;
         }
 
-        SILKRPC_TRACE << "CompletionEndPoint::poll_one next_status=" << next_status << " END";
+        SILKRPC_TRACE << "CompletionEndPoint::poll_one next_status=" << next_status << " END\n";
         return num_completed;
     }
 
@@ -77,7 +77,7 @@ class CompletionEndPoint {
         if (got_event) {
             // Post the event completion on the passed io_context scheduler.
             CompletionTag completion_tag{reinterpret_cast<TagProcessor*>(tag), ok};
-            SILKRPC_DEBUG << "CompletionEndPoint::post_one post operation: " << completion_tag.processor;
+            SILKRPC_DEBUG << "CompletionEndPoint::post_one post operation: " << completion_tag.processor << "\n";
             scheduler.post([completion_tag]() { (*completion_tag.processor)(completion_tag.ok); });
         } else {
             SILKRPC_DEBUG << "CompletionEndPoint::run shutdown\n";
@@ -87,14 +87,14 @@ class CompletionEndPoint {
 
     //! Shutdown and drain the gRPC completion queue.
     void shutdown() {
-        SILKRPC_TRACE << "CompletionEndPoint::shutdown START";
+        SILKRPC_TRACE << "CompletionEndPoint::shutdown START\n";
         queue_.Shutdown();
-        SILKRPC_DEBUG << "CompletionEndPoint::shutdown draining...";
+        SILKRPC_DEBUG << "CompletionEndPoint::shutdown draining...\n";
         void* ignored_tag;
         bool ignored_ok;
         while (queue_.Next(&ignored_tag, &ignored_ok)) {
         }
-        SILKRPC_TRACE << "CompletionEndPoint::shutdown END";
+        SILKRPC_TRACE << "CompletionEndPoint::shutdown END\n";
     }
 
   private:
