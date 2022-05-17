@@ -169,30 +169,34 @@ uint64_t EVMExecutor<WorldState, VM>::refund_gas(const VM& evm, const silkworm::
     gas_left += refund;
 
     const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
-    const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
+    SILKRPC_DEBUG << "EVMExecutor::refund_gas txn.max_fee_per_gas: " << txn.max_fee_per_gas << " base_fee_per_gas: " << base_fee_per_gas << "\n";
+    const intx::uint256 effective_gas_price{txn.max_fee_per_gas >= base_fee_per_gas ? txn.effective_gas_price(base_fee_per_gas)
+                                                                                    : txn.max_priority_fee_per_gas};
+    SILKRPC_DEBUG << "EVMExecutor::refund_gas effective_gas_price: " << effective_gas_price << "\n";
     state_.add_to_balance(*txn.from, gas_left * effective_gas_price);
     return gas_left;
 }
+
 template<typename WorldState, typename VM>
 std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0) {
     const evmc_revision rev{evm.revision()};
 
     if (rev >= EVMC_LONDON) {
-        if (txn.max_fee_per_gas  > 0 || txn.max_priority_fee_per_gas > 0) {
-           if (txn.max_fee_per_gas < base_fee_per_gas) {
-              std::string from = silkworm::to_hex(*txn.from);
-              std::string error = "fee cap less than block base fee: address 0x" + from + ", gasFeeCap: " + intx::to_string(txn.max_fee_per_gas) + " baseFee: " +
-                  intx::to_string(base_fee_per_gas);
-              return error;
-          }
+        if (txn.max_fee_per_gas > 0 || txn.max_priority_fee_per_gas > 0) {
+            if (txn.max_fee_per_gas < base_fee_per_gas) {
+                std::string from = silkworm::to_hex(*txn.from);
+                std::string error = "fee cap less than block base fee: address 0x" + from + ", gasFeeCap: " + intx::to_string(txn.max_fee_per_gas) + " baseFee: " +
+                    intx::to_string(base_fee_per_gas);
+                return error;
+            }
 
-          if (txn.max_fee_per_gas < txn.max_priority_fee_per_gas) {
-              std::string from = silkworm::to_hex(*txn.from);
-              std::string error = "tip higher than fee cap: address 0x" + from + ", tip: " + intx::to_string(txn.max_priority_fee_per_gas) + " gasFeeCap: " +
-                  intx::to_string(txn.max_fee_per_gas);
-              return error;
-          }
-       }
+            if (txn.max_fee_per_gas < txn.max_priority_fee_per_gas) {
+                std::string from = silkworm::to_hex(*txn.from);
+                std::string error = "tip higher than fee cap: address 0x" + from + ", tip: " + intx::to_string(txn.max_priority_fee_per_gas) + " gasFeeCap: " +
+                    intx::to_string(txn.max_fee_per_gas);
+                return error;
+            }
+        }
     }
     if (txn.gas_limit < g0) {
         std::string from = silkworm::to_hex(*txn.from);

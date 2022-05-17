@@ -22,12 +22,18 @@
 
 namespace silkrpc {
 
+static std::string optional_uint256_to_string(std::optional<intx::uint256> u) {
+    return silkworm::to_hex(silkworm::endian::to_big_compact(u.value_or(intx::uint256{})));
+}
+
 std::ostream& operator<<(std::ostream& out, const Call& call) {
     out << "from: " << call.from.value_or(evmc::address{}) << " "
     << "to: " << call.to.value_or(evmc::address{}) << " "
     << "gas: " << call.gas.value_or(0) << " "
-    << "gas_price: " << silkworm::to_hex(silkworm::endian::to_big_compact(call.gas_price.value_or(intx::uint256{}))) << " "
-    << "value: " << silkworm::to_hex(silkworm::endian::to_big_compact(call.value.value_or(intx::uint256{}))) << " "
+    << "gas_price: " << optional_uint256_to_string(call.gas_price.value_or(intx::uint256{})) << " "
+    << "max_priority_fee_per_gas: " << optional_uint256_to_string(call.max_priority_fee_per_gas.value_or(intx::uint256{})) << " "
+    << "max_fee_per_gas: " << optional_uint256_to_string(call.max_fee_per_gas.value_or(intx::uint256{})) << " "
+    << "value: " << optional_uint256_to_string(call.value.value_or(intx::uint256{})) << " "
     << "data: " << silkworm::to_hex(call.data.value_or(silkworm::Bytes{}));
     return out;
 }
