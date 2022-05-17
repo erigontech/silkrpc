@@ -7,7 +7,6 @@
 #include "txpool/mining.pb.h"
 
 #include <functional>
-#include <grpc/impl/codegen/port_platform.h>
 #include <grpcpp/impl/codegen/async_generic_service.h>
 #include <grpcpp/impl/codegen/async_stream.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
@@ -127,40 +126,18 @@ class Mining final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::MiningReply>> PrepareAsyncMining(::grpc::ClientContext* context, const ::txpool::MiningRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::txpool::MiningReply>>(PrepareAsyncMiningRaw(context, request, cq));
     }
-    class experimental_async_interface {
+    class async_interface {
      public:
-      virtual ~experimental_async_interface() {}
+      virtual ~async_interface() {}
       // Version returns the service version number
       virtual void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       // subscribe to pending blocks event
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void OnPendingBlock(::grpc::ClientContext* context, ::txpool::OnPendingBlockRequest* request, ::grpc::ClientReadReactor< ::txpool::OnPendingBlockReply>* reactor) = 0;
-      #else
-      virtual void OnPendingBlock(::grpc::ClientContext* context, ::txpool::OnPendingBlockRequest* request, ::grpc::experimental::ClientReadReactor< ::txpool::OnPendingBlockReply>* reactor) = 0;
-      #endif
+      virtual void OnPendingBlock(::grpc::ClientContext* context, const ::txpool::OnPendingBlockRequest* request, ::grpc::ClientReadReactor< ::txpool::OnPendingBlockReply>* reactor) = 0;
       // subscribe to mined blocks event
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void OnMinedBlock(::grpc::ClientContext* context, ::txpool::OnMinedBlockRequest* request, ::grpc::ClientReadReactor< ::txpool::OnMinedBlockReply>* reactor) = 0;
-      #else
-      virtual void OnMinedBlock(::grpc::ClientContext* context, ::txpool::OnMinedBlockRequest* request, ::grpc::experimental::ClientReadReactor< ::txpool::OnMinedBlockReply>* reactor) = 0;
-      #endif
+      virtual void OnMinedBlock(::grpc::ClientContext* context, const ::txpool::OnMinedBlockRequest* request, ::grpc::ClientReadReactor< ::txpool::OnMinedBlockReply>* reactor) = 0;
       // subscribe to pending blocks event
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void OnPendingLogs(::grpc::ClientContext* context, ::txpool::OnPendingLogsRequest* request, ::grpc::ClientReadReactor< ::txpool::OnPendingLogsReply>* reactor) = 0;
-      #else
-      virtual void OnPendingLogs(::grpc::ClientContext* context, ::txpool::OnPendingLogsRequest* request, ::grpc::experimental::ClientReadReactor< ::txpool::OnPendingLogsReply>* reactor) = 0;
-      #endif
+      virtual void OnPendingLogs(::grpc::ClientContext* context, const ::txpool::OnPendingLogsRequest* request, ::grpc::ClientReadReactor< ::txpool::OnPendingLogsReply>* reactor) = 0;
       // GetWork returns a work package for external miner.
       //
       // The work package consists of 3 strings:
@@ -169,32 +146,12 @@ class Mining final {
       //   result[2] - 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
       //   result[3] - hex encoded block number
       virtual void GetWork(::grpc::ClientContext* context, const ::txpool::GetWorkRequest* request, ::txpool::GetWorkReply* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void GetWork(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::GetWorkReply* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void GetWork(::grpc::ClientContext* context, const ::txpool::GetWorkRequest* request, ::txpool::GetWorkReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void GetWork(::grpc::ClientContext* context, const ::txpool::GetWorkRequest* request, ::txpool::GetWorkReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void GetWork(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::GetWorkReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void GetWork(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::GetWorkReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       // SubmitWork can be used by external miner to submit their POW solution.
       // It returns an indication if the work was accepted.
       // Note either an invalid solution, a stale work a non-existent work will return false.
       virtual void SubmitWork(::grpc::ClientContext* context, const ::txpool::SubmitWorkRequest* request, ::txpool::SubmitWorkReply* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void SubmitWork(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::SubmitWorkReply* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void SubmitWork(::grpc::ClientContext* context, const ::txpool::SubmitWorkRequest* request, ::txpool::SubmitWorkReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void SubmitWork(::grpc::ClientContext* context, const ::txpool::SubmitWorkRequest* request, ::txpool::SubmitWorkReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void SubmitWork(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::SubmitWorkReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void SubmitWork(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::SubmitWorkReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       // SubmitHashRate can be used for remote miners to submit their hash rate.
       // This enables the node to report the combined hash rate of all miners
       // which submit work through this node.
@@ -202,52 +159,18 @@ class Mining final {
       // It accepts the miner hash rate and an identifier which must be unique
       // between nodes.
       virtual void SubmitHashRate(::grpc::ClientContext* context, const ::txpool::SubmitHashRateRequest* request, ::txpool::SubmitHashRateReply* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void SubmitHashRate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::SubmitHashRateReply* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void SubmitHashRate(::grpc::ClientContext* context, const ::txpool::SubmitHashRateRequest* request, ::txpool::SubmitHashRateReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void SubmitHashRate(::grpc::ClientContext* context, const ::txpool::SubmitHashRateRequest* request, ::txpool::SubmitHashRateReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void SubmitHashRate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::SubmitHashRateReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void SubmitHashRate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::SubmitHashRateReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       // HashRate returns the current hashrate for local CPU miner and remote miner.
       virtual void HashRate(::grpc::ClientContext* context, const ::txpool::HashRateRequest* request, ::txpool::HashRateReply* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void HashRate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::HashRateReply* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void HashRate(::grpc::ClientContext* context, const ::txpool::HashRateRequest* request, ::txpool::HashRateReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void HashRate(::grpc::ClientContext* context, const ::txpool::HashRateRequest* request, ::txpool::HashRateReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void HashRate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::HashRateReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void HashRate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::HashRateReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
       // Mining returns an indication if this node is currently mining and it's mining configuration
       virtual void Mining(::grpc::ClientContext* context, const ::txpool::MiningRequest* request, ::txpool::MiningReply* response, std::function<void(::grpc::Status)>) = 0;
-      virtual void Mining(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::MiningReply* response, std::function<void(::grpc::Status)>) = 0;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Mining(::grpc::ClientContext* context, const ::txpool::MiningRequest* request, ::txpool::MiningReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void Mining(::grpc::ClientContext* context, const ::txpool::MiningRequest* request, ::txpool::MiningReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      virtual void Mining(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::MiningReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
-      #else
-      virtual void Mining(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::MiningReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) = 0;
-      #endif
     };
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    typedef class experimental_async_interface async_interface;
-    #endif
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-    async_interface* async() { return experimental_async(); }
-    #endif
-    virtual class experimental_async_interface* experimental_async() { return nullptr; }
-  private:
+    typedef class async_interface experimental_async_interface;
+    virtual class async_interface* async() { return nullptr; }
+    class async_interface* experimental_async() { return async(); }
+   private:
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::types::VersionReply>* AsyncVersionRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientAsyncResponseReaderInterface< ::types::VersionReply>* PrepareAsyncVersionRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) = 0;
     virtual ::grpc::ClientReaderInterface< ::txpool::OnPendingBlockReply>* OnPendingBlockRaw(::grpc::ClientContext* context, const ::txpool::OnPendingBlockRequest& request) = 0;
@@ -272,7 +195,7 @@ class Mining final {
   };
   class Stub final : public StubInterface {
    public:
-    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel);
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
     ::grpc::Status Version(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::types::VersionReply* response) override;
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::types::VersionReply>> AsyncVersion(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::types::VersionReply>>(AsyncVersionRaw(context, request, cq));
@@ -342,107 +265,35 @@ class Mining final {
     std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::MiningReply>> PrepareAsyncMining(::grpc::ClientContext* context, const ::txpool::MiningRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::txpool::MiningReply>>(PrepareAsyncMiningRaw(context, request, cq));
     }
-    class experimental_async final :
-      public StubInterface::experimental_async_interface {
+    class async final :
+      public StubInterface::async_interface {
      public:
       void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, std::function<void(::grpc::Status)>) override;
-      void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void Version(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::types::VersionReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void OnPendingBlock(::grpc::ClientContext* context, ::txpool::OnPendingBlockRequest* request, ::grpc::ClientReadReactor< ::txpool::OnPendingBlockReply>* reactor) override;
-      #else
-      void OnPendingBlock(::grpc::ClientContext* context, ::txpool::OnPendingBlockRequest* request, ::grpc::experimental::ClientReadReactor< ::txpool::OnPendingBlockReply>* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void OnMinedBlock(::grpc::ClientContext* context, ::txpool::OnMinedBlockRequest* request, ::grpc::ClientReadReactor< ::txpool::OnMinedBlockReply>* reactor) override;
-      #else
-      void OnMinedBlock(::grpc::ClientContext* context, ::txpool::OnMinedBlockRequest* request, ::grpc::experimental::ClientReadReactor< ::txpool::OnMinedBlockReply>* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void OnPendingLogs(::grpc::ClientContext* context, ::txpool::OnPendingLogsRequest* request, ::grpc::ClientReadReactor< ::txpool::OnPendingLogsReply>* reactor) override;
-      #else
-      void OnPendingLogs(::grpc::ClientContext* context, ::txpool::OnPendingLogsRequest* request, ::grpc::experimental::ClientReadReactor< ::txpool::OnPendingLogsReply>* reactor) override;
-      #endif
+      void OnPendingBlock(::grpc::ClientContext* context, const ::txpool::OnPendingBlockRequest* request, ::grpc::ClientReadReactor< ::txpool::OnPendingBlockReply>* reactor) override;
+      void OnMinedBlock(::grpc::ClientContext* context, const ::txpool::OnMinedBlockRequest* request, ::grpc::ClientReadReactor< ::txpool::OnMinedBlockReply>* reactor) override;
+      void OnPendingLogs(::grpc::ClientContext* context, const ::txpool::OnPendingLogsRequest* request, ::grpc::ClientReadReactor< ::txpool::OnPendingLogsReply>* reactor) override;
       void GetWork(::grpc::ClientContext* context, const ::txpool::GetWorkRequest* request, ::txpool::GetWorkReply* response, std::function<void(::grpc::Status)>) override;
-      void GetWork(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::GetWorkReply* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void GetWork(::grpc::ClientContext* context, const ::txpool::GetWorkRequest* request, ::txpool::GetWorkReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void GetWork(::grpc::ClientContext* context, const ::txpool::GetWorkRequest* request, ::txpool::GetWorkReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void GetWork(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::GetWorkReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void GetWork(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::GetWorkReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void SubmitWork(::grpc::ClientContext* context, const ::txpool::SubmitWorkRequest* request, ::txpool::SubmitWorkReply* response, std::function<void(::grpc::Status)>) override;
-      void SubmitWork(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::SubmitWorkReply* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void SubmitWork(::grpc::ClientContext* context, const ::txpool::SubmitWorkRequest* request, ::txpool::SubmitWorkReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void SubmitWork(::grpc::ClientContext* context, const ::txpool::SubmitWorkRequest* request, ::txpool::SubmitWorkReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void SubmitWork(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::SubmitWorkReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void SubmitWork(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::SubmitWorkReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void SubmitHashRate(::grpc::ClientContext* context, const ::txpool::SubmitHashRateRequest* request, ::txpool::SubmitHashRateReply* response, std::function<void(::grpc::Status)>) override;
-      void SubmitHashRate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::SubmitHashRateReply* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void SubmitHashRate(::grpc::ClientContext* context, const ::txpool::SubmitHashRateRequest* request, ::txpool::SubmitHashRateReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void SubmitHashRate(::grpc::ClientContext* context, const ::txpool::SubmitHashRateRequest* request, ::txpool::SubmitHashRateReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void SubmitHashRate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::SubmitHashRateReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void SubmitHashRate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::SubmitHashRateReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void HashRate(::grpc::ClientContext* context, const ::txpool::HashRateRequest* request, ::txpool::HashRateReply* response, std::function<void(::grpc::Status)>) override;
-      void HashRate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::HashRateReply* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void HashRate(::grpc::ClientContext* context, const ::txpool::HashRateRequest* request, ::txpool::HashRateReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void HashRate(::grpc::ClientContext* context, const ::txpool::HashRateRequest* request, ::txpool::HashRateReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void HashRate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::HashRateReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void HashRate(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::HashRateReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
       void Mining(::grpc::ClientContext* context, const ::txpool::MiningRequest* request, ::txpool::MiningReply* response, std::function<void(::grpc::Status)>) override;
-      void Mining(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::MiningReply* response, std::function<void(::grpc::Status)>) override;
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Mining(::grpc::ClientContext* context, const ::txpool::MiningRequest* request, ::txpool::MiningReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void Mining(::grpc::ClientContext* context, const ::txpool::MiningRequest* request, ::txpool::MiningReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
-      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      void Mining(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::MiningReply* response, ::grpc::ClientUnaryReactor* reactor) override;
-      #else
-      void Mining(::grpc::ClientContext* context, const ::grpc::ByteBuffer* request, ::txpool::MiningReply* response, ::grpc::experimental::ClientUnaryReactor* reactor) override;
-      #endif
      private:
       friend class Stub;
-      explicit experimental_async(Stub* stub): stub_(stub) { }
+      explicit async(Stub* stub): stub_(stub) { }
       Stub* stub() { return stub_; }
       Stub* stub_;
     };
-    class experimental_async_interface* experimental_async() override { return &async_stub_; }
+    class async* async() override { return &async_stub_; }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
-    class experimental_async async_stub_{this};
+    class async async_stub_{this};
     ::grpc::ClientAsyncResponseReader< ::types::VersionReply>* AsyncVersionRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientAsyncResponseReader< ::types::VersionReply>* PrepareAsyncVersionRaw(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq) override;
     ::grpc::ClientReader< ::txpool::OnPendingBlockReply>* OnPendingBlockRaw(::grpc::ClientContext* context, const ::txpool::OnPendingBlockRequest& request) override;
@@ -694,36 +545,22 @@ class Mining final {
   };
   typedef WithAsyncMethod_Version<WithAsyncMethod_OnPendingBlock<WithAsyncMethod_OnMinedBlock<WithAsyncMethod_OnPendingLogs<WithAsyncMethod_GetWork<WithAsyncMethod_SubmitWork<WithAsyncMethod_SubmitHashRate<WithAsyncMethod_HashRate<WithAsyncMethod_Mining<Service > > > > > > > > > AsyncService;
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_Version : public BaseClass {
+  class WithCallbackMethod_Version : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_Version() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(0,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::VersionReply>(
+    WithCallbackMethod_Version() {
+      ::grpc::Service::MarkMethodCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::VersionReply>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::google::protobuf::Empty* request, ::types::VersionReply* response) { return this->Version(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response) { return this->Version(context, request, response); }));}
     void SetMessageAllocatorFor_Version(
-        ::grpc::experimental::MessageAllocator< ::google::protobuf::Empty, ::types::VersionReply>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::google::protobuf::Empty, ::types::VersionReply>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(0);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(0);
-    #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::VersionReply>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::google::protobuf::Empty, ::types::VersionReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_Version() override {
+    ~WithCallbackMethod_Version() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -731,37 +568,21 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* Version(
-      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::types::VersionReply* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* Version(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::types::VersionReply* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::google::protobuf::Empty* /*request*/, ::types::VersionReply* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_OnPendingBlock : public BaseClass {
+  class WithCallbackMethod_OnPendingBlock : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_OnPendingBlock() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(1,
-          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::txpool::OnPendingBlockRequest, ::txpool::OnPendingBlockReply>(
+    WithCallbackMethod_OnPendingBlock() {
+      ::grpc::Service::MarkMethodCallback(1,
+          new ::grpc::internal::CallbackServerStreamingHandler< ::txpool::OnPendingBlockRequest, ::txpool::OnPendingBlockReply>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::txpool::OnPendingBlockRequest* request) { return this->OnPendingBlock(context, request); }));
+                   ::grpc::CallbackServerContext* context, const ::txpool::OnPendingBlockRequest* request) { return this->OnPendingBlock(context, request); }));
     }
-    ~ExperimentalWithCallbackMethod_OnPendingBlock() override {
+    ~WithCallbackMethod_OnPendingBlock() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -769,37 +590,21 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerWriteReactor< ::txpool::OnPendingBlockReply>* OnPendingBlock(
-      ::grpc::CallbackServerContext* /*context*/, const ::txpool::OnPendingBlockRequest* /*request*/)
-    #else
-    virtual ::grpc::experimental::ServerWriteReactor< ::txpool::OnPendingBlockReply>* OnPendingBlock(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::txpool::OnPendingBlockRequest* /*request*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::txpool::OnPendingBlockRequest* /*request*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_OnMinedBlock : public BaseClass {
+  class WithCallbackMethod_OnMinedBlock : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_OnMinedBlock() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(2,
-          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::txpool::OnMinedBlockRequest, ::txpool::OnMinedBlockReply>(
+    WithCallbackMethod_OnMinedBlock() {
+      ::grpc::Service::MarkMethodCallback(2,
+          new ::grpc::internal::CallbackServerStreamingHandler< ::txpool::OnMinedBlockRequest, ::txpool::OnMinedBlockReply>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::txpool::OnMinedBlockRequest* request) { return this->OnMinedBlock(context, request); }));
+                   ::grpc::CallbackServerContext* context, const ::txpool::OnMinedBlockRequest* request) { return this->OnMinedBlock(context, request); }));
     }
-    ~ExperimentalWithCallbackMethod_OnMinedBlock() override {
+    ~WithCallbackMethod_OnMinedBlock() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -807,37 +612,21 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerWriteReactor< ::txpool::OnMinedBlockReply>* OnMinedBlock(
-      ::grpc::CallbackServerContext* /*context*/, const ::txpool::OnMinedBlockRequest* /*request*/)
-    #else
-    virtual ::grpc::experimental::ServerWriteReactor< ::txpool::OnMinedBlockReply>* OnMinedBlock(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::txpool::OnMinedBlockRequest* /*request*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::txpool::OnMinedBlockRequest* /*request*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_OnPendingLogs : public BaseClass {
+  class WithCallbackMethod_OnPendingLogs : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_OnPendingLogs() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(3,
-          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::txpool::OnPendingLogsRequest, ::txpool::OnPendingLogsReply>(
+    WithCallbackMethod_OnPendingLogs() {
+      ::grpc::Service::MarkMethodCallback(3,
+          new ::grpc::internal::CallbackServerStreamingHandler< ::txpool::OnPendingLogsRequest, ::txpool::OnPendingLogsReply>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::txpool::OnPendingLogsRequest* request) { return this->OnPendingLogs(context, request); }));
+                   ::grpc::CallbackServerContext* context, const ::txpool::OnPendingLogsRequest* request) { return this->OnPendingLogs(context, request); }));
     }
-    ~ExperimentalWithCallbackMethod_OnPendingLogs() override {
+    ~WithCallbackMethod_OnPendingLogs() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -845,46 +634,26 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerWriteReactor< ::txpool::OnPendingLogsReply>* OnPendingLogs(
-      ::grpc::CallbackServerContext* /*context*/, const ::txpool::OnPendingLogsRequest* /*request*/)
-    #else
-    virtual ::grpc::experimental::ServerWriteReactor< ::txpool::OnPendingLogsReply>* OnPendingLogs(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::txpool::OnPendingLogsRequest* /*request*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::txpool::OnPendingLogsRequest* /*request*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_GetWork : public BaseClass {
+  class WithCallbackMethod_GetWork : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_GetWork() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(4,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::txpool::GetWorkRequest, ::txpool::GetWorkReply>(
+    WithCallbackMethod_GetWork() {
+      ::grpc::Service::MarkMethodCallback(4,
+          new ::grpc::internal::CallbackUnaryHandler< ::txpool::GetWorkRequest, ::txpool::GetWorkReply>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::txpool::GetWorkRequest* request, ::txpool::GetWorkReply* response) { return this->GetWork(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::txpool::GetWorkRequest* request, ::txpool::GetWorkReply* response) { return this->GetWork(context, request, response); }));}
     void SetMessageAllocatorFor_GetWork(
-        ::grpc::experimental::MessageAllocator< ::txpool::GetWorkRequest, ::txpool::GetWorkReply>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::txpool::GetWorkRequest, ::txpool::GetWorkReply>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(4);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(4);
-    #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::txpool::GetWorkRequest, ::txpool::GetWorkReply>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::txpool::GetWorkRequest, ::txpool::GetWorkReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_GetWork() override {
+    ~WithCallbackMethod_GetWork() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -892,46 +661,26 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* GetWork(
-      ::grpc::CallbackServerContext* /*context*/, const ::txpool::GetWorkRequest* /*request*/, ::txpool::GetWorkReply* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* GetWork(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::txpool::GetWorkRequest* /*request*/, ::txpool::GetWorkReply* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::txpool::GetWorkRequest* /*request*/, ::txpool::GetWorkReply* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_SubmitWork : public BaseClass {
+  class WithCallbackMethod_SubmitWork : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_SubmitWork() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(5,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::txpool::SubmitWorkRequest, ::txpool::SubmitWorkReply>(
+    WithCallbackMethod_SubmitWork() {
+      ::grpc::Service::MarkMethodCallback(5,
+          new ::grpc::internal::CallbackUnaryHandler< ::txpool::SubmitWorkRequest, ::txpool::SubmitWorkReply>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::txpool::SubmitWorkRequest* request, ::txpool::SubmitWorkReply* response) { return this->SubmitWork(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::txpool::SubmitWorkRequest* request, ::txpool::SubmitWorkReply* response) { return this->SubmitWork(context, request, response); }));}
     void SetMessageAllocatorFor_SubmitWork(
-        ::grpc::experimental::MessageAllocator< ::txpool::SubmitWorkRequest, ::txpool::SubmitWorkReply>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::txpool::SubmitWorkRequest, ::txpool::SubmitWorkReply>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(5);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(5);
-    #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::txpool::SubmitWorkRequest, ::txpool::SubmitWorkReply>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::txpool::SubmitWorkRequest, ::txpool::SubmitWorkReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_SubmitWork() override {
+    ~WithCallbackMethod_SubmitWork() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -939,46 +688,26 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* SubmitWork(
-      ::grpc::CallbackServerContext* /*context*/, const ::txpool::SubmitWorkRequest* /*request*/, ::txpool::SubmitWorkReply* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* SubmitWork(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::txpool::SubmitWorkRequest* /*request*/, ::txpool::SubmitWorkReply* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::txpool::SubmitWorkRequest* /*request*/, ::txpool::SubmitWorkReply* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_SubmitHashRate : public BaseClass {
+  class WithCallbackMethod_SubmitHashRate : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_SubmitHashRate() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(6,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::txpool::SubmitHashRateRequest, ::txpool::SubmitHashRateReply>(
+    WithCallbackMethod_SubmitHashRate() {
+      ::grpc::Service::MarkMethodCallback(6,
+          new ::grpc::internal::CallbackUnaryHandler< ::txpool::SubmitHashRateRequest, ::txpool::SubmitHashRateReply>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::txpool::SubmitHashRateRequest* request, ::txpool::SubmitHashRateReply* response) { return this->SubmitHashRate(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::txpool::SubmitHashRateRequest* request, ::txpool::SubmitHashRateReply* response) { return this->SubmitHashRate(context, request, response); }));}
     void SetMessageAllocatorFor_SubmitHashRate(
-        ::grpc::experimental::MessageAllocator< ::txpool::SubmitHashRateRequest, ::txpool::SubmitHashRateReply>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::txpool::SubmitHashRateRequest, ::txpool::SubmitHashRateReply>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(6);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(6);
-    #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::txpool::SubmitHashRateRequest, ::txpool::SubmitHashRateReply>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::txpool::SubmitHashRateRequest, ::txpool::SubmitHashRateReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_SubmitHashRate() override {
+    ~WithCallbackMethod_SubmitHashRate() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -986,46 +715,26 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* SubmitHashRate(
-      ::grpc::CallbackServerContext* /*context*/, const ::txpool::SubmitHashRateRequest* /*request*/, ::txpool::SubmitHashRateReply* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* SubmitHashRate(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::txpool::SubmitHashRateRequest* /*request*/, ::txpool::SubmitHashRateReply* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::txpool::SubmitHashRateRequest* /*request*/, ::txpool::SubmitHashRateReply* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_HashRate : public BaseClass {
+  class WithCallbackMethod_HashRate : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_HashRate() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(7,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::txpool::HashRateRequest, ::txpool::HashRateReply>(
+    WithCallbackMethod_HashRate() {
+      ::grpc::Service::MarkMethodCallback(7,
+          new ::grpc::internal::CallbackUnaryHandler< ::txpool::HashRateRequest, ::txpool::HashRateReply>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::txpool::HashRateRequest* request, ::txpool::HashRateReply* response) { return this->HashRate(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::txpool::HashRateRequest* request, ::txpool::HashRateReply* response) { return this->HashRate(context, request, response); }));}
     void SetMessageAllocatorFor_HashRate(
-        ::grpc::experimental::MessageAllocator< ::txpool::HashRateRequest, ::txpool::HashRateReply>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::txpool::HashRateRequest, ::txpool::HashRateReply>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(7);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(7);
-    #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::txpool::HashRateRequest, ::txpool::HashRateReply>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::txpool::HashRateRequest, ::txpool::HashRateReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_HashRate() override {
+    ~WithCallbackMethod_HashRate() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1033,46 +742,26 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* HashRate(
-      ::grpc::CallbackServerContext* /*context*/, const ::txpool::HashRateRequest* /*request*/, ::txpool::HashRateReply* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* HashRate(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::txpool::HashRateRequest* /*request*/, ::txpool::HashRateReply* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::txpool::HashRateRequest* /*request*/, ::txpool::HashRateReply* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithCallbackMethod_Mining : public BaseClass {
+  class WithCallbackMethod_Mining : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithCallbackMethod_Mining() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodCallback(8,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::txpool::MiningRequest, ::txpool::MiningReply>(
+    WithCallbackMethod_Mining() {
+      ::grpc::Service::MarkMethodCallback(8,
+          new ::grpc::internal::CallbackUnaryHandler< ::txpool::MiningRequest, ::txpool::MiningReply>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::txpool::MiningRequest* request, ::txpool::MiningReply* response) { return this->Mining(context, request, response); }));}
+                   ::grpc::CallbackServerContext* context, const ::txpool::MiningRequest* request, ::txpool::MiningReply* response) { return this->Mining(context, request, response); }));}
     void SetMessageAllocatorFor_Mining(
-        ::grpc::experimental::MessageAllocator< ::txpool::MiningRequest, ::txpool::MiningReply>* allocator) {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+        ::grpc::MessageAllocator< ::txpool::MiningRequest, ::txpool::MiningReply>* allocator) {
       ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(8);
-    #else
-      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::experimental().GetHandler(8);
-    #endif
-      static_cast<::grpc_impl::internal::CallbackUnaryHandler< ::txpool::MiningRequest, ::txpool::MiningReply>*>(handler)
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::txpool::MiningRequest, ::txpool::MiningReply>*>(handler)
               ->SetMessageAllocator(allocator);
     }
-    ~ExperimentalWithCallbackMethod_Mining() override {
+    ~WithCallbackMethod_Mining() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1080,20 +769,11 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* Mining(
-      ::grpc::CallbackServerContext* /*context*/, const ::txpool::MiningRequest* /*request*/, ::txpool::MiningReply* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* Mining(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::txpool::MiningRequest* /*request*/, ::txpool::MiningReply* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::txpool::MiningRequest* /*request*/, ::txpool::MiningReply* /*response*/)  { return nullptr; }
   };
-  #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-  typedef ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_OnPendingBlock<ExperimentalWithCallbackMethod_OnMinedBlock<ExperimentalWithCallbackMethod_OnPendingLogs<ExperimentalWithCallbackMethod_GetWork<ExperimentalWithCallbackMethod_SubmitWork<ExperimentalWithCallbackMethod_SubmitHashRate<ExperimentalWithCallbackMethod_HashRate<ExperimentalWithCallbackMethod_Mining<Service > > > > > > > > > CallbackService;
-  #endif
-
-  typedef ExperimentalWithCallbackMethod_Version<ExperimentalWithCallbackMethod_OnPendingBlock<ExperimentalWithCallbackMethod_OnMinedBlock<ExperimentalWithCallbackMethod_OnPendingLogs<ExperimentalWithCallbackMethod_GetWork<ExperimentalWithCallbackMethod_SubmitWork<ExperimentalWithCallbackMethod_SubmitHashRate<ExperimentalWithCallbackMethod_HashRate<ExperimentalWithCallbackMethod_Mining<Service > > > > > > > > > ExperimentalCallbackService;
+  typedef WithCallbackMethod_Version<WithCallbackMethod_OnPendingBlock<WithCallbackMethod_OnMinedBlock<WithCallbackMethod_OnPendingLogs<WithCallbackMethod_GetWork<WithCallbackMethod_SubmitWork<WithCallbackMethod_SubmitHashRate<WithCallbackMethod_HashRate<WithCallbackMethod_Mining<Service > > > > > > > > > CallbackService;
+  typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Version : public BaseClass {
    private:
@@ -1428,27 +1108,17 @@ class Mining final {
     }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_Version : public BaseClass {
+  class WithRawCallbackMethod_Version : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_Version() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(0,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    WithRawCallbackMethod_Version() {
+      ::grpc::Service::MarkMethodRawCallback(0,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Version(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Version(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_Version() override {
+    ~WithRawCallbackMethod_Version() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1456,37 +1126,21 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* Version(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* Version(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_OnPendingBlock : public BaseClass {
+  class WithRawCallbackMethod_OnPendingBlock : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_OnPendingBlock() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(1,
-          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    WithRawCallbackMethod_OnPendingBlock() {
+      ::grpc::Service::MarkMethodRawCallback(1,
+          new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const::grpc::ByteBuffer* request) { return this->OnPendingBlock(context, request); }));
+                   ::grpc::CallbackServerContext* context, const::grpc::ByteBuffer* request) { return this->OnPendingBlock(context, request); }));
     }
-    ~ExperimentalWithRawCallbackMethod_OnPendingBlock() override {
+    ~WithRawCallbackMethod_OnPendingBlock() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1494,37 +1148,21 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerWriteReactor< ::grpc::ByteBuffer>* OnPendingBlock(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
-    #else
-    virtual ::grpc::experimental::ServerWriteReactor< ::grpc::ByteBuffer>* OnPendingBlock(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_OnMinedBlock : public BaseClass {
+  class WithRawCallbackMethod_OnMinedBlock : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_OnMinedBlock() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(2,
-          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    WithRawCallbackMethod_OnMinedBlock() {
+      ::grpc::Service::MarkMethodRawCallback(2,
+          new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const::grpc::ByteBuffer* request) { return this->OnMinedBlock(context, request); }));
+                   ::grpc::CallbackServerContext* context, const::grpc::ByteBuffer* request) { return this->OnMinedBlock(context, request); }));
     }
-    ~ExperimentalWithRawCallbackMethod_OnMinedBlock() override {
+    ~WithRawCallbackMethod_OnMinedBlock() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1532,37 +1170,21 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerWriteReactor< ::grpc::ByteBuffer>* OnMinedBlock(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
-    #else
-    virtual ::grpc::experimental::ServerWriteReactor< ::grpc::ByteBuffer>* OnMinedBlock(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_OnPendingLogs : public BaseClass {
+  class WithRawCallbackMethod_OnPendingLogs : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_OnPendingLogs() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(3,
-          new ::grpc_impl::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    WithRawCallbackMethod_OnPendingLogs() {
+      ::grpc::Service::MarkMethodRawCallback(3,
+          new ::grpc::internal::CallbackServerStreamingHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const::grpc::ByteBuffer* request) { return this->OnPendingLogs(context, request); }));
+                   ::grpc::CallbackServerContext* context, const::grpc::ByteBuffer* request) { return this->OnPendingLogs(context, request); }));
     }
-    ~ExperimentalWithRawCallbackMethod_OnPendingLogs() override {
+    ~WithRawCallbackMethod_OnPendingLogs() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1570,37 +1192,21 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerWriteReactor< ::grpc::ByteBuffer>* OnPendingLogs(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
-    #else
-    virtual ::grpc::experimental::ServerWriteReactor< ::grpc::ByteBuffer>* OnPendingLogs(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_GetWork : public BaseClass {
+  class WithRawCallbackMethod_GetWork : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_GetWork() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(4,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    WithRawCallbackMethod_GetWork() {
+      ::grpc::Service::MarkMethodRawCallback(4,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetWork(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->GetWork(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_GetWork() override {
+    ~WithRawCallbackMethod_GetWork() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1608,37 +1214,21 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* GetWork(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* GetWork(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_SubmitWork : public BaseClass {
+  class WithRawCallbackMethod_SubmitWork : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_SubmitWork() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(5,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    WithRawCallbackMethod_SubmitWork() {
+      ::grpc::Service::MarkMethodRawCallback(5,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SubmitWork(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SubmitWork(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_SubmitWork() override {
+    ~WithRawCallbackMethod_SubmitWork() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1646,37 +1236,21 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* SubmitWork(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* SubmitWork(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_SubmitHashRate : public BaseClass {
+  class WithRawCallbackMethod_SubmitHashRate : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_SubmitHashRate() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(6,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    WithRawCallbackMethod_SubmitHashRate() {
+      ::grpc::Service::MarkMethodRawCallback(6,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SubmitHashRate(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->SubmitHashRate(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_SubmitHashRate() override {
+    ~WithRawCallbackMethod_SubmitHashRate() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1684,37 +1258,21 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* SubmitHashRate(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* SubmitHashRate(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_HashRate : public BaseClass {
+  class WithRawCallbackMethod_HashRate : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_HashRate() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(7,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    WithRawCallbackMethod_HashRate() {
+      ::grpc::Service::MarkMethodRawCallback(7,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->HashRate(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->HashRate(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_HashRate() override {
+    ~WithRawCallbackMethod_HashRate() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1722,37 +1280,21 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* HashRate(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* HashRate(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
-  class ExperimentalWithRawCallbackMethod_Mining : public BaseClass {
+  class WithRawCallbackMethod_Mining : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    ExperimentalWithRawCallbackMethod_Mining() {
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-      ::grpc::Service::
-    #else
-      ::grpc::Service::experimental().
-    #endif
-        MarkMethodRawCallback(8,
-          new ::grpc_impl::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    WithRawCallbackMethod_Mining() {
+      ::grpc::Service::MarkMethodRawCallback(8,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
-                   ::grpc::CallbackServerContext*
-    #else
-                   ::grpc::experimental::CallbackServerContext*
-    #endif
-                     context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Mining(context, request, response); }));
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Mining(context, request, response); }));
     }
-    ~ExperimentalWithRawCallbackMethod_Mining() override {
+    ~WithRawCallbackMethod_Mining() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -1760,14 +1302,8 @@ class Mining final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
-    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerUnaryReactor* Mining(
-      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #else
-    virtual ::grpc::experimental::ServerUnaryReactor* Mining(
-      ::grpc::experimental::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)
-    #endif
-      { return nullptr; }
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
   };
   template <class BaseClass>
   class WithStreamedUnaryMethod_Version : public BaseClass {
@@ -1778,8 +1314,8 @@ class Mining final {
       ::grpc::Service::MarkMethodStreamed(0,
         new ::grpc::internal::StreamedUnaryHandler<
           ::google::protobuf::Empty, ::types::VersionReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerUnaryStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
                      ::google::protobuf::Empty, ::types::VersionReply>* streamer) {
                        return this->StreamedVersion(context,
                          streamer);
@@ -1805,8 +1341,8 @@ class Mining final {
       ::grpc::Service::MarkMethodStreamed(4,
         new ::grpc::internal::StreamedUnaryHandler<
           ::txpool::GetWorkRequest, ::txpool::GetWorkReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerUnaryStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
                      ::txpool::GetWorkRequest, ::txpool::GetWorkReply>* streamer) {
                        return this->StreamedGetWork(context,
                          streamer);
@@ -1832,8 +1368,8 @@ class Mining final {
       ::grpc::Service::MarkMethodStreamed(5,
         new ::grpc::internal::StreamedUnaryHandler<
           ::txpool::SubmitWorkRequest, ::txpool::SubmitWorkReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerUnaryStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
                      ::txpool::SubmitWorkRequest, ::txpool::SubmitWorkReply>* streamer) {
                        return this->StreamedSubmitWork(context,
                          streamer);
@@ -1859,8 +1395,8 @@ class Mining final {
       ::grpc::Service::MarkMethodStreamed(6,
         new ::grpc::internal::StreamedUnaryHandler<
           ::txpool::SubmitHashRateRequest, ::txpool::SubmitHashRateReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerUnaryStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
                      ::txpool::SubmitHashRateRequest, ::txpool::SubmitHashRateReply>* streamer) {
                        return this->StreamedSubmitHashRate(context,
                          streamer);
@@ -1886,8 +1422,8 @@ class Mining final {
       ::grpc::Service::MarkMethodStreamed(7,
         new ::grpc::internal::StreamedUnaryHandler<
           ::txpool::HashRateRequest, ::txpool::HashRateReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerUnaryStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
                      ::txpool::HashRateRequest, ::txpool::HashRateReply>* streamer) {
                        return this->StreamedHashRate(context,
                          streamer);
@@ -1913,8 +1449,8 @@ class Mining final {
       ::grpc::Service::MarkMethodStreamed(8,
         new ::grpc::internal::StreamedUnaryHandler<
           ::txpool::MiningRequest, ::txpool::MiningReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerUnaryStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
                      ::txpool::MiningRequest, ::txpool::MiningReply>* streamer) {
                        return this->StreamedMining(context,
                          streamer);
@@ -1941,8 +1477,8 @@ class Mining final {
       ::grpc::Service::MarkMethodStreamed(1,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::txpool::OnPendingBlockRequest, ::txpool::OnPendingBlockReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerSplitStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerSplitStreamer<
                      ::txpool::OnPendingBlockRequest, ::txpool::OnPendingBlockReply>* streamer) {
                        return this->StreamedOnPendingBlock(context,
                          streamer);
@@ -1968,8 +1504,8 @@ class Mining final {
       ::grpc::Service::MarkMethodStreamed(2,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::txpool::OnMinedBlockRequest, ::txpool::OnMinedBlockReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerSplitStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerSplitStreamer<
                      ::txpool::OnMinedBlockRequest, ::txpool::OnMinedBlockReply>* streamer) {
                        return this->StreamedOnMinedBlock(context,
                          streamer);
@@ -1995,8 +1531,8 @@ class Mining final {
       ::grpc::Service::MarkMethodStreamed(3,
         new ::grpc::internal::SplitServerStreamingHandler<
           ::txpool::OnPendingLogsRequest, ::txpool::OnPendingLogsReply>(
-            [this](::grpc_impl::ServerContext* context,
-                   ::grpc_impl::ServerSplitStreamer<
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerSplitStreamer<
                      ::txpool::OnPendingLogsRequest, ::txpool::OnPendingLogsReply>* streamer) {
                        return this->StreamedOnPendingLogs(context,
                          streamer);
