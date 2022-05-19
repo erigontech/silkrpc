@@ -17,7 +17,6 @@
 find_package(absl CONFIG REQUIRED)
 find_package(intx CONFIG REQUIRED)
 
-hunter_add_package(jwt-cpp)
 set(JWT_BUILD_EXAMPLES OFF CACHE BOOL "disable examples" FORCE)
 find_package(jwt-cpp CONFIG REQUIRED)
 
