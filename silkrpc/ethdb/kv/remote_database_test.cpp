@@ -60,7 +60,7 @@ TEST_CASE_METHOD(RemoteDatabaseTest, "RemoteDatabase::begin", "[silkrpc][ethdb][
 
         // Execute the test: RemoteDatabase::begin should raise an exception w/ expected gRPC status code
         CHECK_THROWS_MATCHES(spawn_and_wait(remote_db_.begin()),
-            asio::system_error,
+            boost::asio::error_code,
             test::exception_has_cancelled_grpc_status_code());
     }
 
@@ -77,7 +77,7 @@ TEST_CASE_METHOD(RemoteDatabaseTest, "RemoteDatabase::begin", "[silkrpc][ethdb][
 
         // Execute the test: RemoteDatabase::begin should raise an exception w/ expected gRPC status code
         CHECK_THROWS_MATCHES(spawn_and_wait(remote_db_.begin()),
-            asio::system_error,
+            boost::asio::error_code,
             test::exception_has_cancelled_grpc_status_code());
     }
 }

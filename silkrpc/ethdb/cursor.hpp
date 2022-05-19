@@ -22,7 +22,7 @@
 #include <memory>
 #include <string>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/util.hpp>
@@ -39,22 +39,22 @@ public:
 
     virtual uint32_t cursor_id() const = 0;
 
-    virtual asio::awaitable<void> open_cursor(const std::string& table_name) = 0;
+    virtual boost::asio::awaitable<void> open_cursor(const std::string& table_name) = 0;
 
-    virtual asio::awaitable<KeyValue> seek(silkworm::ByteView key) = 0;
+    virtual boost::asio::awaitable<KeyValue> seek(silkworm::ByteView key) = 0;
 
-    virtual asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) = 0;
+    virtual boost::asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) = 0;
 
-    virtual asio::awaitable<KeyValue> next() = 0;
+    virtual boost::asio::awaitable<KeyValue> next() = 0;
 
-    virtual asio::awaitable<void> close_cursor() = 0;
+    virtual boost::asio::awaitable<void> close_cursor() = 0;
 };
 
 class CursorDupSort : public Cursor {
 public:
-    virtual asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) = 0;
+    virtual boost::asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) = 0;
 
-    virtual asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) = 0;
+    virtual boost::asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) = 0;
 };
 
 struct SplittedKeyValue {
@@ -69,9 +69,9 @@ public:
     SplitCursor(Cursor& inner_cursor, silkworm::ByteView key, uint64_t match_bits, uint64_t part1_end, uint64_t part2_start, uint64_t part3_start);
     SplitCursor& operator=(const SplitCursor&) = delete;
 
-    asio::awaitable<SplittedKeyValue> seek();
+    boost::asio::awaitable<SplittedKeyValue> seek();
 
-    asio::awaitable<SplittedKeyValue> next();
+    boost::asio::awaitable<SplittedKeyValue> next();
 
 private:
     Cursor& inner_cursor_;

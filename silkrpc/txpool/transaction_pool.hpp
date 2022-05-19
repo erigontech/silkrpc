@@ -26,8 +26,8 @@
 #include <silkrpc/config.hpp>
 
 #include <agrpc/grpc_context.hpp>
-#include <asio/io_context.hpp>
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -67,29 +67,28 @@ using TransactionsInPool = std::vector<TransactionInfo>;
 
 class TransactionPool final {
 public:
-    explicit TransactionPool(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context);
+    explicit TransactionPool(boost::asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context);
 
-    explicit TransactionPool(asio::io_context::executor_type executor, std::unique_ptr<::txpool::Txpool::StubInterface> stub,
+    explicit TransactionPool(boost::asio::io_context::executor_type executor, std::unique_ptr<::txpool::Txpool::StubInterface> stub,
         agrpc::GrpcContext& grpc_context);
 
     ~TransactionPool();
 
-    asio::awaitable<OperationResult> add_transaction(const silkworm::ByteView& rlp_tx);
+    boost::asio::awaitable<OperationResult> add_transaction(const silkworm::ByteView& rlp_tx);
 
-    asio::awaitable<std::optional<silkworm::Bytes>> get_transaction(const evmc::bytes32& tx_hash);
+    boost::asio::awaitable<std::optional<silkworm::Bytes>> get_transaction(const evmc::bytes32& tx_hash);
 
-    asio::awaitable<std::optional<uint64_t>> nonce(const evmc::address& address);
+    boost::asio::awaitable<std::optional<uint64_t>> nonce(const evmc::address& address);
 
-    asio::awaitable<StatusInfo> get_status();
+    boost::asio::awaitable<StatusInfo> get_status();
 
-    asio::awaitable<TransactionsInPool> get_transactions();
-
+    boost::asio::awaitable<TransactionsInPool> get_transactions();
 
 private:
     types::H160* H160_from_address(const evmc::address& address);
     types::H128* H128_from_bytes(const uint8_t* bytes);
 
-    asio::io_context::executor_type executor_;
+    boost::asio::io_context::executor_type executor_;
     std::unique_ptr<::txpool::Txpool::StubInterface> stub_;
     agrpc::GrpcContext& grpc_context_;
 };

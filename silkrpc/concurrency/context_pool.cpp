@@ -36,10 +36,10 @@ Context::Context(
     std::shared_ptr<BlockCache> block_cache,
     std::shared_ptr<ethdb::kv::StateCache> state_cache,
     WaitMode wait_mode)
-    : io_context_{std::make_shared<asio::io_context>()},
-      io_context_work_{asio::make_work_guard(*io_context_)},
+    : io_context_{std::make_shared<boost::asio::io_context>()},
+      io_context_work_{boost::asio::make_work_guard(*io_context_)},
       grpc_context_{std::make_unique<agrpc::GrpcContext>(std::make_unique<grpc::CompletionQueue>())},
-      grpc_context_work_{asio::make_work_guard(grpc_context_->get_executor())},
+      grpc_context_work_{boost::asio::make_work_guard(grpc_context_->get_executor())},
       block_cache_(block_cache),
       state_cache_(state_cache),
       wait_mode_(wait_mode) {
@@ -189,7 +189,7 @@ Context& ContextPool::next_context() {
     return context;
 }
 
-asio::io_context& ContextPool::next_io_context() {
+boost::asio::io_context& ContextPool::next_io_context() {
     auto& client_context = next_context();
     return *client_context.io_context();
 }

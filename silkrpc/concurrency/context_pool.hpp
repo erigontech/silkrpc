@@ -26,8 +26,8 @@
 #include <vector>
 
 #include <agrpc/asio_grpc.hpp>
-#include <asio/executor_work_guard.hpp>
-#include <asio/io_context.hpp>
+#include <boost/asio/executor_work_guard.hpp>
+#include <boost/asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/block_cache.hpp>
@@ -52,7 +52,7 @@ class Context {
         std::shared_ptr<ethdb::kv::StateCache> state_cache,
         WaitMode wait_mode = WaitMode::blocking);
 
-    asio::io_context* io_context() const noexcept { return io_context_.get(); }
+    boost::asio::io_context* io_context() const noexcept { return io_context_.get(); }
     grpc::CompletionQueue* grpc_queue() const noexcept { return grpc_context_->get_completion_queue(); }
     agrpc::GrpcContext* grpc_context() const noexcept { return grpc_context_.get(); }
     std::unique_ptr<ethdb::Database>& database() noexcept { return database_; }
@@ -80,14 +80,14 @@ class Context {
     void execute_loop_multi_threaded();
 
     //! The asynchronous event loop scheduler.
-    std::shared_ptr<asio::io_context> io_context_;
+    std::shared_ptr<boost::asio::io_context> io_context_;
 
     //! The work-tracking executor that keep the scheduler running.
-    asio::executor_work_guard<asio::io_context::executor_type> io_context_work_;
+    boost::asio::executor_work_guard<asio::io_context::executor_type> io_context_work_;
 
     std::unique_ptr<agrpc::GrpcContext> grpc_context_;
 
-    asio::executor_work_guard<agrpc::GrpcContext::executor_type> grpc_context_work_;
+    boost::asio::executor_work_guard<agrpc::GrpcContext::executor_type> grpc_context_work_;
 
     std::unique_ptr<ethdb::Database> database_;
     std::unique_ptr<ethbackend::BackEnd> backend_;
@@ -120,14 +120,14 @@ public:
 
     Context& next_context();
 
-    asio::io_context& next_io_context();
+    boost::asio::io_context& next_io_context();
 
 private:
     // The pool of contexts
     std::vector<Context> contexts_;
 
     //! The pool of threads running the execution contexts.
-    asio::detail::thread_group context_threads_;
+    boost::asio::detail::thread_group context_threads_;
 
     // The next index to use for a context
     std::size_t next_index_;

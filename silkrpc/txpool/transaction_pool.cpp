@@ -23,10 +23,10 @@
 
 namespace silkrpc::txpool {
 
-TransactionPool::TransactionPool(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context)
+TransactionPool::TransactionPool(boost::asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context)
     : TransactionPool(context.get_executor(), ::txpool::Txpool::NewStub(channel, grpc::StubOptions()), grpc_context) {}
 
-TransactionPool::TransactionPool(asio::io_context::executor_type executor, std::unique_ptr<::txpool::Txpool::StubInterface> stub, agrpc::GrpcContext& grpc_context)
+TransactionPool::TransactionPool(boost::asio::io_context::executor_type executor, std::unique_ptr<::txpool::Txpool::StubInterface> stub, agrpc::GrpcContext& grpc_context)
     : executor_(executor), stub_(std::move(stub)), grpc_context_(grpc_context) {
     SILKRPC_TRACE << "TransactionPool::ctor " << this << "\n";
 }
@@ -35,7 +35,7 @@ TransactionPool::~TransactionPool() {
     SILKRPC_TRACE << "TransactionPool::dtor " << this << "\n";
 }
 
-asio::awaitable<OperationResult> TransactionPool::add_transaction(const silkworm::ByteView& rlp_tx) {
+boost::asio::awaitable<OperationResult> TransactionPool::add_transaction(const silkworm::ByteView& rlp_tx) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "TransactionPool::add_transaction rlp_tx=" << silkworm::to_hex(rlp_tx) << "\n";
     ::txpool::AddRequest request;
@@ -71,7 +71,7 @@ asio::awaitable<OperationResult> TransactionPool::add_transaction(const silkworm
     co_return result;
 }
 
-asio::awaitable<std::optional<silkworm::Bytes>> TransactionPool::get_transaction(const evmc::bytes32& tx_hash) {
+boost::asio::awaitable<std::optional<silkworm::Bytes>> TransactionPool::get_transaction(const evmc::bytes32& tx_hash) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "TransactionPool::get_transaction tx_hash=" << tx_hash << "\n";
     auto hi = new ::types::H128{};
@@ -99,7 +99,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> TransactionPool::get_transaction
     }
 }
 
-asio::awaitable<std::optional<uint64_t>> TransactionPool::nonce(const evmc::address& address) {
+boost::asio::awaitable<std::optional<uint64_t>> TransactionPool::nonce(const evmc::address& address) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "TransactionPool::nonce address=" << address << "\n";
     ::txpool::NonceRequest request;
@@ -111,7 +111,7 @@ asio::awaitable<std::optional<uint64_t>> TransactionPool::nonce(const evmc::addr
     co_return reply.found() ? std::optional<uint64_t>{reply.nonce()} : std::nullopt;
 }
 
-asio::awaitable<StatusInfo> TransactionPool::get_status() {
+boost::asio::awaitable<StatusInfo> TransactionPool::get_status() {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "TransactionPool::get_status\n";
     ::txpool::StatusRequest request;
@@ -126,7 +126,7 @@ asio::awaitable<StatusInfo> TransactionPool::get_status() {
     co_return status_info;
 }
 
-asio::awaitable<TransactionsInPool> TransactionPool::get_transactions() {
+boost::asio::awaitable<TransactionsInPool> TransactionPool::get_transactions() {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "TransactionPool::get_transactions\n";
     ::txpool::AllRequest request;

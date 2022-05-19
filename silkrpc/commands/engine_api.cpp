@@ -30,7 +30,7 @@ using evmc::literals::operator""_bytes32;
 
 // Format for params is a list which includes a payloadId ie. [payloadId]
 // https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_getpayloadv1
-asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
     if (params.size() != 1) {
@@ -45,6 +45,9 @@ asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann:
         const auto payload_id = params[0].get<std::string>();
         reply = co_await backend_->engine_get_payload_v1(std::stoul(payload_id, 0, 16));
     #ifndef BUILD_COVERAGE
+    } catch (const boost::system::system_error& se) {
+        SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request.at("id"), 100, e.what());
@@ -57,7 +60,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann:
 
 // Format for params is a JSON object ie [ExecutionPayload]
 // https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_newpayloadv1
-asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
     if (params.size() != 1) {
@@ -72,6 +75,9 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
         const auto payload = params[0].get<ExecutionPayload>();
         reply = co_await backend_->engine_new_payload_v1(payload);
     #ifndef BUILD_COVERAGE
+    } catch (const boost::system::system_error& se) {
+        SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request.at("id"), 100, e.what());
@@ -85,7 +91,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
 // Format for params is a JSON list containing two objects
 // one ForkchoiceState and one PayloadAttributes, i.e. [ForkchoiceState, PayloadAttributes]
 // https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_forkchoiceupdatedv1
-asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
     if (params.size() != 1 && params.size() != 2) {
@@ -129,6 +135,9 @@ asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nl
             reply = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
         }
     #ifndef BUILD_COVERAGE
+    } catch (const boost::system::system_error& se) {
+        SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request.at("id"), 100, e.what());
@@ -141,7 +150,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nl
 
 // Checks if the transition configurations of the Execution Layer is equal to the ones in the Consensus Layer
 // Format for params is a JSON list of TransitionConfiguration, i.e. [TransitionConfiguration]
-asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configuration_v1(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configuration_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
     if (params.size() != 1) {
         auto error_msg = "invalid engine_exchangeTransitionConfigurationV1 params: " + params.dump();

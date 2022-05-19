@@ -75,7 +75,7 @@ TEST_CASE_METHOD(MinerTest, "Miner::get_work", "[silkrpc][txpool][miner]") {
 
     SECTION("call get_work and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&Miner::get_work>()), asio::system_error);
+        CHECK_THROWS_AS((run<&Miner::get_work>()), boost::system::system_error);
     }
 }
 
@@ -99,7 +99,7 @@ TEST_CASE_METHOD(MinerTest, "Miner::get_hashrate", "[silkrpc][txpool][miner]") {
 
     SECTION("call get_hashrate and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&Miner::get_hash_rate>()), asio::system_error);
+        CHECK_THROWS_AS((run<&Miner::get_hash_rate>()), boost::system::system_error);
     }
 }
 
@@ -134,7 +134,7 @@ TEST_CASE_METHOD(MinerTest, "Miner::get_mining", "[silkrpc][txpool][miner]") {
 
     SECTION("call get_mining and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&Miner::get_mining>()), asio::system_error);
+        CHECK_THROWS_AS((run<&Miner::get_mining>()), boost::system::system_error);
     }
 }
 
@@ -197,7 +197,7 @@ TEST_CASE_METHOD(MinerTest, "Miner::submit_hash_rate", "[silkrpc][txpool][miner]
         intx::uint256 rate{}; // don't care
         evmc::bytes32 id{silkworm::kEmptyHash}; // don't care
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&Miner::submit_hash_rate>(rate, id)), asio::system_error);
+        CHECK_THROWS_AS((run<&Miner::submit_hash_rate>(rate, id)), boost::system::system_error);
     }
 }
 

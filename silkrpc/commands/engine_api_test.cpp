@@ -19,9 +19,9 @@
 #include <string>
 #include <utility>
 
-#include <asio/awaitable.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 #include <nlohmann/json.hpp>
@@ -41,25 +41,25 @@ using evmc::literals::operator""_bytes32;
 namespace {
 class BackEndMock : public ethbackend::BackEnd {
 public:
-    MOCK_METHOD((asio::awaitable<evmc::address>), etherbase, ());
-    MOCK_METHOD((asio::awaitable<uint64_t>), protocol_version, ());
-    MOCK_METHOD((asio::awaitable<uint64_t>), net_version, ());
-    MOCK_METHOD((asio::awaitable<std::string>), client_version, ());
-    MOCK_METHOD((asio::awaitable<uint64_t>), net_peer_count, ());
-    MOCK_METHOD((asio::awaitable<ExecutionPayload>), engine_get_payload_v1, (uint64_t payload_id));
-    MOCK_METHOD((asio::awaitable<PayloadStatus>), engine_new_payload_v1, (ExecutionPayload payload));
-    MOCK_METHOD((asio::awaitable<ForkchoiceUpdatedReply>), engine_forkchoice_updated_v1, (ForkchoiceUpdatedRequest forkchoice_updated_request));
+    MOCK_METHOD((boost::asio::awaitable<evmc::address>), etherbase, ());
+    MOCK_METHOD((boost::asio::awaitable<uint64_t>), protocol_version, ());
+    MOCK_METHOD((boost::asio::awaitable<uint64_t>), net_version, ());
+    MOCK_METHOD((boost::asio::awaitable<std::string>), client_version, ());
+    MOCK_METHOD((boost::asio::awaitable<uint64_t>), net_peer_count, ());
+    MOCK_METHOD((boost::asio::awaitable<ExecutionPayload>), engine_get_payload_v1, (uint64_t payload_id));
+    MOCK_METHOD((boost::asio::awaitable<PayloadStatus>), engine_new_payload_v1, (ExecutionPayload payload));
+    MOCK_METHOD((boost::asio::awaitable<ForkchoiceUpdatedReply>), engine_forkchoice_updated_v1, (ForkchoiceUpdatedRequest forkchoice_updated_request));
 };
 
 class MockCursor : public ethdb::Cursor {
 public:
     uint32_t cursor_id() const override { return 0; }
 
-    MOCK_METHOD((asio::awaitable<void>), open_cursor, (const std::string& table_name));
-    MOCK_METHOD((asio::awaitable<KeyValue>), seek, (silkworm::ByteView key));
-    MOCK_METHOD((asio::awaitable<KeyValue>), seek_exact, (silkworm::ByteView key));
-    MOCK_METHOD((asio::awaitable<KeyValue>), next, ());
-    MOCK_METHOD((asio::awaitable<void>), close_cursor, ());
+    MOCK_METHOD((boost::asio::awaitable<void>), open_cursor, (const std::string& table_name));
+    MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek, (silkworm::ByteView key));
+    MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek_exact, (silkworm::ByteView key));
+    MOCK_METHOD((boost::asio::awaitable<KeyValue>), next, ());
+    MOCK_METHOD((boost::asio::awaitable<void>), close_cursor, ());
 };
 
 //! This dummy transaction just gives you the same cursor over and over again.
@@ -69,17 +69,17 @@ public:
 
     uint64_t tx_id() const override { return 0; }
 
-    asio::awaitable<void> open() override { co_return; }
+    boost::asio::awaitable<void> open() override { co_return; }
 
-    asio::awaitable<std::shared_ptr<ethdb::Cursor>> cursor(const std::string& /*table*/) override {
+    boost::asio::awaitable<std::shared_ptr<ethdb::Cursor>> cursor(const std::string& /*table*/) override {
         co_return cursor_;
     }
 
-    asio::awaitable<std::shared_ptr<ethdb::CursorDupSort>> cursor_dup_sort(const std::string& /*table*/) override {
+    boost::asio::awaitable<std::shared_ptr<ethdb::CursorDupSort>> cursor_dup_sort(const std::string& /*table*/) override {
         co_return nullptr;
     }
 
-    asio::awaitable<void> close() override { co_return; }
+    boost::asio::awaitable<void> close() override { co_return; }
 
 private:
     std::shared_ptr<ethdb::Cursor> cursor_;
@@ -90,7 +90,7 @@ class DummyDatabase : public ethdb::Database {
 public:
     explicit DummyDatabase(std::shared_ptr<ethdb::Cursor> cursor) : cursor_(cursor) {}
 
-    asio::awaitable<std::unique_ptr<ethdb::Transaction>> begin() override {
+    boost::asio::awaitable<std::unique_ptr<ethdb::Transaction>> begin() override {
         co_return std::make_unique<DummyTransaction>(cursor_);
     }
 private:
@@ -160,7 +160,7 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
 
     BackEndMock backend;
     EXPECT_CALL(backend, engine_get_payload_v1(1)).WillOnce(InvokeWithoutArgs(
-        []() -> asio::awaitable<ExecutionPayload> {
+        []() -> boost::asio::awaitable<ExecutionPayload> {
             co_return ExecutionPayload{1};
         }
     ));
@@ -182,12 +182,12 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_get_payload_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply == ExecutionPayload{1});
@@ -216,12 +216,12 @@ TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_get_payload_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply ==  R"({
@@ -242,7 +242,7 @@ TEST_CASE("handle_engine_new_payload_v1 succeeds if request is expected payload 
 
     BackEndMock backend;
     EXPECT_CALL(backend, engine_new_payload_v1(testing::_)).WillOnce(InvokeWithoutArgs(
-        []() -> asio::awaitable<PayloadStatus> {
+        []() -> boost::asio::awaitable<PayloadStatus> {
             co_return PayloadStatus{
                 .status = "INVALID",
                 .latest_valid_hash = 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32,
@@ -283,12 +283,12 @@ TEST_CASE("handle_engine_new_payload_v1 succeeds if request is expected payload 
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_new_payload_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply == PayloadStatus{
@@ -321,12 +321,12 @@ TEST_CASE("handle_engine_new_payload_v1 fails with invalid amount of params", "[
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_new_payload_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply ==  R"({
@@ -347,7 +347,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds only with forkchoiceStat
 
     BackEndMock *backend = new BackEndMock;
     EXPECT_CALL(*backend, engine_forkchoice_updated_v1(testing::_)).WillOnce(InvokeWithoutArgs(
-        []() -> asio::awaitable<ForkchoiceUpdatedReply> {
+        []() -> boost::asio::awaitable<ForkchoiceUpdatedReply> {
             co_return ForkchoiceUpdatedReply{
                 .payload_status = PayloadStatus{
                     .status = "INVALID",
@@ -381,12 +381,12 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds only with forkchoiceStat
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
     CHECK(reply ==  R"({
         "payloadStatus":{
@@ -404,7 +404,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[sil
 
     BackEndMock *backend = new BackEndMock;
     EXPECT_CALL(*backend, engine_forkchoice_updated_v1(testing::_)).WillOnce(InvokeWithoutArgs(
-        []() -> asio::awaitable<ForkchoiceUpdatedReply> {
+        []() -> boost::asio::awaitable<ForkchoiceUpdatedReply> {
             co_return ForkchoiceUpdatedReply{
                 .payload_status = PayloadStatus{
                     .status = "INVALID",
@@ -443,12 +443,12 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[sil
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
     CHECK(reply ==  R"({
         "payloadStatus":{
@@ -480,12 +480,12 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with invalid amount of para
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply ==  R"({
@@ -527,12 +527,12 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty finalized block 
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
     CHECK(reply ==  R"({
         "error":{
@@ -572,12 +572,12 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty safe block hash"
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
     CHECK(reply ==  R"({
         "error":{
@@ -600,13 +600,13 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
     ));
@@ -627,12 +627,12 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK((reply == TransitionConfiguration {
@@ -654,13 +654,13 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfigNoTerminalBlockNumber};
         }
     ));
@@ -681,12 +681,12 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK((reply == TransitionConfiguration {
@@ -708,13 +708,13 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
     ));
@@ -735,12 +735,12 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply == R"({
@@ -764,13 +764,13 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
     ));
@@ -791,12 +791,12 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply == R"({
@@ -820,13 +820,13 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfigNoTerminalTotalDifficulty};
         }
     ));
@@ -847,12 +847,12 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply == R"({
@@ -876,13 +876,13 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfigNoTerminalBlockHash};
         }
     ));
@@ -903,12 +903,12 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply == R"({
@@ -932,13 +932,13 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if consensus layer se
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
     ));
@@ -959,12 +959,12 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if consensus layer se
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply == R"({
@@ -999,12 +999,12 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params",
         "params":[]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply == R"({

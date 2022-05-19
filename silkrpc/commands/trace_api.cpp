@@ -36,7 +36,7 @@
 namespace silkrpc::commands {
 
 // https://eth.wiki/json-rpc/API#trace_call
-asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() < 3) {
         auto error_msg = "invalid trace_call params: " + params.dump();
@@ -78,7 +78,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json& reque
 }
 
 // https://eth.wiki/json-rpc/API#trace_callmany
-asio::awaitable<void> TraceRpcApi::handle_trace_call_many(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> TraceRpcApi::handle_trace_call_many(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -98,7 +98,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_call_many(const nlohmann::json& 
 }
 
 // https://eth.wiki/json-rpc/API#trace_rawtransaction
-asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -118,7 +118,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlohmann::
 }
 
 // https://eth.wiki/json-rpc/API#trace_replayblocktransactions
-asio::awaitable<void> TraceRpcApi::handle_trace_replay_block_transactions(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> TraceRpcApi::handle_trace_replay_block_transactions(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() < 2) {
         auto error_msg = "invalid trace_replayBlockTransactions params: " + params.dump();
@@ -154,7 +154,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_replay_block_transactions(const 
 }
 
 // https://eth.wiki/json-rpc/API#trace_replaytransaction
-asio::awaitable<void> TraceRpcApi::handle_trace_replay_transaction(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> TraceRpcApi::handle_trace_replay_transaction(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() < 2) {
         auto error_msg = "invalid trace_replayTransaction params: " + params.dump();
@@ -199,7 +199,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_replay_transaction(const nlohman
 }
 
 // https://eth.wiki/json-rpc/API#trace_block
-asio::awaitable<void> TraceRpcApi::handle_trace_block(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> TraceRpcApi::handle_trace_block(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() < 1) {
         auto error_msg = "invalid trace_block params: " + params.dump();
@@ -234,7 +234,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_block(const nlohmann::json& requ
 }
 
 // https://eth.wiki/json-rpc/API#trace_filter
-asio::awaitable<void> TraceRpcApi::handle_trace_filter(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> TraceRpcApi::handle_trace_filter(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -254,7 +254,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_filter(const nlohmann::json& req
 }
 
 // https://eth.wiki/json-rpc/API#trace_get
-asio::awaitable<void> TraceRpcApi::handle_trace_get(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> TraceRpcApi::handle_trace_get(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() < 2) {
         auto error_msg = "invalid trace_get params: " + params.dump();
@@ -278,6 +278,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_get(const nlohmann::json& reques
     }
 
     auto tx = co_await database_->begin();
+
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
@@ -308,7 +309,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_get(const nlohmann::json& reques
 }
 
 // https://eth.wiki/json-rpc/API#trace_transaction
-asio::awaitable<void> TraceRpcApi::handle_trace_transaction(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> TraceRpcApi::handle_trace_transaction(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() < 1) {
         auto error_msg = "invalid trace_transaction params: " + params.dump();

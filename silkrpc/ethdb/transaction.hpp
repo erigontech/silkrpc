@@ -22,7 +22,7 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/util.hpp>
@@ -41,13 +41,13 @@ public:
 
     virtual uint64_t tx_id() const = 0;
 
-    virtual asio::awaitable<void> open() = 0;
+    virtual boost::asio::awaitable<void> open() = 0;
 
-    virtual asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) = 0;
+    virtual boost::asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) = 0;
 
-    virtual asio::awaitable<std::shared_ptr<CursorDupSort>> cursor_dup_sort(const std::string& table) = 0;
+    virtual boost::asio::awaitable<std::shared_ptr<CursorDupSort>> cursor_dup_sort(const std::string& table) = 0;
 
-    virtual asio::awaitable<void> close() = 0;
+    virtual boost::asio::awaitable<void> close() = 0;
 };
 
 } // namespace silkrpc::ethdb

@@ -34,25 +34,25 @@ RemoteTransaction::RemoteTransaction(remote::KV::StubInterface& stub, agrpc::Grp
 RemoteTransaction::~RemoteTransaction() {
 }
 
-asio::awaitable<void> RemoteTransaction::open() {
+boost::asio::awaitable<void> RemoteTransaction::open() {
     tx_id_ = (co_await tx_rpc_.request_and_read()).txid();
 }
 
-asio::awaitable<std::shared_ptr<Cursor>> RemoteTransaction::cursor(const std::string& table) {
+boost::asio::awaitable<std::shared_ptr<Cursor>> RemoteTransaction::cursor(const std::string& table) {
     co_return co_await get_cursor(table);
 }
 
-asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction::cursor_dup_sort(const std::string& table) {
+boost::asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction::cursor_dup_sort(const std::string& table) {
     co_return co_await get_cursor(table);
 }
 
-asio::awaitable<void> RemoteTransaction::close() {
+boost::asio::awaitable<void> RemoteTransaction::close() {
     co_await tx_rpc_.writes_done_and_finish();
     cursors_.clear();
     tx_id_ = 0;
 }
 
-asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction::get_cursor(const std::string& table) {
+boost::asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction::get_cursor(const std::string& table) {
     auto cursor_it = cursors_.find(table);
     if (cursor_it != cursors_.end()) {
         co_return cursor_it->second;

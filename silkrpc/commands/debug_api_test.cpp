@@ -19,9 +19,9 @@
 #include <stdexcept>
 #include <string>
 
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <nlohmann/json.hpp>
 
@@ -49,7 +49,7 @@ public:
         return 0;
     }
 
-    asio::awaitable<void> open_cursor(const std::string& table_name) override {
+    boost::asio::awaitable<void> open_cursor(const std::string& table_name) override {
         table_name_ = table_name;
         table_ = json_.value(table_name_, empty);
         itr_ = table_.end();
@@ -57,12 +57,12 @@ public:
         co_return;
     }
 
-    asio::awaitable<void> close_cursor() override {
+    boost::asio::awaitable<void> close_cursor() override {
         table_name_ = "";
         co_return;
     }
 
-    asio::awaitable<KeyValue> seek(silkworm::ByteView key) override {
+    boost::asio::awaitable<KeyValue> seek(silkworm::ByteView key) override {
         const auto key_ = silkworm::to_hex(key);
 
         KeyValue out;
@@ -83,7 +83,7 @@ public:
         co_return out;
     }
 
-    asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override {
+    boost::asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override {
         const nlohmann::json table = json_.value(table_name_, empty);
         const auto& entry = table.value(silkworm::to_hex(key), "");
         auto value{*silkworm::from_hex(entry)};
@@ -93,7 +93,7 @@ public:
         co_return kv;
     }
 
-    asio::awaitable<KeyValue> next() override {
+    boost::asio::awaitable<KeyValue> next() override {
         KeyValue out;
 
         if (++itr_ != table_.end()) {
@@ -105,7 +105,7 @@ public:
         co_return out;
     }
 
-    asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) override {
+    boost::asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) override {
         silkworm::Bytes key_{key};
         key_ += value;
 
@@ -116,7 +116,7 @@ public:
         co_return out;
     }
 
-    asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) override {
+    boost::asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) override {
         silkworm::Bytes key_{key};
         key_ += value;
 
@@ -145,25 +145,25 @@ public:
         return tx_id_;
     }
 
-    asio::awaitable<void> open() override {
+    boost::asio::awaitable<void> open() override {
         co_return;
     }
 
-    asio::awaitable<std::shared_ptr<silkrpc::ethdb::Cursor>> cursor(const std::string& table) override {
+    boost::asio::awaitable<std::shared_ptr<silkrpc::ethdb::Cursor>> cursor(const std::string& table) override {
         auto cursor = std::make_unique<DummyCursor>(json_);
         co_await cursor->open_cursor(table);
 
         co_return cursor;
     }
 
-    asio::awaitable<std::shared_ptr<silkrpc::ethdb::CursorDupSort>> cursor_dup_sort(const std::string& table) override {
+    boost::asio::awaitable<std::shared_ptr<silkrpc::ethdb::CursorDupSort>> cursor_dup_sort(const std::string& table) override {
         auto cursor = std::make_unique<DummyCursor>(json_);
         co_await cursor->open_cursor(table);
 
         co_return cursor;
     }
 
-    asio::awaitable<void> close() override {
+    boost::asio::awaitable<void> close() override {
         co_return;
     }
 
@@ -176,7 +176,7 @@ class DummyDatabase: public silkrpc::ethdb::Database {
 public:
     explicit DummyDatabase(const nlohmann::json& json) : json_{json} {};
 
-    asio::awaitable<std::unique_ptr<silkrpc::ethdb::Transaction>> begin() override {
+    boost::asio::awaitable<std::unique_ptr<silkrpc::ethdb::Transaction>> begin() override {
         auto txn = std::make_unique<DummyTransaction>(json_);
         co_return txn;
     }
@@ -191,7 +191,7 @@ TEST_CASE("DebugRpcApi") {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
     };
     Context context{create_channel, std::make_shared<BlockCache>(), std::make_shared<ethdb::kv::CoherentStateCache>()};
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
 
     SECTION("CTOR") {
         CHECK_NOTHROW(DebugRpcApi{context, workers});
@@ -200,7 +200,7 @@ TEST_CASE("DebugRpcApi") {
 
 #if !defined(__clang__)
 TEST_CASE("get_modified_accounts") {
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
     nlohmann::json json;
 
     json["SyncStage"] = {
@@ -284,12 +284,12 @@ TEST_CASE("get_modified_accounts") {
     // std::cout << "json: " << json << "\n" << std::flush;
 
     auto database = DummyDatabase{json};
-    auto begin_result = asio::co_spawn(pool, database.begin(), asio::use_future);
+    auto begin_result = boost::asio::co_spawn(pool, database.begin(), boost::asio::use_future);
     auto tx = begin_result.get();
     ethdb::TransactionDatabase tx_database{*tx};
 
     SECTION("end == start") {
-        auto result = asio::co_spawn(pool, get_modified_accounts(tx_database, 0x52a010, 0x52a010), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_modified_accounts(tx_database, 0x52a010, 0x52a010), boost::asio::use_future);
         auto accounts = result.get();
 
         CHECK(accounts.size() == 1);
@@ -301,7 +301,7 @@ TEST_CASE("get_modified_accounts") {
     }
 
     SECTION("end == start + 1") {
-        auto result = asio::co_spawn(pool, get_modified_accounts(tx_database, 0x52a010, 0x52a011), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_modified_accounts(tx_database, 0x52a010, 0x52a011), boost::asio::use_future);
         auto accounts = result.get();
 
         CHECK(accounts.size() == 2);
@@ -314,7 +314,7 @@ TEST_CASE("get_modified_accounts") {
     }
 
     SECTION("end >> start") {
-        auto result = asio::co_spawn(pool, get_modified_accounts(tx_database, 0x52a010, 0x52a058), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_modified_accounts(tx_database, 0x52a010, 0x52a058), boost::asio::use_future);
         auto accounts = result.get();
 
         CHECK(accounts.size() == 70);
@@ -395,14 +395,14 @@ TEST_CASE("get_modified_accounts") {
     }
 
     SECTION("start > end") {
-        auto result = asio::co_spawn(pool, get_modified_accounts(tx_database, 0x52a011, 0x52a010), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_modified_accounts(tx_database, 0x52a011, 0x52a010), boost::asio::use_future);
         auto accounts = result.get();
 
         CHECK(accounts.size() == 0);
     }
 
     SECTION("start > last block") {
-        auto result = asio::co_spawn(pool, get_modified_accounts(tx_database, 0x52a061, 0x52a061), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_modified_accounts(tx_database, 0x52a061, 0x52a061), boost::asio::use_future);
         CHECK_THROWS_AS(result.get(), std::invalid_argument);
     }
 }

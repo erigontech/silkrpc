@@ -1081,14 +1081,14 @@ asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldState, VM>:
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::trace_call(const silkworm::Block& block, const silkrpc::Call& call, const TraceConfig& config) {
+boost::asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::trace_call(const silkworm::Block& block, const silkrpc::Call& call, const TraceConfig& config) {
     silkrpc::Transaction transaction{call.to_transaction()};
     auto result = co_await execute(block.header.number, block, transaction, -1, config);
     co_return result;
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_transaction(const silkworm::BlockWithHash& block_with_hash, const silkrpc::Transaction& transaction) {
+boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_transaction(const silkworm::BlockWithHash& block_with_hash, const silkrpc::Transaction& transaction) {
     std::vector<Trace> traces;
 
     const auto result = co_await execute(block_with_hash.block.header.number-1, block_with_hash.block, transaction, transaction.transaction_index, {false, true, false});
@@ -1112,7 +1112,7 @@ asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_tra
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
+boost::asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
     const silkrpc::Transaction& transaction, std::int32_t index, const TraceConfig& config) {
     SILKRPC_INFO << "execute: "
         << " block_number: " << block_number

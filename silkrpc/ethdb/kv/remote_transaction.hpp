@@ -44,16 +44,16 @@ public:
 
     uint64_t tx_id() const override { return tx_id_; }
 
-    asio::awaitable<void> open() override;
+    boost::asio::awaitable<void> open() override;
 
-    asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) override;
+    boost::asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) override;
 
-    asio::awaitable<std::shared_ptr<CursorDupSort>> cursor_dup_sort(const std::string& table) override;
+    boost::asio::awaitable<std::shared_ptr<CursorDupSort>> cursor_dup_sort(const std::string& table) override;
 
-    asio::awaitable<void> close() override;
+    boost::asio::awaitable<void> close() override;
 
 private:
-    asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table);
+    boost::asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table);
 
     TxRpc tx_rpc_;
     std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
