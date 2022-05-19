@@ -68,12 +68,12 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
                 SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
                 co_return;
             }
-            
+
             auto decoded_client_token = jwt::decode(client_token);
             auto verifier = jwt::verify().allow_algorithm(jwt::algorithm::hs256{jwt_secret});
 
             std::error_code ec;
-                
+
             verifier.verify(decoded_client_token, ec);
 
 
@@ -90,7 +90,6 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
             reply.content = make_json_content(request_id, "success");
             SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
             co_return;
-
         }
 
         request_id = request_json["id"].get<uint32_t>();
