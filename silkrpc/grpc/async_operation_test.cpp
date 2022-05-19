@@ -18,10 +18,10 @@
 
 #include <future>
 
-#include <asio/async_result.hpp>
-#include <asio/error_code.hpp>
-#include <asio/io_context.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/async_result.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/use_future.hpp>
+#include <boost/system/error_code.hpp>
 #include <catch2/catch.hpp>
 
 namespace silkrpc {
@@ -29,10 +29,10 @@ namespace silkrpc {
 using Catch::Matchers::Message;
 
 TEST_CASE("call hook on async operation completion", "[silkrpc][grpc][async_operation]") {
-    class AO : public async_operation<void, asio::error_code> {
+    class AO : public async_operation<void, boost::system::error_code> {
     public:
-        AO() : async_operation<void, asio::error_code>(&AO::do_complete) {}
-        static void do_complete(void* owner, async_operation<void, asio::error_code>* base, asio::error_code error = {}) {
+        AO() : async_operation<void, boost::system::error_code>(&AO::do_complete) {}
+        static void do_complete(void* owner, async_operation<void, boost::system::error_code>* base, boost::system::error_code error = {}) {
             auto self = static_cast<AO*>(base);
             self->called = true;
         }
@@ -45,7 +45,7 @@ TEST_CASE("call hook on async operation completion", "[silkrpc][grpc][async_oper
 
 class initiate_async_noreply_op_immediate {
 public:
-    using executor_type = asio::io_context::executor_type;
+    using executor_type = boost::asio::io_context::executor_type;
 
     explicit initiate_async_noreply_op_immediate(executor_type executor) : executor_(executor) {}
 
@@ -53,8 +53,8 @@ public:
 
     template<typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        using async_op = async_noreply_operation<WaitHandler, asio::io_context::executor_type>;
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        using async_op = async_noreply_operation<WaitHandler, boost::asio::io_context::executor_type>;
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         auto op = new async_op(handler2.value, executor_);
         op->complete(op, {});
     }
@@ -63,21 +63,21 @@ private:
 };
 
 template<typename WaitHandler>
-auto async_noreply_op_immediate(WaitHandler&& handler, asio::io_context& io_context) {
-    return asio::async_initiate<WaitHandler, void(asio::error_code)>(initiate_async_noreply_op_immediate{io_context.get_executor()}, handler);
+auto async_noreply_op_immediate(WaitHandler&& handler, boost::asio::io_context& io_context) {
+    return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code)>(initiate_async_noreply_op_immediate{io_context.get_executor()}, handler);
 }
 
 TEST_CASE("give future result on async void operation with immediate completion", "[silkrpc][grpc][async_operation]") {
-    asio::io_context io_context;
-    using use_future_t_lvalue_ref = typename std::add_lvalue_reference<asio::use_future_t<>>::type;
-    asio::detail::non_const_lvalue<asio::use_future_t<>> handler(const_cast<use_future_t_lvalue_ref>(asio::use_future));
-    auto future_result = async_noreply_op_immediate(asio::use_future, io_context);
+    boost::asio::io_context io_context;
+    using use_future_t_lvalue_ref = typename std::add_lvalue_reference<boost::asio::use_future_t<>>::type;
+    boost::asio::detail::non_const_lvalue<boost::asio::use_future_t<>> handler(const_cast<use_future_t_lvalue_ref>(boost::asio::use_future));
+    auto future_result = async_noreply_op_immediate(boost::asio::use_future, io_context);
     CHECK_NOTHROW(future_result.get());
 }
 
 class initiate_async_noreply_op_delayed {
 public:
-    using executor_type = asio::io_context::executor_type;
+    using executor_type = boost::asio::io_context::executor_type;
 
     explicit initiate_async_noreply_op_delayed(executor_type executor) : executor_(executor) {}
 
@@ -85,8 +85,8 @@ public:
 
     template<typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        using async_op = async_noreply_operation<WaitHandler, asio::io_context::executor_type>;
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        using async_op = async_noreply_operation<WaitHandler, boost::asio::io_context::executor_type>;
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         auto op = new async_op(handler2.value, executor_);
         auto result = std::async([&]() {
             std::this_thread::yield();
@@ -98,21 +98,21 @@ private:
 };
 
 template<typename WaitHandler>
-auto async_noreply_op_delayed(WaitHandler&& handler, asio::io_context& io_context) {
-    return asio::async_initiate<WaitHandler, void(asio::error_code)>(initiate_async_noreply_op_delayed{io_context.get_executor()}, handler);
+auto async_noreply_op_delayed(WaitHandler&& handler, boost::asio::io_context& io_context) {
+    return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code)>(initiate_async_noreply_op_delayed{io_context.get_executor()}, handler);
 }
 
 TEST_CASE("give future result on async void operation with delayed completion", "[silkrpc][grpc][async_operation]") {
-    asio::io_context io_context;
-    using use_future_t_lvalue_ref = typename std::add_lvalue_reference<asio::use_future_t<>>::type;
-    asio::detail::non_const_lvalue<asio::use_future_t<>> handler(const_cast<use_future_t_lvalue_ref>(asio::use_future));
-    auto future_result = async_noreply_op_delayed(asio::use_future, io_context);
+    boost::asio::io_context io_context;
+    using use_future_t_lvalue_ref = typename std::add_lvalue_reference<boost::asio::use_future_t<>>::type;
+    boost::asio::detail::non_const_lvalue<boost::asio::use_future_t<>> handler(const_cast<use_future_t_lvalue_ref>(boost::asio::use_future));
+    auto future_result = async_noreply_op_delayed(boost::asio::use_future, io_context);
     CHECK_NOTHROW(future_result.get());
 }
 
 class initiate_async_op_immediate {
 public:
-    using executor_type = asio::io_context::executor_type;
+    using executor_type = boost::asio::io_context::executor_type;
 
     explicit initiate_async_op_immediate(executor_type executor, uint32_t id) : executor_(executor), id_(id) {}
 
@@ -120,8 +120,8 @@ public:
 
     template<typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        using async_op = async_reply_operation<WaitHandler, asio::io_context::executor_type, uint32_t>;
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        using async_op = async_reply_operation<WaitHandler, boost::asio::io_context::executor_type, uint32_t>;
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         auto op = new async_op(handler2.value, executor_);
         op->complete(op, {}, id_);
     }
@@ -131,21 +131,21 @@ private:
 };
 
 template<typename WaitHandler>
-auto async_op_immediate(WaitHandler&& handler, uint32_t id, asio::io_context& io_context) {
-    return asio::async_initiate<WaitHandler, void(asio::error_code, uint32_t)>(initiate_async_op_immediate{io_context.get_executor(), id}, handler);
+auto async_op_immediate(WaitHandler&& handler, uint32_t id, boost::asio::io_context& io_context) {
+    return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code, uint32_t)>(initiate_async_op_immediate{io_context.get_executor(), id}, handler);
 }
 
 TEST_CASE("give future result on async operation with immediate completion", "[silkrpc][grpc][async_operation]") {
-    asio::io_context io_context;
-    using use_future_t_lvalue_ref = typename std::add_lvalue_reference<asio::use_future_t<>>::type;
-    asio::detail::non_const_lvalue<asio::use_future_t<>> handler(const_cast<use_future_t_lvalue_ref>(asio::use_future));
-    auto future_result = async_op_immediate(asio::use_future, 18, io_context);
+    boost::asio::io_context io_context;
+    using use_future_t_lvalue_ref = typename std::add_lvalue_reference<boost::asio::use_future_t<>>::type;
+    boost::asio::detail::non_const_lvalue<boost::asio::use_future_t<>> handler(const_cast<use_future_t_lvalue_ref>(boost::asio::use_future));
+    auto future_result = async_op_immediate(boost::asio::use_future, 18, io_context);
     CHECK_NOTHROW(future_result.get() == 18);
 }
 
 class initiate_async_op_delayed {
 public:
-    using executor_type = asio::io_context::executor_type;
+    using executor_type = boost::asio::io_context::executor_type;
 
     explicit initiate_async_op_delayed(executor_type executor, uint32_t id) : executor_(executor), id_(id) {}
 
@@ -153,8 +153,8 @@ public:
 
     template<typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        using async_op = async_reply_operation<WaitHandler, asio::io_context::executor_type, uint32_t>;
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        using async_op = async_reply_operation<WaitHandler, boost::asio::io_context::executor_type, uint32_t>;
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         auto op = new async_op(handler2.value, executor_);
         auto result = std::async([&]() {
             std::this_thread::yield();
@@ -167,15 +167,15 @@ private:
 };
 
 template<typename WaitHandler>
-auto async_op_delayed(WaitHandler&& handler, uint32_t id, asio::io_context& io_context) {
-    return asio::async_initiate<WaitHandler, void(asio::error_code, uint32_t)>(initiate_async_op_delayed{io_context.get_executor(), id}, handler);
+auto async_op_delayed(WaitHandler&& handler, uint32_t id, boost::asio::io_context& io_context) {
+    return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code, uint32_t)>(initiate_async_op_delayed{io_context.get_executor(), id}, handler);
 }
 
 TEST_CASE("give future result on async operation with delayed completion", "[silkrpc][grpc][async_operation]") {
-    asio::io_context io_context;
-    using use_future_t_lvalue_ref = typename std::add_lvalue_reference<asio::use_future_t<>>::type;
-    asio::detail::non_const_lvalue<asio::use_future_t<>> handler(const_cast<use_future_t_lvalue_ref>(asio::use_future));
-    auto future_result = async_op_delayed(asio::use_future, 18, io_context);
+    boost::asio::io_context io_context;
+    using use_future_t_lvalue_ref = typename std::add_lvalue_reference<boost::asio::use_future_t<>>::type;
+    boost::asio::detail::non_const_lvalue<boost::asio::use_future_t<>> handler(const_cast<use_future_t_lvalue_ref>(boost::asio::use_future));
+    auto future_result = async_op_delayed(boost::asio::use_future, 18, io_context);
     CHECK_NOTHROW(future_result.get() == 18);
 }
 

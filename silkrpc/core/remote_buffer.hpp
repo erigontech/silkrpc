@@ -24,8 +24,8 @@
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
-#include <asio/awaitable.hpp>
-#include <asio/io_context.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/io_context.hpp>
 #include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>
 
@@ -37,31 +37,31 @@ namespace silkrpc::state {
 
 class AsyncRemoteState {
 public:
-    explicit AsyncRemoteState(asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, uint64_t block_number)
+    explicit AsyncRemoteState(boost::asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, uint64_t block_number)
     : io_context_(io_context), db_reader_(db_reader), block_number_(block_number), state_reader_{db_reader} {}
 
-    asio::awaitable<std::optional<silkworm::Account>> read_account(const evmc::address& address) const noexcept;
+    boost::asio::awaitable<std::optional<silkworm::Account>> read_account(const evmc::address& address) const noexcept;
 
-    asio::awaitable<silkworm::ByteView> read_code(const evmc::bytes32& code_hash) const noexcept;
+    boost::asio::awaitable<silkworm::ByteView> read_code(const evmc::bytes32& code_hash) const noexcept;
 
-    asio::awaitable<evmc::bytes32> read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept;
+    boost::asio::awaitable<evmc::bytes32> read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) const noexcept;
 
-    asio::awaitable<uint64_t> previous_incarnation(const evmc::address& address) const noexcept;
+    boost::asio::awaitable<uint64_t> previous_incarnation(const evmc::address& address) const noexcept;
 
-    asio::awaitable<std::optional<silkworm::BlockHeader>> read_header(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept;
+    boost::asio::awaitable<std::optional<silkworm::BlockHeader>> read_header(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept;
 
-    asio::awaitable<bool> read_body(uint64_t block_number, const evmc::bytes32& block_hash, silkworm::BlockBody& filled_body) const noexcept;
+    boost::asio::awaitable<bool> read_body(uint64_t block_number, const evmc::bytes32& block_hash, silkworm::BlockBody& filled_body) const noexcept;
 
-    asio::awaitable<std::optional<intx::uint256>> total_difficulty(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept;
+    boost::asio::awaitable<std::optional<intx::uint256>> total_difficulty(uint64_t block_number, const evmc::bytes32& block_hash) const noexcept;
 
-    asio::awaitable<evmc::bytes32> state_root_hash() const;
+    boost::asio::awaitable<evmc::bytes32> state_root_hash() const;
 
-    asio::awaitable<uint64_t> current_canonical_block() const;
+    boost::asio::awaitable<uint64_t> current_canonical_block() const;
 
-    asio::awaitable<std::optional<evmc::bytes32>> canonical_hash(uint64_t block_number) const;
+    boost::asio::awaitable<std::optional<evmc::bytes32>> canonical_hash(uint64_t block_number) const;
 
 private:
-    asio::io_context& io_context_;
+    boost::asio::io_context& io_context_;
     const core::rawdb::DatabaseReader& db_reader_;
     uint64_t block_number_;
     StateReader state_reader_;
@@ -69,7 +69,7 @@ private:
 
 class RemoteState : public silkworm::State {
 public:
-    explicit RemoteState(asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, uint64_t block_number)
+    explicit RemoteState(boost::asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, uint64_t block_number)
     : io_context_(io_context), async_state_{io_context, db_reader, block_number} {}
 
     std::optional<silkworm::Account> read_account(const evmc::address& address) const noexcept override;
@@ -123,7 +123,7 @@ public:
     void unwind_state_changes(uint64_t block_number) override {}
 
 private:
-    asio::io_context& io_context_;
+    boost::asio::io_context& io_context_;
     AsyncRemoteState async_state_;
 };
 

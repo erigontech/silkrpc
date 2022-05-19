@@ -22,7 +22,7 @@
 #include <vector>
 #include <utility>
 
-#include <asio/io_context.hpp>
+#include <boost/asio/io_context.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/database.hpp>
@@ -34,7 +34,7 @@ namespace silkrpc::ethdb::kv {
 template<typename Client = TxStreamingClient>
 class RemoteDatabase: public Database {
 public:
-    RemoteDatabase(asio::io_context& io_context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
+    RemoteDatabase(boost::asio::io_context& io_context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
     : io_context_(io_context), stub_{remote::KV::NewStub(channel)}, queue_(queue) {
         SILKRPC_TRACE << "RemoteDatabase::ctor " << this << "\n";
     }
@@ -46,7 +46,7 @@ public:
     RemoteDatabase(const RemoteDatabase&) = delete;
     RemoteDatabase& operator=(const RemoteDatabase&) = delete;
 
-    asio::awaitable<std::unique_ptr<Transaction>> begin() override {
+    boost::asio::awaitable<std::unique_ptr<Transaction>> begin() override {
         SILKRPC_TRACE << "RemoteDatabase::begin " << this << " start\n";
         auto txn = std::make_unique<RemoteTransaction<Client>>(io_context_, stub_, queue_);
         co_await txn->open();
@@ -55,7 +55,7 @@ public:
     }
 
 private:
-    asio::io_context& io_context_;
+    boost::asio::io_context& io_context_;
     std::unique_ptr<remote::KV::StubInterface> stub_;
     grpc::CompletionQueue* queue_;
 };

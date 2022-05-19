@@ -27,9 +27,9 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/awaitable.hpp>
-#include <asio/ip/tcp.hpp>
-#include <asio/thread_pool.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/thread_pool.hpp>
 
 #include <silkrpc/commands/rpc_api_table.hpp>
 #include <silkrpc/common/constants.hpp>
@@ -48,27 +48,27 @@ public:
     Connection& operator=(const Connection&) = delete;
 
     /// Construct a connection running within the given execution context.
-    Connection(Context& context, asio::thread_pool& workers, commands::RpcApiTable& handler_table);
+    Connection(Context& context, boost::asio::thread_pool& workers, commands::RpcApiTable& handler_table);
 
     ~Connection();
 
-    asio::ip::tcp::socket& socket() { return socket_; }
+    boost::asio::ip::tcp::socket& socket() { return socket_; }
 
     /// Start the first asynchronous operation for the connection.
-    asio::awaitable<void> start();
+    boost::asio::awaitable<void> start();
 
 private:
     // reset connection data
     void clean();
 
     /// Perform an asynchronous read operation.
-    asio::awaitable<void> do_read();
+    boost::asio::awaitable<void> do_read();
 
     /// Perform an asynchronous write operation.
-    asio::awaitable<void> do_write();
+    boost::asio::awaitable<void> do_write();
 
     /// Socket for the connection.
-    asio::ip::tcp::socket socket_;
+    boost::asio::ip::tcp::socket socket_;
 
     /// The handler used to process the incoming request.
     RequestHandler request_handler_;

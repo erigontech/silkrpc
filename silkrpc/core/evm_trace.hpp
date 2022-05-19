@@ -24,8 +24,8 @@
 #include <string>
 #include <vector>
 
-#include <asio/awaitable.hpp>
-#include <asio/thread_pool.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <nlohmann/json.hpp>
 
 #pragma GCC diagnostic push
@@ -230,21 +230,25 @@ void to_json(nlohmann::json& json, const TraceCallTraces& result);
 template<typename WorldState = silkworm::IntraBlockState, typename VM = silkworm::EVM>
 class TraceCallExecutor {
 public:
-    explicit TraceCallExecutor(const Context& context, const core::rawdb::DatabaseReader& database_reader, asio::thread_pool& workers, const TraceConfig& config = DEFAULT_TRACE_CONFIG)
-    : context_(context), database_reader_(database_reader), workers_{workers}, config_{config} {}
+    explicit TraceCallExecutor(
+        const Context& context,
+        const core::rawdb::DatabaseReader& database_reader,
+        boost::asio::thread_pool& workers,
+        const TraceConfig& config = DEFAULT_TRACE_CONFIG)
+        : context_(context), database_reader_(database_reader), workers_{workers}, config_{config} {}
     virtual ~TraceCallExecutor() {}
 
     TraceCallExecutor(const TraceCallExecutor&) = delete;
     TraceCallExecutor& operator=(const TraceCallExecutor&) = delete;
 
-    asio::awaitable<TraceCallResult> execute(const silkworm::Block& block, const silkrpc::Call& call);
+    boost::asio::awaitable<TraceCallResult> execute(const silkworm::Block& block, const silkrpc::Call& call);
 
 private:
-    asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block, const silkrpc::Transaction& transaction, std::int32_t = -1);
+    boost::asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block, const silkrpc::Transaction& transaction, std::int32_t = -1);
 
     const Context& context_;
     const core::rawdb::DatabaseReader& database_reader_;
-    asio::thread_pool& workers_;
+    boost::asio::thread_pool& workers_;
     const TraceConfig& config_;
 };
 } // namespace silkrpc::trace

@@ -48,8 +48,8 @@ std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode) {
 }
 
 Context::Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache, WaitMode wait_mode)
-    : io_context_{std::make_shared<asio::io_context>()},
-      work_{asio::require(io_context_->get_executor(), asio::execution::outstanding_work.tracked)},
+    : io_context_{std::make_shared<boost::asio::io_context>()},
+      work_{boost::asio::require(io_context_->get_executor(), boost::asio::execution::outstanding_work.tracked)},
       queue_{std::make_unique<grpc::CompletionQueue>()},
       block_cache_(block_cache),
       wait_mode_(wait_mode) {
@@ -174,7 +174,7 @@ Context& ContextPool::next_context() {
     return context;
 }
 
-asio::io_context& ContextPool::next_io_context() {
+boost::asio::io_context& ContextPool::next_io_context() {
     auto& client_context = next_context();
     return *client_context.io_context();
 }

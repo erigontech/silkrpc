@@ -28,10 +28,10 @@
 #include <absl/flags/usage_config.h>
 #include <absl/strings/match.h>
 #include <absl/strings/string_view.h>
-#include <asio/awaitable.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/signal_set.hpp>
-#include <asio/thread_pool.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/signal_set.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <boost/process/environment.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -193,17 +193,17 @@ int main(int argc, char* argv[]) {
 
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{numContexts, create_channel};
-        asio::thread_pool worker_pool{numWorkers};
+        boost::asio::thread_pool worker_pool{numWorkers};
 
         silkrpc::http::Server eth_rpc_service{http_port, api_spec, context_pool, worker_pool};
         silkrpc::http::Server engine_rpc_service{engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool};
 
         auto& io_context = context_pool.next_io_context();
-        asio::signal_set signals{io_context, SIGINT, SIGTERM};
+        boost::asio::signal_set signals{io_context, SIGINT, SIGTERM};
         SILKRPC_DEBUG << "Signals registered on io_context " << &io_context << "\n" << std::flush;
-        signals.async_wait([&](const asio::system_error& error, int signal_number) {
+        signals.async_wait([&](const boost::system::error_code& error, int signal_number) {
             std::cout << "\n";
-            SILKRPC_INFO << "Signal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
+            SILKRPC_INFO << "Signal caught, error: " << error.message() << " number: " << signal_number << "\n" << std::flush;
             context_pool.stop();
             eth_rpc_service.stop();
             engine_rpc_service.stop();

@@ -26,7 +26,7 @@ namespace silkrpc::commands {
 using Catch::Matchers::Message;
 
 TEST_CASE("NetRpcApi::NetRpcApi", "[silkrpc][erigon_api]") {
-    asio::io_context io_context;
+    boost::asio::io_context io_context;
     auto channel{grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials())};
     grpc::CompletionQueue queue;
     std::unique_ptr<ethbackend::BackEnd> backend{

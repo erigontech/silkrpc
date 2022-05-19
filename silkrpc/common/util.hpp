@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include <asio/buffer.hpp>
+#include <boost/asio/buffer.hpp>
 #include <ethash/keccak.hpp>
 #include <evmc/evmc.hpp>
 
@@ -126,12 +126,12 @@ inline std::ostream& operator<<(std::ostream& out, const uint<N>& value) {
 }
 } // namespace intx
 
-inline std::ostream& operator<<(std::ostream& out, const asio::const_buffer& buffer) {
+inline std::ostream& operator<<(std::ostream& out, const boost::asio::const_buffer& buffer) {
     out << std::string{static_cast<const char*>(buffer.data()), buffer.size()};
     return out;
 }
 
-inline std::ostream& operator<<(std::ostream& out, const std::vector<asio::const_buffer>& buffers) {
+inline std::ostream& operator<<(std::ostream& out, const std::vector<boost::asio::const_buffer>& buffers) {
     for (const auto buffer : buffers) {
         out << buffer;
     }

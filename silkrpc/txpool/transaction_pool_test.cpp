@@ -22,9 +22,9 @@
 #include <type_traits>
 #include <utility>
 
-#include <asio/io_context.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
@@ -161,7 +161,7 @@ auto make_method_proxy(T&& obj) {
 constexpr const char* kTestAddressUri{"localhost:12345"}; // TODO(canepat): grpc_pick_unused_port_or_die
 
 template<auto mf, typename R, typename ...Args>
-asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... args) {
+boost::asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... args) {
     grpc::ServerBuilder builder;
     builder.AddListeningPort(kTestAddressUri, grpc::InsecureServerCredentials());
     builder.RegisterService(service);
@@ -200,23 +200,23 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
             }
         };
         TestSuccessTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), boost::asio::use_future)};
         io_context.run();
         CHECK(result.get().success == true);
     }
 
     SECTION("call add_transaction and check import failure [unexpected import size]") {
         EmptyTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), boost::asio::use_future)};
         io_context.run();
     }
 
     SECTION("call add_transaction and check import failure [unexpected import size]") {
         EmptyTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), boost::asio::use_future)};
         io_context.run();
         CHECK(result.get().success == false);
     }
@@ -231,8 +231,8 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
             }
         };
         TestFailureErrorTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), boost::asio::use_future)};
         io_context.run();
         CHECK(result.get().success == false);
     }
@@ -246,8 +246,8 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
             }
         };
         TestFailureNoErrorTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), boost::asio::use_future)};
         io_context.run();
         CHECK(result.get().success == false);
     }
@@ -261,17 +261,17 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
             }
         };
         TestSuccessTxpoolService service;
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         const auto tx_hash{0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32};
-        auto tx_rlp{asio::co_spawn(io_context, test_get_transaction(&service, tx_hash), asio::use_future)};
+        auto tx_rlp{boost::asio::co_spawn(io_context, test_get_transaction(&service, tx_hash), boost::asio::use_future)};
         io_context.run();
         CHECK(tx_rlp.get() == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
     }
 
     SECTION("call get_transaction and check result is null [rlptxs size is 0]") {
         EmptyTxpoolService service;
-        asio::io_context io_context;
-        auto tx_rlp{asio::co_spawn(io_context, test_get_transaction(&service, evmc::bytes32{}), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto tx_rlp{boost::asio::co_spawn(io_context, test_get_transaction(&service, evmc::bytes32{}), boost::asio::use_future)};
         io_context.run();
         CHECK(tx_rlp.get() == std::nullopt);
     }
@@ -286,9 +286,9 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
             }
         };
         TestTooManyRlpTxsTxpoolService service;
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         const auto tx_hash{0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32};
-        auto tx_rlp{asio::co_spawn(io_context, test_get_transaction(&service, tx_hash), asio::use_future)};
+        auto tx_rlp{boost::asio::co_spawn(io_context, test_get_transaction(&service, tx_hash), boost::asio::use_future)};
         io_context.run();
         CHECK(tx_rlp.get() == std::nullopt);
     }
@@ -303,9 +303,9 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
             }
         };
         TestSuccessTxpoolService service;
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         const auto recipient{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
-        auto result{asio::co_spawn(io_context, test_nonce(&service, recipient), asio::use_future)};
+        auto result{boost::asio::co_spawn(io_context, test_nonce(&service, recipient), boost::asio::use_future)};
         io_context.run();
         CHECK(result.get() == 21);
     }
@@ -319,9 +319,9 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
             }
         };
         TestSuccessTxpoolService service;
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         const auto recipient{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
-        auto result{asio::co_spawn(io_context, test_nonce(&service, recipient), asio::use_future)};
+        auto result{boost::asio::co_spawn(io_context, test_nonce(&service, recipient), boost::asio::use_future)};
         io_context.run();
         CHECK(result.get() == std::nullopt);
     }
@@ -337,8 +337,8 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
             }
         };
         TestSuccessTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_status(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_status(&service), boost::asio::use_future)};
         io_context.run();
         auto status_info = result.get();
         CHECK(status_info.base_fee_count == 0x4);
@@ -358,8 +358,8 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
             }
         };
         TestSuccessTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_all(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_all(&service), boost::asio::use_future)};
         io_context.run();
         auto get_transactions = result.get();
         const auto sender{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
@@ -389,8 +389,8 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
             }
         };
         TestSuccessTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_all(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_all(&service), boost::asio::use_future)};
         io_context.run();
         auto get_transactions = result.get();
         const auto sender{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};

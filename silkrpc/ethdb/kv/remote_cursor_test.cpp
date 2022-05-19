@@ -18,9 +18,9 @@
 
 #include <future>
 
-#include <asio/co_spawn.hpp>
-#include <asio/use_future.hpp>
-#include <asio/io_context.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/use_future.hpp>
+#include <boost/asio/io_context.hpp>
 #include <catch2/catch.hpp>
 #include <silkworm/common/util.hpp>
 
@@ -55,14 +55,14 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
                 write_completed(grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient1 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result.get();
             CHECK(remote_cursor.cursor_id() == 3);
@@ -86,19 +86,19 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
                 write_completed(grpc::Status::CANCELLED);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient2 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result.get();
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 
@@ -117,19 +117,19 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
                 });
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient3 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result.get();
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 }
@@ -148,18 +148,18 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
                 write_completed(grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient4 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_cursor.close_cursor(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result2.get();
@@ -184,18 +184,18 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
                 write_completed(grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient5 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_cursor.close_cursor(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result2.get();
@@ -220,18 +220,18 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
                 });
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient6 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_cursor.close_cursor(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result2.get();
@@ -258,18 +258,18 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
                 });
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient7 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_cursor.close_cursor(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result2.get();
@@ -296,25 +296,25 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
                 });
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient8 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_cursor.close_cursor(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result2.get();
             CHECK(remote_cursor.cursor_id() == 0);
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 
@@ -333,25 +333,25 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
                 });
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient9 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_cursor.close_cursor(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result2.get();
             CHECK(remote_cursor.cursor_id() == 0);
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 }
@@ -372,24 +372,24 @@ TEST_CASE("RemoteCursor::seek", "[silkrpc][ethdb][kv][remote_cursor]") {
                 write_completed(grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient10 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.seek(silkworm::Bytes{}), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_cursor.seek(silkworm::Bytes{}), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             const auto kv_pair = result2.get();
             CHECK(silkworm::to_hex(kv_pair.key) == "36303830");
             CHECK(silkworm::to_hex(kv_pair.value) == "36303830");
-            auto result3{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
+            auto result3{boost::asio::co_spawn(io_context, remote_cursor.close_cursor(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result3.get();
@@ -415,24 +415,24 @@ TEST_CASE("RemoteCursor::seek_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
                 write_completed(grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient11 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.seek_exact(silkworm::Bytes{}), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_cursor.seek_exact(silkworm::Bytes{}), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             const auto kv_pair = result2.get();
             CHECK(kv_pair.key == silkworm::Bytes{});
             CHECK(silkworm::to_hex(kv_pair.value) == "36303830");
-            auto result3{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
+            auto result3{boost::asio::co_spawn(io_context, remote_cursor.close_cursor(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result3.get();
@@ -459,24 +459,24 @@ TEST_CASE("RemoteCursor::next", "[silkrpc][ethdb][kv][remote_cursor]") {
                 write_completed(grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient12 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.next(), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_cursor.next(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             const auto kv_pair = result2.get();
             CHECK(silkworm::to_hex(kv_pair.key) == "30303031");
             CHECK(silkworm::to_hex(kv_pair.value) == "30303032");
-            auto result3{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
+            auto result3{boost::asio::co_spawn(io_context, remote_cursor.close_cursor(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result3.get();
@@ -502,23 +502,23 @@ TEST_CASE("RemoteCursor::seek_both", "[silkrpc][ethdb][kv][remote_cursor]") {
                 write_completed(grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient13 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.seek_both(silkworm::Bytes{}, silkworm::Bytes{}), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_cursor.seek_both(silkworm::Bytes{}, silkworm::Bytes{}), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             const auto value = result2.get();
             CHECK(silkworm::to_hex(value) == "36303830");
-            auto result3{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
+            auto result3{boost::asio::co_spawn(io_context, remote_cursor.close_cursor(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result3.get();
@@ -544,24 +544,24 @@ TEST_CASE("RemoteCursor::seek_both_exact", "[silkrpc][ethdb][kv][remote_cursor]"
                 write_completed(grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         MockStreamingClient14 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
+        KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable{io_context, client};
         RemoteCursor remote_cursor{kv_awaitable};
         try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.seek_both_exact(silkworm::Bytes{}, silkworm::Bytes{}), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_cursor.seek_both_exact(silkworm::Bytes{}, silkworm::Bytes{}), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             const auto kv_pair = result2.get();
             CHECK(kv_pair.key == silkworm::Bytes{});
             CHECK(silkworm::to_hex(kv_pair.value) == "36303830");
-            auto result3{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
+            auto result3{boost::asio::co_spawn(io_context, remote_cursor.close_cursor(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result3.get();

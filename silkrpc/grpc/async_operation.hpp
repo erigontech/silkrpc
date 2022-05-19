@@ -17,19 +17,19 @@
 #ifndef SILKRPC_GRPC_ASYNC_OPERATION_HPP_
 #define SILKRPC_GRPC_ASYNC_OPERATION_HPP_
 
-#include <asio/detail/config.hpp>
-#include <asio/detail/bind_handler.hpp>
-#include <asio/detail/fenced_block.hpp>
-#include <asio/detail/handler_alloc_helpers.hpp>
-#include <asio/detail/handler_tracking.hpp>
-#include <asio/detail/handler_work.hpp>
-#include <asio/detail/memory.hpp>
+#include <boost/asio/detail/config.hpp>
+#include <boost/asio/detail/bind_handler.hpp>
+#include <boost/asio/detail/fenced_block.hpp>
+#include <boost/asio/detail/handler_alloc_helpers.hpp>
+#include <boost/asio/detail/handler_tracking.hpp>
+#include <boost/asio/detail/handler_work.hpp>
+#include <boost/asio/detail/memory.hpp>
 
 namespace silkrpc {
 
 // Base class for gRPC async operations using Asio completion tokens.
 template<typename R, typename... Args>
-class async_operation ASIO_INHERIT_TRACKED_HANDLER {
+class async_operation BOOST_ASIO_INHERIT_TRACKED_HANDLER {
 public:
     typedef async_operation operation_type;
 
@@ -50,24 +50,24 @@ private:
 };
 
 template <typename Handler, typename IoExecutor, typename Reply>
-class async_reply_operation : public async_operation<void, asio::error_code, Reply> {
+class async_reply_operation : public async_operation<void, boost::system::error_code, Reply> {
 public:
-    ASIO_DEFINE_HANDLER_PTR(async_reply_operation);
+    BOOST_ASIO_DEFINE_HANDLER_PTR(async_reply_operation);
 
     async_reply_operation(Handler& h, const IoExecutor& io_ex)
-    : async_operation<void, asio::error_code, Reply>(&async_reply_operation::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
+    : async_operation<void, boost::system::error_code, Reply>(&async_reply_operation::do_complete), handler_(BOOST_ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
     {}
 
-    static void do_complete(void* owner, async_operation<void, asio::error_code, Reply>* base, asio::error_code error = {}, Reply reply = {}) {
+    static void do_complete(void* owner, async_operation<void, boost::system::error_code, Reply>* base, boost::system::error_code error = {}, Reply reply = {}) {
         // Take ownership of the handler object.
         async_reply_operation* h{static_cast<async_reply_operation*>(base)};
-        ptr p = {asio::detail::addressof(h->handler_), h, h};
+        ptr p = {boost::asio::detail::addressof(h->handler_), h, h};
 
-        ASIO_HANDLER_COMPLETION((*h));
+        BOOST_ASIO_HANDLER_COMPLETION((*h));
 
         // Take ownership of the operation's outstanding work.
-        asio::detail::handler_work<Handler, IoExecutor> w(
-            ASIO_MOVE_CAST2(asio::detail::handler_work<Handler, IoExecutor>)(h->work_));
+        boost::asio::detail::handler_work<Handler, IoExecutor> w(
+            BOOST_ASIO_MOVE_CAST2(boost::asio::detail::handler_work<Handler, IoExecutor>)(h->work_));
 
         // Make a copy of the handler so that the memory can be deallocated before
         // the upcall is made. Even if we're not about to make an upcall, a
@@ -76,44 +76,44 @@ public:
         // to ensure that any owning sub-object remains valid until after we have
         // deallocated the memory here.
 
-        asio::detail::move_binder2<Handler, asio::error_code, Reply> handler{
-            0, ASIO_MOVE_CAST(Handler)(h->handler_), error, ASIO_MOVE_CAST(Reply)(reply)};
-        p.h = asio::detail::addressof(handler.handler_);
+        boost::asio::detail::move_binder2<Handler, boost::system::error_code, Reply> handler{
+            0, BOOST_ASIO_MOVE_CAST(Handler)(h->handler_), error, BOOST_ASIO_MOVE_CAST(Reply)(reply)};
+        p.h = boost::asio::detail::addressof(handler.handler_);
         p.reset();
 
         // Make the upcall if required.
         if (owner) {
-            asio::detail::fenced_block b(asio::detail::fenced_block::half);
-            ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_, handler.arg2_));
+            boost::asio::detail::fenced_block b(boost::asio::detail::fenced_block::half);
+            BOOST_ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_, handler.arg2_));
             w.complete(handler, handler.handler_);
-            ASIO_HANDLER_INVOCATION_END;
+            BOOST_ASIO_HANDLER_INVOCATION_END;
         }
     }
 
 private:
     Handler handler_;
-    asio::detail::handler_work<Handler, IoExecutor> work_;
+    boost::asio::detail::handler_work<Handler, IoExecutor> work_;
 };
 
 template <typename Handler, typename IoExecutor>
-class async_reply_operation<Handler, IoExecutor, void> : public async_operation<void, asio::error_code> {
+class async_reply_operation<Handler, IoExecutor, void> : public async_operation<void, boost::system::error_code> {
 public:
-    ASIO_DEFINE_HANDLER_PTR(async_reply_operation);
+    BOOST_ASIO_DEFINE_HANDLER_PTR(async_reply_operation);
 
     async_reply_operation(Handler& h, const IoExecutor& io_ex)
-    : async_operation<void, asio::error_code>(&async_reply_operation::do_complete), handler_(ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
+    : async_operation<void, boost::system::error_code>(&async_reply_operation::do_complete), handler_(BOOST_ASIO_MOVE_CAST(Handler)(h)), work_(handler_, io_ex)
     {}
 
-    static void do_complete(void* owner, async_operation<void, asio::error_code>* base, asio::error_code error = {}) {
+    static void do_complete(void* owner, async_operation<void, boost::system::error_code>* base, boost::system::error_code error = {}) {
         // Take ownership of the handler object.
         async_reply_operation* h{static_cast<async_reply_operation*>(base)};
-        ptr p = {asio::detail::addressof(h->handler_), h, h};
+        ptr p = {boost::asio::detail::addressof(h->handler_), h, h};
 
-        ASIO_HANDLER_COMPLETION((*h));
+        BOOST_ASIO_HANDLER_COMPLETION((*h));
 
         // Take ownership of the operation's outstanding work.
-        asio::detail::handler_work<Handler, IoExecutor> work(
-            ASIO_MOVE_CAST2(asio::detail::handler_work<Handler, IoExecutor>)(h->work_));
+        boost::asio::detail::handler_work<Handler, IoExecutor> work(
+            BOOST_ASIO_MOVE_CAST2(boost::asio::detail::handler_work<Handler, IoExecutor>)(h->work_));
 
         // Make a copy of the handler so that the memory can be deallocated before
         // the upcall is made. Even if we're not about to make an upcall, a
@@ -121,22 +121,22 @@ public:
         // with the handler. Consequently, a local copy of the handler is required
         // to ensure that any owning sub-object remains valid until after we have
         // deallocated the memory here.
-        asio::detail::binder1<Handler, asio::error_code> handler{h->handler_, error};
-        p.h = asio::detail::addressof(handler.handler_);
+        boost::asio::detail::binder1<Handler, boost::system::error_code> handler{h->handler_, error};
+        p.h = boost::asio::detail::addressof(handler.handler_);
         p.reset();
 
         // Make the upcall if required.
         if (owner) {
-            asio::detail::fenced_block b(asio::detail::fenced_block::half);
-            ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_));
+            boost::asio::detail::fenced_block b(boost::asio::detail::fenced_block::half);
+            BOOST_ASIO_HANDLER_INVOCATION_BEGIN((handler.arg1_));
             work.complete(handler, handler.handler_);
-            ASIO_HANDLER_INVOCATION_END;
+            BOOST_ASIO_HANDLER_INVOCATION_END;
         }
     }
 
 private:
     Handler handler_;
-    asio::detail::handler_work<Handler, IoExecutor> work_;
+    boost::asio::detail::handler_work<Handler, IoExecutor> work_;
 };
 
 template <typename Handler, typename IoExecutor>

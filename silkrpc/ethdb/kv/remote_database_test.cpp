@@ -19,9 +19,9 @@
 #include <future>
 #include <system_error>
 
-#include <asio/co_spawn.hpp>
-#include <asio/use_future.hpp>
-#include <asio/io_context.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/use_future.hpp>
+#include <boost/asio/io_context.hpp>
 #include <catch2/catch.hpp>
 
 #include <silkrpc/ethdb/kv/tx_streaming_client.hpp>
@@ -50,12 +50,12 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
             }
             void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         RemoteDatabase<MockStreamingClient> remote_db(io_context, channel, &queue);
         try {
-            auto future_remote_tx{asio::co_spawn(io_context, remote_db.begin(), asio::use_future)};
+            auto future_remote_tx{boost::asio::co_spawn(io_context, remote_db.begin(), boost::asio::use_future)};
             io_context.run();
             auto remote_tx = future_remote_tx.get();
             CHECK(remote_tx->tx_id() == 4);
@@ -84,18 +84,18 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
             }
             void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         RemoteDatabase<MockStreamingClient> remote_db(io_context, channel, &queue);
         try {
-            auto future_remote_tx{asio::co_spawn(io_context, remote_db.begin(), asio::use_future)};
+            auto future_remote_tx{boost::asio::co_spawn(io_context, remote_db.begin(), boost::asio::use_future)};
             io_context.run();
             auto remote_tx = future_remote_tx.get();
             CHECK(remote_tx->tx_id() == 4);
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 
@@ -116,18 +116,18 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
             }
             void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
         RemoteDatabase<MockStreamingClient> remote_db(io_context, channel, &queue);
         try {
-            auto future_remote_tx{asio::co_spawn(io_context, remote_db.begin(), asio::use_future)};
+            auto future_remote_tx{boost::asio::co_spawn(io_context, remote_db.begin(), boost::asio::use_future)};
             io_context.run();
             auto remote_tx = future_remote_tx.get();
             CHECK(remote_tx->tx_id() == 4);
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 }

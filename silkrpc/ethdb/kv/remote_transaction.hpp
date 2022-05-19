@@ -24,7 +24,7 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/log.hpp>
@@ -43,7 +43,7 @@ class RemoteTransaction : public Transaction {
     static_assert(std::is_base_of<AsyncTxStreamingClient, Client>::value && !std::is_same<AsyncTxStreamingClient, Client>::value);
 
 public:
-    explicit RemoteTransaction(asio::io_context& context, std::unique_ptr<remote::KV::StubInterface>& stub, grpc::CompletionQueue* queue)
+    explicit RemoteTransaction(boost::asio::io_context& context, std::unique_ptr<remote::KV::StubInterface>& stub, grpc::CompletionQueue* queue)
     : context_(context), client_{stub, queue}, kv_awaitable_{context_, client_} {
         SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " start\n";
         SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " end\n";
@@ -56,27 +56,27 @@ public:
 
     uint64_t tx_id() const override { return tx_id_; }
 
-    asio::awaitable<void> open() override {
-        tx_id_ = co_await kv_awaitable_.async_start(asio::use_awaitable);
+    boost::asio::awaitable<void> open() override {
+        tx_id_ = co_await kv_awaitable_.async_start(boost::asio::use_awaitable);
         co_return;
     }
 
-    asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) override {
+    boost::asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) override {
         co_return co_await get_cursor(table);
     }
 
-    asio::awaitable<std::shared_ptr<CursorDupSort>> cursor_dup_sort(const std::string& table) override {
+    boost::asio::awaitable<std::shared_ptr<CursorDupSort>> cursor_dup_sort(const std::string& table) override {
         co_return co_await get_cursor(table);
     }
 
-    asio::awaitable<void> close() override {
+    boost::asio::awaitable<void> close() override {
         cursors_.clear();
-        co_await kv_awaitable_.async_end(asio::use_awaitable);
+        co_await kv_awaitable_.async_end(boost::asio::use_awaitable);
         co_return;
     }
 
 private:
-    asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table) {
+    boost::asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table) {
         auto cursor_it = cursors_.find(table);
         if (cursor_it != cursors_.end()) {
             co_return cursor_it->second;
@@ -87,9 +87,9 @@ private:
         co_return cursor;
     }
 
-    asio::io_context& context_;
+    boost::asio::io_context& context_;
     Client client_;
-    KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
+    KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable_;
     std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
     uint64_t tx_id_;
 };

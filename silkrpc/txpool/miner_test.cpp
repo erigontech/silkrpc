@@ -23,9 +23,9 @@
 #include <type_traits>
 #include <utility>
 
-#include <asio/io_context.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
@@ -197,7 +197,7 @@ private:
 };
 
 template<typename T, auto method, typename R, typename ...Args>
-asio::awaitable<R> test_comethod(::txpool::Mining::Service* service, Args... args) {
+boost::asio::awaitable<R> test_comethod(::txpool::Mining::Service* service, Args... args) {
     ClientServerTestBox test_box{service};
     auto method_proxy{test_box.make_method_proxy<method, T>()};
     co_return co_await method_proxy(args...);
@@ -224,8 +224,8 @@ TEST_CASE("Miner::get_work", "[silkrpc][txpool][miner]") {
             }
         };
         TestSuccessMiningService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_get_work(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_get_work(&service), boost::asio::use_future)};
         io_context.run();
         const auto work_result = result.get();
         CHECK(work_result.header_hash == 0x209f062567c161c5f71b3f57a7de277b0e95c3455050b152d785ad7524ef8ee7_bytes32);
@@ -236,8 +236,8 @@ TEST_CASE("Miner::get_work", "[silkrpc][txpool][miner]") {
 
     SECTION("call get_work and get default empty result") {
         EmptyMiningService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_get_work(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_get_work(&service), boost::asio::use_future)};
         io_context.run();
         const auto work_result = result.get();
         CHECK(!work_result.header_hash);
@@ -254,10 +254,10 @@ TEST_CASE("Miner::get_work", "[silkrpc][txpool][miner]") {
             }
         };
         TestFailureMiningService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_get_work(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_get_work(&service), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(result.get(), std::system_error);
+        CHECK_THROWS_AS(result.get(), boost::system::system_error);
     }
 }
 
@@ -273,8 +273,8 @@ TEST_CASE("Miner::get_hashrate", "[silkrpc][txpool][miner]") {
             }
         };
         TestSuccessMiningService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_get_hashrate(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_get_hashrate(&service), boost::asio::use_future)};
         io_context.run();
         const auto hash_rate = result.get();
         CHECK(hash_rate == 1234567);
@@ -282,8 +282,8 @@ TEST_CASE("Miner::get_hashrate", "[silkrpc][txpool][miner]") {
 
     SECTION("call get_hashrate and get default empty result") {
         EmptyMiningService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_get_hashrate(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_get_hashrate(&service), boost::asio::use_future)};
         io_context.run();
         const auto hash_rate = result.get();
         CHECK(hash_rate == 0);
@@ -297,10 +297,10 @@ TEST_CASE("Miner::get_hashrate", "[silkrpc][txpool][miner]") {
             }
         };
         TestFailureMiningService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_get_hashrate(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_get_hashrate(&service), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(result.get(), std::system_error);
+        CHECK_THROWS_AS(result.get(), boost::system::system_error);
     }
 }
 
@@ -324,8 +324,8 @@ TEST_CASE("Miner::get_mining", "[silkrpc][txpool][miner]") {
 
     SECTION("call get_mining and get result for enabled and running") {
         TestSuccessMiningService service{true, true};
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_get_mining(&service), boost::asio::use_future)};
         io_context.run();
         const auto mining_result = result.get();
         CHECK(mining_result.enabled);
@@ -334,8 +334,8 @@ TEST_CASE("Miner::get_mining", "[silkrpc][txpool][miner]") {
 
     SECTION("call get_mining and get result for enabled and running") {
         TestSuccessMiningService service{/*enabled=*/true, /*running=*/true};
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_get_mining(&service), boost::asio::use_future)};
         io_context.run();
         const auto mining_result = result.get();
         CHECK(mining_result.enabled);
@@ -344,8 +344,8 @@ TEST_CASE("Miner::get_mining", "[silkrpc][txpool][miner]") {
 
     SECTION("call get_mining and get result for enabled and not running") {
         TestSuccessMiningService service{/*enabled=*/true, /*running=*/false};
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_get_mining(&service), boost::asio::use_future)};
         io_context.run();
         const auto mining_result = result.get();
         CHECK(mining_result.enabled);
@@ -354,8 +354,8 @@ TEST_CASE("Miner::get_mining", "[silkrpc][txpool][miner]") {
 
     SECTION("call get_mining and get result for not enabled and not running") {
         TestSuccessMiningService service{/*enabled=*/false, /*running=*/false};
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_get_mining(&service), boost::asio::use_future)};
         io_context.run();
         const auto mining_result = result.get();
         CHECK(!mining_result.enabled);
@@ -364,8 +364,8 @@ TEST_CASE("Miner::get_mining", "[silkrpc][txpool][miner]") {
 
     SECTION("call get_mining and get default empty result") {
         EmptyMiningService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_get_mining(&service), boost::asio::use_future)};
         io_context.run();
         const auto mining_result = result.get();
         CHECK(!mining_result.enabled);
@@ -380,10 +380,10 @@ TEST_CASE("Miner::get_mining", "[silkrpc][txpool][miner]") {
             }
         };
         TestFailureMiningService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_get_mining(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_get_mining(&service), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(result.get(), std::system_error);
+        CHECK_THROWS_AS(result.get(), boost::system::system_error);
     }
 }
 
@@ -408,8 +408,8 @@ TEST_CASE("Miner::submit_work", "[silkrpc][txpool][miner]") {
         silkworm::Bytes block_nonce{}; // don't care
         evmc::bytes32 pow_hash{silkworm::kEmptyHash}; // don't care
         evmc::bytes32 digest{silkworm::kEmptyHash}; // don't care
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_submit_work(&service, block_nonce, pow_hash, digest), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_submit_work(&service, block_nonce, pow_hash, digest), boost::asio::use_future)};
         io_context.run();
         const auto ok = result.get();
         CHECK(ok);
@@ -420,8 +420,8 @@ TEST_CASE("Miner::submit_work", "[silkrpc][txpool][miner]") {
         silkworm::Bytes block_nonce{}; // don't care
         evmc::bytes32 pow_hash{silkworm::kEmptyHash}; // don't care
         evmc::bytes32 digest{silkworm::kEmptyHash}; // don't care
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_submit_work(&service, block_nonce, pow_hash, digest), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_submit_work(&service, block_nonce, pow_hash, digest), boost::asio::use_future)};
         io_context.run();
         const auto ok = result.get();
         CHECK(!ok);
@@ -432,8 +432,8 @@ TEST_CASE("Miner::submit_work", "[silkrpc][txpool][miner]") {
         silkworm::Bytes block_nonce{}; // don't care
         evmc::bytes32 pow_hash{silkworm::kEmptyHash}; // don't care
         evmc::bytes32 digest{silkworm::kEmptyHash}; // don't care
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_submit_work(&service, block_nonce, pow_hash, digest), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_submit_work(&service, block_nonce, pow_hash, digest), boost::asio::use_future)};
         io_context.run();
         const auto ok = result.get();
         CHECK(!ok);
@@ -450,10 +450,10 @@ TEST_CASE("Miner::submit_work", "[silkrpc][txpool][miner]") {
         silkworm::Bytes block_nonce{}; // don't care
         evmc::bytes32 pow_hash{silkworm::kEmptyHash}; // don't care
         evmc::bytes32 digest{silkworm::kEmptyHash}; // don't care
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_submit_work(&service, block_nonce, pow_hash, digest), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_submit_work(&service, block_nonce, pow_hash, digest), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(result.get(), std::system_error);
+        CHECK_THROWS_AS(result.get(), boost::system::system_error);
     }
 }
 
@@ -477,8 +477,8 @@ TEST_CASE("Miner::submit_hash_rate", "[silkrpc][txpool][miner]") {
         TestSuccessMiningService service{/*ok=*/true};
         intx::uint256 rate{}; // don't care
         evmc::bytes32 id{silkworm::kEmptyHash}; // don't care
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_submit_hashrate(&service, rate, id), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_submit_hashrate(&service, rate, id), boost::asio::use_future)};
         io_context.run();
         const auto ok = result.get();
         CHECK(ok);
@@ -488,8 +488,8 @@ TEST_CASE("Miner::submit_hash_rate", "[silkrpc][txpool][miner]") {
         TestSuccessMiningService service{/*ok=*/false};
         intx::uint256 rate{}; // don't care
         evmc::bytes32 id{silkworm::kEmptyHash}; // don't care
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_submit_hashrate(&service, rate, id), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_submit_hashrate(&service, rate, id), boost::asio::use_future)};
         io_context.run();
         const auto ok = result.get();
         CHECK(!ok);
@@ -499,8 +499,8 @@ TEST_CASE("Miner::submit_hash_rate", "[silkrpc][txpool][miner]") {
         EmptyMiningService service;
         intx::uint256 rate{}; // don't care
         evmc::bytes32 id{silkworm::kEmptyHash}; // don't care
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_submit_hashrate(&service, rate, id), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_submit_hashrate(&service, rate, id), boost::asio::use_future)};
         io_context.run();
         const auto ok = result.get();
         CHECK(!ok);
@@ -516,10 +516,10 @@ TEST_CASE("Miner::submit_hash_rate", "[silkrpc][txpool][miner]") {
         TestFailureMiningService service;
         intx::uint256 rate{}; // don't care
         evmc::bytes32 id{silkworm::kEmptyHash}; // don't care
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_submit_hashrate(&service, rate, id), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto result{boost::asio::co_spawn(io_context, test_submit_hashrate(&service, rate, id), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(result.get(), std::system_error);
+        CHECK_THROWS_AS(result.get(), boost::system::system_error);
     }
 }
 

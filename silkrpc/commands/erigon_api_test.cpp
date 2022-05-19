@@ -19,9 +19,9 @@
 #include <stdexcept>
 #include <thread>
 
-#include <asio/co_spawn.hpp>
-#include <asio/io_context.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 
 namespace silkrpc::commands {
@@ -39,7 +39,7 @@ public:
     using ErigonRpcApi::handle_erigon_issuance;
 };
 
-using TestHandleMethod = asio::awaitable<void>(ErigonRpcApiTest::*)(const nlohmann::json&, nlohmann::json&);
+using TestHandleMethod = boost::asio::awaitable<void>(ErigonRpcApiTest::*)(const nlohmann::json&, nlohmann::json&);
 
 void check_api(TestHandleMethod method, const nlohmann::json& request, nlohmann::json& reply, bool success) {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -47,9 +47,9 @@ void check_api(TestHandleMethod method, const nlohmann::json& request, nlohmann:
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     try {
         ErigonRpcApiTest erigon_api{cp.next_context()};
-        auto result{asio::co_spawn(cp.next_io_context(), [&]() {
+        auto result{boost::asio::co_spawn(cp.next_io_context(), [&]() {
             return (&erigon_api->*method)(request, reply);
-        }, asio::use_future)};
+        }, boost::asio::use_future)};
         result.get();
         CHECK(success);
     } catch (...) {

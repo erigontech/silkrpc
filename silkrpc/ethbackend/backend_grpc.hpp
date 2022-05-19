@@ -21,8 +21,8 @@
 #include <string>
 #include <memory>
 
-#include <asio/io_context.hpp>
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
 
 #include <silkrpc/grpc/awaitables.hpp>
@@ -91,7 +91,7 @@ using EngineForkChoiceUpdatedV1Client = AsyncUnaryClient<
 >;
 
 using EtherbaseAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     EtherbaseClient,
     ::remote::ETHBACKEND::StubInterface,
     ::remote::EtherbaseRequest,
@@ -99,7 +99,7 @@ using EtherbaseAwaitable = unary_awaitable<
 >;
 
 using ProtocolVersionAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     ProtocolVersionClient,
     ::remote::ETHBACKEND::StubInterface,
     ::remote::ProtocolVersionRequest,
@@ -107,7 +107,7 @@ using ProtocolVersionAwaitable = unary_awaitable<
 >;
 
 using NetVersionAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     NetVersionClient,
     ::remote::ETHBACKEND::StubInterface,
     ::remote::NetVersionRequest,
@@ -115,7 +115,7 @@ using NetVersionAwaitable = unary_awaitable<
 >;
 
 using ClientVersionAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     ClientVersionClient,
     ::remote::ETHBACKEND::StubInterface,
     ::remote::ClientVersionRequest,
@@ -123,7 +123,7 @@ using ClientVersionAwaitable = unary_awaitable<
 >;
 
 using NetPeerCountAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     NetPeerCountClient,
     ::remote::ETHBACKEND::StubInterface,
     ::remote::NetPeerCountRequest,
@@ -131,7 +131,7 @@ using NetPeerCountAwaitable = unary_awaitable<
 >;
 
 using EngineGetPayloadV1Awaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     EngineGetPayloadV1Client,
     ::remote::ETHBACKEND::StubInterface,
     ::remote::EngineGetPayloadRequest,
@@ -139,7 +139,7 @@ using EngineGetPayloadV1Awaitable = unary_awaitable<
 >;
 
 using EngineNewPayloadV1Awaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     EngineNewPayloadV1Client,
     ::remote::ETHBACKEND::StubInterface,
     ::types::ExecutionPayload,
@@ -147,7 +147,7 @@ using EngineNewPayloadV1Awaitable = unary_awaitable<
 >;
 
 using EngineForkChoiceUpdatedV1Awaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     EngineForkChoiceUpdatedV1Client,
     ::remote::ETHBACKEND::StubInterface,
     ::remote::EngineForkChoiceUpdatedRequest,
@@ -156,10 +156,10 @@ using EngineForkChoiceUpdatedV1Awaitable = unary_awaitable<
 
 class BackEndGrpc final: public BackEnd {
 public:
-    explicit BackEndGrpc(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
+    explicit BackEndGrpc(boost::asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
     : BackEndGrpc(context.get_executor(), ::remote::ETHBACKEND::NewStub(channel), queue) {}
 
-    explicit BackEndGrpc(asio::io_context::executor_type executor, std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub, grpc::CompletionQueue* queue)
+    explicit BackEndGrpc(boost::asio::io_context::executor_type executor, std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub, grpc::CompletionQueue* queue)
     : executor_(executor), stub_(std::move(stub)), queue_(queue) {
         SILKRPC_TRACE << "BackEnd::ctor " << this << "\n";
     }
@@ -168,14 +168,14 @@ public:
         SILKRPC_TRACE << "BackEnd::dtor " << this << "\n";
     }
 
-    asio::awaitable<evmc::address> etherbase();
-    asio::awaitable<uint64_t> protocol_version();
-    asio::awaitable<uint64_t> net_version();
-    asio::awaitable<std::string> client_version();
-    asio::awaitable<uint64_t> net_peer_count();
-    asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id);
-    asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload);
-    asio::awaitable<ForkchoiceUpdatedReply> engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request);
+    boost::asio::awaitable<evmc::address> etherbase();
+    boost::asio::awaitable<uint64_t> protocol_version();
+    boost::asio::awaitable<uint64_t> net_version();
+    boost::asio::awaitable<std::string> client_version();
+    boost::asio::awaitable<uint64_t> net_peer_count();
+    boost::asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id);
+    boost::asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload);
+    boost::asio::awaitable<ForkchoiceUpdatedReply> engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request);
 
 private:
     evmc::address address_from_H160(const types::H160& h160);
@@ -202,7 +202,7 @@ private:
     PayloadStatus decode_payload_status(const remote::EnginePayloadStatus& payload_status_grpc);
     std::string decode_status_message(const remote::EngineStatus& status);
 
-    asio::io_context::executor_type executor_;
+    boost::asio::io_context::executor_type executor_;
     std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub_;
     grpc::CompletionQueue* queue_;
 };

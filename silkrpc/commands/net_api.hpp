@@ -22,7 +22,7 @@
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/json/types.hpp>
@@ -43,9 +43,9 @@ public:
     NetRpcApi& operator=(const NetRpcApi&) = delete;
 
 protected:
-    asio::awaitable<void> handle_net_listening(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_net_peer_count(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_net_version(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_net_listening(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_net_peer_count(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_net_version(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
     friend class silkrpc::http::RequestHandler;

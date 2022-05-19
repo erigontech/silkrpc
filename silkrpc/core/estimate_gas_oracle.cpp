@@ -20,9 +20,9 @@
 #include <string>
 #include <utility>
 
-#include <asio/compose.hpp>
-#include <asio/post.hpp>
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/compose.hpp>
+#include <boost/asio/post.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 
@@ -30,7 +30,7 @@
 
 namespace silkrpc::ego {
 
-asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call, uint64_t block_number) {
+boost::asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call, uint64_t block_number) {
     SILKRPC_DEBUG << "EstimateGasOracle::estimate_gas called\n";
 
     std::uint64_t hi;
@@ -107,7 +107,7 @@ asio::awaitable<intx::uint256> EstimateGasOracle::estimate_gas(const Call& call,
     co_return hi;
 }
 
-asio::awaitable<bool> EstimateGasOracle::try_execution(const silkworm::Transaction& transaction) {
+boost::asio::awaitable<bool> EstimateGasOracle::try_execution(const silkworm::Transaction& transaction) {
     const auto result = co_await executor_(transaction);
 
     bool failed = true;

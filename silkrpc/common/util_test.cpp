@@ -75,14 +75,14 @@ TEST_CASE("print bytes32", "[silkrpc][common][util]") {
 }
 
 TEST_CASE("print empty const_buffer", "[silkrpc][common][util]") {
-    asio::const_buffer cb{};
+    boost::asio::const_buffer cb{};
     CHECK_NOTHROW(null_stream() << cb);
 }
 
 TEST_CASE("print empty vector of const_buffer", "[silkrpc][common][util]") {
-    std::vector<asio::const_buffer> v;
-    asio::const_buffer cb1{};
-    asio::const_buffer cb2{};
+    std::vector<boost::asio::const_buffer> v;
+    boost::asio::const_buffer cb1{};
+    boost::asio::const_buffer cb2{};
     v.push_back(cb1);
     v.push_back(cb2);
     CHECK_NOTHROW(null_stream() << v);

@@ -26,9 +26,9 @@
 #include <thread>
 #include <utility>
 
-#include <asio/async_result.hpp>
-#include <asio/detail/non_const_lvalue.hpp>
-#include <asio/error.hpp>
+#include <boost/asio/async_result.hpp>
+#include <boost/asio/detail/non_const_lvalue.hpp>
+#include <boost/asio/error.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkworm/common/util.hpp>
@@ -57,9 +57,9 @@ public:
 
     template <typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         using OP = AsyncReplyOperation<WaitHandler, Executor, Reply>;
-        typename OP::ptr p = {asio::detail::addressof(handler2.value), OP::ptr::allocate(handler2.value), 0};
+        typename OP::ptr p = {boost::asio::detail::addressof(handler2.value), OP::ptr::allocate(handler2.value), 0};
         wrapper_ = new OP(handler2.value, self_->executor_);
 
         self_->client_.async_call(request_, [this](const grpc::Status& status, const Reply& reply) {
@@ -91,9 +91,9 @@ public:
 
     template <typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         using OP = AsyncReplyOperation<WaitHandler, Executor, void>;
-        typename OP::ptr p = {asio::detail::addressof(handler2.value), OP::ptr::allocate(handler2.value), 0};
+        typename OP::ptr p = {boost::asio::detail::addressof(handler2.value), OP::ptr::allocate(handler2.value), 0};
         wrapper_ = new OP(handler2.value, self_->executor_);
 
         self_->client_.async_call(request_, [this](const grpc::Status& status) {
@@ -122,7 +122,7 @@ struct unary_awaitable {
 
     template<typename WaitHandler>
     auto async_call(const Request& request, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, Reply)>(
+        return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code, Reply)>(
             initiate_unary_async<Executor, UnaryClient, async_reply_operation, StubInterface, Request, Reply>{this, request}, handler);
     }
 
@@ -139,7 +139,7 @@ struct unary_awaitable<Executor, UnaryClient, StubInterface, Request, void> {
 
     template<typename WaitHandler>
     auto async_call(const Request& request, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code)>(
+        return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code)>(
             initiate_unary_async<Executor, UnaryClient, async_reply_operation, StubInterface, Request, void>{this, request}, handler);
     }
 

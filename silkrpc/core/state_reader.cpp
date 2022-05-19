@@ -29,7 +29,7 @@
 
 namespace silkrpc {
 
-asio::awaitable<std::optional<silkworm::Account>> StateReader::read_account(const evmc::address& address, uint64_t block_number) const {
+boost::asio::awaitable<std::optional<silkworm::Account>> StateReader::read_account(const evmc::address& address, uint64_t block_number) const {
     std::optional<silkworm::Bytes> encoded{co_await read_historical_account(address, block_number)};
     if (!encoded) {
         encoded = co_await db_reader_.get_one(silkrpc::db::table::kPlainState, full_view(address));
@@ -53,7 +53,7 @@ asio::awaitable<std::optional<silkworm::Account>> StateReader::read_account(cons
     co_return account;
 }
 
-asio::awaitable<evmc::bytes32> StateReader::read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location_hash,
+boost::asio::awaitable<evmc::bytes32> StateReader::read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location_hash,
     uint64_t block_number) const {
     std::optional<silkworm::Bytes> value{co_await read_historical_storage(address, incarnation, location_hash, block_number)};
     if (!value) {
@@ -71,7 +71,7 @@ asio::awaitable<evmc::bytes32> StateReader::read_storage(const evmc::address& ad
     co_return storage_value;
 }
 
-asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_code(const evmc::bytes32& code_hash) const {
+boost::asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_code(const evmc::bytes32& code_hash) const {
     if (code_hash == silkworm::kEmptyHash) {
         co_return std::nullopt;
     }
@@ -79,7 +79,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_code(const evm
     co_return code;
 }
 
-asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_account(const evmc::address& address, uint64_t block_number) const {
+boost::asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_account(const evmc::address& address, uint64_t block_number) const {
     const auto account_history_key{silkworm::db::account_history_key(address, block_number)};
     SILKRPC_DEBUG << "StateReader::read_historical_account account_history_key: " << account_history_key << "\n";
     const auto kv_pair{co_await db_reader_.get(silkrpc::db::table::kAccountHistory, account_history_key)};
@@ -107,7 +107,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_acc
     co_return value;
 }
 
-asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_storage(const evmc::address& address, uint64_t incarnation,
+boost::asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_storage(const evmc::address& address, uint64_t incarnation,
     const evmc::bytes32& location_hash, uint64_t block_number) const {
     const auto storage_history_key{silkworm::db::storage_history_key(address, location_hash, block_number)};
     SILKRPC_DEBUG << "StateReader::read_historical_storage storage_history_key: " << storage_history_key << "\n";

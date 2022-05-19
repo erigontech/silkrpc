@@ -25,10 +25,10 @@
 #include <thread>
 #include <utility>
 
-#include <asio/async_result.hpp>
-#include <asio/detail/non_const_lvalue.hpp>
-#include <asio/error.hpp>
-#include <asio/io_context.hpp>
+#include <boost/asio/async_result.hpp>
+#include <boost/asio/detail/non_const_lvalue.hpp>
+#include <boost/asio/error.hpp>
+#include <boost/asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkworm/common/util.hpp>
@@ -75,9 +75,9 @@ public:
 
     template <typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         using op = async_start<WaitHandler, Executor>;
-        typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
+        typename op::ptr p = {boost::asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
         self_->client_.start_call([this](const grpc::Status& status) {
@@ -116,9 +116,9 @@ public:
 
     template <typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         using op = async_open_cursor<WaitHandler, Executor>;
-        typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
+        typename op::ptr p = {boost::asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
         auto open_message = remote::Cursor{};
@@ -161,9 +161,9 @@ public:
 
     template <typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         using op = async_seek<WaitHandler, Executor>;
-        typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
+        typename op::ptr p = {boost::asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
         auto seek_message = remote::Cursor{};
@@ -208,9 +208,9 @@ public:
 
     template <typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         using op = async_seek<WaitHandler, Executor>;
-        typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
+        typename op::ptr p = {boost::asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
         auto seek_message = remote::Cursor{};
@@ -256,9 +256,9 @@ public:
 
     template <typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         using op = async_next<WaitHandler, Executor>;
-        typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
+        typename op::ptr p = {boost::asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
         auto next_message = remote::Cursor{};
@@ -300,9 +300,9 @@ public:
 
     template <typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         using op = async_close_cursor<WaitHandler, Executor>;
-        typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
+        typename op::ptr p = {boost::asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
         auto close_message = remote::Cursor{};
@@ -345,9 +345,9 @@ public:
 
     template <typename WaitHandler>
     void operator()(WaitHandler&& handler) {
-        asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
+        boost::asio::detail::non_const_lvalue<WaitHandler> handler2(handler);
         using op = async_end<WaitHandler, Executor>;
-        typename op::ptr p = {asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
+        typename op::ptr p = {boost::asio::detail::addressof(handler2.value), op::ptr::allocate(handler2.value), 0};
         wrapper_ = new op(handler2.value, self_->context_.get_executor());
 
         self_->client_.end_call([this](const grpc::Status& status) {
@@ -369,55 +369,55 @@ template<typename Executor>
 struct KvAsioAwaitable {
     typedef Executor executor_type;
 
-    explicit KvAsioAwaitable(asio::io_context& context, AsyncTxStreamingClient& client)
+    explicit KvAsioAwaitable(boost::asio::io_context& context, AsyncTxStreamingClient& client)
     : context_(context), client_(client) {}
 
     template<typename WaitHandler>
     auto async_start(WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, uint64_t)>(initiate_async_start{this}, handler);
+        return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code, uint64_t)>(initiate_async_start{this}, handler);
     }
 
     template<typename WaitHandler>
     auto async_open_cursor(const std::string& table_name, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, uint32_t)>(initiate_async_open_cursor{this, table_name}, handler);
+        return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code, uint32_t)>(initiate_async_open_cursor{this, table_name}, handler);
     }
 
     template<typename WaitHandler>
     auto async_seek(uint32_t cursor_id, const silkworm::ByteView& key, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, const remote::Pair&)>(initiate_async_seek{this, cursor_id, key, false}, handler);
+        return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code, const remote::Pair&)>(initiate_async_seek{this, cursor_id, key, false}, handler);
     }
 
     template<typename WaitHandler>
     auto async_seek_exact(uint32_t cursor_id, const silkworm::ByteView& key, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, const remote::Pair&)>(initiate_async_seek{this, cursor_id, key, true}, handler);
+        return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code, const remote::Pair&)>(initiate_async_seek{this, cursor_id, key, true}, handler);
     }
 
     template<typename WaitHandler>
     auto async_seek_both(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, const remote::Pair&)>(initiate_async_seek_both{this, cursor_id, key, value, false}, handler);
+        return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code, const remote::Pair&)>(initiate_async_seek_both{this, cursor_id, key, value, false}, handler);
     }
 
     template<typename WaitHandler>
     auto async_seek_both_exact(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, const remote::Pair&)>(initiate_async_seek_both{this, cursor_id, key, value, true}, handler);
+        return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code, const remote::Pair&)>(initiate_async_seek_both{this, cursor_id, key, value, true}, handler);
     }
 
     template<typename WaitHandler>
     auto async_next(uint32_t cursor_id, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, const remote::Pair&)>(initiate_async_next{this, cursor_id}, handler);
+        return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code, const remote::Pair&)>(initiate_async_next{this, cursor_id}, handler);
     }
 
     template<typename WaitHandler>
     auto async_close_cursor(uint32_t cursor_id, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code, uint32_t)>(initiate_async_close_cursor{this, cursor_id}, handler);
+        return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code, uint32_t)>(initiate_async_close_cursor{this, cursor_id}, handler);
     }
 
     template<typename WaitHandler>
     auto async_end(WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code)>(initiate_async_end{this}, handler);
+        return boost::asio::async_initiate<WaitHandler, void(boost::system::error_code)>(initiate_async_end{this}, handler);
     }
 
-    asio::io_context& context_;
+    boost::asio::io_context& context_;
     AsyncTxStreamingClient& client_;
 };
 

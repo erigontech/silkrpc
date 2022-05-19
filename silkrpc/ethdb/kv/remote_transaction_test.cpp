@@ -19,9 +19,9 @@
 #include <future>
 #include <system_error>
 
-#include <asio/co_spawn.hpp>
-#include <asio/use_future.hpp>
-#include <asio/io_context.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/use_future.hpp>
+#include <boost/asio/io_context.hpp>
 #include <catch2/catch.hpp>
 
 #include <silkrpc/ethdb/kv/tx_streaming_client.hpp>
@@ -51,13 +51,13 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
             }
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result{asio::co_spawn(io_context, remote_tx.open(), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_tx.open(), boost::asio::use_future)};
             io_context.run();
             result.get();
             CHECK(remote_tx.tx_id() == 4);
@@ -84,18 +84,18 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
             }
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result{asio::co_spawn(io_context, remote_tx.open(), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_tx.open(), boost::asio::use_future)};
             io_context.run();
             result.get();
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 
@@ -116,18 +116,18 @@ TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]")
             }
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result{asio::co_spawn(io_context, remote_tx.open(), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_tx.open(), boost::asio::use_future)};
             io_context.run();
             result.get();
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 }
@@ -150,17 +150,17 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
             }
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result1{asio::co_spawn(io_context, remote_tx.open(), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_tx.open(), boost::asio::use_future)};
             io_context.run();
             result1.get();
             CHECK(remote_tx.tx_id() == 4);
-            auto result2{asio::co_spawn(io_context, remote_tx.close(), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_tx.close(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result2.get();
@@ -181,13 +181,13 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
             void read_start(std::function<void(const grpc::Status&, const ::remote::Pair&)> read_completed) override {}
             void write_start(const ::remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result{asio::co_spawn(io_context, remote_tx.close(), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_tx.close(), boost::asio::use_future)};
             io_context.run();
             result.get();
             CHECK(true);
@@ -215,21 +215,21 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
                 write_completed(::grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result1{asio::co_spawn(io_context, remote_tx.open(), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_tx.open(), boost::asio::use_future)};
             io_context.run();
             result1.get();
-            auto result2{asio::co_spawn(io_context, remote_tx.cursor("table1"), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_tx.cursor("table1"), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             auto cursor = result2.get();
             CHECK(cursor != nullptr);
-            auto result3{asio::co_spawn(io_context, remote_tx.close(), asio::use_future)};
+            auto result3{boost::asio::co_spawn(io_context, remote_tx.close(), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             result3.get();
@@ -258,18 +258,18 @@ TEST_CASE("RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]"
                 write_completed(::grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result{asio::co_spawn(io_context, remote_tx.close(), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_tx.close(), boost::asio::use_future)};
             io_context.run();
             result.get();
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 }
@@ -290,13 +290,13 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
                write_completed(::grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result{asio::co_spawn(io_context, remote_tx.cursor("table1"), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_tx.cursor("table1"), boost::asio::use_future)};
             io_context.run();
             auto cursor = result.get();
             CHECK(cursor->cursor_id() == 0x23);
@@ -320,17 +320,17 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
                 write_completed(::grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result1{asio::co_spawn(io_context, remote_tx.cursor("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_tx.cursor("table1"), boost::asio::use_future)};
             io_context.run();
             auto cursor1 = result1.get();
             CHECK(cursor1->cursor_id() == 0x23);
-            auto result2{asio::co_spawn(io_context, remote_tx.cursor("table2"), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_tx.cursor("table2"), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             auto cursor2 = result2.get();
@@ -355,18 +355,18 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
                 write_completed(::grpc::Status::CANCELLED);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result{asio::co_spawn(io_context, remote_tx.cursor("table1"), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_tx.cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result.get();
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 
@@ -385,18 +385,18 @@ TEST_CASE("RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]
                 write_completed(::grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result{asio::co_spawn(io_context, remote_tx.cursor("table1"), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_tx.cursor("table1"), boost::asio::use_future)};
             io_context.run();
             result.get();
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 }
@@ -417,13 +417,13 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
                 write_completed(::grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result{asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), boost::asio::use_future)};
             io_context.run();
             auto cursor = result.get();
             CHECK(cursor->cursor_id() == 0x23);
@@ -447,17 +447,17 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
                 write_completed(::grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result1{asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), asio::use_future)};
+            auto result1{boost::asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), boost::asio::use_future)};
             io_context.run();
             auto cursor1 = result1.get();
             CHECK(cursor1->cursor_id() == 0x23);
-            auto result2{asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), asio::use_future)};
+            auto result2{boost::asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), boost::asio::use_future)};
             io_context.reset();
             io_context.run();
             auto cursor2 = result2.get();
@@ -482,18 +482,18 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
                 write_completed(::grpc::Status::CANCELLED);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result{asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), boost::asio::use_future)};
             io_context.run();
             result.get();
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 
@@ -512,18 +512,18 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
                 write_completed(::grpc::Status::OK);
             }
         };
-        asio::io_context io_context;
+        boost::asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         std::unique_ptr<remote::KV::StubInterface> stub{remote::KV::NewStub(channel)};
         grpc::CompletionQueue queue;
         RemoteTransaction<MockStreamingClient> remote_tx(io_context, stub, &queue);
         try {
-            auto result{asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), asio::use_future)};
+            auto result{boost::asio::co_spawn(io_context, remote_tx.cursor_dup_sort("table1"), boost::asio::use_future)};
             io_context.run();
             result.get();
             CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
+        } catch (const boost::system::system_error& e) {
+            CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
     }
 }

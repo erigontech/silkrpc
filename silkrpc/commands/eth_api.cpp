@@ -59,7 +59,7 @@
 namespace silkrpc::commands {
 
 // https://eth.wiki/json-rpc/API#eth_blocknumber
-asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -79,7 +79,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::js
 }
 
 // https://eth.wiki/json-rpc/API#eth_chainid
-asio::awaitable<void> EthereumRpcApi::handle_eth_chain_id(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_chain_id(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -99,7 +99,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_chain_id(const nlohmann::json& 
 }
 
 // https://eth.wiki/json-rpc/API#eth_protocolversion
-asio::awaitable<void> EthereumRpcApi::handle_eth_protocol_version(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_protocol_version(const nlohmann::json& request, nlohmann::json& reply) {
     try {
         const auto protocol_version = co_await backend_->protocol_version();
         reply = make_json_content(request["id"], to_quantity(protocol_version));
@@ -115,7 +115,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_protocol_version(const nlohmann
 }
 
 // https://eth.wiki/json-rpc/API#eth_syncing
-asio::awaitable<void> EthereumRpcApi::handle_eth_syncing(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_syncing(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -143,7 +143,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_syncing(const nlohmann::json& r
 }
 
 // https://eth.wiki/json-rpc/API#eth_gasprice
-asio::awaitable<void> EthereumRpcApi::handle_eth_gas_price(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_gas_price(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -171,7 +171,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_gas_price(const nlohmann::json&
 }
 
 // https://eth.wiki/json-rpc/API#eth_getblockbyhash
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid eth_getBlockByHash params: " + params.dump();
@@ -210,7 +210,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_hash(const nlohman
 }
 
 // https://eth.wiki/json-rpc/API#eth_getblockbynumber
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_number(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid getBlockByNumber params: " + params.dump();
@@ -249,7 +249,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_number(const nlohm
 }
 
 // https://eth.wiki/json-rpc/API#eth_getblocktransactioncountbyhash
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid eth_getBlockTransactionCountByHash params: " + params.dump();
@@ -282,7 +282,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_
 }
 
 // https://eth.wiki/json-rpc/API#eth_getblocktransactioncountbynumber
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_number(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid eth_getBlockTransactionCountByNumber params: " + params.dump();
@@ -315,7 +315,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_transaction_count_by_
 }
 
 // https://eth.wiki/json-rpc/API#eth_getunclebyblockhashandindex
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid eth_getUncleByBlockHashAndIndex params: " + params.dump();
@@ -363,7 +363,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_ind
 }
 
 // https://eth.wiki/json-rpc/API#eth_getunclebyblocknumberandindex
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid eth_getUncleByBlockNumberAndIndex params: " + params.dump();
@@ -410,7 +410,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_number_and_i
 }
 
 // https://eth.wiki/json-rpc/API#eth_getunclecountbyblockhash
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_hash(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_hash(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid eth_getUncleCountByBlockHash params: " + params.dump();
@@ -443,7 +443,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_hash(c
 }
 
 // https://eth.wiki/json-rpc/API#eth_getunclecountbyblocknumber
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_number(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid eth_getUncleCountByBlockNumber params: " + params.dump();
@@ -477,7 +477,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_count_by_block_number
 }
 
 // https://eth.wiki/json-rpc/API#eth_gettransactionbyhash
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid eth_getTransactionByHash params: " + params.dump();
@@ -517,7 +517,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const n
 }
 
 // https://eth.wiki/json-rpc/API#eth_getrawtransactionbyhash
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid eth_getRawTransactionByHash params: " + params.dump();
@@ -560,7 +560,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_hash(con
 }
 
 // https://eth.wiki/json-rpc/API#eth_gettransactionbyblockhashandindex
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid eth_getTransactionByBlockHashAndIndex params: " + params.dump();
@@ -602,7 +602,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_hash_a
 }
 
 // https://eth.wiki/json-rpc/API#eth_getrawtransactionbyblockhashandindex
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_block_hash_and_index(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid eth_getRawTransactionByBlockHashAndIndex params: " + params.dump();
@@ -645,7 +645,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_block_ha
 }
 
 // https://eth.wiki/json-rpc/API#eth_gettransactionbyblocknumberandindex
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid eth_getTransactionByBlockNumberAndIndex params: " + params.dump();
@@ -688,7 +688,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_block_number
 }
 
 // https://eth.wiki/json-rpc/API#eth_getrawtransactionbyblocknumberandindex
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_block_number_and_index(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid eth_getRawTransactionByBlockNumberAndIndex params: " + params.dump();
@@ -732,7 +732,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_block_nu
 }
 
 // https://eth.wiki/json-rpc/API#eth_gettransactionreceipt
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid eth_getTransactionReceipt params: " + params.dump();
@@ -785,7 +785,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const n
 }
 
 // https://eth.wiki/json-rpc/API#eth_estimategas
-asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid eth_estimategas params: " + params.dump();
@@ -849,7 +849,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohmann::js
 }
 
 // https://eth.wiki/json-rpc/API#eth_getbalance
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid eth_getBalance params: " + params.dump();
@@ -884,7 +884,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohmann::jso
 }
 
 // https://eth.wiki/json-rpc/API#eth_getcode
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid eth_getCode params: " + params.dump();
@@ -924,7 +924,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann::json& 
 }
 
 // https://eth.wiki/json-rpc/API#eth_gettransactioncount
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid eth_getTransactionCount params: " + params.dump();
@@ -962,7 +962,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(const nlo
 }
 
 // https://eth.wiki/json-rpc/API#eth_getstorageat
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_storage_at(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_storage_at(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 3) {
         auto error_msg = "invalid eth_getStorageAt params: " + params.dump();
@@ -1002,7 +1002,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_storage_at(const nlohmann::
 }
 
 // https://eth.wiki/json-rpc/API#eth_call
-asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid eth_call params: " + params.dump();
@@ -1053,7 +1053,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
 }
 
 // https://geth.ethereum.org/docs/rpc/ns-eth#eth_createaccesslist
-asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 2) {
         auto error_msg = "invalid eth_call params: " + params.dump();
@@ -1141,10 +1141,10 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
 }
 
 //https://docs.flashbots.net/flashbots-auction/miners/mev-geth-spec/v06-rpc/eth_callBundle
-asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 3) {
-        auto error_msg = "invalid eth_call_bundle params: " + params.dump();
+        auto error_msg = "invalid eth_callBundle params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
@@ -1155,13 +1155,13 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohmann::jso
     const auto timeout = params[2].get<uint64_t>();
 
     if (tx_hash_list.size() == 0) {
-        auto error_msg = "invalid eth_call_bundle hash-list: " + params.dump();
+        const auto error_msg = "invalid eth_callBundle hash list: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
 
-    SILKRPC_DEBUG << " block_number_or_hash: " << state_block_number_or_hash << " timeout: " << timeout << "\n";
+    SILKRPC_DEBUG << "block_number_or_hash: " << state_block_number_or_hash << " timeout: " << timeout << "\n";
 
     auto tx = co_await database_->begin();
 
@@ -1186,26 +1186,26 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohmann::jso
             struct CallBundleTxInfo tx_info{};
             const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache(), tx_database, tx_hash_list[i]);
             if (!tx_with_block) {
-                 auto error_msg = "invalid trnsaction hash";
-                 SILKRPC_ERROR << error_msg << "\n";
-                 reply = make_json_error(request["id"], 100, error_msg);
-                 break;
+                const auto error_msg = "invalid transaction hash";
+                SILKRPC_ERROR << "eth_callBundle: " << error_msg << "\n";
+                reply = make_json_error(request["id"], 100, error_msg);
+                break;
             }
 
             EVMExecutor executor{*context_.io_context(), tx_database, *chain_config_ptr, workers_, block_number};
             const auto execution_result = co_await executor.call(block_with_hash.block, tx_with_block->transaction);
             if (execution_result.pre_check_error) {
-                 reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
-                 error = true;
-                 break;
+                reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
+                error = true;
+                break;
             }
 
             if ((clock_time::since(start_time) / 1000000) > timeout) {
-                 auto error_msg = "execution aborted (timeout)";
-                 SILKRPC_ERROR << error_msg << "\n";
-                 reply = make_json_error(request["id"], -32000, error_msg);
-                 error = true;
-                 break;
+                const auto error_msg = "execution aborted (timeout)";
+                SILKRPC_ERROR << "eth_callBundle: " << error_msg << "\n";
+                reply = make_json_error(request["id"], -32000, error_msg);
+                error = true;
+                break;
             }
             tx_info.gas_used = tx_with_block->transaction.gas_limit - execution_result.gas_left;
             tx_info.hash = hash_of_transaction(tx_with_block->transaction);
@@ -1219,11 +1219,11 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohmann::jso
 
             bundle_info.txs_info.push_back(tx_info);
             hash_data = hash_data + silkworm::Bytes{tx_info.hash.bytes, silkworm::kHashLength};
-       }
-       if (!error) {
-          bundle_info.bundle_hash = hash_of(hash_data);
-          reply = make_json_content(request["id"], bundle_info);
-       }
+        }
+        if (!error) {
+            bundle_info.bundle_hash = hash_of(hash_data);
+            reply = make_json_content(request["id"], bundle_info);
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -1237,7 +1237,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohmann::jso
 }
 
 // https://eth.wiki/json-rpc/API#eth_newfilter
-asio::awaitable<void> EthereumRpcApi::handle_eth_new_filter(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_new_filter(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -1257,7 +1257,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_new_filter(const nlohmann::json
 }
 
 // https://eth.wiki/json-rpc/API#eth_newblockfilter
-asio::awaitable<void> EthereumRpcApi::handle_eth_new_block_filter(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_new_block_filter(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -1277,7 +1277,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_new_block_filter(const nlohmann
 }
 
 // https://eth.wiki/json-rpc/API#eth_newpendingtransactionfilter
-asio::awaitable<void> EthereumRpcApi::handle_eth_new_pending_transaction_filter(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_new_pending_transaction_filter(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -1297,7 +1297,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_new_pending_transaction_filter(
 }
 
 // https://eth.wiki/json-rpc/API#eth_getfilterchanges
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_changes(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_changes(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -1317,7 +1317,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_changes(const nlohma
 }
 
 // https://eth.wiki/json-rpc/API#eth_uninstallfilter
-asio::awaitable<void> EthereumRpcApi::handle_eth_uninstall_filter(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_uninstall_filter(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -1337,7 +1337,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_uninstall_filter(const nlohmann
 }
 
 // https://eth.wiki/json-rpc/API#eth_getlogs
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid eth_getLogs params: " + params.dump();
@@ -1470,7 +1470,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
 }
 
 // https://eth.wiki/json-rpc/API#eth_sendrawtransaction
-asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid eth_sendRawTransaction params: " + params.dump();
@@ -1545,7 +1545,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nloh
 }
 
 // https://eth.wiki/json-rpc/API#eth_sendtransaction
-asio::awaitable<void> EthereumRpcApi::handle_eth_send_transaction(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_send_transaction(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -1565,7 +1565,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_send_transaction(const nlohmann
 }
 
 // https://eth.wiki/json-rpc/API#eth_signtransaction
-asio::awaitable<void> EthereumRpcApi::handle_eth_sign_transaction(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_sign_transaction(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -1585,7 +1585,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_sign_transaction(const nlohmann
 }
 
 // https://eth.wiki/json-rpc/API#eth_getproof
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_proof(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_proof(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -1605,10 +1605,13 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_proof(const nlohmann::json&
 }
 
 // https://eth.wiki/json-rpc/API#eth_mining
-asio::awaitable<void> EthereumRpcApi::handle_eth_mining(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_mining(const nlohmann::json& request, nlohmann::json& reply) {
     try {
         const auto mining_result = co_await miner_->get_mining();
         reply = make_json_content(request["id"], mining_result.enabled && mining_result.running);
+    } catch (const boost::system::system_error& se) {
+        SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], -32000, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());
@@ -1621,10 +1624,13 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_mining(const nlohmann::json& re
 }
 
 // https://eth.wiki/json-rpc/API#eth_coinbase
-asio::awaitable<void> EthereumRpcApi::handle_eth_coinbase(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_coinbase(const nlohmann::json& request, nlohmann::json& reply) {
     try {
         const auto coinbase_address = co_await backend_->etherbase();
         reply = make_json_content(request["id"], coinbase_address);
+    } catch (const boost::system::system_error& se) {
+        SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], -32000, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());
@@ -1637,10 +1643,13 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_coinbase(const nlohmann::json& 
 }
 
 // https://eth.wiki/json-rpc/API#eth_hashrate
-asio::awaitable<void> EthereumRpcApi::handle_eth_hashrate(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_hashrate(const nlohmann::json& request, nlohmann::json& reply) {
     try {
         const auto hash_rate = co_await miner_->get_hash_rate();
         reply = make_json_content(request["id"], to_quantity(hash_rate));
+    } catch (const boost::system::system_error& se) {
+        SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], -32000, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());
@@ -1653,7 +1662,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_hashrate(const nlohmann::json& 
 }
 
 // https://eth.wiki/json-rpc/API#eth_submithashrate
-asio::awaitable<void> EthereumRpcApi::handle_eth_submit_hashrate(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_submit_hashrate(const nlohmann::json& request, nlohmann::json& reply) {
     const auto params = request["params"];
     if (params.size() != 2) {
         const auto error_msg = "invalid eth_submitHashrate params: " + params.dump();
@@ -1667,6 +1676,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_submit_hashrate(const nlohmann:
         const auto id = params[1].get<evmc::bytes32>();
         const auto success = co_await miner_->submit_hash_rate(hash_rate, id);
         reply = make_json_content(request["id"], success);
+    } catch (const boost::system::system_error& se) {
+        SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], -32000, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());
@@ -1679,7 +1691,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_submit_hashrate(const nlohmann:
 }
 
 // https://eth.wiki/json-rpc/API#eth_getwork
-asio::awaitable<void> EthereumRpcApi::handle_eth_get_work(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_work(const nlohmann::json& request, nlohmann::json& reply) {
     try {
         const auto work = co_await miner_->get_work();
         const std::vector<std::string> current_work{
@@ -1689,6 +1701,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_work(const nlohmann::json& 
             silkworm::to_hex(work.block_number)
         };
         reply = make_json_content(request["id"], current_work);
+    } catch (const boost::system::system_error& se) {
+        SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], -32000, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());
@@ -1701,7 +1716,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_work(const nlohmann::json& 
 }
 
 // https://eth.wiki/json-rpc/API#eth_submitwork
-asio::awaitable<void> EthereumRpcApi::handle_eth_submit_work(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_submit_work(const nlohmann::json& request, nlohmann::json& reply) {
     const auto params = request["params"];
     if (params.size() != 3) {
         const auto error_msg = "invalid eth_submitWork params: " + params.dump();
@@ -1722,6 +1737,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_submit_work(const nlohmann::jso
         const auto digest = params[2].get<evmc::bytes32>();
         const auto success = co_await miner_->submit_work(block_nonce.value(), pow_hash, digest);
         reply = make_json_content(request["id"], success);
+    } catch (const boost::system::system_error& se) {
+        SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], -32000, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], -32000, e.what());
@@ -1734,7 +1752,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_submit_work(const nlohmann::jso
 }
 
 // https://eth.wiki/json-rpc/API#eth_subscribe
-asio::awaitable<void> EthereumRpcApi::handle_eth_subscribe(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_subscribe(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -1754,7 +1772,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_subscribe(const nlohmann::json&
 }
 
 // https://eth.wiki/json-rpc/API#eth_unsubscribe
-asio::awaitable<void> EthereumRpcApi::handle_eth_unsubscribe(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EthereumRpcApi::handle_eth_unsubscribe(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -1773,7 +1791,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_unsubscribe(const nlohmann::jso
     co_return;
 }
 
-asio::awaitable<roaring::Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end) {
+boost::asio::awaitable<roaring::Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end) {
     SILKRPC_DEBUG << "#topics: " << topics.size() << " start: " << start << " end: " << end << "\n";
     roaring::Roaring result_bitmap;
     for (auto subtopics : topics) {
@@ -1799,7 +1817,7 @@ asio::awaitable<roaring::Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb:
     co_return result_bitmap;
 }
 
-asio::awaitable<roaring::Roaring> EthereumRpcApi::get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end) {
+boost::asio::awaitable<roaring::Roaring> EthereumRpcApi::get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end) {
     SILKRPC_TRACE << "#addresses: " << addresses.size() << " start: " << start << " end: " << end << "\n";
     roaring::Roaring result_bitmap;
     for (auto address : addresses) {

@@ -37,44 +37,44 @@ const std::string bad_gateway = "HTTP/1.1 502 Bad Gateway\r\n";                 
 const std::string service_unavailable = "HTTP/1.1 503 Service Unavailable\r\n";     // NOLINT(runtime/string)
 const std::string processing_continue = "HTTP/1.1 100 Continue\r\n";                // NOLINT(runtime/string)
 
-asio::const_buffer to_buffer(Reply::StatusType status) {
+boost::asio::const_buffer to_buffer(Reply::StatusType status) {
     switch (status) {
         case Reply::ok:
-            return asio::buffer(ok);
+            return boost::asio::buffer(ok);
         case Reply::created:
-            return asio::buffer(created);
+            return boost::asio::buffer(created);
         case Reply::accepted:
-            return asio::buffer(accepted);
+            return boost::asio::buffer(accepted);
         case Reply::no_content:
-            return asio::buffer(no_content);
+            return boost::asio::buffer(no_content);
         case Reply::multiple_choices:
-            return asio::buffer(multiple_choices);
+            return boost::asio::buffer(multiple_choices);
         case Reply::moved_permanently:
-            return asio::buffer(moved_permanently);
+            return boost::asio::buffer(moved_permanently);
         case Reply::moved_temporarily:
-            return asio::buffer(moved_temporarily);
+            return boost::asio::buffer(moved_temporarily);
         case Reply::not_modified:
-            return asio::buffer(not_modified);
+            return boost::asio::buffer(not_modified);
         case Reply::bad_request:
-            return asio::buffer(bad_request);
+            return boost::asio::buffer(bad_request);
         case Reply::unauthorized:
-            return asio::buffer(unauthorized);
+            return boost::asio::buffer(unauthorized);
         case Reply::forbidden:
-            return asio::buffer(forbidden);
+            return boost::asio::buffer(forbidden);
         case Reply::not_found:
-            return asio::buffer(not_found);
+            return boost::asio::buffer(not_found);
         case Reply::internal_server_error:
-            return asio::buffer(internal_server_error);
+            return boost::asio::buffer(internal_server_error);
         case Reply::not_implemented:
-            return asio::buffer(not_implemented);
+            return boost::asio::buffer(not_implemented);
         case Reply::bad_gateway:
-            return asio::buffer(bad_gateway);
+            return boost::asio::buffer(bad_gateway);
         case Reply::service_unavailable:
-            return asio::buffer(service_unavailable);
+            return boost::asio::buffer(service_unavailable);
         case Reply::processing_continue:
-            return asio::buffer(processing_continue);
+            return boost::asio::buffer(processing_continue);
         default:
-            return asio::buffer(internal_server_error);
+            return boost::asio::buffer(internal_server_error);
     }
 }
 
@@ -88,19 +88,19 @@ const char lf[] = { '\n' };
 
 } // namespace misc_strings
 
-std::vector<asio::const_buffer> Reply::to_buffers() {
-    std::vector<asio::const_buffer> buffers;
+std::vector<boost::asio::const_buffer> Reply::to_buffers() {
+    std::vector<boost::asio::const_buffer> buffers;
     buffers.reserve(1+headers.size()*4+2);
     buffers.push_back(status_strings::to_buffer(status));
     for (std::size_t i = 0; i < headers.size(); ++i) {
         Header& h = headers[i];
-        buffers.push_back(asio::buffer(h.name));
-        buffers.push_back(asio::buffer(misc_strings::name_value_separator));
-        buffers.push_back(asio::buffer(h.value));
-        buffers.push_back(asio::buffer(misc_strings::crlf));
+        buffers.push_back(boost::asio::buffer(h.name));
+        buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
+        buffers.push_back(boost::asio::buffer(h.value));
+        buffers.push_back(boost::asio::buffer(misc_strings::crlf));
     }
-    buffers.push_back(asio::buffer(misc_strings::crlf));
-    buffers.push_back(asio::buffer(content));
+    buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+    buffers.push_back(boost::asio::buffer(content));
     SILKRPC_TRACE << "Reply::to_buffers buffers: " << buffers << "\n";
     return buffers;
 }

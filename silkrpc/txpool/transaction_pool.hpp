@@ -25,8 +25,8 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/io_context.hpp>
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <boost/endian/conversion.hpp>
 #include <evmc/evmc.hpp>
 #include <grpcpp/grpcpp.h>
@@ -70,7 +70,7 @@ using AddClient = AsyncUnaryClient<
 >;
 
 using AddAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     AddClient,
     ::txpool::Txpool::StubInterface,
     ::txpool::AddRequest,
@@ -85,7 +85,7 @@ using TransactionsClient = AsyncUnaryClient<
 >;
 
 using TransactionsAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     TransactionsClient,
     ::txpool::Txpool::StubInterface,
     ::txpool::TransactionsRequest,
@@ -100,7 +100,7 @@ using NonceClient = AsyncUnaryClient<
 >;
 
 using NonceAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     NonceClient,
     ::txpool::Txpool::StubInterface,
     ::txpool::NonceRequest,
@@ -115,7 +115,7 @@ using StatusClient = AsyncUnaryClient<
 >;
 
 using StatusAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     StatusClient,
     ::txpool::Txpool::StubInterface,
     ::txpool::StatusRequest,
@@ -130,7 +130,7 @@ using AllClient = AsyncUnaryClient<
 >;
 
 using AllAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     AllClient,
     ::txpool::Txpool::StubInterface,
     ::txpool::AllRequest,
@@ -144,10 +144,10 @@ public:
         std::string error_descr;
     } OperationResult;
 
-    explicit TransactionPool(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
+    explicit TransactionPool(boost::asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
     : TransactionPool(context.get_executor(), ::txpool::Txpool::NewStub(channel, grpc::StubOptions()), queue) {}
 
-    explicit TransactionPool(asio::io_context::executor_type executor, std::unique_ptr<::txpool::Txpool::StubInterface> stub, grpc::CompletionQueue* queue)
+    explicit TransactionPool(boost::asio::io_context::executor_type executor, std::unique_ptr<::txpool::Txpool::StubInterface> stub, grpc::CompletionQueue* queue)
     : executor_(executor), stub_(std::move(stub)), queue_(queue) {
         SILKRPC_TRACE << "TransactionPool::ctor " << this << "\n";
     }
@@ -156,13 +156,13 @@ public:
         SILKRPC_TRACE << "TransactionPool::dtor " << this << "\n";
     }
 
-    asio::awaitable<OperationResult> add_transaction(const silkworm::ByteView& rlp_tx) {
+    boost::asio::awaitable<OperationResult> add_transaction(const silkworm::ByteView& rlp_tx) {
         const auto start_time = clock_time::now();
         SILKRPC_DEBUG << "TransactionPool::add_transaction rlp_tx=" << silkworm::to_hex(rlp_tx) << "\n";
         ::txpool::AddRequest request;
         request.add_rlptxs(rlp_tx.data(), rlp_tx.size());
         AddAwaitable add_awaitable{executor_, stub_, queue_};
-        const auto reply = co_await add_awaitable.async_call(request, asio::use_awaitable);
+        const auto reply = co_await add_awaitable.async_call(request, boost::asio::use_awaitable);
         const auto imported_size = reply.imported_size();
         const auto errors_size = reply.errors_size();
         SILKRPC_DEBUG << "TransactionPool::add_transaction imported_size=" << imported_size << " errors_size=" << errors_size << "\n";
@@ -192,7 +192,7 @@ public:
         co_return result;
     }
 
-    asio::awaitable<std::optional<silkworm::Bytes>> get_transaction(const evmc::bytes32& tx_hash) {
+    boost::asio::awaitable<std::optional<silkworm::Bytes>> get_transaction(const evmc::bytes32& tx_hash) {
         const auto start_time = clock_time::now();
         SILKRPC_DEBUG << "TransactionPool::get_transaction tx_hash=" << tx_hash << "\n";
         auto hi = new ::types::H128{};
@@ -206,7 +206,7 @@ public:
         hash_h256->set_allocated_hi(hi);  // take ownership
         hash_h256->set_allocated_lo(lo);  // take ownership
         TransactionsAwaitable transactions_awaitable{executor_, stub_, queue_};
-        const auto reply = co_await transactions_awaitable.async_call(request, asio::use_awaitable);
+        const auto reply = co_await transactions_awaitable.async_call(request, boost::asio::use_awaitable);
         const auto rlptxs_size = reply.rlptxs_size();
         SILKRPC_DEBUG << "TransactionPool::get_transaction rlptxs_size=" << rlptxs_size << "\n";
         if (rlptxs_size == 1) {
@@ -220,25 +220,25 @@ public:
         }
     }
 
-    asio::awaitable<std::optional<uint64_t>> nonce(const evmc::address& address) {
+    boost::asio::awaitable<std::optional<uint64_t>> nonce(const evmc::address& address) {
         const auto start_time = clock_time::now();
         SILKRPC_DEBUG << "TransactionPool::nonce address=" << address << "\n";
         ::txpool::NonceRequest request{};
         request.set_allocated_address(H160_from_address(address));
         NonceAwaitable nonce_awaitable{executor_, stub_, queue_};
-        const auto reply = co_await nonce_awaitable.async_call(request, asio::use_awaitable);
+        const auto reply = co_await nonce_awaitable.async_call(request, boost::asio::use_awaitable);
         SILKRPC_DEBUG << "TransactionPool::nonce found:" << reply.found() << " nonce: " << reply.nonce() <<
                          " t=" << clock_time::since(start_time) << "\n";
         co_return reply.found() ? std::optional<uint64_t>{reply.nonce()} : std::nullopt;
     }
 
-    asio::awaitable<StatusInfo> get_status() {
+    boost::asio::awaitable<StatusInfo> get_status() {
         const auto start_time = clock_time::now();
         SILKRPC_DEBUG << "TransactionPool::get_status\n";
         StatusInfo status_info{};
         ::txpool::StatusRequest request{};
         StatusAwaitable status_awaitable{executor_, stub_, queue_};
-        const auto reply = co_await status_awaitable.async_call(request, asio::use_awaitable);
+        const auto reply = co_await status_awaitable.async_call(request, boost::asio::use_awaitable);
         status_info.base_fee_count = reply.basefeecount();
         status_info.queued_count = reply.queuedcount();
         status_info.pending_count = reply.pendingcount();
@@ -246,13 +246,13 @@ public:
         co_return status_info;
     }
 
-    asio::awaitable<TransactionsInPool> get_transactions() {
+    boost::asio::awaitable<TransactionsInPool> get_transactions() {
         const auto start_time = clock_time::now();
         SILKRPC_DEBUG << "TransactionPool::get_transactions\n";
         TransactionsInPool transactions_in_pool{};
         ::txpool::AllRequest request{};
         AllAwaitable all_awaitable{executor_, stub_, queue_};
-        const auto reply = co_await all_awaitable.async_call(request, asio::use_awaitable);
+        const auto reply = co_await all_awaitable.async_call(request, boost::asio::use_awaitable);
         const auto txs_size = reply.txs_size();
         for (int i = 0; i < txs_size; i++) {
             const auto tx = reply.txs(i);
@@ -292,7 +292,7 @@ private:
         return h128;
     }
 
-    asio::io_context::executor_type executor_;
+    boost::asio::io_context::executor_type executor_;
     std::unique_ptr<::txpool::Txpool::StubInterface> stub_;
     grpc::CompletionQueue* queue_;
 };

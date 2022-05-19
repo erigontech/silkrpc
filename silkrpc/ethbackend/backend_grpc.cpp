@@ -28,10 +28,10 @@
 
 namespace silkrpc::ethbackend {
 
-asio::awaitable<evmc::address> BackEndGrpc::etherbase() {
+boost::asio::awaitable<evmc::address> BackEndGrpc::etherbase() {
     const auto start_time = clock_time::now();
     EtherbaseAwaitable eb_awaitable{executor_, stub_, queue_};
-    const auto reply = co_await eb_awaitable.async_call(::remote::EtherbaseRequest{}, asio::use_awaitable);
+    const auto reply = co_await eb_awaitable.async_call(::remote::EtherbaseRequest{}, boost::asio::use_awaitable);
     evmc::address evmc_address;
     if (reply.has_address()) {
         const auto h160_address = reply.address();
@@ -41,68 +41,68 @@ asio::awaitable<evmc::address> BackEndGrpc::etherbase() {
     co_return evmc_address;
 }
 
-asio::awaitable<uint64_t> BackEndGrpc::protocol_version() {
+boost::asio::awaitable<uint64_t> BackEndGrpc::protocol_version() {
     const auto start_time = clock_time::now();
     ProtocolVersionAwaitable pv_awaitable{executor_, stub_, queue_};
-    const auto reply = co_await pv_awaitable.async_call(::remote::ProtocolVersionRequest{}, asio::use_awaitable);
+    const auto reply = co_await pv_awaitable.async_call(::remote::ProtocolVersionRequest{}, boost::asio::use_awaitable);
     const auto pv = reply.id();
     SILKRPC_DEBUG << "BackEnd::protocol_version version=" << pv << " t=" << clock_time::since(start_time) << "\n";
     co_return pv;
 }
 
-asio::awaitable<uint64_t> BackEndGrpc::net_version() {
+boost::asio::awaitable<uint64_t> BackEndGrpc::net_version() {
     const auto start_time = clock_time::now();
     NetVersionAwaitable nv_awaitable{executor_, stub_, queue_};
-    const auto reply = co_await nv_awaitable.async_call(::remote::NetVersionRequest{}, asio::use_awaitable);
+    const auto reply = co_await nv_awaitable.async_call(::remote::NetVersionRequest{}, boost::asio::use_awaitable);
     const auto nv = reply.id();
     SILKRPC_DEBUG << "BackEnd::net_version version=" << nv << " t=" << clock_time::since(start_time) << "\n";
     co_return nv;
 }
 
-asio::awaitable<std::string> BackEndGrpc::client_version() {
+boost::asio::awaitable<std::string> BackEndGrpc::client_version() {
     const auto start_time = clock_time::now();
     ClientVersionAwaitable cv_awaitable{executor_, stub_, queue_};
-    const auto reply = co_await cv_awaitable.async_call(::remote::ClientVersionRequest{}, asio::use_awaitable);
+    const auto reply = co_await cv_awaitable.async_call(::remote::ClientVersionRequest{}, boost::asio::use_awaitable);
     const auto cv = reply.nodename();
     SILKRPC_DEBUG << "BackEnd::client_version version=" << cv << " t=" << clock_time::since(start_time) << "\n";
     co_return cv;
 }
 
-asio::awaitable<uint64_t> BackEndGrpc::net_peer_count() {
+boost::asio::awaitable<uint64_t> BackEndGrpc::net_peer_count() {
     const auto start_time = clock_time::now();
     NetPeerCountAwaitable npc_awaitable{executor_, stub_, queue_};
-    const auto reply = co_await npc_awaitable.async_call(::remote::NetPeerCountRequest{}, asio::use_awaitable);
+    const auto reply = co_await npc_awaitable.async_call(::remote::NetPeerCountRequest{}, boost::asio::use_awaitable);
     const auto count = reply.count();
     SILKRPC_DEBUG << "BackEnd::net_peer_count count=" << count << " t=" << clock_time::since(start_time) << "\n";
     co_return count;
 }
 
-asio::awaitable<ExecutionPayload> BackEndGrpc::engine_get_payload_v1(uint64_t payload_id) {
+boost::asio::awaitable<ExecutionPayload> BackEndGrpc::engine_get_payload_v1(uint64_t payload_id) {
     const auto start_time = clock_time::now();
     EngineGetPayloadV1Awaitable npc_awaitable{executor_, stub_, queue_};
     ::remote::EngineGetPayloadRequest req;
     req.set_payloadid(payload_id);
-    const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
+    const auto reply = co_await npc_awaitable.async_call(req, boost::asio::use_awaitable);
     auto execution_payload{decode_execution_payload(reply)};
     SILKRPC_DEBUG << "BackEnd::engine_get_payload_v1 data=" << execution_payload << " t=" << clock_time::since(start_time) << "\n";
     co_return execution_payload;
 }
 
-asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPayload payload) {
+boost::asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPayload payload) {
     const auto start_time = clock_time::now();
     EngineNewPayloadV1Awaitable npc_awaitable{executor_, stub_, queue_};
     auto req{encode_execution_payload(payload)};
-    const auto reply = co_await npc_awaitable.async_call(req, asio::use_awaitable);
+    const auto reply = co_await npc_awaitable.async_call(req, boost::asio::use_awaitable);
     PayloadStatus payload_status = decode_payload_status(reply);
     SILKRPC_DEBUG << "BackEnd::engine_new_payload_v1 data=" << payload_status << " t=" << clock_time::since(start_time) << "\n";
     co_return payload_status;
 }
 
-asio::awaitable<ForkchoiceUpdatedReply> BackEndGrpc::engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request) {
+boost::asio::awaitable<ForkchoiceUpdatedReply> BackEndGrpc::engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request) {
     const auto start_time = clock_time::now();
     EngineForkChoiceUpdatedV1Awaitable fcu_awaitable{executor_, stub_, queue_};
     const auto req{encode_forkchoice_updated_request(forkchoice_updated_request)};
-    const auto reply = co_await fcu_awaitable.async_call(req, asio::use_awaitable);
+    const auto reply = co_await fcu_awaitable.async_call(req, boost::asio::use_awaitable);
     PayloadStatus payload_status = decode_payload_status(reply.payloadstatus());
     ForkchoiceUpdatedReply forkchoice_updated_reply{
         .payload_status = payload_status,

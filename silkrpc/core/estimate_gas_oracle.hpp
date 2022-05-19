@@ -24,7 +24,7 @@
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/block.hpp>
@@ -40,9 +40,9 @@ namespace silkrpc::ego {
 const std::uint64_t kTxGas = 21'000;
 const std::uint64_t kGasCap = 25'000'000;
 
-using BlockHeaderProvider = std::function<asio::awaitable<silkworm::BlockHeader>(uint64_t)>;
-using AccountReader = std::function<asio::awaitable<std::optional<silkworm::Account>>(const evmc::address&, uint64_t)>;
-using Executor = std::function<asio::awaitable<silkrpc::ExecutionResult>(const silkworm::Transaction &)>;
+using BlockHeaderProvider = std::function<boost::asio::awaitable<silkworm::BlockHeader>(uint64_t)>;
+using AccountReader = std::function<boost::asio::awaitable<std::optional<silkworm::Account>>(const evmc::address&, uint64_t)>;
+using Executor = std::function<boost::asio::awaitable<silkrpc::ExecutionResult>(const silkworm::Transaction &)>;
 
 struct EstimateGasException : public std::exception {
 public:
@@ -85,10 +85,10 @@ public:
     EstimateGasOracle(const EstimateGasOracle&) = delete;
     EstimateGasOracle& operator=(const EstimateGasOracle&) = delete;
 
-    asio::awaitable<intx::uint256> estimate_gas(const Call& call, uint64_t block_number);
+    boost::asio::awaitable<intx::uint256> estimate_gas(const Call& call, uint64_t block_number);
 
 private:
-    asio::awaitable<bool> try_execution(const silkworm::Transaction& transaction);
+    boost::asio::awaitable<bool> try_execution(const silkworm::Transaction& transaction);
 
     const BlockHeaderProvider& block_header_provider_;
     const AccountReader& account_reader_;

@@ -21,7 +21,7 @@
 #include <iostream>
 #include <utility>
 
-#include <asio/co_spawn.hpp>
+#include <boost/asio/co_spawn.hpp>
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
@@ -33,7 +33,7 @@
 
 using silkrpc::LogLevel;
 
-asio::awaitable<void> kv_seek(silkrpc::ethdb::Database& kv_db, const std::string& table_name, const silkworm::Bytes& key) {
+boost::asio::awaitable<void> kv_seek(silkrpc::ethdb::Database& kv_db, const std::string& table_name, const silkworm::Bytes& key) {
     const auto kv_transaction = co_await kv_db.begin();
     std::cout << "KV Tx OPEN -> table_name: " << table_name << "\n" << std::flush;
     const auto kv_cursor = co_await kv_transaction->cursor(table_name);
@@ -60,7 +60,7 @@ int kv_seek_async_coroutines(const std::string& target, const std::string& table
         auto io_context = context.io_context();
         auto& database = context.database();
 
-        asio::co_spawn(*io_context, kv_seek(*database, table_name, key), [&](std::exception_ptr exptr) {
+        boost::asio::co_spawn(*io_context, kv_seek(*database, table_name, key), [&](std::exception_ptr exptr) {
             context_pool.stop();
         });
 

@@ -22,8 +22,8 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/io_context.hpp>
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/base.hpp>
@@ -45,7 +45,7 @@ using GetWorkClient = AsyncUnaryClient<
 >;
 
 using GetWorkAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     GetWorkClient,
     ::txpool::Mining::StubInterface,
     ::txpool::GetWorkRequest,
@@ -60,7 +60,7 @@ using SubmitWorkClient = AsyncUnaryClient<
 >;
 
 using SubmitWorkAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     SubmitWorkClient,
     ::txpool::Mining::StubInterface,
     ::txpool::SubmitWorkRequest,
@@ -75,7 +75,7 @@ using SubmitHashRateClient = AsyncUnaryClient<
 >;
 
 using SubmitHashRateAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     SubmitHashRateClient,
     ::txpool::Mining::StubInterface,
     ::txpool::SubmitHashRateRequest,
@@ -90,7 +90,7 @@ using HashRateClient = AsyncUnaryClient<
 >;
 
 using HashRateAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     HashRateClient,
     ::txpool::Mining::StubInterface,
     ::txpool::HashRateRequest,
@@ -105,7 +105,7 @@ using MiningClient = AsyncUnaryClient<
 >;
 
 using MiningAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
+    boost::asio::io_context::executor_type,
     MiningClient,
     ::txpool::Mining::StubInterface,
     ::txpool::MiningRequest,
@@ -126,23 +126,23 @@ struct MiningResult {
 
 class Miner final {
 public:
-    explicit Miner(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue);
-    explicit Miner(asio::io_context::executor_type executor, std::unique_ptr<::txpool::Mining::StubInterface> stub, grpc::CompletionQueue* queue);
+    explicit Miner(boost::asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue);
+    explicit Miner(boost::asio::io_context::executor_type executor, std::unique_ptr<::txpool::Mining::StubInterface> stub, grpc::CompletionQueue* queue);
 
     ~Miner();
 
-    asio::awaitable<WorkResult> get_work();
+    boost::asio::awaitable<WorkResult> get_work();
 
-    asio::awaitable<bool> submit_work(const silkworm::Bytes& block_nonce, const evmc::bytes32& pow_hash, const evmc::bytes32& digest);
+    boost::asio::awaitable<bool> submit_work(const silkworm::Bytes& block_nonce, const evmc::bytes32& pow_hash, const evmc::bytes32& digest);
 
-    asio::awaitable<bool> submit_hash_rate(const intx::uint256& rate, const evmc::bytes32& id);
+    boost::asio::awaitable<bool> submit_hash_rate(const intx::uint256& rate, const evmc::bytes32& id);
 
-    asio::awaitable<uint64_t> get_hash_rate();
+    boost::asio::awaitable<uint64_t> get_hash_rate();
 
-    asio::awaitable<MiningResult> get_mining();
+    boost::asio::awaitable<MiningResult> get_mining();
 
 private:
-    asio::io_context::executor_type executor_;
+    boost::asio::io_context::executor_type executor_;
     std::unique_ptr<::txpool::Mining::StubInterface> stub_;
     grpc::CompletionQueue* queue_;
 };

@@ -21,9 +21,9 @@
 #include <thread>
 #include <utility>
 
-#include <asio/io_context.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
@@ -295,7 +295,7 @@ private:
 };
 
 template<typename T, auto method, typename R, typename ...Args>
-asio::awaitable<R> test_comethod(::remote::ETHBACKEND::Service* service, Args... args) {
+boost::asio::awaitable<R> test_comethod(::remote::ETHBACKEND::Service* service, Args... args) {
     ClientServerTestBox test_box{service};
     auto method_proxy{test_box.make_method_proxy<method, T>()};
     co_return co_await method_proxy(args...);
@@ -315,26 +315,26 @@ TEST_CASE("BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
 
     SECTION("call etherbase and get address") {
         TestBackEndService service;
-        asio::io_context io_context;
-        auto etherbase{asio::co_spawn(io_context, test_etherbase(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto etherbase{boost::asio::co_spawn(io_context, test_etherbase(&service), boost::asio::use_future)};
         io_context.run();
         CHECK(etherbase.get() == 0xaaaaeeffffeeaaaa11ddbbaaaabbdd11ccddddcc_address);
     }
 
     SECTION("call etherbase and get empty address") {
         EmptyBackEndService service;
-        asio::io_context io_context;
-        auto etherbase{asio::co_spawn(io_context, test_etherbase(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto etherbase{boost::asio::co_spawn(io_context, test_etherbase(&service), boost::asio::use_future)};
         io_context.run();
         CHECK(etherbase.get() == evmc::address{});
     }
 
     SECTION("call etherbase and get error") {
         FailureBackEndService service;
-        asio::io_context io_context;
-        auto etherbase{asio::co_spawn(io_context, test_etherbase(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto etherbase{boost::asio::co_spawn(io_context, test_etherbase(&service), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(etherbase.get(), std::system_error);
+        CHECK_THROWS_AS(etherbase.get(), boost::system::system_error);
     }
 }
 
@@ -343,26 +343,26 @@ TEST_CASE("BackEnd::protocol_version", "[silkrpc][ethbackend][backend]") {
 
     SECTION("call protocol_version and get version") {
         TestBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_protocol_version(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto version{boost::asio::co_spawn(io_context, test_protocol_version(&service), boost::asio::use_future)};
         io_context.run();
         CHECK(version.get() == 15);
     }
 
     SECTION("call protocol_version and get empty version") {
         EmptyBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_protocol_version(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto version{boost::asio::co_spawn(io_context, test_protocol_version(&service), boost::asio::use_future)};
         io_context.run();
         CHECK(version.get() == 0);
     }
 
     SECTION("call protocol_version and get error") {
         FailureBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_protocol_version(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto version{boost::asio::co_spawn(io_context, test_protocol_version(&service), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(version.get(), std::system_error);
+        CHECK_THROWS_AS(version.get(), boost::system::system_error);
     }
 }
 
@@ -371,26 +371,26 @@ TEST_CASE("BackEnd::net_version", "[silkrpc][ethbackend][backend]") {
 
     SECTION("call net_version and get version") {
         TestBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_net_version(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto version{boost::asio::co_spawn(io_context, test_net_version(&service), boost::asio::use_future)};
         io_context.run();
         CHECK(version.get() == 66);
     }
 
     SECTION("call net_version and get empty version") {
         EmptyBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_net_version(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto version{boost::asio::co_spawn(io_context, test_net_version(&service), boost::asio::use_future)};
         io_context.run();
         CHECK(version.get() == 0);
     }
 
     SECTION("call net_version and get error") {
         FailureBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_net_version(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto version{boost::asio::co_spawn(io_context, test_net_version(&service), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(version.get(), std::system_error);
+        CHECK_THROWS_AS(version.get(), boost::system::system_error);
     }
 }
 
@@ -399,26 +399,26 @@ TEST_CASE("BackEnd::client_version", "[silkrpc][ethbackend][backend]") {
 
     SECTION("call client_version and get version") {
         TestBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_client_version(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto version{boost::asio::co_spawn(io_context, test_client_version(&service), boost::asio::use_future)};
         io_context.run();
         CHECK(version.get() == "erigon");
     }
 
     SECTION("call client_version and get empty version") {
         EmptyBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_client_version(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto version{boost::asio::co_spawn(io_context, test_client_version(&service), boost::asio::use_future)};
         io_context.run();
         CHECK(version.get() == "");
     }
 
     SECTION("call client_version and get error") {
         FailureBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_client_version(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto version{boost::asio::co_spawn(io_context, test_client_version(&service), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(version.get(), std::system_error);
+        CHECK_THROWS_AS(version.get(), boost::system::system_error);
     }
 }
 
@@ -427,26 +427,26 @@ TEST_CASE("BackEnd::net_peer_count", "[silkrpc][ethbackend][backend]") {
 
     SECTION("call net_peer_count and get peer count") {
         TestBackEndService service;
-        asio::io_context io_context;
-        auto peer_count{asio::co_spawn(io_context, test_net_peer_count(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto peer_count{boost::asio::co_spawn(io_context, test_net_peer_count(&service), boost::asio::use_future)};
         io_context.run();
         CHECK(peer_count.get() == 20);
     }
 
     SECTION("call net_peer_count and get empty peer count") {
         EmptyBackEndService service;
-        asio::io_context io_context;
-        auto peer_count{asio::co_spawn(io_context, test_net_peer_count(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto peer_count{boost::asio::co_spawn(io_context, test_net_peer_count(&service), boost::asio::use_future)};
         io_context.run();
         CHECK(peer_count.get() == 0);
     }
 
     SECTION("call net_peer_count and get error") {
         FailureBackEndService service;
-        asio::io_context io_context;
-        auto peer_count{asio::co_spawn(io_context, test_net_peer_count(&service), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto peer_count{boost::asio::co_spawn(io_context, test_net_peer_count(&service), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(peer_count.get(), std::system_error);
+        CHECK_THROWS_AS(peer_count.get(), boost::system::system_error);
     }
 }
 
@@ -455,8 +455,8 @@ TEST_CASE("BackEnd::engine_get_payload_v1", "[silkrpc][ethbackend][backend]") {
 
     SECTION("call engine_get_payload_v1 and get payload") {
         TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_get_payload_v1(&service, 0), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto reply{boost::asio::co_spawn(io_context, test_engine_get_payload_v1(&service, 0), boost::asio::use_future)};
         io_context.run();
         auto payload{reply.get()};
         CHECK(payload.number == 0x1);
@@ -477,18 +477,18 @@ TEST_CASE("BackEnd::engine_get_payload_v1", "[silkrpc][ethbackend][backend]") {
 
     SECTION("call engine_get_payload_v1 and get empty peer count") {
         EmptyBackEndService service;
-        asio::io_context io_context;
-        auto payload{asio::co_spawn(io_context, test_engine_get_payload_v1(&service, 0), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto payload{boost::asio::co_spawn(io_context, test_engine_get_payload_v1(&service, 0), boost::asio::use_future)};
         io_context.run();
         CHECK(payload.get().number == 0);
     }
 
     SECTION("call engine_get_payload_v1 and get error") {
         FailureBackEndService service;
-        asio::io_context io_context;
-        auto payload{asio::co_spawn(io_context, test_engine_get_payload_v1(&service, 0), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto payload{boost::asio::co_spawn(io_context, test_engine_get_payload_v1(&service, 0), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(payload.get(), std::system_error);
+        CHECK_THROWS_AS(payload.get(), boost::system::system_error);
     }
 }
 
@@ -516,8 +516,8 @@ TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
 
     SECTION("call engine_new_payload_v1 and get VALID status") {
         TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto reply{boost::asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), boost::asio::use_future)};
         io_context.run();
         auto payload_status{reply.get()};
         CHECK(payload_status.status == "VALID");
@@ -528,8 +528,8 @@ TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
     SECTION("call engine_new_payload_v1 and get INVALID status") {
         execution_payload.number = 1;
         TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto reply{boost::asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), boost::asio::use_future)};
         io_context.run();
         CHECK(reply.get().status == "INVALID");
     }
@@ -537,8 +537,8 @@ TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
     SECTION("call engine_new_payload_v1 and get SYNCYNG status") {
         execution_payload.number = 2;
         TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto reply{boost::asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), boost::asio::use_future)};
         io_context.run();
         CHECK(reply.get().status == "SYNCING");
     }
@@ -546,8 +546,8 @@ TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
     SECTION("call engine_new_payload_v1 and get ACCEPTED status") {
         execution_payload.number = 3;
         TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto reply{boost::asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), boost::asio::use_future)};
         io_context.run();
         CHECK(reply.get().status == "ACCEPTED");
     }
@@ -555,8 +555,8 @@ TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
     SECTION("call engine_new_payload_v1 and get INVALID_BLOCK_HASH status") {
         execution_payload.number = 4;
         TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto reply{boost::asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), boost::asio::use_future)};
         io_context.run();
         CHECK(reply.get().status == "INVALID_BLOCK_HASH");
     }
@@ -564,16 +564,16 @@ TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
     SECTION("call engine_new_payload_v1 and get INVALID_TERMINAL_BLOCK status") {
         execution_payload.number = 5;
         TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto reply{boost::asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), boost::asio::use_future)};
         io_context.run();
         CHECK(reply.get().status == "INVALID_TERMINAL_BLOCK");
     }
 
     SECTION("call engine_new_payload_v1 and get empty peer count") {
         EmptyBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto reply{boost::asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), boost::asio::use_future)};
         io_context.run();
         auto payload_status{reply.get()};
         CHECK(payload_status.status == "VALID"); // Default value in interfaces is Valid
@@ -583,10 +583,10 @@ TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
 
     SECTION("call engine_new_payload_v1 and get error") {
         FailureBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto reply{boost::asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(reply.get(), std::system_error);
+        CHECK_THROWS_AS(reply.get(), boost::system::system_error);
     }
 }
 
@@ -607,8 +607,8 @@ TEST_CASE("Backend::engine_forkchoice_updated_v1", "[silkrpc][ethbackend][backen
     };
     SECTION("call engine_forkchoice_updated_v1 and get VALID status") {
         TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto reply{boost::asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), boost::asio::use_future)};
         io_context.run();
         auto forkchoice_reply{reply.get()};
         silkrpc::PayloadStatus payload_status = forkchoice_reply.payload_status;
@@ -619,8 +619,8 @@ TEST_CASE("Backend::engine_forkchoice_updated_v1", "[silkrpc][ethbackend][backen
 
     SECTION("call engine_forkchoice_updated_v1 and get error") {
         EmptyBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto reply{boost::asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), boost::asio::use_future)};
         io_context.run();
         auto forkchoice_reply{reply.get()};
         silkrpc::PayloadStatus payload_status = forkchoice_reply.payload_status;
@@ -631,10 +631,10 @@ TEST_CASE("Backend::engine_forkchoice_updated_v1", "[silkrpc][ethbackend][backen
 
     SECTION("call engine_forkchoice_updated_v1 and get VALID status with empty service") {
         FailureBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), asio::use_future)};
+        boost::asio::io_context io_context;
+        auto reply{boost::asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), boost::asio::use_future)};
         io_context.run();
-        CHECK_THROWS_AS(reply.get(), std::system_error);
+        CHECK_THROWS_AS(reply.get(), boost::system::system_error);
     }
 }
 } // namespace silkrpc

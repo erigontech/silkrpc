@@ -18,10 +18,10 @@
 
 #include <catch2/catch.hpp>
 #include <silkrpc/config.hpp>
-#include <asio/use_awaitable.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/use_awaitable.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/log.hpp>
@@ -34,54 +34,54 @@ using Catch::Matchers::Message;
 
 class AwaitableWrap {
 public:
-    AwaitableWrap(asio::io_context& context, AsyncTxStreamingClient& client) : kv_awaitable_{context, client} {}
+    AwaitableWrap(boost::asio::io_context& context, AsyncTxStreamingClient& client) : kv_awaitable_{context, client} {}
 
-    asio::awaitable<int64_t> async_start() {
-        int64_t tx_id = co_await kv_awaitable_.async_start(asio::use_awaitable);
+    boost::asio::awaitable<int64_t> async_start() {
+        int64_t tx_id = co_await kv_awaitable_.async_start(boost::asio::use_awaitable);
         co_return tx_id;
     }
 
-    asio::awaitable<int64_t> open_cursor(const std::string& table_name) {
-        uint32_t cursor_id = co_await kv_awaitable_.async_open_cursor(table_name, asio::use_awaitable);
+    boost::asio::awaitable<int64_t> open_cursor(const std::string& table_name) {
+        uint32_t cursor_id = co_await kv_awaitable_.async_open_cursor(table_name, boost::asio::use_awaitable);
         co_return cursor_id;
     }
 
-    asio::awaitable<remote::Pair> async_seek(uint32_t cursor_id, const silkworm::ByteView& key) {
-        remote::Pair seek_pair = co_await kv_awaitable_.async_seek(cursor_id, key, asio::use_awaitable);
+    boost::asio::awaitable<remote::Pair> async_seek(uint32_t cursor_id, const silkworm::ByteView& key) {
+        remote::Pair seek_pair = co_await kv_awaitable_.async_seek(cursor_id, key, boost::asio::use_awaitable);
         co_return seek_pair;
     }
 
-    asio::awaitable<remote::Pair> async_seek_exact(uint32_t cursor_id, const silkworm::ByteView& key) {
-        remote::Pair seek_pair = co_await kv_awaitable_.async_seek_exact(cursor_id, key, asio::use_awaitable);
+    boost::asio::awaitable<remote::Pair> async_seek_exact(uint32_t cursor_id, const silkworm::ByteView& key) {
+        remote::Pair seek_pair = co_await kv_awaitable_.async_seek_exact(cursor_id, key, boost::asio::use_awaitable);
         co_return seek_pair;
     }
 
-    asio::awaitable<remote::Pair> async_seek_both(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value) {
-        remote::Pair seek_pair = co_await kv_awaitable_.async_seek_both(cursor_id, key, value, asio::use_awaitable);
+    boost::asio::awaitable<remote::Pair> async_seek_both(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value) {
+        remote::Pair seek_pair = co_await kv_awaitable_.async_seek_both(cursor_id, key, value, boost::asio::use_awaitable);
         co_return seek_pair;
     }
 
-    asio::awaitable<remote::Pair> async_seek_both_exact(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value) {
-        remote::Pair seek_pair = co_await kv_awaitable_.async_seek_both_exact(cursor_id, key, value, asio::use_awaitable);
+    boost::asio::awaitable<remote::Pair> async_seek_both_exact(uint32_t cursor_id, const silkworm::ByteView& key, const silkworm::ByteView& value) {
+        remote::Pair seek_pair = co_await kv_awaitable_.async_seek_both_exact(cursor_id, key, value, boost::asio::use_awaitable);
         co_return seek_pair;
     }
 
-    asio::awaitable<remote::Pair> async_next(uint32_t cursor_id) {
-        remote::Pair seek_pair = co_await kv_awaitable_.async_next(cursor_id, asio::use_awaitable);
+    boost::asio::awaitable<remote::Pair> async_next(uint32_t cursor_id) {
+        remote::Pair seek_pair = co_await kv_awaitable_.async_next(cursor_id, boost::asio::use_awaitable);
         co_return seek_pair;
     }
 
-    asio::awaitable<uint32_t> async_close_cursor(uint32_t cursor_id) {
-        uint32_t ret_cursor_id = co_await kv_awaitable_.async_close_cursor(cursor_id, asio::use_awaitable);
+    boost::asio::awaitable<uint32_t> async_close_cursor(uint32_t cursor_id) {
+        uint32_t ret_cursor_id = co_await kv_awaitable_.async_close_cursor(cursor_id, boost::asio::use_awaitable);
         co_return ret_cursor_id;
     }
 
-    asio::awaitable<void> async_end() {
-        co_return co_await kv_awaitable_.async_end(asio::use_awaitable);
+    boost::asio::awaitable<void> async_end() {
+        co_return co_await kv_awaitable_.async_end(boost::asio::use_awaitable);
     }
 
 private:
-    KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
+    KvAsioAwaitable<boost::asio::io_context::executor_type> kv_awaitable_;
 };
 
 
@@ -106,7 +106,7 @@ TEST_CASE("async_start") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_start(), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_start(), boost::asio::use_future)};
         txid = result.get();
        } catch (...) {
            CHECK(false);
@@ -142,7 +142,7 @@ TEST_CASE("async_start") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_start(), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_start(), boost::asio::use_future)};
         txid = result.get();
        } catch (...) {
            CHECK(false);
@@ -167,10 +167,10 @@ TEST_CASE("async_start") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_start(), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_start(), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -194,10 +194,10 @@ TEST_CASE("async_start") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_start(), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_start(), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -225,7 +225,7 @@ TEST_CASE("open_cursor") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.open_cursor("table1"), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.open_cursor("table1"), boost::asio::use_future)};
         cursorid = result.get();
        } catch (...) {
            CHECK(false);
@@ -259,7 +259,7 @@ TEST_CASE("open_cursor") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.open_cursor("table"), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.open_cursor("table"), boost::asio::use_future)};
         cursor_id = result.get();
        } catch (...) {
            CHECK(false);
@@ -287,10 +287,10 @@ TEST_CASE("open_cursor") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.open_cursor("table"), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.open_cursor("table"), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -311,10 +311,10 @@ TEST_CASE("open_cursor") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.open_cursor("table"), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.open_cursor("table"), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -343,7 +343,7 @@ TEST_CASE("async_seek") {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
         silkworm::ByteView key;
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek(1, key), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek(1, key), boost::asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
            CHECK(false);
@@ -379,7 +379,7 @@ TEST_CASE("async_seek") {
         MockStreamingClient sct;
         silkworm::ByteView key;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek(1, key), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek(1, key), boost::asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
            CHECK(false);
@@ -408,10 +408,10 @@ TEST_CASE("async_seek") {
         MockStreamingClient sct;
         silkworm::ByteView key;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek(1, key), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek(1, key), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -433,10 +433,10 @@ TEST_CASE("async_seek") {
         MockStreamingClient sct;
         silkworm::ByteView key;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek(1, key), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek(1, key), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -465,7 +465,7 @@ TEST_CASE("async_seek_exact") {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
         silkworm::ByteView key;
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek_exact(1, key), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek_exact(1, key), boost::asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
            CHECK(false);
@@ -501,7 +501,7 @@ TEST_CASE("async_seek_exact") {
         MockStreamingClient sct;
         silkworm::ByteView key;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek_exact(1, key), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek_exact(1, key), boost::asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
            CHECK(false);
@@ -530,10 +530,10 @@ TEST_CASE("async_seek_exact") {
         MockStreamingClient sct;
         silkworm::ByteView key;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek_exact(1, key), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek_exact(1, key), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -555,10 +555,10 @@ TEST_CASE("async_seek_exact") {
         MockStreamingClient sct;
         silkworm::ByteView key;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek_exact(1, key), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek_exact(1, key), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -589,7 +589,7 @@ TEST_CASE("async_seek_both") {
         AwaitableWrap test{*cp.next_context().io_context(), sct };
         silkworm::ByteView key;
         silkworm::ByteView value;
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek_both(1, key, value), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek_both(1, key, value), boost::asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
            CHECK(false);
@@ -629,7 +629,7 @@ TEST_CASE("async_seek_both") {
         silkworm::ByteView key;
         silkworm::ByteView value;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek_both(1, key, value), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek_both(1, key, value), boost::asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
            CHECK(false);
@@ -660,10 +660,10 @@ TEST_CASE("async_seek_both") {
         silkworm::ByteView key;
         silkworm::ByteView value;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek_both(1, key, value), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek_both(1, key, value), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -686,10 +686,10 @@ TEST_CASE("async_seek_both") {
         silkworm::ByteView key;
         silkworm::ByteView value;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek_both(1, key, value), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek_both(1, key, value), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -720,7 +720,7 @@ TEST_CASE("async_seek_both_exact") {
         AwaitableWrap test{*cp.next_context().io_context(), sct };
         silkworm::ByteView key;
         silkworm::ByteView value;
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek_both_exact(1, key, value), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek_both_exact(1, key, value), boost::asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
            CHECK(false);
@@ -760,7 +760,7 @@ TEST_CASE("async_seek_both_exact") {
         silkworm::ByteView key;
         silkworm::ByteView value;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek_both_exact(1, key, value), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek_both_exact(1, key, value), boost::asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
            CHECK(false);
@@ -791,10 +791,10 @@ TEST_CASE("async_seek_both_exact") {
         silkworm::ByteView key;
         silkworm::ByteView value;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek_both_exact(1, key, value), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek_both_exact(1, key, value), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -817,10 +817,10 @@ TEST_CASE("async_seek_both_exact") {
         silkworm::ByteView key;
         silkworm::ByteView value;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_seek_both_exact(1, key, value), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_seek_both_exact(1, key, value), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -847,7 +847,7 @@ TEST_CASE("async_seek_next") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_next(1), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_next(1), boost::asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
            CHECK(false);
@@ -882,7 +882,7 @@ TEST_CASE("async_seek_next") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_next(1), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_next(1), boost::asio::use_future)};
         seek_pair = result.get();
        } catch (...) {
            CHECK(false);
@@ -910,10 +910,10 @@ TEST_CASE("async_seek_next") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_next(1), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_next(1), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -934,10 +934,10 @@ TEST_CASE("async_seek_next") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_next(1), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_next(1), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -965,7 +965,7 @@ TEST_CASE("async_close_cursor") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_close_cursor(2), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_close_cursor(2), boost::asio::use_future)};
         cursor_id = result.get();
        } catch (...) {
            CHECK(false);
@@ -1000,7 +1000,7 @@ TEST_CASE("async_close_cursor") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_close_cursor(2), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_close_cursor(2), boost::asio::use_future)};
         cursor_id = result.get();
        } catch (...) {
            CHECK(false);
@@ -1028,10 +1028,10 @@ TEST_CASE("async_close_cursor") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_close_cursor(2), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_close_cursor(2), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -1052,10 +1052,10 @@ TEST_CASE("async_close_cursor") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_close_cursor(2), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_close_cursor(2), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();
@@ -1078,7 +1078,7 @@ TEST_CASE("async_end") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_end(), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_end(), boost::asio::use_future)};
         result.get();
        } catch (...) {
            CHECK(false);
@@ -1106,7 +1106,7 @@ TEST_CASE("async_end") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_end(), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_end(), boost::asio::use_future)};
         result.get();
        } catch (...) {
            CHECK(false);
@@ -1131,10 +1131,10 @@ TEST_CASE("async_end") {
       try {
         MockStreamingClient sct;
         AwaitableWrap test{*cp.next_context().io_context(), sct };
-        auto result{asio::co_spawn(cp.next_io_context(), test.async_end(), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), test.async_end(), boost::asio::use_future)};
         result.get();
-       } catch (const std::system_error& e) {
-             CHECK(e.code().value() == 1);
+       } catch (const boost::system::system_error& e) {
+             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
        }
        cp.stop();
        context_pool_thread.join();

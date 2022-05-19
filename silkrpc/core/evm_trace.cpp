@@ -519,14 +519,14 @@ void StateDiffTracer::on_execution_end(const evmc_result& result, const silkworm
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(const silkworm::Block& block, const silkrpc::Call& call) {
+boost::asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(const silkworm::Block& block, const silkrpc::Call& call) {
     silkrpc::Transaction transaction{call.to_transaction()};
     auto result = co_await execute(block.header.number, block, transaction, -1);
     co_return result;
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
+boost::asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
     const silkrpc::Transaction& transaction, std::int32_t index) {
     SILKRPC_INFO << "execute: "
         << " block_number: " << block_number

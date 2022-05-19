@@ -20,9 +20,9 @@
 #include <string>
 #include <vector>
 
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
@@ -38,19 +38,19 @@ TEST_CASE("EVMexecutor") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
 
     class StubDatabase : public core::rawdb::DatabaseReader {
-        asio::awaitable<KeyValue> get(const std::string& table, const silkworm::ByteView& key) const override {
+        boost::asio::awaitable<KeyValue> get(const std::string& table, const silkworm::ByteView& key) const override {
             co_return KeyValue{};
         }
-        asio::awaitable<silkworm::Bytes> get_one(const std::string& table, const silkworm::ByteView& key) const override {
+        boost::asio::awaitable<silkworm::Bytes> get_one(const std::string& table, const silkworm::ByteView& key) const override {
             co_return silkworm::Bytes{};
         }
-        asio::awaitable<std::optional<silkworm::Bytes>> get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const override {
+        boost::asio::awaitable<std::optional<silkworm::Bytes>> get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const override {
             co_return silkworm::Bytes{};
         }
-        asio::awaitable<void> walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, core::rawdb::Walker w) const override {
+        boost::asio::awaitable<void> walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, core::rawdb::Walker w) const override {
             co_return;
         }
-        asio::awaitable<void> for_prefix(const std::string& table, const silkworm::ByteView& prefix, core::rawdb::Walker w) const override {
+        boost::asio::awaitable<void> for_prefix(const std::string& table, const silkworm::ByteView& prefix, core::rawdb::Walker w) const override {
             co_return;
         }
     };
@@ -62,7 +62,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 10000;
@@ -72,7 +72,7 @@ TEST_CASE("EVMexecutor") {
         block.header.number = block_number;
 
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         pool_thread.join();
@@ -87,7 +87,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -99,7 +99,7 @@ TEST_CASE("EVMexecutor") {
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         pool_thread.join();
@@ -114,7 +114,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -127,7 +127,7 @@ TEST_CASE("EVMexecutor") {
         txn.max_priority_fee_per_gas = 0x18;
 
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         pool_thread.join();
@@ -142,7 +142,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -155,7 +155,7 @@ TEST_CASE("EVMexecutor") {
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         pool_thread.join();
@@ -170,7 +170,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -183,7 +183,7 @@ TEST_CASE("EVMexecutor") {
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, false, /* gasBailout */true, {}), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, false, /* gasBailout */true, {}), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         pool_thread.join();
@@ -208,7 +208,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -220,7 +220,7 @@ TEST_CASE("EVMexecutor") {
         txn.access_list = access_list;
 
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, true, true, {}), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, true, true, {}), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         pool_thread.join();
@@ -257,7 +257,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -281,7 +281,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -305,7 +305,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -329,7 +329,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -353,7 +353,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -377,7 +377,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -401,7 +401,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -425,7 +425,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -449,7 +449,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -473,7 +473,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -497,7 +497,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -521,7 +521,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -545,7 +545,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -569,7 +569,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -593,7 +593,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;
@@ -617,7 +617,7 @@ TEST_CASE("EVMexecutor") {
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         auto pool_thread = std::thread([&]() { my_pool.run(); });
 
         const auto block_number = 6000000;

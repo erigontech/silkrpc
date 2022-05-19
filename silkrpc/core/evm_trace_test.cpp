@@ -19,9 +19,9 @@
 #include <string>
 #include <utility>
 
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 
@@ -56,11 +56,11 @@ static silkworm::Bytes kConfigValue{*silkworm::from_hex(
 
 class EvmTraceMockDatabaseReader : public core::rawdb::DatabaseReader {
   public:
-    MOCK_CONST_METHOD2(get, asio::awaitable<KeyValue>(const std::string&, const silkworm::ByteView&));
-    MOCK_CONST_METHOD2(get_one, asio::awaitable<silkworm::Bytes>(const std::string&, const silkworm::ByteView&));
-    MOCK_CONST_METHOD3(get_both_range, asio::awaitable<std::optional<silkworm::Bytes>>(const std::string&, const silkworm::ByteView&, const silkworm::ByteView&));
-    MOCK_CONST_METHOD4(walk, asio::awaitable<void>(const std::string&, const silkworm::ByteView&, uint32_t, core::rawdb::Walker));
-    MOCK_CONST_METHOD3(for_prefix, asio::awaitable<void>(const std::string&, const silkworm::ByteView&, core::rawdb::Walker));
+    MOCK_CONST_METHOD2(get, boost::asio::awaitable<KeyValue>(const std::string&, const silkworm::ByteView&));
+    MOCK_CONST_METHOD2(get_one, boost::asio::awaitable<silkworm::Bytes>(const std::string&, const silkworm::ByteView&));
+    MOCK_CONST_METHOD3(get_both_range, boost::asio::awaitable<std::optional<silkworm::Bytes>>(const std::string&, const silkworm::ByteView&, const silkworm::ByteView&));
+    MOCK_CONST_METHOD4(walk, boost::asio::awaitable<void>(const std::string&, const silkworm::ByteView&, uint32_t, core::rawdb::Walker));
+    MOCK_CONST_METHOD3(for_prefix, boost::asio::awaitable<void>(const std::string&, const silkworm::ByteView&, core::rawdb::Walker));
 };
 
 TEST_CASE("TraceCallExecutor::execute call 1") {
@@ -116,7 +116,7 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
     static silkworm::Bytes kPlainStateKey2{*silkworm::from_hex("52728289eba496b6080d57d0250a90663a07e556")};
 
     EvmTraceMockDatabaseReader db_reader;
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -126,23 +126,23 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
 
     SECTION("Call: failed with intrinsic gas too low") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kConfigKey, kConfigValue};
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
             }));
         EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey1}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return silkworm::Bytes{};
             }));
 
@@ -156,9 +156,9 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         silkworm::Block block{};
         block.header.number = block_number;
 
-        asio::io_context& io_context = context_pool.next_io_context();
+        boost::asio::io_context& io_context = context_pool.next_io_context();
         TraceCallExecutor executor{context_pool.next_context(), db_reader, workers};
-        auto execution_result = asio::co_spawn(io_context, executor.execute(block, call), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(io_context, executor.execute(block, call), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -171,27 +171,27 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
 
     SECTION("Call: full output") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kConfigKey, kConfigValue};
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
             }));
         EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey}, silkworm::ByteView{kAccountChangeSetSubkey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
                 co_return kAccountChangeSetValue;
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
             }));
         EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return silkworm::Bytes{};
             }));
 
@@ -207,8 +207,8 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
 
         TraceConfig config{true, true, true};
         TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.execute(block, call), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -299,27 +299,27 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
 
     SECTION("Call: no vmTrace") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kConfigKey, kConfigValue};
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
             }));
         EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey}, silkworm::ByteView{kAccountChangeSetSubkey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
                 co_return kAccountChangeSetValue;
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
             }));
         EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return silkworm::Bytes{};
             }));
 
@@ -335,8 +335,8 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
 
         TraceConfig config{false, true, true};
         TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.execute(block, call), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -364,27 +364,27 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
 
     SECTION("Call: no trace") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kConfigKey, kConfigValue};
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
             }));
         EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey}, silkworm::ByteView{kAccountChangeSetSubkey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
                 co_return kAccountChangeSetValue;
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
             }));
         EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return silkworm::Bytes{};
             }));
 
@@ -400,8 +400,8 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
 
         TraceConfig config{true, false, true};
         TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.execute(block, call), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -484,27 +484,27 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
 
     SECTION("Call: no stateDiff") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kConfigKey, kConfigValue};
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
             }));
         EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey}, silkworm::ByteView{kAccountChangeSetSubkey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
                 co_return kAccountChangeSetValue;
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
             }));
         EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return silkworm::Bytes{};
             }));
 
@@ -520,8 +520,8 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
 
         TraceConfig config{true, true, false};
         TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.execute(block, call), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -611,27 +611,27 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
 
     SECTION("Call: no vmTrace, trace and stateDiff") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kConfigKey, kConfigValue};
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
             }));
         EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey}, silkworm::ByteView{kAccountChangeSetSubkey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
                 co_return kAccountChangeSetValue;
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
             }));
         EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return silkworm::Bytes{};
             }));
 
@@ -647,8 +647,8 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
 
         TraceConfig config{false, false, false};
         TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.execute(block, call), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -722,7 +722,7 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
     static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("03010408014219564ff26a00")};
 
     EvmTraceMockDatabaseReader db_reader;
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -732,7 +732,7 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
 
     SECTION("Call: TO present") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 SILKRPC_LOG << "EXPECT_CALL::get "
                     << " table: " << db::table::kCanonicalHashes
                     << " key: " << silkworm::to_hex(kZeroKey)
@@ -741,7 +741,7 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 SILKRPC_LOG << "EXPECT_CALL::get "
                     << " table: " << db::table::kConfig
                     << " key: " << silkworm::to_hex(kConfigKey)
@@ -750,7 +750,7 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
                 co_return KeyValue{kConfigKey, kConfigValue};
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 SILKRPC_LOG << "EXPECT_CALL::get "
                     << " table: " << db::table::kAccountHistory
                     << " key: " << silkworm::to_hex(kAccountHistoryKey1)
@@ -762,7 +762,7 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
                 get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey1},
                                 silkworm::ByteView{kAccountChangeSetSubkey1}))
             .WillOnce(InvokeWithoutArgs(
-                []() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+                []() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
                     SILKRPC_LOG << "EXPECT_CALL::get_both_range "
                         << " table: " << db::table::kPlainAccountChangeSet
                         << " key: " << silkworm::to_hex(kAccountChangeSetKey1)
@@ -772,7 +772,7 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
                     co_return kAccountChangeSetValue1;
                 }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 SILKRPC_LOG << "EXPECT_CALL::get "
                     << " table: " << db::table::kAccountHistory
                     << " key: " << silkworm::to_hex(kAccountHistoryKey2)
@@ -783,7 +783,7 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
         EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey2},
                                 silkworm::ByteView{kAccountChangeSetSubkey2}))
             .WillOnce(InvokeWithoutArgs(
-                []() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+                []() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
                     SILKRPC_LOG << "EXPECT_CALL::get_both_range "
                         << " table: " << db::table::kPlainAccountChangeSet
                         << " key: " << silkworm::to_hex(kAccountChangeSetKey2)
@@ -807,8 +807,8 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
 
         TraceConfig config{true, true, true};
         TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.execute(block, call), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -867,7 +867,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
     static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("00000000005279a8")};
 
     EvmTraceMockDatabaseReader db_reader;
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -876,7 +876,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
     auto pool_thread = std::thread([&]() { context_pool.run(); });
 
     EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
             SILKRPC_LOG << "EXPECT_CALL::get_one "
                 << " table: " << db::table::kCanonicalHashes
                 << " key: " << silkworm::to_hex(kZeroKey)
@@ -885,7 +885,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
             co_return kZeroHeader;
         }));
     EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             SILKRPC_LOG << "EXPECT_CALL::get "
                 << " table: " << db::table::kConfig
                 << " key: " << silkworm::to_hex(kConfigKey)
@@ -894,7 +894,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
             co_return KeyValue{kConfigKey, kConfigValue};
         }));
     EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             SILKRPC_LOG << "EXPECT_CALL::get "
                 << " table: " << db::table::kAccountHistory
                 << " key: " << silkworm::to_hex(kAccountHistoryKey1)
@@ -905,7 +905,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
     EXPECT_CALL(db_reader,
             get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey},
                             silkworm::ByteView{kAccountChangeSetSubkey}))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
             SILKRPC_LOG << "EXPECT_CALL::get_both_range "
                 << " table: " << db::table::kPlainAccountChangeSet
                 << " key: " << silkworm::to_hex(kAccountChangeSetKey)
@@ -917,7 +917,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
     EXPECT_CALL(db_reader,
             get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey1},
                             silkworm::ByteView{kAccountChangeSetSubkey1}))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
             SILKRPC_LOG << "NON DOVREBBE SUCCEDERE EXPECT_CALL::get_both_range "
                 << " table: " << db::table::kPlainAccountChangeSet
                 << " key: " << silkworm::to_hex(kAccountChangeSetKey1)
@@ -927,7 +927,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
             co_return kAccountChangeSetValue1;
         }));
     EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
-        .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+        .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             SILKRPC_LOG << "EXPECT_CALL::get "
                 << " table: " << db::table::kAccountHistory
                 << " key: " << silkworm::to_hex(kAccountHistoryKey2)
@@ -936,7 +936,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
             co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
         }));
     EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey}))
-        .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+        .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
             SILKRPC_LOG << "EXPECT_CALL::get "
                 << " table: " << db::table::kPlainState
                 << " key: " << silkworm::to_hex(kPlainStateKey)
@@ -964,8 +964,8 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
 
     TraceConfig config{true, true, true};
     TraceCallExecutor executor{context_pool.next_context(), db_reader, workers, config};
-    asio::io_context& io_context = context_pool.next_io_context();
-    auto execution_result = asio::co_spawn(io_context.get_executor(), executor.execute(block, call), asio::use_future);
+    boost::asio::io_context& io_context = context_pool.next_io_context();
+    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.execute(block, call), boost::asio::use_future);
     auto result = execution_result.get();
 
     context_pool.stop();
