@@ -26,6 +26,7 @@
 #include <utility>
 
 #include <nlohmann/json.hpp>
+#include <jwt-cpp/jwt.h>
 
 #include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
@@ -33,7 +34,7 @@
 
 namespace silkrpc::http {
 
-asio::awaitable<void> RequestHandler::handle_request(const http::Request& request, http::Reply& reply, std::string& jwt_token) {
+asio::awaitable<void> RequestHandler::handle_request(const http::Request& request, http::Reply& reply, std::string& jwt_secret) {
     SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
     auto start = clock_time::now();
 
@@ -50,7 +51,7 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
         }
 
         const auto request_json = nlohmann::json::parse(request.content);
-        if (jwt_token.length() > 0) {
+        if (jwt_secret.length() > 0) {
             const auto header = request_json["Header"].get<nlohmann::json>();
             const auto auth = header["Authorization"].get<std::string>();
             std::string client_token = "";
@@ -61,12 +62,35 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
 
             if (client_token.length() == 0) {
                 reply.status = http::Reply::unauthorized;
-                reply.content = make_json_error(request_id, -32600, "missing token").dump() + "\n";
+                reply.content = make_json_error(request_id, 401, "missing token").dump() + "\n";
                 reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
                 reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
                 SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
                 co_return;
             }
+            
+            auto decoded_client_token = jwt::decode(client_token);
+            auto verifier = jwt::verify().allow_algorithm(jwt::algorithm::hs256{jwt_secret});
+
+            std::error_code ec;
+                
+            verifier.verify(decoded_client_token, ec);
+
+
+            if (ec) {
+                reply.status = http::Reply::unauthorized;
+                reply.content = make_json_error(request_id, 401, "invalid token").dump() + "\n";
+                reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
+                reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
+                SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
+                co_return;
+            }
+
+            reply.status = http::Reply::ok;
+            reply.content = make_json_content(request_id, "success");
+            SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
+            co_return;
+
         }
 
         request_id = request_json["id"].get<uint32_t>();
