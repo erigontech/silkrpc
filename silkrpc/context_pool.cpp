@@ -23,95 +23,160 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 #include <silkrpc/ethbackend/backend_grpc.hpp>
+#include <silkworm/common/assert.hpp>
 
 namespace silkrpc {
 
-std::ostream& operator<<(std::ostream& out, const Context& c) {
-    out << "io_context: " << &*c.io_context
-        << " grpc_queue: " << &*c.grpc_queue
-        << " grpc_runner: " << &*c.grpc_runner
-        << " database: " << &*c.database
-        << " backend: " << &*c.backend
-        << " miner: " << &*c.miner
-        << " txpool: " << &*c.tx_pool
-        << " cache: " << &*c.block_cache;
+std::ostream& operator<<(std::ostream& out, Context& c) {
+    out << "io_context: " << c.io_context() << " queue: " << c.grpc_queue() << " end_point: " << c.rpc_end_point();
     return out;
 }
 
-ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel) : next_index_{0} {
+std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode) {
+    switch (wait_mode) {
+        case WaitMode::yielding:
+            return std::make_unique<YieldingWaitStrategy>();
+        case WaitMode::sleeping:
+            return std::make_unique<SleepingWaitStrategy>();
+        case WaitMode::spin_wait:
+            return std::make_unique<SpinWaitWaitStrategy>();
+        case WaitMode::busy_spin:
+            return std::make_unique<BusySpinWaitStrategy>();
+        default:
+            return nullptr;
+    }
+}
+
+Context::Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache, WaitMode wait_mode)
+    : io_context_{std::make_shared<asio::io_context>()},
+      work_{asio::require(io_context_->get_executor(), asio::execution::outstanding_work.tracked)},
+      queue_{std::make_unique<grpc::CompletionQueue>()},
+      block_cache_(block_cache),
+      wait_mode_(wait_mode) {
+    std::shared_ptr<grpc::Channel> channel = create_channel();
+    rpc_end_point_ = std::make_unique<silkworm::rpc::CompletionEndPoint>(*queue_);
+    database_ = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context_, channel, queue_.get());
+    backend_ = std::make_unique<ethbackend::BackEndGrpc>(*io_context_, channel, queue_.get());
+    miner_ = std::make_unique<txpool::Miner>(*io_context_, channel, queue_.get());
+    tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, channel, queue_.get());
+}
+
+void Context::execute_loop() {
+    if (wait_mode_ == WaitMode::blocking) {
+        execute_loop_double_threaded();
+    } else {
+        execute_loop_single_threaded();
+    }
+}
+
+void Context::execute_loop_single_threaded() {
+    SILKRPC_INFO << "Single-thread execution loop start [" << this << "]\n";
+    std::unique_ptr<WaitStrategy> wait_strategy{make_wait_strategy(wait_mode_)};
+    SILKWORM_ASSERT(wait_strategy != nullptr);
+    while (!io_context_->stopped()) {
+        uint32_t executed_count = rpc_end_point_->poll_one();
+        executed_count += io_context_->poll_one();
+        wait_strategy->wait_once(executed_count);
+    }
+    rpc_end_point_->shutdown();
+    SILKRPC_INFO << "Single-thread execution loop end [" << this << "]\n";
+}
+
+void Context::execute_loop_double_threaded() {
+    SILKRPC_INFO << "Double-thread execution loop start [" << this << "]\n";
+    std::thread completion_runner_thread{[&]() {
+        bool stopped{false};
+        while (!stopped) {
+            stopped = rpc_end_point_->post_one(*io_context_);
+        }
+    }};
+    io_context_->run();
+    rpc_end_point_->shutdown();
+    completion_runner_thread.join();
+    SILKRPC_INFO << "Double-thread execution loop end [" << this << "]\n";
+}
+
+void Context::stop() {
+    io_context_->stop();
+}
+
+ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, WaitMode wait_mode) : next_index_{0} {
     if (pool_size == 0) {
         throw std::logic_error("ContextPool::ContextPool pool_size is 0");
     }
     SILKRPC_INFO << "ContextPool::ContextPool creating pool with size: " << pool_size << "\n";
 
-    auto block_cache = std::make_shared<silkrpc::BlockCache>(1024);
+    // Create the unique block cache to be shared among the execution contexts.
+    auto block_cache = std::make_shared<silkrpc::BlockCache>();
 
-    // Create all the io_contexts and give them work to do so that their event loop will not exit until they are explicitly stopped.
+    // Create as many execution contexts according as required by the pool size.
     for (std::size_t i{0}; i < pool_size; ++i) {
-        auto io_context = std::make_shared<asio::io_context>();
-        auto grpc_channel = create_channel();
-        auto grpc_queue = std::make_unique<grpc::CompletionQueue>();
-        auto grpc_runner = std::make_unique<CompletionRunner>(*grpc_queue, *io_context);
-        auto database = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
-        auto backend = std::make_unique<ethbackend::BackEndGrpc>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
-        auto miner = std::make_unique<txpool::Miner>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
-        auto tx_pool = std::make_unique<txpool::TransactionPool>(*io_context, grpc_channel, grpc_queue.get()); // TODO(canepat): move elsewhere
-        contexts_.push_back({
-            io_context,
-            std::move(grpc_queue),
-            std::move(grpc_runner),
-            std::move(database),
-            std::move(backend),
-            std::move(miner),
-            std::move(tx_pool),
-            block_cache
-        });
+        contexts_.push_back(Context{create_channel, block_cache, wait_mode});
         SILKRPC_DEBUG << "ContextPool::ContextPool context[" << i << "] " << contexts_[i] << "\n";
-        work_.push_back(asio::require(io_context->get_executor(), asio::execution::outstanding_work.tracked));
     }
 }
 
-void ContextPool::run() {
-    // Create a pool of threads to run all of the contexts (each one having 1+1 threads)
-    asio::detail::thread_group workers{};
-    for (std::size_t i{0}; i < contexts_.size(); ++i) {
-        auto& context = contexts_[i];
-        workers.create_thread([&]() { context.grpc_runner->run(); });
-        SILKRPC_DEBUG << "ContextPool::run context[" << i << "].grpc_runner started: " << &*context.grpc_runner << "\n";
-        workers.create_thread([&]() { context.io_context->run(); });
-        SILKRPC_DEBUG << "ContextPool::run context[" << i << "].io_context started: " << &*context.io_context << "\n";
+ContextPool::~ContextPool() {
+    SILKRPC_TRACE << "ContextPool::~ContextPool started " << this << "\n";
+    stop();
+    SILKRPC_TRACE << "ContextPool::~ContextPool completed " << this << "\n";
+}
+
+void ContextPool::start() {
+    SILKRPC_TRACE << "ContextPool::start started\n";
+
+    if (!stopped_) {
+        // Create a pool of threads to run all of the contexts (each one having 1 threads)
+        for (std::size_t i{0}; i < contexts_.size(); ++i) {
+            auto& context = contexts_[i];
+            context_threads_.create_thread([&, i = i]() {
+                SILKRPC_DEBUG << "thread start context[" << i << "] thread_id: " << std::this_thread::get_id() << "\n";
+                context.execute_loop();
+                SILKRPC_DEBUG << "thread end context[" << i << "] thread_id: " << std::this_thread::get_id() << "\n";
+            });
+            SILKRPC_DEBUG << "ContextPool::start context[" << i << "].io_context started: " << &*context.io_context() << "\n";
+        }
     }
 
-    // Wait for all threads in the pool to exit
-    workers.join();
+    SILKRPC_TRACE << "ContextPool::start completed\n";
+}
 
-    SILKRPC_DEBUG << "ContextPool::run completed\n";
+void ContextPool::join() {
+    SILKRPC_TRACE << "ContextPool::join started\n";
+
+    // Wait for all threads in the pool to exit.
+    SILKRPC_DEBUG << "ContextPool::join joining...\n";
+    context_threads_.join();
+
+    SILKRPC_TRACE << "ContextPool::join completed\n";
 }
 
 void ContextPool::stop() {
     // Explicitly stop all scheduler runnable components
-    SILKRPC_DEBUG << "ContextPool::stop started\n";
+    SILKRPC_TRACE << "ContextPool::stop started\n";
 
     for (std::size_t i{0}; i < contexts_.size(); ++i) {
-        auto& context = contexts_[i];
-        context.io_context->stop();
-        SILKRPC_DEBUG << "ContextPool::stop context[" << i << "].io_context stopped: " << &*context.io_context << "\n";
-        context.grpc_runner->stop();
-        SILKRPC_DEBUG << "ContextPool::stop context[" << i << "].grpc_runner stopped: " << &*context.grpc_runner << "\n";
+        contexts_[i].stop();
+        SILKRPC_DEBUG << "ContextPool::stop context[" << i << "].io_context stopped: " << &*contexts_[i].io_context() << "\n";
     }
-    SILKRPC_DEBUG << "ContextPool::stop completed\n";
+    SILKRPC_TRACE << "ContextPool::stop completed\n";
 }
 
-Context& ContextPool::get_context() {
+void ContextPool::run() {
+    start();
+    join();
+}
+
+Context& ContextPool::next_context() {
     // Use a round-robin scheme to choose the next context to use
     auto& context = contexts_[next_index_];
     next_index_ = ++next_index_ % contexts_.size();
     return context;
 }
 
-asio::io_context& ContextPool::get_io_context() {
-    auto& context = get_context();
-    return *context.io_context;
+asio::io_context& ContextPool::next_io_context() {
+    auto& client_context = next_context();
+    return *client_context.io_context();
 }
 
 } // namespace silkrpc

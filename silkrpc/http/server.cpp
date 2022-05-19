@@ -69,8 +69,8 @@ asio::awaitable<void> Server::run() {
     try {
         while (acceptor_.is_open()) {
             // Get the next context to use chosen round-robin, then get both io_context *and* database from it
-            auto& context = context_pool_.get_context();
-            auto& io_context = context.io_context;
+            auto& context = context_pool_.next_context();
+            auto io_context = context.io_context();
 
             SILKRPC_DEBUG << "Server::start accepting using io_context " << io_context << "...\n" << std::flush;
 

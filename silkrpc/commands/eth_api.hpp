@@ -46,7 +46,7 @@ namespace silkrpc::commands {
 class EthereumRpcApi {
 public:
     explicit EthereumRpcApi(Context& context, asio::thread_pool& workers)
-    : context_(context), database_(context.database), backend_(context.backend), miner_{context.miner}, tx_pool_{context.tx_pool}, workers_{workers} {}
+    : context_(context), database_(context.database()), backend_(context.backend()), miner_{context.miner()}, tx_pool_{context.tx_pool()}, workers_{workers} {}
     virtual ~EthereumRpcApi() {}
 
     EthereumRpcApi(const EthereumRpcApi&) = delete;
@@ -99,7 +99,6 @@ protected:
     asio::awaitable<void> handle_eth_submit_work(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_subscribe(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_eth_unsubscribe(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_txpool_status(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<roaring::Roaring> get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end);
     asio::awaitable<roaring::Roaring> get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end);
 

@@ -189,6 +189,8 @@ int main(int argc, char* argv[]) {
         };
 
         // Check protocol version compatibility with Core Services
+        SILKRPC_LOG << "Checking protocol version compatibility with core services...\n";
+
         const auto core_service_channel{create_channel()};
         const auto kv_protocol_check{silkrpc::wait_for_kv_protocol_check(core_service_channel)};
         if (!kv_protocol_check.compatible) {
@@ -219,7 +221,7 @@ int main(int argc, char* argv[]) {
         silkrpc::http::Server engine_rpc_service{engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool, ""};
         silkrpc::http::Server auth_engine_rpc_service{auth_engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool, jwt_token};
 
-        auto& io_context = context_pool.get_io_context();
+        auto& io_context = context_pool.next_io_context();
         asio::signal_set signals{io_context, SIGINT, SIGTERM};
         SILKRPC_DEBUG << "Signals registered on io_context " << &io_context << "\n" << std::flush;
         signals.async_wait([&](const asio::system_error& error, int signal_number) {

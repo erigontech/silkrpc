@@ -28,7 +28,7 @@
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 
-class GrpcKvCallbackReactor final : public grpc::experimental::ClientBidiReactor<remote::Cursor, remote::Pair> {
+class GrpcKvCallbackReactor final : public grpc::ClientBidiReactor<remote::Cursor, remote::Pair> {
 public:
     explicit GrpcKvCallbackReactor(remote::KV::Stub& stub, std::chrono::milliseconds timeout) : stub_(stub) {
         context_.set_deadline(std::chrono::system_clock::now() + timeout);

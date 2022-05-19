@@ -4,6 +4,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 
 | Command                                    | Availability | Notes                                      |
 | :------------------------------------------| :----------: | -----------------------------------------: |
+| admin_nodeInfo                             | -            | not yet implemented                        |
+|                                            |              |                                            |
 | web3_clientVersion                         | Yes          |                                            |
 | web3_sha3                                  | Yes          |                                            |
 |                                            |              |                                            |
@@ -94,7 +96,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | trace_get                                  | -            | not yet implemented                        |
 | trace_transaction                          | -            | not yet implemented                        |
 |                                            |              |                                            |
-| txpool_content                             | -            | not yet implemented                        |
+| txpool_content                             | Yes          |                                            |
 | txpool_status                              | Yes          |                                            |
 |                                            |              |                                            |
 | eth_getCompilers                           | No           | deprecated                                 |
@@ -120,9 +122,12 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 |                                            |              |                                            |
 | erigon_getHeaderByHash                     | Yes          |                                            |
 | erigon_getHeaderByNumber                   | Yes          |                                            |
+| erigon_getBlockByTimestamp                 | -            | not yet implemented                        |
 | erigon_getLogsByHash                       | Yes          |                                            |
 | erigon_forks                               | Yes          |                                            |
 | erigon_issuance                            | Yes          |                                            |
+| erigon_watchTheBurn                        | -            | not yet implemented (same as _issuance?)   |
+| erigon_nodeInfo                            | -            | not yet implemented                        |
 |                                            |              |                                            |
 | starknet_call                              | -            | not yet implemented                        |
 |                                            |              |                                            |
@@ -136,5 +141,18 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | bor_getRootHash                            | -            | not yet implemented                        |
 |                                            |              |                                            |
 | parity_getBlockReceipts                    | Yes          | same as eth_getBlockReceipts               |
+|                                            |              |                                            |
+| ots_getApiLevel                            | -            | not yet implemented                        |
+| ots_getInternalOperations                  | -            | not yet implemented                        |
+| ots_searchTransactionsBefore               | -            | not yet implemented                        |
+| ots_searchTransactionsAfter                | -            | not yet implemented                        |
+| ots_getBlockDetails                        | -            | not yet implemented                        |
+| ots_getBlockDetailsByHash                  | -            | not yet implemented                        |
+| ots_getBlockTransactions                   | -            | not yet implemented                        |
+| ots_hasCode                                | -            | not yet implemented                        |
+| ots_traceTransaction                       | -            | not yet implemented                        |
+| ots_getTransactionError                    | -            | not yet implemented                        |
+| ots_getTransactionBySenderAndNonce         | -            | not yet implemented                        |
+| ots_getContractCreator                     | -            | not yet implemented                        |
 
 This table is constantly updated. Please visit again.

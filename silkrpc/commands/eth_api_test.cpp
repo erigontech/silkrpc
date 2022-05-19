@@ -32,16 +32,16 @@
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/transaction.hpp>
 
-namespace silkrpc {
+namespace silkrpc::commands {
 
 using Catch::Matchers::Message;
 
-class EthereumRpcApiTest : public commands::EthereumRpcApi {
+class EthereumRpcApiTest : public EthereumRpcApi {
 public:
-    explicit EthereumRpcApiTest(Context& context, asio::thread_pool& workers) : commands::EthereumRpcApi{context, workers} {}
+    explicit EthereumRpcApiTest(Context& context, asio::thread_pool& workers) : EthereumRpcApi{context, workers} {}
 
-    using commands::EthereumRpcApi::handle_eth_block_number;
-    using commands::EthereumRpcApi::handle_eth_send_raw_transaction;
+    using EthereumRpcApi::handle_eth_block_number;
+    using EthereumRpcApi::handle_eth_send_raw_transaction;
 };
 
 typedef asio::awaitable<void> (EthereumRpcApiTest::*HandleTestMethod)(const nlohmann::json&, nlohmann::json&);
@@ -52,8 +52,8 @@ void test_eth_api(HandleTestMethod test_handle_method, const nlohmann::json& req
     auto context_pool_thread = std::thread([&]() { cp.run(); });
     asio::thread_pool workers{1};
     try {
-        EthereumRpcApiTest eth_api{cp.get_context(), workers};
-        auto result{asio::co_spawn(cp.get_io_context(), [&]() {
+        EthereumRpcApiTest eth_api{cp.next_context(), workers};
+        auto result{asio::co_spawn(cp.next_io_context(), [&]() {
             return (&eth_api->*test_handle_method)(request, reply);
         }, asio::use_future)};
         result.get();
@@ -62,6 +62,14 @@ void test_eth_api(HandleTestMethod test_handle_method, const nlohmann::json& req
     }
     cp.stop();
     context_pool_thread.join();
+}
+
+TEST_CASE("EthereumRpcApi::EthereumRpcApi", "[silkrpc][erigon_api]") {
+    ContextPool context_pool{1, []() {
+        return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+    }};
+    asio::thread_pool workers{1};
+    CHECK_NOTHROW(EthereumRpcApi{context_pool.next_context(), workers});
 }
 
 TEST_CASE("handle_eth_block_number succeeds if request well-formed", "[silkrpc][eth_api]") {
@@ -108,4 +116,4 @@ TEST_CASE("handle_eth_send_raw_transaction fails wrong number digit", "[silkrpc]
 */
 }
 
-} // namespace silkrpc
+} // namespace silkrpc::commands

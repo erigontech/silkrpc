@@ -31,8 +31,8 @@
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/base.hpp>
 
+#include <silkrpc/context_pool.hpp>
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/grpc/completion_runner.hpp>
 #include <silkrpc/interfaces/txpool/txpool.grpc.pb.h>
 #include <silkrpc/interfaces/txpool/txpool_mock_fix24351.grpc.pb.h>
 
@@ -158,32 +158,26 @@ auto make_method_proxy(T&& obj) {
     };
 }
 
+constexpr const char* kTestAddressUri{"localhost:12345"}; // TODO(canepat): grpc_pick_unused_port_or_die
+
 template<auto mf, typename R, typename ...Args>
 asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... args) {
-    std::ostringstream server_address;
-    server_address << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
     grpc::ServerBuilder builder;
-    builder.AddListeningPort(server_address.str(), grpc::InsecureServerCredentials());
+    builder.AddListeningPort(kTestAddressUri, grpc::InsecureServerCredentials());
     builder.RegisterService(service);
     const auto server_ptr = builder.BuildAndStart();
-    asio::io_context io_context;
-    asio::io_context::work work{io_context};
-    grpc::CompletionQueue queue;
-    CompletionRunner completion_runner{queue, io_context};
-    auto io_context_thread = std::thread([&]() { io_context.run(); });
-    auto completion_runner_thread = std::thread([&]() { completion_runner.run(); });
-    const auto channel = grpc::CreateChannel(server_address.str(), grpc::InsecureChannelCredentials());
-    txpool::TransactionPool transaction_pool{io_context, channel, &queue};
+    auto create_channel = []() {
+        return grpc::CreateChannel(kTestAddressUri, grpc::InsecureChannelCredentials());
+    };
+    Context context{create_channel, std::make_shared<BlockCache>()};
+    auto context_thread = std::thread([&]() { context.execute_loop(); });
+    txpool::TransactionPool transaction_pool{*context.io_context(), create_channel(), context.grpc_queue()};
     auto method_proxy{make_method_proxy<mf, txpool::TransactionPool>(std::move(transaction_pool))};
     const auto result = co_await method_proxy(args...);
     server_ptr->Shutdown();
-    io_context.stop();
-    completion_runner.stop();
-    if (io_context_thread.joinable()) {
-        io_context_thread.join();
-    }
-    if (completion_runner_thread.joinable()) {
-        completion_runner_thread.join();
+    context.stop();
+    if (context_thread.joinable()) {
+        context_thread.join();
     }
     co_return result;
 }
@@ -191,7 +185,8 @@ asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... arg
 auto test_add_transaction = test_comethod<&txpool::TransactionPool::add_transaction, txpool::TransactionPool::OperationResult, silkworm::ByteView>;
 auto test_get_transaction = test_comethod<&txpool::TransactionPool::get_transaction, std::optional<silkworm::Bytes>, evmc::bytes32>;
 auto test_nonce = test_comethod<&txpool::TransactionPool::nonce, std::optional<uint64_t>, evmc::address>;
-auto test_status = test_comethod<&txpool::TransactionPool::get_status, struct txpool::StatusInfo>;
+auto test_status = test_comethod<&txpool::TransactionPool::get_status, txpool::StatusInfo>;
+auto test_all = test_comethod<&txpool::TransactionPool::get_transactions, txpool::TransactionsInPool>;
 
 TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -346,9 +341,71 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         auto result{asio::co_spawn(io_context, test_status(&service), asio::use_future)};
         io_context.run();
         auto status_info = result.get();
-        CHECK(status_info.base_fee == 0x4);
-        CHECK(status_info.pending == 0x5);
-        CHECK(status_info.queued == 0x6);
+        CHECK(status_info.base_fee_count == 0x4);
+        CHECK(status_info.pending_count == 0x5);
+        CHECK(status_info.queued_count == 0x6);
+    }
+
+    SECTION("call get one_transaction") {
+        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
+        public:
+            ::grpc::Status All(::grpc::ServerContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response) override {
+                auto tx = response->add_txs();
+                tx->set_type(::txpool::AllReply_Type_QUEUED);
+                tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
+                tx->set_rlptx("0804");
+                return ::grpc::Status::OK;
+            }
+        };
+        TestSuccessTxpoolService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_all(&service), asio::use_future)};
+        io_context.run();
+        auto get_transactions = result.get();
+        const auto sender{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
+        CHECK(get_transactions.size() == 1);
+        CHECK(get_transactions[0].transaction_type == silkrpc::txpool::TransactionType::QUEUED);
+        CHECK(get_transactions[0].sender == sender);
+        CHECK(get_transactions[0].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
+    }
+
+    SECTION("call get more transactions") {
+        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
+        public:
+            ::grpc::Status All(::grpc::ServerContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response) override {
+                auto tx = response->add_txs();
+                tx->set_type(::txpool::AllReply_Type_QUEUED);
+                tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
+                tx->set_rlptx("0804");
+                tx = response->add_txs();
+                tx->set_type(::txpool::AllReply_Type_PENDING);
+                tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de735");
+                tx->set_rlptx("0806");
+                tx = response->add_txs();
+                tx->set_type(::txpool::AllReply_Type_BASE_FEE);
+                tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de736");
+                tx->set_rlptx("0807");
+                return ::grpc::Status::OK;
+            }
+        };
+        TestSuccessTxpoolService service;
+        asio::io_context io_context;
+        auto result{asio::co_spawn(io_context, test_all(&service), asio::use_future)};
+        io_context.run();
+        auto get_transactions = result.get();
+        const auto sender{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
+        const auto sender1{0x9988b87991262f6ba471f09758cde1c0fc1de735_address};
+        const auto sender2{0x9988b87991262f6ba471f09758cde1c0fc1de736_address};
+        CHECK(get_transactions.size() == 3);
+        CHECK(get_transactions[0].transaction_type == txpool::TransactionType::QUEUED);
+        CHECK(get_transactions[0].sender == sender);
+        CHECK(get_transactions[0].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
+        CHECK(get_transactions[1].transaction_type == txpool::TransactionType::PENDING);
+        CHECK(get_transactions[1].sender == sender1);
+        CHECK(get_transactions[1].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x36});
+        CHECK(get_transactions[2].transaction_type == txpool::TransactionType::BASE_FEE);
+        CHECK(get_transactions[2].sender == sender2);
+        CHECK(get_transactions[2].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x37});
    }
  }
 } // namespace silkrpc

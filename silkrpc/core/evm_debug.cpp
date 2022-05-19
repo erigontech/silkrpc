@@ -156,6 +156,7 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
         << "   msg.depth: " << std::dec << execution_state.msg->depth
         << "}\n";
 
+
     bool output_storage = false;
     if (!config_.disableStorage) {
         if (opcode_name == "SLOAD" && stack_height >= 1) {
@@ -183,6 +184,11 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
             auto gas_cost = log.gas - execution_state.gas_left;
             log.gas_cost = gas_cost;
 
+    if (log.op == "SLOAD") {
+       std::cout << gas_cost <<  "\n";
+    }
+
+
             if (!config_.disableMemory) {
                 auto& memory = log.memory;
                 for (int idx = memory.size(); idx < current_memory.size(); idx++) {
@@ -199,6 +205,11 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
     log.op = opcode_name == "KECCAK256" ? "SHA3" : opcode_name; // TODO(sixtysixter) for RPCDAEMON compatibility
     log.gas = execution_state.gas_left;
     log.depth = execution_state.msg->depth + 1;
+
+    if (opcode_name == "SLOAD") {
+       std::cout << opcode_name << " " << log.gas << "\n";
+    }
+
     if (!config_.disableStack) {
         output_stack(log.stack, stack_top, stack_height);
     }
@@ -254,7 +265,7 @@ asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::execute(
     const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
     const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
 
-    EVMExecutor<WorldState, VM> executor{context_, database_reader_, *chain_config_ptr, workers_, block_number-1};
+    EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number-1};
 
     std::vector<DebugTrace> debug_traces(transactions.size());
     for (std::uint64_t idx = 0; idx < transactions.size(); idx++) {
@@ -306,7 +317,7 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std:
 
     const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
 
-    EVMExecutor<WorldState, VM> executor{context_, database_reader_, *chain_config_ptr, workers_, block_number};
+    EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number};
 
     for (auto idx = 0; idx < index; idx++) {
         silkrpc::Transaction txn{block.transactions[idx]};

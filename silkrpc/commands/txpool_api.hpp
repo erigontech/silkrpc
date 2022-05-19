@@ -14,10 +14,11 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMANDS_PARITY_API_HPP_
-#define SILKRPC_COMMANDS_PARITY_API_HPP_
+#ifndef SILKRPC_COMMANDS_TXPOOL_API_HPP_
+#define SILKRPC_COMMANDS_TXPOOL_API_HPP_
 
 #include <memory>
+#include <set>
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
@@ -27,30 +28,32 @@
 #include <silkrpc/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/json/types.hpp>
-#include <silkrpc/ethdb/database.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
 namespace silkrpc::commands {
 
-class ParityRpcApi {
+class TxPoolRpcApi {
 public:
-    explicit ParityRpcApi(Context& context) : database_(context.database()), context_(context) {}
-    virtual ~ParityRpcApi() {}
+    explicit TxPoolRpcApi(Context& context)
+    : context_(context), database_(context.database()), tx_pool_{context.tx_pool()} {}
+    virtual ~TxPoolRpcApi() {}
 
-    ParityRpcApi(const ParityRpcApi&) = delete;
-    ParityRpcApi& operator=(const ParityRpcApi&) = delete;
+    TxPoolRpcApi(const TxPoolRpcApi&) = delete;
+    TxPoolRpcApi& operator=(const TxPoolRpcApi&) = delete;
 
 protected:
-    asio::awaitable<void> handle_parity_get_block_receipts(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_txpool_status(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_txpool_content(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
-    std::unique_ptr<ethdb::Database>& database_;
     Context& context_;
+    std::unique_ptr<ethdb::Database>& database_;
+    std::unique_ptr<txpool::TransactionPool>& tx_pool_;
 
     friend class silkrpc::http::RequestHandler;
 };
 
 } // namespace silkrpc::commands
 
-#endif  // SILKRPC_COMMANDS_PARITY_API_HPP_
+#endif  // SILKRPC_COMMANDS_TXPOOL_API_HPP_

@@ -763,6 +763,45 @@ TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
         "v":"0x1c",
         "value":"0x7a69"
     })"_json);
+    silkrpc::Transaction txn3{
+        silkworm::Transaction::Type::kLegacy,               // type
+        0,                                                  // nonce
+        50'000 * kGiga,                                     // max_priority_fee_per_gas
+        50'000 * kGiga,                                     // max_fee_per_gas
+        21'000,                                             // gas_limit
+        0x5df9b87991262f6ba471f09758cde1c0fc1de734_address, // to
+        31337,                                              // value
+        {},                                                 // data
+        true,                                               // odd_y_parity
+        std::nullopt,                                       // chain_id
+        intx::from_string<intx::uint256>("0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0"), // r
+        intx::from_string<intx::uint256>("0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a"), // s
+        std::vector<silkworm::AccessListEntry>{},                                    // access_list
+        0x007fb8417eb9ad4d958b050fc3720d5b46a2c053_address,                          // from
+        0x4e3a3754410177e6937ef1f84bba68ea139e8d1a2258c5f85db9f1cd715a1bdd_bytes32,  // block_hash
+        46147,                                                                       // block_number
+        intx::uint256{0},                                                            // block_base_fee_per_gas
+        0,                                                                           // transactionIndex
+        true                                                                         // queued_in_pool
+    };
+    nlohmann::json j3 = txn3;
+    CHECK(j3 == R"({
+        "blockHash":null,
+        "blockNumber":null,
+        "from":"0x007fb8417eb9ad4d958b050fc3720d5b46a2c053",
+        "gas":"0x5208",
+        "gasPrice":"0x2d79883d2000",
+        "hash":"0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060",
+        "input":"0x",
+        "nonce":"0x0",
+        "r":"0x88ff6cf0fefd94db46111149ae4bfc179e9b94721fffd821d38d16464b3f71d0",
+        "s":"0x45e0aff800961cfce805daef7016b9b675c137a6a41a548f7b60a3484c06a33a",
+        "to":"0x5df9b87991262f6ba471f09758cde1c0fc1de734",
+        "transactionIndex":null,
+        "type":"0x0",
+        "v":"0x1c",
+        "value":"0x7a69"
+    })"_json);
 }
 
 TEST_CASE("serialize EIP-2930 transaction (type=1)", "[silkrpc][to_json]") {

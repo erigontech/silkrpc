@@ -17,10 +17,17 @@
 #include "web3_api.hpp"
 
 #include <catch2/catch.hpp>
+#include <grpcpp/grpcpp.h>
 
-namespace silkrpc {
+namespace silkrpc::commands {
 
 using Catch::Matchers::Message;
 
-} // namespace silkrpc
+TEST_CASE("Web3RpcApi::Web3RpcApi", "[silkrpc][erigon_api]") {
+    ContextPool context_pool{1, []() {
+        return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+    }};
+    CHECK_NOTHROW(Web3RpcApi{context_pool.next_context()});
+}
 
+} // namespace silkrpc::commands
