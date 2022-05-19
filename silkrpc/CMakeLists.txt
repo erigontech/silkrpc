@@ -166,11 +166,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 endif()
 
 add_library(silkrpc ${SILKRPC_SRC})
-target_include_directories(silkrpc PUBLIC 
-    ${CMAKE_SOURCE_DIR}
-    ${CMAKE_SOURCE_DIR}/jwt-cpp/include)
+target_include_directories(silkrpc PUBLIC${CMAKE_SOURCE_DIR})
 target_link_libraries(silkrpc
-    jwt-cpp
+    jwt-cpp::jwt-cpp
     absl::flat_hash_map
     absl::flat_hash_set
     absl::btree
