@@ -76,7 +76,6 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
 
             verifier.verify(decoded_client_token, ec);
 
-
             if (ec) {
                 reply.status = http::Reply::unauthorized;
                 reply.content = make_json_error(request_id, 401, "invalid token").dump() + "\n";

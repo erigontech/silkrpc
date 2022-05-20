@@ -238,6 +238,9 @@ int main(int argc, char* argv[]) {
         SILKRPC_LOG << "Silkrpc running Engine RPC API service at " << engine_port << "\n";
         engine_rpc_service.start();
 
+        SILKRPC_LOG << "Silkrpc running Authenticated Engine RPC API service at " << auth_engine_port << "\n";
+        auth_engine_rpc_service.start();
+
         SILKRPC_LOG << "Silkrpc is now running [pid=" << pid << ", main thread=" << tid << "]\n";
 
         context_pool.run();
