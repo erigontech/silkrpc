@@ -51,6 +51,7 @@ ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "numbe
 ABSL_FLAG(uint32_t, numWorkers, 16, "number of worker threads as 32-bit integer");
 ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
+ABSL_FLAG(silkrpc::WaitMode, wait_mode, silkrpc::WaitMode::blocking, "scheduler wait mode");
 
 const char* currentExceptionTypeName() {
     int status;
@@ -158,6 +159,8 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
+        const auto wait_mode{absl::GetFlag(FLAGS_wait_mode)};
+
         if (chaindata.empty()) {
             SILKRPC_LOG << "Silkrpc launched with target " << target << " using " << numContexts << " contexts, " << numWorkers << " workers\n";
         } else {
@@ -195,7 +198,7 @@ int main(int argc, char* argv[]) {
         SILKRPC_LOG << txpool_protocol_check.result << "\n";
 
         // TODO(canepat): handle also local (shared-memory) database
-        ContextPool context_pool{numContexts, create_channel};
+        ContextPool context_pool{numContexts, create_channel, wait_mode};
         asio::thread_pool worker_pool{numWorkers};
 
         std::vector<std::unique_ptr<Server>> active_services;
@@ -210,7 +213,7 @@ int main(int argc, char* argv[]) {
         SILKRPC_DEBUG << "Signals registered on io_context " << &io_context << "\n" << std::flush;
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
             std::cout << "\n";
-            SILKRPC_INFO << "Signal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
+            SILKRPC_INFO << "Signal number: " << signal_number << " caught, error code: " << error.code() << "\n" << std::flush;
             context_pool.stop();
             for (auto& service : active_services) {
                 service->stop();
