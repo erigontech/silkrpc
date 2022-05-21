@@ -222,10 +222,10 @@ class PerfTest:
         self.rpc_daemon = 1
         on_core = self.config.daemon_vegeta_on_core.split(':')
         if on_core[0] == "-":
-            cmd = self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3  &"
+            cmd = self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3  2>/dev/null &"
         else:
             cmd = "taskset -c " + on_core[0] + " " + \
-                   self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3  &"
+                   self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3  2>/dev/null &"
         print("RpcDaemon starting ...: ", cmd)
         status = os.system(cmd)
         if int(status) != 0:
