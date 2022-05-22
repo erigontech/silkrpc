@@ -87,11 +87,8 @@ asio::awaitable<void> Server::run() {
             SILKRPC_TRACE << "Server::start starting connection for socket: " << &new_connection->socket() << "\n";
             auto new_connection_starter = [=]() -> asio::awaitable<void> { co_await new_connection->start(); };
 
-            // https://github.com/chriskohlhoff/asio/issues/552
-            asio::dispatch(*io_context, [=]() mutable {
-                asio::co_spawn(*io_context, new_connection_starter, [&](std::exception_ptr eptr) {
-                    if (eptr) std::rethrow_exception(eptr);
-                });
+            asio::co_spawn(*io_context, new_connection_starter, [&](std::exception_ptr eptr) {
+                if (eptr) std::rethrow_exception(eptr);
             });
         }
     } catch (const std::system_error& se) {
