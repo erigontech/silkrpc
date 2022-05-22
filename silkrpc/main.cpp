@@ -47,10 +47,10 @@ ABSL_FLAG(std::string, http_port, silkrpc::kDefaultHttpPort, "Ethereum JSON RPC 
 ABSL_FLAG(std::string, engine_port, silkrpc::kDefaultEnginePort, "Engine JSON RPC API local end-point as string <address>:<port>");
 ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "Erigon Core gRPC service location as string <address>:<port>");
 ABSL_FLAG(std::string, api_spec, silkrpc::kDefaultEth1ApiSpec, "JSON RPC API namespaces as comma-separated list of strings");
-ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "number of running I/O contexts as 32-bit integer");
-ABSL_FLAG(uint32_t, numWorkers, 16, "number of worker threads as 32-bit integer");
+ABSL_FLAG(uint32_t, num_contexts, std::thread::hardware_concurrency() / 3, "number of running I/O contexts as 32-bit integer");
+ABSL_FLAG(uint32_t, num_workers, 16, "number of worker threads as 32-bit integer");
 ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
-ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
+ABSL_FLAG(silkrpc::LogLevel, log_level, silkrpc::LogLevel::Critical, "logging level");
 ABSL_FLAG(silkrpc::WaitMode, wait_mode, silkrpc::WaitMode::blocking, "scheduler wait mode");
 
 const char* currentExceptionTypeName() {
@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("C++ implementation of Ethereum JSON RPC API service within Thorax architecture");
     absl::ParseCommandLine(argc, argv);
 
-    SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
+    SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_log_level));
     SILKRPC_LOG_THREAD(true);
 
     std::set_terminate([]() {
@@ -145,26 +145,26 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        auto numContexts{absl::GetFlag(FLAGS_numContexts)};
-        if (numContexts < 0) {
-            SILKRPC_ERROR << "Parameter numContexts is invalid: [" << numContexts << "]\n";
-            SILKRPC_ERROR << "Use --numContexts flag to specify the number of threads running I/O contexts\n";
+        auto num_contexts{absl::GetFlag(FLAGS_num_contexts)};
+        if (num_contexts < 0) {
+            SILKRPC_ERROR << "Parameter numContexts is invalid: [" << num_contexts << "]\n";
+            SILKRPC_ERROR << "Use --num_contexts flag to specify the number of threads running I/O contexts\n";
             return -1;
         }
 
-        auto numWorkers{absl::GetFlag(FLAGS_numWorkers)};
-        if (numWorkers < 0) {
-            SILKRPC_ERROR << "Parameter numWorkers is invalid: [" << numWorkers << "]\n";
-            SILKRPC_ERROR << "Use --numWorkers flag to specify the number of worker threads executing long-run operations\n";
+        auto num_workers{absl::GetFlag(FLAGS_num_workers)};
+        if (num_workers < 0) {
+            SILKRPC_ERROR << "Parameter num_workers is invalid: [" << num_workers << "]\n";
+            SILKRPC_ERROR << "Use --num_workers flag to specify the number of worker threads executing long-run operations\n";
             return -1;
         }
 
         const auto wait_mode{absl::GetFlag(FLAGS_wait_mode)};
 
         if (chaindata.empty()) {
-            SILKRPC_LOG << "Silkrpc launched with target " << target << " using " << numContexts << " contexts, " << numWorkers << " workers\n";
+            SILKRPC_LOG << "Silkrpc launched with target " << target << " using " << num_contexts << " contexts, " << num_workers << " workers\n";
         } else {
-            SILKRPC_LOG << "Silkrpc launched with chaindata " << chaindata << " using " << numContexts << " contexts, " << numWorkers << " workers\n";
+            SILKRPC_LOG << "Silkrpc launched with chaindata " << chaindata << " using " << num_contexts << " contexts, " << num_workers << " workers\n";
         }
 
         // TODO(canepat): handle also secure channel for remote
@@ -198,11 +198,11 @@ int main(int argc, char* argv[]) {
         SILKRPC_LOG << txpool_protocol_check.result << "\n";
 
         // TODO(canepat): handle also local (shared-memory) database
-        ContextPool context_pool{numContexts, create_channel, wait_mode};
-        asio::thread_pool worker_pool{numWorkers};
+        ContextPool context_pool{num_contexts, create_channel, wait_mode};
+        asio::thread_pool worker_pool{num_workers};
 
         std::vector<std::unique_ptr<Server>> active_services;
-        for (int i = 0; i < numContexts; ++i) {
+        for (int i = 0; i < num_contexts; ++i) {
             auto& context = context_pool.next_context();
             active_services.emplace_back(std::make_unique<Server>(http_port, api_spec, context, worker_pool));
             active_services.emplace_back(std::make_unique<Server>(engine_port, kDefaultEth2ApiSpec, context, worker_pool));
