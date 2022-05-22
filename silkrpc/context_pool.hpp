@@ -22,8 +22,10 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <string>
 #include <vector>
 
+#include <absl/strings/string_view.h>
 #include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -212,6 +214,9 @@ enum class WaitMode {
     spin_wait,
     busy_spin
 };
+
+bool AbslParseFlag(absl::string_view text, WaitMode* wait_mode, std::string* error);
+std::string AbslUnparseFlag(WaitMode wait_mode);
 
 std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode);
 

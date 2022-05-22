@@ -32,6 +32,42 @@ std::ostream& operator<<(std::ostream& out, Context& c) {
     return out;
 }
 
+bool AbslParseFlag(absl::string_view text, WaitMode* wait_mode, std::string* error) {
+    if (text == "blocking") {
+        *wait_mode = WaitMode::blocking;
+        return true;
+    }
+    if (text == "sleeping") {
+        *wait_mode = WaitMode::sleeping;
+        return true;
+    }
+    if (text == "yielding") {
+        *wait_mode = WaitMode::yielding;
+        return true;
+    }
+    if (text == "spin_wait") {
+        *wait_mode = WaitMode::spin_wait;
+        return true;
+    }
+    if (text == "busy_spin") {
+        *wait_mode = WaitMode::busy_spin;
+        return true;
+    }
+    *error = "unknown value for WaitMode";
+    return false;
+}
+
+std::string AbslUnparseFlag(WaitMode wait_mode) {
+    switch (wait_mode) {
+        case WaitMode::blocking: return "blocking";
+        case WaitMode::sleeping: return "sleeping";
+        case WaitMode::yielding: return "yielding";
+        case WaitMode::spin_wait: return "spin_wait";
+        case WaitMode::busy_spin: return "busy_spin";
+        default: return absl::StrCat(wait_mode);
+    }
+}
+
 std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode) {
     switch (wait_mode) {
         case WaitMode::yielding:

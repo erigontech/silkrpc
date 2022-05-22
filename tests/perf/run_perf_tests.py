@@ -264,10 +264,10 @@ class PerfTest:
         else:
             perf_cmd = ""
         if on_core[0] == "-":
-            cmd = perf_cmd + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --logLevel c --numWorkers 16 &"
+            cmd = perf_cmd + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_verbosity c --num_workers 16 &"
         else:
             cmd = perf_cmd + "taskset -c " + on_core[0] + " "\
-                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --logLevel c  --numWorkers 16 --numContexts "\
+                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_verbosity c  --num_workers 16 --num_contexts "\
                     + str(self.config.silkrpc_num_contexts) + " &"
         print("SilkDaemon starting ...: ", cmd)
         status = os.system(cmd)
