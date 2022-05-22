@@ -20,6 +20,7 @@
 #include <exception>
 #include <filesystem>
 #include <iostream>
+#include <string>
 #include <thread>
 
 #include <absl/flags/flag.h>
@@ -32,9 +33,11 @@
 #include <asio/co_spawn.hpp>
 #include <asio/signal_set.hpp>
 #include <asio/thread_pool.hpp>
+#include <asio/version.hpp>
 #include <boost/process/environment.hpp>
 #include <grpcpp/grpcpp.h>
 
+#include <silkrpc/buildinfo.h>
 #include <silkrpc/context_pool.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
@@ -51,6 +54,35 @@ ABSL_FLAG(uint32_t, numContexts, std::thread::hardware_concurrency() / 2, "numbe
 ABSL_FLAG(uint32_t, numWorkers, 16, "number of worker threads as 32-bit integer");
 ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
+
+//! Assemble the application name using the Cable build information
+std::string get_name_from_build_info() {
+    const auto build_info{silkrpc_get_buildinfo()};
+
+    std::string application_name{"silkrpc/"};
+    application_name.append(build_info->git_branch);
+    application_name.append(build_info->project_version);
+    application_name.append("/");
+    application_name.append(build_info->system_name);
+    application_name.append("-");
+    application_name.append(build_info->system_processor);
+    application_name.append("_");
+    application_name.append(build_info->build_type);
+    application_name.append("/");
+    application_name.append(build_info->compiler_id);
+    application_name.append("-");
+    application_name.append(build_info->compiler_version);
+    return application_name;
+}
+
+//! Assemble the relevant library version information
+std::string get_library_versions() {
+    std::string library_versions{"gRPC: "};
+    library_versions.append(grpc::Version());
+    library_versions.append(" Asio: ");
+    library_versions.append(std::to_string(ASIO_VERSION));
+    return library_versions;
+}
 
 const char* currentExceptionTypeName() {
     int status;
@@ -91,6 +123,8 @@ int main(int argc, char* argv[]) {
 
         std::abort();
     });
+
+    SILKRPC_LOG << "Silkrpc build info: " << get_name_from_build_info() << " " << get_library_versions() << "\n";
 
     try {
         auto chaindata{absl::GetFlag(FLAGS_chaindata)};
