@@ -169,6 +169,52 @@ namespace silkrpc {
 
 using Catch::Matchers::Message;
 
+TEST_CASE("parse wait mode", "[silkrpc][common][log]") {
+    std::vector<absl::string_view> input_texts{
+        "blocking", "sleeping", "yielding", "spin_wait", "busy_spin"
+    };
+    std::vector<WaitMode> expected_wait_modes{
+        WaitMode::blocking,
+        WaitMode::sleeping,
+        WaitMode::yielding,
+        WaitMode::spin_wait,
+        WaitMode::busy_spin,
+    };
+    for (auto i{0}; i < input_texts.size(); i++) {
+        WaitMode wait_mode;
+        std::string error;
+        const auto success{AbslParseFlag(input_texts[i], &wait_mode, &error)};
+        CHECK(success == true);
+        CHECK(error.empty());
+        CHECK(wait_mode == expected_wait_modes[i]);
+    }
+}
+
+TEST_CASE("parse invalid wait mode", "[silkrpc][common][log]") {
+    WaitMode wait_mode;
+    std::string error;
+    const auto success{AbslParseFlag("abc", &wait_mode, &error)};
+    CHECK(success == false);
+    CHECK(!error.empty());
+}
+
+TEST_CASE("unparse wait mode", "[silkrpc][common][log]") {
+    std::vector<WaitMode> input_wait_modes{
+        WaitMode::blocking,
+        WaitMode::sleeping,
+        WaitMode::yielding,
+        WaitMode::spin_wait,
+        WaitMode::busy_spin,
+    };
+    std::vector<absl::string_view> expected_texts{
+        "blocking", "sleeping", "yielding", "spin_wait", "busy_spin"
+    };
+    for (auto i{0}; i < input_wait_modes.size(); i++) {
+        const auto text{AbslUnparseFlag(input_wait_modes[i])};
+        CHECK(text == expected_texts[i]);
+    }
+}
+
 template<typename R, typename P>
 inline void sleep_then_check_wait(WaitStrategy& w, const std::chrono::duration<R, P>& t, uint32_t executed_count) {
     std::this_thread::sleep_for(t);

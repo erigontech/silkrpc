@@ -138,10 +138,10 @@ We use the standard C++20 programming language. We follow the [Google's C++ Styl
 From the build folder (`build_[gcc, clang]_[debug, release]` according to your choice) you typically activate Silkrpc using:
 
 ```
-$ silkrpc/silkrpcdaemon --target <erigon_core_host_address>:9090
+$ silkrpc/silkrpcdaemon --target <core_service_host_address>:9090
 ```
 
-where `<erigon_core_host_address>` is the hostname or IP address of the Erigon Core to connect to.
+where `<core_service_host_address>` is the hostname or IP address of the Core services to connect to.
 
 You can check all command-line parameters supported by Silkrpc using:
 
@@ -153,11 +153,12 @@ silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
     --chaindata (chain data path as string); default: "";
     --http_port (Ethereum JSON RPC API local binding as string <address>:<port>); default: "localhost:8545";
     --engine_port (Engine JSON RPC API local binding as string <address>:<port>); default: "localhost:8550";
-    --logLevel (logging level); default: c;
-    --numContexts (number of running I/O contexts as 32-bit integer); default: number of hardware thread contexts / 2;
-    --numWorkers (number of worker threads as 32-bit integer); default: number of hardware thread contexts;
-    --target (Erigon Core gRPC service location as string <address>:<port>); default: "localhost:9090";
-    --timeout (gRPC call timeout as 32-bit integer); default: 10000;
+    --log_verbosity (logging verbosity level); default: c;
+    --num_contexts (number of running I/O contexts as integer); default: number of hardware thread contexts / 3;
+    --num_workers (number of worker threads as integer); default: 16;
+    --target (Core gRPC service location as string <address>:<port>); default: "localhost:9090";
+    --timeout (gRPC call timeout as integer); default: 10000;
+    --wait_mode (I/O scheduler wait mode); default: blocking;
 ```
 
 You can also check the Silkrpc executable version by:
