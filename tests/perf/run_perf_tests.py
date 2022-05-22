@@ -80,6 +80,9 @@ class Config:
         self.start_server = "1"
         self.wait_mode = DEFAULT_WAIT_MODE
 
+        self.__parse_args(argv)
+
+    def __parse_args(self, argv):
         try:
             local_config = 0
             opts, _ = getopt.getopt(argv[1:], "D:hm:d:p:c:a:g:s:r:t:n:y:zw:i:")
@@ -270,7 +273,8 @@ class PerfTest:
             perf_cmd = ""
         wait_mode_str = " --wait_mode " + self.config.wait_mode
         if on_core[0] == "-":
-            cmd = perf_cmd + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_level c --num_workers 16 " + wait_mode_str + " &"
+            cmd = perf_cmd \
+                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_level c --num_workers 16" + wait_mode_str + " &"
         else:
             cmd = perf_cmd + "taskset -c " + on_core[0] + " "\
                 + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_level c  --num_workers 16 --num_contexts "\
