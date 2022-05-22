@@ -37,6 +37,8 @@ HunterGate(
 
 project(silkrpc)
 
+cable_add_buildinfo_library(PROJECT_NAME ${PROJECT_NAME})
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   if(CMAKE_C_COMPILER_VERSION VERSION_LESS 10.3.0)
     message(FATAL_ERROR "required gcc version >= 10.3.0")
