@@ -62,7 +62,7 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
 
             if (client_token.length() == 0) {
                 reply.status = http::Reply::unauthorized;
-                reply.content = make_json_error(request_id, 401, "missing token").dump() + "\n";
+                reply.content = make_json_error(request_id, 403, "missing token").dump() + "\n";
                 reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
                 reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
                 SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
@@ -70,15 +70,15 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
             }
 
             auto decoded_client_token = jwt::decode(client_token);
-            auto verifier = jwt::verify().allow_algorithm(jwt::algorithm::hs256{jwt_secret});
+            auto verifier = jwt::verify()
+                .allow_algorithm(jwt::algorithm::hs256{jwt_secret});
 
             std::error_code ec;
-
             verifier.verify(decoded_client_token, ec);
 
             if (ec) {
                 reply.status = http::Reply::unauthorized;
-                reply.content = make_json_error(request_id, 401, "invalid token").dump() + "\n";
+                reply.content = make_json_error(request_id, 403, "invalid token").dump() + "\n";
                 reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
                 reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
                 SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";

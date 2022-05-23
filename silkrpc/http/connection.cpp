@@ -38,12 +38,14 @@
 
 namespace silkrpc::http {
 
-Connection::Connection(Context& context, asio::thread_pool& workers, commands::RpcApiTable& handler_table, std::string& jwt_token)
-: socket_{*context.io_context()}, request_handler_{context, workers, handler_table}, jwt_token_{jwt_token} {
+Connection::Connection(Context& context, asio::thread_pool& workers, commands::RpcApiTable& handler_table, std::string jwt_secret)
+: socket_{*context.io_context()}, request_handler_{context, workers, handler_table}{
     request_.content.reserve(kRequestContentInitialCapacity);
     request_.headers.reserve(kRequestHeadersInitialCapacity);
     request_.method.reserve(kRequestMethodInitialCapacity);
     request_.uri.reserve(kRequestUriInitialCapacity);
+    jwt_secret_ = jwt_secret;
+
     SILKRPC_DEBUG << "Connection::Connection socket " << &socket_ << " created\n";
 }
 
@@ -66,7 +68,8 @@ asio::awaitable<void> Connection::do_read() {
         RequestParser::ResultType result = request_parser_.parse(request_, buffer_.data(), buffer_.data() + bytes_read);
 
         if (result == RequestParser::good) {
-            co_await request_handler_.handle_request(request_, reply_, jwt_token_);
+            std::cout << jwt_secret_ << std::endl;
+            co_await request_handler_.handle_request(request_, reply_, jwt_secret_);
             co_await do_write();
             clean();
         } else if (result == RequestParser::bad) {

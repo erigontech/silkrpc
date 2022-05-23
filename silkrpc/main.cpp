@@ -253,9 +253,10 @@ int main(int argc, char* argv[]) {
         // TODO(canepat): handle also local (shared-memory) database
         silkrpc::ContextPool context_pool{num_contexts, create_channel, wait_mode};
         asio::thread_pool worker_pool{num_workers};
+        std::string no_jwt_secret = "";
 
-        silkrpc::http::Server eth_rpc_service{http_port, api_spec, context_pool, worker_pool, ""};
-        silkrpc::http::Server engine_rpc_service{engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool, ""};
+        silkrpc::http::Server eth_rpc_service{http_port, api_spec, context_pool, worker_pool, no_jwt_secret};
+        silkrpc::http::Server engine_rpc_service{engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool, no_jwt_secret};
         silkrpc::http::Server auth_engine_rpc_service{auth_engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool, jwt_secret};
 
         auto& io_context = context_pool.next_io_context();

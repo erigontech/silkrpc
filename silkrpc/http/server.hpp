@@ -47,7 +47,7 @@ public:
     Server& operator=(const Server&) = delete;
 
     // Construct the server to listen on the specified local TCP end-point
-    explicit Server(const std::string& end_point, const std::string& api_spec, ContextPool& context_pool, asio::thread_pool& workers, std::string jwt_token);
+    explicit Server(const std::string& end_point, const std::string& api_spec, ContextPool& context_pool, asio::thread_pool& workers, std::string jwt_secret);
 
     void start();
 
@@ -69,8 +69,8 @@ private:
 
     asio::thread_pool& workers_;
 
-    // jwt token
-    std::string jwt_token_;
+    // jwt secret
+    std::string jwt_secret_;
 };
 
 } // namespace silkrpc::http
