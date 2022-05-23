@@ -105,7 +105,7 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
         const auto method = request_json["method"].get<std::string>();
         const auto handle_method_opt = rpc_api_table_.find_handler(method);
         if (!handle_method_opt) {
-            reply.content = make_json_error(request_id, -32601, "method not existent or not implemented").dump() + "\n";
+            reply.content = make_json_error(request_id, -32601, "method not existent or not implemented: " + method).dump() + "\n";
             reply.status = http::Reply::not_implemented;
             reply.headers.reserve(2);
             reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});

@@ -183,6 +183,7 @@ target_link_libraries(silkrpc
 add_executable(silkrpcdaemon main.cpp)
 target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
 target_link_libraries(silkrpcdaemon
+    silkrpc-buildinfo
     silkrpc
     absl::flags_parse
     silkinterfaces
