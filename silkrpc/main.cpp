@@ -110,6 +110,8 @@ int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("C++ implementation of Ethereum JSON RPC API service within Thorax architecture");
     absl::ParseCommandLine(argc, argv);
 
+    std::string jwt_secret = "";
+
     SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_log_verbosity));
     SILKRPC_LOG_THREAD(true);
 
@@ -159,10 +161,10 @@ int main(int argc, char* argv[]) {
             return -1;
         }
 
-        auto jwt_secret{absl::GetFlag(FLAGS_auth_jwtsecret)};
+        auto jwt_secret_flag{absl::GetFlag(FLAGS_auth_jwtsecret)};
         std::string jwt_file_path = silkrpc::kDefaultJwtPath;
-        if (!jwt_secret.empty()) {
-            jwt_file_path = jwt_secret;
+        if (!jwt_secret_flag.empty()) {
+            jwt_file_path = jwt_secret_flag;
         }
 
         auto target{absl::GetFlag(FLAGS_target)};
@@ -214,9 +216,8 @@ int main(int argc, char* argv[]) {
             SILKRPC_LOG << "Silkrpc launched with chaindata " << chaindata << " using " << num_contexts << " contexts, " << num_workers << " workers\n";
         }
 
-        std::string jwt_token = "";
-        if(!silkrpc::obtain_jwt_token(jwt_file_path, jwt_token)) {
-            SILKRPC_ERROR << "Jwt token is the wrong size with a size of: " << jwt_token.length() << "\n";
+        if(!silkrpc::obtain_jwt_token(jwt_file_path, jwt_secret)) {
+            SILKRPC_ERROR << "Jwt token is the wrong size with a size of: " << jwt_secret.length() << "\n";
             return -1;
         }
         // TODO(canepat): handle also secure channel for remote
@@ -255,7 +256,7 @@ int main(int argc, char* argv[]) {
 
         silkrpc::http::Server eth_rpc_service{http_port, api_spec, context_pool, worker_pool, ""};
         silkrpc::http::Server engine_rpc_service{engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool, ""};
-        silkrpc::http::Server auth_engine_rpc_service{auth_engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool, jwt_token};
+        silkrpc::http::Server auth_engine_rpc_service{auth_engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool, jwt_secret};
 
         auto& io_context = context_pool.next_io_context();
         asio::signal_set signals{io_context, SIGINT, SIGTERM};
