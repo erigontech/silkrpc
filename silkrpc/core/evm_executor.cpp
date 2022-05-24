@@ -177,6 +177,14 @@ uint64_t EVMExecutor<WorldState, VM>::refund_gas(const VM& evm, const silkworm::
     return gas_left;
 }
 
+
+template<typename WorldState, typename VM>
+void EVMExecutor<WorldState, VM>::reset() {
+    state_.clear_journal_and_substate();
+}
+
+
+
 template<typename WorldState, typename VM>
 std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0) {
     const evmc_revision rev{evm.revision()};
@@ -280,6 +288,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                     const uint64_t gas_used{txn.gas_limit - refund_gas(evm, txn, result.gas_left)};
                     gas_left = txn.gas_limit - gas_used;
                 }
+                state_.finalize_transaction();
 
                 ExecutionResult exec_result{result.status, gas_left, result.data};
                 asio::post(io_context_, [exec_result, self = std::move(self)]() mutable {
