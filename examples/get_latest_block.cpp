@@ -43,7 +43,7 @@
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 
 ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "server location as string <address>:<port>");
-ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level");
+ABSL_FLAG(silkrpc::LogLevel, log_verbosity, silkrpc::LogLevel::Critical, "logging level");
 
 using silkrpc::LogLevel;
 
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("Seek Erigon/Silkworm Key-Value (KV) remote interface to database");
     absl::ParseCommandLine(argc, argv);
 
-    SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
+    SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_log_verbosity));
 
     try {
         auto target{absl::GetFlag(FLAGS_target)};

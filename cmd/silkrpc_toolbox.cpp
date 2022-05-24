@@ -35,7 +35,7 @@ int kv_seek_both(const std::string& target, const std::string& table_name, const
 int kv_seek(const std::string& target, const std::string& table_name, const silkworm::Bytes& key);
 
 ABSL_FLAG(std::string, key, "", "key as hex string w/o leading 0x");
-ABSL_FLAG(silkrpc::LogLevel, logLevel, silkrpc::LogLevel::Critical, "logging level as string");
+ABSL_FLAG(silkrpc::LogLevel, log_verbosity, silkrpc::LogLevel::Critical, "logging level as string");
 ABSL_FLAG(std::string, seekkey, "", "seek key as hex string w/o leading 0x");
 ABSL_FLAG(std::string, subkey, "", "subkey as hex string w/o leading 0x");
 ABSL_FLAG(std::string, tool, "", "gRPC remote interface tool name as string");
@@ -253,7 +253,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_logLevel));
+    SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_log_verbosity));
 
     const std::string tool{positional_args[1]};
     if (tool == "ethbackend_async") {
