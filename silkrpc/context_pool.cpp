@@ -92,7 +92,7 @@ Context::Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> bloc
     std::shared_ptr<grpc::Channel> channel = create_channel();
     rpc_end_point_ = std::make_unique<silkworm::rpc::CompletionEndPoint>(*queue_);
     database_ = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context_, channel, queue_.get());
-    backend_ = std::make_unique<ethbackend::BackEndGrpc>(*io_context_, channel, queue_.get());
+    backend_ = std::make_unique<ethbackend::RemoteBackEnd>(*io_context_, channel, queue_.get());
     miner_ = std::make_unique<txpool::Miner>(*io_context_, channel, queue_.get());
     tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, channel, queue_.get());
 }

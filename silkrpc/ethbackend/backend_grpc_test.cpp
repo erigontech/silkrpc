@@ -301,14 +301,14 @@ asio::awaitable<R> test_comethod(::remote::ETHBACKEND::Service* service, Args...
     co_return co_await method_proxy(args...);
 }
 
-auto test_etherbase = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::etherbase, evmc::address>;
-auto test_protocol_version = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::protocol_version, uint64_t>;
-auto test_net_version = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::net_version, uint64_t>;
-auto test_client_version = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::client_version, std::string>;
-auto test_net_peer_count = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::net_peer_count, uint64_t>;
-auto test_engine_get_payload_v1 = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::engine_get_payload_v1, ExecutionPayload, uint64_t>;
-auto test_engine_new_payload_v1 = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::engine_new_payload_v1, PayloadStatus, ExecutionPayload>;
-auto test_engine_forkchoice_updated_v1 = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::engine_forkchoice_updated_v1, ForkchoiceUpdatedReply, ForkchoiceUpdatedRequest>;
+auto test_etherbase = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::etherbase, evmc::address>;
+auto test_protocol_version = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::protocol_version, uint64_t>;
+auto test_net_version = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::net_version, uint64_t>;
+auto test_client_version = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::client_version, std::string>;
+auto test_net_peer_count = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::net_peer_count, uint64_t>;
+auto test_engine_get_payload_v1 = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::engine_get_payload_v1, ExecutionPayload, uint64_t>;
+auto test_engine_new_payload_v1 = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::engine_new_payload_v1, PayloadStatus, ExecutionPayload>;
+auto test_engine_forkchoice_updated_v1 = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::engine_forkchoice_updated_v1, ForkchoiceUpdatedReply, ForkchoiceUpdatedRequest>;
 
 TEST_CASE("BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
