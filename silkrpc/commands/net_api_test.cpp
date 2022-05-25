@@ -19,7 +19,7 @@
 #include <catch2/catch.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/ethbackend/backend_grpc.hpp>
+#include <silkrpc/ethbackend/remote_backend.hpp>
 
 namespace silkrpc::commands {
 

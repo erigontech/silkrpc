@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_ETHBACKEND_BACKEND_GRPC_HPP_
-#define SILKRPC_ETHBACKEND_BACKEND_GRPC_HPP_
+#ifndef SILKRPC_ETHBACKEND_REMOTE_BACKEND_HPP_
+#define SILKRPC_ETHBACKEND_REMOTE_BACKEND_HPP_
 
 #include <utility>
 #include <string>

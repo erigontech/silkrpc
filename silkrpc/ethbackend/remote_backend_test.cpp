@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "backend_grpc.hpp"
+#include "remote_backend.hpp"
 
 #include <string>
 #include <system_error>

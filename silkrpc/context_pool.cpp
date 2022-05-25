@@ -22,7 +22,7 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
-#include <silkrpc/ethbackend/backend_grpc.hpp>
+#include <silkrpc/ethbackend/remote_backend.hpp>
 #include <silkworm/common/assert.hpp>
 
 namespace silkrpc {

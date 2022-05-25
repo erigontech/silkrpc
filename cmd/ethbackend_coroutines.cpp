@@ -28,7 +28,7 @@
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/context_pool.hpp>
-#include <silkrpc/ethbackend/backend_grpc.hpp>
+#include <silkrpc/ethbackend/remote_backend.hpp>
 #include <silkrpc/interfaces/types/types.pb.h>
 
 inline std::ostream& operator<<(std::ostream& out, const types::H160& address) {
