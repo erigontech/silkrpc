@@ -270,7 +270,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 if (txn.to.has_value()) {
                     state_.access_account(*txn.to);
                     // EVM itself increments the nonce for contract creation
-                    state_.set_nonce(*txn.from, txn.nonce + 1);
+                    state_.set_nonce(*txn.from, state_.get_nonce(*txn.from) + 1);
                 }
                 for (const silkworm::AccessListEntry& ae : txn.access_list) {
                     state_.access_account(ae.account);
