@@ -11,7 +11,7 @@
                 "code": -32601,
                 "message": "method not existent or not implemented: unknown_method"
             },
-            "id": 6,
+            "id": 1,
             "jsonrpc": "2.0"
         }
     },
