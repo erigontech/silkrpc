@@ -178,6 +178,10 @@ uint64_t EVMExecutor<WorldState, VM>::refund_gas(const VM& evm, const silkworm::
 }
 
 template<typename WorldState, typename VM>
+void EVMExecutor<WorldState, VM>::reset() {
+    state_.clear_journal_and_substate();
+}
+template<typename WorldState, typename VM>
 std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0) {
     const evmc_revision rev{evm.revision()};
 
@@ -262,7 +266,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 if (txn.to.has_value()) {
                     state_.access_account(*txn.to);
                     // EVM itself increments the nonce for contract creation
-                    state_.set_nonce(*txn.from, txn.nonce + 1);
+                    state_.set_nonce(*txn.from, state_.get_nonce(*txn.from) + 1);
                 }
                 for (const silkworm::AccessListEntry& ae : txn.access_list) {
                     state_.access_account(ae.account);
@@ -280,6 +284,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                     const uint64_t gas_used{txn.gas_limit - refund_gas(evm, txn, result.gas_left)};
                     gas_left = txn.gas_limit - gas_used;
                 }
+                state_.finalize_transaction();
 
                 ExecutionResult exec_result{result.status, gas_left, result.data};
                 asio::post(io_context_, [exec_result, self = std::move(self)]() mutable {
