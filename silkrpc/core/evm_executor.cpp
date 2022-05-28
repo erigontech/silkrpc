@@ -181,7 +181,6 @@ template<typename WorldState, typename VM>
 void EVMExecutor<WorldState, VM>::reset() {
     state_.clear_journal_and_substate();
 }
-
 template<typename WorldState, typename VM>
 std::optional<std::string> EVMExecutor<WorldState, VM>::pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0) {
     const evmc_revision rev{evm.revision()};
