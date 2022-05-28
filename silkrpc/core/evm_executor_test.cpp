@@ -611,6 +611,30 @@ TEST_CASE("EVMexecutor") {
         CHECK(error_message == "call depth exceeded");
     }
 
+    SECTION("get_error_message(EVMC_STATIC_MODE_VIOLATION) with short error") {
+        StubDatabase tx_database;
+        const uint64_t chain_id = 5;
+        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+
+        ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
+        ContextPool my_pool{1, my_channel};
+        asio::thread_pool workers{1};
+        auto pool_thread = std::thread([&]() { my_pool.run(); });
+
+        const auto block_number = 6000000;
+        silkworm::Block block{};
+        block.header.number = block_number;
+        silkworm::Transaction txn{};
+        txn.gas_limit = 60000;
+        txn.from = 0xa872626373628737383927236382161739290870_address;
+
+        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        auto error_message = executor.get_error_message(evmc_status_code::EVMC_STATIC_MODE_VIOLATION, error_data, false);
+        my_pool.stop();
+        pool_thread.join();
+        CHECK(error_message == "static mode violation");
+    }
+
     SECTION("get_error_message(wrong status_code) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
