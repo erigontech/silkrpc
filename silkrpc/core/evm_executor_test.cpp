@@ -185,6 +185,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, false, /* gasBailout */true, {}), asio::use_future);
         auto result = execution_result.get();
+        executor.reset();
         my_pool.stop();
         pool_thread.join();
         CHECK(result.error_code == 0);
