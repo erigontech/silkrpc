@@ -14,8 +14,8 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_ETHBACKEND_BACKEND_GRPC_HPP_
-#define SILKRPC_ETHBACKEND_BACKEND_GRPC_HPP_
+#ifndef SILKRPC_ETHBACKEND_REMOTE_BACKEND_HPP_
+#define SILKRPC_ETHBACKEND_REMOTE_BACKEND_HPP_
 
 #include <utility>
 #include <string>
@@ -154,17 +154,17 @@ using EngineForkChoiceUpdatedV1Awaitable = unary_awaitable<
     ::remote::EngineForkChoiceUpdatedReply
 >;
 
-class BackEndGrpc final: public BackEnd {
+class RemoteBackEnd final: public BackEnd {
 public:
-    explicit BackEndGrpc(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : BackEndGrpc(context.get_executor(), ::remote::ETHBACKEND::NewStub(channel), queue) {}
+    explicit RemoteBackEnd(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
+    : RemoteBackEnd(context.get_executor(), ::remote::ETHBACKEND::NewStub(channel), queue) {}
 
-    explicit BackEndGrpc(asio::io_context::executor_type executor, std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub, grpc::CompletionQueue* queue)
+    explicit RemoteBackEnd(asio::io_context::executor_type executor, std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub, grpc::CompletionQueue* queue)
     : executor_(executor), stub_(std::move(stub)), queue_(queue) {
         SILKRPC_TRACE << "BackEnd::ctor " << this << "\n";
     }
 
-    ~BackEndGrpc() {
+    ~RemoteBackEnd() {
         SILKRPC_TRACE << "BackEnd::dtor " << this << "\n";
     }
 
@@ -209,4 +209,4 @@ private:
 
 } // namespace silkrpc::ethbackend
 
-#endif // SILKRPC_ETHBACKEND_BACKEND_GRPC_HPP_
+#endif // SILKRPC_ETHBACKEND_REMOTE_BACKEND_HPP_
