@@ -209,4 +209,4 @@ private:
 
 } // namespace silkrpc::ethbackend
 
-#endif // SILKRPC_ETHBACKEND_BACKEND_GRPC_HPP_
+#endif // SILKRPC_ETHBACKEND_REMOTE_BACKEND_HPP_
