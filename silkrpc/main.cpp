@@ -20,6 +20,7 @@
 #include <exception>
 #include <filesystem>
 #include <iostream>
+#include <string>
 #include <thread>
 
 #include <absl/flags/flag.h>
@@ -32,9 +33,11 @@
 #include <asio/co_spawn.hpp>
 #include <asio/signal_set.hpp>
 #include <asio/thread_pool.hpp>
+#include <asio/version.hpp>
 #include <boost/process/environment.hpp>
 #include <grpcpp/grpcpp.h>
 
+#include <silkrpc/buildinfo.h>
 #include <silkrpc/context_pool.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
@@ -50,8 +53,37 @@ ABSL_FLAG(std::string, api_spec, silkrpc::kDefaultEth1ApiSpec, "JSON RPC API nam
 ABSL_FLAG(uint32_t, num_contexts, std::thread::hardware_concurrency() / 3, "number of running I/O contexts as 32-bit integer");
 ABSL_FLAG(uint32_t, num_workers, 16, "number of worker threads as 32-bit integer");
 ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
-ABSL_FLAG(silkrpc::LogLevel, log_level, silkrpc::LogLevel::Critical, "logging level");
+ABSL_FLAG(silkrpc::LogLevel, log_verbosity, silkrpc::LogLevel::Critical, "logging verbosity level");
 ABSL_FLAG(silkrpc::WaitMode, wait_mode, silkrpc::WaitMode::blocking, "scheduler wait mode");
+
+//! Assemble the application name using the Cable build information
+std::string get_name_from_build_info() {
+    const auto build_info{silkrpc_get_buildinfo()};
+
+    std::string application_name{"silkrpc/"};
+    application_name.append(build_info->git_branch);
+    application_name.append(build_info->project_version);
+    application_name.append("/");
+    application_name.append(build_info->system_name);
+    application_name.append("-");
+    application_name.append(build_info->system_processor);
+    application_name.append("_");
+    application_name.append(build_info->build_type);
+    application_name.append("/");
+    application_name.append(build_info->compiler_id);
+    application_name.append("-");
+    application_name.append(build_info->compiler_version);
+    return application_name;
+}
+
+//! Assemble the relevant library version information
+std::string get_library_versions() {
+    std::string library_versions{"gRPC: "};
+    library_versions.append(grpc::Version());
+    library_versions.append(" Asio: ");
+    library_versions.append(std::to_string(ASIO_VERSION));
+    return library_versions;
+}
 
 const char* currentExceptionTypeName() {
     int status;
@@ -78,7 +110,7 @@ int main(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("C++ implementation of Ethereum JSON RPC API service within Thorax architecture");
     absl::ParseCommandLine(argc, argv);
 
-    SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_log_level));
+    SILKRPC_LOG_VERBOSITY(absl::GetFlag(FLAGS_log_verbosity));
     SILKRPC_LOG_THREAD(true);
 
     std::set_terminate([]() {
@@ -95,6 +127,8 @@ int main(int argc, char* argv[]) {
 
         std::abort();
     });
+
+    SILKRPC_LOG << "Silkrpc build info: " << get_name_from_build_info() << " " << get_library_versions() << "\n";
 
     try {
         auto chaindata{absl::GetFlag(FLAGS_chaindata)};
@@ -147,7 +181,7 @@ int main(int argc, char* argv[]) {
 
         auto num_contexts{absl::GetFlag(FLAGS_num_contexts)};
         if (num_contexts < 0) {
-            SILKRPC_ERROR << "Parameter numContexts is invalid: [" << num_contexts << "]\n";
+            SILKRPC_ERROR << "Parameter num_contexts is invalid: [" << num_contexts << "]\n";
             SILKRPC_ERROR << "Use --num_contexts flag to specify the number of threads running I/O contexts\n";
             return -1;
         }
