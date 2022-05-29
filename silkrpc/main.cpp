@@ -242,11 +242,11 @@ int main(int argc, char* argv[]) {
             active_services.emplace_back(std::make_unique<Server>(engine_port, kDefaultEth2ApiSpec, context, worker_pool));
         }
 
-        auto& io_context = context_pool.next_io_context();
-        asio::signal_set signals{io_context, SIGINT, SIGTERM};
-        SILKRPC_DEBUG << "Signals registered on io_context " << &io_context << "\n" << std::flush;
+        asio::io_context signal_context;
+        asio::signal_set signals{signal_context, SIGINT, SIGTERM};
+        SILKRPC_DEBUG << "Signals registered on signal_context " << &signal_context << "\n" << std::flush;
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
-            std::cout << "\n";
+            if (signal_number == SIGINT) std::cout << "\n";
             SILKRPC_INFO << "Signal number: " << signal_number << " caught, error code: " << error.code() << "\n" << std::flush;
             context_pool.stop();
             for (auto& service : active_services) {
@@ -262,7 +262,10 @@ int main(int argc, char* argv[]) {
 
         SILKRPC_LOG << "Silkrpc is now running [pid=" << pid << ", main thread=" << tid << "]\n";
 
-        context_pool.run();
+        context_pool.start();
+        signal_context.run();
+
+        context_pool.join();
     } catch (const std::exception& e) {
         SILKRPC_CRIT << "Exception: " << e.what() << "\n" << std::flush;
     } catch (...) {

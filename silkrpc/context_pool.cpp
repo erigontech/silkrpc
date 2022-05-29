@@ -84,7 +84,7 @@ std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode) {
 }
 
 Context::Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache, WaitMode wait_mode)
-    : io_context_{std::make_shared<asio::io_context>()},
+    : io_context_{std::make_shared<asio::io_context>(wait_mode == WaitMode::blocking ? ASIO_CONCURRENCY_HINT_1 : ASIO_CONCURRENCY_HINT_UNSAFE)},
       work_{asio::require(io_context_->get_executor(), asio::execution::outstanding_work.tracked)},
       queue_{std::make_unique<grpc::CompletionQueue>()},
       block_cache_(block_cache),
@@ -134,6 +134,7 @@ void Context::execute_loop_double_threaded() {
 
 void Context::stop() {
     io_context_->stop();
+    SILKRPC_DEBUG << "Context::stop io_context " << io_context_ << " [" << this << "]\n";
 }
 
 ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, WaitMode wait_mode) : next_index_{0} {
@@ -147,7 +148,7 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, W
 
     // Create as many execution contexts according as required by the pool size.
     for (std::size_t i{0}; i < pool_size; ++i) {
-        contexts_.push_back(Context{create_channel, block_cache, wait_mode});
+        contexts_.emplace_back(Context{create_channel, block_cache, wait_mode});
         SILKRPC_DEBUG << "ContextPool::ContextPool context[" << i << "] " << contexts_[i] << "\n";
     }
 }
@@ -166,9 +167,9 @@ void ContextPool::start() {
         for (std::size_t i{0}; i < contexts_.size(); ++i) {
             auto& context = contexts_[i];
             context_threads_.create_thread([&, i = i]() {
-                SILKRPC_DEBUG << "thread start context[" << i << "] thread_id: " << std::this_thread::get_id() << "\n";
+                SILKRPC_DEBUG << "Thread start context[" << i << "] thread_id: " << std::this_thread::get_id() << "\n";
                 context.execute_loop();
-                SILKRPC_DEBUG << "thread end context[" << i << "] thread_id: " << std::this_thread::get_id() << "\n";
+                SILKRPC_DEBUG << "Thread end context[" << i << "] thread_id: " << std::this_thread::get_id() << "\n";
             });
             SILKRPC_DEBUG << "ContextPool::start context[" << i << "].io_context started: " << &*context.io_context() << "\n";
         }
