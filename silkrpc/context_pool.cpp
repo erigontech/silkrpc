@@ -84,7 +84,7 @@ std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode) {
 }
 
 Context::Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache, WaitMode wait_mode)
-    : io_context_{std::make_shared<asio::io_context>(wait_mode == WaitMode::blocking ? ASIO_CONCURRENCY_HINT_1 : ASIO_CONCURRENCY_HINT_UNSAFE)},
+    : io_context_{std::make_shared<asio::io_context>()},
       work_{asio::require(io_context_->get_executor(), asio::execution::outstanding_work.tracked)},
       queue_{std::make_unique<grpc::CompletionQueue>()},
       block_cache_(block_cache),
