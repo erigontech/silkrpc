@@ -136,6 +136,7 @@ void DebugTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
 
 void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
               const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
+
     assert(execution_state.msg);
     evmc::address recipient(execution_state.msg->recipient);
     evmc::address sender(execution_state.msg->sender);
@@ -155,7 +156,6 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
         << "   msg.gas: " << std::dec << execution_state.msg->gas
         << "   msg.depth: " << std::dec << execution_state.msg->depth
         << "}\n";
-
 
     bool output_storage = false;
     if (!config_.disableStorage) {
@@ -191,7 +191,7 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
                 }
             }
         } else if (depth == execution_state.msg->depth) {
-            log.gas_cost = start_gas_;
+            log.gas_cost = log.gas - execution_state.gas_left;
         }
     }
 
