@@ -291,13 +291,11 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(cons
 template<typename WorldState, typename VM>
 asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
         const silkrpc::Transaction& transaction, std::int32_t index) {
-
     SILKRPC_INFO << "DebugExecutor::execute: "
         << " block_number: " << block_number
         << " transaction: {" << transaction << "}"
         << " index: " << std::dec << index
-        << " config: " << config_
-        << "\n";
+        << " config: " << config_ << "\n";
 
     const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
     const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
