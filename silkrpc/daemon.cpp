@@ -18,6 +18,7 @@
 
 #include <cxxabi.h>
 #include <filesystem>
+#include <stdexcept>
 
 #include <asio/signal_set.hpp>
 #include <boost/process/environment.hpp>
