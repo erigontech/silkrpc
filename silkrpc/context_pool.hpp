@@ -29,13 +29,13 @@
 #include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/txpool/transaction_pool.hpp>
 #include <silkrpc/common/block_cache.hpp>
+#include <silkrpc/common/log.hpp>
 #include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/txpool/miner.hpp>
+#include <silkrpc/txpool/transaction_pool.hpp>
 //#include <silkworm/rpc/completion_end_point.hpp>
-#include <silkrpc/common/log.hpp>
 
 // TODO(canepat) Temporary modified copy of CompletionEndPoint just for prototyping
 namespace silkworm::rpc {
