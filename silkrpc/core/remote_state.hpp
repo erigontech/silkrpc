@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_REMOTE_BUFFER_HPP_
-#define SILKRPC_CORE_REMOTE_BUFFER_HPP_
+#ifndef SILKRPC_CORE_REMOTE_STATE_HPP_
+#define SILKRPC_CORE_REMOTE_STATE_HPP_
 
 #include <iostream>
 #include <optional>
@@ -131,4 +131,4 @@ std::ostream& operator<<(std::ostream& out, const RemoteState& s);
 
 } // namespace silkrpc::state
 
-#endif  // SILKRPC_CORE_REMOTE_BUFFER_HPP_
+#endif  // SILKRPC_CORE_REMOTE_STATE_HPP_
