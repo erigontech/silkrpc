@@ -36,7 +36,7 @@
 #include <silkworm/types/transaction.hpp>
 
 #include <silkrpc/context_pool.hpp>
-#include <silkrpc/core/remote_buffer.hpp>
+#include <silkrpc/core/remote_state.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 
 namespace silkrpc {
