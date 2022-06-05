@@ -1,5 +1,10 @@
 extraction:
   cpp:
+    prepare:
+      packages:
+        - build-essential
+        - g++-10
+        - gcc-10
     after_prepare:
       - "mkdir custom_cmake"
       - "wget --quiet -O - https://cmake.org/files/v3.23/cmake-3.23.2-linux-x86_64.tar.gz | tar --strip-components=1 -xz -C custom_cmake"
