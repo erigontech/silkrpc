@@ -3,6 +3,9 @@
 C++ implementation of the daemon component exposing the [Ethereum JSON RPC protocol](https://eth.wiki/json-rpc/API) within the [Erigon](https://github.com/ledgerwatch/erigon) architecture.
 
 [![CircleCI](https://circleci.com/gh/torquem-ch/silkrpc.svg?style=shield)](https://circleci.com/gh/torquem-ch/silkrpc)
+[![Total Alerts](https://img.shields.io/lgtm/alerts/g/torquem-ch/silkrpc.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/torquem-ch/silkrpc/alerts)
+[![Code Quality: C/C++](https://img.shields.io/lgtm/grade/cpp/g/torquem-ch/silkrpc.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/torquem-ch/silkrpc/context:cpp)
+[![Code Quality: Python](https://img.shields.io/lgtm/grade/python/g/torquem-ch/silkrpc.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/torquem-ch/silkrpc/context:python)
 [![Codecov master](https://img.shields.io/codecov/c/github/torquem-ch/silkrpc/master.svg?style=shield&logo=codecov&logoColor=white)](https://codecov.io/gh/torquem-ch/silkrpc)
 ![version](https://img.shields.io/github/v/release/torquem-ch/silkrpc?sort=semver&color=normal)
 [![License](https://img.shields.io/github/license/torquem-ch/silkrpc?color=lightgrey)](https://img.shields.io/github/license/torquem-ch/silkrpc)
