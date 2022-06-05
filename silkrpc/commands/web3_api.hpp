@@ -24,7 +24,7 @@
 #include <asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/json/types.hpp>

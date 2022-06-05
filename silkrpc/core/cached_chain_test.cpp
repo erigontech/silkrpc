@@ -26,7 +26,7 @@
 #include <gmock/gmock.h>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 
 #include <silkworm/common/util.hpp>
 #include <silkworm/common/base.hpp>

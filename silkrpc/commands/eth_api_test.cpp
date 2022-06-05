@@ -27,7 +27,7 @@
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/transaction.hpp>

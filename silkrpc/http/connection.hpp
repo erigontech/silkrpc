@@ -33,7 +33,7 @@
 
 #include <silkrpc/commands/rpc_api_table.hpp>
 #include <silkrpc/common/constants.hpp>
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/http/reply.hpp>
 #include <silkrpc/http/request.hpp>
 #include <silkrpc/http/request_handler.hpp>

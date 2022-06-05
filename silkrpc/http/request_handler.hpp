@@ -26,7 +26,7 @@
 #include <asio/awaitable.hpp>
 #include <asio/thread_pool.hpp>
 
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/commands/rpc_api.hpp>
 #include <silkrpc/commands/rpc_api_table.hpp>
 #include <silkrpc/http/reply.hpp>
