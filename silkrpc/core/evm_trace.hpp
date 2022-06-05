@@ -132,10 +132,7 @@ struct TraceAction {
     std::uint64_t gas{0};
     std::optional<silkworm::Bytes> input;
     std::optional<silkworm::Bytes> init;
-    // silkworm::Bytes input{};
-    // silkworm::Bytes init{};
     intx::uint256 value{0};
-    // std::string value{"0x0"};
 };
 
 struct TraceResult {
@@ -163,10 +160,8 @@ class iterable_stack: public std::stack<T, Container> {
     using std::stack<T, Container>::c;
 
 public:
-    // using iterator = Container::iterator;
     using const_iterator = Container::const_iterator;
 
-    // auto begin() const { return std::begin(c); }
     const_iterator begin() const { return c.begin(); }
     const_iterator end() const { return std::end(c); }
 };
@@ -193,29 +188,15 @@ private:
     std::uint64_t initial_gas_;
     std::int32_t current_depth_{-1};
     std::set<evmc::address> created_address_;
-    // std::stack<std::reference_wrapper<Trace>> traces_stack_;
     iterable_stack<std::uint32_t> index_stack_;
     std::stack<std::uint64_t> start_gas_;
 };
-
-// struct DiffBalance {
-//     std::optional<evmc::address> from;
-//     std::optional<evmc::address> to;
-// };
-
-// struct DiffCode {
-//     std::optional<std::string> from;
-//     std::optional<std::string> to;
-// };
 
 struct DiffValue {
     std::optional<std::string> from;
     std::optional<std::string> to;
 };
 
-// using DiffBalance = std::map<std::string, DiffBalanceEntry>;
-// using DiffCode = std::map<std::string, DiffCodeEntry>;
-// using DiffNonce = std::map<std::string, std::string>;
 using DiffStorage = std::map<std::string, DiffValue>;
 
 struct StateDiffEntry {
@@ -227,10 +208,6 @@ struct StateDiffEntry {
 
 using StateDiff = std::map<std::string, StateDiffEntry>;
 
-// void to_json(nlohmann::json& json, const DiffBalanceEntry& dfe);
-// void to_json(nlohmann::json& json, const DiffCodeEntry& dce);
-// void to_json(nlohmann::json& json, const DiffBalance& db);
-// void to_json(nlohmann::json& json, const DiffCode& dc);
 void to_json(nlohmann::json& json, const DiffValue& dn);
 void to_json(nlohmann::json& json, const StateDiffEntry& state_diff);
 
