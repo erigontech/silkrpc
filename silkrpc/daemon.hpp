@@ -31,7 +31,7 @@
 
 namespace silkrpc {
 
-struct DaemonConfig {
+struct DaemonSettings {
     std::string chaindata;
     std::string http_port; // eth_end_point
     std::string engine_port; // engine_end_point
@@ -52,9 +52,9 @@ struct DaemonChecklist {
 
 class Daemon {
   public:
-    static int run(const DaemonConfig& config);
+    static int run(const DaemonSettings& settings);
 
-    explicit Daemon(const DaemonConfig& config);
+    explicit Daemon(const DaemonSettings& settings);
 
     Daemon(const Daemon&) = delete;
     Daemon& operator=(const Daemon&) = delete;
@@ -67,10 +67,10 @@ class Daemon {
     void join();
 
   protected:
-    static bool check_configuration(const DaemonConfig& config);
-    static ChannelFactory make_channel_factory(const DaemonConfig& config);
+    static bool validate_settings(const DaemonSettings& settings);
+    static ChannelFactory make_channel_factory(const DaemonSettings& settings);
 
-    const DaemonConfig& config_;
+    const DaemonSettings& settings_;
     ChannelFactory create_channel_;
     ContextPool context_pool_;
     asio::thread_pool worker_pool_;

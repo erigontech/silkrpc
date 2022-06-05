@@ -81,7 +81,7 @@ std::string get_library_versions() {
     return library_versions;
 }
 
-silkrpc::DaemonConfig parse_args(int argc, char* argv[]) {
+silkrpc::DaemonSettings parse_args(int argc, char* argv[]) {
     absl::FlagsUsageConfig config;
     config.contains_helpshort_flags = [](absl::string_view) { return false; };
     config.contains_help_flags = [](absl::string_view filename) { return absl::EndsWith(filename, "main.cpp"); };
@@ -92,7 +92,7 @@ silkrpc::DaemonConfig parse_args(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("C++ implementation of Ethereum JSON RPC API service within Thorax architecture");
     absl::ParseCommandLine(argc, argv);
 
-    const silkrpc::DaemonConfig rpc_daemon_config{
+    const silkrpc::DaemonSettings rpc_daemon_settings{
         absl::GetFlag(FLAGS_chaindata),
         absl::GetFlag(FLAGS_http_port),
         absl::GetFlag(FLAGS_engine_port),
@@ -104,7 +104,7 @@ silkrpc::DaemonConfig parse_args(int argc, char* argv[]) {
         absl::GetFlag(FLAGS_wait_mode)
     };
 
-    return rpc_daemon_config;
+    return rpc_daemon_settings;
 }
 
 int main(int argc, char* argv[]) {

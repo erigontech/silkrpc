@@ -39,13 +39,13 @@ const char* current_exception_name() {
     return abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, 0, &status);
 }
 
-int Daemon::run(const DaemonConfig& config) {
-    const bool valid_configuration{check_configuration(config)};
-    if (!valid_configuration) {
+int Daemon::run(const DaemonSettings& settings) {
+    const bool are_settings_valid{validate_settings(settings)};
+    if (!are_settings_valid) {
         return -1;
     }
 
-    SILKRPC_LOG_VERBOSITY(config.log_verbosity);
+    SILKRPC_LOG_VERBOSITY(settings.log_verbosity);
     SILKRPC_LOG_THREAD(true);
 
     std::set_terminate([]() {
@@ -66,16 +66,16 @@ int Daemon::run(const DaemonConfig& config) {
     const auto tid = std::this_thread::get_id();
 
     try {
-        if (config.chaindata.empty()) {
-            SILKRPC_LOG << "Silkrpc launched with target " << config.target << " using " << config.num_contexts
-                        << " contexts, " << config.num_workers << " workers\n";
+        if (settings.chaindata.empty()) {
+            SILKRPC_LOG << "Silkrpc launched with target " << settings.target << " using " << settings.num_contexts
+                        << " contexts, " << settings.num_workers << " workers\n";
         } else {
-            SILKRPC_LOG << "Silkrpc launched with chaindata " << config.chaindata << " using " << config.num_contexts
-                        << " contexts, " << config.num_workers << " workers\n";
+            SILKRPC_LOG << "Silkrpc launched with chaindata " << settings.chaindata << " using " << settings.num_contexts
+                        << " contexts, " << settings.num_workers << " workers\n";
         }
 
         // Create the one-and-only Silkrpc daemon
-        silkrpc::Daemon rpc_daemon{config};
+        silkrpc::Daemon rpc_daemon{settings};
 
         // Check protocol version compatibility with Core Services
         SILKRPC_LOG << "Checking protocol version compatibility with core services...\n";
@@ -98,7 +98,7 @@ int Daemon::run(const DaemonConfig& config) {
             rpc_daemon.stop();
         });
 
-        SILKRPC_LOG << "Silkrpc starting ETH RPC API at " << config.http_port << " ENGINE RPC API at " << config.engine_port << "\n";
+        SILKRPC_LOG << "Silkrpc starting ETH RPC API at " << settings.http_port << " ENGINE RPC API at " << settings.engine_port << "\n";
 
         rpc_daemon.start();
 
@@ -118,29 +118,29 @@ int Daemon::run(const DaemonConfig& config) {
     return 0;
 }
 
-bool Daemon::check_configuration(const DaemonConfig& config) {
-    const auto chaindata = config.chaindata;
+bool Daemon::validate_settings(const DaemonSettings& settings) {
+    const auto chaindata = settings.chaindata;
     if (!chaindata.empty() && !std::filesystem::exists(chaindata)) {
         SILKRPC_ERROR << "Parameter chaindata is invalid: [" << chaindata << "]\n";
         SILKRPC_ERROR << "Use --chaindata flag to specify the path of Erigon database\n";
         return false;
     }
 
-    const auto http_port = config.http_port;
+    const auto http_port = settings.http_port;
     if (!http_port.empty() && http_port.find(silkrpc::kAddressPortSeparator) == std::string::npos) {
         SILKRPC_ERROR << "Parameter http_port is invalid: [" << http_port << "]\n";
         SILKRPC_ERROR << "Use --http_port flag to specify the local binding for Ethereum JSON RPC service\n";
         return false;
     }
 
-    const auto engine_port = config.engine_port;
+    const auto engine_port = settings.engine_port;
     if (!engine_port.empty() && engine_port.find(silkrpc::kAddressPortSeparator) == std::string::npos) {
         SILKRPC_ERROR << "Parameter engine_port is invalid: [" << engine_port << "]\n";
         SILKRPC_ERROR << "Use --engine_port flag to specify the local binding for Engine JSON RPC service\n";
         return false;
     }
 
-    const auto target = config.target;
+    const auto target = settings.target;
     if (!target.empty() && target.find(":") == std::string::npos) {
         SILKRPC_ERROR << "Parameter target is invalid: [" << target << "]\n";
         SILKRPC_ERROR << "Use --target flag to specify the location of Erigon running instance\n";
@@ -153,21 +153,21 @@ bool Daemon::check_configuration(const DaemonConfig& config) {
         return false;
     }
 
-    const auto api_spec = config.api_spec;
+    const auto api_spec = settings.api_spec;
     if (api_spec.empty()) {
         SILKRPC_ERROR << "Parameter api_spec is invalid: [" << api_spec << "]\n";
         SILKRPC_ERROR << "Use --api_spec flag to specify JSON RPC API namespaces as comma-separated list of strings\n";
         return false;
     }
 
-    const auto num_contexts = config.num_contexts;
+    const auto num_contexts = settings.num_contexts;
     if (num_contexts < 0) {
         SILKRPC_ERROR << "Parameter num_contexts is invalid: [" << num_contexts << "]\n";
         SILKRPC_ERROR << "Use --num_contexts flag to specify the number of threads running I/O contexts\n";
         return false;
     }
 
-    const auto num_workers = config.num_workers;
+    const auto num_workers = settings.num_workers;
     if (num_workers < 0) {
         SILKRPC_ERROR << "Parameter num_workers is invalid: [" << num_workers << "]\n";
         SILKRPC_ERROR << "Use --num_workers flag to specify the number of worker threads executing long-run operations\n";
@@ -177,17 +177,17 @@ bool Daemon::check_configuration(const DaemonConfig& config) {
     return true;
 }
 
-ChannelFactory Daemon::make_channel_factory(const DaemonConfig& config) {
-    return [&config]() {
-        return grpc::CreateChannel(config.target, grpc::InsecureChannelCredentials());
+ChannelFactory Daemon::make_channel_factory(const DaemonSettings& settings) {
+    return [&settings]() {
+        return grpc::CreateChannel(settings.target, grpc::InsecureChannelCredentials());
     };
 }
 
-Daemon::Daemon(const DaemonConfig& config)
-    : config_(config),
-      create_channel_{make_channel_factory(config_)},
-      context_pool_{config_.num_contexts, create_channel_, config_.wait_mode},
-      worker_pool_{config_.num_workers} {
+Daemon::Daemon(const DaemonSettings& settings)
+    : settings_(settings),
+      create_channel_{make_channel_factory(settings_)},
+      context_pool_{settings_.num_contexts, create_channel_, settings_.wait_mode},
+      worker_pool_{settings_.num_workers} {
 }
 
 DaemonChecklist Daemon::run_checklist() {
@@ -208,12 +208,12 @@ DaemonChecklist Daemon::run_checklist() {
 }
 
 void Daemon::start() {
-    for (int i = 0; i < config_.num_contexts; ++i) {
+    for (int i = 0; i < settings_.num_contexts; ++i) {
         auto& context = context_pool_.next_context();
         rpc_services_.emplace_back(
-            std::make_unique<http::Server>(config_.http_port, config_.api_spec, context, worker_pool_));
+            std::make_unique<http::Server>(settings_.http_port, settings_.api_spec, context, worker_pool_));
         rpc_services_.emplace_back(
-            std::make_unique<http::Server>(config_.engine_port, kDefaultEth2ApiSpec, context, worker_pool_));
+            std::make_unique<http::Server>(settings_.engine_port, kDefaultEth2ApiSpec, context, worker_pool_));
     }
 
     for (auto& service : rpc_services_) {
