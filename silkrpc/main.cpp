@@ -96,6 +96,9 @@ int main(int argc, char* argv[]) {
 
     using silkrpc::kAddressPortSeparator;
     using silkrpc::kDefaultEth2ApiSpec;
+    using silkrpc::ChannelFactory;
+    using silkrpc::ContextPool;
+    using silkrpc::http::Server;
 
     absl::FlagsUsageConfig config;
     config.contains_helpshort_flags = [](absl::string_view) { return false; };
@@ -199,7 +202,7 @@ int main(int argc, char* argv[]) {
         }
 
         // TODO(canepat): handle also secure channel for remote
-        silkrpc::ChannelFactory create_channel = [&]() {
+        ChannelFactory create_channel = [&]() {
             return grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
         };
 
@@ -229,32 +232,40 @@ int main(int argc, char* argv[]) {
         SILKRPC_LOG << txpool_protocol_check.result << "\n";
 
         // TODO(canepat): handle also local (shared-memory) database
-        silkrpc::ContextPool context_pool{num_contexts, create_channel, wait_mode};
+        ContextPool context_pool{num_contexts, create_channel, wait_mode};
         asio::thread_pool worker_pool{num_workers};
 
-        silkrpc::http::Server eth_rpc_service{http_port, api_spec, context_pool, worker_pool};
-        silkrpc::http::Server engine_rpc_service{engine_port, kDefaultEth2ApiSpec, context_pool, worker_pool};
+        std::vector<std::unique_ptr<Server>> active_services;
+        for (int i = 0; i < num_contexts; ++i) {
+            auto& context = context_pool.next_context();
+            active_services.emplace_back(std::make_unique<Server>(http_port, api_spec, context, worker_pool));
+            active_services.emplace_back(std::make_unique<Server>(engine_port, kDefaultEth2ApiSpec, context, worker_pool));
+        }
 
-        auto& io_context = context_pool.next_io_context();
-        asio::signal_set signals{io_context, SIGINT, SIGTERM};
-        SILKRPC_DEBUG << "Signals registered on io_context " << &io_context << "\n" << std::flush;
+        asio::io_context signal_context;
+        asio::signal_set signals{signal_context, SIGINT, SIGTERM};
+        SILKRPC_DEBUG << "Signals registered on signal_context " << &signal_context << "\n" << std::flush;
         signals.async_wait([&](const asio::system_error& error, int signal_number) {
-            std::cout << "\n";
-            SILKRPC_INFO << "Signal caught, error: " << error.what() << " number: " << signal_number << "\n" << std::flush;
+            if (signal_number == SIGINT) std::cout << "\n";
+            SILKRPC_INFO << "Signal number: " << signal_number << " caught, error code: " << error.code() << "\n" << std::flush;
             context_pool.stop();
-            eth_rpc_service.stop();
-            engine_rpc_service.stop();
+            for (auto& service : active_services) {
+                service->stop();
+            }
         });
 
-        SILKRPC_LOG << "Silkrpc starting Ethereum RPC API service at " << http_port << "\n";
-        eth_rpc_service.start();
+        SILKRPC_LOG << "Silkrpc starting ETH RPC API at " << http_port << " ENGINE RPC API at " << engine_port << "\n";
 
-        SILKRPC_LOG << "Silkrpc running Engine RPC API service at " << engine_port << "\n";
-        engine_rpc_service.start();
+        for (auto& service : active_services) {
+            service->start();
+        }
 
         SILKRPC_LOG << "Silkrpc is now running [pid=" << pid << ", main thread=" << tid << "]\n";
 
-        context_pool.run();
+        context_pool.start();
+        signal_context.run();
+
+        context_pool.join();
     } catch (const std::exception& e) {
         SILKRPC_CRIT << "Exception: " << e.what() << "\n" << std::flush;
     } catch (...) {

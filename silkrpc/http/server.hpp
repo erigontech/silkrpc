@@ -47,7 +47,7 @@ public:
     Server& operator=(const Server&) = delete;
 
     // Construct the server to listen on the specified local TCP end-point
-    explicit Server(const std::string& end_point, const std::string& api_spec, ContextPool& context_pool, asio::thread_pool& workers);
+    explicit Server(const std::string& end_point, const std::string& api_spec, Context& context, asio::thread_pool& workers);
 
     void start();
 
@@ -61,8 +61,8 @@ private:
     // The repository of API request handlers
     commands::RpcApiTable handler_table_;
 
-    // The context pool used to perform asynchronous operations
-    ContextPool& context_pool_;
+    // The context used to perform asynchronous operations
+    Context& context_;
 
     // The acceptor used to listen for incoming TCP connections
     asio::ip::tcp::acceptor acceptor_;
