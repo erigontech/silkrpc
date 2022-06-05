@@ -113,8 +113,8 @@ public:
     void on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
             const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
-    void on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept;
-    void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept {};
+    void on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override;
+    void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
 
 private:
     VmTrace& vm_trace_;
@@ -160,7 +160,7 @@ class iterable_stack: public std::stack<T, Container> {
     using std::stack<T, Container>::c;
 
 public:
-    using const_iterator = Container::const_iterator;
+    using const_iterator = typename Container::const_iterator;
 
     const_iterator begin() const { return c.begin(); }
     const_iterator end() const { return std::end(c); }
@@ -178,8 +178,8 @@ public:
     void on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
             const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
-    void on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept {};
-    void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept;
+    void on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
+    void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
 
 private:
     std::vector<Trace>& traces_;
@@ -223,8 +223,8 @@ public:
     void on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
             const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
-    void on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept {};
-    void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept;
+    void on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
+    void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
 
 private:
     StateDiff& state_diff_;

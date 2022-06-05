@@ -535,6 +535,9 @@ void TraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
             case evmc_call_kind::EVMC_CALLCODE:
                 trace_action.call_type = "callcode";
                 break;
+            case evmc_call_kind::EVMC_CREATE:
+            case evmc_call_kind::EVMC_CREATE2:
+                break;
         }
     }
 
