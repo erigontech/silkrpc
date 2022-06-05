@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CONTEXT_POOL_HPP_
-#define SILKRPC_CONTEXT_POOL_HPP_
+#ifndef SILKRPC_CONCURRENCY_CONTEXT_POOL_HPP_
+#define SILKRPC_CONCURRENCY_CONTEXT_POOL_HPP_
 
 #include <cstddef>
 #include <functional>
@@ -303,4 +303,4 @@ private:
 
 } // namespace silkrpc
 
-#endif // SILKRPC_CONTEXT_POOL_HPP_
+#endif // SILKRPC_CONCURRENCY_CONTEXT_POOL_HPP_
