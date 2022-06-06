@@ -114,7 +114,7 @@ RPCDaemon will be running on port 8545
 #### _Silkrpc_
 From Silkrpc project directory:
 ```
-taskset -c 0-1 build_gcc_release/silkrpc/silkrpcdaemon --target localhost:9090
+taskset -c 0-1 build_gcc_release/cmd/silkrpcdaemon --target localhost:9090
 ```
 Silkrpc will be running on port 51515
 

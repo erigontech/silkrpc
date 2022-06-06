@@ -46,8 +46,7 @@ ABSL_FLAG(silkrpc::WaitMode, wait_mode, silkrpc::WaitMode::blocking, "scheduler 
 std::string get_version_from_build_info() {
     const auto build_info{silkrpc_get_buildinfo()};
 
-    std::string application_version{"silkrpc/"};
-    application_version.append(build_info->git_branch);
+    std::string application_version{"silkrpcdaemon version: "};
     application_version.append(build_info->project_version);
     return application_version;
 }
@@ -108,7 +107,5 @@ silkrpc::DaemonSettings parse_args(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
-    SILKRPC_LOG << "Silkrpc build info: " << get_name_from_build_info() << " " << get_library_versions() << "\n";
-
-    return silkrpc::Daemon::run(parse_args(argc, argv));
+    return silkrpc::Daemon::run(parse_args(argc, argv), {get_name_from_build_info(), get_library_versions()});
 }

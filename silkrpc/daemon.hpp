@@ -44,6 +44,11 @@ struct DaemonSettings {
     WaitMode wait_mode;
 };
 
+struct DaemonInfo {
+    std::string build;
+    std::string libraries;
+};
+
 struct DaemonChecklist {
     std::vector<ProtocolVersionResult> protocol_checklist;
 
@@ -52,7 +57,7 @@ struct DaemonChecklist {
 
 class Daemon {
   public:
-    static int run(const DaemonSettings& settings);
+    static int run(const DaemonSettings& settings, const DaemonInfo& info = {});
 
     explicit Daemon(const DaemonSettings& settings);
 

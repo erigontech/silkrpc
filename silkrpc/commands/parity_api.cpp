@@ -63,7 +63,7 @@ asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohm
 
         reply = make_json_content(request["id"], receipts);
     } catch (const std::invalid_argument& iv) {
-        SILKRPC_DEBUG << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
+        SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_content(request["id"], {});
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";

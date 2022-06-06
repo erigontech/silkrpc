@@ -39,7 +39,7 @@ const char* current_exception_name() {
     return abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, 0, &status);
 }
 
-int Daemon::run(const DaemonSettings& settings) {
+int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
     const bool are_settings_valid{validate_settings(settings)};
     if (!are_settings_valid) {
         return -1;
@@ -47,6 +47,8 @@ int Daemon::run(const DaemonSettings& settings) {
 
     SILKRPC_LOG_VERBOSITY(settings.log_verbosity);
     SILKRPC_LOG_THREAD(true);
+
+    SILKRPC_LOG << "Silkrpc build info: " << info.build << " " << info.libraries << "\n";
 
     std::set_terminate([]() {
         try {
