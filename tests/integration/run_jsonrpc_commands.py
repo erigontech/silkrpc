@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 """ Run the JSON RPC API curl commands as integration tests """
 
-import getopt
 import json
-import jsondiff
 import shlex
 import subprocess
 import sys
+
+import getopt
+import jsondiff
 
 
 def get_target(silk: bool, method: str):
