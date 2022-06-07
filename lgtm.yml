@@ -6,8 +6,6 @@ extraction:
         - g++-10
         - gcc-10
     after_prepare:
-      - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 50
-      - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 50
       - mkdir custom_cmake
       - wget --quiet -O - https://cmake.org/files/v3.23/cmake-3.23.2-linux-x86_64.tar.gz | tar --strip-components=1 -xz -C custom_cmake
       - export PATH=$(pwd)/custom_cmake/bin:${PATH}
