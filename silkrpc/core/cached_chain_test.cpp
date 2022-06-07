@@ -26,7 +26,7 @@
 #include <gmock/gmock.h>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 
 #include <silkworm/common/util.hpp>
 #include <silkworm/common/base.hpp>
@@ -106,10 +106,9 @@ static void check_expected_transaction(const Transaction& transaction) {
     CHECK(transaction.data == *silkworm::from_hex(
         "f2f0387700000000000000000000000000000000000000000000000000000000000158b09f0270fc889c577c1c64db7c819f921d1b6e8c7e5d3f2ff34f162cf4b324cc05"));
     CHECK(*transaction.from == 0x70A5C9D346416f901826581d423Cd5B92d44Ff5a_address);
-    //CHECK(transaction.nonce == 103470);
+    CHECK(transaction.nonce == 103470);
     CHECK(transaction.max_priority_fee_per_gas == 0x77359400);
     CHECK(transaction.max_fee_per_gas == 0x77359400);
-    //CHECK(transaction.gas == 103470);
     CHECK(transaction.gas_limit == 5000000);
     CHECK(transaction.transaction_index == 0);
     CHECK(transaction.type == Transaction::Type::kLegacy);
@@ -449,7 +448,9 @@ TEST_CASE("read_transaction_by_hash") {
         ));
         EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> {
-                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("70A5C9D346416f901826581d423Cd5B92d44Ff5a")};
+                co_return KeyValue{
+                    *silkworm::from_hex("00000000003d0900439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff"),
+                    *silkworm::from_hex("70A5C9D346416f901826581d423Cd5B92d44Ff5a")};
             }
         ));
         auto result = asio::co_spawn(pool, read_transaction_by_hash(cache, db_reader, transaction_hash), asio::use_future);

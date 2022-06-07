@@ -32,7 +32,7 @@
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/base.hpp>
 
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/interfaces/txpool/mining.grpc.pb.h>
 #include <silkrpc/interfaces/txpool/mining_mock_fix24351.grpc.pb.h>

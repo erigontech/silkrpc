@@ -141,7 +141,7 @@ We use the standard C++20 programming language. We follow the [Google's C++ Styl
 From the build folder (`build_[gcc, clang]_[debug, release]` according to your choice) you typically activate Silkrpc using:
 
 ```
-$ silkrpc/silkrpcdaemon --target <core_service_host_address>:9090
+$ cmd/silkrpcdaemon --target <core_service_host_address>:9090
 ```
 
 where `<core_service_host_address>` is the hostname or IP address of the Core services to connect to.
@@ -149,7 +149,7 @@ where `<core_service_host_address>` is the hostname or IP address of the Core se
 You can check all command-line parameters supported by Silkrpc using:
 
 ```
-$ silkrpc/silkrpcdaemon --help
+$ cmd/silkrpcdaemon --help
 silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
 
   Flags from main.cpp:
@@ -167,6 +167,6 @@ silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
 You can also check the Silkrpc executable version by:
 
 ```
-$ silkrpc/silkrpcdaemon --version
+$ cmd/silkrpcdaemon --version
 silkrpcdaemon 0.0.7
 ```

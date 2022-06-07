@@ -29,7 +29,7 @@
 
 #include <silkrpc/txpool/transaction_pool.hpp>
 #include <silkworm/types/receipt.hpp>
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/croaring/roaring.hh>
 #include <silkrpc/json/types.hpp>

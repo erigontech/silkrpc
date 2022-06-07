@@ -27,7 +27,7 @@
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/ethbackend/remote_backend.hpp>
 #include <silkrpc/interfaces/types/types.pb.h>
 

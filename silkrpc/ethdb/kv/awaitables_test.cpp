@@ -25,7 +25,7 @@
 #include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/ethdb/kv/awaitables.hpp>
 
 namespace silkrpc::ethdb::kv {

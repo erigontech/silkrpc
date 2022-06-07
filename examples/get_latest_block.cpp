@@ -34,7 +34,7 @@
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
