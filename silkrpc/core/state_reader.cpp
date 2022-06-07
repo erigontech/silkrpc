@@ -32,7 +32,7 @@ namespace silkrpc {
 asio::awaitable<std::optional<silkworm::Account>> StateReader::read_account(const evmc::address& address, uint64_t block_number) const {
     std::optional<silkworm::Bytes> encoded{co_await read_historical_account(address, block_number)};
     if (!encoded) {
-        encoded = co_await db_reader_.get_one(silkrpc::db::table::kPlainState, full_view(address));
+        encoded = co_await db_reader_.get_one(db::table::kPlainState, full_view(address));
     }
     if (!encoded || encoded->empty()) {
         co_return std::nullopt;
@@ -44,7 +44,7 @@ asio::awaitable<std::optional<silkworm::Account>> StateReader::read_account(cons
     if (account.incarnation > 0 && account.code_hash == silkworm::kEmptyHash) {
         // Restore code hash
         const auto storage_key{silkworm::db::storage_prefix(full_view(address), account.incarnation)};
-        auto code_hash{co_await db_reader_.get_one(silkrpc::db::table::kPlainContractCode, storage_key)};
+        auto code_hash{co_await db_reader_.get_one(db::table::kPlainContractCode, storage_key)};
         if (code_hash.length() == silkworm::kHashLength) {
             std::memcpy(account.code_hash.bytes, code_hash.data(), silkworm::kHashLength);
         }
@@ -59,7 +59,7 @@ asio::awaitable<evmc::bytes32> StateReader::read_storage(const evmc::address& ad
     if (!value) {
         auto composite_key{silkrpc::composite_storage_key(address, incarnation, location_hash.bytes)};
         SILKRPC_DEBUG << "StateReader::read_storage composite_key: " << composite_key << "\n";
-        value = co_await db_reader_.get_one(silkrpc::db::table::kPlainState, composite_key);
+        value = co_await db_reader_.get_one(db::table::kPlainState, composite_key);
         SILKRPC_DEBUG << "StateReader::read_storage value: " << (value ? *value : silkworm::Bytes{}) << "\n";
     }
     if (!value) {
@@ -75,14 +75,14 @@ asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_code(const evm
     if (code_hash == silkworm::kEmptyHash) {
         co_return std::nullopt;
     }
-    auto code{co_await db_reader_.get_one(silkrpc::db::table::kCode, full_view(code_hash))};
+    auto code{co_await db_reader_.get_one(db::table::kCode, full_view(code_hash))};
     co_return code;
 }
 
 asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_account(const evmc::address& address, uint64_t block_number) const {
     const auto account_history_key{silkworm::db::account_history_key(address, block_number)};
     SILKRPC_DEBUG << "StateReader::read_historical_account account_history_key: " << account_history_key << "\n";
-    const auto kv_pair{co_await db_reader_.get(silkrpc::db::table::kAccountHistory, account_history_key)};
+    const auto kv_pair{co_await db_reader_.get(db::table::kAccountHistory, account_history_key)};
 
     const auto address_view{full_view(address)};
     if (kv_pair.key.substr(0, silkworm::kAddressLength) != address_view) {
@@ -101,7 +101,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_acc
     SILKRPC_DEBUG << "StateReader::read_historical_account block_key: " << block_key << "\n";
     const auto address_subkey{address_view};
     SILKRPC_DEBUG << "StateReader::read_historical_account address_subkey: " << address_subkey << "\n";
-    const auto value{co_await db_reader_.get_both_range(silkrpc::db::table::kPlainAccountChangeSet, block_key, address_subkey)};
+    const auto value{co_await db_reader_.get_both_range(db::table::kPlainAccountChangeSet, block_key, address_subkey)};
     SILKRPC_DEBUG << "StateReader::read_historical_account value: " << (value ? *value : silkworm::Bytes{}) << "\n";
 
     co_return value;
@@ -111,7 +111,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_sto
     const evmc::bytes32& location_hash, uint64_t block_number) const {
     const auto storage_history_key{silkworm::db::storage_history_key(address, location_hash, block_number)};
     SILKRPC_DEBUG << "StateReader::read_historical_storage storage_history_key: " << storage_history_key << "\n";
-    const auto kv_pair{co_await db_reader_.get(silkrpc::db::table::kStorageHistory, storage_history_key)};
+    const auto kv_pair{co_await db_reader_.get(db::table::kStorageHistory, storage_history_key)};
 
     const auto location_hash_view{full_view(location_hash)};
     if (kv_pair.key.substr(0, silkworm::kAddressLength) != full_view(address) ||
@@ -131,7 +131,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_sto
     SILKRPC_DEBUG << "StateReader::read_historical_storage storage_change_key: " << storage_change_key << "\n";
     const auto location_subkey{location_hash_view};
     SILKRPC_DEBUG << "StateReader::read_historical_storage location_subkey: " << location_subkey << "\n";
-    const auto value{co_await db_reader_.get_both_range(silkrpc::db::table::kPlainStorageChangeSet, storage_change_key, location_subkey)};
+    const auto value{co_await db_reader_.get_both_range(db::table::kPlainStorageChangeSet, storage_change_key, location_subkey)};
     SILKRPC_DEBUG << "StateReader::read_historical_storage value: " << (value ? *value : silkworm::Bytes{}) << "\n";
 
     co_return value;

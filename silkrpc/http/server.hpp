@@ -33,7 +33,7 @@
 #include <asio/ip/tcp.hpp>
 #include <asio/thread_pool.hpp>
 
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/http/request_handler.hpp>
 
 #include <silkrpc/commands/rpc_api_table.hpp>

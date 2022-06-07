@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include "remote_buffer.hpp"
+#include "remote_state.hpp"
 
 #include <asio/co_spawn.hpp>
 #include <asio/use_future.hpp>

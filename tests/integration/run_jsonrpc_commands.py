@@ -5,8 +5,10 @@ import json
 import shlex
 import subprocess
 import sys
+
 import getopt
 import jsondiff
+
 
 def get_target(silk: bool, method: str):
     "Determine where silkrpc is supposed to be serving at."
@@ -17,7 +19,7 @@ def get_target(silk: bool, method: str):
 
     return "localhost:8545"
 
-def run_shell_command(command: str, expected_response: str, exit_on_fail):
+def run_shell_command(command: str, expected_response: str, verbose: bool, exit_on_fail: bool):
     """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
     command_and_args = shlex.split(command)
     process = subprocess.run(command_and_args, stdout=subprocess.PIPE, universal_newlines=True, check=True)
@@ -34,10 +36,13 @@ def run_shell_command(command: str, expected_response: str, exit_on_fail):
             return
         response_diff = jsondiff.diff(expected_response, response)
         print(f"--> KO: unexpected result for command: {command}\n--> DIFF expected-received: {response_diff}")
+        if verbose:
+            print(f"\n--> expected_response: {expected_response}")
+            print(f"\n--> response: {response}")
         if exit_on_fail:
             sys.exit(1)
 
-def run_tests(json_filename, verbose, silk, exit_on_fail, req_test):
+def run_tests(json_filename: str, verbose: bool, silk: bool, exit_on_fail: bool, req_test: int):
     """ Run integration tests. """
     with open(json_filename, encoding='utf8') as json_file:
         jsonrpc_commands = json.load(json_file)
@@ -53,7 +58,9 @@ def run_tests(json_filename, verbose, silk, exit_on_fail, req_test):
                 run_shell_command(
                     '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
                     request_dumps + '''\' ''' + target,
-                    response, exit_on_fail)
+                    response,
+                    verbose,
+                    exit_on_fail)
             test_number = test_number + 1
 
 #

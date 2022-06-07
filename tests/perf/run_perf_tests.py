@@ -274,11 +274,11 @@ class PerfTest:
         wait_mode_str = " --wait_mode " + self.config.wait_mode
         if on_core[0] == "-":
             cmd = perf_cmd \
-                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_verbosity c --num_workers 16"\
+                + self.config.silkrpc_build_dir + "cmd/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_verbosity c --num_workers 16"\
                     + wait_mode_str + " &"
         else:
             cmd = perf_cmd + "taskset -c " + on_core[0] + " "\
-                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_verbosity c  --num_workers 16"\
+                + self.config.silkrpc_build_dir + "cmd/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_verbosity c  --num_workers 16"\
                     + " --num_contexts " + str(self.config.silkrpc_num_contexts) + wait_mode_str + " &"
         print("SilkDaemon starting ...: ", cmd)
         status = os.system(cmd)
