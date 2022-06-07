@@ -1,5 +1,5 @@
 /*
-   Copyright 2020 The Silkrpc Authors
+   Copyright 2020-2022 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,6 +14,26 @@
    limitations under the License.
 */
 
+// Portions of the following code are inspired by Aeron [https://github.com/real-logic/aeron]
+
+/*
+ * Copyright 2014-2022 Real Logic Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+// Portions of the following code are based on Disruptor-cpp [https://github.com/Abc-Arbitrage/Disruptor-cpp]
+
 #ifndef SILKRPC_CONCURRENCY_WAIT_STRATEGY_HPP_
 #define SILKRPC_CONCURRENCY_WAIT_STRATEGY_HPP_
 
@@ -26,45 +46,101 @@
 
 namespace silkrpc {
 
-struct WaitStrategy {
-    virtual ~WaitStrategy() = default;
+class SleepingWaitStrategy {
+  public:
+    inline void idle(int work_count) {
+        if (work_count > 0) {
+            if (counter_ != kRetries) {
+                counter_ = kRetries;
+            }
+            return;
+        }
 
-    virtual void wait_once(uint32_t executed_count) = 0;
-};
-
-struct SleepingWaitStrategy : public WaitStrategy {
-    void wait_once(uint32_t executed_count) override;
-
-  private:
-    inline static const uint32_t kRetries{200};
-
-    uint32_t counter_{kRetries};
-};
-
-struct YieldingWaitStrategy : public WaitStrategy {
-    void wait_once(uint32_t executed_count) override;
-
-  private:
-    inline static const uint32_t kSpinTries{100};
-
-    uint32_t counter_{kSpinTries};
-};
-
-struct SpinWaitWaitStrategy : public WaitStrategy {
-    void wait_once(uint32_t executed_count) override;
+        if (counter_ > 100) {
+            --counter_;
+        } else if (counter_ > 0) {
+            --counter_;
+            std::this_thread::yield();
+        } else {
+            std::this_thread::sleep_for(duration_);
+        }
+    }
 
   private:
-    void spin_wait();
+    inline static const int kRetries{200};
 
-    inline static const uint32_t kYieldThreshold{10};
-    inline static const uint32_t kSleep0EveryHowManyTimes{5};
-    inline static const uint32_t kSleep1EveryHowManyTimes{20};
-
-    uint32_t counter_{0};
+    int counter_{kRetries};
+    std::chrono::milliseconds duration_{1};
 };
 
-struct BusySpinWaitStrategy : public WaitStrategy {
-    void wait_once(uint32_t /*executed_count*/) override {
+class YieldingWaitStrategy {
+  public:
+    inline void idle(int work_count) {
+        if (work_count > 0) {
+            if (counter_ != kSpinTries) {
+                counter_ = kSpinTries;
+            }
+            return;
+        }
+
+        if (counter_ == 0) {
+            std::this_thread::yield();
+        } else {
+            --counter_;
+        }
+    }
+
+  private:
+    inline static const int kSpinTries{100};
+
+    int counter_{kSpinTries};
+};
+
+class SpinWaitWaitStrategy {
+  public:
+    inline void idle(int work_count) {
+        if (work_count > 0) {
+            if (counter_ != 0) {
+                counter_ = 0;
+            }
+            return;
+        }
+
+        if (counter_ > kYieldThreshold) {
+            auto delta = counter_ - kYieldThreshold;
+            if (delta % kSleep1EveryHowManyTimes == kSleep1EveryHowManyTimes - 1) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            } else if (delta % kSleep0EveryHowManyTimes == kSleep0EveryHowManyTimes - 1) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(0));
+            } else {
+                std::this_thread::yield();
+            }
+        } else {
+            for (auto i{0}; i < (4 << counter_); i++) {
+                spin_wait();
+            }
+        }
+    }
+
+  private:
+    inline void spin_wait() {
+        asm volatile
+        (
+            "rep\n"
+            "nop"
+        );
+    }
+
+    inline static const int kYieldThreshold{10};
+    inline static const int kSleep0EveryHowManyTimes{5};
+    inline static const int kSleep1EveryHowManyTimes{20};
+
+    int counter_{0};
+};
+
+class BusySpinWaitStrategy {
+  public:
+    inline void idle(int /*work_count*/) {
     }
 };
 
@@ -78,8 +154,6 @@ enum class WaitMode {
 
 bool AbslParseFlag(absl::string_view text, WaitMode* wait_mode, std::string* error);
 std::string AbslUnparseFlag(WaitMode wait_mode);
-
-std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode);
 
 } // namespace silkrpc
 

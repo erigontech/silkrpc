@@ -132,7 +132,8 @@ class Context {
 
   private:
     //! Execute single-threaded loop until stopped.
-    void execute_loop_single_threaded();
+    template <typename WaitStrategy>
+    void execute_loop_single_threaded(WaitStrategy&& wait_strategy);
 
     //! Execute single-threaded loop until stopped.
     void execute_loop_double_threaded();
