@@ -75,17 +75,19 @@ void Context::execute_loop() {
     switch (wait_mode_) {
         case WaitMode::blocking:
             execute_loop_double_threaded();
+        break;
         case WaitMode::yielding:
             execute_loop_single_threaded(YieldingWaitStrategy{});
+        break;
         case WaitMode::sleeping:
             execute_loop_single_threaded(SleepingWaitStrategy{});
+        break;
         case WaitMode::spin_wait:
             execute_loop_single_threaded(SpinWaitWaitStrategy{});
+        break;
         case WaitMode::busy_spin:
             execute_loop_single_threaded(BusySpinWaitStrategy{});
-        default:
-            SILKRPC_CRIT << "Cannot execute loop, unsupported wait mode\n";
-            return;
+        break;
     }
 }
 
