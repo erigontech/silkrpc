@@ -38,6 +38,7 @@
 #define SILKRPC_CONCURRENCY_WAIT_STRATEGY_HPP_
 
 #include <chrono>
+#include <limits>
 #include <memory>
 #include <string>
 #include <thread>
@@ -45,6 +46,8 @@
 #include <absl/strings/string_view.h>
 
 namespace silkrpc {
+
+// These wait strategies are experimental for performance tests and not yet production-ready.
 
 class SleepingWaitStrategy {
   public:
@@ -120,6 +123,12 @@ class SpinWaitWaitStrategy {
                 spin_wait();
             }
         }
+
+        if (counter_ == std::numeric_limits<int32_t>::max()) {
+            counter_ = kYieldThreshold;
+        } else {
+            ++counter_;
+        }
     }
 
   private:
@@ -131,11 +140,11 @@ class SpinWaitWaitStrategy {
         );
     }
 
-    inline static const int kYieldThreshold{10};
-    inline static const int kSleep0EveryHowManyTimes{5};
-    inline static const int kSleep1EveryHowManyTimes{20};
+    inline static const int32_t kYieldThreshold{10};
+    inline static const int32_t kSleep0EveryHowManyTimes{5};
+    inline static const int32_t kSleep1EveryHowManyTimes{20};
 
-    int counter_{0};
+    int32_t counter_{0};
 };
 
 class BusySpinWaitStrategy {
