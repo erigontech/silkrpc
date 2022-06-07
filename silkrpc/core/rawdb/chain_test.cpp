@@ -812,12 +812,21 @@ TEST_CASE("read_body") {
         ));
         EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> {
-                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("70A5C9D346416f901826581d423Cd5B92d44Ff5a")};
+                co_return KeyValue{
+                    *silkworm::from_hex("00000000003d0900439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff"),
+                    *silkworm::from_hex("70A5C9D346416f901826581d423Cd5B92d44Ff5a")};
             }
         ));
         auto result = asio::co_spawn(pool, read_body(db_reader, block_hash, block_number), asio::use_future);
         const silkworm::BlockBody body = result.get();
         CHECK(body.transactions.size() == 1);
+        if (body.transactions.size() > 0) {
+            const auto first_transaction = body.transactions[0];
+            CHECK(first_transaction.from.has_value());
+            if (first_transaction.from) {
+                CHECK(*first_transaction.from == 0x70A5C9D346416f901826581d423Cd5B92d44Ff5a_address);
+            }
+        }
     }
 
     SECTION("block found with transaction not matching senders") {
@@ -847,7 +856,11 @@ TEST_CASE("read_body") {
             }
         ));
         auto result = asio::co_spawn(pool, read_body(db_reader, block_hash, block_number), asio::use_future);
-        CHECK_THROWS_MATCHES(result.get(), std::runtime_error, Message("#senders and #transactions do not match in read_body"));
+        const silkworm::BlockBody body = result.get();
+        CHECK(body.transactions.size() == 1);
+        if (body.transactions.size() > 0) {
+            CHECK(!body.transactions[0].from.has_value());
+        }
     }
 }
 
@@ -920,7 +933,9 @@ TEST_CASE("read_senders") {
         const uint64_t block_number{3'529'603};
         EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> {
-                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("70A5C9D346416f901826581d423Cd5B92d44Ff5a")};
+                co_return KeyValue{
+                    *silkworm::from_hex("000000000035db838059c265f40cdb2d3b3245847c21ed154eebf299fd0ff01ee3afded43cdadc45"),
+                    *silkworm::from_hex("70A5C9D346416f901826581d423Cd5B92d44Ff5a")};
             }
         ));
         auto result = asio::co_spawn(pool, read_senders(db_reader, block_hash, block_number), asio::use_future);
@@ -932,11 +947,12 @@ TEST_CASE("read_senders") {
         const uint64_t block_number{3'529'601};
         EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> {
-                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex(
-                    "be188D6641E8b680743A4815dFA0f6208038960F"
-                    "0828D0386C1122E565f07DD28c7d1340eD5B3315"
-                    "70A5C9D346416f901826581d423Cd5B92d44Ff5a"
-                    "Dd74564BC9ff247C23f02cFbA1083c805829D981")};
+                co_return KeyValue{
+                    *silkworm::from_hex("000000000035db81c4af12a451cf621a0786b2b240fa4b479ae9110083db4df80d1527dc702e91a6"),
+                    *silkworm::from_hex("be188D6641E8b680743A4815dFA0f6208038960F"
+                                        "0828D0386C1122E565f07DD28c7d1340eD5B3315"
+                                        "70A5C9D346416f901826581d423Cd5B92d44Ff5a"
+                                        "Dd74564BC9ff247C23f02cFbA1083c805829D981")};
             }
         ));
         auto result = asio::co_spawn(pool, read_senders(db_reader, block_hash, block_number), asio::use_future);

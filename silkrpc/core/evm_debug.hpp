@@ -33,7 +33,7 @@
 #pragma GCC diagnostic pop
 #include <silkworm/state/intra_block_state.hpp>
 
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/types/block.hpp>
 #include <silkrpc/types/call.hpp>

@@ -30,7 +30,7 @@
 #include <grpcpp/grpcpp.h>
 #include <boost/endian/conversion.hpp>
 
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 
