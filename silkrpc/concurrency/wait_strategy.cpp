@@ -22,71 +22,6 @@
 
 namespace silkrpc {
 
-void SleepingWaitStrategy::wait_once(uint32_t executed_count) {
-    if (executed_count > 0) {
-        if (counter_ != kRetries) {
-            counter_ = kRetries;
-        }
-        return;
-    }
-
-    if (counter_ > 100) {
-        --counter_;
-    } else if (counter_ > 0) {
-        --counter_;
-        std::this_thread::yield();
-    } else {
-        std::this_thread::sleep_for(std::chrono::milliseconds(0));
-    }
-}
-
-void YieldingWaitStrategy::wait_once(uint32_t executed_count) {
-    if (executed_count > 0) {
-        if (counter_ != kSpinTries) {
-            counter_ = kSpinTries;
-        }
-        return;
-    }
-
-    if (counter_ == 0) {
-        std::this_thread::yield();
-    } else {
-        --counter_;
-    }
-}
-
-void SpinWaitWaitStrategy::wait_once(uint32_t executed_count) {
-    if (executed_count > 0) {
-        if (counter_ != 0) {
-            counter_ = 0;
-        }
-        return;
-    }
-
-    if (counter_ > kYieldThreshold) {
-        auto delta = counter_ - kYieldThreshold;
-        if (delta % kSleep1EveryHowManyTimes == kSleep1EveryHowManyTimes - 1) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        } else if (delta % kSleep0EveryHowManyTimes == kSleep0EveryHowManyTimes - 1) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(0));
-        } else {
-            std::this_thread::yield();
-        }
-    } else {
-        for (auto i{0}; i < (4 << counter_); i++) {
-            spin_wait();
-        }
-    }
-}
-
-void SpinWaitWaitStrategy::spin_wait() {
-    asm volatile
-    (
-        "rep\n"
-        "nop"
-    );
-}
-
 bool AbslParseFlag(absl::string_view text, WaitMode* wait_mode, std::string* error) {
     if (text == "blocking") {
         *wait_mode = WaitMode::blocking;
@@ -120,21 +55,6 @@ std::string AbslUnparseFlag(WaitMode wait_mode) {
         case WaitMode::spin_wait: return "spin_wait";
         case WaitMode::busy_spin: return "busy_spin";
         default: return absl::StrCat(wait_mode);
-    }
-}
-
-std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode) {
-    switch (wait_mode) {
-        case WaitMode::yielding:
-            return std::make_unique<YieldingWaitStrategy>();
-        case WaitMode::sleeping:
-            return std::make_unique<SleepingWaitStrategy>();
-        case WaitMode::spin_wait:
-            return std::make_unique<SpinWaitWaitStrategy>();
-        case WaitMode::busy_spin:
-            return std::make_unique<BusySpinWaitStrategy>();
-        default:
-            return nullptr;
     }
 }
 

@@ -23,7 +23,6 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 #include <silkrpc/ethbackend/remote_backend.hpp>
-#include <silkworm/common/assert.hpp>
 
 namespace silkrpc {
 
@@ -46,22 +45,13 @@ Context::Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> bloc
     tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, channel, queue_.get());
 }
 
-void Context::execute_loop() {
-    if (wait_mode_ == WaitMode::blocking) {
-        execute_loop_double_threaded();
-    } else {
-        execute_loop_single_threaded();
-    }
-}
-
-void Context::execute_loop_single_threaded() {
+template <typename WaitStrategy>
+void Context::execute_loop_single_threaded(WaitStrategy&& wait_strategy) {
     SILKRPC_INFO << "Single-thread execution loop start [" << this << "]\n";
-    std::unique_ptr<WaitStrategy> wait_strategy{make_wait_strategy(wait_mode_)};
-    SILKWORM_ASSERT(wait_strategy != nullptr);
     while (!io_context_->stopped()) {
-        uint32_t executed_count = rpc_end_point_->poll_one();
-        executed_count += io_context_->poll_one();
-        wait_strategy->wait_once(executed_count);
+        int work_count = rpc_end_point_->poll_one();
+        work_count += io_context_->poll_one();
+        wait_strategy.idle(work_count);
     }
     rpc_end_point_->shutdown();
     SILKRPC_INFO << "Single-thread execution loop end [" << this << "]\n";
@@ -79,6 +69,26 @@ void Context::execute_loop_double_threaded() {
     rpc_end_point_->shutdown();
     completion_runner_thread.join();
     SILKRPC_INFO << "Double-thread execution loop end [" << this << "]\n";
+}
+
+void Context::execute_loop() {
+    switch (wait_mode_) {
+        case WaitMode::blocking:
+            execute_loop_double_threaded();
+        break;
+        case WaitMode::yielding:
+            execute_loop_single_threaded(YieldingWaitStrategy{});
+        break;
+        case WaitMode::sleeping:
+            execute_loop_single_threaded(SleepingWaitStrategy{});
+        break;
+        case WaitMode::spin_wait:
+            execute_loop_single_threaded(SpinWaitWaitStrategy{});
+        break;
+        case WaitMode::busy_spin:
+            execute_loop_single_threaded(BusySpinWaitStrategy{});
+        break;
+    }
 }
 
 void Context::stop() {
