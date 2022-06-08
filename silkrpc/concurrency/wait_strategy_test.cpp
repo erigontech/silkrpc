@@ -79,10 +79,10 @@ TEST_CASE("unparse wait mode", "[silkrpc][common][log]") {
     }
 }
 
-template<typename R, typename P>
-inline void sleep_then_check_wait(WaitStrategy& w, const std::chrono::duration<R, P>& t, uint32_t executed_count) {
+template<typename W, typename R, typename P>
+inline void sleep_then_check_wait(W& w, const std::chrono::duration<R, P>& t, uint32_t executed_count) {
     std::this_thread::sleep_for(t);
-    CHECK_NOTHROW(w.wait_once(executed_count));
+    CHECK_NOTHROW(w.idle(executed_count));
 }
 
 TEST_CASE("SleepingWaitStrategy", "[silkrpc][context_pool]") {
@@ -90,6 +90,7 @@ TEST_CASE("SleepingWaitStrategy", "[silkrpc][context_pool]") {
     sleep_then_check_wait(wait_strategy, 10ms, 1);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
+    sleep_then_check_wait(wait_strategy, 10ms, 1);
 }
 
 TEST_CASE("YieldingWaitStrategy", "[silkrpc][context_pool]") {
@@ -97,6 +98,7 @@ TEST_CASE("YieldingWaitStrategy", "[silkrpc][context_pool]") {
     sleep_then_check_wait(wait_strategy, 10ms, 1);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
+    sleep_then_check_wait(wait_strategy, 10ms, 1);
 }
 
 TEST_CASE("SpinWaitWaitStrategy", "[silkrpc][context_pool]") {
@@ -104,6 +106,7 @@ TEST_CASE("SpinWaitWaitStrategy", "[silkrpc][context_pool]") {
     sleep_then_check_wait(wait_strategy, 10ms, 1);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
+    sleep_then_check_wait(wait_strategy, 10ms, 1);
 }
 
 TEST_CASE("BusySpinWaitStrategy", "[silkrpc][context_pool]") {
@@ -111,14 +114,7 @@ TEST_CASE("BusySpinWaitStrategy", "[silkrpc][context_pool]") {
     sleep_then_check_wait(wait_strategy, 10ms, 1);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
-}
-
-TEST_CASE("make_wait_strategy", "[silkrpc][context_pool]") {
-    CHECK(dynamic_cast<SleepingWaitStrategy*>(make_wait_strategy(WaitMode::sleeping).get()) != nullptr);
-    CHECK(dynamic_cast<YieldingWaitStrategy*>(make_wait_strategy(WaitMode::yielding).get()) != nullptr);
-    CHECK(dynamic_cast<SpinWaitWaitStrategy*>(make_wait_strategy(WaitMode::spin_wait).get()) != nullptr);
-    CHECK(dynamic_cast<BusySpinWaitStrategy*>(make_wait_strategy(WaitMode::busy_spin).get()) != nullptr);
-    CHECK(make_wait_strategy(WaitMode::blocking).get() == nullptr);
+    sleep_then_check_wait(wait_strategy, 10ms, 1);
 }
 
 } // namespace silkrpc
