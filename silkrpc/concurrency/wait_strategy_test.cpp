@@ -90,6 +90,7 @@ TEST_CASE("SleepingWaitStrategy", "[silkrpc][context_pool]") {
     sleep_then_check_wait(wait_strategy, 10ms, 1);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
+    sleep_then_check_wait(wait_strategy, 10ms, 1);
 }
 
 TEST_CASE("YieldingWaitStrategy", "[silkrpc][context_pool]") {
@@ -97,6 +98,7 @@ TEST_CASE("YieldingWaitStrategy", "[silkrpc][context_pool]") {
     sleep_then_check_wait(wait_strategy, 10ms, 1);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
+    sleep_then_check_wait(wait_strategy, 10ms, 1);
 }
 
 TEST_CASE("SpinWaitWaitStrategy", "[silkrpc][context_pool]") {
@@ -104,6 +106,7 @@ TEST_CASE("SpinWaitWaitStrategy", "[silkrpc][context_pool]") {
     sleep_then_check_wait(wait_strategy, 10ms, 1);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
+    sleep_then_check_wait(wait_strategy, 10ms, 1);
 }
 
 TEST_CASE("BusySpinWaitStrategy", "[silkrpc][context_pool]") {
@@ -111,6 +114,7 @@ TEST_CASE("BusySpinWaitStrategy", "[silkrpc][context_pool]") {
     sleep_then_check_wait(wait_strategy, 10ms, 1);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
     sleep_then_check_wait(wait_strategy, 20ms, 0);
+    sleep_then_check_wait(wait_strategy, 10ms, 1);
 }
 
 } // namespace silkrpc
