@@ -57,7 +57,6 @@ struct StorageItem {
     silkworm::Bytes key;
     silkworm::Bytes sec_key;
     silkworm::Bytes value;
-    // intx::uint256 value;
 };
 
 bool operator<(const StorageItem& k1, const StorageItem& k2) {

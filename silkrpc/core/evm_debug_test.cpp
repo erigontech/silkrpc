@@ -41,6 +41,7 @@ using testing::InvokeWithoutArgs;
 
 static silkworm::Bytes kZeroKey{*silkworm::from_hex("0000000000000000")};
 static silkworm::Bytes kZeroHeader{*silkworm::from_hex("bf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a")};
+static silkworm::Bytes kZeroAddress{*silkworm::from_hex("00000000000000000000")};
 
 static silkworm::Bytes kConfigKey{
     *silkworm::from_hex("bf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a")};
@@ -104,12 +105,55 @@ TEST_CASE("DebugExecutor::execute call 1") {
         "7e647e6a7e727e7f7e887e917e967ea37eac7eb57ebe7ec77ed07ed67ee27eeb7ef47efd7e037f0f7f187f217f2a7f337f3c7f457f4e7f577f"
         "607f667f727f7b7f847f8d7f")};
 
-    static silkworm::Bytes kAccountChangeSetKey{*silkworm::from_hex("00000000005279ab")};
-    static silkworm::Bytes kAccountChangeSetSubkey{*silkworm::from_hex("e0a2bd4258d2768837baa26a28fe71dc079f84c7")};
-    static silkworm::Bytes kAccountChangeSetValue{*silkworm::from_hex("030203430b141e903194951083c424fd")};
-
     static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("52728289eba496b6080d57d0250a90663a07e55600000000005279a8")};
     static silkworm::Bytes kAccountHistoryValue2{*silkworm::from_hex("0100000000000000000000003a300000010000004e00000010000000d63b")};
+
+    static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000005279a8")};
+    static silkworm::Bytes kAccountHistoryValue3{*silkworm::from_hex(
+        "0100000000000000000000003b30270000000040202b003f002c001c002d0009002e000a002f000000300000003100000032000b003300"
+        "0200340011003500030036000a003700040038000800390000003a0000003b0007003c0000003d000a003e0003003f0002004000060041"
+        "000200420002004300010044000200450003004700050048000400490039004a0012004b0003004c0012004d00c2004e0010004f000500"
+        "50007a0051001700520000005300650049010000c901000003020000170200002d0200002f02000031020000330200004b020000510200"
+        "00750200007d020000930200009d020000af020000b1020000b3020000c3020000c5020000db020000e3020000e9020000f7020000fd02"
+        "000003030000070300000d03000015030000210300002b0300009f030000c5030000cd030000f3030000790500009b050000a70500009d"
+        "060000c3060000c5060000988d9b8d9c8d9d8d9f8da08da18da38da48da58da68da78da88da98dab8dac8dad8dae8daf8db08db18db28d"
+        "b38db48db58dba8dbb8dbc8dbd8dbe8dbf8dc18dc28dc38dc48dc58dc68dc88dc98dca8d598fa7a2f6a2f9a207a344a3c8a331a446a423"
+        "ad27ad37ae3cae40ae58ee5aee61eeb8eebeee44ef91ef9cef23f189f1c403ec033c047905b605d4120d133b147d147b168616641a5624"
+        "c2cec6dce5dcd7df25e02ee071e093e0a2e00ae11de344e387e3a3e3abe37de43b249824413f5741734203549654a554bc5419db204529"
+        "4530454c45d4abf0ab05ac0cac13ac18ac00b9dfb63f7fe3535bc76de078e080e088e095e09ce0a7e0aee0b4e0b8e0bde014431a4306a6"
+        "d625e025ed25ff252e39ed3916722972497258725f7250735f738e749b74587c9b7c7da001657983a0d5a9d5c91fcd1f1a2046216d4975"
+        "4a084bef6cf376418d8f8d113f4b49a1491a4db5e9ec542355a35c816b9a6cc3719e791c8909b4ce45f817bf4c074de94dfb4d154e1a4e"
+        "1e4e714fa6b183bd84bd87bd8cbd8fbdc0bdabc0b8c0dbc0ebc011c5740543065c06630666436843754341754975f6a5a7ccf7e71aec2e"
+        "fab12676415dfb73f280f287f2040f21369b5818863c86a5b2b4b2bab2afb4277fdf7ff27ff97fbd80cf808da643a80db4dbe3d2ff6511"
+        "69116b116d116e1171117311d813f5138f149214c8142615411544156a1575157d157e15a415a515f31777448e44ba4d3155625b685b35"
+        "5c425c585c465de15dd26b4f7250726072219328935d935e93a193e493e593e693ee93ef93f893fa931b941c94f3abb4aebeaeb2af6cb5"
+        "fccc29cf09004cb4000037be000039be00003bbe09005dd1000060d1000062d100007fea010068eb0000af2b2442a79900d99e367b394d"
+        "5fa17448c94dc98bcbe0cdf7cd74ce7dce86ceeecefece12cf30cf36cf3ccf49cf630a9c0a2025b93608500f5023502a502b5035503d50"
+        "3e5043504b504d504e5054505650d250d750dd50e450e950f250f750fe5003510d6214621a621f6225622b62336235623a624162426247"
+        "624c62556262626b6271627d6282628d6294629a62a162aa62b362b962bf62c462ca62ce62d662d762df62e762ee62f762ff6201630663"
+        "0d6316631b632063286331633a6343634963506355635b6361636463706375637e63866387638f6394639a63a063a663ae63b463ba63c1"
+        "63c663cb63d163db63e263e963ee63f363f863d78172947b948494899496949d94a494ad94b194b894be94c394cc94d594dd94e294e794"
+        "ef94f694fb94029507950d9514951a951f9526952e9538953d9549954f9558955c9561956c95749577958095859592959795a395ad95b4"
+        "95ba95bb95c195c895d195d695e395e895ee95f595fb95049610961696229628962e9634963d9646964f96549605975b97bd9714a234a7"
+        "50c16fc501d80ad814d82cd841d84bd863d870d87cd84de3c3e989fb93fba7fbc9fefffe54ffdb07fb3f664f9c5099587d8a418b888be4"
+        "8e2a90e49d91b59ddfd7e55be61de86ef3f1096579667a0a7def8bbcbb0b0f3b16974265537753895392539b53a453ad53b653d153da53"
+        "e853f053f553fe530754105422542b5434543d5446544b54505461546a5473547c5485549754a054bb54c454ce54de54e654f154fa5403"
+        "55095515551e55275542555d5578559c55a555aa55b355c055c555db55ed55f655fe550356085611561a5623562c5635563e5662566b56"
+        "745686568f569856a156b356bc56c556ce56f256fb5604570a571f57315743574c575e577057795781578b5794579d57a657af57c157dc"
+        "57e557f457fc57095819581b5824582d583b584858515862586c5875587e589958a058ab58b458bd58aa5a635dbc5dd65d568bc79a279b"
+        "09000f770300147704001e770800287700003ba1000042be0000e2be0000fbbe0000edc500001b369f2b7444cf78de78327938793f7944"
+        "794c79517957795c79637968796d79727979797e79837989798e79957996799d79aa79ab79b079b679bd79c279c779cf79d479da79db79"
+        "e179e679ec79f379f879017a037a067a0d7a0e7a137a187a1f7a207a287a2d7a327a387a3d7a447a4a7a567a5b7a617a687afc7a017b08"
+        "7b0e7b137b197b257b377b437b497b557b5f7b6a7b6c7b6d7b8d7b9f7ba97baf7bb57bbe7bc47bc57bd57bad7db37dbe7dbf7dd17de57d"
+        "f17dfb7d017e0b7e157e207e287e2b7e397e4b7e517e5f7e")};
+
+    static silkworm::Bytes kAccountChangeSetKey1{*silkworm::from_hex("00000000005279ab")};
+    static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("e0a2bd4258d2768837baa26a28fe71dc079f84c7")};
+    static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("030203430b141e903194951083c424fd")};
+
+    static silkworm::Bytes kAccountChangeSetKey2{*silkworm::from_hex("0000000000532b9f")};
+    static silkworm::Bytes kAccountChangeSetSubKey2{*silkworm::from_hex("0000000000000000000000000000000000000000")};
+    static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("020944ed67f28fd50bb8e9")};
 
     static silkworm::Bytes kPlainStateKey1{*silkworm::from_hex("e0a2bd4258d2768837baa26a28fe71dc079f84c7")};
     static silkworm::Bytes kPlainStateKey2{*silkworm::from_hex("52728289eba496b6080d57d0250a90663a07e556")};
@@ -170,7 +214,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
     SECTION("Call: full output") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
@@ -181,9 +225,17 @@ TEST_CASE("DebugExecutor::execute call 1") {
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
             }));
-        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey}, silkworm::ByteView{kAccountChangeSetSubkey}))
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey3, kAccountHistoryValue3};
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey1}, silkworm::ByteView{kAccountChangeSetSubkey1}))
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
-                co_return kAccountChangeSetValue;
+                co_return kAccountChangeSetValue1;
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey2}, silkworm::ByteView{kAccountChangeSetSubKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+                co_return kAccountChangeSetValue2;
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
             .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
@@ -270,7 +322,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
     SECTION("Call: no stack") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
@@ -281,9 +333,17 @@ TEST_CASE("DebugExecutor::execute call 1") {
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
             }));
-        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey}, silkworm::ByteView{kAccountChangeSetSubkey}))
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey3, kAccountHistoryValue3};
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey1}, silkworm::ByteView{kAccountChangeSetSubkey1}))
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
-                co_return kAccountChangeSetValue;
+                co_return kAccountChangeSetValue1;
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey2}, silkworm::ByteView{kAccountChangeSetSubKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+                co_return kAccountChangeSetValue2;
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
             .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
@@ -362,7 +422,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
     SECTION("Call: no memory") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
@@ -373,9 +433,17 @@ TEST_CASE("DebugExecutor::execute call 1") {
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
             }));
-        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey}, silkworm::ByteView{kAccountChangeSetSubkey}))
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey3, kAccountHistoryValue3};
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey1}, silkworm::ByteView{kAccountChangeSetSubkey1}))
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
-                co_return kAccountChangeSetValue;
+                co_return kAccountChangeSetValue1;
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey2}, silkworm::ByteView{kAccountChangeSetSubKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+                co_return kAccountChangeSetValue2;
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
             .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
@@ -459,7 +527,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
     SECTION("Call: no storage") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
@@ -470,9 +538,17 @@ TEST_CASE("DebugExecutor::execute call 1") {
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
             }));
-        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey}, silkworm::ByteView{kAccountChangeSetSubkey}))
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey3, kAccountHistoryValue3};
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey1}, silkworm::ByteView{kAccountChangeSetSubkey1}))
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
-                co_return kAccountChangeSetValue;
+                co_return kAccountChangeSetValue1;
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey2}, silkworm::ByteView{kAccountChangeSetSubKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+                co_return kAccountChangeSetValue2;
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
             .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
@@ -557,7 +633,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
     SECTION("Call: no stack, memory and storage") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
@@ -568,9 +644,17 @@ TEST_CASE("DebugExecutor::execute call 1") {
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
                 co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
             }));
-        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey}, silkworm::ByteView{kAccountChangeSetSubkey}))
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey3, kAccountHistoryValue3};
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey1}, silkworm::ByteView{kAccountChangeSetSubkey1}))
             .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
-                co_return kAccountChangeSetValue;
+                co_return kAccountChangeSetValue1;
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey2}, silkworm::ByteView{kAccountChangeSetSubKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+                co_return kAccountChangeSetValue2;
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
             .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
@@ -684,18 +768,61 @@ TEST_CASE("DebugExecutor::execute call 2") {
         "ff7b067c0d7c167c1d7c1f7c207c227c247c2c7c2e7c317c3d7c3f7c497c597c627c647c667c817c827c857c8d7c917c997c9b7c9c7c9f"
         "7ca47ca67ca87caa7cac7caf7cb37cc97ce57cf57c077d087d")};
 
-    static silkworm::Bytes kAccountChangeSetKey1{*silkworm::from_hex("00000000004366ae")};
-    static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("8ced5ad0d8da4ec211c17355ed3dbfec4cf0e5b9")};
-    static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("0303038c330a01a098914888dc0516d2")};
-
     static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("5e1f0c9ddbe3cb57b80c933fab5151627d7966fa00000000004366ad")};
     static silkworm::Bytes kAccountHistoryValue2{*silkworm::from_hex(
             "0100000000000000000000003a300000020000004000020043000c00180000001e0000005e8d618d628d826688668d668f66a466ac"
             "66b866bb66cf66db6623678e67d167")};
 
+    static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000004366ad")};
+    static silkworm::Bytes kAccountHistoryValue3{*silkworm::from_hex(
+        "0100000000000000000000003b30270000000040202b003f002c001c002d0009002e000a002f000000300000003100000032000b003300"
+        "0200340011003500030036000a003700040038000800390000003a0000003b0007003c0000003d000a003e0003003f0002004000060041"
+        "000200420002004300010044000200450003004700050048000400490039004a0012004b0003004c0012004d00c2004e0010004f000500"
+        "50007a0051001700520000005300650049010000c901000003020000170200002d0200002f02000031020000330200004b020000510200"
+        "00750200007d020000930200009d020000af020000b1020000b3020000c3020000c5020000db020000e3020000e9020000f7020000fd02"
+        "000003030000070300000d03000015030000210300002b0300009f030000c5030000cd030000f3030000790500009b050000a70500009d"
+        "060000c3060000c5060000988d9b8d9c8d9d8d9f8da08da18da38da48da58da68da78da88da98dab8dac8dad8dae8daf8db08db18db28d"
+        "b38db48db58dba8dbb8dbc8dbd8dbe8dbf8dc18dc28dc38dc48dc58dc68dc88dc98dca8d598fa7a2f6a2f9a207a344a3c8a331a446a423"
+        "ad27ad37ae3cae40ae58ee5aee61eeb8eebeee44ef91ef9cef23f189f1c403ec033c047905b605d4120d133b147d147b168616641a5624"
+        "c2cec6dce5dcd7df25e02ee071e093e0a2e00ae11de344e387e3a3e3abe37de43b249824413f5741734203549654a554bc5419db204529"
+        "4530454c45d4abf0ab05ac0cac13ac18ac00b9dfb63f7fe3535bc76de078e080e088e095e09ce0a7e0aee0b4e0b8e0bde014431a4306a6"
+        "d625e025ed25ff252e39ed3916722972497258725f7250735f738e749b74587c9b7c7da001657983a0d5a9d5c91fcd1f1a2046216d4975"
+        "4a084bef6cf376418d8f8d113f4b49a1491a4db5e9ec542355a35c816b9a6cc3719e791c8909b4ce45f817bf4c074de94dfb4d154e1a4e"
+        "1e4e714fa6b183bd84bd87bd8cbd8fbdc0bdabc0b8c0dbc0ebc011c5740543065c06630666436843754341754975f6a5a7ccf7e71aec2e"
+        "fab12676415dfb73f280f287f2040f21369b5818863c86a5b2b4b2bab2afb4277fdf7ff27ff97fbd80cf808da643a80db4dbe3d2ff6511"
+        "69116b116d116e1171117311d813f5138f149214c8142615411544156a1575157d157e15a415a515f31777448e44ba4d3155625b685b35"
+        "5c425c585c465de15dd26b4f7250726072219328935d935e93a193e493e593e693ee93ef93f893fa931b941c94f3abb4aebeaeb2af6cb5"
+        "fccc29cf09004cb4000037be000039be00003bbe09005dd1000060d1000062d100007fea010068eb0000af2b2442a79900d99e367b394d"
+        "5fa17448c94dc98bcbe0cdf7cd74ce7dce86ceeecefece12cf30cf36cf3ccf49cf630a9c0a2025b93608500f5023502a502b5035503d50"
+        "3e5043504b504d504e5054505650d250d750dd50e450e950f250f750fe5003510d6214621a621f6225622b62336235623a624162426247"
+        "624c62556262626b6271627d6282628d6294629a62a162aa62b362b962bf62c462ca62ce62d662d762df62e762ee62f762ff6201630663"
+        "0d6316631b632063286331633a6343634963506355635b6361636463706375637e63866387638f6394639a63a063a663ae63b463ba63c1"
+        "63c663cb63d163db63e263e963ee63f363f863d78172947b948494899496949d94a494ad94b194b894be94c394cc94d594dd94e294e794"
+        "ef94f694fb94029507950d9514951a951f9526952e9538953d9549954f9558955c9561956c95749577958095859592959795a395ad95b4"
+        "95ba95bb95c195c895d195d695e395e895ee95f595fb95049610961696229628962e9634963d9646964f96549605975b97bd9714a234a7"
+        "50c16fc501d80ad814d82cd841d84bd863d870d87cd84de3c3e989fb93fba7fbc9fefffe54ffdb07fb3f664f9c5099587d8a418b888be4"
+        "8e2a90e49d91b59ddfd7e55be61de86ef3f1096579667a0a7def8bbcbb0b0f3b16974265537753895392539b53a453ad53b653d153da53"
+        "e853f053f553fe530754105422542b5434543d5446544b54505461546a5473547c5485549754a054bb54c454ce54de54e654f154fa5403"
+        "55095515551e55275542555d5578559c55a555aa55b355c055c555db55ed55f655fe550356085611561a5623562c5635563e5662566b56"
+        "745686568f569856a156b356bc56c556ce56f256fb5604570a571f57315743574c575e577057795781578b5794579d57a657af57c157dc"
+        "57e557f457fc57095819581b5824582d583b584858515862586c5875587e589958a058ab58b458bd58aa5a635dbc5dd65d568bc79a279b"
+        "09000f770300147704001e770800287700003ba1000042be0000e2be0000fbbe0000edc500001b369f2b7444cf78de78327938793f7944"
+        "794c79517957795c79637968796d79727979797e79837989798e79957996799d79aa79ab79b079b679bd79c279c779cf79d479da79db79"
+        "e179e679ec79f379f879017a037a067a0d7a0e7a137a187a1f7a207a287a2d7a327a387a3d7a447a4a7a567a5b7a617a687afc7a017b08"
+        "7b0e7b137b197b257b377b437b497b557b5f7b6a7b6c7b6d7b8d7b9f7ba97baf7bb57bbe7bc47bc57bd57bad7db37dbe7dbf7dd17de57d"
+        "f17dfb7d017e0b7e157e207e287e2b7e397e4b7e517e5f7e")};
+
+    static silkworm::Bytes kAccountChangeSetKey1{*silkworm::from_hex("00000000004366ae")};
+    static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("8ced5ad0d8da4ec211c17355ed3dbfec4cf0e5b9")};
+    static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("0303038c330a01a098914888dc0516d2")};
+
     static silkworm::Bytes kAccountChangeSetKey2{*silkworm::from_hex("00000000004366b8")};
     static silkworm::Bytes kAccountChangeSetSubkey2{*silkworm::from_hex("5e1f0c9ddbe3cb57b80c933fab5151627d7966fa")};
     static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("03010408014219564ff26a00")};
+
+    static silkworm::Bytes kAccountChangeSetKey3{*silkworm::from_hex("000000000044589b")};
+    static silkworm::Bytes kAccountChangeSetSubkey3{*silkworm::from_hex("0000000000000000000000000000000000000000")};
+    static silkworm::Bytes kAccountChangeSetValue3{*silkworm::from_hex("02094165832d46fa1082db")};
 
     EvmDebugMockDatabaseReader db_reader;
     asio::thread_pool workers{1};
@@ -756,6 +883,15 @@ TEST_CASE("DebugExecutor::execute call 2") {
                     << "\n";
                 co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
             }));
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                SILKRPC_LOG << "EXPECT_CALL::get "
+                    << " table: " << db::table::kAccountHistory
+                    << " key: " << silkworm::to_hex(kAccountHistoryKey3)
+                    << " value: " << silkworm::to_hex(kAccountHistoryValue3)
+                    << "\n";
+                co_return KeyValue{kAccountHistoryKey3, kAccountHistoryValue3};
+            }));
         EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey2},
                                 silkworm::ByteView{kAccountChangeSetSubkey2}))
             .WillOnce(InvokeWithoutArgs(
@@ -767,6 +903,18 @@ TEST_CASE("DebugExecutor::execute call 2") {
                         << " value: " << silkworm::to_hex(kAccountChangeSetValue2)
                         << "\n";
                     co_return kAccountChangeSetValue2;
+                }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey3},
+                                silkworm::ByteView{kAccountChangeSetSubkey3}))
+            .WillOnce(InvokeWithoutArgs(
+                []() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+                    SILKRPC_LOG << "EXPECT_CALL::get_both_range "
+                        << " table: " << db::table::kPlainAccountChangeSet
+                        << " key: " << silkworm::to_hex(kAccountChangeSetKey3)
+                        << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey3)
+                        << " value: " << silkworm::to_hex(kAccountChangeSetValue3)
+                        << "\n";
+                    co_return kAccountChangeSetValue3;
                 }));
 
         const auto block_number = 4'417'196;  // 0x4366AC
@@ -812,21 +960,64 @@ TEST_CASE("DebugExecutor::execute call with error") {
         "a117a11ba131a135a139a152a154a158a15aa15da171a175a17ca1b4a1e4a124a21fbb22bb26bb2bbb2dbb2fbb34bb38bb3fbb0bd14ed2"
         "a0e5a3e550eb60eb6ceb72eb")};
 
-    static silkworm::Bytes kAccountChangeSetKey{*silkworm::from_hex("00000000005279ad")};
-    static silkworm::Bytes kAccountChangeSetSubkey{*silkworm::from_hex("578f0a154b23be77fc2033197fbc775637648ad4")};
-    static silkworm::Bytes kAccountChangeSetValue{*silkworm::from_hex("03012f090207fbc719f215d705")};
-
     static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("6951c35e335fa18c97cb207119133cd8009580cd00000000005279a8")};
     static silkworm::Bytes kAccountHistoryValue2{*silkworm::from_hex(
         "0100000000000000000000003a3000000700000044000a004600010048000100490005004c0001004d0001005e"
         "00000040000000560000005a0000005e0000006a0000006e000000720000005da562a563a565a567a56aa59da5"
         "a0a5f0a5f5a57ef926a863a8eb520b535d1b951bb71b3c1c741caa4f53f5b0f5184f536018f6")};
 
+    static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000005279a8")};
+    static silkworm::Bytes kAccountHistoryValue3{*silkworm::from_hex(
+        "0100000000000000000000003b30270000000040202b003f002c001c002d0009002e000a002f000000300000003100000032000b003300"
+        "0200340011003500030036000a003700040038000800390000003a0000003b0007003c0000003d000a003e0003003f0002004000060041"
+        "000200420002004300010044000200450003004700050048000400490039004a0012004b0003004c0012004d00c2004e0010004f000500"
+        "50007a0051001700520000005300650049010000c901000003020000170200002d0200002f02000031020000330200004b020000510200"
+        "00750200007d020000930200009d020000af020000b1020000b3020000c3020000c5020000db020000e3020000e9020000f7020000fd02"
+        "000003030000070300000d03000015030000210300002b0300009f030000c5030000cd030000f3030000790500009b050000a70500009d"
+        "060000c3060000c5060000988d9b8d9c8d9d8d9f8da08da18da38da48da58da68da78da88da98dab8dac8dad8dae8daf8db08db18db28d"
+        "b38db48db58dba8dbb8dbc8dbd8dbe8dbf8dc18dc28dc38dc48dc58dc68dc88dc98dca8d598fa7a2f6a2f9a207a344a3c8a331a446a423"
+        "ad27ad37ae3cae40ae58ee5aee61eeb8eebeee44ef91ef9cef23f189f1c403ec033c047905b605d4120d133b147d147b168616641a5624"
+        "c2cec6dce5dcd7df25e02ee071e093e0a2e00ae11de344e387e3a3e3abe37de43b249824413f5741734203549654a554bc5419db204529"
+        "4530454c45d4abf0ab05ac0cac13ac18ac00b9dfb63f7fe3535bc76de078e080e088e095e09ce0a7e0aee0b4e0b8e0bde014431a4306a6"
+        "d625e025ed25ff252e39ed3916722972497258725f7250735f738e749b74587c9b7c7da001657983a0d5a9d5c91fcd1f1a2046216d4975"
+        "4a084bef6cf376418d8f8d113f4b49a1491a4db5e9ec542355a35c816b9a6cc3719e791c8909b4ce45f817bf4c074de94dfb4d154e1a4e"
+        "1e4e714fa6b183bd84bd87bd8cbd8fbdc0bdabc0b8c0dbc0ebc011c5740543065c06630666436843754341754975f6a5a7ccf7e71aec2e"
+        "fab12676415dfb73f280f287f2040f21369b5818863c86a5b2b4b2bab2afb4277fdf7ff27ff97fbd80cf808da643a80db4dbe3d2ff6511"
+        "69116b116d116e1171117311d813f5138f149214c8142615411544156a1575157d157e15a415a515f31777448e44ba4d3155625b685b35"
+        "5c425c585c465de15dd26b4f7250726072219328935d935e93a193e493e593e693ee93ef93f893fa931b941c94f3abb4aebeaeb2af6cb5"
+        "fccc29cf09004cb4000037be000039be00003bbe09005dd1000060d1000062d100007fea010068eb0000af2b2442a79900d99e367b394d"
+        "5fa17448c94dc98bcbe0cdf7cd74ce7dce86ceeecefece12cf30cf36cf3ccf49cf630a9c0a2025b93608500f5023502a502b5035503d50"
+        "3e5043504b504d504e5054505650d250d750dd50e450e950f250f750fe5003510d6214621a621f6225622b62336235623a624162426247"
+        "624c62556262626b6271627d6282628d6294629a62a162aa62b362b962bf62c462ca62ce62d662d762df62e762ee62f762ff6201630663"
+        "0d6316631b632063286331633a6343634963506355635b6361636463706375637e63866387638f6394639a63a063a663ae63b463ba63c1"
+        "63c663cb63d163db63e263e963ee63f363f863d78172947b948494899496949d94a494ad94b194b894be94c394cc94d594dd94e294e794"
+        "ef94f694fb94029507950d9514951a951f9526952e9538953d9549954f9558955c9561956c95749577958095859592959795a395ad95b4"
+        "95ba95bb95c195c895d195d695e395e895ee95f595fb95049610961696229628962e9634963d9646964f96549605975b97bd9714a234a7"
+        "50c16fc501d80ad814d82cd841d84bd863d870d87cd84de3c3e989fb93fba7fbc9fefffe54ffdb07fb3f664f9c5099587d8a418b888be4"
+        "8e2a90e49d91b59ddfd7e55be61de86ef3f1096579667a0a7def8bbcbb0b0f3b16974265537753895392539b53a453ad53b653d153da53"
+        "e853f053f553fe530754105422542b5434543d5446544b54505461546a5473547c5485549754a054bb54c454ce54de54e654f154fa5403"
+        "55095515551e55275542555d5578559c55a555aa55b355c055c555db55ed55f655fe550356085611561a5623562c5635563e5662566b56"
+        "745686568f569856a156b356bc56c556ce56f256fb5604570a571f57315743574c575e577057795781578b5794579d57a657af57c157dc"
+        "57e557f457fc57095819581b5824582d583b584858515862586c5875587e589958a058ab58b458bd58aa5a635dbc5dd65d568bc79a279b"
+        "09000f770300147704001e770800287700003ba1000042be0000e2be0000fbbe0000edc500001b369f2b7444cf78de78327938793f7944"
+        "794c79517957795c79637968796d79727979797e79837989798e79957996799d79aa79ab79b079b679bd79c279c779cf79d479da79db79"
+        "e179e679ec79f379f879017a037a067a0d7a0e7a137a187a1f7a207a287a2d7a327a387a3d7a447a4a7a567a5b7a617a687afc7a017b08"
+        "7b0e7b137b197b257b377b437b497b557b5f7b6a7b6c7b6d7b8d7b9f7ba97baf7bb57bbe7bc47bc57bd57bad7db37dbe7dbf7dd17de57d"
+        "f17dfb7d017e0b7e157e207e287e2b7e397e4b7e517e5f7e")};
+
     static silkworm::Bytes kPlainStateKey{*silkworm::from_hex("6951c35e335fa18c97cb207119133cd8009580cd")};
+
+    static silkworm::Bytes kAccountChangeSetKey{*silkworm::from_hex("00000000005279ad")};
+    static silkworm::Bytes kAccountChangeSetSubkey{*silkworm::from_hex("578f0a154b23be77fc2033197fbc775637648ad4")};
+    static silkworm::Bytes kAccountChangeSetValue{*silkworm::from_hex("03012f090207fbc719f215d705")};
 
     static silkworm::Bytes kAccountChangeSetKey1{*silkworm::from_hex("00000000005EF618")};
     static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("6951c35e335fa18c97cb207119133cd8009580cd")};
     static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("00000000005279a8")};
+
+    static silkworm::Bytes kAccountChangeSetKey2{*silkworm::from_hex("0000000000532b9f")};
+    static silkworm::Bytes kAccountChangeSetSubkey2{*silkworm::from_hex("0000000000000000000000000000000000000000")};
+    static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("020944ed67f28fd50bb8e9")};
 
     EvmDebugMockDatabaseReader db_reader;
     asio::thread_pool workers{1};
@@ -888,14 +1079,35 @@ TEST_CASE("DebugExecutor::execute call with error") {
                 << "\n";
             co_return kAccountChangeSetValue1;
         }));
+    EXPECT_CALL(db_reader,
+            get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey2},
+                            silkworm::ByteView{kAccountChangeSetSubkey2}))
+        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+            SILKRPC_LOG << "NON DOVREBBE SUCCEDERE EXPECT_CALL::get_both_range "
+                << " table: " << db::table::kPlainAccountChangeSet
+                << " key: " << silkworm::to_hex(kAccountChangeSetKey2)
+                << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey2)
+                << " value: " << silkworm::to_hex(kAccountChangeSetValue2)
+                << "\n";
+            co_return kAccountChangeSetValue2;
+        }));
     EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
-        .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
             SILKRPC_LOG << "EXPECT_CALL::get "
                 << " table: " << db::table::kAccountHistory
                 << " key: " << silkworm::to_hex(kAccountHistoryKey2)
                 << " value: " << silkworm::to_hex(kAccountHistoryValue2)
                 << "\n";
             co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
+        }));
+    EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
+        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kAccountHistory
+                << " key: " << silkworm::to_hex(kAccountHistoryKey3)
+                << " value: " << silkworm::to_hex(kAccountHistoryValue3)
+                << "\n";
+            co_return KeyValue{kAccountHistoryKey3, kAccountHistoryValue3};
         }));
     EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey}))
         .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
@@ -977,12 +1189,56 @@ TEST_CASE("DebugExecutor::execute block") {
     static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("a85b4c37cd8f447848d49851a1bb06d10d410c1300000000000fa0a5")};
     static silkworm::Bytes kAccountHistoryValue2{*silkworm::from_hex("0100000000000000000000003a300000010000000f00000010000000a5a0")};
 
+    static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000000fa0a5")};
+    static silkworm::Bytes kAccountHistoryValue3{*silkworm::from_hex(
+        "0100000000000000000000003b301800000001000000000002000100040007000600030008000200090000000e0011000f00060011000f"
+        "00130003001a0000001c0003001d0000001e0000001f00370020001d002100270222006b00230019002400320025004d00260004002700"
+        "04002a000f002b002700d0000000d2000000d6000000e6000000ee000000f4000000f60000001a01000028010000480100005001000052"
+        "0100005a0100005c0100005e010000ce0100000a02000000050000d80500000c060000720600000e070000180700002207000042070000"
+        "0000d03cd13cd1b6d3b617b718b719b72ab72cb774fa4611c695c795c8957184728474842d12377d4c7d547d767e848053819c81dc81d9"
+        "8fee8f059022902f9035903c903f904a9091902eb0fee1ffe101e202e203e205e2e6b1e8b1e9b1eab1edb1eeb1f0b1f1b1f2b1f3b1f5b1"
+        "f6b1f7b1f9b1fab1fcb1de62e562e662f2625209b453ba53c153d65304ebb1007f4b8a4b314c9b4c685dc25dcc5df05d045e0c5e315e51"
+        "5eb55e0f5f105f2d5fac890f9031907f907e9f0ca0f1a0f6a0faa009a120a126a1f3a1f5a1b1a2b3a21ca41fa425a445a456a458a443a5"
+        "95a698a68ad190d1a1e249e577e570e6c3e936f940f921fe28fe2dfe27ff39ff83ff25123612371230439f434d598c593d6c676c996ca0"
+        "6cc16cf26c337114826183e386f59729983b9870f284f2a2f283f3a1f3b7f3faf702f84cfa53fabd00d4070000d8070000dd0700000c08"
+        "0000730800007f080000c20c00003b1e00003f1e0000671e00006a1e0000ea200000fd200100f8230000ac240000333600008d3600009d"
+        "370000673a00000c3b00000b520000105200004d540200c2690000ce690100eb690100ee690000176a0400f9770000d4780000de780000"
+        "e478000076790000de790100e1790200007a0100037a0200297a04005b7c0a00677c04006d7c00006f7c0600777c0000797c0600817c00"
+        "00837c06008b7c00008d7c0600957c0000977c06009f7c0400a57c0200a97c0000ab7c0500b37c0700bd7c0000bf7c0400c57c0300eb7c"
+        "0000f97c0100017d0000057d00000d7d00001c7d0300217d08002b7d00002d7d0600357d0000377d06003f7d0000417d0500497d070053"
+        "7d0400597d02005d7d0000607d0500677d0000697d0800737d08007e7d0500857d0000877d0300ba7d0000bd7d0000cc7d0000d47d0000"
+        "118e0000978e0000aa8e0000128f0300178f0000198f0700238f0300288f0100408f0100438f06004b8f0400518f08005b8f01005e8f08"
+        "00698f00006b8f01006e8f0300748f07007d8f0000808f0300858f0000878f03008c8f0500948f020024900100279001002a9000002c90"
+        "020031900000349002003a9002003f9001004290000045900300759000001c91000013a8000023a8000043a8000055aa0000adab0100ca"
+        "bd0000b9c20000d9c20000e2c20000f8c2000031d100004ed1000051d1000062d1040068d1070071d109007cd1050084d105008bd10800"
+        "95d1000097d106009fd10000a1d10100a4d10300abd10100aed10300b3d10000b5d10000b7d10400bdd10000bfd10200c3d10200c7d100"
+        "00cad10200ced10600f6d100007bd20000afd2000038d402006cd4000086d402008ad401008dd400008fd40100c6d5000099d60600a1d6"
+        "0400a7d60000a9d60000acd60000aed60100c7d60000d4d60500dbd60200f2d60100f5d60200fad6020010d7010013d7030019d700001b"
+        "d701001ed7050025d704002bd7080035d70600a1d80000bad80000701777178b1793179b17ca17db1708181a1829183a183c183d183f18"
+        "7a1a811a941a9b1a2f1b371b3a1b514451475d4763477047f147f84701480748114818481c482f483d4843484b48ec59d45a6c5b0f5dca"
+        "716f72707271721ba320a37fa585a5c6b6f9b6fbb604b752b899b8b8b8e6b83eb98fb990b991b9bfbac7ba33ca47ca8ecb93cb58cc5fcc"
+        "f7cd6ed3c9d6ccd6d5d6a5e4b5e4d6e46fe58be596e597e598e599e59be59ce59ee59fe5a0e5a1e5aae5ace5b4e5b5e5b6e5bbe5bce5bd"
+        "e5c0e5c7e5c8e5ece5ede5eee5fae6ffe65cf6e3f7b4f9160e89108a109310aa100d118412ad5681669a669c66f86646675d679f67e067"
+        "1c68d86aa26dba6dba81c881b0820298219a40edb809cb09d909b60ad10ac00b3b8f618f958fbc90fba420a53ba5d5baedba07bb40bbb2"
+        "bbe2bb02bcd0bef0bf8bc08ec02ace40ce41ce38cfd8d181d4a1d4a3d4dce45be55ee567e572e578e590e59be5a1e5c0e5b8e6dbe693e8"
+        "9ee8fbe925ea53eaf6ecd7eea02ab42ae82afa2a042b222bb33db43db63dd13dd23dd53dd83dd93dda3dff3e003f2b3f2c3f2e3f423f43"
+        "3f443f4d3f4e3f1c4034402841b741d641e34114424f422d447944a444a944c444c844bd5537563e5644564f567a565b572458a669dd6b"
+        "1071127129716c719c71d171ed7115725d74a982ad82ce82d182d68277c47dc40bc53ac767c78cc7bcc71cc823c828c82dc892caa2caa3"
+        "cbbdcb39783e8391b992b93dffbb05c205728f928fb6c7b44a365b3f5b08b1f2c41bc52bc57dc592cafbca39cd79cd96f15af221f338f3"
+        "c434a94baa4ba84d424e1252125af45e625f645f6e5f556357637a633e64cf64fb66fc66fd66fe66ff6601670267036704670567066708"
+        "6709670a67a575f87a4b7b537b157dec7f938d948d958d968d")};
+
     static silkworm::Bytes kAccountChangeSetKey{*silkworm::from_hex("00000000000fa0a5")};
     static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("daae090d53f9ed9e2e1fd25258c01bac4dd6d1c5")};
     static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("030127080334e1d62a9e3440")};
 
     static silkworm::Bytes kAccountChangeSetSubkey2{*silkworm::from_hex("a85b4c37cd8f447848d49851a1bb06d10d410c13")};
     static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("")};
+
+    static silkworm::Bytes kAccountChangeSetKey3{*silkworm::from_hex("00000000000fb02e")};
+    static silkworm::Bytes kAccountChangeSetSubkey3{*silkworm::from_hex("0000000000000000000000000000000000000000")};
+    static silkworm::Bytes kAccountChangeSetValue3{*silkworm::from_hex("0208028ded68c33d1401")};
+
 
     EvmDebugMockDatabaseReader db_reader;
     asio::thread_pool workers{1};
@@ -1029,6 +1285,15 @@ TEST_CASE("DebugExecutor::execute block") {
                 << "\n";
             co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
         }));
+    EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
+        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kAccountHistory
+                << " key: " << silkworm::to_hex(kAccountHistoryKey3)
+                << " value: " << silkworm::to_hex(kAccountHistoryValue3)
+                << "\n";
+            co_return KeyValue{kAccountHistoryKey3, kAccountHistoryValue3};
+        }));
     EXPECT_CALL(db_reader,
             get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey},
                             silkworm::ByteView{kAccountChangeSetSubkey1}))
@@ -1054,6 +1319,19 @@ TEST_CASE("DebugExecutor::execute block") {
                 << " value: " << silkworm::to_hex(kAccountChangeSetValue2)
                 << "\n";
                 co_return kAccountChangeSetValue2;
+            }));
+    EXPECT_CALL(db_reader,
+            get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey3},
+                            silkworm::ByteView{kAccountChangeSetSubkey3}))
+        .WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+            SILKRPC_LOG << "EXPECT_CALL::get_both_range "
+                << " table: " << db::table::kPlainAccountChangeSet
+                << " key: " << silkworm::to_hex(kAccountChangeSetKey3)
+                << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey3)
+                << " value: " << silkworm::to_hex(kAccountChangeSetValue3)
+                << "\n";
+                co_return kAccountChangeSetValue3;
             }));
 
     uint64_t block_number = 1'024'165;
