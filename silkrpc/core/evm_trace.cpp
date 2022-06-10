@@ -409,9 +409,10 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     if (vm_trace.ops.size() > 0) {
         auto& op = vm_trace.ops[vm_trace.ops.size() - 1];
         if (op.call_gas) {
-            op.gas_cost = op.call_gas.value();
-        } else {
-            op.gas_cost = op.gas_cost - execution_state.gas_left;
+           op.gas_cost = op.gas_cost - op.call_gas.value();
+        }
+        else {
+           op.gas_cost = op.gas_cost - execution_state.gas_left;
         }
         op.trace_ex.used = execution_state.gas_left;
 
@@ -437,6 +438,7 @@ void VmTraceTracer::on_precompiled_run(const evmc::result& result, int64_t gas, 
         << " status: " << result.status_code
         << ", gas: " << std::dec << gas
         << "\n";
+
 
     if (vm_trace_.ops.size() > 0) {
         auto& op = vm_trace_.ops[vm_trace_.ops.size() - 1];
@@ -869,9 +871,12 @@ asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std:
     for (auto idx = 0; idx < index; idx++) {
         silkrpc::Transaction txn{block.transactions[idx]};
 
-        txn.recover_sender();
+        if (!txn.from) {
+           txn.recover_sender();
+        }
         const auto execution_result = co_await executor.call(block, txn);
     }
+    executor.reset();
 
     state::RemoteState remote_state{io_context_, database_reader_, block_number};
     silkworm::IntraBlockState initial_ibs{remote_state};
