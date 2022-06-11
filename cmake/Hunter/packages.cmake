@@ -15,7 +15,6 @@
 ]]
 
 hunter_add_package(abseil)
-hunter_add_package(asio)
 hunter_add_package(Catch)
 hunter_add_package(ethash)
 hunter_add_package(gRPC)
@@ -23,3 +22,4 @@ hunter_add_package(GTest)
 hunter_add_package(intx)
 hunter_add_package(nlohmann_json)
 hunter_add_package(Protobuf)
+hunter_add_package(asio-grpc)

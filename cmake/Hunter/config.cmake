@@ -16,3 +16,10 @@
 
 # silkworm configuration
 include(${CMAKE_SOURCE_DIR}/silkworm/cmake/Hunter/config.cmake)
+
+hunter_config(
+    asio-grpc
+    VERSION ${HUNTER_asio-grpc_VERSION}
+    CMAKE_ARGS
+      ASIO_GRPC_USE_BOOST_CONTAINER=ON
+)

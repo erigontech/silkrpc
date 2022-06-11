@@ -26,8 +26,6 @@
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/log.hpp>
 
-#include <silkrpc/common/log.hpp>
-
 namespace silkrpc {
 
 using Catch::Matchers::Message;
@@ -88,7 +86,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
         SECTION(std::string("Context::Context wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
             Context context{create_channel, std::make_shared<BlockCache>(), wait_mode};
             CHECK_NOTHROW(context.io_context() != nullptr);
-            CHECK_NOTHROW(context.rpc_end_point() != nullptr);
+            CHECK_NOTHROW(context.grpc_context() != nullptr);
             CHECK_NOTHROW(context.backend() != nullptr);
             CHECK_NOTHROW(context.miner() != nullptr);
             CHECK_NOTHROW(context.block_cache() != nullptr);

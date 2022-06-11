@@ -24,6 +24,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/use_future.hpp>
+#include <agrpc/test.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
@@ -32,7 +33,7 @@
 
 #include <silkrpc/context_pool.hpp>
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
+#include <silkrpc/interfaces/remote/ethbackend_mock.grpc.pb.h>
 
 namespace silkrpc {
 
@@ -273,7 +274,7 @@ public:
     template<auto method, typename T>
     auto make_method_proxy() {
         const auto channel = grpc::CreateChannel(server_address_.str(), grpc::InsecureChannelCredentials());
-        std::unique_ptr<T> target{std::make_unique<T>(*context_.io_context(), channel, context_.grpc_queue())};
+        std::unique_ptr<T> target{std::make_unique<T>(*context_.io_context(), channel, *context_.grpc_context())};
         return [target = std::move(target)](auto&&... args) {
             return (target.get()->*method)(std::forward<decltype(args)>(args)...);
         };
@@ -310,31 +311,97 @@ auto test_engine_get_payload_v1 = test_comethod<ethbackend::BackEndGrpc, &ethbac
 auto test_engine_new_payload_v1 = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::engine_new_payload_v1, PayloadStatus, ExecutionPayload>;
 auto test_engine_forkchoice_updated_v1 = test_comethod<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::engine_forkchoice_updated_v1, ForkchoiceUpdatedReply, ForkchoiceUpdatedRequest>;
 
-TEST_CASE("BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+using StrictMockEthBackendStub = testing::StrictMock<::remote::MockETHBACKENDStub>;
+
+template<typename Reply>
+class MockAsyncResponseReader : public grpc::ClientAsyncResponseReaderInterface<Reply>
+{
+public:
+    MOCK_METHOD(void, StartCall, (), (override));
+    MOCK_METHOD(void, ReadInitialMetadata, (void*), (override));
+    MOCK_METHOD(void, Finish, (Reply*, ::grpc::Status*, void*), (override));
+};
+
+template<typename Reply>
+using StrictMockAsyncResponseReader = testing::StrictMock<MockAsyncResponseReader<Reply>>;
+
+class ContextTestBase {
+public:
+    ContextTestBase() = default;
+
+    ~ContextTestBase() {
+        context_.stop();
+        if (context_thread_.joinable()) {
+            context_thread_.join();
+        }
+    }
+
+private:
+    bool init_dummy{[] { SILKRPC_LOG_VERBOSITY(LogLevel::None); return true; }()};
+
+public:
+    Context context_{create_channel, std::make_shared<BlockCache>()};
+    boost::asio::io_context& io_context_{*context_.io_context()};
+    agrpc::GrpcContext& grpc_context_{*context_.grpc_context()};
+    std::thread context_thread_{std::thread([&]() { context_.execute_loop(); })};
+};
+
+class EthBackendTest : public ContextTestBase {
+public:
+    template<typename T, auto method, typename ...Args>
+    auto run(Args&&... args) {
+        T target{io_context_.get_executor(), std::move(stub_), grpc_context_};
+        return boost::asio::co_spawn(io_context_, (target.*method)(std::forward<Args>(args)...), boost::asio::use_future).get();
+    }
+
+    std::unique_ptr<StrictMockEthBackendStub> stub_{std::make_unique<StrictMockEthBackendStub>()};
+};
+
+auto finish_with_status(agrpc::GrpcContext& grpc_context, grpc::Status status){
+    return [&grpc_context, status](auto&&, ::grpc::Status* status_ptr, void* tag){
+                *status_ptr = status;
+                agrpc::process_grpc_tag(grpc_context, tag, true);
+            };
+}
+
+auto finish_ok(agrpc::GrpcContext& grpc_context){
+    return finish_with_status(grpc_context, grpc::Status::OK);
+}
+
+auto finish_cancelled(agrpc::GrpcContext& grpc_context){
+    return finish_with_status(grpc_context, grpc::Status::CANCELLED);
+}
+
+template<typename Reply>
+auto finish_with(agrpc::GrpcContext& grpc_context, Reply&& reply) {
+    return [&grpc_context, reply = std::forward<Reply>(reply)](auto* reply_ptr, ::grpc::Status* status, void* tag) mutable {
+        *reply_ptr = std::move(reply);
+        finish_with_status(grpc_context, grpc::Status::OK)(reply_ptr, status, tag);
+    };
+}
+
+TEST_CASE_METHOD(EthBackendTest, "BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
+    StrictMockAsyncResponseReader<::remote::EtherbaseReply> reader;
+    EXPECT_CALL(*stub_, AsyncEtherbaseRaw).WillOnce(testing::Return(&reader));
 
     SECTION("call etherbase and get address") {
-        TestBackEndService service;
-        boost::asio::io_context io_context;
-        auto etherbase{boost::asio::co_spawn(io_context, test_etherbase(&service), boost::asio::use_future)};
-        io_context.run();
-        CHECK(etherbase.get() == 0xaaaaeeffffeeaaaa11ddbbaaaabbdd11ccddddcc_address);
+        ::remote::EtherbaseReply response;
+        response.set_allocated_address(make_h160(0xAAAAEEFFFFEEAAAA, 0x11DDBBAAAABBDD11, 0xCCDDDDCC));
+        EXPECT_CALL(reader, Finish).WillOnce(finish_with(grpc_context_, std::move(response)));
+        auto etherbase = run<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::etherbase>();
+        CHECK(etherbase == 0xaaaaeeffffeeaaaa11ddbbaaaabbdd11ccddddcc_address);
     }
 
     SECTION("call etherbase and get empty address") {
-        EmptyBackEndService service;
-        boost::asio::io_context io_context;
-        auto etherbase{boost::asio::co_spawn(io_context, test_etherbase(&service), boost::asio::use_future)};
-        io_context.run();
-        CHECK(etherbase.get() == evmc::address{});
+        EXPECT_CALL(reader, Finish).WillOnce(finish_ok(grpc_context_));
+        auto etherbase = run<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::etherbase>();
+        CHECK(etherbase == evmc::address{});
     }
 
     SECTION("call etherbase and get error") {
-        FailureBackEndService service;
-        boost::asio::io_context io_context;
-        auto etherbase{boost::asio::co_spawn(io_context, test_etherbase(&service), boost::asio::use_future)};
-        io_context.run();
-        CHECK_THROWS_AS(etherbase.get(), boost::system::system_error);
+        EXPECT_CALL(reader, Finish).WillOnce(finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<ethbackend::BackEndGrpc, &ethbackend::BackEndGrpc::etherbase>()), boost::system::system_error);
     }
 }
 
