@@ -195,7 +195,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_hash(const nlohman
 
         reply = make_json_content(request["id"], extended_block);
     } catch (const std::invalid_argument& iv) {
-        SILKRPC_DEBUG << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
+        SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_content(request["id"], {});
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -234,7 +234,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_number(const nlohm
 
         reply = make_json_content(request["id"], extended_block);
     } catch (const std::invalid_argument& iv) {
-        SILKRPC_DEBUG << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
+        SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_content(request["id"], {});
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -323,9 +323,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_ind
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
-    auto block_hash = params[0].get<evmc::bytes32>();
-    auto index_string = params[1].get<std::string>();
-    SILKRPC_DEBUG << "block_hash: " << block_hash << " index: " << index_string << "\n";
+    const auto block_hash = params[0].get<evmc::bytes32>();
+    const auto index = params[1].get<std::string>();
+    SILKRPC_DEBUG << "block_hash: " << block_hash << " index: " << index << "\n";
 
     auto tx = co_await database_->begin();
 
@@ -333,17 +333,16 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_hash_and_ind
         ethdb::TransactionDatabase tx_database{*tx};
 
         const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache(), tx_database, block_hash);
-
         const auto ommers = block_with_hash.block.ommers;
 
-        auto index = std::stoul(index_string, 0, 16);
-        if (index >= ommers.size()) {
-            SILKRPC_WARN << "Requested uncle not found " << index_string << "\n";
+        const auto idx = std::stoul(index, 0, 16);
+        if (idx >= ommers.size()) {
+            SILKRPC_WARN << "invalid_argument: index not found processing request: " << request.dump() << "\n";
             reply = make_json_content(request["id"], nullptr);
         } else {
             const auto block_number = block_with_hash.block.header.number;
             const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_hash, block_number);
-            auto uncle = ommers[index];
+            auto uncle = ommers[idx];
 
             silkworm::BlockWithHash uncle_block_with_hash{{{}, uncle}, uncle.hash()};
             const Block uncle_block_with_hash_and_td{uncle_block_with_hash, total_difficulty};
@@ -384,9 +383,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_uncle_by_block_number_and_i
         const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache(), tx_database, block_number);
         const auto ommers = block_with_hash.block.ommers;
 
-        auto idx = std::stoul(index, 0, 16);
+        const auto idx = std::stoul(index, 0, 16);
         if (idx >= ommers.size()) {
-            SILKRPC_WARN << "Requested uncle not found " << index << "\n";
+            SILKRPC_WARN << "invalid_argument: index not found processing request: " << request.dump() << "\n";
             reply = make_json_content(request["id"], nullptr);
         } else {
             const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_with_hash.hash, block_number);
@@ -502,7 +501,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(const n
             reply = make_json_content(request["id"], tx_with_block->transaction);
         }
     } catch (const std::invalid_argument& iv) {
-        SILKRPC_DEBUG << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
+        SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_content(request["id"], {});
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -545,7 +544,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_hash(con
             reply = make_json_content(request["id"], rlp);
         }
     } catch (const std::invalid_argument& iv) {
-        SILKRPC_DEBUG << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
+        SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_content(request["id"], {});
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -770,7 +769,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const n
         }
         reply = make_json_content(request["id"], receipts[tx_index]);
     } catch (const std::invalid_argument& iv) {
-        SILKRPC_DEBUG << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
+        SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_content(request["id"], {});
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -1415,7 +1414,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
             Logs filtered_block_logs{};
             const auto block_key = silkworm::db::block_key(block_to_match);
             SILKRPC_TRACE << "block_to_match: " << block_to_match << " block_key: " << silkworm::to_hex(block_key) << "\n";
-            co_await tx_database.for_prefix(silkrpc::db::table::kLogs, block_key, [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
+            co_await tx_database.for_prefix(db::table::kLogs, block_key, [&](const silkworm::Bytes& k, const silkworm::Bytes& v) {
                 Logs chunck_logs{};
                 const bool decoding_ok{cbor_decode(v, chunck_logs)};
                 if (!decoding_ok) {
@@ -1455,7 +1454,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann::json& 
 
         reply = make_json_content(request["id"], logs);
     } catch (const std::invalid_argument& iv) {
-        SILKRPC_DEBUG << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
+        SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_content(request["id"], logs);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -1782,7 +1781,7 @@ asio::awaitable<roaring::Roaring> EthereumRpcApi::get_topics_bitmap(core::rawdb:
         for (auto topic : subtopics) {
             silkworm::Bytes topic_key{std::begin(topic.bytes), std::end(topic.bytes)};
             SILKRPC_TRACE << "topic: " << topic << " topic_key: " << silkworm::to_hex(topic) <<"\n";
-            auto bitmap = co_await ethdb::bitmap::get(db_reader, silkrpc::db::table::kLogTopicIndex, topic_key, start, end);
+            auto bitmap = co_await ethdb::bitmap::get(db_reader, db::table::kLogTopicIndex, topic_key, start, end);
             SILKRPC_TRACE << "bitmap: " << bitmap.toString() << "\n";
             subtopic_bitmap |= bitmap;
             SILKRPC_TRACE << "subtopic_bitmap: " << subtopic_bitmap.toString() << "\n";
@@ -1804,7 +1803,7 @@ asio::awaitable<roaring::Roaring> EthereumRpcApi::get_addresses_bitmap(core::raw
     roaring::Roaring result_bitmap;
     for (auto address : addresses) {
         silkworm::Bytes address_key{std::begin(address.bytes), std::end(address.bytes)};
-        auto bitmap = co_await ethdb::bitmap::get(db_reader, silkrpc::db::table::kLogAddressIndex, address_key, start, end);
+        auto bitmap = co_await ethdb::bitmap::get(db_reader, db::table::kLogAddressIndex, address_key, start, end);
         SILKRPC_TRACE << "bitmap: " << bitmap.toString() << "\n";
         result_bitmap |= bitmap;
     }

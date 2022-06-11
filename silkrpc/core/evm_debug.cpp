@@ -122,7 +122,6 @@ void DebugTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
     if (opcode_names_ == nullptr) {
         opcode_names_ = evmc_get_instruction_names_table(rev);
     }
-
     start_gas_ = msg.gas;
     evmc::address recipient(msg.recipient);
     evmc::address sender(msg.sender);
@@ -156,7 +155,6 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
         << "   msg.depth: " << std::dec << execution_state.msg->depth
         << "}\n";
 
-
     bool output_storage = false;
     if (!config_.disableStorage) {
         if (opcode_name == "SLOAD" && stack_height >= 1) {
@@ -181,9 +179,7 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
         auto& log = logs_[logs_.size() - 1];
         auto depth = log.depth;
         if (depth == execution_state.msg->depth + 1) {
-            auto gas_cost = log.gas - execution_state.gas_left;
-            log.gas_cost = gas_cost;
-
+            log.gas_cost = log.gas - execution_state.gas_left;
             if (!config_.disableMemory) {
                 auto& memory = log.memory;
                 for (int idx = memory.size(); idx < current_memory.size(); idx++) {
@@ -191,10 +187,9 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
                 }
             }
         } else if (depth == execution_state.msg->depth) {
-            log.gas_cost = start_gas_;
+            log.gas_cost = log.gas - execution_state.gas_left;
         }
     }
-
     DebugLog log;
     log.pc = pc;
     log.op = opcode_name == "KECCAK256" ? "SHA3" : opcode_name; // TODO(sixtysixter) for RPCDAEMON compatibility
@@ -283,7 +278,6 @@ asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::execute(
             debug_trace.return_value = silkworm::to_hex(execution_result.data);
         }
     }
-
     co_return debug_traces;
 }
 
@@ -305,9 +299,7 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std:
         << "\n";
 
     const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
-
     const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
-
     EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number};
 
     for (auto idx = 0; idx < index; idx++) {
@@ -318,7 +310,6 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std:
         }
         const auto execution_result = co_await executor.call(block, txn);
     }
-
     executor.reset();
 
     DebugExecutorResult result;

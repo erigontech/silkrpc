@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-#include "remote_buffer.hpp"
+#include "remote_state.hpp"
 
 #include <future>
 #include <unordered_map>

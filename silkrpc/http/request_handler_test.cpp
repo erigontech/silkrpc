@@ -27,7 +27,7 @@
 #include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/context_pool.hpp>
+#include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/http/request.hpp>
 #include <silkrpc/http/reply.hpp>
 #include <silkrpc/http/header.hpp>

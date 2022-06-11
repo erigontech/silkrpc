@@ -97,7 +97,7 @@ asio::awaitable<void> AccountDumper::load_accounts(ethdb::TransactionDatabase& t
 
         if (account.incarnation > 0 && account.code_hash == silkworm::kEmptyHash) {
             const auto storage_key{silkworm::db::storage_prefix(full_view(address), account.incarnation)};
-            auto code_hash{co_await tx_database.get_one(silkrpc::db::table::kPlainContractCode, storage_key)};
+            auto code_hash{co_await tx_database.get_one(db::table::kPlainContractCode, storage_key)};
             if (code_hash.length() == silkworm::kHashLength) {
                 std::memcpy(dump_account.code_hash.bytes, code_hash.data(), silkworm::kHashLength);
             }

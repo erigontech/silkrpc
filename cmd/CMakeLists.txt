@@ -20,7 +20,9 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   add_link_options(-Wl,-stack_size -Wl,0x1000000)
 endif()
 
+find_package(absl CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
+find_package(mimalloc 2.0 REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
 
 add_compile_options(-std=c++2a)
@@ -38,6 +40,15 @@ add_executable(silkrpc_toolbox
 )
 target_include_directories(silkrpc_toolbox PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(silkrpc_toolbox absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkrpc)
+
+add_executable(silkrpcdaemon silkrpc_daemon.cpp)
+target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
+target_link_libraries(silkrpcdaemon
+    silkrpc-buildinfo
+    silkrpc
+    absl::flags_parse
+    silkinterfaces
+    mimalloc)
 
 # Unit tests
 enable_testing()

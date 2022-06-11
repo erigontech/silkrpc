@@ -23,6 +23,7 @@ DEFAULT_RPCDAEMON_ADDRESS = "localhost"
 DEFAULT_TEST_MODE = "3"
 DEFAULT_WAITING_TIME = "5"
 DEFAULT_TEST_TYPE = "eth_getLogs"
+DEFAULT_WAIT_MODE = "blocking"
 
 VEGETA_PATTERN_DIRNAME = "erigon_stress_test"
 VEGETA_REPORT = "vegeta_report.hrd"
@@ -49,6 +50,7 @@ def usage(argv):
     print("-s silkrpcBuildDir      path to Silkrpc build folder (e.g. ../../build_gcc_release/)                           [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
     print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                      [default: " + str(DEFAULT_REPETITIONS) + "]")
     print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10)       [default: " + DEFAULT_TEST_SEQUENCE + "]")
+    print("-i                      wait mode                                                                              [default: " + DEFAULT_WAIT_MODE + "]")
     print("-n numContexts          number of Silkrpc execution contexts (i.e. 1+1 asio+grpc threads)                      [default: " + str(DEFAULT_SILKRPC_NUM_CONTEXTS) + "]")
     print("-m mode                 tests type silkrpc(1), rpcdaemon(2) and both (3) (i.e. 3)                              [default: " + str(DEFAULT_TEST_MODE) + "]")
     print("-w                      waiting time                                                                           [default: " + DEFAULT_WAITING_TIME + "]")
@@ -76,10 +78,14 @@ class Config:
         self.waiting_time = DEFAULT_WAITING_TIME
         self.user_perf_command = ""
         self.start_server = "1"
+        self.wait_mode = DEFAULT_WAIT_MODE
 
+        self.__parse_args(argv)
+
+    def __parse_args(self, argv):
         try:
             local_config = 0
-            opts, _ = getopt.getopt(argv[1:], "D:hm:d:p:c:a:g:s:r:t:n:y:zw:")
+            opts, _ = getopt.getopt(argv[1:], "D:hm:d:p:c:a:g:s:r:t:n:y:zw:i:")
 
             for option, optarg in opts:
                 if option in ("-h", "--help"):
@@ -126,6 +132,8 @@ class Config:
                     self.waiting_time = optarg
                 elif option == "-y":
                     self.test_type = optarg
+                elif option == "-i":
+                    self.wait_mode = optarg
                 elif option == "-n":
                     if local_config == 2:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
@@ -217,10 +225,10 @@ class PerfTest:
         self.rpc_daemon = 1
         on_core = self.config.daemon_vegeta_on_core.split(':')
         if on_core[0] == "-":
-            cmd = self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3  &"
+            cmd = self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3  2>/dev/null &"
         else:
             cmd = "taskset -c " + on_core[0] + " " + \
-                   self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3  &"
+                   self.config.erigon_builddir + "bin/rpcdaemon --private.api.addr="+self.config.erigon_addr+" --http.api=eth,debug,net,web3  2>/dev/null &"
         print("RpcDaemon starting ...: ", cmd)
         status = os.system(cmd)
         if int(status) != 0:
@@ -263,12 +271,15 @@ class PerfTest:
             perf_cmd = self.config.user_perf_command
         else:
             perf_cmd = ""
+        wait_mode_str = " --wait_mode " + self.config.wait_mode
         if on_core[0] == "-":
-            cmd = perf_cmd + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_verbosity c --num_workers 16 &"
+            cmd = perf_cmd \
+                + self.config.silkrpc_build_dir + "cmd/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_verbosity c --num_workers 16"\
+                    + wait_mode_str + " &"
         else:
             cmd = perf_cmd + "taskset -c " + on_core[0] + " "\
-                + self.config.silkrpc_build_dir + "silkrpc/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_verbosity c  --num_workers 16 --num_contexts "\
-                    + str(self.config.silkrpc_num_contexts) + " &"
+                + self.config.silkrpc_build_dir + "cmd/silkrpcdaemon --target " + self.config.erigon_addr + " --http_port localhost:51515 --log_verbosity c  --num_workers 16"\
+                    + " --num_contexts " + str(self.config.silkrpc_num_contexts) + wait_mode_str + " &"
         print("SilkDaemon starting ...: ", cmd)
         status = os.system(cmd)
         if int(status) != 0:

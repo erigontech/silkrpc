@@ -33,7 +33,7 @@ bool cbor_decode(const silkworm::Bytes& bytes, std::vector<Log>& logs) {
         logs = json.get<std::vector<Log>>();
         return true;
     } else {
-        SILKRPC_WARN << "cbor_decode<std::vector<Log>> unexpected json: " << json.dump() << "\n";
+        SILKRPC_ERROR << "cbor_decode<std::vector<Log>> unexpected json: " << json.dump() << "\n";
         return false;
     }
 }
@@ -48,7 +48,7 @@ bool cbor_decode(const silkworm::Bytes& bytes, std::vector<Receipt>& receipts) {
         receipts = json.get<std::vector<Receipt>>();
         return true;
     } else {
-        SILKRPC_WARN << "cbor_decode<std::vector<Receipt>> unexpected json: " << json.dump() << "\n";
+        SILKRPC_ERROR << "cbor_decode<std::vector<Receipt>> unexpected json: " << json.dump() << "\n";
         return false;
     }
 }

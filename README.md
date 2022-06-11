@@ -5,7 +5,12 @@ C++ implementation of the daemon component exposing the [Ethereum JSON RPC proto
 [![CircleCI](https://circleci.com/gh/torquem-ch/silkrpc.svg?style=shield)](https://circleci.com/gh/torquem-ch/silkrpc)
 [![Codecov master](https://img.shields.io/codecov/c/github/torquem-ch/silkrpc/master.svg?style=shield&logo=codecov&logoColor=white)](https://codecov.io/gh/torquem-ch/silkrpc)
 ![version](https://img.shields.io/github/v/release/torquem-ch/silkrpc?sort=semver&color=normal)
-[![License](https://img.shields.io/github/license/torquem-ch/silkrpc?color=lightgrey)](https://img.shields.io/github/license/torquem-ch/silkrpc)
+
+[![Total Alerts](https://img.shields.io/lgtm/alerts/g/torquem-ch/silkrpc.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/torquem-ch/silkrpc/alerts)
+[![Code Quality: C/C++](https://img.shields.io/lgtm/grade/cpp/g/torquem-ch/silkrpc.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/torquem-ch/silkrpc/context:cpp)
+[![Code Quality: Python](https://img.shields.io/lgtm/grade/python/g/torquem-ch/silkrpc.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/torquem-ch/silkrpc/context:python)
+
+[![GitHub](https://img.shields.io/github/license/torquem-ch/silkrpc.svg)](https://github.com/torquem-ch/silkrpc/blob/master/LICENSE)
 ![semver](https://img.shields.io/badge/semver-2.0.0-blue)
 
 <br>
@@ -138,7 +143,7 @@ We use the standard C++20 programming language. We follow the [Google's C++ Styl
 From the build folder (`build_[gcc, clang]_[debug, release]` according to your choice) you typically activate Silkrpc using:
 
 ```
-$ silkrpc/silkrpcdaemon --target <core_service_host_address>:9090
+$ cmd/silkrpcdaemon --target <core_service_host_address>:9090
 ```
 
 where `<core_service_host_address>` is the hostname or IP address of the Core services to connect to.
@@ -146,7 +151,7 @@ where `<core_service_host_address>` is the hostname or IP address of the Core se
 You can check all command-line parameters supported by Silkrpc using:
 
 ```
-$ silkrpc/silkrpcdaemon --help
+$ cmd/silkrpcdaemon --help
 silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
 
   Flags from main.cpp:
@@ -164,6 +169,6 @@ silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
 You can also check the Silkrpc executable version by:
 
 ```
-$ silkrpc/silkrpcdaemon --version
+$ cmd/silkrpcdaemon --version
 silkrpcdaemon 0.0.7
 ```

@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CONTEXT_POOL_HPP_
-#define SILKRPC_CONTEXT_POOL_HPP_
+#ifndef SILKRPC_CONCURRENCY_CONTEXT_POOL_HPP_
+#define SILKRPC_CONCURRENCY_CONTEXT_POOL_HPP_
 
 #include <cstddef>
 #include <functional>
@@ -25,17 +25,17 @@
 #include <string>
 #include <vector>
 
-#include <absl/strings/string_view.h>
 #include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/txpool/transaction_pool.hpp>
 #include <silkrpc/common/block_cache.hpp>
+#include <silkrpc/common/log.hpp>
+#include <silkrpc/concurrency/wait_strategy.hpp>
 #include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/txpool/miner.hpp>
+#include <silkrpc/txpool/transaction_pool.hpp>
 //#include <silkworm/rpc/completion_end_point.hpp>
-#include <silkrpc/common/log.hpp>
 
 // TODO(canepat) Temporary modified copy of CompletionEndPoint just for prototyping
 namespace silkworm::rpc {
@@ -108,118 +108,6 @@ class CompletionEndPoint {
 
 namespace silkrpc {
 
-struct WaitStrategy {
-    virtual ~WaitStrategy() = default;
-
-    virtual void wait_once(uint32_t executed_count) = 0;
-};
-
-struct SleepingWaitStrategy : public WaitStrategy {
-    void wait_once(uint32_t executed_count) override {
-        if (executed_count > 0) {
-            if (counter_ != kRetries) {
-                counter_ = kRetries;
-            }
-            return;
-        }
-
-        if (counter_ > 100) {
-            --counter_;
-        } else if (counter_ > 0) {
-            --counter_;
-            std::this_thread::yield();
-        } else {
-            std::this_thread::sleep_for(std::chrono::milliseconds(0));
-        }
-    }
-
-  private:
-    inline static const uint32_t kRetries{200};
-
-    uint32_t counter_{kRetries};
-};
-
-struct YieldingWaitStrategy : public WaitStrategy {
-    void wait_once(uint32_t executed_count) override {
-        if (executed_count > 0) {
-            if (counter_ != kSpinTries) {
-                counter_ = kSpinTries;
-            }
-            return;
-        }
-
-        if (counter_ == 0) {
-            std::this_thread::yield();
-        } else {
-            --counter_;
-        }
-    }
-
-  private:
-    inline static const uint32_t kSpinTries{100};
-
-    uint32_t counter_{kSpinTries};
-};
-
-struct SpinWaitWaitStrategy : public WaitStrategy {
-    void wait_once(uint32_t executed_count) override {
-        if (executed_count > 0) {
-            if (counter_ != 0) {
-                counter_ = 0;
-            }
-            return;
-        }
-
-        if (counter_ > kYieldThreshold) {
-            auto delta = counter_ - kYieldThreshold;
-            if (delta % kSleep1EveryHowManyTimes == kSleep1EveryHowManyTimes - 1) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(1));
-            } else if (delta % kSleep0EveryHowManyTimes == kSleep0EveryHowManyTimes - 1) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(0));
-            } else {
-                std::this_thread::yield();
-            }
-        } else {
-            for (auto i{0}; i < (4 << counter_); i++) {
-                spin_wait();
-            }
-        }
-    }
-
-  private:
-    void spin_wait() {
-        asm volatile
-        (
-            "rep\n"
-            "nop"
-        );
-    }
-
-    inline static const uint32_t kYieldThreshold{10};
-    inline static const uint32_t kSleep0EveryHowManyTimes{5};
-    inline static const uint32_t kSleep1EveryHowManyTimes{20};
-
-    uint32_t counter_{0};
-};
-
-struct BusySpinWaitStrategy : public WaitStrategy {
-    void wait_once(uint32_t /*executed_count*/) override {
-    }
-};
-
-enum class WaitMode {
-    blocking,
-    sleeping,
-    yielding,
-    spin_wait,
-    busy_spin
-};
-
-bool AbslParseFlag(absl::string_view text, WaitMode* wait_mode, std::string* error);
-std::string AbslUnparseFlag(WaitMode wait_mode);
-
-std::unique_ptr<WaitStrategy> make_wait_strategy(WaitMode wait_mode);
-
 using ChannelFactory = std::function<std::shared_ptr<grpc::Channel>()>;
 
 //! Asynchronous client scheduler running an execution loop.
@@ -244,7 +132,8 @@ class Context {
 
   private:
     //! Execute single-threaded loop until stopped.
-    void execute_loop_single_threaded();
+    template <typename WaitStrategy>
+    void execute_loop_single_threaded(WaitStrategy&& wait_strategy);
 
     //! Execute single-threaded loop until stopped.
     void execute_loop_double_threaded();
@@ -303,4 +192,4 @@ private:
 
 } // namespace silkrpc
 
-#endif // SILKRPC_CONTEXT_POOL_HPP_
+#endif // SILKRPC_CONCURRENCY_CONTEXT_POOL_HPP_
