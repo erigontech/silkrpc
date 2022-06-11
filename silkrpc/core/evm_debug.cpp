@@ -184,11 +184,6 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
             auto gas_cost = log.gas - execution_state.gas_left;
             log.gas_cost = gas_cost;
 
-    if (log.op == "SLOAD") {
-       std::cout << gas_cost <<  "\n";
-    }
-
-
             if (!config_.disableMemory) {
                 auto& memory = log.memory;
                 for (int idx = memory.size(); idx < current_memory.size(); idx++) {
@@ -205,10 +200,6 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
     log.op = opcode_name == "KECCAK256" ? "SHA3" : opcode_name; // TODO(sixtysixter) for RPCDAEMON compatibility
     log.gas = execution_state.gas_left;
     log.depth = execution_state.msg->depth + 1;
-
-    if (opcode_name == "SLOAD") {
-       std::cout << opcode_name << " " << log.gas << "\n";
-    }
 
     if (!config_.disableStack) {
         output_stack(log.stack, stack_top, stack_height);
@@ -327,6 +318,8 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std:
         }
         const auto execution_result = co_await executor.call(block, txn);
     }
+
+    executor.reset();
 
     DebugExecutorResult result;
     auto& debug_trace = result.debug_trace;

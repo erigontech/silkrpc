@@ -14,7 +14,7 @@
     limitations under the License.
 */
 
-#include "backend_grpc.hpp"
+#include "remote_backend.hpp"
 
 #include <optional>
 #include <vector>
@@ -28,7 +28,7 @@
 
 namespace silkrpc::ethbackend {
 
-asio::awaitable<evmc::address> BackEndGrpc::etherbase() {
+asio::awaitable<evmc::address> RemoteBackEnd::etherbase() {
     const auto start_time = clock_time::now();
     EtherbaseAwaitable eb_awaitable{executor_, stub_, queue_};
     const auto reply = co_await eb_awaitable.async_call(::remote::EtherbaseRequest{}, asio::use_awaitable);
@@ -41,7 +41,7 @@ asio::awaitable<evmc::address> BackEndGrpc::etherbase() {
     co_return evmc_address;
 }
 
-asio::awaitable<uint64_t> BackEndGrpc::protocol_version() {
+asio::awaitable<uint64_t> RemoteBackEnd::protocol_version() {
     const auto start_time = clock_time::now();
     ProtocolVersionAwaitable pv_awaitable{executor_, stub_, queue_};
     const auto reply = co_await pv_awaitable.async_call(::remote::ProtocolVersionRequest{}, asio::use_awaitable);
@@ -50,7 +50,7 @@ asio::awaitable<uint64_t> BackEndGrpc::protocol_version() {
     co_return pv;
 }
 
-asio::awaitable<uint64_t> BackEndGrpc::net_version() {
+asio::awaitable<uint64_t> RemoteBackEnd::net_version() {
     const auto start_time = clock_time::now();
     NetVersionAwaitable nv_awaitable{executor_, stub_, queue_};
     const auto reply = co_await nv_awaitable.async_call(::remote::NetVersionRequest{}, asio::use_awaitable);
@@ -59,7 +59,7 @@ asio::awaitable<uint64_t> BackEndGrpc::net_version() {
     co_return nv;
 }
 
-asio::awaitable<std::string> BackEndGrpc::client_version() {
+asio::awaitable<std::string> RemoteBackEnd::client_version() {
     const auto start_time = clock_time::now();
     ClientVersionAwaitable cv_awaitable{executor_, stub_, queue_};
     const auto reply = co_await cv_awaitable.async_call(::remote::ClientVersionRequest{}, asio::use_awaitable);
@@ -68,7 +68,7 @@ asio::awaitable<std::string> BackEndGrpc::client_version() {
     co_return cv;
 }
 
-asio::awaitable<uint64_t> BackEndGrpc::net_peer_count() {
+asio::awaitable<uint64_t> RemoteBackEnd::net_peer_count() {
     const auto start_time = clock_time::now();
     NetPeerCountAwaitable npc_awaitable{executor_, stub_, queue_};
     const auto reply = co_await npc_awaitable.async_call(::remote::NetPeerCountRequest{}, asio::use_awaitable);
@@ -77,7 +77,7 @@ asio::awaitable<uint64_t> BackEndGrpc::net_peer_count() {
     co_return count;
 }
 
-asio::awaitable<ExecutionPayload> BackEndGrpc::engine_get_payload_v1(uint64_t payload_id) {
+asio::awaitable<ExecutionPayload> RemoteBackEnd::engine_get_payload_v1(uint64_t payload_id) {
     const auto start_time = clock_time::now();
     EngineGetPayloadV1Awaitable npc_awaitable{executor_, stub_, queue_};
     ::remote::EngineGetPayloadRequest req;
@@ -88,7 +88,7 @@ asio::awaitable<ExecutionPayload> BackEndGrpc::engine_get_payload_v1(uint64_t pa
     co_return execution_payload;
 }
 
-asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPayload payload) {
+asio::awaitable<PayloadStatus> RemoteBackEnd::engine_new_payload_v1(ExecutionPayload payload) {
     const auto start_time = clock_time::now();
     EngineNewPayloadV1Awaitable npc_awaitable{executor_, stub_, queue_};
     auto req{encode_execution_payload(payload)};
@@ -98,7 +98,7 @@ asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPaylo
     co_return payload_status;
 }
 
-asio::awaitable<ForkchoiceUpdatedReply> BackEndGrpc::engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request) {
+asio::awaitable<ForkchoiceUpdatedReply> RemoteBackEnd::engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request) {
     const auto start_time = clock_time::now();
     EngineForkChoiceUpdatedV1Awaitable fcu_awaitable{executor_, stub_, queue_};
     const auto req{encode_forkchoice_updated_request(forkchoice_updated_request)};
@@ -116,7 +116,7 @@ asio::awaitable<ForkchoiceUpdatedReply> BackEndGrpc::engine_forkchoice_updated_v
     co_return forkchoice_updated_reply;
 }
 
-evmc::address BackEndGrpc::address_from_H160(const types::H160& h160) {
+evmc::address RemoteBackEnd::address_from_H160(const types::H160& h160) {
     uint64_t hi_hi = h160.hi().hi();
     uint64_t hi_lo = h160.hi().lo();
     uint32_t lo = h160.lo();
@@ -127,21 +127,21 @@ evmc::address BackEndGrpc::address_from_H160(const types::H160& h160) {
     return address;
 }
 
-silkworm::Bytes BackEndGrpc::bytes_from_H128(const types::H128& h128) {
+silkworm::Bytes RemoteBackEnd::bytes_from_H128(const types::H128& h128) {
     silkworm::Bytes bytes(16, '\0');
     boost::endian::store_big_u64(&bytes[0], h128.hi());
     boost::endian::store_big_u64(&bytes[8], h128.lo());
     return bytes;
 }
 
-types::H128* BackEndGrpc::H128_from_bytes(const uint8_t* bytes) {
+types::H128* RemoteBackEnd::H128_from_bytes(const uint8_t* bytes) {
     auto h128{new types::H128()};
     h128->set_hi(boost::endian::load_big_u64(bytes));
     h128->set_lo(boost::endian::load_big_u64(bytes + 8));
     return h128;
 }
 
-types::H160* BackEndGrpc::H160_from_address(const evmc::address& address) {
+types::H160* RemoteBackEnd::H160_from_address(const evmc::address& address) {
     auto h160{new types::H160()};
     auto hi{H128_from_bytes(address.bytes)};
     h160->set_allocated_hi(hi);
@@ -149,7 +149,7 @@ types::H160* BackEndGrpc::H160_from_address(const evmc::address& address) {
     return h160;
 }
 
-types::H256* BackEndGrpc::H256_from_bytes(const uint8_t* bytes) {
+types::H256* RemoteBackEnd::H256_from_bytes(const uint8_t* bytes) {
     auto h256{new types::H256()};
     auto hi{H128_from_bytes(bytes)};
     auto lo{H128_from_bytes(bytes + 16)};
@@ -158,7 +158,7 @@ types::H256* BackEndGrpc::H256_from_bytes(const uint8_t* bytes) {
     return h256;
 }
 
-silkworm::Bytes BackEndGrpc::bytes_from_H256(const types::H256& h256) {
+silkworm::Bytes RemoteBackEnd::bytes_from_H256(const types::H256& h256) {
     silkworm::Bytes bytes(32, '\0');
     auto hi{h256.hi()};
     auto lo{h256.lo()};
@@ -167,7 +167,7 @@ silkworm::Bytes BackEndGrpc::bytes_from_H256(const types::H256& h256) {
     return bytes;
 }
 
-intx::uint256 BackEndGrpc::uint256_from_H256(const types::H256& h256) {
+intx::uint256 RemoteBackEnd::uint256_from_H256(const types::H256& h256) {
     intx::uint256 n;
     n[3] = h256.hi().hi();
     n[2] = h256.hi().lo();
@@ -176,7 +176,7 @@ intx::uint256 BackEndGrpc::uint256_from_H256(const types::H256& h256) {
     return n;
 }
 
-types::H256* BackEndGrpc::H256_from_uint256(const intx::uint256& n) {
+types::H256* RemoteBackEnd::H256_from_uint256(const intx::uint256& n) {
     auto h256{new types::H256()};
     auto hi{new types::H128()};
     auto lo{new types::H128()};
@@ -191,13 +191,13 @@ types::H256* BackEndGrpc::H256_from_uint256(const intx::uint256& n) {
     return h256;
 }
 
-evmc::bytes32 BackEndGrpc::bytes32_from_H256(const types::H256& h256) {
+evmc::bytes32 RemoteBackEnd::bytes32_from_H256(const types::H256& h256) {
     evmc::bytes32 bytes32;
     std::memcpy(bytes32.bytes, bytes_from_H256(h256).data(), 32);
     return bytes32;
 }
 
-types::H512* BackEndGrpc::H512_from_bytes(const uint8_t* bytes) {
+types::H512* RemoteBackEnd::H512_from_bytes(const uint8_t* bytes) {
     auto h512{new types::H512()};
     auto hi{H256_from_bytes(bytes)};
     auto lo{H256_from_bytes(bytes + 32)};
@@ -206,7 +206,7 @@ types::H512* BackEndGrpc::H512_from_bytes(const uint8_t* bytes) {
     return h512;
 }
 
-silkworm::Bytes BackEndGrpc::bytes_from_H512(types::H512& h512) {
+silkworm::Bytes RemoteBackEnd::bytes_from_H512(types::H512& h512) {
     silkworm::Bytes bytes(64, '\0');
     auto hi{h512.hi()};
     auto lo{h512.lo()};
@@ -215,7 +215,7 @@ silkworm::Bytes BackEndGrpc::bytes_from_H512(types::H512& h512) {
     return bytes;
 }
 
-types::H1024* BackEndGrpc::H1024_from_bytes(const uint8_t* bytes) {
+types::H1024* RemoteBackEnd::H1024_from_bytes(const uint8_t* bytes) {
     auto h1024{new types::H1024()};
     auto hi{H512_from_bytes(bytes)};
     auto lo{H512_from_bytes(bytes + 64)};
@@ -224,7 +224,7 @@ types::H1024* BackEndGrpc::H1024_from_bytes(const uint8_t* bytes) {
     return h1024;
 }
 
-silkworm::Bytes BackEndGrpc::bytes_from_H1024(types::H1024& h1024) {
+silkworm::Bytes RemoteBackEnd::bytes_from_H1024(types::H1024& h1024) {
     silkworm::Bytes bytes(128, '\0');
     auto hi{h1024.hi()};
     auto lo{h1024.lo()};
@@ -233,7 +233,7 @@ silkworm::Bytes BackEndGrpc::bytes_from_H1024(types::H1024& h1024) {
     return bytes;
 }
 
-types::H2048* BackEndGrpc::H2048_from_bytes(const uint8_t* bytes) {
+types::H2048* RemoteBackEnd::H2048_from_bytes(const uint8_t* bytes) {
     auto h2048{new types::H2048()};
     auto hi{H1024_from_bytes(bytes)};
     auto lo{H1024_from_bytes(bytes + 128)};
@@ -242,7 +242,7 @@ types::H2048* BackEndGrpc::H2048_from_bytes(const uint8_t* bytes) {
     return h2048;
 }
 
-silkworm::Bytes BackEndGrpc::bytes_from_H2048(types::H2048& h2048) {
+silkworm::Bytes RemoteBackEnd::bytes_from_H2048(types::H2048& h2048) {
     silkworm::Bytes bytes(256, '\0');
     auto hi{h2048.hi()};
     auto lo{h2048.lo()};
@@ -251,7 +251,7 @@ silkworm::Bytes BackEndGrpc::bytes_from_H2048(types::H2048& h2048) {
     return bytes;
 }
 
-ExecutionPayload BackEndGrpc::decode_execution_payload(const types::ExecutionPayload& execution_payload_grpc) {
+ExecutionPayload RemoteBackEnd::decode_execution_payload(const types::ExecutionPayload& execution_payload_grpc) {
     auto state_root_h256{execution_payload_grpc.stateroot()};
     auto receipts_root_h256{execution_payload_grpc.receiptroot()};
     auto block_hash_h256{execution_payload_grpc.blockhash()};
@@ -288,7 +288,7 @@ ExecutionPayload BackEndGrpc::decode_execution_payload(const types::ExecutionPay
     };
 }
 
-types::ExecutionPayload BackEndGrpc::encode_execution_payload(const ExecutionPayload& execution_payload) {
+types::ExecutionPayload RemoteBackEnd::encode_execution_payload(const ExecutionPayload& execution_payload) {
     types::ExecutionPayload execution_payload_grpc;
     // Numerical parameters
     execution_payload_grpc.set_blocknumber(execution_payload.number);
@@ -313,7 +313,7 @@ types::ExecutionPayload BackEndGrpc::encode_execution_payload(const ExecutionPay
     return execution_payload_grpc;
 }
 
-remote::EngineForkChoiceState* BackEndGrpc::encode_forkchoice_state(const ForkchoiceState& forkchoice_state) {
+remote::EngineForkChoiceState* RemoteBackEnd::encode_forkchoice_state(const ForkchoiceState& forkchoice_state) {
     remote::EngineForkChoiceState *forkchoice_state_grpc = new remote::EngineForkChoiceState();
     // 32-bytes parameters
     forkchoice_state_grpc->set_allocated_headblockhash(H256_from_bytes(forkchoice_state.head_block_hash.bytes));
@@ -322,7 +322,7 @@ remote::EngineForkChoiceState* BackEndGrpc::encode_forkchoice_state(const Forkch
     return forkchoice_state_grpc;
 }
 
-remote::EnginePayloadAttributes* BackEndGrpc::encode_payload_attributes(const PayloadAttributes& payload_attributes) {
+remote::EnginePayloadAttributes* RemoteBackEnd::encode_payload_attributes(const PayloadAttributes& payload_attributes) {
     remote::EnginePayloadAttributes *payload_attributes_grpc = new remote::EnginePayloadAttributes();
     // Numerical parameters
     payload_attributes_grpc->set_timestamp(payload_attributes.timestamp);
@@ -334,20 +334,20 @@ remote::EnginePayloadAttributes* BackEndGrpc::encode_payload_attributes(const Pa
     return payload_attributes_grpc;
 }
 
-remote::EngineForkChoiceUpdatedRequest BackEndGrpc::encode_forkchoice_updated_request(const ForkchoiceUpdatedRequest& forkchoice_updated_request) {
+remote::EngineForkChoiceUpdatedRequest RemoteBackEnd::encode_forkchoice_updated_request(const ForkchoiceUpdatedRequest& forkchoice_updated_request) {
     remote::EngineForkChoiceUpdatedRequest forkchoice_updated_request_grpc;
-    remote::EngineForkChoiceState *forkchoice_state_grpc = BackEndGrpc::encode_forkchoice_state(forkchoice_updated_request.forkchoice_state);
+    remote::EngineForkChoiceState *forkchoice_state_grpc = RemoteBackEnd::encode_forkchoice_state(forkchoice_updated_request.forkchoice_state);
 
     forkchoice_updated_request_grpc.set_allocated_forkchoicestate(forkchoice_state_grpc);
     if (forkchoice_updated_request.payload_attributes != std::nullopt) {
         remote::EnginePayloadAttributes *payload_attributes_grpc =
-            BackEndGrpc::encode_payload_attributes(forkchoice_updated_request.payload_attributes.value());
+            RemoteBackEnd::encode_payload_attributes(forkchoice_updated_request.payload_attributes.value());
         forkchoice_updated_request_grpc.set_allocated_payloadattributes(payload_attributes_grpc);
     }
     return forkchoice_updated_request_grpc;
 }
 
-PayloadStatus BackEndGrpc::decode_payload_status(const remote::EnginePayloadStatus& payload_status_grpc) {
+PayloadStatus RemoteBackEnd::decode_payload_status(const remote::EnginePayloadStatus& payload_status_grpc) {
     PayloadStatus payload_status;
     payload_status.status = decode_status_message(payload_status_grpc.status());
     // Set LatestValidHash (if there is one)
@@ -362,7 +362,7 @@ PayloadStatus BackEndGrpc::decode_payload_status(const remote::EnginePayloadStat
     return payload_status;
 }
 
-std::string BackEndGrpc::decode_status_message(const remote::EngineStatus& status) {
+std::string RemoteBackEnd::decode_status_message(const remote::EngineStatus& status) {
     switch (status) {
         case remote::EngineStatus::VALID:
             return "VALID";
