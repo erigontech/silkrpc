@@ -78,7 +78,7 @@ struct TraceOp {
     std::uint64_t gas_cost{0};
     std::optional<std::uint64_t> call_gas;
     TraceEx trace_ex;
-    std::uint32_t idx;
+    std::string idx;
     std::uint8_t op_code;
     std::string op_name;
     std::uint32_t pc;
@@ -104,7 +104,7 @@ void push_memory_offset_len(std::uint8_t op_code, const evmone::uint256* stack, 
 
 class VmTraceTracer : public silkworm::EvmTracer {
 public:
-    explicit VmTraceTracer(VmTrace& vm_trace) : vm_trace_(vm_trace) {}
+    explicit VmTraceTracer(VmTrace& vm_trace, std::int32_t index = -1) : vm_trace_(vm_trace), transaction_index_{index} {}
 
     VmTraceTracer(const VmTraceTracer&) = delete;
     VmTraceTracer& operator=(const VmTraceTracer&) = delete;
@@ -118,9 +118,11 @@ public:
 
 private:
     VmTrace& vm_trace_;
+    std::int32_t transaction_index_;
+    std::stack<std::string> index_prefix_;
     std::stack<std::reference_wrapper<VmTrace>> traces_stack_;
     const char* const* opcode_names_ = nullptr;
-    std::int32_t next_index_{0};
+    // std::int32_t next_index_{0};
     std::stack<std::uint64_t> start_gas_;
     std::stack<TraceMemory> trace_memory_stack_;
 };

@@ -625,7 +625,7 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
                 "storage": {}
                 }
             },
-            "trace": null,
+            "trace": [],
             "vmTrace": {
                 "code": "0x602a60005500",
                 "ops": [
@@ -894,7 +894,7 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         CHECK(result.traces == R"({
             "output": "0x",
             "stateDiff": null,
-            "trace": null,
+            "trace": [],
             "vmTrace": null
         })"_json);
     }
@@ -1469,7 +1469,7 @@ TEST_CASE("VmTrace json serialization") {
     TraceOp trace_op;
     trace_op.gas_cost = 42;
     trace_op.trace_ex = trace_ex;
-    trace_op.idx = 12;
+    trace_op.idx = "12";
     trace_op.op_name = "PUSH1";
     trace_op.pc = 27;
     VmTrace vm_trace;
@@ -1478,6 +1478,8 @@ TEST_CASE("VmTrace json serialization") {
     vm_trace.ops.push_back(trace_op);
 
     SECTION("VmTrace") {
+        nlohmann::json json = vm_trace;
+        std::cout << "JSON :" << json << "\n" << std::flush;
         CHECK(vm_trace == R"({
             "code": "0xdeadbeaf",
             "ops": [
@@ -1504,6 +1506,8 @@ TEST_CASE("VmTrace json serialization") {
         })"_json);
     }
     SECTION("TraceOp") {
+        nlohmann::json json = trace_op;
+        std::cout << "JSON :" << json << "\n" << std::flush;
         CHECK(trace_op == R"({
             "cost":42,
             "ex":{
