@@ -6,7 +6,6 @@ extraction:
         - g++-10
         - gcc-10
     after_prepare:
-      - mkdir -p $LGTM_WORKSPACE/bin
       - gcc-10 --version
       - g++-10 --version
       - mkdir -p $LGTM_WORKSPACE/custom_cmake
