@@ -437,8 +437,6 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     TraceOp trace_op;
     trace_op.gas_cost = execution_state.gas_left;
     trace_op.idx = index_prefix;
-    // trace_op.idx = index_prefix_ + std::to_string(next_index_++);
-    // trace_op.idx = next_index_++;
     trace_op.op_code = op_code;
     trace_op.op_name = op_name == "KECCAK256" ? "SHA3" : op_name; // TODO(sixtysixter) for RPCDAEMON compatibility
     trace_op.pc = pc;
