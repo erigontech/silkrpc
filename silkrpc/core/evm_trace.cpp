@@ -57,7 +57,7 @@ void to_json(nlohmann::json& json, const VmTrace& vm_trace) {
 void to_json(nlohmann::json& json, const TraceOp& trace_op) {
     json["cost"] = trace_op.gas_cost;
     json["ex"] = trace_op.trace_ex;
-    json["idx"] = std::to_string(trace_op.idx);
+    json["idx"] = trace_op.idx;
     json["op"] = trace_op.op_name;
     json["pc"] = trace_op.pc;
     if (trace_op.sub) {
@@ -178,11 +178,7 @@ void to_json(nlohmann::json& json, const TraceCallTraces& result) {
     } else {
         json["stateDiff"] = nlohmann::json::value_t::null;
     }
-    if (result.trace.size() != 0) {
-        json["trace"] = result.trace;
-    } else {
-        json["trace"] = nlohmann::json::value_t::null;
-    }
+    json["trace"] = result.trace;
     if (result.vm_trace) {
         json["vmTrace"] = result.vm_trace.value();
     } else {
@@ -350,15 +346,21 @@ void push_memory_offset_len(std::uint8_t op_code, const evmone::uint256* stack, 
 
 std::string get_op_name(const char* const* names, std::uint8_t opcode) {
     const auto name = names[opcode];
-    return (name != nullptr) ?name : "opcode 0x" + evmc::hex(opcode) + " not defined";
+    if (name != nullptr) {
+        return name;
+     }
+    auto hex = evmc::hex(opcode);
+    if (opcode < 16) {
+        hex = hex.substr(1);
+    }
+    return "opcode 0x" + hex + " not defined";
 }
 
+static const char* PADDING = "0x0000000000000000000000000000000000000000000000000000000000000000";
 std::string to_string(intx::uint256 value) {
-    if (value != 0) {
-        return "0x" + intx::to_string(value, 16);
-    }
-
-    return "0x0000000000000000000000000000000000000000000000000000000000000000";
+    auto out = intx::to_string(value, 16);
+    std::string padding = std::string{PADDING};
+    return padding.substr(0, padding.size() - out.size()) + out;
 }
 
 void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept {
@@ -380,8 +382,19 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
     if (msg.depth == 0) {
         vm_trace_.code = "0x" + silkworm::to_hex(code);
         traces_stack_.push(vm_trace_);
+        if (transaction_index_ == -1) {
+            index_prefix_.push("");
+        } else {
+            index_prefix_.push(std::to_string(transaction_index_) + "-");
+        }
     } else if (vm_trace_.ops.size() > 0) {
-        auto& op = vm_trace_.ops[vm_trace_.ops.size() - 1];
+        auto& vm_trace = traces_stack_.top().get();
+
+        auto index_prefix = index_prefix_.top();
+        index_prefix = index_prefix + std::to_string(vm_trace.ops.size() - 1) + "-";
+        index_prefix_.push(index_prefix);
+
+        auto& op = vm_trace.ops[vm_trace.ops.size() - 1];
         op.sub = std::make_shared<VmTrace>();
         traces_stack_.push(*op.sub);
         op.sub->code = "0x" + silkworm::to_hex(code);
@@ -419,9 +432,11 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
         copy_stack(op.op_code, stack_top, op.trace_ex.stack);
     }
 
+    auto index_prefix = index_prefix_.top() + std::to_string(vm_trace.ops.size());
+
     TraceOp trace_op;
     trace_op.gas_cost = execution_state.gas_left;
-    trace_op.idx = next_index_++;
+    trace_op.idx = index_prefix;
     trace_op.op_code = op_code;
     trace_op.op_name = op_name == "KECCAK256" ? "SHA3" : op_name; // TODO(sixtysixter) for RPCDAEMON compatibility
     trace_op.pc = pc;
@@ -453,6 +468,8 @@ void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::
 
     std::uint64_t start_gas = start_gas_.top();
     start_gas_.pop();
+
+    index_prefix_.pop();
 
     SILKRPC_DEBUG << "VmTraceTracer::on_execution_end:"
         << " result.status_code: " << result.status_code
@@ -765,7 +782,7 @@ void StateDiffTracer::on_reward_granted(const silkworm::CallResult& result, cons
             auto initial_code = initial_ibs_.get_code(address);
             auto initial_nonce = initial_ibs_.get_nonce(address);
             if (exists) {
-                bool all_equals = diff_storage.size() == 0;
+                bool all_equals = true;
                 auto final_balance = intra_block_state.get_balance(address);
                 if (initial_balance != final_balance) {
                     all_equals = false;
@@ -792,10 +809,15 @@ void StateDiffTracer::on_reward_granted(const silkworm::CallResult& result, cons
                 }
                 for (auto& key : diff_storage) {
                     auto key_b32 = silkworm::bytes32_from_hex(key);
-                    entry.storage[key] = DiffValue{
-                        silkworm::to_hex(intra_block_state.get_original_storage(address, key_b32)),
-                        silkworm::to_hex(intra_block_state.get_current_storage(address, key_b32))
-                    };
+                    auto initial_storage = intra_block_state.get_original_storage(address, key_b32);
+                    auto final_storage = intra_block_state.get_current_storage(address, key_b32);
+                    if (initial_storage != final_storage) {
+                        all_equals = false;
+                        entry.storage[key] = DiffValue{
+                            silkworm::to_hex(intra_block_state.get_original_storage(address, key_b32)),
+                            silkworm::to_hex(intra_block_state.get_current_storage(address, key_b32))
+                        };
+                    }
                 }
                 if (all_equals) {
                     state_diff_.erase(address_key);
@@ -885,7 +907,7 @@ asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std:
     TraceCallTraces& traces = result.traces;
     if (config_.vm_trace) {
         traces.vm_trace.emplace();
-        std::shared_ptr<silkworm::EvmTracer> tracer = std::make_shared<trace::VmTraceTracer>(traces.vm_trace.value());
+        std::shared_ptr<silkworm::EvmTracer> tracer = std::make_shared<trace::VmTraceTracer>(traces.vm_trace.value(), index);
         tracers.push_back(tracer);
     }
     if (config_.trace) {
