@@ -1103,7 +1103,6 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const nlohma
 
         Tracers tracers{tracer};
         bool access_lists_match{false};
-        do {
         EVMExecutor executor{*context_.io_context(), tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number};
         do {
             const auto txn = call.to_transaction();
