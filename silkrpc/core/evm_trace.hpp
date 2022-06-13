@@ -124,7 +124,6 @@ private:
     std::stack<std::string> index_prefix_;
     std::stack<std::reference_wrapper<VmTrace>> traces_stack_;
     const char* const* opcode_names_ = nullptr;
-    // std::int32_t next_index_{0};
     std::stack<std::uint64_t> start_gas_;
     std::stack<TraceMemory> trace_memory_stack_;
 };
