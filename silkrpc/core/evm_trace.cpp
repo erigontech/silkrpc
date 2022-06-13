@@ -356,12 +356,11 @@ std::string get_op_name(const char* const* names, std::uint8_t opcode) {
     return "opcode 0x" + hex + " not defined";
 }
 
+static const char* PADDING = "0x0000000000000000000000000000000000000000000000000000000000000000";
 std::string to_string(intx::uint256 value) {
-    if (value != 0) {
-        return "0x" + intx::to_string(value, 16);
-    }
-
-    return "0x0000000000000000000000000000000000000000000000000000000000000000";
+    auto out = intx::to_string(value, 16);
+    std::string padding = std::string{PADDING};
+    return padding.substr(0, padding.size() - out.size()) + out;
 }
 
 void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept {

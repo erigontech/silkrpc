@@ -1478,8 +1478,6 @@ TEST_CASE("VmTrace json serialization") {
     vm_trace.ops.push_back(trace_op);
 
     SECTION("VmTrace") {
-        nlohmann::json json = vm_trace;
-        std::cout << "JSON :" << json << "\n" << std::flush;
         CHECK(vm_trace == R"({
             "code": "0xdeadbeaf",
             "ops": [
@@ -1506,8 +1504,6 @@ TEST_CASE("VmTrace json serialization") {
         })"_json);
     }
     SECTION("TraceOp") {
-        nlohmann::json json = trace_op;
-        std::cout << "JSON :" << json << "\n" << std::flush;
         CHECK(trace_op == R"({
             "cost":42,
             "ex":{
@@ -2070,6 +2066,59 @@ TEST_CASE("push_memory_offset_len") {
                 CHECK(tms.size() == 0);
                 break;
         }
+    }
+}
+TEST_CASE("get_op_name") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    const char* names[256] = {
+    /* 0x00 */ "STOP",
+    /* 0x01 */ "ADD",
+    /* 0x02 */ "MUL",
+    /* 0x03 */ "SUB",
+    /* 0x04 */ "DIV",
+    /* 0x05 */ "SDIV",
+    /* 0x06 */ "MOD",
+    /* 0x07 */ "SMOD",
+    /* 0x08 */ "ADDMOD",
+    /* 0x09 */ "MULMOD",
+    /* 0x0a */ "EXP",
+    /* 0x0b */ "SIGNEXTEND",
+    /* 0x0c */ NULL,
+    /* 0x0d */ NULL,
+    /* 0x0e */ NULL,
+    /* 0x0f */ NULL,
+    /* 0x10 */ "LT",
+    /* 0x11 */ "GT",
+    /* 0x12 */ "SLT",
+    /* 0x13 */ "SGT",
+    /* 0x14 */ "EQ",
+    /* 0x15 */ "ISZERO",
+    /* 0x16 */ "AND"
+    };
+
+    SECTION("valid op_code") {
+        auto op_code_name = get_op_name(names, 0x00);
+        CHECK(op_code_name == "STOP");
+    }
+    SECTION("not existent op_code") {
+        auto op_code_name = get_op_name(names, 0x0d);
+        CHECK(op_code_name == "opcode 0xd not defined");
+    }
+}
+
+TEST_CASE("to_string") {
+    SECTION("value == 0") {
+        auto out = to_string(intx::uint256{0});
+        CHECK(out == "0x0000000000000000000000000000000000000000000000000000000000000000");
+    }
+    SECTION("value == 1") {
+        auto out = to_string(intx::uint256{1});
+        CHECK(out == "0x0000000000000000000000000000000000000000000000000000000000000001");
+    }
+    SECTION("value == 1") {
+        auto out = to_string(intx::uint256{0xdeadbeaf});
+        CHECK(out == "0x00000000000000000000000000000000000000000000000000000000deadbeaf");
     }
 }
 }  // namespace silkrpc::trace
