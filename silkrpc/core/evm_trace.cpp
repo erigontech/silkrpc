@@ -409,9 +409,9 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     if (vm_trace.ops.size() > 0) {
         auto& op = vm_trace.ops[vm_trace.ops.size() - 1];
         if (op.call_gas) {
-           op.gas_cost = op.gas_cost - op.call_gas.value();
+            op.gas_cost = op.gas_cost - op.call_gas.value();
         } else {
-           op.gas_cost = op.gas_cost - execution_state.gas_left;
+            op.gas_cost = op.gas_cost - execution_state.gas_left;
         }
         op.trace_ex.used = execution_state.gas_left;
 
