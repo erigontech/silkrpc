@@ -32,7 +32,7 @@
 namespace silkrpc {
 
 // Gas limit cap for eth_call (increased wrt RPCDaemon)
-constexpr uint64_t kDefaultGasLimit{30'000'000};
+constexpr uint64_t kDefaultGasLimit{50'000'000};
 
 struct Call {
     std::optional<evmc::address> from;
@@ -61,6 +61,9 @@ struct Call {
             txn.access_list = access_list;
         }
         txn.gas_limit = gas.value_or(kDefaultGasLimit);
+        if (gas > kDefaultGasLimit) {
+            txn.gas_limit = kDefaultGasLimit;
+        }
         if (gas_price) {
             txn.max_priority_fee_per_gas = gas_price.value();
             txn.max_fee_per_gas = gas_price.value();
