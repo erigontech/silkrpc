@@ -168,9 +168,6 @@ public:
 
     const_iterator begin() const { return c.begin(); }
     const_iterator end() const { return std::end(c); }
-
-    container_type& container() {return c;};
-    const container_type& container() const {return c;};
 };
 
 class TraceTracer : public silkworm::EvmTracer {
