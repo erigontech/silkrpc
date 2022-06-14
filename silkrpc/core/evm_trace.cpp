@@ -369,16 +369,6 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
     }
     start_gas_.push(msg.gas);
 
-    SILKRPC_DEBUG << "VmTraceTracer::on_execution_start:"
-        << " depth: " << msg.depth
-        << ", gas: " << std::dec << msg.gas
-        << ", recipient: " << evmc::address{msg.recipient}
-        << ", sender: " << evmc::address{msg.sender}
-        << ", code: " << silkworm::to_hex(code)
-        << ", code_address: " << evmc::address{msg.code_address}
-        << ", input_size: " << msg.input_size
-        << "\n";
-
     if (msg.depth == 0) {
         vm_trace_.code = "0x" + silkworm::to_hex(code);
         traces_stack_.push(vm_trace_);
@@ -399,6 +389,18 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
         traces_stack_.push(*op.sub);
         op.sub->code = "0x" + silkworm::to_hex(code);
     }
+
+    auto& index_prefix = index_prefix_.top();
+    SILKRPC_LOG << "VmTraceTracer::on_execution_start:"
+        << " depth: " << msg.depth
+        << ", gas: " << std::dec << msg.gas
+        << ", recipient: " << evmc::address{msg.recipient}
+        << ", sender: " << evmc::address{msg.sender}
+        << ", code: " << silkworm::to_hex(code)
+        << ", code_address: " << evmc::address{msg.code_address}
+        << ", input_size: " << msg.input_size
+        << ", index_prefix: " << index_prefix
+        << "\n";
 }
 
 void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
@@ -406,20 +408,7 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     const auto op_code = execution_state.code[pc];
     auto op_name = get_op_name(opcode_names_, op_code);
 
-    SILKRPC_DEBUG << "VmTraceTracer::on_instruction_start:"
-        << " pc: " << std::dec << pc
-        << ", opcode: 0x" << std::hex << evmc::hex(op_code)
-        << ", opcode_name: " << op_name
-        << ", execution_state: {"
-        << "   gas_left: " << std::dec << execution_state.gas_left
-        << ",   status: " << execution_state.status
-        << ",   msg.gas: " << std::dec << execution_state.msg->gas
-        << ",   msg.depth: " << std::dec << execution_state.msg->depth
-        << "}\n";
-
-
     auto& vm_trace = traces_stack_.top().get();
-
     if (vm_trace.ops.size() > 0) {
         auto& op = vm_trace.ops[vm_trace.ops.size() - 1];
         if (op.call_gas) {
@@ -446,10 +435,21 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     copy_store(op_code, stack_top, trace_op.trace_ex.storage);
 
     vm_trace.ops.push_back(trace_op);
+    SILKRPC_LOG << "VmTraceTracer::on_instruction_start:"
+        << " pc: " << std::dec << pc
+        << ", opcode: 0x" << std::hex << evmc::hex(op_code)
+        << ", opcode_name: " << op_name
+        << ", index_prefix: " << index_prefix
+        << ", execution_state: {"
+        << "   gas_left: " << std::dec << execution_state.gas_left
+        << ",   status: " << execution_state.status
+        << ",   msg.gas: " << std::dec << execution_state.msg->gas
+        << ",   msg.depth: " << std::dec << execution_state.msg->depth
+        << "}\n";
 }
 
 void VmTraceTracer::on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept {
-    SILKRPC_DEBUG << "VmTraceTracer::on_precompiled_run:"
+    SILKRPC_LOG << "VmTraceTracer::on_precompiled_run:"
         << " status: " << result.status_code
         << ", gas: " << std::dec << gas
         << "\n";

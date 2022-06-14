@@ -163,10 +163,14 @@ class iterable_stack: public std::stack<T, Container> {
     using std::stack<T, Container>::c;
 
 public:
+    using container_type = typename std::stack<T, Container>::container_type;
     using const_iterator = typename Container::const_iterator;
 
     const_iterator begin() const { return c.begin(); }
     const_iterator end() const { return std::end(c); }
+
+    container_type& container() {return c;};
+    const container_type& container() const {return c;};
 };
 
 class TraceTracer : public silkworm::EvmTracer {
@@ -262,6 +266,9 @@ public:
     TraceCallExecutor& operator=(const TraceCallExecutor&) = delete;
 
     asio::awaitable<TraceCallResult> execute(const silkworm::Block& block, const silkrpc::Call& call);
+    asio::awaitable<TraceCallResult> execute(const silkworm::Block& block, const silkrpc::Transaction& transaction) {
+        return execute(block.header.number-1, block, transaction, transaction.transaction_index);
+    }
 
 private:
     asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block, const silkrpc::Transaction& transaction, std::int32_t = -1);
