@@ -169,7 +169,7 @@ asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... arg
     auto create_channel = []() {
         return grpc::CreateChannel(kTestAddressUri, grpc::InsecureChannelCredentials());
     };
-    Context context{create_channel, std::make_shared<BlockCache>()};
+    Context context{create_channel, std::make_shared<BlockCache>(), std::make_shared<ethdb::kv::CoherentStateCache>()};
     auto context_thread = std::thread([&]() { context.execute_loop(); });
     txpool::TransactionPool transaction_pool{*context.io_context(), create_channel(), context.grpc_queue()};
     auto method_proxy{make_method_proxy<mf, txpool::TransactionPool>(std::move(transaction_pool))};

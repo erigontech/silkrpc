@@ -33,6 +33,8 @@
 #include <silkrpc/concurrency/wait_strategy.hpp>
 #include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
+#include <silkrpc/ethdb/kv/state_cache.hpp>
+#include <silkrpc/ethdb/kv/state_changes_stream.hpp>
 #include <silkrpc/txpool/miner.hpp>
 #include <silkrpc/txpool/transaction_pool.hpp>
 //#include <silkworm/rpc/completion_end_point.hpp>
@@ -113,7 +115,11 @@ using ChannelFactory = std::function<std::shared_ptr<grpc::Channel>()>;
 //! Asynchronous client scheduler running an execution loop.
 class Context {
   public:
-    explicit Context(ChannelFactory create_channel, std::shared_ptr<BlockCache> block_cache, WaitMode wait_mode = WaitMode::blocking);
+    explicit Context(
+        ChannelFactory create_channel,
+        std::shared_ptr<BlockCache> block_cache,
+        std::shared_ptr<ethdb::kv::StateCache> state_cache,
+        WaitMode wait_mode = WaitMode::blocking);
 
     asio::io_context* io_context() const noexcept { return io_context_.get(); }
     grpc::CompletionQueue* grpc_queue() const noexcept { return queue_.get(); }
@@ -123,6 +129,7 @@ class Context {
     std::unique_ptr<txpool::Miner>& miner() noexcept { return miner_; }
     std::unique_ptr<txpool::TransactionPool>& tx_pool() noexcept { return tx_pool_; }
     std::shared_ptr<BlockCache>& block_cache() noexcept { return block_cache_; }
+    std::shared_ptr<ethdb::kv::StateCache>& state_cache() noexcept { return state_cache_; }
 
     //! Execute the scheduler loop until stopped.
     void execute_loop();
@@ -135,8 +142,8 @@ class Context {
     template <typename WaitStrategy>
     void execute_loop_single_threaded(WaitStrategy&& wait_strategy);
 
-    //! Execute single-threaded loop until stopped.
-    void execute_loop_double_threaded();
+    //! Execute multi-threaded loop until stopped.
+    void execute_loop_multi_threaded();
 
     //! The asynchronous event loop scheduler.
     std::shared_ptr<asio::io_context> io_context_;
@@ -151,11 +158,14 @@ class Context {
     std::unique_ptr<txpool::Miner> miner_;
     std::unique_ptr<txpool::TransactionPool> tx_pool_;
     std::shared_ptr<BlockCache> block_cache_;
+    std::shared_ptr<ethdb::kv::StateCache> state_cache_;
     WaitMode wait_mode_;
 };
 
 std::ostream& operator<<(std::ostream& out, Context& c);
 
+//! Pool of asynchronous client schedulers.
+// [currently cannot start/stop more than once because grpc::CompletionQueue cannot be used after shutdown]
 class ContextPool {
 public:
     explicit ContextPool(std::size_t pool_size, ChannelFactory create_channel, WaitMode wait_mode = WaitMode::blocking);
@@ -188,6 +198,10 @@ private:
 
     //! Flag indicating if pool has been stopped.
     bool stopped_{false};
+
+    std::unique_ptr<remote::KV::StubInterface> state_changes_stub_;
+
+    std::unique_ptr<ethdb::kv::StateChangesStream> state_changes_stream_;
 };
 
 } // namespace silkrpc

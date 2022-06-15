@@ -39,6 +39,10 @@ struct KeyValue {
     silkworm::Bytes value;
 };
 
+inline bool operator<(const KeyValue& lhs, const KeyValue& rhs) {
+    return lhs.key < rhs.key;
+}
+
 std::string base64_encode(const uint8_t* bytes_to_encode, size_t len, bool url);
 std::string to_dec(intx::uint256 number);
 bool check_tx_fee_less_cap(float cap, intx::uint256 max_fee_per_gas, uint64_t gas_limit);
