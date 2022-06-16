@@ -176,7 +176,7 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     std::unique_ptr<ethdb::Database> database;
     // Initialise components
     EngineRpcApiTest rpc(database, backend_ptr);
@@ -193,7 +193,7 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
     CHECK(reply == ExecutionPayload{1});
 
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
     backend_ptr.release();
 }
 
@@ -209,7 +209,7 @@ TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(new BackEndMock);
     std::unique_ptr<ethdb::Database> database;
@@ -234,7 +234,7 @@ TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[
     })"_json);
 
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_new_payload_v1 succeeds if request is expected payload status", "[silkrpc][engine_api]") {
@@ -277,7 +277,7 @@ TEST_CASE("handle_engine_new_payload_v1 succeeds if request is expected payload 
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     std::unique_ptr<ethdb::Database> database;
     // Initialise components
     EngineRpcApiTest rpc(database, backend_ptr);
@@ -298,7 +298,7 @@ TEST_CASE("handle_engine_new_payload_v1 succeeds if request is expected payload 
         });
 
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
     backend_ptr.release();
 }
 
@@ -314,7 +314,7 @@ TEST_CASE("handle_engine_new_payload_v1 fails with invalid amount of params", "[
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(new BackEndMock);
     std::unique_ptr<ethdb::Database> database;
@@ -339,7 +339,7 @@ TEST_CASE("handle_engine_new_payload_v1 fails with invalid amount of params", "[
     })"_json);
 
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds only with forkchoiceState", "[silkrpc][engine_api]") {
@@ -374,7 +374,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds only with forkchoiceStat
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(backend);
     std::unique_ptr<ethdb::Database> database;
@@ -396,7 +396,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds only with forkchoiceStat
         }
     })"_json);
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[silkrpc][engine_api]") {
@@ -436,7 +436,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[sil
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(backend);
     std::unique_ptr<ethdb::Database> database;
@@ -458,7 +458,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[sil
         }
     })"_json);
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_forkchoice_updated_v1 fails with invalid amount of params", "[silkrpc][engine_api]") {
@@ -473,7 +473,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with invalid amount of para
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(new BackEndMock);
     std::unique_ptr<ethdb::Database> database;
@@ -498,7 +498,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with invalid amount of para
     })"_json);
 
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty finalized block hash", "[silkrpc][engine_api]") {
@@ -520,7 +520,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty finalized block 
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(backend);
     std::unique_ptr<ethdb::Database> database;
@@ -543,7 +543,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty finalized block 
         "jsonrpc":"2.0" 
     })"_json);
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty safe block hash", "[silkrpc][engine_api]") {
@@ -565,7 +565,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty safe block hash"
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(backend);
     std::unique_ptr<ethdb::Database> database;
@@ -588,14 +588,14 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty safe block hash"
         "jsonrpc":"2.0" 
     })"_json);
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configurations has the same request configuration", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
@@ -642,14 +642,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
     }));
 
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default terminal block number to zero if chain config doesn't specify it", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
@@ -696,14 +696,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
     }));
 
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal total difficulty", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
@@ -752,14 +752,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
             "jsonrpc":"2.0"
         })"_json);
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal block hash", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
@@ -808,14 +808,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
             "jsonrpc":"2.0"
         })"_json);
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer does not have terminal total difficulty", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
@@ -864,14 +864,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
             "jsonrpc":"2.0"
         })"_json);
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn't have terminal block hash", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
@@ -920,14 +920,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn
             "jsonrpc":"2.0"
         })"_json);
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if consensus layer sends block number different from zero", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
@@ -976,14 +976,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if consensus layer se
             "jsonrpc":"2.0"
         })"_json);
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
@@ -1016,6 +1016,6 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params",
             "jsonrpc":"2.0"
         })"_json);
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 } // namespace silkrpc::commands

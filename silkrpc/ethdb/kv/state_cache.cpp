@@ -24,6 +24,7 @@
 #include <silkworm/rpc/conversion.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/core/rawdb/util.hpp>
 
 namespace silkrpc::ethdb::kv {
@@ -88,32 +89,24 @@ void CoherentStateCache::on_new_block(const remote::StateChangeBatch& state_chan
         }
     }
 
+    //TODO(canepat): uncomment when advance_root is implemented
     //root->ready = true;
 }
 
 void CoherentStateCache::process_upsert_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change) {
     const auto address = silkworm::rpc::address_from_H160(change.address());
-    const auto data = silkworm::from_hex(change.data());
-    if (data) {
-        const silkworm::Bytes address_bytes{address.bytes, silkworm::kAddressLength};
-        const silkworm::Bytes data_bytes{data.value()};
-        add({address_bytes, data_bytes}, root, view_id);
-    } else {
-        SILKRPC_WARN << "Empty data in account upsert change for view: " << view_id << " address: " << address << "\n";
-    }
+    const auto data_bytes = silkworm::bytes_of_string(change.data());
+    SILKRPC_DEBUG << "CoherentStateCache::process_upsert_change data: " << data_bytes << " address: " << address << "\n";
+    const silkworm::Bytes address_bytes{address.bytes, silkworm::kAddressLength};
+    add({address_bytes, data_bytes}, root, view_id);
 }
 
 void CoherentStateCache::process_code_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change) {
-    const auto code = silkworm::from_hex(change.code());
-    if (code) {
-        const ethash::hash256 code_hash{silkworm::keccak256(code.value())};
-        const silkworm::Bytes hash_bytes{code_hash.bytes, silkworm::kHashLength};
-        const silkworm::Bytes code_bytes{code.value()};
-        add_code({hash_bytes, code_bytes}, root, view_id);
-    } else {
-        const auto address = silkworm::rpc::address_from_H160(change.address());
-        SILKRPC_WARN << "Empty code in contract code change for view: " << view_id << " address: " << address << "\n";
-    }
+    const auto code_bytes = silkworm::bytes_of_string(change.code());
+    SILKRPC_DEBUG << "CoherentStateCache::process_code_change code: " << code_bytes << "\n";
+    const ethash::hash256 code_hash{silkworm::keccak256(code_bytes)};
+    const silkworm::Bytes hash_bytes{code_hash.bytes, silkworm::kHashLength};
+    add_code({hash_bytes, code_bytes}, root, view_id);
 }
 
 void CoherentStateCache::process_delete_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change) {
@@ -127,22 +120,20 @@ void CoherentStateCache::process_storage_change(CoherentStateRoot* root, StateVi
     for (const auto& storage_change : change.storagechanges()) {
         const auto location_hash = silkworm::rpc::bytes32_from_H256(storage_change.location());
         const auto storage_key = composite_storage_key(address, change.incarnation(), location_hash.bytes);
-        const auto data = silkworm::from_hex(storage_change.data());
-        if (data) {
-            const silkworm::Bytes data_bytes{data.value()};
-            add({storage_key, data_bytes}, root, view_id);
-        } else {
-            SILKRPC_WARN << "Empty data in storage change for view: " << view_id << " address: " << address << "\n";
-        }
+        const auto data_bytes = silkworm::bytes_of_string(storage_change.data());
+        SILKRPC_DEBUG << "CoherentStateCache::process_storage_change data: " << data_bytes << " address: " << address << "\n";
+        add({storage_key, data_bytes}, root, view_id);
     }
 }
 
 void CoherentStateCache::add(const KeyValue& kv, CoherentStateRoot* root, StateViewId view_id) {
     std::unique_lock write_lock{rw_mutex_};
+    //TODO(canepat)
 }
 
 void CoherentStateCache::add_code(const KeyValue& kv, CoherentStateRoot* root, StateViewId view_id) {
     std::unique_lock write_lock{rw_mutex_};
+    //TODO(canepat)
 }
 
 silkworm::Bytes CoherentStateCache::get(const KeyValue& kv, Transaction& txn) {
@@ -163,14 +154,17 @@ silkworm::Bytes CoherentStateCache::get(const KeyValue& kv, Transaction& txn) {
 }
 
 silkworm::Bytes CoherentStateCache::get_code(const KeyValue& kv, Transaction& /*txn*/) {
+    //TODO(canepat)
     return silkworm::Bytes{};
 }
 
 CoherentStateRoot* CoherentStateCache::get_root(StateViewId view_id) {
+    //TODO(canepat)
     return nullptr;
 }
 
 CoherentStateRoot* CoherentStateCache::advance_root(StateViewId view_id) {
+    //TODO(canepat)
     return nullptr;
 }
 
