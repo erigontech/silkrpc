@@ -42,7 +42,7 @@ public:
 
 class StateCache {
 public:
-    virtual StateView* get_view(Transaction& txn) = 0;
+    virtual std::unique_ptr<StateView> get_view(Transaction& txn) = 0;
 
     virtual void on_new_block(const remote::StateChangeBatch& state_changes) = 0;
 
@@ -99,11 +99,11 @@ public:
     CoherentStateCache(const CoherentStateCache&) = delete;
     CoherentStateCache& operator=(const CoherentStateCache&) = delete;
 
-    StateView* get_view(Transaction& txn) override;
+    std::unique_ptr<StateView> get_view(Transaction& txn) override;
 
     void on_new_block(const remote::StateChangeBatch& batch) override;
 
-    std::size_t size() override { return 0; }
+    std::size_t size() override;
 
 private:
     friend class CoherentStateView;
@@ -112,18 +112,19 @@ private:
     void process_code_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change);
     void process_delete_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change);
     void process_storage_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change);
-    void add(const KeyValue& kv, CoherentStateRoot* root, StateViewId view_id);
-    void add_code(const KeyValue& kv, CoherentStateRoot* root, StateViewId view_id);
+    void add(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id);
+    void add_code(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id);
     silkworm::Bytes get(const KeyValue& kv, Transaction& txn);
     silkworm::Bytes get_code(const KeyValue& kv, Transaction& txn);
     CoherentStateRoot* get_root(StateViewId view_id);
     CoherentStateRoot* advance_root(StateViewId view_id);
+    void evict_roots();
 
     const CoherentCacheConfig& config_;
 
-    std::map<StateViewId, CoherentStateRoot*> state_view_roots_;
-    StateViewId latest_state_view_id_;
-    CoherentStateRoot* latest_state_view_;
+    std::map<StateViewId, std::unique_ptr<CoherentStateRoot>> state_view_roots_;
+    StateViewId latest_state_view_id_{0};
+    CoherentStateRoot* latest_state_view_{nullptr};
     std::list<KeyValue> state_evictions_;
     std::list<KeyValue> code_evictions_;
     std::shared_mutex rw_mutex_;

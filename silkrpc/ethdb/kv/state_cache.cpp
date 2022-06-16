@@ -46,14 +46,23 @@ CoherentStateCache::CoherentStateCache(const CoherentCacheConfig& config) : conf
     }
 }
 
-StateView* CoherentStateCache::get_view(Transaction& txn) {
+std::unique_ptr<StateView> CoherentStateCache::get_view(Transaction& txn) {
     const auto view_id = txn.tx_id();
     CoherentStateRoot* root = get_root(view_id);
-    SILKWORM_ASSERT(root->ready);
-    return new CoherentStateView{txn, this};
+    return root->ready ? std::make_unique<CoherentStateView>(txn, this) : nullptr;
+}
+
+std::size_t CoherentStateCache::size() {
+    std::shared_lock read_lock{rw_mutex_};
+    if (latest_state_view_ == nullptr) {
+        return 0;
+    }
+    return latest_state_view_->cache.size();
 }
 
 void CoherentStateCache::on_new_block(const remote::StateChangeBatch& state_changes) {
+    std::unique_lock write_lock{rw_mutex_};
+
     const auto view_id = state_changes.databaseviewid();
     CoherentStateRoot* root = advance_root(view_id);
     for (const auto& state_change : state_changes.changebatch()) {
@@ -89,8 +98,7 @@ void CoherentStateCache::on_new_block(const remote::StateChangeBatch& state_chan
         }
     }
 
-    //TODO(canepat): uncomment when advance_root is implemented
-    //root->ready = true;
+    root->ready = true;
 }
 
 void CoherentStateCache::process_upsert_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change) {
@@ -126,20 +134,18 @@ void CoherentStateCache::process_storage_change(CoherentStateRoot* root, StateVi
     }
 }
 
-void CoherentStateCache::add(const KeyValue& kv, CoherentStateRoot* root, StateViewId view_id) {
-    std::unique_lock write_lock{rw_mutex_};
+void CoherentStateCache::add(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id) {
     //TODO(canepat)
 }
 
-void CoherentStateCache::add_code(const KeyValue& kv, CoherentStateRoot* root, StateViewId view_id) {
-    std::unique_lock write_lock{rw_mutex_};
+void CoherentStateCache::add_code(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id) {
     //TODO(canepat)
 }
 
 silkworm::Bytes CoherentStateCache::get(const KeyValue& kv, Transaction& txn) {
-    const auto view_id = txn.tx_id();
-
     std::shared_lock read_lock{rw_mutex_};
+
+    const auto view_id = txn.tx_id();
     auto root_it = state_view_roots_.find(view_id);
     if (root_it == state_view_roots_.end()) {
         return silkworm::Bytes{};
@@ -159,13 +165,56 @@ silkworm::Bytes CoherentStateCache::get_code(const KeyValue& kv, Transaction& /*
 }
 
 CoherentStateRoot* CoherentStateCache::get_root(StateViewId view_id) {
-    //TODO(canepat)
-    return nullptr;
+    const auto root_it = state_view_roots_.find(view_id);
+    if (root_it != state_view_roots_.end()) {
+        return root_it->second.get();
+    }
+    const auto [new_root_it, _] = state_view_roots_.emplace(view_id, std::make_unique<CoherentStateRoot>());
+    return new_root_it->second.get();
 }
 
 CoherentStateRoot* CoherentStateCache::advance_root(StateViewId view_id) {
-    //TODO(canepat)
-    return nullptr;
+    CoherentStateRoot* root = get_root(view_id);
+
+    const auto previous_root_it = state_view_roots_.find(view_id - 1);
+    if (previous_root_it != state_view_roots_.end() && previous_root_it->second->canonical) {
+        root->cache = previous_root_it->second->cache;
+        root->code_cache = previous_root_it->second->code_cache;
+    } else {
+        state_evictions_.clear();
+        for (const auto& kv : root->cache) {
+            state_evictions_.push_front(kv);
+        }
+        code_evictions_.clear();
+        for (const auto& kv : root->code_cache) {
+            code_evictions_.push_front(kv);
+        }
+    }
+    root->canonical = true;
+
+    evict_roots();
+
+    latest_state_view_id_ = view_id;
+    latest_state_view_ = root;
+
+    //TODO(canepat) add metrics
+
+    return root;
+}
+
+void CoherentStateCache::evict_roots() {
+    if (latest_state_view_id_ <= config_.max_views) {
+        return;
+    }
+    if (state_view_roots_.size() < config_.max_views) {
+        return;
+    }
+    // Erase older state views in order to not exceed max_views
+    const auto max_view_id_to_delete = latest_state_view_id_ - config_.max_views;
+    std::erase_if(state_view_roots_, [&](const auto& item) {
+        auto const& [view_id, _] = item;
+        return view_id <= max_view_id_to_delete;
+    });
 }
 
 } // namespace silkrpc::ethdb::kv
