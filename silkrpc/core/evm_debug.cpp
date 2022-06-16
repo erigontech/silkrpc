@@ -219,15 +219,12 @@ void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::In
         insert_error(log, result.status_code);
 
         switch (result.status_code) {
-        case evmc_status_code::EVMC_REVERT:
-        case evmc_status_code::EVMC_OUT_OF_GAS:
-            log.gas_cost = 0;
-            break;
-
         case evmc_status_code::EVMC_UNDEFINED_INSTRUCTION:
             log.gas_cost = start_gas_ - log.gas;
             break;
 
+        case evmc_status_code::EVMC_REVERT:
+        case evmc_status_code::EVMC_OUT_OF_GAS:
         default:
             log.gas_cost = log.gas - result.gas_left;
             break;

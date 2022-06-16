@@ -417,14 +417,21 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
         << ",   msg.depth: " << std::dec << execution_state.msg->depth
         << "}\n";
 
+
     auto& vm_trace = traces_stack_.top().get();
 
     if (vm_trace.ops.size() > 0) {
         auto& op = vm_trace.ops[vm_trace.ops.size() - 1];
+        std::cout << pc << " " << op_name << " " << execution_state.gas_left << " " << op.gas_cost << " " << std::dec << execution_state.msg->gas << " " << std::dec << execution_state.msg->depth <<"\n";
         if (op.call_gas) {
             op.gas_cost = op.gas_cost - op.call_gas.value();
+            std::cout << "op.gas_cost1: " << op.gas_cost << "\n";
         } else {
+            std::cout << "stack size: " << vm_trace.ops.size() << "\n";
+            std::cout << "op.gas_cost: " << op.gas_cost << " " << op.idx << "\n";
             op.gas_cost = op.gas_cost - execution_state.gas_left;
+            std::cout << "execution_state: " << execution_state.gas_left << "\n";
+            std::cout << "op.gas_cost2(gas_cost-gas_left): " << op.gas_cost << "\n";
         }
         op.trace_ex.used = execution_state.gas_left;
 
@@ -445,6 +452,7 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     copy_store(op_code, stack_top, trace_op.trace_ex.storage);
 
     vm_trace.ops.push_back(trace_op);
+    std::cout << "stack size: " << vm_trace.ops.size() << "\n";
 }
 
 void VmTraceTracer::on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept {
@@ -489,8 +497,8 @@ void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::
     switch (result.status_code) {
     case evmc_status_code::EVMC_REVERT:
     case evmc_status_code::EVMC_OUT_OF_GAS:
-        op.trace_ex.used = op.gas_cost;
-        op.gas_cost = 0;
+        op.trace_ex.used = result.gas_left;
+        op.gas_cost -= result.gas_left;
         break;
 
     case evmc_status_code::EVMC_UNDEFINED_INSTRUCTION:
