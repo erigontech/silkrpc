@@ -422,16 +422,10 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
 
     if (vm_trace.ops.size() > 0) {
         auto& op = vm_trace.ops[vm_trace.ops.size() - 1];
-        std::cout << pc << " " << op_name << " " << execution_state.gas_left << " " << op.gas_cost << " " << std::dec << execution_state.msg->gas << " " << std::dec << execution_state.msg->depth <<"\n";
         if (op.call_gas) {
             op.gas_cost = op.gas_cost - op.call_gas.value();
-            std::cout << "op.gas_cost1: " << op.gas_cost << "\n";
         } else {
-            std::cout << "stack size: " << vm_trace.ops.size() << "\n";
-            std::cout << "op.gas_cost: " << op.gas_cost << " " << op.idx << "\n";
             op.gas_cost = op.gas_cost - execution_state.gas_left;
-            std::cout << "execution_state: " << execution_state.gas_left << "\n";
-            std::cout << "op.gas_cost2(gas_cost-gas_left): " << op.gas_cost << "\n";
         }
         op.trace_ex.used = execution_state.gas_left;
 
@@ -452,7 +446,6 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     copy_store(op_code, stack_top, trace_op.trace_ex.storage);
 
     vm_trace.ops.push_back(trace_op);
-    std::cout << "stack size: " << vm_trace.ops.size() << "\n";
 }
 
 void VmTraceTracer::on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept {
