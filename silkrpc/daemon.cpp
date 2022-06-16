@@ -26,6 +26,9 @@
 
 namespace silkrpc {
 
+// The maximum receive message in bytes for gRPC channels.
+constexpr auto kRpcMaxReceiveMessageSize{64 * 1024 * 1024}; // 64 MiB
+
 void DaemonChecklist::success_or_throw() const {
     for (const auto protocol_check : protocol_checklist) {
         if (!protocol_check.compatible) {
@@ -181,7 +184,9 @@ bool Daemon::validate_settings(const DaemonSettings& settings) {
 
 ChannelFactory Daemon::make_channel_factory(const DaemonSettings& settings) {
     return [&settings]() {
-        return grpc::CreateChannel(settings.target, grpc::InsecureChannelCredentials());
+        grpc::ChannelArguments channel_args;
+        channel_args.SetMaxReceiveMessageSize(kRpcMaxReceiveMessageSize);
+        return grpc::CreateCustomChannel(settings.target, grpc::InsecureChannelCredentials(), channel_args);
     };
 }
 
@@ -189,7 +194,12 @@ Daemon::Daemon(const DaemonSettings& settings)
     : settings_(settings),
       create_channel_{make_channel_factory(settings_)},
       context_pool_{settings_.num_contexts, create_channel_, settings_.wait_mode},
-      worker_pool_{settings_.num_workers} {
+      worker_pool_{settings_.num_workers},
+      kv_stub_{remote::KV::NewStub(create_channel_())} {
+    // Create the unique KV state-changes stream feeding the state cache
+    auto& context = context_pool_.next_context();
+    state_changes_stream_ = std::make_unique<ethdb::kv::StateChangesStream>(
+        *context.io_context(), context.grpc_queue(), kv_stub_.get(), context.state_cache().get());
 }
 
 DaemonChecklist Daemon::run_checklist() {
@@ -222,10 +232,16 @@ void Daemon::start() {
         service->start();
     }
 
+    // Open the KV state-changes stream feeding the state cache
+    state_changes_stream_->open();
+
     context_pool_.start();
 }
 
 void Daemon::stop() {
+    // Cancel registration for incoming KV state changes
+    state_changes_stream_->close();
+
     context_pool_.stop();
 
     for (auto& service : rpc_services_) {

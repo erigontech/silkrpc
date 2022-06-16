@@ -101,8 +101,7 @@ void Context::stop() {
     SILKRPC_DEBUG << "Context::stop io_context " << io_context_ << " [" << this << "]\n";
 }
 
-ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, WaitMode wait_mode)
-    : next_index_{0}, state_changes_stub_{remote::KV::NewStub(create_channel())} {
+ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, WaitMode wait_mode) : next_index_{0} {
     if (pool_size == 0) {
         throw std::logic_error("ContextPool::ContextPool pool_size is 0");
     }
@@ -119,11 +118,6 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, W
         contexts_.emplace_back(Context{create_channel, block_cache, state_cache, wait_mode});
         SILKRPC_DEBUG << "ContextPool::ContextPool context[" << i << "] " << contexts_[i] << "\n";
     }
-
-    // Create the unique KV state-changes stream feeding the state cache
-    auto& context = next_context();
-    state_changes_stream_ = std::make_unique<ethdb::kv::StateChangesStream>(
-        *context.io_context(), context.grpc_queue(), state_changes_stub_.get(), state_cache.get());
 }
 
 ContextPool::~ContextPool() {
@@ -138,9 +132,6 @@ void ContextPool::start() {
     if (stopped_) {
         throw std::logic_error("cannot restart context pool, create another one");
     }
-
-    // Open the KV state-changes stream feeding the state cache
-    state_changes_stream_->open();
 
     // Create a pool of threads to run all of the contexts (each one having 1 threads)
     for (std::size_t i{0}; i < contexts_.size(); ++i) {
@@ -170,9 +161,6 @@ void ContextPool::stop() {
     SILKRPC_TRACE << "ContextPool::stop started\n";
 
     stopped_ = true;
-
-    // Cancel registration for incoming KV state changes
-    state_changes_stream_->close();
 
     // Explicitly stop all scheduler runnable components
     for (std::size_t i{0}; i < contexts_.size(); ++i) {

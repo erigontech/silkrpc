@@ -34,7 +34,6 @@
 #include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/kv/state_cache.hpp>
-#include <silkrpc/ethdb/kv/state_changes_stream.hpp>
 #include <silkrpc/txpool/miner.hpp>
 #include <silkrpc/txpool/transaction_pool.hpp>
 //#include <silkworm/rpc/completion_end_point.hpp>
@@ -198,10 +197,6 @@ private:
 
     //! Flag indicating if pool has been stopped.
     bool stopped_{false};
-
-    std::unique_ptr<remote::KV::StubInterface> state_changes_stub_;
-
-    std::unique_ptr<ethdb::kv::StateChangesStream> state_changes_stream_;
 };
 
 } // namespace silkrpc
