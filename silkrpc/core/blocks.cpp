@@ -29,6 +29,10 @@ asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const co
         block_number = kEarliestBlockNumber;
     } else if (block_id == kLatestBlockId || block_id == kPendingBlockId) {
         block_number = co_await get_latest_block_number(reader);
+    } else if (block_id == kFinalizedBlockId) {
+        block_number = co_await get_forkchoice_finalized_block_number(reader);
+    } else if (block_id == kSafeBlockId) {
+        block_number = co_await get_forkchoice_safe_block_number(reader);
     } else {
         block_number = std::stol(block_id, 0, 0);
     }
@@ -63,7 +67,7 @@ asio::awaitable<uint64_t> get_forkchoice_finalized_block_number(const core::rawd
     const auto kv_pair = co_await reader.get(silkrpc::db::table::kLastForkchoice, silkworm::bytes_of_string(std::string("finalizedBlockHash")));
     const auto finalized_block_hash_data = kv_pair.value;
     if (finalized_block_hash_data.empty()) {
-        SILKRPC_LOG << "no finalized forkchoice block found\n";
+        SILKRPC_LOG << "no finalized forkchoice block number found\n";
         co_return 0;
     }
     const auto finalized_block_hash = silkworm::to_bytes32(finalized_block_hash_data);
@@ -77,7 +81,7 @@ asio::awaitable<uint64_t> get_forkchoice_safe_block_number(const core::rawdb::Da
     const auto kv_pair = co_await reader.get(silkrpc::db::table::kLastForkchoice, silkworm::bytes_of_string(std::string("safeBlockHash")));
     const auto safe_block_hash_data = kv_pair.value;
     if (safe_block_hash_data.empty()) {
-        SILKRPC_LOG << "no safe forkchoice block found\n";
+        SILKRPC_LOG << "no safe forkchoice block number found\n";
         co_return 0;
     }
     const auto safe_block_hash = silkworm::to_bytes32(safe_block_hash_data);
