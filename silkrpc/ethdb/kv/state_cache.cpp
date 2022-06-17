@@ -134,12 +134,48 @@ void CoherentStateCache::process_storage_change(CoherentStateRoot* root, StateVi
     }
 }
 
-void CoherentStateCache::add(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id) {
-    //TODO(canepat)
+KeyValue* CoherentStateCache::add(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id) {
+    auto [it, inserted] = root->cache.insert(kv);
+    KeyValue* replaced{nullptr};
+    if (!inserted) {
+        replaced = &*it;
+        root->cache.erase(it);
+        std::tie(it, inserted) = root->cache.insert(kv);
+        SILKWORM_ASSERT(inserted);
+    }
+    if (latest_state_view_id_ != view_id) {
+        return &*it;
+    }
+    if (replaced != nullptr) {
+        state_evictions_.remove(*replaced);
+    }
+    state_evictions_.push_front(kv);
+    if (state_evictions_.size() > config_.max_state_keys) {
+        state_evictions_.pop_back(); // remove oldest
+    }
+    return &*it;
 }
 
-void CoherentStateCache::add_code(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id) {
-    //TODO(canepat)
+KeyValue* CoherentStateCache::add_code(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id) {
+    auto [it, inserted] = root->code_cache.insert(kv);
+    KeyValue* replaced{nullptr};
+    if (!inserted) {
+        replaced = &*it;
+        root->code_cache.erase(it);
+        std::tie(it, inserted) = root->code_cache.insert(kv);
+        SILKWORM_ASSERT(inserted);
+    }
+    if (latest_state_view_id_ != view_id) {
+        return &*it;
+    }
+    if (replaced != nullptr) {
+        code_evictions_.remove(*replaced);
+    }
+    code_evictions_.push_front(kv);
+    if (code_evictions_.size() > config_.max_code_keys) {
+        code_evictions_.pop_back(); // remove oldest
+    }
+    return &*it;
 }
 
 silkworm::Bytes CoherentStateCache::get(const KeyValue& kv, Transaction& txn) {
