@@ -179,7 +179,12 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
         auto& log = logs_[logs_.size() - 1];
         auto depth = log.depth;
         if (depth == execution_state.msg->depth + 1) {
-            log.gas_cost = log.gas - execution_state.gas_left;
+            if (gas_on_precompiled) {
+               log.gas_cost = log.gas - gas_on_precompiled;
+               gas_on_precompiled = 0;
+            } else {
+               log.gas_cost = log.gas - execution_state.gas_left;
+            }
             if (!config_.disableMemory) {
                 auto& memory = log.memory;
                 for (int idx = memory.size(); idx < current_memory.size(); idx++) {
@@ -211,6 +216,16 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
 
     logs_.push_back(log);
 }
+
+void DebugTracer::on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept {
+    SILKRPC_DEBUG << "VmTraceTracer::on_precompiled_run:"
+        << " status: " << result.status_code
+        << ", gas: " << std::dec << gas
+        << "\n";
+
+    gas_on_precompiled = gas;
+}
+
 
 void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
     if (logs_.size() > 0) {
