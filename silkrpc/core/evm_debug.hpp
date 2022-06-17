@@ -88,7 +88,7 @@ private:
     std::map<evmc::address, Storage> storage_;
     const char* const* opcode_names_ = nullptr;
     std::int64_t start_gas_{0};
-    std::int64_t gas_on_precompiled{0};
+    std::int64_t gas_on_precompiled_{0};
 };
 
 class NullTracer : public silkworm::EvmTracer {
