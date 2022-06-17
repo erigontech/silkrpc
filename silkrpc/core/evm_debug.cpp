@@ -179,9 +179,9 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
         auto& log = logs_[logs_.size() - 1];
         auto depth = log.depth;
         if (depth == execution_state.msg->depth + 1) {
-            if (gas_on_precompiled) {
-               log.gas_cost = log.gas - gas_on_precompiled;
-               gas_on_precompiled = 0;
+            if (gas_on_precompiled_) {
+               log.gas_cost = log.gas - gas_on_precompiled_;
+               gas_on_precompiled_ = 0;
             } else {
                log.gas_cost = log.gas - execution_state.gas_left;
             }
@@ -223,7 +223,7 @@ void DebugTracer::on_precompiled_run(const evmc::result& result, int64_t gas, co
         << ", gas: " << std::dec << gas
         << "\n";
 
-    gas_on_precompiled = gas;
+    gas_on_precompiled_ = gas;
 }
 
 
