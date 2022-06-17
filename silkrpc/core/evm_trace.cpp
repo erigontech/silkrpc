@@ -417,6 +417,7 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
         << ",   msg.depth: " << std::dec << execution_state.msg->depth
         << "}\n";
 
+
     auto& vm_trace = traces_stack_.top().get();
 
     if (vm_trace.ops.size() > 0) {
@@ -489,8 +490,8 @@ void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::
     switch (result.status_code) {
     case evmc_status_code::EVMC_REVERT:
     case evmc_status_code::EVMC_OUT_OF_GAS:
-        op.trace_ex.used = op.gas_cost;
-        op.gas_cost = 0;
+        op.trace_ex.used = result.gas_left;
+        op.gas_cost -= result.gas_left;
         break;
 
     case evmc_status_code::EVMC_UNDEFINED_INSTRUCTION:
