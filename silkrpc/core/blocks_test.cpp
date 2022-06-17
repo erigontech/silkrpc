@@ -227,6 +227,30 @@ TEST_CASE("get_latest_block_number with head forkchoice number", "[silkrpc][core
     CHECK(result.get() == 0x3d0900);
 }
 
+TEST_CASE("get_finalized_forkchoice_number with finalized block in db", "[silkrpc][core][blocks]") {
+    MockDatabaseReader db_reader;
+    asio::thread_pool pool{1};
+    const std::string FINALIZED_FORKCHOICE_BLOCK_ID = kFinalizedBlockId;
+    EXPECT_CALL(db_reader, get(db::table::kLastForkchoice, _)).WillOnce(InvokeWithoutArgs(
+        [&]() -> asio::awaitable<KeyValue> {
+            co_return KeyValue{silkworm::Bytes{}, block_hash};
+        }
+    ));
+
+    EXPECT_CALL(db_reader, get(db::table::kHeaderNumbers, _)).WillOnce(InvokeWithoutArgs(
+        []() -> asio::awaitable<KeyValue> {
+            co_return KeyValue{silkworm::Bytes{}, kNumber};
+        }
+    ));
+
+    EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+        []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
+    ));
+
+    auto result = asio::co_spawn(pool, get_block_number(FINALIZED_FORKCHOICE_BLOCK_ID, db_reader), asio::use_future);
+    CHECK(result.get() == 0x3d0900);
+}
+
 TEST_CASE("get_finalized_forkchoice_number with no finalized block we return genesis number", "[silkrpc][core][blocks]") {
     MockDatabaseReader db_reader;
     asio::thread_pool pool{1};
@@ -239,6 +263,30 @@ TEST_CASE("get_finalized_forkchoice_number with no finalized block we return gen
 
     auto result = asio::co_spawn(pool, get_forkchoice_finalized_block_number(db_reader), asio::use_future);
     CHECK(result.get() == 0x0);
+}
+
+TEST_CASE("get_safe_forkchoice_number with safe block in db", "[silkrpc][core][blocks]") {
+    MockDatabaseReader db_reader;
+    asio::thread_pool pool{1};
+    const std::string SAFE_FORKCHOICE_BLOCK_ID = kSafeBlockId;
+    EXPECT_CALL(db_reader, get(db::table::kLastForkchoice, _)).WillOnce(InvokeWithoutArgs(
+        [&]() -> asio::awaitable<KeyValue> {
+            co_return KeyValue{silkworm::Bytes{}, block_hash};
+        }
+    ));
+
+    EXPECT_CALL(db_reader, get(db::table::kHeaderNumbers, _)).WillOnce(InvokeWithoutArgs(
+        []() -> asio::awaitable<KeyValue> {
+            co_return KeyValue{silkworm::Bytes{}, kNumber};
+        }
+    ));
+
+    EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+        []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
+    ));
+
+    auto result = asio::co_spawn(pool, get_block_number(SAFE_FORKCHOICE_BLOCK_ID, db_reader), asio::use_future);
+    CHECK(result.get() == 0x3d0900);
 }
 
 TEST_CASE("get_safe_forkchoice_number with no safe block we return genesis number", "[silkrpc][core][blocks]") {
