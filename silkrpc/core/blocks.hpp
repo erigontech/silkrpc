@@ -30,6 +30,8 @@ namespace silkrpc::core {
 constexpr const char* kEarliestBlockId{"earliest"};
 constexpr const char* kLatestBlockId{"latest"};
 constexpr const char* kPendingBlockId{"pending"};
+constexpr const char* kFinalizedBlockId{"finalized"};
+constexpr const char* kSafeBlockId{"safe"};
 
 constexpr uint64_t kEarliestBlockNumber{0ul};
 
