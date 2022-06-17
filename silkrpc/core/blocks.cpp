@@ -18,6 +18,8 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/stagedsync/stages.hpp>
+#include <silkrpc/core/rawdb/chain.hpp>
+#include <silkrpc/ethdb/tables.hpp>
 
 namespace silkrpc::core {
 
@@ -45,8 +47,44 @@ asio::awaitable<uint64_t> get_highest_block_number(const core::rawdb::DatabaseRe
 }
 
 asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader) {
+    const auto kv_pair = co_await reader.get(silkrpc::db::table::kLastForkchoice, silkworm::bytes_of_string(std::string("headBlockHash")));
+    const auto head_block_hash_data = kv_pair.value;
+    if (!head_block_hash_data.empty()) {
+        const auto head_block_hash = silkworm::to_bytes32(head_block_hash_data);
+        const silkworm::BlockWithHash head_block_with_hash = co_await rawdb::read_block_by_hash(reader, head_block_hash);
+        const silkworm::BlockHeader head_block_header = head_block_with_hash.block.header;
+        co_return head_block_header.number;
+    }
     const auto latest_block_number = co_await stages::get_sync_stage_progress(reader, stages::kExecution);
     co_return latest_block_number;
+}
+
+asio::awaitable<uint64_t> get_forkchoice_finalized_block_number(const core::rawdb::DatabaseReader& reader) {
+    const auto kv_pair = co_await reader.get(silkrpc::db::table::kLastForkchoice, silkworm::bytes_of_string(std::string("finalizedBlockHash")));
+    const auto finalized_block_hash_data = kv_pair.value;
+    if (finalized_block_hash_data.empty()) {
+        SILKRPC_LOG << "no finalized forkchoice block found\n";
+        co_return 0;
+    }
+    const auto finalized_block_hash = silkworm::to_bytes32(finalized_block_hash_data);
+
+    const silkworm::BlockWithHash finalized_block_with_hash = co_await rawdb::read_block_by_hash(reader, finalized_block_hash);
+    const silkworm::BlockHeader finalized_block_header = finalized_block_with_hash.block.header;
+    co_return finalized_block_header.number;
+}
+
+asio::awaitable<uint64_t> get_forkchoice_safe_block_number(const core::rawdb::DatabaseReader& reader) {
+    const auto kv_pair = co_await reader.get(silkrpc::db::table::kLastForkchoice, silkworm::bytes_of_string(std::string("safeBlockHash")));
+    const auto safe_block_hash_data = kv_pair.value;
+    if (safe_block_hash_data.empty()) {
+        SILKRPC_LOG << "no safe forkchoice block found\n";
+        co_return 0;
+    }
+    const auto safe_block_hash = silkworm::to_bytes32(safe_block_hash_data);
+
+    const silkworm::BlockWithHash safe_block_with_hash = co_await rawdb::read_block_by_hash(reader, safe_block_hash);
+    const silkworm::BlockHeader safe_block_header = safe_block_with_hash.block.header;
+    co_return safe_block_header.number;
 }
 
 } // namespace silkrpc::core
