@@ -58,8 +58,16 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
 
     SECTION("kLatestBlockId") {
         const std::string LATEST_BLOCK_ID = kLatestBlockId;
+
+        EXPECT_CALL(db_reader, get(db::table::kLastForkchoice, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { 
+                co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")}; }
+            []() -> asio::awaitable<KeyValue> { 
+                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")};
+                 }
         ));
         auto result = asio::co_spawn(pool, get_block_number(LATEST_BLOCK_ID, db_reader), asio::use_future);
         CHECK(result.get() == 0x1234567890123456);
@@ -67,6 +75,11 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
 
     SECTION("kPendingBlockId") {
         const std::string PENDING_BLOCK_ID = kPendingBlockId;
+        EXPECT_CALL(db_reader, get(db::table::kLastForkchoice, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { 
+                co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
             []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")}; }
         ));
@@ -115,6 +128,11 @@ TEST_CASE("get_latest_block_number", "[silkrpc][core][blocks]") {
     const silkworm::ByteView kExecutionStage{stages::kExecution};
     MockDatabaseReader db_reader;
     asio::thread_pool pool{1};
+
+    EXPECT_CALL(db_reader, get(db::table::kLastForkchoice, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<KeyValue> { 
+                co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
 
     EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
         []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("0000ddff12345678")}; }
