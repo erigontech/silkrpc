@@ -55,7 +55,11 @@ void to_json(nlohmann::json& json, const VmTrace& vm_trace) {
 }
 
 void to_json(nlohmann::json& json, const TraceOp& trace_op) {
-    json["cost"] = trace_op.gas_cost;
+    // if (trace_op.call_gas_cap) {
+    //     json["cost"] = trace_op.call_gas_cap.value();
+    // } else {
+        json["cost"] = trace_op.gas_cost;
+    // }
     json["ex"] = trace_op.trace_ex;
     json["idx"] = trace_op.idx;
     json["op"] = trace_op.op_name;
@@ -385,6 +389,20 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
         index_prefix_.push(index_prefix);
 
         auto& op = vm_trace.ops[vm_trace.ops.size() - 1];
+        if (op.op_code == evmc_opcode::OP_STATICCALL || op.op_code == evmc_opcode::OP_DELEGATECALL || op.op_code == evmc_opcode::OP_CALL) {
+            auto& op_1 = vm_trace.ops[vm_trace.ops.size() - 2];
+            auto cap = op_1.trace_ex.used - msg.gas;
+
+            SILKRPC_LOG << "VmTraceTracer::on_execution_start:"
+                << " idx: " << op.idx
+                << " msg.gas: " << msg.gas
+                << " op_name: " << op.op_name
+                << " gas_cost: " << op.gas_cost
+                << " used[" << op_1.idx << "]: " << op_1.trace_ex.used
+                << " cap: " << cap
+                << "\n";
+            op.call_gas_cap = cap;
+        }
         op.sub = std::make_shared<VmTrace>();
         traces_stack_.push(*op.sub);
         op.sub->code = "0x" + silkworm::to_hex(code);
@@ -411,12 +429,20 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     auto& vm_trace = traces_stack_.top().get();
     if (vm_trace.ops.size() > 0) {
         auto& op = vm_trace.ops[vm_trace.ops.size() - 1];
-        if (op.call_gas) {
-            op.gas_cost = op.gas_cost - op.call_gas.value();
+        if (op.precompiled_call_gas) {
+            op.gas_cost = op.gas_cost - op.precompiled_call_gas.value();
         } else {
             op.gas_cost = op.gas_cost - execution_state.gas_left;
         }
         op.trace_ex.used = execution_state.gas_left;
+
+        SILKRPC_LOG << "VmTraceTracer::on_instruction_start: CHANGE GAS_COST"
+            << " idx: " << op.idx
+            << " op_name: " << op.op_name
+            << " used: " << op.trace_ex.used
+            << " gas_cost: " << op.gas_cost
+            << " precompiled_call_gas: " << (op.precompiled_call_gas ? "SET" : "NOT SET")
+            << "\n";
 
         copy_memory(execution_state.memory, op.trace_ex.memory);
         copy_stack(op.op_code, stack_top, op.trace_ex.stack);
@@ -454,10 +480,9 @@ void VmTraceTracer::on_precompiled_run(const evmc::result& result, int64_t gas, 
         << ", gas: " << std::dec << gas
         << "\n";
 
-
     if (vm_trace_.ops.size() > 0) {
         auto& op = vm_trace_.ops[vm_trace_.ops.size() - 1];
-        op.call_gas = gas;
+        op.precompiled_call_gas = gas;
         op.sub = std::make_shared<VmTrace>();
         op.sub->code = "0x";
     }
@@ -472,7 +497,7 @@ void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::
 
     index_prefix_.pop();
 
-    SILKRPC_DEBUG << "VmTraceTracer::on_execution_end:"
+    SILKRPC_LOG << "VmTraceTracer::on_execution_end:"
         << " result.status_code: " << result.status_code
         << ", start_gas: " << std::dec << start_gas
         << ", gas_left: " << std::dec << result.gas_left
@@ -487,8 +512,15 @@ void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::
         vm_trace.ops.clear();
         return;
     }
+
+    SILKRPC_LOG << "VmTraceTracer::on_execution_end:"
+        << " idx: " << op.idx
+        << " op_name: " << op.op_name
+        << " used: " << op.trace_ex.used
+        << " gas_cost: " << op.gas_cost
+        << "\n";
+
     switch (result.status_code) {
-    case evmc_status_code::EVMC_REVERT:
     case evmc_status_code::EVMC_OUT_OF_GAS:
         op.trace_ex.used = result.gas_left;
         op.gas_cost -= result.gas_left;
@@ -500,6 +532,7 @@ void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::
         op.trace_ex.used -= op.gas_cost;
         break;
 
+    case evmc_status_code::EVMC_REVERT:
     default:
         op.gas_cost = op.gas_cost - result.gas_left;
         op.trace_ex.used = result.gas_left;
