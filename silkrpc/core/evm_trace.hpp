@@ -78,7 +78,8 @@ struct VmTrace;
 
 struct TraceOp {
     std::uint64_t gas_cost{0};
-    std::optional<std::uint64_t> call_gas;
+    std::optional<std::uint64_t> precompiled_call_gas;
+    std::optional<std::uint64_t> call_gas_cap;
     TraceEx trace_ex;
     std::string idx;
     std::uint8_t op_code;
