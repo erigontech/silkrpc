@@ -156,18 +156,17 @@ struct InlineDispatcher {
 };
 }
 
-template<auto Rpc, typename Stub>
+template<auto Rpc>
 class UnaryRpc;
 
 template<
     typename Stub,
-    typename StubBase,
     typename Request,
     template<typename> typename Reader,
     typename Reply,
-    std::unique_ptr<Reader<Reply>>(StubBase::*Async)(grpc::ClientContext*, const Request&, grpc::CompletionQueue*)
+    std::unique_ptr<Reader<Reply>>(Stub::*Async)(grpc::ClientContext*, const Request&, grpc::CompletionQueue*)
 >
-class UnaryRpc<Async, Stub> {
+class UnaryRpc<Async> {
 private:
     template<typename Dispatcher>
     struct Call {
@@ -177,7 +176,7 @@ private:
 
         template<typename Op>
         void operator()(Op& op) {
-            SILKRPC_TRACE << "UnaryRpc::async_call " << this << " start\n";
+            SILKRPC_TRACE << "UnaryRpc::initiate " << this << "\n";
             self_.reader_ = agrpc::request(Async, self_.stub_, self_.context_, request_, self_.grpc_context_);
             agrpc::finish(self_.reader_, self_.reply_, self_.status_, 
                 boost::asio::bind_executor(self_.grpc_context_, std::move(op)));
@@ -227,11 +226,6 @@ private:
     Reply reply_;
     grpc::Status status_;
 };
-
-template<auto Rpc, typename Stub>
-auto make_unary_rpc(Stub& stub, agrpc::GrpcContext& grpc_context) {
-    return UnaryRpc<Rpc, Stub>{stub, grpc_context};
-}
 
 } // namespace silkrpc
 

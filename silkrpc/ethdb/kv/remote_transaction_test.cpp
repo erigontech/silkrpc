@@ -25,10 +25,11 @@
 #include <catch2/catch.hpp>
 
 #include <silkrpc/ethdb/kv/tx_streaming_client.hpp>
+#include <silkrpc/test/grpc_actions.hpp>
+#include <silkrpc/test/grpc_matcher.hpp>
+#include <silkrpc/test/kv_test_base.hpp>
 
 namespace silkrpc::ethdb::kv {
-
-using Catch::Matchers::Message;
 
 TEST_CASE("RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
@@ -525,6 +526,32 @@ TEST_CASE("RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_tra
         } catch (const boost::system::system_error& e) {
             CHECK(std::error_code(e.code()).value() == grpc::StatusCode::CANCELLED);
         }
+    }
+}
+
+struct RemoteTransactionTest : test::KVTestBase {
+    RemoteTransaction2 remote_tx_{*stub_, grpc_context_};
+};
+
+TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::open", "[silkrpc][ethdb][kv][remote_transaction]") {
+    SECTION("request fails") {
+        EXPECT_CALL(*stub_, AsyncTxRaw).WillOnce([&](auto&&, auto&&, void* tag) {
+            agrpc::process_grpc_tag(grpc_context_, tag, false);
+            return reader_writer_ptr_.release();
+        });
+        EXPECT_CALL(reader_writer_, Finish).WillOnce([&](grpc::Status* status, void* tag) {
+            *status = grpc::Status::CANCELLED;
+            agrpc::process_grpc_tag(grpc_context_, tag, true);
+        });
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_tx_.open()), boost::system::system_error, test::exception_has_cancelled_grpc_status_code());
+    }
+    SECTION("success") {
+        this->expect_request_async_tx();
+        remote::Pair pair;
+        pair.set_txid(4);
+        EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, pair));
+        CHECK_NOTHROW(spawn_and_wait(remote_tx_.open()));
+        CHECK(remote_tx_.tx_id() == 4);
     }
 }
 

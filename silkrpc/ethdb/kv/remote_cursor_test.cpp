@@ -18,11 +18,17 @@
 
 #include <future>
 
+#include <agrpc/test.hpp>
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/use_future.hpp>
 #include <boost/asio/io_context.hpp>
 #include <catch2/catch.hpp>
+#include <gmock/gmock.h>
 #include <silkworm/common/util.hpp>
+#include <silkrpc/test/kv_test_base.hpp>
+#include <silkrpc/test/grpc_responder.hpp>
+#include <silkrpc/test/grpc_actions.hpp>
+#include <silkrpc/test/grpc_matcher.hpp>
 
 namespace silkrpc::ethdb::kv {
 
@@ -569,6 +575,65 @@ TEST_CASE("RemoteCursor::seek_both_exact", "[silkrpc][ethdb][kv][remote_cursor]"
         } catch (...) {
             CHECK(false);
         }
+    }
+}
+
+struct RemoteCursorTest : test::KVTestBase {
+    RemoteCursorTest() {
+        this->expect_request_async_tx();
+        EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, remote::Pair{}));
+        kv_streaming_rpc_.request_and_read(boost::asio::use_future).get();
+    }
+
+    KVStreamingRpc kv_streaming_rpc_{*stub_, grpc_context_};
+    RemoteCursor2 remote_cursor_{kv_streaming_rpc_};
+};
+
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
+    using namespace testing;
+    SECTION("success") {
+        EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        remote::Pair pair;
+        pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, pair));        
+        CHECK_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+        CHECK(remote_cursor_.cursor_id() == 3);
+    }
+    SECTION("write failure") {
+        EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_failure(grpc_context_));
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_with_status(grpc_context_, grpc::Status::CANCELLED));
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.open_cursor("table1")), 
+            boost::system::system_error, 
+            test::exception_has_cancelled_grpc_status_code());
+    }    
+    SECTION("read failure") {
+        EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_success(grpc_context_));
+        EXPECT_CALL(reader_writer_, Read).WillOnce([&](auto* , void* tag) {
+            agrpc::process_grpc_tag(grpc_context_, tag, false);
+        });        
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_with_status(grpc_context_, grpc::Status::CANCELLED));
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.open_cursor("table1")), 
+            boost::system::system_error, 
+            test::exception_has_cancelled_grpc_status_code());
+    }
+}
+
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
+    using namespace testing;
+    SECTION("success") {
+        Expectation open = EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_success(grpc_context_));
+        EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::CLOSE)), Property(&remote::Cursor::cursor, Eq(3))), _))
+            .After(open)
+            .WillOnce(test::write_success(grpc_context_));
+        remote::Pair pair;
+        pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read).Times(2).WillRepeatedly(test::read_success_with(grpc_context_, pair)); 
+        CHECK_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+        CHECK_NOTHROW(spawn_and_wait(remote_cursor_.close_cursor()));
+        CHECK(remote_cursor_.cursor_id() == 0);
     }
 }
 

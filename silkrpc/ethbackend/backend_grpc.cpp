@@ -43,7 +43,7 @@ BackEndGrpc::~BackEndGrpc() {
 
 boost::asio::awaitable<evmc::address> BackEndGrpc::etherbase() {
     const auto start_time = clock_time::now();
-    auto eb_rpc = silkrpc::make_unary_rpc<&::remote::ETHBACKEND::StubInterface::AsyncEtherbase>(*stub_, grpc_context_);
+    silkrpc::UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncEtherbase> eb_rpc(*stub_, grpc_context_);
     const auto reply = co_await eb_rpc.finish_on(executor_, ::remote::EtherbaseRequest{});
     evmc::address evmc_address;
     if (reply.has_address()) {
@@ -56,7 +56,7 @@ boost::asio::awaitable<evmc::address> BackEndGrpc::etherbase() {
 
 boost::asio::awaitable<uint64_t> BackEndGrpc::protocol_version() {
     const auto start_time = clock_time::now();
-    auto pv_rpc = silkrpc::make_unary_rpc<&::remote::ETHBACKEND::StubInterface::AsyncProtocolVersion>(*stub_, grpc_context_);
+    silkrpc::UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncProtocolVersion> pv_rpc(*stub_, grpc_context_);
     const auto reply = co_await pv_rpc.finish_on(executor_, ::remote::ProtocolVersionRequest{});
     const auto pv = reply.id();
     SILKRPC_DEBUG << "BackEnd::protocol_version version=" << pv << " t=" << clock_time::since(start_time) << "\n";
@@ -65,7 +65,7 @@ boost::asio::awaitable<uint64_t> BackEndGrpc::protocol_version() {
 
 boost::asio::awaitable<uint64_t> BackEndGrpc::net_version() {
     const auto start_time = clock_time::now();
-    auto nv_rpc = silkrpc::make_unary_rpc<&::remote::ETHBACKEND::StubInterface::AsyncNetVersion>(*stub_, grpc_context_);
+    silkrpc::UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncNetVersion> nv_rpc(*stub_, grpc_context_);
     const auto reply = co_await nv_rpc.finish_on(executor_, ::remote::NetVersionRequest{});
     const auto nv = reply.id();
     SILKRPC_DEBUG << "BackEnd::net_version version=" << nv << " t=" << clock_time::since(start_time) << "\n";
@@ -74,7 +74,7 @@ boost::asio::awaitable<uint64_t> BackEndGrpc::net_version() {
 
 boost::asio::awaitable<std::string> BackEndGrpc::client_version() {
     const auto start_time = clock_time::now();
-    auto cv_rpc = silkrpc::make_unary_rpc<&::remote::ETHBACKEND::StubInterface::AsyncClientVersion>(*stub_, grpc_context_);
+    silkrpc::UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncClientVersion> cv_rpc(*stub_, grpc_context_);
     const auto reply = co_await cv_rpc.finish_on(executor_, ::remote::ClientVersionRequest{});
     const auto cv = reply.nodename();
     SILKRPC_DEBUG << "BackEnd::client_version version=" << cv << " t=" << clock_time::since(start_time) << "\n";
@@ -83,7 +83,7 @@ boost::asio::awaitable<std::string> BackEndGrpc::client_version() {
 
 boost::asio::awaitable<uint64_t> BackEndGrpc::net_peer_count() {
     const auto start_time = clock_time::now();
-    auto npc_rpc = silkrpc::make_unary_rpc<&::remote::ETHBACKEND::StubInterface::AsyncNetPeerCount>(*stub_, grpc_context_);
+    silkrpc::UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncNetPeerCount> npc_rpc(*stub_, grpc_context_);
     const auto reply = co_await npc_rpc.finish_on(executor_, ::remote::NetPeerCountRequest{});
     const auto count = reply.count();
     SILKRPC_DEBUG << "BackEnd::net_peer_count count=" << count << " t=" << clock_time::since(start_time) << "\n";
@@ -92,7 +92,7 @@ boost::asio::awaitable<uint64_t> BackEndGrpc::net_peer_count() {
 
 boost::asio::awaitable<ExecutionPayload> BackEndGrpc::engine_get_payload_v1(uint64_t payload_id) {
     const auto start_time = clock_time::now();
-    auto npc_rpc = silkrpc::make_unary_rpc<&::remote::ETHBACKEND::StubInterface::AsyncEngineGetPayloadV1>(*stub_, grpc_context_);
+    silkrpc::UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncEngineGetPayloadV1> npc_rpc(*stub_, grpc_context_);
     ::remote::EngineGetPayloadRequest req;
     req.set_payloadid(payload_id);
     const auto reply = co_await npc_rpc.finish_on(executor_, req);
@@ -103,7 +103,7 @@ boost::asio::awaitable<ExecutionPayload> BackEndGrpc::engine_get_payload_v1(uint
 
 boost::asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(ExecutionPayload payload) {
     const auto start_time = clock_time::now();
-    auto npc_rpc = silkrpc::make_unary_rpc<&::remote::ETHBACKEND::StubInterface::AsyncEngineNewPayloadV1>(*stub_, grpc_context_);
+    silkrpc::UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncEngineNewPayloadV1> npc_rpc(*stub_, grpc_context_);
     auto req{encode_execution_payload(payload)};
     const auto reply = co_await npc_rpc.finish_on(executor_, req);
     PayloadStatus payload_status = decode_payload_status(reply);
@@ -113,7 +113,7 @@ boost::asio::awaitable<PayloadStatus> BackEndGrpc::engine_new_payload_v1(Executi
 
 boost::asio::awaitable<ForkchoiceUpdatedReply> BackEndGrpc::engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request) {
     const auto start_time = clock_time::now();
-    auto fcu_rpc = silkrpc::make_unary_rpc<&::remote::ETHBACKEND::StubInterface::AsyncEngineForkChoiceUpdatedV1>(*stub_, grpc_context_);
+    silkrpc::UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncEngineForkChoiceUpdatedV1> fcu_rpc(*stub_, grpc_context_);
     const auto req{encode_forkchoice_updated_request(forkchoice_updated_request)};
     const auto reply = co_await fcu_rpc.finish_on(executor_, req);
     PayloadStatus payload_status = decode_payload_status(reply.payloadstatus());
