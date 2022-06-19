@@ -22,9 +22,7 @@ endif()
 
 find_package(absl CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
-if(SILKRPC_USE_MIMALLOC)
-  find_package(mimalloc 2.0 REQUIRED)
-endif()
+find_package(mimalloc 2.0 CONFIG REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
 
 add_compile_options(-std=c++2a)
@@ -45,20 +43,12 @@ target_link_libraries(silkrpc_toolbox absl::flags_parse gRPC::grpc++_unsecure pr
 
 add_executable(silkrpcdaemon silkrpc_daemon.cpp)
 target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
-if(SILKRPC_USE_MIMALLOC)
-  target_link_libraries(silkrpcdaemon
+target_link_libraries(silkrpcdaemon
     silkrpc-buildinfo
     silkrpc
     absl::flags_parse
     silkinterfaces
     mimalloc)
-else()
-  target_link_libraries(silkrpcdaemon
-    silkrpc-buildinfo
-    silkrpc
-    absl::flags_parse
-    silkinterfaces)
-endif()
 
 # Unit tests
 enable_testing()
