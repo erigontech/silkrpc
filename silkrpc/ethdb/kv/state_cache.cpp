@@ -26,18 +26,20 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/core/rawdb/util.hpp>
+#include <silkrpc/ethdb/tables.hpp>
+#include <silkrpc/ethdb/transaction_database.hpp>
 
 namespace silkrpc::ethdb::kv {
 
 CoherentStateView::CoherentStateView(Transaction& txn, CoherentStateCache* cache) : txn_(txn), cache_(cache) {
 }
 
-silkworm::Bytes CoherentStateView::get(const KeyValue& kv) {
-    return cache_->get(kv, txn_);
+asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateView::get(const silkworm::Bytes& key) {
+    co_return co_await cache_->get(key, txn_);
 }
 
-silkworm::Bytes CoherentStateView::get_code(const KeyValue& kv) {
-    return cache_->get_code(kv, txn_);
+asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateView::get_code(const silkworm::Bytes& key) {
+    co_return co_await cache_->get_code(key, txn_);
 }
 
 CoherentStateCache::CoherentStateCache(const CoherentCacheConfig& config) : config_(config) {
@@ -178,26 +180,62 @@ KeyValue* CoherentStateCache::add_code(KeyValue&& kv, CoherentStateRoot* root, S
     return &*it;
 }
 
-silkworm::Bytes CoherentStateCache::get(const KeyValue& kv, Transaction& txn) {
+asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateCache::get(const silkworm::Bytes& key, Transaction& txn) {
     std::shared_lock read_lock{rw_mutex_};
 
     const auto view_id = txn.tx_id();
-    auto root_it = state_view_roots_.find(view_id);
+    const auto root_it = state_view_roots_.find(view_id);
     if (root_it == state_view_roots_.end()) {
-        return silkworm::Bytes{};
+        co_return std::nullopt;
     }
+    KeyValue kv{key};
     auto& cache = root_it->second->cache;
     const auto kv_it = cache.find(kv);
     if (kv_it != cache.end() && view_id == latest_state_view_id_) {
-        //state_evictions_.splice(state_evictions_.begin(), state_evictions_, );
+        state_evictions_.remove(kv);
+        state_evictions_.push_front(kv);
     }
 
-    return silkworm::Bytes{};
+    //TODO(canepat) add hit/miss stats
+
+    TransactionDatabase tx_database{txn};
+    const auto value = co_await tx_database.get_one(db::table::kPlainState, key);
+
+    read_lock.unlock();
+    std::unique_lock write_lock{rw_mutex_};
+
+    add({key, value}, root_it->second.get(), view_id);
+
+    co_return key;
 }
 
-silkworm::Bytes CoherentStateCache::get_code(const KeyValue& kv, Transaction& /*txn*/) {
-    //TODO(canepat)
-    return silkworm::Bytes{};
+asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateCache::get_code(const silkworm::Bytes& key, Transaction& txn) {
+    std::shared_lock read_lock{rw_mutex_};
+
+    const auto view_id = txn.tx_id();
+    const auto root_it = state_view_roots_.find(view_id);
+    if (root_it == state_view_roots_.end()) {
+        co_return std::nullopt;
+    }
+    KeyValue kv{key};
+    auto& code_cache = root_it->second->code_cache;
+    const auto kv_it = code_cache.find(kv);
+    if (kv_it != code_cache.end() && view_id == latest_state_view_id_) {
+        code_evictions_.remove(kv);
+        code_evictions_.push_front(kv);
+    }
+
+    //TODO(canepat) add hit/miss stats
+
+    TransactionDatabase tx_database{txn};
+    const auto value = co_await tx_database.get_one(db::table::kCode, key);
+
+    read_lock.unlock();
+    std::unique_lock write_lock{rw_mutex_};
+
+    add_code({key, value}, root_it->second.get(), view_id);
+
+    co_return key;
 }
 
 CoherentStateRoot* CoherentStateCache::get_root(StateViewId view_id) {
@@ -233,7 +271,7 @@ CoherentStateRoot* CoherentStateCache::advance_root(StateViewId view_id) {
     latest_state_view_id_ = view_id;
     latest_state_view_ = root;
 
-    //TODO(canepat) add metrics
+    //TODO(canepat) add keys/code_keys state_evictions/code_evictions stats
 
     return root;
 }

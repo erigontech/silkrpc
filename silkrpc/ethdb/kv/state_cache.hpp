@@ -22,9 +22,13 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <optional>
 #include <shared_mutex>
 
+#include <silkrpc/config.hpp>
+
 #include <absl/container/btree_set.h>
+#include <asio/awaitable.hpp>
 #include <silkworm/common/base.hpp>
 
 #include <silkrpc/common/util.hpp>
@@ -35,9 +39,9 @@ namespace silkrpc::ethdb::kv {
 
 class StateView {
 public:
-    virtual silkworm::Bytes get(const KeyValue& kv) = 0;
+    virtual asio::awaitable<std::optional<silkworm::Bytes>> get(const silkworm::Bytes& key) = 0;
 
-    virtual silkworm::Bytes get_code(const KeyValue& kv) = 0;
+    virtual asio::awaitable<std::optional<silkworm::Bytes>> get_code(const silkworm::Bytes& key) = 0;
 };
 
 class StateCache {
@@ -83,9 +87,9 @@ public:
     CoherentStateView(const CoherentStateView&) = delete;
     CoherentStateView& operator=(const CoherentStateView&) = delete;
 
-    silkworm::Bytes get(const KeyValue& kv) override;
+    asio::awaitable<std::optional<silkworm::Bytes>> get(const silkworm::Bytes& key) override;
 
-    silkworm::Bytes get_code(const KeyValue& kv) override;
+    asio::awaitable<std::optional<silkworm::Bytes>> get_code(const silkworm::Bytes& key) override;
 
 private:
     Transaction& txn_;
@@ -114,8 +118,8 @@ private:
     void process_storage_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change);
     KeyValue* add(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id);
     KeyValue* add_code(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id);
-    silkworm::Bytes get(const KeyValue& kv, Transaction& txn);
-    silkworm::Bytes get_code(const KeyValue& kv, Transaction& txn);
+    asio::awaitable<std::optional<silkworm::Bytes>> get(const silkworm::Bytes& key, Transaction& txn);
+    asio::awaitable<std::optional<silkworm::Bytes>> get_code(const silkworm::Bytes& key, Transaction& txn);
     CoherentStateRoot* get_root(StateViewId view_id);
     CoherentStateRoot* advance_root(StateViewId view_id);
     void evict_roots();
