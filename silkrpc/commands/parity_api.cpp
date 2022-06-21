@@ -114,7 +114,7 @@ asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohma
             co_await tx->close();
             co_return;
         }
-        silkworm::Bytes seek_bytes= silkworm::db::storage_prefix(full_view(address), account->incarnation);
+        silkworm::Bytes seek_bytes = silkworm::db::storage_prefix(full_view(address), account->incarnation);
 
         const auto cursor = co_await tx->cursor_dup_sort(db::table::kPlainState);
         SILKRPC_TRACE << "ParityRpcApi::handle_parity_list_storage_keys cursor id: " << cursor->cursor_id() << "\n";
