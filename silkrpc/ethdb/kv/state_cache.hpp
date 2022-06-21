@@ -17,7 +17,6 @@
 #ifndef SILKRPC_ETHDB_KV_STATE_CACHE_HPP_
 #define SILKRPC_ETHDB_KV_STATE_CACHE_HPP_
 
-#include <chrono>
 #include <cstddef>
 #include <list>
 #include <map>
@@ -56,23 +55,18 @@ public:
 struct CoherentStateRoot {
     absl::btree_set<KeyValue> cache;
     absl::btree_set<KeyValue> code_cache;
-    bool ready;
-    bool canonical;
+    bool ready{false};
+    bool canonical{false};
 };
 
-using namespace std::chrono_literals; // NOLINT(build/namespaces)
 using StateViewId = uint64_t;
 
 constexpr auto kDefaultMaxViews{5ul};
-constexpr auto kDefaultNewblockTimeout{50ms};
-constexpr auto kDefaultLabel{"default"};
 constexpr auto kDefaultMaxStateKeys{1'000'000u};
 constexpr auto kDefaultMaxCodeKeys{10'000u};
 
 struct CoherentCacheConfig {
     uint64_t max_views{kDefaultMaxViews};
-    std::chrono::milliseconds new_block_timeout{kDefaultNewblockTimeout};
-    const char* label{kDefaultLabel};
     bool with_storage{true};
     uint32_t max_state_keys{kDefaultMaxStateKeys};
     uint32_t max_code_keys{kDefaultMaxCodeKeys};
@@ -98,7 +92,7 @@ private:
 
 class CoherentStateCache : public StateCache {
 public:
-    explicit CoherentStateCache(const CoherentCacheConfig& config = {});
+    explicit CoherentStateCache(CoherentCacheConfig config = {});
 
     CoherentStateCache(const CoherentStateCache&) = delete;
     CoherentStateCache& operator=(const CoherentStateCache&) = delete;
@@ -108,6 +102,15 @@ public:
     void on_new_block(const remote::StateChangeBatch& batch) override;
 
     std::size_t size() override;
+
+    uint64_t state_hit_count() const { return state_hit_count_; }
+    uint64_t state_miss_count() const { return state_miss_count_; }
+    uint64_t state_key_count() const { return state_key_count_; }
+    uint64_t state_eviction_count() const { return state_eviction_count_; }
+    uint64_t code_hit_count() const { return code_hit_count_; }
+    uint64_t code_miss_count() const { return code_miss_count_; }
+    uint64_t code_key_count() const { return code_key_count_; }
+    uint64_t code_eviction_count() const { return code_eviction_count_; }
 
 private:
     friend class CoherentStateView;
@@ -124,7 +127,7 @@ private:
     CoherentStateRoot* advance_root(StateViewId view_id);
     void evict_roots();
 
-    const CoherentCacheConfig& config_;
+    CoherentCacheConfig config_;
 
     std::map<StateViewId, std::unique_ptr<CoherentStateRoot>> state_view_roots_;
     StateViewId latest_state_view_id_{0};
@@ -141,7 +144,6 @@ private:
     uint64_t code_miss_count_{0};
     uint64_t code_key_count_{0};
     uint64_t code_eviction_count_{0};
-    uint64_t timeout_{0};
 };
 
 } // namespace silkrpc::ethdb::kv
