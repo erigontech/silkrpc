@@ -28,11 +28,11 @@
 
 #include <absl/container/btree_set.h>
 #include <asio/awaitable.hpp>
-#include <silkworm/common/base.hpp>
 
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/ethdb/transaction.hpp>
 #include <silkrpc/interfaces/remote/kv.pb.h>
+#include <silkworm/common/base.hpp>
 
 namespace silkrpc::ethdb::kv {
 
@@ -148,6 +148,6 @@ private:
     uint64_t code_eviction_count_{0};
 };
 
-} // namespace silkrpc::ethdb::kv
+}  // namespace silkrpc::ethdb::kv
 
 #endif  // SILKRPC_ETHDB_KV_STATE_CACHE_HPP_

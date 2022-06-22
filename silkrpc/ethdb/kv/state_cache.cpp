@@ -19,20 +19,19 @@
 #include <exception>
 
 #include <magic_enum.hpp>
-#include <silkworm/common/assert.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/rpc/conversion.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/core/rawdb/util.hpp>
 #include <silkrpc/ethdb/tables.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
+#include <silkworm/common/assert.hpp>
+#include <silkworm/common/util.hpp>
+#include <silkworm/rpc/conversion.hpp>
 
 namespace silkrpc::ethdb::kv {
 
-CoherentStateView::CoherentStateView(Transaction& txn, CoherentStateCache* cache) : txn_(txn), cache_(cache) {
-}
+CoherentStateView::CoherentStateView(Transaction& txn, CoherentStateCache* cache) : txn_(txn), cache_(cache) {}
 
 asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateView::get(const silkworm::Bytes& key) {
     co_return co_await cache_->get(key, txn_);
@@ -162,7 +161,7 @@ KeyValue* CoherentStateCache::add(KeyValue&& kv, CoherentStateRoot* root, StateV
     }
     state_evictions_.push_front(kv);
     if (state_evictions_.size() > config_.max_state_keys) {
-        state_evictions_.pop_back(); // remove oldest
+        state_evictions_.pop_back();  // remove oldest
     }
     return &*it;
 }
@@ -184,7 +183,7 @@ KeyValue* CoherentStateCache::add_code(KeyValue&& kv, CoherentStateRoot* root, S
     }
     code_evictions_.push_front(kv);
     if (code_evictions_.size() > config_.max_code_keys) {
-        code_evictions_.pop_back(); // remove oldest
+        code_evictions_.pop_back();  // remove oldest
     }
     return &*it;
 }
@@ -259,7 +258,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateCache::get_code(con
 
     TransactionDatabase tx_database{txn};
     const auto value = co_await tx_database.get_one(db::table::kCode, key);
-    SILKRPC_DEBUG << "Miss in state cache: lookup in Code key=" << key << " value=" << value <<"\n";
+    SILKRPC_DEBUG << "Miss in state cache: lookup in Code key=" << key << " value=" << value << "\n";
     if (value.empty()) {
         co_return std::nullopt;
     }
@@ -326,4 +325,4 @@ void CoherentStateCache::evict_roots() {
     });
 }
 
-} // namespace silkrpc::ethdb::kv
+}  // namespace silkrpc::ethdb::kv
