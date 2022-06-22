@@ -625,7 +625,7 @@ void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::In
         break;
         case evmc_status_code::EVMC_REVERT:
             trace.error = "Reverted";
-            trace.trace_result.reset();
+            trace.trace_result->gas_used = start_gas - result.gas_left;
             break;
         case evmc_status_code::EVMC_OUT_OF_GAS:
         case evmc_status_code::EVMC_STACK_OVERFLOW:
@@ -685,7 +685,14 @@ void TraceTracer::on_reward_granted(const silkworm::CallResult& result, const si
             break;
         case evmc_status_code::EVMC_REVERT:
             trace.error = "Reverted";
-            trace.trace_result.reset();
+            trace.trace_result->gas_used = initial_gas_ - result.gas_left;
+            if (result.data.size() > 0) {
+                if (trace.trace_result->code) {
+                    trace.trace_result->code = result.data;
+                } else if (trace.trace_result->output) {
+                    trace.trace_result->output = result.data;
+                }
+            }
             break;
         case evmc_status_code::EVMC_OUT_OF_GAS:
         case evmc_status_code::EVMC_STACK_OVERFLOW:
