@@ -38,6 +38,8 @@ namespace silkrpc::ethdb::kv {
 
 class StateView {
 public:
+    virtual ~StateView() = default;
+
     virtual asio::awaitable<std::optional<silkworm::Bytes>> get(const silkworm::Bytes& key) = 0;
 
     virtual asio::awaitable<std::optional<silkworm::Bytes>> get_code(const silkworm::Bytes& key) = 0;

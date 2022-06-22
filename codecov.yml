@@ -19,4 +19,4 @@ ignore:
   - "cmd"
   - "silkrpc/croaring"
   - "silkrpc/interfaces"
-  - "silkrpc/proto-bindings"
+  - "silkrpc/test"

@@ -204,7 +204,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateCache::get(const si
     if (kv_it != cache.end()) {
         ++state_hit_count_;
 
-        SILKRPC_DEBUG << "Hit in state cache key=" << key << " value=" << kv_it->value <<"\n";
+        SILKRPC_DEBUG << "Hit in state cache key=" << key << " value=" << kv_it->value << "\n";
 
         if (view_id == latest_state_view_id_) {
             state_evictions_.remove(kv);
@@ -217,8 +217,9 @@ asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateCache::get(const si
     ++state_miss_count_;
 
     TransactionDatabase tx_database{txn};
+    SILKRPC_DEBUG << "Miss in state cache: lookup in PlainState key=" << key << "\n";
     const auto value = co_await tx_database.get_one(db::table::kPlainState, key);
-    SILKRPC_DEBUG << "Miss in state cache: lookup in PlainState key=" << key << " value=" << value <<"\n";
+    SILKRPC_DEBUG << "Miss in state cache: lookup in PlainState key=" << key << " value=" << value << "\n";
     if (value.empty()) {
         co_return std::nullopt;
     }

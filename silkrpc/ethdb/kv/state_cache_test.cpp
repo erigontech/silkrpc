@@ -26,15 +26,17 @@
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
-
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/core/rawdb/util.hpp>
 #include <silkworm/common/base.hpp>
 #include <silkworm/rpc/conversion.hpp>
 
+#include <silkrpc/common/log.hpp>
+#include <silkrpc/core/rawdb/util.hpp>
+#include <silkrpc/test/dummy_transaction.hpp>
+#include <silkrpc/test/mock_transaction.hpp>
+
 namespace silkrpc::ethdb::kv {
 
-using namespace evmc::literals;
+using namespace evmc::literals; // NOLINT(build/namespaces_literals)
 
 using Catch::Matchers::Message;
 using testing::InvokeWithoutArgs;
@@ -55,15 +57,6 @@ static const silkworm::Bytes kTestCode2{*silkworm::from_hex("602a5f556101c960015
 
 static const auto kTestHashedLocation1{0x6677907ab33937e392b9be983b30818f29d594039c9e1e7490bf7b3698888fb1_bytes32};
 static const auto kTestHashedLocation2{0xe046602dcccb1a2f1d176718c8e709a42bba57af2da2379ba7130e2f916c95cd_bytes32};
-
-class MockTransaction : public Transaction {
-  public:
-    MOCK_CONST_METHOD0(tx_id, uint64_t());
-    MOCK_METHOD0(open, asio::awaitable<void>());
-    MOCK_METHOD1(cursor, asio::awaitable<std::shared_ptr<Cursor>>(const std::string&));
-    MOCK_METHOD1(cursor_dup_sort, asio::awaitable<std::shared_ptr<CursorDupSort>>(const std::string&));
-    MOCK_METHOD0(close, asio::awaitable<void>());
-};
 
 class MockCursor : public Cursor {
   public:
@@ -110,7 +103,7 @@ remote::StateChangeBatch new_batch(silkworm::BlockNum block_height, const evmc::
 }
 
 TEST_CASE("CoherentStateCache", "[silkrpc][ethdb][kv][state_cache]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    SILKRPC_LOG_VERBOSITY(LogLevel::Debug);
     asio::thread_pool pool{1};
 
     SECTION("CoherentStateCache::CoherentStateCache default config") {
@@ -124,7 +117,7 @@ TEST_CASE("CoherentStateCache", "[silkrpc][ethdb][kv][state_cache]") {
 
     SECTION("CoherentStateCache::get_view: empty cache => view invalid") {
         CoherentStateCache cache;
-        MockTransaction txn;
+        test::MockTransaction txn;
         EXPECT_CALL(txn, tx_id());
         std::unique_ptr<StateView> view = cache.get_view(txn);
         CHECK(view == nullptr);
@@ -138,7 +131,7 @@ TEST_CASE("CoherentStateCache", "[silkrpc][ethdb][kv][state_cache]") {
         CoherentStateCache cache;
         cache.on_new_block(remote::StateChangeBatch{});
         CHECK(cache.size() == 0);
-        MockTransaction txn;
+        test::MockTransaction txn;
         EXPECT_CALL(txn, tx_id());
         std::unique_ptr<StateView> view = cache.get_view(txn);
         CHECK(view == nullptr);
@@ -151,7 +144,7 @@ TEST_CASE("CoherentStateCache", "[silkrpc][ethdb][kv][state_cache]") {
     SECTION("CoherentStateCache::get_view: single change batch => view valid, search hit") {
         CoherentStateCache cache;
 
-        auto batch = new_batch(kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{}, /*unwind=*/false);
+        auto batch = new_batch(kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{}, false);
         remote::StateChange* state_change = batch.mutable_changebatch(0);
         remote::AccountChange* account_change = state_change->add_changes();
         account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddress).release());
@@ -163,7 +156,7 @@ TEST_CASE("CoherentStateCache", "[silkrpc][ethdb][kv][state_cache]") {
         cache.on_new_block(batch);
         CHECK(cache.size() == 1);
 
-        MockTransaction txn;
+        test::MockTransaction txn;
         EXPECT_CALL(txn, tx_id()).Times(2);
 
         std::unique_ptr<StateView> view = cache.get_view(txn);
@@ -186,7 +179,7 @@ TEST_CASE("CoherentStateCache", "[silkrpc][ethdb][kv][state_cache]") {
     SECTION("CoherentStateCache::get_view: single change batch => view valid, search miss") {
         CoherentStateCache cache;
 
-        auto batch = new_batch(kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{}, /*unwind=*/false);
+        auto batch = new_batch(kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{}, false);
         remote::StateChange* state_change = batch.mutable_changebatch(0);
         remote::AccountChange* account_change = state_change->add_changes();
         account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddress).release());
@@ -198,16 +191,12 @@ TEST_CASE("CoherentStateCache", "[silkrpc][ethdb][kv][state_cache]") {
         cache.on_new_block(batch);
         CHECK(cache.size() == 1);
 
-        MockTransaction txn;
-        EXPECT_CALL(txn, tx_id()).Times(2);
+        std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
+        test::DummyTransaction txn{mock_cursor};
 
         std::unique_ptr<StateView> view = cache.get_view(txn);
         CHECK(view != nullptr);
         if (view) {
-            auto mock_cursor = std::make_shared<MockCursor>();
-            EXPECT_CALL(txn, cursor(_)).WillOnce(InvokeWithoutArgs(
-                [&]() -> asio::awaitable<std::shared_ptr<Cursor>> { co_return mock_cursor; }
-            ));
             EXPECT_CALL(*mock_cursor, seek_exact(_)).WillOnce(InvokeWithoutArgs(
                 []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kTestData2}; }
             ));
@@ -244,7 +233,7 @@ TEST_CASE("CoherentStateCache", "[silkrpc][ethdb][kv][state_cache]") {
         cache.on_new_block(batch);
         CHECK(cache.size() == 2);
 
-        MockTransaction txn;
+        test::MockTransaction txn;
         EXPECT_CALL(txn, tx_id()).Times(3);
         std::unique_ptr<StateView> view = cache.get_view(txn);
 
