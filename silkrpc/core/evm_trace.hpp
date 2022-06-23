@@ -82,6 +82,7 @@ struct TraceOp {
     std::optional<std::uint64_t> call_gas_cap;
     TraceEx trace_ex;
     std::string idx;
+    std::uint32_t depth{0};
     std::uint8_t op_code;
     std::string op_name;
     std::uint32_t pc;
@@ -164,7 +165,6 @@ class iterable_stack: public std::stack<T, Container> {
     using std::stack<T, Container>::c;
 
 public:
-    using container_type = typename std::stack<T, Container>::container_type;
     using const_iterator = typename Container::const_iterator;
 
     const_iterator begin() const { return c.begin(); }
