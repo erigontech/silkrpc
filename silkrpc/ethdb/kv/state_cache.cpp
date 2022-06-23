@@ -110,29 +110,32 @@ void CoherentStateCache::on_new_block(const remote::StateChangeBatch& state_chan
     root->ready = true;
 }
 
-void CoherentStateCache::process_upsert_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change) {
+void CoherentStateCache::process_upsert_change(CoherentStateRoot* root, StateViewId view_id,
+                                               const remote::AccountChange& change) {
     const auto address = silkworm::rpc::address_from_H160(change.address());
     const auto data_bytes = silkworm::bytes_of_string(change.data());
     SILKRPC_DEBUG << "CoherentStateCache::process_upsert_change data: " << data_bytes << " address: " << address << "\n";
-    const silkworm::Bytes address_bytes{address.bytes, silkworm::kAddressLength};
-    add({address_bytes, data_bytes}, root, view_id);
+    const silkworm::Bytes address_key{address.bytes, silkworm::kAddressLength};
+    add({address_key, data_bytes}, root, view_id);
 }
 
 void CoherentStateCache::process_code_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change) {
     const auto code_bytes = silkworm::bytes_of_string(change.code());
     SILKRPC_DEBUG << "CoherentStateCache::process_code_change code: " << code_bytes << "\n";
     const ethash::hash256 code_hash{silkworm::keccak256(code_bytes)};
-    const silkworm::Bytes hash_bytes{code_hash.bytes, silkworm::kHashLength};
-    add_code({hash_bytes, code_bytes}, root, view_id);
+    const silkworm::Bytes code_hash_key{code_hash.bytes, silkworm::kHashLength};
+    add_code({code_hash_key, code_bytes}, root, view_id);
 }
 
-void CoherentStateCache::process_delete_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change) {
+void CoherentStateCache::process_delete_change(CoherentStateRoot* root, StateViewId view_id,
+                                               const remote::AccountChange& change) {
     const auto address = silkworm::rpc::address_from_H160(change.address());
-    const silkworm::Bytes address_bytes{address.bytes, silkworm::kAddressLength};
-    add({address_bytes, {}}, root, view_id);
+    const silkworm::Bytes address_key{address.bytes, silkworm::kAddressLength};
+    add({address_key, {}}, root, view_id);
 }
 
-void CoherentStateCache::process_storage_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change) {
+void CoherentStateCache::process_storage_change(CoherentStateRoot* root, StateViewId view_id,
+                                                const remote::AccountChange& change) {
     const auto address = silkworm::rpc::address_from_H160(change.address());
     SILKRPC_DEBUG << "CoherentStateCache::process_storage_change address=" << address << "\n";
     for (const auto& storage_change : change.storagechanges()) {
