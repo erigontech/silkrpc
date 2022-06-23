@@ -36,6 +36,8 @@
 
 namespace silkrpc::trace {
 
+const static bool PRECOPILED_CAP_IN_OUTPUT = false;
+
 using evmc::literals::operator""_address;
 
 const std::uint8_t CODE_PUSH1 = evmc_opcode::OP_PUSH1;
@@ -55,11 +57,11 @@ void to_json(nlohmann::json& json, const VmTrace& vm_trace) {
 }
 
 void to_json(nlohmann::json& json, const TraceOp& trace_op) {
-    // if (trace_op.call_gas_cap) {
-    //     json["cost"] = trace_op.call_gas_cap.value();
-    // } else {
+    if (PRECOPILED_CAP_IN_OUTPUT && trace_op.call_gas_cap) {
+        json["cost"] = trace_op.call_gas_cap.value();
+    } else {
         json["cost"] = trace_op.gas_cost;
-    // }
+    }
     json["ex"] = trace_op.trace_ex;
     json["idx"] = trace_op.idx;
     json["op"] = trace_op.op_name;
@@ -393,7 +395,8 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
             auto& op_1 = vm_trace.ops[vm_trace.ops.size() - 2];
             auto cap = op_1.trace_ex.used - msg.gas;
 
-            SILKRPC_LOG << "VmTraceTracer::on_execution_start:"
+            // TO BE REMOVED
+            SILKRPC_DEBUG << "VmTraceTracer::on_execution_start:"
                 << " idx: " << op.idx
                 << " msg.gas: " << msg.gas
                 << " op_name: " << op.op_name
@@ -409,7 +412,7 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
     }
 
     auto& index_prefix = index_prefix_.top();
-    SILKRPC_LOG << "VmTraceTracer::on_execution_start:"
+    SILKRPC_DEBUG << "VmTraceTracer::on_execution_start:"
         << " depth: " << msg.depth
         << ", gas: " << std::dec << msg.gas
         << ", recipient: " << evmc::address{msg.recipient}
@@ -431,12 +434,12 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
         auto& op = vm_trace.ops[vm_trace.ops.size() - 1];
         if (op.precompiled_call_gas) {
             op.gas_cost = op.gas_cost - op.precompiled_call_gas.value();
-        } else {
+        } else if (op.depth == execution_state.msg->depth) {
             op.gas_cost = op.gas_cost - execution_state.gas_left;
         }
         op.trace_ex.used = execution_state.gas_left;
 
-        SILKRPC_LOG << "VmTraceTracer::on_instruction_start: CHANGE GAS_COST"
+        SILKRPC_DEBUG << "VmTraceTracer::on_instruction_start: CHANGE GAS_COST"
             << " idx: " << op.idx
             << " op_name: " << op.op_name
             << " used: " << op.trace_ex.used
@@ -461,7 +464,7 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     copy_store(op_code, stack_top, trace_op.trace_ex.storage);
 
     vm_trace.ops.push_back(trace_op);
-    SILKRPC_LOG << "VmTraceTracer::on_instruction_start:"
+    SILKRPC_DEBUG << "VmTraceTracer::on_instruction_start:"
         << " pc: " << std::dec << pc
         << ", opcode: 0x" << std::hex << evmc::hex(op_code)
         << ", opcode_name: " << op_name
@@ -475,7 +478,7 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
 }
 
 void VmTraceTracer::on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept {
-    SILKRPC_LOG << "VmTraceTracer::on_precompiled_run:"
+    SILKRPC_DEBUG << "VmTraceTracer::on_precompiled_run:"
         << " status: " << result.status_code
         << ", gas: " << std::dec << gas
         << "\n";
@@ -497,7 +500,7 @@ void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::
 
     index_prefix_.pop();
 
-    SILKRPC_LOG << "VmTraceTracer::on_execution_end:"
+    SILKRPC_DEBUG << "VmTraceTracer::on_execution_end:"
         << " result.status_code: " << result.status_code
         << ", start_gas: " << std::dec << start_gas
         << ", gas_left: " << std::dec << result.gas_left
@@ -513,7 +516,7 @@ void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::
         return;
     }
 
-    SILKRPC_LOG << "VmTraceTracer::on_execution_end:"
+    SILKRPC_DEBUG << "VmTraceTracer::on_execution_end:"
         << " idx: " << op.idx
         << " op_name: " << op.op_name
         << " used: " << op.trace_ex.used
@@ -583,6 +586,8 @@ void TraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
                 break;
             case evmc_call_kind::EVMC_DELEGATECALL:
                 trace_action.call_type = "delegatecall";
+                trace_action.to = code_address;
+                trace_action.from = recipient;
                 break;
             case evmc_call_kind::EVMC_CALLCODE:
                 trace_action.call_type = "callcode";
@@ -802,6 +807,7 @@ void StateDiffTracer::on_reward_granted(const silkworm::CallResult& result, cons
     SILKRPC_DEBUG << "StateDiffTracer::on_reward_granted:"
         << " result.status_code: " << result.status
         << ", result.gas_left: " << result.gas_left
+        << ", #touched: " << intra_block_state.touched().size()
         << "\n";
 
     for (const auto& address : intra_block_state.touched()) {
@@ -845,6 +851,10 @@ void StateDiffTracer::on_reward_granted(const silkworm::CallResult& result, cons
                     auto key_b32 = silkworm::bytes32_from_hex(key);
                     auto initial_storage = intra_block_state.get_original_storage(address, key_b32);
                     auto final_storage = intra_block_state.get_current_storage(address, key_b32);
+
+                    auto very_initial_storage = initial_ibs_.get_original_storage(address, key_b32);
+                    auto very_final_storage = initial_ibs_.get_current_storage(address, key_b32);
+
                     if (initial_storage != final_storage) {
                         all_equals = false;
                         entry.storage[key] = DiffValue{
