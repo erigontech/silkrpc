@@ -261,7 +261,9 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                    });
                    return;
                 }
-                state_.subtract_from_balance(*txn.from, want);
+
+                if (have >= want + txn.value)
+                   state_.subtract_from_balance(*txn.from, want);
 
                 if (txn.to.has_value()) {
                     state_.access_account(*txn.to);
