@@ -36,7 +36,7 @@
 
 namespace silkrpc::trace {
 
-const static bool PRECOPILED_CAP_IN_OUTPUT = false;
+static const bool PRECOPILED_CAP_IN_OUTPUT = false;
 
 using evmc::literals::operator""_address;
 
@@ -373,6 +373,7 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
     if (opcode_names_ == nullptr) {
         opcode_names_ = evmc_get_instruction_names_table(rev);
     }
+
     start_gas_.push(msg.gas);
 
     if (msg.depth == 0) {
@@ -394,6 +395,8 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
         if (op.op_code == evmc_opcode::OP_STATICCALL || op.op_code == evmc_opcode::OP_DELEGATECALL || op.op_code == evmc_opcode::OP_CALL) {
             auto& op_1 = vm_trace.ops[vm_trace.ops.size() - 2];
             auto cap = op_1.trace_ex.used - msg.gas;
+            op.depth = msg.depth;
+            op.gas_cost = op.gas_cost-msg.gas;
 
             // TO BE REMOVED
             SILKRPC_DEBUG << "VmTraceTracer::on_execution_start:"
@@ -456,6 +459,7 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     TraceOp trace_op;
     trace_op.gas_cost = execution_state.gas_left;
     trace_op.idx = index_prefix;
+    trace_op.depth = execution_state.msg->depth;
     trace_op.op_code = op_code;
     trace_op.op_name = op_name == "KECCAK256" ? "SHA3" : op_name; // TODO(sixtysixter) for RPCDAEMON compatibility
     trace_op.pc = pc;
@@ -554,7 +558,7 @@ void TraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
 
     current_depth_ = msg.depth;
 
-    auto create = !initial_ibs_.exists(recipient) && created_address_.find(recipient) == created_address_.end();
+    auto create = (!initial_ibs_.exists(recipient) && created_address_.find(recipient) == created_address_.end() && recipient != code_address);
 
     start_gas_.push(msg.gas);
 
@@ -600,8 +604,8 @@ void TraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
 
     if (msg.depth > 0) {
         if (index_stack_.size() > 0) {
-            auto index = index_stack_.top();
-            Trace& calling_trace = traces_[index];
+            auto index_stack = index_stack_.top();
+            Trace& calling_trace = traces_[index_stack];
 
             trace.trace_address.push_back(calling_trace.sub_traces);
             calling_trace.sub_traces++;
