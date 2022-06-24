@@ -125,8 +125,11 @@ asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohma
         // we look for keys until we have the quantity we want or the key is invalid/empty
         while (v.size() >= silkworm::kHashLength && keys.size() != quantity) {
             keys.push_back(v.substr(0, silkworm::kHashLength));
-            cursor->next();
-            v = co_await cursor->seek_both(seek_bytes, seek_val);
+            const auto kv_pair = co_await cursor->next();
+            if (kv_pair.key != seek_bytes) {
+                break;
+            }
+            v = kv_pair.value;
         }
         co_await cursor->close_cursor();
         reply = make_json_content(reply["id"], keys);
