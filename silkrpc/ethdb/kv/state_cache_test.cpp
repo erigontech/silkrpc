@@ -116,9 +116,9 @@ remote::StateChangeBatch new_batch(uint64_t view_id, silkworm::BlockNum block_he
     return state_changes;
 }
 
-remote::StateChangeBatch new_batch_with_upsert(silkworm::BlockNum block_height, const evmc::bytes32& block_hash,
+remote::StateChangeBatch new_batch_with_upsert(uint64_t view_id, silkworm::BlockNum block_height, const evmc::bytes32& block_hash,
                                                const std::vector<silkworm::Bytes>&& tx_rlps, bool unwind) {
-    remote::StateChangeBatch state_changes = new_batch(kTestViewId0, block_height, block_hash, std::move(tx_rlps), unwind);
+    remote::StateChangeBatch state_changes = new_batch(view_id, block_height, block_hash, std::move(tx_rlps), unwind);
     remote::StateChange* latest_change = state_changes.mutable_changebatch(0);
 
     remote::AccountChange* account_change = latest_change->add_changes();
@@ -130,10 +130,10 @@ remote::StateChangeBatch new_batch_with_upsert(silkworm::BlockNum block_height, 
     return state_changes;
 }
 
-remote::StateChangeBatch new_batch_with_upsert_code(silkworm::BlockNum block_height, const evmc::bytes32& block_hash,
-                                                    const std::vector<silkworm::Bytes>&& tx_rlps, bool unwind,
-                                                    int num_code_changes) {
-    remote::StateChangeBatch state_changes = new_batch(kTestViewId0, block_height, block_hash, std::move(tx_rlps), unwind);
+remote::StateChangeBatch new_batch_with_upsert_code(uint64_t view_id, silkworm::BlockNum block_height,
+                                                    const evmc::bytes32& block_hash, const std::vector<silkworm::Bytes>&& tx_rlps,
+                                                    bool unwind, int num_code_changes) {
+    remote::StateChangeBatch state_changes = new_batch(view_id, block_height, block_hash, std::move(tx_rlps), unwind);
     remote::StateChange* latest_change = state_changes.mutable_changebatch(0);
 
     SILKWORM_ASSERT(num_code_changes <= kTestCodes.size());
@@ -149,9 +149,9 @@ remote::StateChangeBatch new_batch_with_upsert_code(silkworm::BlockNum block_hei
     return state_changes;
 }
 
-remote::StateChangeBatch new_batch_with_delete(silkworm::BlockNum block_height, const evmc::bytes32& block_hash,
+remote::StateChangeBatch new_batch_with_delete(uint64_t view_id, silkworm::BlockNum block_height, const evmc::bytes32& block_hash,
                                                const std::vector<silkworm::Bytes>&& tx_rlps, bool unwind) {
-    remote::StateChangeBatch state_changes = new_batch(kTestViewId0, block_height, block_hash, std::move(tx_rlps), unwind);
+    remote::StateChangeBatch state_changes = new_batch(view_id, block_height, block_hash, std::move(tx_rlps), unwind);
     remote::StateChange* latest_change = state_changes.mutable_changebatch(0);
 
     remote::AccountChange* account_change = latest_change->add_changes();
@@ -161,10 +161,10 @@ remote::StateChangeBatch new_batch_with_delete(silkworm::BlockNum block_height, 
     return state_changes;
 }
 
-remote::StateChangeBatch new_batch_with_storage(silkworm::BlockNum block_height, const evmc::bytes32& block_hash,
-                                                const std::vector<silkworm::Bytes>&& tx_rlps, bool unwind,
-                                                int num_storage_changes) {
-    remote::StateChangeBatch state_changes = new_batch(kTestViewId0, block_height, block_hash, std::move(tx_rlps), unwind);
+remote::StateChangeBatch new_batch_with_storage(uint64_t view_id, silkworm::BlockNum block_height,
+                                                const evmc::bytes32& block_hash, const std::vector<silkworm::Bytes>&& tx_rlps,
+                                                bool unwind, int num_storage_changes) {
+    remote::StateChangeBatch state_changes = new_batch(view_id, block_height, block_hash, std::move(tx_rlps), unwind);
     remote::StateChange* latest_change = state_changes.mutable_changebatch(0);
 
     remote::AccountChange* account_change = latest_change->add_changes();
@@ -182,9 +182,9 @@ remote::StateChangeBatch new_batch_with_storage(silkworm::BlockNum block_height,
     return state_changes;
 }
 
-remote::StateChangeBatch new_batch_with_code(silkworm::BlockNum block_height, const evmc::bytes32& block_hash,
+remote::StateChangeBatch new_batch_with_code(uint64_t view_id, silkworm::BlockNum block_height, const evmc::bytes32& block_hash,
                                              const std::vector<silkworm::Bytes>&& tx_rlps, bool unwind, int num_code_changes) {
-    remote::StateChangeBatch state_changes = new_batch(kTestViewId0, block_height, block_hash, std::move(tx_rlps), unwind);
+    remote::StateChangeBatch state_changes = new_batch(view_id, block_height, block_hash, std::move(tx_rlps), unwind);
     remote::StateChange* latest_change = state_changes.mutable_changebatch(0);
 
     SILKWORM_ASSERT(num_code_changes <= kTestCodes.size());
@@ -196,6 +196,37 @@ remote::StateChangeBatch new_batch_with_code(silkworm::BlockNum block_height, co
     }
 
     return state_changes;
+}
+
+void check_upsert(CoherentStateCache& cache, Transaction& txn, const evmc::address& address, const silkworm::Bytes& data) {
+    std::unique_ptr<StateView> view = cache.get_view(txn);
+    CHECK(view != nullptr);
+    if (view) {
+        asio::thread_pool pool{1};
+        const silkworm::Bytes address_key{address.bytes, silkworm::kAddressLength};
+        auto result = asio::co_spawn(pool, view->get(address_key), asio::use_future);
+        const auto value = result.get();
+        CHECK(value.has_value());
+        if (value) {
+            CHECK(*value == data);
+        }
+    }
+}
+
+void check_code(CoherentStateCache& cache, Transaction& txn, silkworm::ByteView code) {
+    std::unique_ptr<StateView> view = cache.get_view(txn);
+    CHECK(view != nullptr);
+    if (view) {
+        asio::thread_pool pool{1};
+        const ethash::hash256 code_hash{silkworm::keccak256(kTestCode1)};
+        const silkworm::Bytes code_hash_key{code_hash.bytes, silkworm::kHashLength};
+        auto result = asio::co_spawn(pool, view->get_code(code_hash_key), asio::use_future);
+        const auto value = result.get();
+        CHECK(value.has_value());
+        if (value) {
+            CHECK(*value == kTestCode1);
+        }
+    }
 }
 
 TEST_CASE("CoherentStateCache::CoherentStateCache", "[silkrpc][ethdb][kv][state_cache]") {
@@ -214,11 +245,11 @@ TEST_CASE("CoherentStateCache::CoherentStateCache", "[silkrpc][ethdb][kv][state_
     }
 }
 
-TEST_CASE("CoherentStateCache::get_view", "[silkrpc][ethdb][kv][state_cache]") {
+TEST_CASE("CoherentStateCache::get_view returns no view", "[silkrpc][ethdb][kv][state_cache]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     asio::thread_pool pool{1};
 
-    SECTION("empty cache => view invalid") {
+    SECTION("no batch") {
         CoherentStateCache cache;
         test::MockTransaction txn;
         EXPECT_CALL(txn, tx_id()).WillOnce(Return(kTestViewId0));
@@ -230,7 +261,7 @@ TEST_CASE("CoherentStateCache::get_view", "[silkrpc][ethdb][kv][state_cache]") {
         CHECK(cache.state_eviction_count() == 0);
     }
 
-    SECTION("empty batch => view invalid") {
+    SECTION("empty batch") {
         CoherentStateCache cache;
         cache.on_new_block(remote::StateChangeBatch{});
         CHECK(cache.latest_data_size() == 0);
@@ -243,11 +274,15 @@ TEST_CASE("CoherentStateCache::get_view", "[silkrpc][ethdb][kv][state_cache]") {
         CHECK(cache.state_key_count() == 0);
         CHECK(cache.state_eviction_count() == 0);
     }
+}
 
-    SECTION("single upsert change batch => view valid, search hit") {
-        CoherentStateCache cache;
+TEST_CASE("CoherentStateCache::get_view returns one view", "[silkrpc][ethdb][kv][state_cache]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    CoherentStateCache cache;
+    asio::thread_pool pool{1};
 
-        auto batch = new_batch_with_upsert(kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
+    SECTION("single upsert change batch => search hit") {
+        auto batch = new_batch_with_upsert(kTestViewId0, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
                                            /*unwind=*/false);
         cache.on_new_block(batch);
         CHECK(cache.latest_data_size() == 1);
@@ -255,68 +290,38 @@ TEST_CASE("CoherentStateCache::get_view", "[silkrpc][ethdb][kv][state_cache]") {
         test::MockTransaction txn;
         EXPECT_CALL(txn, tx_id()).Times(2).WillRepeatedly(Return(kTestViewId0));
 
-        std::unique_ptr<StateView> view = cache.get_view(txn);
-        CHECK(view != nullptr);
-        if (view) {
-            const silkworm::Bytes address_key{kTestAddress.bytes, silkworm::kAddressLength};
-            auto result = asio::co_spawn(pool, view->get(address_key), asio::use_future);
-            const auto value = result.get();
-            CHECK(value.has_value());
-            if (value) {
-                CHECK(*value == kTestAccountData);
-            }
-            CHECK(cache.state_hit_count() == 1);
-            CHECK(cache.state_miss_count() == 0);
-            CHECK(cache.state_key_count() == 1);
-            CHECK(cache.state_eviction_count() == 0);
-        }
+        check_upsert(cache, txn, kTestAddress, kTestAccountData);
+        CHECK(cache.state_hit_count() == 1);
+        CHECK(cache.state_miss_count() == 0);
+        CHECK(cache.state_key_count() == 1);
+        CHECK(cache.state_eviction_count() == 0);
     }
 
-    SECTION("single upsert+code change batch => view valid, double search hit") {
-        CoherentStateCache cache;
-
-        auto batch = new_batch_with_upsert_code(kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
+    SECTION("single upsert+code change batch => double search hit") {
+        auto batch = new_batch_with_upsert_code(kTestViewId0, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
                                                 /*unwind=*/false, /*num_code_changes=*/1);
         cache.on_new_block(batch);
         CHECK(cache.latest_data_size() == 1);
         CHECK(cache.latest_code_size() == 1);
 
         test::MockTransaction txn;
-        EXPECT_CALL(txn, tx_id()).Times(3).WillRepeatedly(Return(kTestViewId0));
+        EXPECT_CALL(txn, tx_id()).Times(4).WillRepeatedly(Return(kTestViewId0));
 
-        std::unique_ptr<StateView> view = cache.get_view(txn);
-        CHECK(view != nullptr);
-        if (view) {
-            const silkworm::Bytes address_key{kTestAddress.bytes, silkworm::kAddressLength};
-            auto result1 = asio::co_spawn(pool, view->get(address_key), asio::use_future);
-            const auto value1 = result1.get();
-            CHECK(value1.has_value());
-            if (value1) {
-                CHECK(*value1 == kTestAccountData);
-            }
-            const ethash::hash256 code_hash{silkworm::keccak256(kTestCode1)};
-            const silkworm::Bytes code_hash_key{code_hash.bytes, silkworm::kHashLength};
-            auto result2 = asio::co_spawn(pool, view->get_code(code_hash_key), asio::use_future);
-            const auto value2 = result2.get();
-            CHECK(value2.has_value());
-            if (value2) {
-                CHECK(*value2 == kTestCode1);
-            }
-            CHECK(cache.state_hit_count() == 1);
-            CHECK(cache.state_miss_count() == 0);
-            CHECK(cache.state_key_count() == 1);
-            CHECK(cache.state_eviction_count() == 0);
-            CHECK(cache.code_hit_count() == 1);
-            CHECK(cache.code_miss_count() == 0);
-            CHECK(cache.code_key_count() == 1);
-            CHECK(cache.code_eviction_count() == 0);
-        }
+        check_upsert(cache, txn, kTestAddress, kTestAccountData);
+        CHECK(cache.state_hit_count() == 1);
+        CHECK(cache.state_miss_count() == 0);
+        CHECK(cache.state_key_count() == 1);
+        CHECK(cache.state_eviction_count() == 0);
+
+        check_code(cache, txn, kTestCode1);
+        CHECK(cache.code_hit_count() == 1);
+        CHECK(cache.code_miss_count() == 0);
+        CHECK(cache.code_key_count() == 1);
+        CHECK(cache.code_eviction_count() == 0);
     }
 
-    SECTION("single delete change batch => view valid, search hit") {
-        CoherentStateCache cache;
-
-        auto batch = new_batch_with_delete(kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
+    SECTION("single delete change batch => search hit") {
+        auto batch = new_batch_with_delete(kTestViewId0, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
                                            /*unwind=*/false);
         cache.on_new_block(batch);
         CHECK(cache.latest_data_size() == 1);
@@ -341,10 +346,8 @@ TEST_CASE("CoherentStateCache::get_view", "[silkrpc][ethdb][kv][state_cache]") {
         }
     }
 
-    SECTION("single storage change batch => view valid, search hit") {
-        CoherentStateCache cache;
-
-        auto batch = new_batch_with_storage(kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
+    SECTION("single storage change batch => search hit") {
+        auto batch = new_batch_with_storage(kTestViewId0, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
                                             /*unwind=*/false, /*num_storage_changes=*/1);
         cache.on_new_block(batch);
         CHECK(cache.latest_data_size() == 1);
@@ -369,10 +372,8 @@ TEST_CASE("CoherentStateCache::get_view", "[silkrpc][ethdb][kv][state_cache]") {
         }
     }
 
-    SECTION("single storage change batch => view valid, search miss") {
-        CoherentStateCache cache;
-
-        auto batch = new_batch_with_storage(kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
+    SECTION("single storage change batch => search miss") {
+        auto batch = new_batch_with_storage(kTestViewId0, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
                                             /*unwind=*/false, /*num_storage_changes=*/1);
         cache.on_new_block(batch);
         CHECK(cache.latest_data_size() == 1);
@@ -402,9 +403,7 @@ TEST_CASE("CoherentStateCache::get_view", "[silkrpc][ethdb][kv][state_cache]") {
     }
 
     SECTION("double storage change batch => double search hit") {
-        CoherentStateCache cache;
-
-        auto batch = new_batch_with_storage(kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
+        auto batch = new_batch_with_storage(kTestViewId0, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
                                             /*unwind=*/false, /*num_storage_changes=*/2);
         cache.on_new_block(batch);
         CHECK(cache.latest_data_size() == 2);
@@ -436,10 +435,8 @@ TEST_CASE("CoherentStateCache::get_view", "[silkrpc][ethdb][kv][state_cache]") {
         }
     }
 
-    SECTION("single code change batch => view valid, search hit") {
-        CoherentStateCache cache;
-
-        auto batch = new_batch_with_code(kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
+    SECTION("single code change batch => search hit") {
+        auto batch = new_batch_with_code(kTestViewId0, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
                                          /*unwind=*/false, /*num_code_changes=*/1);
         cache.on_new_block(batch);
         CHECK(cache.latest_code_size() == 1);
@@ -463,6 +460,37 @@ TEST_CASE("CoherentStateCache::get_view", "[silkrpc][ethdb][kv][state_cache]") {
             CHECK(cache.code_key_count() == 1);
             CHECK(cache.code_eviction_count() == 0);
         }
+    }
+}
+
+TEST_CASE("CoherentStateCache::get_view returns two views", "[silkrpc][ethdb][kv][state_cache]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    CoherentStateCache cache;
+
+    SECTION("two single-upsert change batches => two search hits in different views") {
+        auto batch1 = new_batch_with_upsert(kTestViewId1, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
+                                            /*unwind=*/false);
+        auto batch2 = new_batch_with_upsert(kTestViewId2, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{},
+                                            /*unwind=*/false);
+        cache.on_new_block(batch1);
+        cache.on_new_block(batch2);
+        CHECK(cache.latest_data_size() == 1);
+
+        test::MockTransaction txn1, txn2;
+        EXPECT_CALL(txn1, tx_id()).Times(2).WillRepeatedly(Return(kTestViewId1));
+        EXPECT_CALL(txn2, tx_id()).Times(2).WillRepeatedly(Return(kTestViewId2));
+
+        check_upsert(cache, txn1, kTestAddress, kTestAccountData);
+        CHECK(cache.state_hit_count() == 1);
+        CHECK(cache.state_miss_count() == 0);
+        CHECK(cache.state_key_count() == 1);
+        CHECK(cache.state_eviction_count() == 1);
+
+        check_upsert(cache, txn2, kTestAddress, kTestAccountData);
+        CHECK(cache.state_hit_count() == 2);
+        CHECK(cache.state_miss_count() == 0);
+        CHECK(cache.state_key_count() == 1);
+        CHECK(cache.state_eviction_count() == 1);
     }
 }
 

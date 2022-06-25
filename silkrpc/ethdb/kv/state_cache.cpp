@@ -122,22 +122,23 @@ void CoherentStateCache::process_upsert_change(CoherentStateRoot* root, StateVie
                                                const remote::AccountChange& change) {
     const auto address = silkworm::rpc::address_from_H160(change.address());
     const auto data_bytes = silkworm::bytes_of_string(change.data());
-    SILKRPC_DEBUG << "CoherentStateCache::process_upsert_change data: " << data_bytes << " address: " << address << "\n";
+    SILKRPC_DEBUG << "CoherentStateCache::process_upsert_change address: " << address << " data: " << data_bytes << "\n";
     const silkworm::Bytes address_key{address.bytes, silkworm::kAddressLength};
     add({address_key, data_bytes}, root, view_id);
 }
 
 void CoherentStateCache::process_code_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change) {
     const auto code_bytes = silkworm::bytes_of_string(change.code());
-    SILKRPC_DEBUG << "CoherentStateCache::process_code_change code: " << code_bytes << "\n";
     const ethash::hash256 code_hash{silkworm::keccak256(code_bytes)};
     const silkworm::Bytes code_hash_key{code_hash.bytes, silkworm::kHashLength};
+    SILKRPC_DEBUG << "CoherentStateCache::process_code_change code_hash_key: " << code_hash_key << "\n";
     add_code({code_hash_key, code_bytes}, root, view_id);
 }
 
 void CoherentStateCache::process_delete_change(CoherentStateRoot* root, StateViewId view_id,
                                                const remote::AccountChange& change) {
     const auto address = silkworm::rpc::address_from_H160(change.address());
+    SILKRPC_DEBUG << "CoherentStateCache::process_delete_change address: " << address << "\n";
     const silkworm::Bytes address_key{address.bytes, silkworm::kAddressLength};
     add({address_key, {}}, root, view_id);
 }
@@ -227,7 +228,6 @@ asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateCache::get(const si
     ++state_miss_count_;
 
     TransactionDatabase tx_database{txn};
-    SILKRPC_DEBUG << "Miss in state cache: lookup in PlainState key=" << key << "\n";
     const auto value = co_await tx_database.get_one(db::table::kPlainState, key);
     SILKRPC_DEBUG << "Miss in state cache: lookup in PlainState key=" << key << " value=" << value << "\n";
     if (value.empty()) {
@@ -257,6 +257,8 @@ asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateCache::get_code(con
     if (kv_it != code_cache.end()) {
         ++code_hit_count_;
 
+        SILKRPC_DEBUG << "Hit in code cache key=" << key << " value=" << kv_it->value << "\n";
+
         if (view_id == latest_state_view_id_) {
             code_evictions_.remove(kv);
             code_evictions_.push_front(kv);
@@ -269,7 +271,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateCache::get_code(con
 
     TransactionDatabase tx_database{txn};
     const auto value = co_await tx_database.get_one(db::table::kCode, key);
-    SILKRPC_DEBUG << "Miss in state cache: lookup in Code key=" << key << " value=" << value << "\n";
+    SILKRPC_DEBUG << "Miss in code cache: lookup in Code key=" << key << " value=" << value << "\n";
     if (value.empty()) {
         co_return std::nullopt;
     }
@@ -285,9 +287,11 @@ asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateCache::get_code(con
 CoherentStateRoot* CoherentStateCache::get_root(StateViewId view_id) {
     const auto root_it = state_view_roots_.find(view_id);
     if (root_it != state_view_roots_.end()) {
+        SILKRPC_DEBUG << "CoherentStateCache::get_root view_id=" << view_id << " root=" << root_it->second.get() << " found\n";
         return root_it->second.get();
     }
     const auto [new_root_it, _] = state_view_roots_.emplace(view_id, std::make_unique<CoherentStateRoot>());
+    SILKRPC_DEBUG << "CoherentStateCache::get_root view_id=" << view_id << " root=" << root_it->second.get() << " created\n";
     return new_root_it->second.get();
 }
 
