@@ -495,4 +495,32 @@ TEST_CASE("CoherentStateCache::get_view returns two views", "[silkrpc][ethdb][kv
     }
 }
 
+TEST_CASE("CoherentStateCache::on_new_block exceed max views", "[silkrpc][ethdb][kv][state_cache]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    CoherentCacheConfig config;
+    CoherentStateCache cache{config};
+
+    // Create as many state views as the maximum allowed number
+    for (uint64_t view_id = kTestViewId0; view_id < config.max_views; ++view_id) {
+        cache.on_new_block(
+            new_batch_with_upsert(view_id, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{}, /*unwind=*/false));
+        test::MockTransaction txn;
+        EXPECT_CALL(txn, tx_id()).WillOnce(Return(view_id));
+        CHECK(cache.get_view(txn) != nullptr);
+    }
+
+    // Next incoming batch with progressive view ID overflows the state views
+    uint64_t view_id = config.max_views;
+    cache.on_new_block(
+        new_batch_with_upsert(view_id, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{}, /*unwind=*/false));
+    test::MockTransaction txn;
+    EXPECT_CALL(txn, tx_id()).WillOnce(Return(view_id));
+    CHECK(cache.get_view(txn) != nullptr);
+
+    // Oldest state view should have been erased
+    test::MockTransaction txn0;
+    EXPECT_CALL(txn0, tx_id()).WillOnce(Return(kTestViewId0));
+    CHECK(cache.get_view(txn0) == nullptr);
+}
+
 }  // namespace silkrpc::ethdb::kv
