@@ -31,9 +31,9 @@ namespace silkrpc::test {
 //! This dummy transaction just gives you the same cursor over and over again.
 class DummyTransaction : public ethdb::Transaction {
 public:
-    explicit DummyTransaction(std::shared_ptr<ethdb::Cursor> cursor) : cursor_(cursor) {}
+    explicit DummyTransaction(uint64_t tx_id, std::shared_ptr<ethdb::Cursor> cursor) : tx_id_(tx_id), cursor_(cursor) {}
 
-    uint64_t tx_id() const override { return 0; }
+    uint64_t tx_id() const override { return tx_id_; }
 
     asio::awaitable<void> open() override { co_return; }
 
@@ -48,6 +48,7 @@ public:
     asio::awaitable<void> close() override { co_return; }
 
 private:
+    uint64_t tx_id_;
     std::shared_ptr<ethdb::Cursor> cursor_;
 };
 

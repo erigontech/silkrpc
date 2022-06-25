@@ -53,12 +53,20 @@ std::unique_ptr<StateView> CoherentStateCache::get_view(Transaction& txn) {
     return root->ready ? std::make_unique<CoherentStateView>(txn, this) : nullptr;
 }
 
-std::size_t CoherentStateCache::size() {
+std::size_t CoherentStateCache::latest_data_size() {
     std::shared_lock read_lock{rw_mutex_};
     if (latest_state_view_ == nullptr) {
         return 0;
     }
     return latest_state_view_->cache.size();
+}
+
+std::size_t CoherentStateCache::latest_code_size() {
+    std::shared_lock read_lock{rw_mutex_};
+    if (latest_state_view_ == nullptr) {
+        return 0;
+    }
+    return latest_state_view_->code_cache.size();
 }
 
 void CoherentStateCache::on_new_block(const remote::StateChangeBatch& state_changes) {

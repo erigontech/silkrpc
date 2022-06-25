@@ -51,7 +51,8 @@ public:
 
     virtual void on_new_block(const remote::StateChangeBatch& state_changes) = 0;
 
-    virtual std::size_t size() = 0;
+    virtual std::size_t latest_data_size() = 0;
+    virtual std::size_t latest_code_size() = 0;
 };
 
 struct CoherentStateRoot {
@@ -103,7 +104,8 @@ public:
 
     void on_new_block(const remote::StateChangeBatch& batch) override;
 
-    std::size_t size() override;
+    std::size_t latest_data_size() override;
+    std::size_t latest_code_size() override;
 
     uint64_t state_hit_count() const { return state_hit_count_; }
     uint64_t state_miss_count() const { return state_miss_count_; }
