@@ -233,6 +233,7 @@ TEST_CASE("CoherentStateCache::CoherentStateCache", "[silkrpc][ethdb][kv][state_
     SECTION("default config") {
         CoherentStateCache cache;
         CHECK(cache.latest_data_size() == 0);
+        CHECK(cache.latest_code_size() == 0);
         CHECK(cache.state_hit_count() == 0);
         CHECK(cache.state_miss_count() == 0);
         CHECK(cache.state_key_count() == 0);
