@@ -326,14 +326,17 @@ CoherentStateRoot* CoherentStateCache::advance_root(StateViewId view_id) {
 }
 
 void CoherentStateCache::evict_roots() {
+    SILKRPC_DEBUG << "CoherentStateCache::evict_roots latest_state_view_id_=" << latest_state_view_id_ << "\n";
     if (latest_state_view_id_ <= config_.max_views) {
         return;
     }
+    SILKRPC_DEBUG << "CoherentStateCache::evict_roots state_view_roots_.size()=" << state_view_roots_.size() << "\n";
     if (state_view_roots_.size() < config_.max_views) {
         return;
     }
     // Erase older state views in order to not exceed max_views
-    const auto max_view_id_to_delete = latest_state_view_id_ - config_.max_views;
+    const auto max_view_id_to_delete = latest_state_view_id_ - config_.max_views + 1;
+    SILKRPC_DEBUG << "CoherentStateCache::evict_roots max_view_id_to_delete=" << max_view_id_to_delete << "\n";
     std::erase_if(state_view_roots_, [&](const auto& item) {
         auto const& [view_id, _] = item;
         return view_id <= max_view_id_to_delete;

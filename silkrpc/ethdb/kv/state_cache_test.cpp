@@ -501,7 +501,7 @@ TEST_CASE("CoherentStateCache::on_new_block exceed max views", "[silkrpc][ethdb]
     CoherentStateCache cache{config};
 
     // Create as many state views as the maximum allowed number
-    for (uint64_t view_id = kTestViewId0; view_id < config.max_views; ++view_id) {
+    for (uint64_t view_id = kTestViewId0; view_id < kTestViewId0 + config.max_views; ++view_id) {
         cache.on_new_block(
             new_batch_with_upsert(view_id, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{}, /*unwind=*/false));
         test::MockTransaction txn;
@@ -510,7 +510,7 @@ TEST_CASE("CoherentStateCache::on_new_block exceed max views", "[silkrpc][ethdb]
     }
 
     // Next incoming batch with progressive view ID overflows the state views
-    uint64_t view_id = config.max_views;
+    uint64_t view_id = kTestViewId0 + config.max_views;
     cache.on_new_block(
         new_batch_with_upsert(view_id, kTestBlockNumber, kTestBlockHash, std::vector<silkworm::Bytes>{}, /*unwind=*/false));
     test::MockTransaction txn;
