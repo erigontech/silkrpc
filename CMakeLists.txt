@@ -65,9 +65,9 @@ add_subdirectory(silkworm)
 
 # Silkrpc itself
 option(SILKRPC_CLANG_COVERAGE "Clang instrumentation for code coverage reports" OFF)
+option(SILKRPC_USE_MIMALLOC "Enable using mimalloc for dynamic memory management" ON)
 
 if(SILKRPC_CLANG_COVERAGE)
-
   add_compile_options(-fprofile-instr-generate -fcoverage-mapping -DBUILD_COVERAGE)
   add_link_options(-fprofile-instr-generate -fcoverage-mapping)
 endif()
