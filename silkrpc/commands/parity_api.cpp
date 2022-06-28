@@ -131,7 +131,6 @@ asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohma
             }
             v = kv_pair.value;
         }
-        co_await cursor->close_cursor();
         reply = make_json_content(reply["id"], keys);
     } catch (const std::invalid_argument& iv) {
         SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
