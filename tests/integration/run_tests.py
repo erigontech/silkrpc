@@ -129,7 +129,7 @@ def main(argv):
             test_dir = "./json/" + api_file
             test_lists = os.listdir(test_dir)
 
-            if (api_name == "" or api_name == api_file):
+            if api_name in ("", api_file):
                 print ("Testing API: " + api_file)
                 for test_name in test_lists:
                     test_file = test_dir+"/"+test_name
