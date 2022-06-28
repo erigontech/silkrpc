@@ -36,6 +36,7 @@ using Catch::Matchers::Message;
 using testing::_;
 using testing::InvokeWithoutArgs;
 
+#ifndef BUILD_COVERAGE
 TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     const silkworm::ByteView kExecutionStage{stages::kExecution};
@@ -119,5 +120,6 @@ TEST_CASE("get_latest_block_number", "[silkrpc][core][blocks]") {
     auto result = asio::co_spawn(pool, get_latest_block_number(db_reader), asio::use_future);
     CHECK(result.get() == 0x0000ddff12345678);
 }
+#endif // BUILD_COVERAGE
 
 }  // namespace silkrpc::core

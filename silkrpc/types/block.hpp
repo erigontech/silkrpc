@@ -41,7 +41,7 @@ std::ostream& operator<<(std::ostream& out, const Block& b);
 class BlockNumberOrHash {
 public:
     explicit BlockNumberOrHash(std::string const& bnoh) { build(bnoh); }
-    explicit BlockNumberOrHash(std::uint64_t const& number) noexcept : value_{number} {}
+    explicit BlockNumberOrHash(uint64_t number) noexcept : value_{number} {}
 
     virtual ~BlockNumberOrHash() noexcept {}
 
@@ -49,21 +49,13 @@ public:
     BlockNumberOrHash(BlockNumberOrHash const& bnoh) noexcept : value_{bnoh.value_} {}
 
     BlockNumberOrHash& operator=(BlockNumberOrHash const& bnoh) = delete;
-    BlockNumberOrHash& operator=(std::string const& bnoh)  {
-        build(bnoh);
-        return *this;
-    }
-    BlockNumberOrHash& operator=(std::uint64_t const number) {
-        value_ = number;
-        return *this;
-    }
 
     bool is_number() const {
-        return std::holds_alternative<std::uint64_t>(value_);
+        return std::holds_alternative<uint64_t>(value_);
     }
 
     uint64_t number() const {
-        return is_number() ? *std::get_if<std::uint64_t>(&value_) : 0;
+        return is_number() ? *std::get_if<uint64_t>(&value_) : 0;
     }
 
     bool is_hash() const {
@@ -84,9 +76,8 @@ public:
 
 private:
     void build(std::string const& bnoh);
-    void set_number(std::string const& input, int base);
 
-    std::variant<std::uint64_t, evmc::bytes32, std::string> value_;
+    std::variant<uint64_t, evmc::bytes32, std::string> value_;
 };
 
 std::ostream& operator<<(std::ostream& out, const BlockNumberOrHash& b);

@@ -1046,7 +1046,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::json& requ
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
+        ethdb::kv::CachedDatabase tx_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
 
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);

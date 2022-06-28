@@ -16,14 +16,13 @@
 
 #include "block.hpp"
 
-#include <iomanip>
-#include <limits>
 #include <string>
 
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/core/blocks.hpp>
+#include <silkworm/common/assert.hpp>
 #include <silkworm/common/endian.hpp>
 #include <silkworm/core/silkworm/rlp/encode_vector.hpp>
-#include <silkrpc/core/blocks.hpp>
 
 namespace silkrpc {
 
@@ -70,7 +69,7 @@ std::ostream& operator<<(std::ostream& out, const BlockNumberOrHash& bnoh) {
     } else if (bnoh.is_hash()) {
         out << "0x" << bnoh.hash();
     } else {
-        assert(bnoh.is_tag());
+        SILKWORM_ASSERT(bnoh.is_tag());
         out << bnoh.tag();
     }
     return out;
@@ -88,19 +87,10 @@ void BlockNumberOrHash::build(const std::string& bnoh) {
             const auto b32 = silkworm::to_bytes32(b32_bytes.value_or(silkworm::Bytes{}));
             value_ = b32;
         } else {
-            set_number(bnoh, 16);
+            value_ = std::stoul(bnoh, nullptr, 16);
         }
     } else {
-        set_number(bnoh, 10);
-    }
-}
-
-void BlockNumberOrHash::set_number(const std::string& input, int base) {
-    char* end;
-    errno = 0;
-    auto value = strtoul(input.c_str(), &end, base);
-    if (errno == 0 && *end == '\0' && end != input.c_str() && value <= std::numeric_limits<uint64_t>::max()) {
-        value_ = value;
+        value_ = std::stoul(bnoh, nullptr, 10);
     }
 }
 

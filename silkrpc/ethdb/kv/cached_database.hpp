@@ -50,7 +50,7 @@ public:
                                      core::rawdb::Walker w) const override;
 
 private:
-    const BlockNumberOrHash& block_id_;
+    BlockNumberOrHash block_id_;
     Transaction& txn_;
     kv::StateCache& state_cache_;
     TransactionDatabase txn_database_;
