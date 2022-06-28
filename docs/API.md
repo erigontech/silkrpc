@@ -141,6 +141,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | bor_getRootHash                            | -            | not yet implemented                        |
 |                                            |              |                                            |
 | parity_getBlockReceipts                    | Yes          | same as eth_getBlockReceipts               |
+| parity_listStorageKeys                     | Yes          |                                            |
 |                                            |              |                                            |
 | ots_getApiLevel                            | -            | not yet implemented                        |
 | ots_getInternalOperations                  | -            | not yet implemented                        |
