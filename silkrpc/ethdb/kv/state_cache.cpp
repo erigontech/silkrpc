@@ -172,8 +172,12 @@ KeyValue* CoherentStateCache::add(KeyValue&& kv, CoherentStateRoot* root, StateV
         state_evictions_.remove(*replaced);
     }
     state_evictions_.push_front(kv);
+
+    // Remove longest unused key-value pair when size exceeded
     if (state_evictions_.size() > config_.max_state_keys) {
-        state_evictions_.pop_back();  // remove oldest
+        const auto& kv = state_evictions_.back();
+        state_evictions_.pop_back();
+        root->cache.erase(kv);
     }
     return &*it;
 }
@@ -194,8 +198,12 @@ KeyValue* CoherentStateCache::add_code(KeyValue&& kv, CoherentStateRoot* root, S
         code_evictions_.remove(*replaced);
     }
     code_evictions_.push_front(kv);
+
+    // Remove longest unused key-value pair when size exceeded
     if (code_evictions_.size() > config_.max_code_keys) {
-        code_evictions_.pop_back();  // remove oldest
+        const auto& kv = code_evictions_.back();
+        code_evictions_.pop_back();
+        root->code_cache.erase(kv);
     }
     return &*it;
 }
@@ -300,9 +308,11 @@ CoherentStateRoot* CoherentStateCache::advance_root(StateViewId view_id) {
 
     const auto previous_root_it = state_view_roots_.find(view_id - 1);
     if (previous_root_it != state_view_roots_.end() && previous_root_it->second->canonical) {
+        SILKRPC_DEBUG << "CoherentStateCache::advance_root canonical view_id-1=" << (view_id - 1) << " found\n";
         root->cache = previous_root_it->second->cache;
         root->code_cache = previous_root_it->second->code_cache;
     } else {
+        SILKRPC_DEBUG << "CoherentStateCache::advance_root canonical view_id-1=" << (view_id - 1) << " not found\n";
         state_evictions_.clear();
         for (const auto& kv : root->cache) {
             state_evictions_.push_front(kv);

@@ -24,6 +24,7 @@
 #include <asio/awaitable.hpp>
 
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/types/block.hpp>
 
 namespace silkrpc::core {
 
@@ -41,6 +42,8 @@ asio::awaitable<uint64_t> get_highest_block_number(const core::rawdb::DatabaseRe
 
 asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader);
 
-} // namespace silkrpc::core
+asio::awaitable<bool> is_latest_block_number(const BlockNumberOrHash& bnoh, const core::rawdb::DatabaseReader& reader);
+
+}  // namespace silkrpc::core
 
 #endif  // SILKRPC_CORE_BLOCKS_HPP_

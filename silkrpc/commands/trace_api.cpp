@@ -27,6 +27,7 @@
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/cached_chain.hpp>
 #include <silkrpc/core/evm_trace.hpp>
+#include <silkrpc/ethdb/kv/cached_database.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/types/call.hpp>
@@ -64,7 +65,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json& reque
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
+        ethdb::kv::CachedDatabase tx_database{block_number_or_hash, *tx, *context_.state_cache()};
 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
@@ -93,7 +94,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_call_many(const nlohmann::json& 
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
+        ethdb::kv::CachedDatabase tx_database{BlockNumberOrHash{0}, *tx, *context_.state_cache()};
 
         reply = make_json_error(request["id"], 500, "not yet implemented");
     } catch (const std::exception& e) {
