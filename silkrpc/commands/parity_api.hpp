@@ -43,6 +43,7 @@ public:
 
 protected:
     asio::awaitable<void> handle_parity_get_block_receipts(const nlohmann::json& request, nlohmann::json& reply);
+    asio::awaitable<void> handle_parity_list_storage_keys(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
     std::unique_ptr<ethdb::Database>& database_;
