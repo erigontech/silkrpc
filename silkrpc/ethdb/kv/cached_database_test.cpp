@@ -16,6 +16,8 @@
 
 #include "cached_database.hpp"
 
+#include <memory>
+
 #include <asio/co_spawn.hpp>
 #include <asio/thread_pool.hpp>
 #include <asio/use_future.hpp>
@@ -47,7 +49,7 @@ TEST_CASE("CachedDatabase::CachedDatabase", "[silkrpc][ethdb][kv][cached_reader]
     std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
     test::DummyTransaction txn{0, mock_cursor};
     kv::CoherentStateCache cache;
-    
+
     SECTION("empty key from PlainState in latest block") {
         BlockNumberOrHash block_id{0};
         CachedDatabase cached_db{block_id, txn, cache};
@@ -65,7 +67,7 @@ TEST_CASE("CachedDatabase::get", "[silkrpc][ethdb][kv][cached_reader]") {
     std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
     test::DummyTransaction txn{0, mock_cursor};
     kv::CoherentStateCache cache;
-    
+
     SECTION("empty key from PlainState in latest block") {
         BlockNumberOrHash block_id{0};
         CachedDatabase cached_db{block_id, txn, cache};
