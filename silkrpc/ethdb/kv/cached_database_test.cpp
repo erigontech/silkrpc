@@ -30,7 +30,6 @@ using Catch::Matchers::Message;
 using testing::_;
 using testing::InvokeWithoutArgs;
 
-#ifndef BUILD_COVERAGE
 TEST_CASE("CachedDatabase", "[silkrpc][ethdb][kv][cached_reader]") {
     BlockNumberOrHash block_id{0};
     test::MockTransaction txn;
@@ -40,6 +39,5 @@ TEST_CASE("CachedDatabase", "[silkrpc][ethdb][kv][cached_reader]") {
 
     // TODO(canepat) complete
 }
-#endif // BUILD_COVERAGE
 
 }  // namespace silkrpc::ethdb::kv
