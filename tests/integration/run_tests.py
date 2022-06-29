@@ -20,7 +20,7 @@ def get_target(silk: bool, method: str):
 
     return "localhost:8545"
 
-def run_shell_command(command: str, expected_response: str, verbose: bool, exit_on_fail: bool):
+def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool):
     """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
     command_and_args = shlex.split(command)
     process = subprocess.run(command_and_args, stdout=subprocess.PIPE, universal_newlines=True, check=True)
@@ -28,6 +28,13 @@ def run_shell_command(command: str, expected_response: str, verbose: bool, exit_
         sys.exit(process.returncode)
     process.stdout = process.stdout.strip('\n')
     response = json.loads(process.stdout)
+    if (command1 != ""):
+       command_and_args = shlex.split(command1)
+       process = subprocess.run(command_and_args, stdout=subprocess.PIPE, universal_newlines=True, check=True)
+       if process.returncode != 0:
+           sys.exit(process.returncode)
+       process.stdout = process.stdout.strip('\n')
+       expected_response = json.loads(process.stdout)
     if response != expected_response:
         if "result" in response and "result" in expected_response and expected_response["result"] is None:
             # response and expected_response are different but don't care
@@ -43,7 +50,7 @@ def run_shell_command(command: str, expected_response: str, verbose: bool, exit_
         if exit_on_fail:
             sys.exit(1)
 
-def run_tests(json_filename: str, verbose: bool, silk: bool, exit_on_fail: bool, test_number: int):
+def run_tests(json_filename: str, verbose: bool, silk: bool, exit_on_fail: bool, test_number: int, verify_with_rpc: bool):
     """ Run integration tests. """
     with open(json_filename, encoding='utf8') as json_file:
         jsonrpc_commands = json.load(json_file)
@@ -52,11 +59,20 @@ def run_tests(json_filename: str, verbose: bool, silk: bool, exit_on_fail: bool,
             request_dumps = json.dumps(request)
             target = get_target(silk, request["method"])
             if verbose:
-                print (str(test_number) + ") " + request_dumps)
-            response = json_rpc["response"]
+               print (str(test_number) + ") " + request_dumps)
+            if verify_with_rpc == 0:
+               cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
+               cmd1 = ""
+               response = json_rpc["response"]
+            else:
+               response = ""
+               target = get_target(1, request["method"])
+               cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
+               target1 = get_target(0, request["method"])
+               cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target1
             run_shell_command(
-                '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
-                request_dumps + '''\' ''' + target,
+                cmd,
+                cmd1,
                 response,
                 verbose,
                 exit_on_fail)
@@ -67,7 +83,7 @@ def run_tests(json_filename: str, verbose: bool, silk: bool, exit_on_fail: bool,
 def usage(argv):
     """ Print script usage
     """
-    print("Usage: " + argv[0] + " -h -c -r -v -a <api_name> -t < test_number> -l < no of loops> ")
+    print("Usage: " + argv[0] + " -h -c -r -v -a <api_name> -t < test_number> -l < no of loops> -d")
     print("")
     print("Launch an automated test sequence on Silkrpc or RPCDaemon")
     print("")
@@ -77,6 +93,7 @@ def usage(argv):
     print("-l <number of loops>")
     print("-a <test api >")
     print("-t <test_number>")
+    print("-d verify real time with rpc")
     print("-v verbose")
 
 
@@ -92,9 +109,11 @@ def main(argv):
     verbose = 0
     req_test = -1
     api_name = ""
+    verify_with_rpc = 0
+    json_dir = "./goerly/"
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:d")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -111,6 +130,8 @@ def main(argv):
                 api_name = optarg
             elif option == "-l":
                 loop_number = int(optarg)
+            elif option == "-d":
+                verify_with_rpc = 1
             else:
                 usage(argv)
                 sys.exit(-1)
@@ -124,10 +145,10 @@ def main(argv):
     for test_rep in range(0, loop_number):
         if verbose:
             print("Test iteration: ", test_rep + 1)
-        dirs = os.listdir('./json')
+        dirs = sorted(os.listdir(json_dir))
         test_number = 0
         for api_file in dirs:
-            test_dir = "./json/" + api_file
+            test_dir = json_dir + api_file
             test_lists = os.listdir(test_dir)
             for test_name in test_lists:
                 if api_name in ("", api_file):
@@ -135,7 +156,7 @@ def main(argv):
                     if req_test in (-1, test_number):
                         if verbose:
                             print("Test name: ", api_file, " ", test_name)
-                        run_tests(test_file, verbose, silk, exit_on_fail, test_number)
+                        run_tests(test_file, verbose, silk, exit_on_fail, test_number, verify_with_rpc)
                 test_number = test_number + 1
 
 #
