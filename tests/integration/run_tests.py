@@ -43,26 +43,23 @@ def run_shell_command(command: str, expected_response: str, verbose: bool, exit_
         if exit_on_fail:
             sys.exit(1)
 
-def run_tests(json_filename: str, verbose: bool, silk: bool, exit_on_fail: bool, req_test: int):
+def run_tests(json_filename: str, verbose: bool, silk: bool, exit_on_fail: bool, test_number: int):
     """ Run integration tests. """
     with open(json_filename, encoding='utf8') as json_file:
         jsonrpc_commands = json.load(json_file)
-        test_number = 0
         for json_rpc in jsonrpc_commands:
-            if req_test in (-1, test_number):
-                request = json_rpc["request"]
-                request_dumps = json.dumps(request)
-                target = get_target(silk, request["method"])
-                if verbose:
-                    print (str(test_number) + ") " + request_dumps)
-                response = json_rpc["response"]
-                run_shell_command(
-                    '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
-                    request_dumps + '''\' ''' + target,
-                    response,
-                    verbose,
-                    exit_on_fail)
-            test_number = test_number + 1
+            request = json_rpc["request"]
+            request_dumps = json.dumps(request)
+            target = get_target(silk, request["method"])
+            if verbose:
+                print (str(test_number) + ") " + request_dumps)
+            response = json_rpc["response"]
+            run_shell_command(
+                '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' +
+                request_dumps + '''\' ''' + target,
+                response,
+                verbose,
+                exit_on_fail)
 
 #
 # usage
@@ -70,15 +67,16 @@ def run_tests(json_filename: str, verbose: bool, silk: bool, exit_on_fail: bool,
 def usage(argv):
     """ Print script usage
     """
-    print("Usage: " + argv[0] + " -h -c -r -v")
+    print("Usage: " + argv[0] + " -h -c -r -v -a <api_name> -t < test_number> -l < no of loops> ")
     print("")
     print("Launch an automated test sequence on Silkrpc or RPCDaemon")
     print("")
     print("-h print this help")
     print("-c runs all tests even if one test fails [ default exit at first test fail ]")
-    print("-t api_name")
     print("-r connect to rpcdaemon [ default connect to silk ] ")
-    print("-l number of loops")
+    print("-l <number of loops>")
+    print("-a <test api >")
+    print("-t <test_number>")
     print("-v verbose")
 
 
@@ -96,7 +94,7 @@ def main(argv):
     api_name = ""
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -108,6 +106,8 @@ def main(argv):
             elif option == "-v":
                 verbose = 1
             elif option == "-t":
+                req_test = int(optarg)
+            elif option == "-a":
                 api_name = optarg
             elif option == "-l":
                 loop_number = int(optarg)
@@ -125,15 +125,18 @@ def main(argv):
         if verbose:
             print("Test iteration: ", test_rep + 1)
         dirs = os.listdir('./json')
+        test_number = 0
         for api_file in dirs:
             test_dir = "./json/" + api_file
             test_lists = os.listdir(test_dir)
-
-            if api_name in ("", api_file):
-                print ("Testing API: " + api_file)
-                for test_name in test_lists:
-                    test_file = test_dir+"/"+test_name
-                    run_tests(test_file, verbose, silk, exit_on_fail, req_test)
+            for test_name in test_lists:
+                if api_name in ("", api_file):
+                    test_file = test_dir+"/"+ test_name
+                    if req_test in (-1, test_number):
+                        if verbose:
+                            print("Test name: ", api_file, " ", test_name)
+                        run_tests(test_file, verbose, silk, exit_on_fail, test_number)
+                test_number = test_number + 1
 
 #
 # module as main
