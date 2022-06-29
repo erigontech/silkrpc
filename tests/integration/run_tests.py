@@ -21,7 +21,7 @@ def get_target(silk: bool, method: str):
 
     return "localhost:8545"
 
-def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool, output_dir: str, silk_file: str, 
+def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool, output_dir: str, silk_file: str,
                       rpc_file: str, diff_file: str):
     """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
 
@@ -31,23 +31,23 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         sys.exit(process.returncode)
     process.stdout = process.stdout.strip('\n')
     response = json.loads(process.stdout)
-    if (command1 != ""):
-       command_and_args = shlex.split(command1)
-       process = subprocess.run(command_and_args, stdout=subprocess.PIPE, universal_newlines=True, check=True)
-       if process.returncode != 0:
-           sys.exit(process.returncode)
-       process.stdout = process.stdout.strip('\n')
-       expected_response = json.loads(process.stdout)
+    if command1 != "":
+        command_and_args = shlex.split(command1)
+        process = subprocess.run(command_and_args, stdout=subprocess.PIPE, universal_newlines=True, check=True)
+        if process.returncode != 0:
+            sys.exit(process.returncode)
+        process.stdout = process.stdout.strip('\n')
+        expected_response = json.loads(process.stdout)
 
     if response != expected_response:
         if (silk_file != "" and os.path.exists(output_dir) == 0):
-           os.mkdir (output_dir)
-        if (silk_file != ""):
-            opened_file = open(silk_file, 'w') 
-            opened_file.write(json.dumps(response, indent = 6))
-        if (rpc_file != ""):
-            opened_file = open(rpc_file, 'w') 
-            opened_file.write(json.dumps(expected_response, indent = 6))
+            os.mkdir (output_dir)
+        if silk_file != "":
+            with open(silk_file, 'w', encoding='utf8') as json_file_ptr:
+                json_file_ptr.write(json.dumps(response, indent = 6))
+        if rpc_file != "":
+            with open(rpc_file, 'w', encoding='utf8') as json_file_ptr:
+                json_file_ptr.write(json.dumps(expected_response, indent = 6))
         if "result" in response and "result" in expected_response and expected_response["result"] is None:
             # response and expected_response are different but don't care
             return
@@ -55,9 +55,9 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
             # response and expected_response are different but don't care
             return
         response_diff = jsondiff.diff(expected_response, response, marshal=True)
-        if (diff_file != ""):
-            opened_file = open(diff_file, 'w') 
-            opened_file.write(json.dumps(response_diff))
+        if diff_file != "":
+            with open(diff_file, 'w', encoding='utf8') as json_file_ptr:
+                json_file_ptr.write(json.dumps(response_diff, indent = 6))
         print(f"--> KO: unexpected result for command: {command}\n--> DIFF expected-received: {response_diff}")
         if verbose:
             print(f"\n--> expected_response: {expected_response}")
@@ -67,7 +67,6 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
 
 def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, test_number: int, verify_with_rpc: bool):
     """ Run integration tests. """
-    
     json_filename = test_dir + json_file
     with open(json_filename, encoding='utf8') as json_file_ptr:
         jsonrpc_commands = json.load(json_file_ptr)
@@ -76,26 +75,26 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
             request_dumps = json.dumps(request)
             target = get_target(silk, request["method"])
             if verbose:
-               print (str(test_number) + ") " + request_dumps)
+                print (str(test_number) + ") " + request_dumps)
             if verify_with_rpc == 0:
-               cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
-               cmd1 = ""
-               response = json_rpc["response"]
-               output_dir_name = ""
-               silk_file = ""
-               rpc_file = ""
-               diff_file = ""
+                cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
+                cmd1 = ""
+                response = json_rpc["response"]
+                output_dir_name = ""
+                silk_file = ""
+                rpc_file = ""
+                diff_file = ""
             else:
-               output_api_filename = output_dir + json_file[:-5]
-               output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
-               response = ""
-               target = get_target(1, request["method"])
-               cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
-               target1 = get_target(0, request["method"])
-               cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target1
-               silk_file = output_api_filename + "-silk.json"
-               rpc_file = output_api_filename + "-rpcdaemon.json"
-               diff_file = output_api_filename + "-diff.json"
+                output_api_filename = output_dir + json_file[:-5]
+                output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
+                response = ""
+                target = get_target(1, request["method"])
+                cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
+                target1 = get_target(0, request["method"])
+                cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target1
+                silk_file = output_api_filename + "-silk.json"
+                rpc_file = output_api_filename + "-rpcdaemon.json"
+                diff_file = output_api_filename + "-diff.json"
             run_shell_command(
                 cmd,
                 cmd1,
@@ -173,10 +172,9 @@ def main(argv):
         usage(argv)
         sys.exit(-1)
 
-    try:
-       shutil.rmtree(output_dir)
-    except Exception:
-       pass
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+
     os.mkdir (output_dir)
     for test_rep in range(0, loop_number):
         if verbose:

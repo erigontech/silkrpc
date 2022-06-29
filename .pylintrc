@@ -17,6 +17,7 @@ disable=too-many-ancestors,duplicate-code,not-callable,too-few-public-methods
 
 # Maximum number of arguments for function / method
 max-args=15
+max-nested-blocks=6
 
 
 [FORMAT]
