@@ -44,15 +44,18 @@ TEST_CASE("CachedDatabase::CachedDatabase", "[silkrpc][ethdb][kv][cached_reader]
     CHECK_NOTHROW(CachedDatabase{block_id, txn, cache});
 }
 
-/*TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_reader]") {
+TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_reader]") {
     asio::thread_pool pool{1};
     std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
     test::DummyTransaction txn{0, mock_cursor};
     kv::CoherentStateCache cache;
 
-    SECTION("empty key from PlainState in latest block") {
+    SECTION("cache miss: empty key from PlainState in latest block") {
         BlockNumberOrHash block_id{0};
         CachedDatabase cached_db{block_id, txn, cache};
+        EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("0000000000000000")};
+        }));
         EXPECT_CALL(*mock_cursor, seek_exact(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}};
         }));
@@ -60,7 +63,7 @@ TEST_CASE("CachedDatabase::CachedDatabase", "[silkrpc][ethdb][kv][cached_reader]
         const auto value = result.get();
         CHECK(value.empty());
     }
-}*/
+}
 
 TEST_CASE("CachedDatabase::get", "[silkrpc][ethdb][kv][cached_reader]") {
     asio::thread_pool pool{1};
@@ -68,7 +71,7 @@ TEST_CASE("CachedDatabase::get", "[silkrpc][ethdb][kv][cached_reader]") {
     test::DummyTransaction txn{0, mock_cursor};
     kv::CoherentStateCache cache;
 
-    SECTION("empty key from PlainState in latest block") {
+    SECTION("cache miss: empty key from PlainState in latest block") {
         BlockNumberOrHash block_id{0};
         CachedDatabase cached_db{block_id, txn, cache};
         EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
