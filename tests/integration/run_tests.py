@@ -7,6 +7,7 @@ import subprocess
 import sys
 import os
 import shutil
+import tarfile
 
 import getopt
 import jsondiff
@@ -68,33 +69,46 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
 def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, test_number: int, verify_with_rpc: bool):
     """ Run integration tests. """
     json_filename = test_dir + json_file
-    with open(json_filename, encoding='utf8') as json_file_ptr:
-        jsonrpc_commands = json.load(json_file_ptr)
-        for json_rpc in jsonrpc_commands:
-            request = json_rpc["request"]
-            request_dumps = json.dumps(request)
-            target = get_target(silk, request["method"])
-            if verbose:
-                print (str(test_number) + ") " + request_dumps)
-            if verify_with_rpc == 0:
-                cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
-                cmd1 = ""
-                response = json_rpc["response"]
-                output_dir_name = ""
-                silk_file = ""
-                rpc_file = ""
-                diff_file = ""
-            else:
-                output_api_filename = output_dir + json_file[:-5]
-                output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
-                response = ""
-                target = get_target(1, request["method"])
-                cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
-                target1 = get_target(0, request["method"])
-                cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target1
-                silk_file = output_api_filename + "-silk.json"
-                rpc_file = output_api_filename + "-rpcdaemon.json"
-                diff_file = output_api_filename + "-diff.json"
+    ext = os.path.splitext(json_file)[1]
+
+    if ext in (".zip", ".tar"):
+        with tarfile.open(json_filename,encoding='utf-8') as tar:
+            files = tar.getmembers()
+            if len(files) != 1:
+                print ("bad archive file " + json_filename)
+                sys.exit(1)
+            file = tar.extractfile(files[0])
+            buff = file.read()
+            tar.close()
+            jsonrpc_commands = json.loads(buff)
+    else:
+        with open(json_filename, encoding='utf8') as json_file_ptr:
+            jsonrpc_commands = json.load(json_file_ptr)
+    for json_rpc in jsonrpc_commands:
+        request = json_rpc["request"]
+        request_dumps = json.dumps(request)
+        target = get_target(silk, request["method"])
+        if verbose:
+            print (str(test_number) + ") " + request_dumps)
+        if verify_with_rpc == 0:
+            cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
+            cmd1 = ""
+            response = json_rpc["response"]
+            output_dir_name = ""
+            silk_file = ""
+            rpc_file = ""
+            diff_file = ""
+        else:
+            output_api_filename = output_dir + json_file[:-5]
+            output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
+            response = ""
+            target = get_target(1, request["method"])
+            cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
+            target1 = get_target(0, request["method"])
+            cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target1
+            silk_file = output_api_filename + "-silk.json"
+            rpc_file = output_api_filename + "-rpcdaemon.json"
+            diff_file = output_api_filename + "-diff.json"
             run_shell_command(
                 cmd,
                 cmd1,
