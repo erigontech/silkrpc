@@ -27,4 +27,4 @@ max-line-length=200
 
 max-branches=25
 max-statements=80
-max-locals=25
+max-locals=30
