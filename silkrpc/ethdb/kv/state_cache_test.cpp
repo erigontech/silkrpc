@@ -31,6 +31,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/core/rawdb/util.hpp>
 #include <silkrpc/test/dummy_transaction.hpp>
+#include <silkrpc/test/mock_cursor.hpp>
 #include <silkrpc/test/mock_transaction.hpp>
 #include <silkworm/common/assert.hpp>
 #include <silkworm/common/base.hpp>
@@ -70,16 +71,6 @@ static const auto kTestHashedLocation1{0x6677907ab33937e392b9be983b30818f29d5940
 static const auto kTestHashedLocation2{0xe046602dcccb1a2f1d176718c8e709a42bba57af2da2379ba7130e2f916c95cd_bytes32};
 static const std::vector<evmc::bytes32> kTestHashedLocations{kTestHashedLocation1, kTestHashedLocation2};
 static const std::vector<silkworm::Bytes> kTestZeroTxs{};
-
-class MockCursor : public Cursor {
-public:
-    MOCK_CONST_METHOD0(cursor_id, uint32_t());
-    MOCK_METHOD1(open_cursor, asio::awaitable<void>(const std::string&));
-    MOCK_METHOD1(seek, asio::awaitable<KeyValue>(silkworm::ByteView));
-    MOCK_METHOD1(seek_exact, asio::awaitable<KeyValue>(silkworm::ByteView));
-    MOCK_METHOD0(next, asio::awaitable<KeyValue>());
-    MOCK_METHOD0(close_cursor, asio::awaitable<void>());
-};
 
 TEST_CASE("CoherentStateRoot", "[silkrpc][ethdb][kv][state_cache]") {
     SECTION("CoherentStateRoot::CoherentStateRoot") {
@@ -385,7 +376,7 @@ TEST_CASE("CoherentStateCache::get_view returns one view", "[silkrpc][ethdb][kv]
         cache.on_new_block(batch);
         CHECK(cache.latest_data_size() == 1);
 
-        std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
+        std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
         test::DummyTransaction txn{kTestViewId0, mock_cursor};
 
         std::unique_ptr<StateView> view = cache.get_view(txn);
