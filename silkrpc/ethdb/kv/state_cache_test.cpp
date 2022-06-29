@@ -81,7 +81,6 @@ public:
     MOCK_METHOD0(close_cursor, asio::awaitable<void>());
 };
 
-#ifndef BUILD_COVERAGE
 TEST_CASE("CoherentStateRoot", "[silkrpc][ethdb][kv][state_cache]") {
     SECTION("CoherentStateRoot::CoherentStateRoot") {
         CoherentStateRoot root;
@@ -532,6 +531,5 @@ TEST_CASE("CoherentStateCache::on_new_block exceed max views", "[silkrpc][ethdb]
     EXPECT_CALL(txn0, tx_id()).WillOnce(Return(kTestViewId0));
     CHECK(cache.get_view(txn0) == nullptr);
 }
-#endif // BUILD_COVERAGE
 
 }  // namespace silkrpc::ethdb::kv
