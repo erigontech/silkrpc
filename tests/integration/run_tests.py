@@ -6,6 +6,7 @@ import shlex
 import subprocess
 import sys
 import os
+import shutil
 
 import getopt
 import jsondiff
@@ -20,8 +21,10 @@ def get_target(silk: bool, method: str):
 
     return "localhost:8545"
 
-def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool):
+def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool, output_dir: str, silk_file: str, 
+                      rpc_file: str, diff_file: str):
     """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
+
     command_and_args = shlex.split(command)
     process = subprocess.run(command_and_args, stdout=subprocess.PIPE, universal_newlines=True, check=True)
     if process.returncode != 0:
@@ -35,14 +38,26 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
            sys.exit(process.returncode)
        process.stdout = process.stdout.strip('\n')
        expected_response = json.loads(process.stdout)
+
     if response != expected_response:
+        if (silk_file != "" and os.path.exists(output_dir) == 0):
+           os.mkdir (output_dir)
+        if (silk_file != ""):
+            opened_file = open(silk_file, 'w') 
+            opened_file.write(json.dumps(response, indent = 6))
+        if (rpc_file != ""):
+            opened_file = open(rpc_file, 'w') 
+            opened_file.write(json.dumps(expected_response, indent = 6))
         if "result" in response and "result" in expected_response and expected_response["result"] is None:
             # response and expected_response are different but don't care
             return
         if "error" in response and "error" in expected_response and expected_response["error"] is None:
             # response and expected_response are different but don't care
             return
-        response_diff = jsondiff.diff(expected_response, response)
+        response_diff = jsondiff.diff(expected_response, response, marshal=True)
+        if (diff_file != ""):
+            opened_file = open(diff_file, 'w') 
+            opened_file.write(json.dumps(response_diff))
         print(f"--> KO: unexpected result for command: {command}\n--> DIFF expected-received: {response_diff}")
         if verbose:
             print(f"\n--> expected_response: {expected_response}")
@@ -50,10 +65,12 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         if exit_on_fail:
             sys.exit(1)
 
-def run_tests(json_filename: str, verbose: bool, silk: bool, exit_on_fail: bool, test_number: int, verify_with_rpc: bool):
+def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, test_number: int, verify_with_rpc: bool):
     """ Run integration tests. """
-    with open(json_filename, encoding='utf8') as json_file:
-        jsonrpc_commands = json.load(json_file)
+    
+    json_filename = test_dir + json_file
+    with open(json_filename, encoding='utf8') as json_file_ptr:
+        jsonrpc_commands = json.load(json_file_ptr)
         for json_rpc in jsonrpc_commands:
             request = json_rpc["request"]
             request_dumps = json.dumps(request)
@@ -64,18 +81,31 @@ def run_tests(json_filename: str, verbose: bool, silk: bool, exit_on_fail: bool,
                cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
                cmd1 = ""
                response = json_rpc["response"]
+               output_dir_name = ""
+               silk_file = ""
+               rpc_file = ""
+               diff_file = ""
             else:
+               output_api_filename = output_dir + json_file[:-5]
+               output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
                response = ""
                target = get_target(1, request["method"])
                cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
                target1 = get_target(0, request["method"])
                cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target1
+               silk_file = output_api_filename + "-silk.json"
+               rpc_file = output_api_filename + "-rpcdaemon.json"
+               diff_file = output_api_filename + "-diff.json"
             run_shell_command(
                 cmd,
                 cmd1,
                 response,
                 verbose,
-                exit_on_fail)
+                exit_on_fail,
+                output_dir_name,
+                silk_file,
+                rpc_file,
+                diff_file)
 
 #
 # usage
@@ -111,6 +141,7 @@ def main(argv):
     api_name = ""
     verify_with_rpc = 0
     json_dir = "./goerly/"
+    output_dir = "./int_test_results/"
 
     try:
         opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:d")
@@ -142,6 +173,11 @@ def main(argv):
         usage(argv)
         sys.exit(-1)
 
+    try:
+       shutil.rmtree(output_dir)
+    except Exception:
+       pass
+    os.mkdir (output_dir)
     for test_rep in range(0, loop_number):
         if verbose:
             print("Test iteration: ", test_rep + 1)
@@ -149,14 +185,14 @@ def main(argv):
         test_number = 0
         for api_file in dirs:
             test_dir = json_dir + api_file
-            test_lists = os.listdir(test_dir)
+            test_lists = sorted(os.listdir(test_dir))
             for test_name in test_lists:
                 if api_name in ("", api_file):
-                    test_file = test_dir+"/"+ test_name
+                    test_file = api_file + "/" + test_name
                     if req_test in (-1, test_number):
                         if verbose:
-                            print("Test name: ", api_file, " ", test_name)
-                        run_tests(test_file, verbose, silk, exit_on_fail, test_number, verify_with_rpc)
+                            print("Test name: ", test_file)
+                        run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, test_number, verify_with_rpc)
                 test_number = test_number + 1
 
 #
