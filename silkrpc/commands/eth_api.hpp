@@ -45,7 +45,15 @@ namespace silkrpc::commands {
 
 class EthereumRpcApi {
 public:
-    explicit EthereumRpcApi(Context& context, asio::thread_pool& workers);
+    explicit EthereumRpcApi(Context& context, asio::thread_pool& workers)
+        : context_(context),
+          block_cache_(context.block_cache()),
+          state_cache_(context.state_cache()),
+          database_(context.database()),
+          backend_(context.backend()),
+          miner_{context.miner()},
+          tx_pool_{context.tx_pool()},
+          workers_{workers} {}
 
     virtual ~EthereumRpcApi() {}
 

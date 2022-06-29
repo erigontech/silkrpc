@@ -59,17 +59,6 @@
 
 namespace silkrpc::commands {
 
-EthereumRpcApi::EthereumRpcApi(Context& context, asio::thread_pool& workers)
-    : context_(context),
-      block_cache_(context.block_cache()),
-      state_cache_(context.state_cache()),
-      database_(context.database()),
-      backend_(context.backend()),
-      miner_{context.miner()},
-      tx_pool_{context.tx_pool()},
-      workers_{workers} {
-}
-
 // https://eth.wiki/json-rpc/API#eth_blocknumber
 asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
