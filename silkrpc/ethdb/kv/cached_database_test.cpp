@@ -80,7 +80,7 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_reader]") {
         test::MockStateView* mock_view = new test::MockStateView;
         test::MockStateCache mock_cache;
         CachedDatabase cached_db{block_id, txn, mock_cache};
-        // Mock cursor shall be used to read latest block from Execution state in table SyncStageProgress
+        // Mock cursor shall be used to read latest block from Execution stage in table SyncStageProgress
         EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kTestBlockNumberBytes};
         }));
@@ -103,7 +103,7 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_reader]") {
         test::MockStateView* mock_view = new test::MockStateView;
         test::MockStateCache mock_cache;
         CachedDatabase cached_db{block_id, txn, mock_cache};
-        // Mock cursor shall be used to read latest block from Execution state in table SyncStageProgress
+        // Mock cursor shall be used to read latest block from Execution stage in table SyncStageProgress
         EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kTestBlockNumberBytes};
         }));

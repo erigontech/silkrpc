@@ -120,4 +120,44 @@ TEST_CASE("get_latest_block_number", "[silkrpc][core][blocks]") {
     CHECK(result.get() == 0x0000ddff12345678);
 }
 
+TEST_CASE("is_latest_block_number", "[silkrpc][core][blocks]") {
+    const silkworm::ByteView kExecutionStage{stages::kExecution};
+    test::MockDatabaseReader db_reader;
+    asio::thread_pool pool{1};
+
+    SECTION("tag: latest") {
+        BlockNumberOrHash bnoh{"latest"};
+        auto result = asio::co_spawn(pool, is_latest_block_number(bnoh, db_reader), asio::use_future);
+        CHECK(result.get());
+    }
+
+    SECTION("tag: pending") {
+        BlockNumberOrHash bnoh{"pending"};
+        auto result = asio::co_spawn(pool, is_latest_block_number(bnoh, db_reader), asio::use_future);
+        CHECK(result.get());
+    }
+
+    SECTION("number: latest") {
+        BlockNumberOrHash bnoh{1'000'000};
+        // Mock reader shall be used to read latest block from Execution stage in table SyncStageProgress
+        EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("00000000000F4240")};
+            }));
+        auto result = asio::co_spawn(pool, is_latest_block_number(bnoh, db_reader), asio::use_future);
+        CHECK(result.get());
+    }
+
+    SECTION("number: not latest") {
+        BlockNumberOrHash bnoh{1'000'000};
+        // Mock reader shall be used to read latest block from Execution stage in table SyncStageProgress
+        EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("00000000000F4241")};
+            }));
+        auto result = asio::co_spawn(pool, is_latest_block_number(bnoh, db_reader), asio::use_future);
+        CHECK(!result.get());
+    }
+}
+
 }  // namespace silkrpc::core
