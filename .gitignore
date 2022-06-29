@@ -7,3 +7,4 @@ perf.data*
 *.code-workspace
 *.hrd
 *.stdout
+int_test_results
