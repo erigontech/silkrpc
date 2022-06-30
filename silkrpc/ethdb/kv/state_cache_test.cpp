@@ -218,13 +218,13 @@ void get_and_check_code(CoherentStateCache& cache, Transaction& txn, silkworm::B
     CHECK(view != nullptr);
     if (view) {
         asio::thread_pool pool{1};
-        const ethash::hash256 code_hash{silkworm::keccak256(kTestCode1)};
+        const ethash::hash256 code_hash{silkworm::keccak256(code)};
         const silkworm::Bytes code_hash_key{code_hash.bytes, silkworm::kHashLength};
         auto result = asio::co_spawn(pool, view->get_code(code_hash_key), asio::use_future);
         const auto value = result.get();
         CHECK(value.has_value());
         if (value) {
-            CHECK(*value == kTestCode1);
+            CHECK(*value == code);
         }
     }
 }
@@ -498,6 +498,35 @@ TEST_CASE("CoherentStateCache::get_view two views", "[silkrpc][ethdb][kv][state_
         CHECK(cache.state_miss_count() == 0);
         CHECK(cache.state_key_count() == 1);
         CHECK(cache.state_eviction_count() == 1);
+    }
+
+    SECTION("two code change batches => two search hits in different views") {
+        auto batch1 = new_batch_with_code(kTestViewId1, kTestBlockNumber, kTestBlockHash, kTestZeroTxs,
+                                          /*unwind=*/false, /*num_code_changes=*/1);
+        auto batch2 = new_batch_with_code(kTestViewId2, kTestBlockNumber, kTestBlockHash, kTestZeroTxs,
+                                          /*unwind=*/false, /*num_code_changes=*/2);
+        cache.on_new_block(batch1);
+        cache.on_new_block(batch2);
+        CHECK(cache.latest_code_size() == 2);
+
+        test::MockTransaction txn1, txn2;
+        EXPECT_CALL(txn1, tx_id()).Times(2).WillRepeatedly(Return(kTestViewId1));
+        EXPECT_CALL(txn2, tx_id()).Times(4).WillRepeatedly(Return(kTestViewId2));
+
+        get_and_check_code(cache, txn1, kTestCode1);
+
+        CHECK(cache.code_hit_count() == 1);
+        CHECK(cache.code_miss_count() == 0);
+        CHECK(cache.code_key_count() == 2);
+        CHECK(cache.code_eviction_count() == 1);
+
+        get_and_check_code(cache, txn2, kTestCode1);
+        get_and_check_code(cache, txn2, kTestCode2);
+
+        CHECK(cache.code_hit_count() == 3);
+        CHECK(cache.code_miss_count() == 0);
+        CHECK(cache.code_key_count() == 2);
+        CHECK(cache.code_eviction_count() == 1);
     }
 }
 
