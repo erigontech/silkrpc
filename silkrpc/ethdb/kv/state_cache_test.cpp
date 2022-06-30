@@ -538,7 +538,7 @@ TEST_CASE("CoherentStateCache::on_new_block exceed max keys", "[silkrpc][ethdb][
 
     // Create as many data and code keys as the maximum allowed number
     cache.on_new_block(new_batch_with_upsert_code(kTestViewId0, kTestBlockNumber, kTestBlockHash, kTestZeroTxs,
-        /*unwind=*/false, /*num_changes=*/kMaxKeys));
+                                                  /*unwind=*/false, /*num_changes=*/kMaxKeys));
     CHECK(cache.state_key_count() == kMaxKeys);
     CHECK(cache.code_key_count() == kMaxKeys);
     CHECK(cache.state_eviction_count() == 0);
@@ -546,7 +546,7 @@ TEST_CASE("CoherentStateCache::on_new_block exceed max keys", "[silkrpc][ethdb][
 
     // Next incoming batch with *new keys* overflows the data and code keys
     cache.on_new_block(new_batch_with_upsert_code(kTestViewId1, kTestBlockNumber + 1, kTestBlockHash, kTestZeroTxs,
-        /*unwind=*/false, /*num_changes=*/4, /*offset=*/2));
+                                                  /*unwind=*/false, /*num_changes=*/4, /*offset=*/2));
     CHECK(cache.state_key_count() == kMaxKeys);
     CHECK(cache.code_key_count() == kMaxKeys);
     CHECK(cache.state_eviction_count() == kMaxKeys);
