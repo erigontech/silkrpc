@@ -481,7 +481,7 @@ void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::
 
     index_prefix_.pop();
 
-    SILKRPC_DEBUG << "VmTraceTracer::on_execution_end:" 
+    SILKRPC_DEBUG << "VmTraceTracer::on_execution_end:"
         << " result.status_code: " << result.status_code
         << ", start_gas: " << std::dec << start_gas
         << ", gas_left: " << std::dec << result.gas_left
