@@ -126,7 +126,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
 def usage(argv):
     """ Print script usage
     """
-    print("Usage: " + argv[0] + " -h -c -r -v -a <api_name> -t < test_number> -l < no of loops> -d")
+    print("Usage: " + argv[0] + " -h -c -r -v -a <api_name> -t < test_number> -l < no of loops> -d -h <chain Name>")
     print("")
     print("Launch an automated test sequence on Silkrpc or RPCDaemon")
     print("")
@@ -137,6 +137,7 @@ def usage(argv):
     print("-a <test api >")
     print("-t <test_number>")
     print("-d verify real time with rpc")
+    print("-b blockchain (default goerly)")
     print("-v verbose")
 
 
@@ -154,10 +155,11 @@ def main(argv):
     api_name = ""
     verify_with_rpc = 0
     json_dir = "./goerly/"
-    output_dir = "./int_test_results/"
+    results_dir = "results"
+    output_dir = json_dir + "/" + results_dir + "/"
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:d")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:db:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -176,6 +178,8 @@ def main(argv):
                 loop_number = int(optarg)
             elif option == "-d":
                 verify_with_rpc = 1
+            elif option == "-b":
+                json_dir = "./" + optarg + "/"
             else:
                 usage(argv)
                 sys.exit(-1)
@@ -196,6 +200,9 @@ def main(argv):
         dirs = sorted(os.listdir(json_dir))
         test_number = 0
         for api_file in dirs:
+            # jump result_dir
+            if api_file == results_dir:
+                continue
             test_dir = json_dir + api_file
             test_lists = sorted(os.listdir(test_dir))
             for test_name in test_lists:
