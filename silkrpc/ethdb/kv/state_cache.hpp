@@ -123,8 +123,8 @@ private:
     void process_code_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change);
     void process_delete_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change);
     void process_storage_change(CoherentStateRoot* root, StateViewId view_id, const remote::AccountChange& change);
-    KeyValue* add(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id);
-    KeyValue* add_code(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id);
+    bool add(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id);
+    bool add_code(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id);
     asio::awaitable<std::optional<silkworm::Bytes>> get(const silkworm::Bytes& key, Transaction& txn);
     asio::awaitable<std::optional<silkworm::Bytes>> get_code(const silkworm::Bytes& key, Transaction& txn);
     CoherentStateRoot* get_root(StateViewId view_id);

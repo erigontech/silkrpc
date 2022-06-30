@@ -54,7 +54,11 @@ static constexpr uint64_t kTestViewId2{3'000'002};
 static constexpr auto kTestBlockNumber{1'000'000};
 static constexpr auto kTestBlockHash{0x8e38b4dbf6b11fcc3b9dee84fb7986e29ca0a02cecd8977c161ff7333329681e_bytes32};
 
-static constexpr auto kTestAddress{0x0a6bb546b9208cfab9e8fa2b9b2c042b18df7030_address};
+static constexpr auto kTestAddress1{0x0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6_address};
+static constexpr auto kTestAddress2{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
+static constexpr auto kTestAddress3{0x326c977e6efc84e512bb9c30f76e30c160ed06fb_address};
+static constexpr auto kTestAddress4{0x2d3be3b6021606e1af02fccbc6ea5b192e6d412d_address};
+static const std::vector<evmc::address> kTestAddresses{kTestAddress1, kTestAddress2, kTestAddress3, kTestAddress4};
 static constexpr uint64_t kTestIncarnation{3};
 
 static const silkworm::Bytes kTestAccountData{*silkworm::from_hex("600035600055")};
@@ -64,8 +68,10 @@ static const silkworm::Bytes kTestStorageData2{*silkworm::from_hex("600035600055
 static const std::vector<silkworm::Bytes> kTestStorageData{kTestStorageData1, kTestStorageData2};
 
 static const silkworm::Bytes kTestCode1{*silkworm::from_hex("602a6000556101c960015560068060166000396000f3600035600055")};
-static const silkworm::Bytes kTestCode2{*silkworm::from_hex("602a5f556101c960015560048060135f395ff35f355f55")};
-static const std::vector<silkworm::Bytes> kTestCodes{kTestCode1, kTestCode2};
+static const silkworm::Bytes kTestCode2{*silkworm::from_hex("600160010160005500")};
+static const silkworm::Bytes kTestCode3{*silkworm::from_hex("600260020160005500")};
+static const silkworm::Bytes kTestCode4{*silkworm::from_hex("60606040526008565b00")};
+static const std::vector<silkworm::Bytes> kTestCodes{kTestCode1, kTestCode2, kTestCode3, kTestCode4};
 
 static const auto kTestHashedLocation1{0x6677907ab33937e392b9be983b30818f29d594039c9e1e7490bf7b3698888fb1_bytes32};
 static const auto kTestHashedLocation2{0xe046602dcccb1a2f1d176718c8e709a42bba57af2da2379ba7130e2f916c95cd_bytes32};
@@ -114,7 +120,7 @@ remote::StateChangeBatch new_batch_with_upsert(uint64_t view_id, silkworm::Block
     remote::StateChange* latest_change = state_changes.mutable_changebatch(0);
 
     remote::AccountChange* account_change = latest_change->add_changes();
-    account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddress).release());
+    account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddress1).release());
     account_change->set_action(remote::Action::UPSERT);
     account_change->set_incarnation(kTestIncarnation);
     account_change->set_data(kTestAccountData.data(), kTestAccountData.size());
@@ -124,14 +130,15 @@ remote::StateChangeBatch new_batch_with_upsert(uint64_t view_id, silkworm::Block
 
 remote::StateChangeBatch new_batch_with_upsert_code(uint64_t view_id, silkworm::BlockNum block_height,
                                                     const evmc::bytes32& block_hash, const std::vector<silkworm::Bytes>& tx_rlps,
-                                                    bool unwind, int num_code_changes) {
+                                                    bool unwind, int num_changes, int offset = 0) {
     remote::StateChangeBatch state_changes = new_batch(view_id, block_height, block_hash, tx_rlps, unwind);
     remote::StateChange* latest_change = state_changes.mutable_changebatch(0);
 
-    SILKWORM_ASSERT(num_code_changes <= kTestCodes.size());
-    for (int i{0}; i < num_code_changes; ++i) {
+    SILKWORM_ASSERT(num_changes <= kTestAddresses.size());
+    SILKWORM_ASSERT(num_changes <= kTestCodes.size());
+    for (int i{offset}; i < num_changes; ++i) {
         remote::AccountChange* account_change = latest_change->add_changes();
-        account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddress).release());
+        account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddresses[i]).release());
         account_change->set_action(remote::Action::UPSERT_CODE);
         account_change->set_incarnation(kTestIncarnation);
         account_change->set_data(kTestAccountData.data(), kTestAccountData.size());
@@ -147,7 +154,7 @@ remote::StateChangeBatch new_batch_with_delete(uint64_t view_id, silkworm::Block
     remote::StateChange* latest_change = state_changes.mutable_changebatch(0);
 
     remote::AccountChange* account_change = latest_change->add_changes();
-    account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddress).release());
+    account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddress1).release());
     account_change->set_action(remote::Action::DELETE);
 
     return state_changes;
@@ -160,7 +167,7 @@ remote::StateChangeBatch new_batch_with_storage(uint64_t view_id, silkworm::Bloc
     remote::StateChange* latest_change = state_changes.mutable_changebatch(0);
 
     remote::AccountChange* account_change = latest_change->add_changes();
-    account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddress).release());
+    account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddress1).release());
     account_change->set_action(remote::Action::STORAGE);
     account_change->set_incarnation(kTestIncarnation);
     SILKWORM_ASSERT(num_storage_changes <= kTestHashedLocations.size());
@@ -182,7 +189,7 @@ remote::StateChangeBatch new_batch_with_code(uint64_t view_id, silkworm::BlockNu
     SILKWORM_ASSERT(num_code_changes <= kTestCodes.size());
     for (int i{0}; i < num_code_changes; ++i) {
         remote::AccountChange* account_change = latest_change->add_changes();
-        account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddress).release());
+        account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddress1).release());
         account_change->set_action(remote::Action::CODE);
         account_change->set_code(kTestCodes[i].data(), kTestCodes[i].size());
     }
@@ -270,7 +277,7 @@ TEST_CASE("CoherentStateCache::get_view returns no view", "[silkrpc][ethdb][kv][
     }
 }
 
-TEST_CASE("CoherentStateCache::get_view returns one view", "[silkrpc][ethdb][kv][state_cache]") {
+TEST_CASE("CoherentStateCache::get_view one view", "[silkrpc][ethdb][kv][state_cache]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     CoherentStateCache cache;
     asio::thread_pool pool{1};
@@ -285,7 +292,7 @@ TEST_CASE("CoherentStateCache::get_view returns one view", "[silkrpc][ethdb][kv]
         test::MockTransaction txn;
         EXPECT_CALL(txn, tx_id()).Times(2).WillRepeatedly(Return(kTestViewId0));
 
-        get_and_check_upsert(cache, txn, kTestAddress, kTestAccountData);
+        get_and_check_upsert(cache, txn, kTestAddress1, kTestAccountData);
 
         CHECK(cache.state_hit_count() == 1);
         CHECK(cache.state_miss_count() == 0);
@@ -295,7 +302,7 @@ TEST_CASE("CoherentStateCache::get_view returns one view", "[silkrpc][ethdb][kv]
 
     SECTION("single upsert+code change batch => double search hit") {
         auto batch = new_batch_with_upsert_code(kTestViewId0, kTestBlockNumber, kTestBlockHash, kTestZeroTxs,
-                                                /*unwind=*/false, /*num_code_changes=*/1);
+                                                /*unwind=*/false, /*num_changes=*/1);
         cache.on_new_block(batch);
         CHECK(cache.latest_data_size() == 1);
         CHECK(cache.latest_code_size() == 1);
@@ -303,7 +310,7 @@ TEST_CASE("CoherentStateCache::get_view returns one view", "[silkrpc][ethdb][kv]
         test::MockTransaction txn;
         EXPECT_CALL(txn, tx_id()).Times(4).WillRepeatedly(Return(kTestViewId0));
 
-        get_and_check_upsert(cache, txn, kTestAddress, kTestAccountData);
+        get_and_check_upsert(cache, txn, kTestAddress1, kTestAccountData);
 
         CHECK(cache.state_hit_count() == 1);
         CHECK(cache.state_miss_count() == 0);
@@ -330,7 +337,7 @@ TEST_CASE("CoherentStateCache::get_view returns one view", "[silkrpc][ethdb][kv]
         std::unique_ptr<StateView> view = cache.get_view(txn);
         CHECK(view != nullptr);
         if (view) {
-            const silkworm::Bytes address_key{kTestAddress.bytes, silkworm::kAddressLength};
+            const silkworm::Bytes address_key{kTestAddress1.bytes, silkworm::kAddressLength};
             auto result1 = asio::co_spawn(pool, view->get(address_key), asio::use_future);
             const auto value1 = result1.get();
             CHECK(value1.has_value());
@@ -356,7 +363,7 @@ TEST_CASE("CoherentStateCache::get_view returns one view", "[silkrpc][ethdb][kv]
         std::unique_ptr<StateView> view = cache.get_view(txn);
         CHECK(view != nullptr);
         if (view) {
-            const auto storage_key1 = composite_storage_key(kTestAddress, kTestIncarnation, kTestHashedLocation1.bytes);
+            const auto storage_key1 = composite_storage_key(kTestAddress1, kTestIncarnation, kTestHashedLocation1.bytes);
             auto result = asio::co_spawn(pool, view->get(storage_key1), asio::use_future);
             const auto value = result.get();
             CHECK(value.has_value());
@@ -386,7 +393,7 @@ TEST_CASE("CoherentStateCache::get_view returns one view", "[silkrpc][ethdb][kv]
                 co_return KeyValue{silkworm::Bytes{}, kTestStorageData2};
             }));
 
-            const auto storage_key2 = composite_storage_key(kTestAddress, kTestIncarnation, kTestHashedLocation2.bytes);
+            const auto storage_key2 = composite_storage_key(kTestAddress1, kTestIncarnation, kTestHashedLocation2.bytes);
             auto result = asio::co_spawn(pool, view->get(storage_key2), asio::use_future);
             const auto value = result.get();
             CHECK(value.has_value());
@@ -412,14 +419,14 @@ TEST_CASE("CoherentStateCache::get_view returns one view", "[silkrpc][ethdb][kv]
 
         CHECK(view != nullptr);
         if (view) {
-            const auto storage_key1 = composite_storage_key(kTestAddress, kTestIncarnation, kTestHashedLocation1.bytes);
+            const auto storage_key1 = composite_storage_key(kTestAddress1, kTestIncarnation, kTestHashedLocation1.bytes);
             auto result1 = asio::co_spawn(pool, view->get(storage_key1), asio::use_future);
             const auto value1 = result1.get();
             CHECK(value1.has_value());
             if (value1) {
                 CHECK(*value1 == kTestStorageData1);
             }
-            const auto storage_key2 = composite_storage_key(kTestAddress, kTestIncarnation, kTestHashedLocation2.bytes);
+            const auto storage_key2 = composite_storage_key(kTestAddress1, kTestIncarnation, kTestHashedLocation2.bytes);
             auto result2 = asio::co_spawn(pool, view->get(storage_key2), asio::use_future);
             const auto value2 = result2.get();
             CHECK(value2.has_value());
@@ -461,7 +468,7 @@ TEST_CASE("CoherentStateCache::get_view returns one view", "[silkrpc][ethdb][kv]
     }
 }
 
-TEST_CASE("CoherentStateCache::get_view returns two views", "[silkrpc][ethdb][kv][state_cache]") {
+TEST_CASE("CoherentStateCache::get_view two views", "[silkrpc][ethdb][kv][state_cache]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     CoherentStateCache cache;
 
@@ -478,14 +485,14 @@ TEST_CASE("CoherentStateCache::get_view returns two views", "[silkrpc][ethdb][kv
         EXPECT_CALL(txn1, tx_id()).Times(2).WillRepeatedly(Return(kTestViewId1));
         EXPECT_CALL(txn2, tx_id()).Times(2).WillRepeatedly(Return(kTestViewId2));
 
-        get_and_check_upsert(cache, txn1, kTestAddress, kTestAccountData);
+        get_and_check_upsert(cache, txn1, kTestAddress1, kTestAccountData);
 
         CHECK(cache.state_hit_count() == 1);
         CHECK(cache.state_miss_count() == 0);
         CHECK(cache.state_key_count() == 1);
         CHECK(cache.state_eviction_count() == 1);
 
-        get_and_check_upsert(cache, txn2, kTestAddress, kTestAccountData);
+        get_and_check_upsert(cache, txn2, kTestAddress1, kTestAccountData);
 
         CHECK(cache.state_hit_count() == 2);
         CHECK(cache.state_miss_count() == 0);
@@ -521,6 +528,29 @@ TEST_CASE("CoherentStateCache::on_new_block exceed max views", "[silkrpc][ethdb]
     test::MockTransaction txn0;
     EXPECT_CALL(txn0, tx_id()).WillOnce(Return(kTestViewId0));
     CHECK(cache.get_view(txn0) == nullptr);
+}
+
+TEST_CASE("CoherentStateCache::on_new_block exceed max keys", "[silkrpc][ethdb][kv][state_cache]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    constexpr auto kMaxKeys{2u};
+    const CoherentCacheConfig config{kDefaultMaxViews, /*with_storage=*/true, kMaxKeys, kMaxKeys};
+    CoherentStateCache cache{config};
+
+    // Create as many data and code keys as the maximum allowed number
+    cache.on_new_block(new_batch_with_upsert_code(kTestViewId0, kTestBlockNumber, kTestBlockHash, kTestZeroTxs,
+        /*unwind=*/false, /*num_changes=*/kMaxKeys));
+    CHECK(cache.state_key_count() == kMaxKeys);
+    CHECK(cache.code_key_count() == kMaxKeys);
+    CHECK(cache.state_eviction_count() == 0);
+    CHECK(cache.code_eviction_count() == 0);
+
+    // Next incoming batch with *new keys* overflows the data and code keys
+    cache.on_new_block(new_batch_with_upsert_code(kTestViewId1, kTestBlockNumber + 1, kTestBlockHash, kTestZeroTxs,
+        /*unwind=*/false, /*num_changes=*/4, /*offset=*/2));
+    CHECK(cache.state_key_count() == kMaxKeys);
+    CHECK(cache.code_key_count() == kMaxKeys);
+    CHECK(cache.state_eviction_count() == kMaxKeys);
+    CHECK(cache.code_eviction_count() == kMaxKeys);
 }
 
 }  // namespace silkrpc::ethdb::kv

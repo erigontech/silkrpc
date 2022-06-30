@@ -156,8 +156,9 @@ void CoherentStateCache::process_storage_change(CoherentStateRoot* root, StateVi
     }
 }
 
-KeyValue* CoherentStateCache::add(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id) {
+bool CoherentStateCache::add(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id) {
     auto [it, inserted] = root->cache.insert(kv);
+    SILKRPC_DEBUG << "Data cache kv.key=" << silkworm::to_hex(kv.key) << " inserted=" << inserted << " view=" << view_id << "\n";
     KeyValue* replaced{nullptr};
     if (!inserted) {
         replaced = &*it;
@@ -166,24 +167,28 @@ KeyValue* CoherentStateCache::add(KeyValue&& kv, CoherentStateRoot* root, StateV
         SILKWORM_ASSERT(inserted);
     }
     if (latest_state_view_id_ != view_id) {
-        return &*it;
+        return inserted;
     }
     if (replaced != nullptr) {
         state_evictions_.remove(*replaced);
+        SILKRPC_DEBUG << "Data evictions removed replaced.key=" << silkworm::to_hex(replaced->key) << "\n";
     }
     state_evictions_.push_front(kv);
 
     // Remove longest unused key-value pair when size exceeded
     if (state_evictions_.size() > config_.max_state_keys) {
-        const auto& kv = state_evictions_.back();
+        const auto oldest = state_evictions_.back();
+        SILKRPC_DEBUG << "Data cache resize oldest.key=" << silkworm::to_hex(oldest.key) << "\n";
         state_evictions_.pop_back();
-        root->cache.erase(kv);
+        const auto num_erased = root->cache.erase(oldest);
+        SILKWORM_ASSERT(num_erased == 1);
     }
-    return &*it;
+    return inserted;
 }
 
-KeyValue* CoherentStateCache::add_code(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id) {
+bool CoherentStateCache::add_code(KeyValue&& kv, CoherentStateRoot* root, StateViewId view_id) {
     auto [it, inserted] = root->code_cache.insert(kv);
+    SILKRPC_DEBUG << "Code cache kv.key=" << silkworm::to_hex(kv.key) << " inserted=" << inserted << " view=" << view_id << "\n";
     KeyValue* replaced{nullptr};
     if (!inserted) {
         replaced = &*it;
@@ -192,20 +197,23 @@ KeyValue* CoherentStateCache::add_code(KeyValue&& kv, CoherentStateRoot* root, S
         SILKWORM_ASSERT(inserted);
     }
     if (latest_state_view_id_ != view_id) {
-        return &*it;
+        return inserted;
     }
     if (replaced != nullptr) {
         code_evictions_.remove(*replaced);
+        SILKRPC_DEBUG << "Code evictions removed replaced.key=" << silkworm::to_hex(replaced->key) << "\n";
     }
     code_evictions_.push_front(kv);
 
     // Remove longest unused key-value pair when size exceeded
     if (code_evictions_.size() > config_.max_code_keys) {
-        const auto& kv = code_evictions_.back();
+        const auto oldest = code_evictions_.back();
+        SILKRPC_DEBUG << "Code cache resize oldest.key=" << silkworm::to_hex(oldest.key) << "\n";
         code_evictions_.pop_back();
-        root->code_cache.erase(kv);
+        const auto num_erased = root->code_cache.erase(oldest);
+        SILKWORM_ASSERT(num_erased == 1);
     }
-    return &*it;
+    return inserted;
 }
 
 asio::awaitable<std::optional<silkworm::Bytes>> CoherentStateCache::get(const silkworm::Bytes& key, Transaction& txn) {
