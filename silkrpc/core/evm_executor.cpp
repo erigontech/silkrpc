@@ -287,7 +287,6 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 if (refund) {
                     gas_left = txn.gas_limit - gas_used;
                 }
-                state_.finalize_transaction();
 
                 // reward the fee recipient
                 const intx::uint256 priority_fee_per_gas{txn.priority_fee_per_gas(base_fee_per_gas)};
@@ -297,6 +296,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 for (auto tracer : evm.tracers()) {
                     tracer.get().on_reward_granted(result, evm.state());
                 }
+                state_.finalize_transaction();
 
                 ExecutionResult exec_result{result.status, gas_left, result.data};
                 asio::post(io_context_, [exec_result, self = std::move(self)]() mutable {

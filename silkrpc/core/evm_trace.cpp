@@ -607,6 +607,7 @@ void TraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
             auto index_stack = index_stack_.top();
             Trace& calling_trace = traces_[index_stack];
 
+            trace.trace_address = calling_trace.trace_address;
             trace.trace_address.push_back(calling_trace.sub_traces);
             calling_trace.sub_traces++;
         }
@@ -853,17 +854,15 @@ void StateDiffTracer::on_reward_granted(const silkworm::CallResult& result, cons
                 }
                 for (auto& key : diff_storage) {
                     auto key_b32 = silkworm::bytes32_from_hex(key);
+
                     auto initial_storage = intra_block_state.get_original_storage(address, key_b32);
                     auto final_storage = intra_block_state.get_current_storage(address, key_b32);
-
-                    auto very_initial_storage = initial_ibs_.get_original_storage(address, key_b32);
-                    auto very_final_storage = initial_ibs_.get_current_storage(address, key_b32);
 
                     if (initial_storage != final_storage) {
                         all_equals = false;
                         entry.storage[key] = DiffValue{
-                            silkworm::to_hex(intra_block_state.get_original_storage(address, key_b32)),
-                            silkworm::to_hex(intra_block_state.get_current_storage(address, key_b32))
+                            "0x" + silkworm::to_hex(intra_block_state.get_original_storage(address, key_b32)),
+                            "0x" + silkworm::to_hex(intra_block_state.get_current_storage(address, key_b32))
                         };
                     }
                 }
@@ -945,6 +944,7 @@ asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std:
         }
         const auto execution_result = co_await executor.call(block, txn);
     }
+
     executor.reset();
 
     state::RemoteState remote_state{io_context_, database_reader_, block_number};
