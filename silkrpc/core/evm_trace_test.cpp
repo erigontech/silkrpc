@@ -1460,6 +1460,8 @@ TEST_CASE("VmTrace json serialization") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
+    CALL_GAS_CAP_IN_OUTPUT = false;
+
     TraceEx trace_ex;
     trace_ex.used = 5000;
     trace_ex.stack.push_back("0xdeadbeaf");
@@ -1468,6 +1470,7 @@ TEST_CASE("VmTrace json serialization") {
 
     TraceOp trace_op;
     trace_op.gas_cost = 42;
+    trace_op.call_gas_cap = 100;
     trace_op.trace_ex = trace_ex;
     trace_op.idx = "12";
     trace_op.op_name = "PUSH1";
@@ -1504,6 +1507,28 @@ TEST_CASE("VmTrace json serialization") {
         })"_json);
     }
     SECTION("TraceOp") {
+        CHECK(trace_op == R"({
+            "cost":42,
+            "ex":{
+                "mem":{
+                    "data":"data",
+                    "off":10
+                },
+                "push":["0xdeadbeaf"],
+                "store":{
+                    "key":"key",
+                    "val":"value"
+                },
+                "used":5000
+            },
+            "idx":"12",
+            "op":"PUSH1",
+            "pc":27,
+            "sub":null
+        })"_json);
+    }
+    SECTION("TraceOp - call gas cap") {
+        CALL_GAS_CAP_IN_OUTPUT = true;
         CHECK(trace_op == R"({
             "cost":42,
             "ex":{

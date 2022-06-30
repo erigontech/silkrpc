@@ -36,8 +36,6 @@
 
 namespace silkrpc::trace {
 
-static const bool PRECOPILED_CAP_IN_OUTPUT = false;
-
 using evmc::literals::operator""_address;
 
 const std::uint8_t CODE_PUSH1 = evmc_opcode::OP_PUSH1;
@@ -57,7 +55,7 @@ void to_json(nlohmann::json& json, const VmTrace& vm_trace) {
 }
 
 void to_json(nlohmann::json& json, const TraceOp& trace_op) {
-    if (PRECOPILED_CAP_IN_OUTPUT && trace_op.call_gas_cap) {
+    if (CALL_GAS_CAP_IN_OUTPUT && trace_op.call_gas_cap) {
         json["cost"] = trace_op.call_gas_cap.value();
     } else {
         json["cost"] = trace_op.gas_cost;
@@ -397,16 +395,6 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
             auto cap = op_1.trace_ex.used - msg.gas;
             op.depth = msg.depth;
             op.gas_cost = op.gas_cost-msg.gas;
-
-            // TO BE REMOVED
-            SILKRPC_DEBUG << "VmTraceTracer::on_execution_start:"
-                << " idx: " << op.idx
-                << " msg.gas: " << msg.gas
-                << " op_name: " << op.op_name
-                << " gas_cost: " << op.gas_cost
-                << " used[" << op_1.idx << "]: " << op_1.trace_ex.used
-                << " cap: " << cap
-                << "\n";
             op.call_gas_cap = cap;
         }
         op.sub = std::make_shared<VmTrace>();
@@ -442,14 +430,6 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
         }
         op.trace_ex.used = execution_state.gas_left;
 
-        SILKRPC_DEBUG << "VmTraceTracer::on_instruction_start: CHANGE GAS_COST"
-            << " idx: " << op.idx
-            << " op_name: " << op.op_name
-            << " used: " << op.trace_ex.used
-            << " gas_cost: " << op.gas_cost
-            << " precompiled_call_gas: " << (op.precompiled_call_gas ? "SET" : "NOT SET")
-            << "\n";
-
         copy_memory(execution_state.memory, op.trace_ex.memory);
         copy_stack(op.op_code, stack_top, op.trace_ex.stack);
     }
@@ -482,10 +462,7 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
 }
 
 void VmTraceTracer::on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept {
-    SILKRPC_DEBUG << "VmTraceTracer::on_precompiled_run:"
-        << " status: " << result.status_code
-        << ", gas: " << std::dec << gas
-        << "\n";
+    SILKRPC_DEBUG << "VmTraceTracer::on_precompiled_run:" << " status: " << result.status_code << ", gas: " << std::dec << gas << "\n";
 
     if (vm_trace_.ops.size() > 0) {
         auto& op = vm_trace_.ops[vm_trace_.ops.size() - 1];
@@ -504,7 +481,7 @@ void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::
 
     index_prefix_.pop();
 
-    SILKRPC_DEBUG << "VmTraceTracer::on_execution_end:"
+    SILKRPC_DEBUG << "VmTraceTracer::on_execution_end:" 
         << " result.status_code: " << result.status_code
         << ", start_gas: " << std::dec << start_gas
         << ", gas_left: " << std::dec << result.gas_left
@@ -519,13 +496,6 @@ void VmTraceTracer::on_execution_end(const evmc_result& result, const silkworm::
         vm_trace.ops.clear();
         return;
     }
-
-    SILKRPC_DEBUG << "VmTraceTracer::on_execution_end:"
-        << " idx: " << op.idx
-        << " op_name: " << op.op_name
-        << " used: " << op.trace_ex.used
-        << " gas_cost: " << op.gas_cost
-        << "\n";
 
     switch (result.status_code) {
     case evmc_status_code::EVMC_OUT_OF_GAS:

@@ -90,7 +90,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | trace_callMany                             | -            | not yet implemented                        |
 | trace_rawTransaction                       | -            | not yet implemented                        |
 | trace_replayBlockTransactions              | -            | not yet implemented                        |
-| trace_replayTransaction                    | -            | not yet implemented                        |
+| trace_replayTransaction                    | Yes          |                                            |
 | trace_block                                | -            | not yet implemented                        |
 | trace_filter                               | -            | not yet implemented                        |
 | trace_get                                  | -            | not yet implemented                        |

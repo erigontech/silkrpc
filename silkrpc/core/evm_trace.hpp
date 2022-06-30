@@ -44,6 +44,8 @@
 
 namespace silkrpc::trace {
 
+static bool CALL_GAS_CAP_IN_OUTPUT = false;
+
 struct TraceConfig {
     bool vm_trace{false};
     bool trace{false};
