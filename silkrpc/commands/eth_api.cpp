@@ -882,7 +882,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohmann::jso
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
+        ethdb::kv::CachedDatabase tx_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
         StateReader state_reader{tx_database};
 
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
@@ -917,7 +917,7 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann::json& 
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
+        ethdb::kv::CachedDatabase tx_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
         StateReader state_reader{tx_database};
 
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
@@ -957,8 +957,9 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(const nlo
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
+        ethdb::kv::CachedDatabase tx_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
         StateReader state_reader{tx_database};
+
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
         std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
 
@@ -989,14 +990,14 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_storage_at(const nlohmann::
         co_return;
     }
     const auto address = params[0].get<evmc::address>();
-    auto location = params[1].get<evmc::bytes32>();
+    const auto location = params[1].get<evmc::bytes32>();
     const auto block_id = params[2].get<std::string>();
     SILKRPC_DEBUG << "address: " << silkworm::to_hex(address) << " block_id: " << block_id << "\n";
 
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::TransactionDatabase tx_database{*tx};
+        ethdb::kv::CachedDatabase tx_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
         StateReader state_reader{tx_database};
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
         std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
