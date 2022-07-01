@@ -1,0 +1,21 @@
+[
+   {
+        "request": {
+            "jsonrpc": "2.0",
+            "method": "eth_callBundle",
+            "params": [["0x85819b33108c533c0ef7f8f9216070e82de3b93d72577c2d60b6059208f92f41"], "0x527C19", 1000],
+            "id": 1
+        },
+        "response": {
+             "result":{"bundleHash":"0x933745d5fb114a8b881f69c59cdbdb74d3fc7ec3583d703e1783bc6a6334ccf2",
+                        "results":[{"gasUsed":133674,
+                                    "txHash":"0x85819b33108c533c0ef7f8f9216070e82de3b93d72577c2d60b6059208f92f41",
+                                    "value":"0x0000000000000000000000000000000000000000000000000000000000000001"
+                                  }]
+                      },
+            "id": 1,
+            "jsonrpc": "2.0"
+        }
+   }
+]
+
