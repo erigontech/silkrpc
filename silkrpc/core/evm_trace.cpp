@@ -55,11 +55,7 @@ void to_json(nlohmann::json& json, const VmTrace& vm_trace) {
 }
 
 void to_json(nlohmann::json& json, const TraceOp& trace_op) {
-    if (CALL_GAS_CAP_IN_OUTPUT && trace_op.call_gas_cap) {
-        json["cost"] = trace_op.call_gas_cap.value();
-    } else {
-        json["cost"] = trace_op.gas_cost;
-    }
+    json["cost"] = trace_op.gas_cost;
     json["ex"] = trace_op.trace_ex;
     json["idx"] = trace_op.idx;
     json["op"] = trace_op.op_name;
@@ -893,7 +889,7 @@ asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(cons
 template<typename WorldState, typename VM>
 asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
     const silkrpc::Transaction& transaction, std::int32_t index) {
-    SILKRPC_INFO << "execute: "
+    SILKRPC_LOG << "execute: "
         << " block_number: " << block_number
         << " transaction: {" << transaction << "}"
         << " index: " << std::dec << index
