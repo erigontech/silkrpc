@@ -25,6 +25,8 @@
 #include <string>
 #include <vector>
 
+#include <agrpc/asioGrpc.hpp>
+#include <asio/executor_work_guard.hpp>
 #include <asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -121,8 +123,8 @@ class Context {
         WaitMode wait_mode = WaitMode::blocking);
 
     asio::io_context* io_context() const noexcept { return io_context_.get(); }
-    grpc::CompletionQueue* grpc_queue() const noexcept { return queue_.get(); }
-    silkworm::rpc::CompletionEndPoint* rpc_end_point() noexcept { return rpc_end_point_.get(); }
+    grpc::CompletionQueue* grpc_queue() const noexcept { return grpc_context_->get_completion_queue(); }
+    agrpc::GrpcContext* grpc_context() const noexcept { return grpc_context_.get(); }
     std::unique_ptr<ethdb::Database>& database() noexcept { return database_; }
     std::unique_ptr<ethbackend::BackEnd>& backend() noexcept { return backend_; }
     std::unique_ptr<txpool::Miner>& miner() noexcept { return miner_; }
@@ -148,10 +150,12 @@ class Context {
     std::shared_ptr<asio::io_context> io_context_;
 
     //! The work-tracking executor that keep the scheduler running.
-    asio::execution::any_executor<> work_;
+    asio::executor_work_guard<asio::io_context::executor_type> io_context_work_;
 
-    std::unique_ptr<grpc::CompletionQueue> queue_;
-    std::unique_ptr<silkworm::rpc::CompletionEndPoint> rpc_end_point_;
+    std::unique_ptr<agrpc::GrpcContext> grpc_context_;
+
+    asio::executor_work_guard<agrpc::GrpcContext::executor_type> grpc_context_work_;
+
     std::unique_ptr<ethdb::Database> database_;
     std::unique_ptr<ethbackend::BackEnd> backend_;
     std::unique_ptr<txpool::Miner> miner_;

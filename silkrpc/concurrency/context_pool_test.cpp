@@ -23,9 +23,9 @@
 
 #include <catch2/catch.hpp>
 #include <grpcpp/grpcpp.h>
-#include <silkworm/common/log.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkworm/common/log.hpp>
 
 // TODO(canepat) Temporary modified copy of CompletionEndPoint tests just for prototyping
 #include <chrono>
@@ -184,7 +184,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
         SECTION(std::string("Context::Context wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
             Context context{create_channel, block_cache, state_cache, wait_mode};
             CHECK_NOTHROW(context.io_context() != nullptr);
-            CHECK_NOTHROW(context.rpc_end_point() != nullptr);
+            CHECK_NOTHROW(context.grpc_context() != nullptr);
             CHECK_NOTHROW(context.backend() != nullptr);
             CHECK_NOTHROW(context.miner() != nullptr);
             CHECK_NOTHROW(context.block_cache() != nullptr);
@@ -193,17 +193,17 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
         SECTION(std::string("Context::execute_loop wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
             Context context{create_channel, block_cache, state_cache, wait_mode};
             std::atomic_bool processed{false};
-            auto io_context = context.io_context();
+            auto* io_context = context.io_context();
             io_context->post([&]() {
                 processed = true;
-                io_context->stop();
+                context.stop();
             });
             auto context_thread = std::thread([&]() { context.execute_loop(); });
             CHECK_NOTHROW(context_thread.join());
             CHECK(processed);
         }
 
-        SECTION(std::string("Context::stop wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
+        /*SECTION(std::string("Context::stop wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
             Context context{create_channel, block_cache, state_cache, wait_mode};
             std::atomic_bool processed{false};
             context.io_context()->post([&]() {
@@ -212,7 +212,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
             auto context_thread = std::thread([&]() { context.execute_loop(); });
             CHECK_NOTHROW(context.stop());
             CHECK_NOTHROW(context_thread.join());
-        }
+        }*/
     }
 }
 

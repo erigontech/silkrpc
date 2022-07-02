@@ -27,7 +27,7 @@
 namespace silkrpc {
 
 std::ostream& operator<<(std::ostream& out, Context& c) {
-    out << "io_context: " << c.io_context() << " queue: " << c.grpc_queue() << " end_point: " << c.rpc_end_point();
+    out << "io_context: " << c.io_context() << " queue: " << c.grpc_queue();
     return out;
 }
 
@@ -37,41 +37,42 @@ Context::Context(
     std::shared_ptr<ethdb::kv::StateCache> state_cache,
     WaitMode wait_mode)
     : io_context_{std::make_shared<asio::io_context>()},
-      work_{asio::require(io_context_->get_executor(), asio::execution::outstanding_work.tracked)},
-      queue_{std::make_unique<grpc::CompletionQueue>()},
+      io_context_work_{asio::make_work_guard(*io_context_)},
+      grpc_context_{std::make_unique<agrpc::GrpcContext>(std::make_unique<grpc::CompletionQueue>())},
+      grpc_context_work_{asio::make_work_guard(grpc_context_->get_executor())},
       block_cache_(block_cache),
       state_cache_(state_cache),
       wait_mode_(wait_mode) {
     std::shared_ptr<grpc::Channel> channel = create_channel();
-    rpc_end_point_ = std::make_unique<silkworm::rpc::CompletionEndPoint>(*queue_);
-    database_ = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context_, channel, queue_.get(), state_cache_.get());
-    backend_ = std::make_unique<ethbackend::RemoteBackEnd>(*io_context_, channel, queue_.get());
-    miner_ = std::make_unique<txpool::Miner>(*io_context_, channel, queue_.get());
-    tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, channel, queue_.get());
+    database_ = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context_, channel, grpc_queue(), state_cache_.get());
+    backend_ = std::make_unique<ethbackend::RemoteBackEnd>(*io_context_, channel, grpc_queue());
+    miner_ = std::make_unique<txpool::Miner>(*io_context_, channel, grpc_queue());
+    tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, channel, grpc_queue());
 }
 
 template <typename WaitStrategy>
 void Context::execute_loop_single_threaded(WaitStrategy&& wait_strategy) {
     SILKRPC_DEBUG << "Single-thread execution loop start [" << this << "]\n";
+    io_context_->restart();
+    grpc_context_->reset();
     while (!io_context_->stopped()) {
-        int work_count = rpc_end_point_->poll_one();
-        work_count += io_context_->poll_one();
+        int work_count = grpc_context_->poll_completion_queue();
+        work_count += io_context_->poll();
         wait_strategy.idle(work_count);
     }
-    rpc_end_point_->shutdown();
     SILKRPC_DEBUG << "Single-thread execution loop end [" << this << "]\n";
 }
 
 void Context::execute_loop_multi_threaded() {
     SILKRPC_DEBUG << "Multi-thread execution loop start [" << this << "]\n";
+    io_context_->restart();
+    grpc_context_->reset();
     std::thread completion_runner_thread{[&]() {
-        bool stopped{false};
-        while (!stopped) {
-            stopped = rpc_end_point_->post_one(*io_context_);
-        }
+        grpc_context_->run_completion_queue();
     }};
     io_context_->run();
-    rpc_end_point_->shutdown();
+    grpc_context_->stop();
+    grpc_queue()->Shutdown();
     completion_runner_thread.join();
     SILKRPC_DEBUG << "Multi-thread execution loop end [" << this << "]\n";
 }

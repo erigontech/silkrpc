@@ -56,7 +56,7 @@ endif()
 
 add_executable(silkrpcdaemon silkrpc_daemon.cpp)
 target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
-target_link_libraries(silkrpcdaemon ${SILKRPC_DAEMON_LIBRARIES})
+target_link_libraries(silkrpcdaemon PRIVATE ${SILKRPC_DAEMON_LIBRARIES})
 
 # Unit tests
 enable_testing()
