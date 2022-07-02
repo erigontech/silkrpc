@@ -555,4 +555,22 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::open", "[silkrpc][e
     }
 }
 
+TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::close", "[silkrpc][ethdb][kv][remote_transaction]") {
+    using namespace testing;
+    this->expect_request_async_tx();
+    SECTION("success with cursor in table") {
+        remote::Pair pair;
+        pair.set_txid(4);
+        EXPECT_CALL(reader_writer_, Read).Times(2).WillRepeatedly(test::read_success_with(grpc_context_, pair));
+        EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_success(grpc_context_));
+        EXPECT_CALL(reader_writer_, WritesDone).WillOnce(test::writes_done_success(grpc_context_));
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_with_status(grpc_context_, grpc::Status::OK));
+        CHECK_NOTHROW(spawn_and_wait(remote_tx_.open()));
+        const auto cursor = spawn_and_wait(remote_tx_.cursor("table1"));
+        CHECK(cursor != nullptr);
+        CHECK_NOTHROW(spawn_and_wait(remote_tx_.close()));
+        CHECK(remote_tx_.tx_id() == 0);
+    }
+}
+
 } // namespace silkrpc::ethdb::kv

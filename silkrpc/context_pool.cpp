@@ -22,6 +22,7 @@
 
 #include <agrpc/grpcExecutor.hpp>
 #include <agrpc/grpcContext.hpp>
+#include <agrpc/run.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
@@ -74,15 +75,9 @@ void Context::execute_loop() {
 
 void Context::execute_loop_single_threaded() {
     SILKRPC_INFO << "Single-thread execution loop start [" << this << "]\n";
-    std::unique_ptr<WaitStrategy> wait_strategy{make_wait_strategy(wait_mode_)};
-    SILKWORM_ASSERT(wait_strategy != nullptr);
     io_context_->restart();
     grpc_context_->reset();
-    while (!io_context_->stopped()) {
-        uint32_t executed_count = grpc_context_->poll_completion_queue();
-        executed_count += io_context_->poll();
-        wait_strategy->wait_once(executed_count);
-    }
+    agrpc::run(*grpc_context_, *io_context_, [&] { return grpc_context_->is_stopped(); });
     SILKRPC_INFO << "Single-thread execution loop end [" << this << "]\n";
 }
 
@@ -90,12 +85,12 @@ void Context::execute_loop_double_threaded() {
     SILKRPC_INFO << "Double-thread execution loop start [" << this << "]\n";
     io_context_->restart();
     grpc_context_->reset();
-    std::thread completion_runner_thread{[&]() {
-        grpc_context_->run_completion_queue();
+    std::thread grpc_context_thread{[&]() {
+        grpc_context_->run();
         io_context_->stop();
     }};
     io_context_->run();
-    completion_runner_thread.join();
+    grpc_context_thread.join();
     SILKRPC_INFO << "Double-thread execution loop end [" << this << "]\n";
 }
 

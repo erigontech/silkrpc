@@ -22,9 +22,10 @@
 #include <boost/endian/conversion.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/grpc/awaitables.hpp>
+#include <silkrpc/grpc/unary_rpc.hpp>
 #include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/config.hpp>
 
 namespace silkrpc::ethbackend {

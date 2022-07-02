@@ -54,6 +54,10 @@ inline auto write_success(agrpc::GrpcContext& grpc_context) { return write(grpc_
 
 inline auto write_failure(agrpc::GrpcContext& grpc_context) { return write(grpc_context, false); }
 
+inline auto writes_done_success(agrpc::GrpcContext& grpc_context) {
+    return [&grpc_context](void* tag) { agrpc::process_grpc_tag(grpc_context, tag, true); };
+}
+
 template <typename Reply>
 auto read_success_with(agrpc::GrpcContext& grpc_context, Reply&& reply) {
     return [&grpc_context, reply = std::forward<Reply>(reply)](auto* reply_ptr, void* tag) mutable {

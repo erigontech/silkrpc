@@ -17,19 +17,21 @@
 #ifndef SILKRPC_KV_TEST_BASE_HPP_
 #define SILKRPC_KV_TEST_BASE_HPP_
 
+#include <silkrpc/interfaces/remote/kv_mock.grpc.pb.h>
+
 #include <agrpc/test.hpp>
+#include <boost/asio/post.hpp>
 #include <memory>
 #include <silkrpc/config.hpp>
 #include <silkrpc/test/context_test_base.hpp>
 #include <silkrpc/test/grpc_responder.hpp>
-#include <silkrpc/interfaces/remote/kv_mock.grpc.pb.h>
 
 namespace silkrpc::test {
 
 struct KVTestBase : test::ContextTestBase {
     testing::Expectation expect_request_async_tx() {
         return EXPECT_CALL(*stub_, AsyncTxRaw).WillOnce([&](auto&&, auto&&, void* tag) {
-            agrpc::process_grpc_tag(grpc_context_, tag, true);
+            boost::asio::post(io_context_, [&, tag] { agrpc::process_grpc_tag(grpc_context_, tag, true); });
             return reader_writer_ptr_.release();
         });
     }

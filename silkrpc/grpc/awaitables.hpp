@@ -27,8 +27,8 @@
 
 #include <agrpc/rpc.hpp>
 #include <boost/asio/async_result.hpp>
-#include <boost/asio/compose.hpp>
-#include <boost/asio/experimental/append.hpp>
+#include <boost/asio/dispatch.hpp>
+#include <boost/asio/bind_executor.hpp>
 #include <boost/asio/detail/non_const_lvalue.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -132,100 +132,10 @@ struct unary_awaitable {
     UnaryClient client_;
 };
 
-namespace detail {
-struct DoneTag {
-};
-
-template<typename Executor>
-struct ExecutorDispatcher {
-    Executor executor_;
-
-    template<typename CompletionToken, typename... Args>
-    void dispatch(CompletionToken&& token, Args&&... args){
-                boost::asio::dispatch(boost::asio::bind_executor(executor_, boost::asio::experimental::append(std::forward<CompletionToken>(token), std::forward<Args>(args)...)));
-
-    }
-};   
-    
-struct InlineDispatcher {
-    template<typename CompletionToken, typename... Args>
-    void dispatch(CompletionToken&& token, Args&&... args){
-            std::forward<CompletionToken>(token)(std::forward<Args>(args)...);
-
-    }
-};
+template<class Executor>
+auto continue_on(Executor&& executor) {
+    return boost::asio::dispatch(boost::asio::bind_executor(std::forward<Executor>(executor), boost::asio::use_awaitable));
 }
-
-template<auto Rpc>
-class UnaryRpc;
-
-template<
-    typename Stub,
-    typename Request,
-    template<typename> typename Reader,
-    typename Reply,
-    std::unique_ptr<Reader<Reply>>(Stub::*Async)(grpc::ClientContext*, const Request&, grpc::CompletionQueue*)
->
-class UnaryRpc<Async> {
-private:
-    template<typename Dispatcher>
-    struct Call {
-        UnaryRpc& self_;
-        const Request& request_;
-        [[no_unique_address]] Dispatcher dispatcher_;
-
-        template<typename Op>
-        void operator()(Op& op) {
-            SILKRPC_TRACE << "UnaryRpc::initiate " << this << "\n";
-            self_.reader_ = agrpc::request(Async, self_.stub_, self_.context_, request_, self_.grpc_context_);
-            agrpc::finish(self_.reader_, self_.reply_, self_.status_, 
-                boost::asio::bind_executor(self_.grpc_context_, std::move(op)));
-        }
-
-        template<typename Op>
-        void operator()(Op& op, bool /*ok*/) {
-            dispatcher_.dispatch(std::move(op), detail::DoneTag{});
-        }
-
-        template<typename Op>
-        void operator()(Op& op, detail::DoneTag) {
-            auto& status = self_.status_;
-            SILKRPC_TRACE << "UnaryRpc::completed result: " << status.ok() << "\n";
-            if (status.ok()) {
-                op.complete({}, std::move(self_.reply_));
-            } else {
-                SILKRPC_ERROR << "UnaryRpc::completed error_code: " << status.error_code() << "\n";
-                SILKRPC_ERROR << "UnaryRpc::completed error_message: " << status.error_message() << "\n";
-                SILKRPC_ERROR << "UnaryRpc::completed error_details: " << status.error_details() << "\n";
-                op.complete(make_error_code(status.error_code(), status.error_message()), {});
-            }
-        }
-    };
-
-public:
-    explicit UnaryRpc(Stub& stub, agrpc::GrpcContext& grpc_context)
-    : stub_(stub), grpc_context_(grpc_context) {}
-
-    template<typename CompletionToken = agrpc::DefaultCompletionToken>
-    auto finish(const Request& request, CompletionToken&& token = {}) {
-        return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, Reply)>(
-            Call<detail::InlineDispatcher>{*this, request}, token);
-    }
-
-    template<typename Executor, typename CompletionToken = agrpc::DefaultCompletionToken>
-    auto finish_on(const Executor& executor, const Request& request, CompletionToken&& token = {}) {
-        return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, Reply)>(
-            Call<detail::ExecutorDispatcher<Executor>>{*this, request, executor}, token, executor);
-    }
-
-private:
-    Stub& stub_;
-    agrpc::GrpcContext& grpc_context_;
-    grpc::ClientContext context_;
-    std::unique_ptr<Reader<Reply>> reader_;
-    Reply reply_;
-    grpc::Status status_;
-};
 
 } // namespace silkrpc
 

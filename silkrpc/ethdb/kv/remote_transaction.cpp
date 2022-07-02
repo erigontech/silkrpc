@@ -22,6 +22,7 @@
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/grpc/awaitables.hpp>
 #include <silkrpc/ethdb/kv/remote_transaction.hpp>
 
 namespace silkrpc::ethdb::kv {
@@ -39,7 +40,6 @@ RemoteTransaction2::~RemoteTransaction2() {
 
 boost::asio::awaitable<void> RemoteTransaction2::open() {
     tx_id_ = (co_await streaming_rpc_.request_and_read()).txid();
-    co_return;
 }
 
 boost::asio::awaitable<std::shared_ptr<Cursor>> RemoteTransaction2::cursor(const std::string& table) {
@@ -51,12 +51,13 @@ boost::asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction2::curso
 }
 
 boost::asio::awaitable<void> RemoteTransaction2::close() {
-    cursors_.clear();
     co_await streaming_rpc_.writes_done_and_finish();
-    co_return;
+    cursors_.clear();
+    tx_id_ = 0;
 }
 
 boost::asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction2::get_cursor(const std::string& table) {
+    co_await silkrpc::continue_on(streaming_rpc_.get_executor());
     auto cursor_it = cursors_.find(table);
     if (cursor_it != cursors_.end()) {
         co_return cursor_it->second;

@@ -167,6 +167,10 @@ public:
             WritesDoneAndFinish{*this}, token);
     }
 
+    auto get_executor() const noexcept {
+        return grpc_context_.get_executor();
+    }
+
 private:
     template<typename CompletionToken = agrpc::DefaultCompletionToken>
     auto finish(CompletionToken&& token = {}) {
