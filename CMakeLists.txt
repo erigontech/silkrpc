@@ -36,6 +36,12 @@ HunterGate(
 )
 
 project(silkrpc)
+set(PROJECT_VERSION 0.0.7)
+
+string(REGEX MATCH "([0-9]+)\\.([0-9]+)\\.([0-9]+)" _ ${PROJECT_VERSION})
+set(PROJECT_VERSION_MAJOR ${CMAKE_MATCH_1})
+set(PROJECT_VERSION_MINOR ${CMAKE_MATCH_2})
+set(PROJECT_VERSION_PATCH ${CMAKE_MATCH_3})
 
 cable_add_buildinfo_library(PROJECT_NAME ${PROJECT_NAME})
 

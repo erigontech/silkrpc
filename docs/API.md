@@ -36,6 +36,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getRawTransactionByBlockNumberAndIndex | Yes          | partially implemented                      |
 | eth_getTransactionReceipt                  | Yes          | partially implemented                      |
 | eth_getBlockReceipts                       | Yes          | same as parity_getBlockReceipts            |
+| eth_getTransactionReceiptsByBlockNumber    | -            | not yet implemented (eth_getBlockReceipts) |
+| eth_getTransactionReceiptsByBlockHash      | -            | not yet implemented (eth_getBlockReceipts) |
 |                                            |              |                                            |
 | eth_estimateGas                            | Yes          |                                            |
 | eth_getBalance                             | Yes          |                                            |
@@ -43,6 +45,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getTransactionCount                    | Yes          |                                            |
 | eth_getStorageAt                           | Yes          |                                            |
 | eth_call                                   | Yes          |                                            |
+| eth_callMany                               | -            | not yet implemented                        |
 | eth_callBundle                             | Yes          |                                            |
 | eth_createAccessList                       | Yes          |                                            |
 |                                            |              |                                            |
@@ -90,7 +93,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | trace_callMany                             | -            | not yet implemented                        |
 | trace_rawTransaction                       | -            | not yet implemented                        |
 | trace_replayBlockTransactions              | -            | not yet implemented                        |
-| trace_replayTransaction                    | -            | not yet implemented                        |
+| trace_replayTransaction                    | Yes          |                                            |
 | trace_block                                | -            | not yet implemented                        |
 | trace_filter                               | -            | not yet implemented                        |
 | trace_get                                  | -            | not yet implemented                        |

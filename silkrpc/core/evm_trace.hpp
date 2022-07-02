@@ -78,9 +78,11 @@ struct VmTrace;
 
 struct TraceOp {
     std::uint64_t gas_cost{0};
-    std::optional<std::uint64_t> call_gas;
+    std::optional<std::uint64_t> precompiled_call_gas;
+    std::optional<std::uint64_t> call_gas_cap;
     TraceEx trace_ex;
     std::string idx;
+    std::uint32_t depth{0};
     std::uint8_t op_code;
     std::string op_name;
     std::uint32_t pc;
@@ -262,6 +264,9 @@ public:
     TraceCallExecutor& operator=(const TraceCallExecutor&) = delete;
 
     asio::awaitable<TraceCallResult> execute(const silkworm::Block& block, const silkrpc::Call& call);
+    asio::awaitable<TraceCallResult> execute(const silkworm::Block& block, const silkrpc::Transaction& transaction) {
+        return execute(block.header.number-1, block, transaction, transaction.transaction_index);
+    }
 
 private:
     asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block, const silkrpc::Transaction& transaction, std::int32_t = -1);
