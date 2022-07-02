@@ -157,11 +157,11 @@ asio::awaitable<void> TraceRpcApi::handle_trace_replay_transaction(const nlohman
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
-    auto transaction_hash = params[0].get<evmc::bytes32>();
+    const auto transaction_hash = params[0].get<evmc::bytes32>();
     const auto trace_type = params[1].get<std::vector<std::string>>();
 
     trace::TraceConfig config;
-    for (auto entry : trace_type) {
+    for (const auto entry : trace_type) {
         if (entry == "trace") {
             config.trace = true;
         }
@@ -186,7 +186,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_replay_transaction(const nlohman
             reply = make_json_error(request["id"], -32000, oss.str());
         } else {
             trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_, config};
-            auto result = co_await executor.execute(tx_with_block->block_with_hash.block, tx_with_block->transaction);
+            const auto result = co_await executor.execute(tx_with_block->block_with_hash.block, tx_with_block->transaction);
 
             if (result.pre_check_error) {
                 reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
