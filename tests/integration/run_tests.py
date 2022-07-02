@@ -23,7 +23,7 @@ def get_target(silk: bool, method: str):
     return "localhost:8545"
 
 def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool, output_dir: str, silk_file: str,
-                      rpc_file: str, diff_file: str):
+                      rpc_file: str, diff_file: str, dump_output):
     """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
 
     command_and_args = shlex.split(command)
@@ -65,8 +65,15 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
             print(f"\n--> response: {response}")
         if exit_on_fail:
             sys.exit(1)
+    else:
+        if dump_output:
+            if (silk_file != "" and os.path.exists(output_dir) == 0):
+                os.mkdir (output_dir)
+            if silk_file != "":
+                with open(silk_file, 'w', encoding='utf8') as json_file_ptr:
+                    json_file_ptr.write(json.dumps(response, indent = 6))
 
-def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, test_number: int, verify_with_rpc: bool):
+def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, test_number: int, verify_with_rpc: bool, dump_output: bool):
     """ Run integration tests. """
     json_filename = test_dir + json_file
     ext = os.path.splitext(json_file)[1]
@@ -109,7 +116,8 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
             silk_file = output_api_filename + "-silk.json"
             rpc_file = output_api_filename + "-rpcdaemon.json"
             diff_file = output_api_filename + "-diff.json"
-            run_shell_command(
+
+        run_shell_command(
                 cmd,
                 cmd1,
                 response,
@@ -118,7 +126,8 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
                 output_dir_name,
                 silk_file,
                 rpc_file,
-                diff_file)
+                diff_file,
+                dump_output)
 
 #
 # usage
@@ -126,7 +135,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
 def usage(argv):
     """ Print script usage
     """
-    print("Usage: " + argv[0] + " -h -c -r -v -a <api_name> -t < test_number> -l < no of loops> -d -h <chain Name>")
+    print("Usage: " + argv[0] + " -h -c -r -v -a <api_name> -t < test_number> -l < no of loops> -d -h <chain Name> -o ")
     print("")
     print("Launch an automated test sequence on Silkrpc or RPCDaemon")
     print("")
@@ -139,6 +148,7 @@ def usage(argv):
     print("-d verify real time with rpc")
     print("-b blockchain (default goerly)")
     print("-v verbose")
+    print("-o dump response")
 
 
 #
@@ -152,6 +162,7 @@ def main(argv):
     loop_number = 1
     verbose = 0
     req_test = -1
+    dump_output = 0
     api_name = ""
     verify_with_rpc = 0
     json_dir = "./goerly/"
@@ -159,7 +170,7 @@ def main(argv):
     output_dir = json_dir + "/" + results_dir + "/"
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:db:")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:db:o")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -178,6 +189,8 @@ def main(argv):
                 loop_number = int(optarg)
             elif option == "-d":
                 verify_with_rpc = 1
+            elif option == "-o":
+                dump_output = 1
             elif option == "-b":
                 json_dir = "./" + optarg + "/"
             else:
@@ -211,7 +224,7 @@ def main(argv):
                     if req_test in (-1, test_number):
                         if verbose:
                             print("Test name: ", test_file)
-                        run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, test_number, verify_with_rpc)
+                        run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, test_number, verify_with_rpc, dump_output)
                 test_number = test_number + 1
 
 #
