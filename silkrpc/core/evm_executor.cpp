@@ -244,24 +244,24 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
 
                 intx::uint256 want;
                 if (txn.max_fee_per_gas > 0 || txn.max_priority_fee_per_gas > 0) {
-                   // this method should be called after check (max_fee and base_fee) present in pre_check() method
-                   const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
-                   want = txn.gas_limit * effective_gas_price;
+                    // this method should be called after check (max_fee and base_fee) present in pre_check() method
+                    const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
+                    want = txn.gas_limit * effective_gas_price;
                 } else {
-                   want = 0;
+                    want = 0;
                 }
                 const auto have = state_.get_balance(*txn.from);
                 if (have < want + txn.value) {
-                   if (!gas_bailout) {
-                       silkworm::Bytes data{};
-                       std::string from = silkworm::to_hex(*txn.from);
-                       std::string error = "insufficient funds for gas * price + value: address 0x" + from + " have " + intx::to_string(have) + " want " + intx::to_string(want+txn.value);
-                       ExecutionResult exec_result{1000, txn.gas_limit, data, error};
-                       asio::post(io_context_, [exec_result, self = std::move(self)]() mutable {
-                           self.complete(exec_result);
-                       });
-                       return;
-                   }
+                    if (!gas_bailout) {
+                        silkworm::Bytes data{};
+                        std::string from = silkworm::to_hex(*txn.from);
+                        std::string error = "insufficient funds for gas * price + value: address 0x" + from + " have " + intx::to_string(have) + " want " + intx::to_string(want+txn.value);
+                        ExecutionResult exec_result{1000, txn.gas_limit, data, error};
+                        asio::post(io_context_, [exec_result, self = std::move(self)]() mutable {
+                            self.complete(exec_result);
+                        });
+                        return;
+                    }
                 } else {
                    state_.subtract_from_balance(*txn.from, want);
                 }
