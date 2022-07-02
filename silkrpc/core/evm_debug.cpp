@@ -332,7 +332,7 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std:
     auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_);
 
     silkrpc::Tracers tracers{debug_tracer};
-    const auto execution_result = co_await executor.call(block, transaction, /* refund */ false, /* gasBailout*/ false, tracers);
+    const auto execution_result = co_await executor.call(block, transaction, /* refund */ true, /* gasBailout*/ false, tracers);
 
     if (execution_result.pre_check_error) {
         result.pre_check_error = "tracing failed: " + execution_result.pre_check_error.value();
