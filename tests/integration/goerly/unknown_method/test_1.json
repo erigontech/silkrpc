@@ -9,7 +9,7 @@
         "response":{
             "error": {
                 "code": -32601,
-                "message": "method not existent or not implemented: unknown_method"
+                "message": "the method unknown_method does not exist/is not available"
             },
             "id": 1,
             "jsonrpc": "2.0"

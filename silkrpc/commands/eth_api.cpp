@@ -760,6 +760,10 @@ asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_receipt(const n
             SILKRPC_TRACE << "tx " << idx << ") hash: " << silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength}) << "\n";
             if (std::memcmp(transaction_hash.bytes, ethash_hash.bytes, silkworm::kHashLength) == 0) {
                 tx_index = idx;
+                const intx::uint256 base_fee_per_gas{block_with_hash.block.header.base_fee_per_gas.value_or(0)};
+                const intx::uint256 effective_gas_price{transactions[idx].max_fee_per_gas >= base_fee_per_gas ? transactions[idx].effective_gas_price(base_fee_per_gas)
+                                                        : transactions[idx].max_priority_fee_per_gas};
+                receipts[tx_index].effective_gas_price = effective_gas_price;
                 break;
             }
         }
