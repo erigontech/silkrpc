@@ -130,12 +130,41 @@ asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlohmann::
 
 // https://eth.wiki/json-rpc/API#trace_replayblocktransactions
 asio::awaitable<void> TraceRpcApi::handle_trace_replay_block_transactions(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() < 2) {
+        auto error_msg = "invalid trace_replayBlockTransactions params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto block_number_or_hash = params[0].get<BlockNumberOrHash>();
+    const auto trace_type = params[1].get<std::vector<std::string>>();
+
+    trace::TraceConfig config;
+    for (auto entry : trace_type) {
+        if (entry == "trace") {
+            config.trace = true;
+        }
+        if (entry == "vmTrace") {
+            config.vm_trace = true;
+        }
+        if (entry == "stateDiff") {
+            config.state_diff = true;
+        }
+    }
+
+    SILKRPC_INFO << " block_number_or_hash: " << block_number_or_hash << " config: " << config << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_error(request["id"], 500, "not yet implemented");
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
+
+        trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_, config};
+        auto result = co_await executor.execute(block_with_hash.block);
+        reply = make_json_content(request["id"], result);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
