@@ -14,8 +14,10 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_GRPC_ACTIONS_HPP_
-#define SILKRPC_GRPC_ACTIONS_HPP_
+#ifndef SILKRPC_TEST_GRPC_ACTIONS_HPP_
+#define SILKRPC_TEST_GRPC_ACTIONS_HPP_
+
+#include <utility>
 
 #include <grpcpp/grpcpp.h>
 
@@ -54,6 +56,14 @@ inline auto write_success(agrpc::GrpcContext& grpc_context) { return write(grpc_
 
 inline auto write_failure(agrpc::GrpcContext& grpc_context) { return write(grpc_context, false); }
 
+inline auto writes_done(agrpc::GrpcContext& grpc_context, bool ok) {
+    return [&grpc_context, ok](void* tag) { agrpc::process_grpc_tag(grpc_context, tag, ok); };
+}
+
+inline auto writes_done_success(agrpc::GrpcContext& grpc_context) { return writes_done(grpc_context, true); }
+
+inline auto writes_done_failure(agrpc::GrpcContext& grpc_context) { return writes_done(grpc_context, false); }
+
 template <typename Reply>
 auto read_success_with(agrpc::GrpcContext& grpc_context, Reply&& reply) {
     return [&grpc_context, reply = std::forward<Reply>(reply)](auto* reply_ptr, void* tag) mutable {
@@ -71,4 +81,4 @@ inline auto finish_streaming_with_status(agrpc::GrpcContext& grpc_context, grpc:
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_GRPC_ACTIONS_HPP_
+#endif  // SILKRPC_TEST_GRPC_ACTIONS_HPP_

@@ -20,6 +20,8 @@
 #include <thread>
 #include <utility>
 
+#include <agrpc/detail/grpcContext.ipp>
+
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethbackend/remote_backend.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>
@@ -45,16 +47,14 @@ Context::Context(
       wait_mode_(wait_mode) {
     std::shared_ptr<grpc::Channel> channel = create_channel();
     database_ = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context_, channel, grpc_queue(), state_cache_.get());
-    backend_ = std::make_unique<ethbackend::RemoteBackEnd>(*io_context_, channel, grpc_queue());
-    miner_ = std::make_unique<txpool::Miner>(*io_context_, channel, grpc_queue());
-    tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, channel, grpc_queue());
+    backend_ = std::make_unique<ethbackend::RemoteBackEnd>(*io_context_, channel, *grpc_context_);
+    miner_ = std::make_unique<txpool::Miner>(*io_context_, channel, *grpc_context_);
+    tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, channel, *grpc_context_);
 }
 
 template <typename WaitStrategy>
 void Context::execute_loop_single_threaded(WaitStrategy&& wait_strategy) {
     SILKRPC_DEBUG << "Single-thread execution loop start [" << this << "]\n";
-    io_context_->restart();
-    grpc_context_->reset();
     while (!io_context_->stopped()) {
         int work_count = grpc_context_->poll_completion_queue();
         work_count += io_context_->poll();
@@ -65,14 +65,16 @@ void Context::execute_loop_single_threaded(WaitStrategy&& wait_strategy) {
 
 void Context::execute_loop_multi_threaded() {
     SILKRPC_DEBUG << "Multi-thread execution loop start [" << this << "]\n";
-    io_context_->restart();
-    grpc_context_->reset();
     std::thread completion_runner_thread{[&]() {
         grpc_context_->run_completion_queue();
     }};
     io_context_->run();
+    grpc_context_work_.reset();
     grpc_context_->stop();
-    grpc_queue()->Shutdown();
+    /**/
+    grpc_context_->get_completion_queue()->Shutdown();
+    agrpc::detail::drain_completion_queue(*grpc_context_);
+    /**/
     completion_runner_thread.join();
     SILKRPC_DEBUG << "Multi-thread execution loop end [" << this << "]\n";
 }

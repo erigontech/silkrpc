@@ -31,7 +31,7 @@ namespace silkrpc::test {
 
 class ContextTestBase {
   public:
-    explicit ContextTestBase();
+    ContextTestBase();
 
     template <typename AwaitableOrFunction>
     auto spawn_and_wait(AwaitableOrFunction&& awaitable) {

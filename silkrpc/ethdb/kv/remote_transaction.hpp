@@ -24,6 +24,7 @@
 
 #include <silkrpc/config.hpp>
 
+#include <agrpc/grpcContext.hpp>
 #include <asio/use_awaitable.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -91,6 +92,30 @@ private:
     asio::io_context& context_;
     Client client_;
     KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
+    std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
+    uint64_t tx_id_;
+};
+
+class RemoteTransaction2 : public Transaction {
+public:
+    explicit RemoteTransaction2(remote::KV::StubInterface& stub, agrpc::GrpcContext& grpc_context);
+
+    ~RemoteTransaction2();
+
+    uint64_t tx_id() const override { return tx_id_; }
+
+    asio::awaitable<void> open() override;
+
+    asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) override;
+
+    asio::awaitable<std::shared_ptr<CursorDupSort>> cursor_dup_sort(const std::string& table) override;
+
+    asio::awaitable<void> close() override;
+
+private:
+    asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table);
+
+    KVTxStreamingRpc streaming_rpc_;
     std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
     uint64_t tx_id_;
 };

@@ -14,18 +14,18 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_GRPC_MATCHER_HPP_
-#define SILKRPC_GRPC_MATCHER_HPP_
+#ifndef SILKRPC_TEST_GRPC_MATCHER_HPP_
+#define SILKRPC_TEST_GRPC_MATCHER_HPP_
 
 #include <grpcpp/grpcpp.h>
 
-#include <boost/system/system_error.hpp>
+#include <asio/system_error.hpp>
 #include <catch2/catch.hpp>
 
 namespace silkrpc::test {
 
 inline auto exception_has_grpc_status_code(grpc::StatusCode status_code) {
-    return Catch::Predicate<const boost::system::system_error&>(
+    return Catch::Predicate<const asio::system_error&>(
         [status_code](auto& e) { return std::error_code(e.code()).value() == status_code; });
 }
 
@@ -35,4 +35,4 @@ inline auto exception_has_cancelled_grpc_status_code() {
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_GRPC_MATCHER_HPP_
+#endif  // SILKRPC_TEST_GRPC_MATCHER_HPP_

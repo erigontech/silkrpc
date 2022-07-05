@@ -144,7 +144,7 @@ set(SILKRPC_LIBRARIES
     absl::flat_hash_map
     absl::flat_hash_set
     absl::btree
-    asio-grpc::asio-grpc
+    asio-grpc::asio-grpc-standalone-asio
     intx::intx
     gRPC::grpc++
     protobuf::libprotobuf

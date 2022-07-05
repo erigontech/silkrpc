@@ -26,13 +26,18 @@
 #include <thread>
 #include <utility>
 
+#include <agrpc/rpc.hpp>
 #include <asio/async_result.hpp>
+#include <asio/bind_executor.hpp>
 #include <asio/detail/non_const_lvalue.hpp>
+#include <asio/dispatch.hpp>
 #include <asio/error.hpp>
+#include <asio/use_awaitable.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkworm/common/util.hpp>
 #include <silkrpc/common/constants.hpp>
+#include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/grpc/error.hpp>
 #include <silkrpc/grpc/async_operation.hpp>
@@ -130,22 +135,10 @@ struct unary_awaitable {
     UnaryClient client_;
 };
 
-template<typename Executor, typename UnaryClient, typename StubInterface, typename Request>
-struct unary_awaitable<Executor, UnaryClient, StubInterface, Request, void> {
-    typedef Executor executor_type;
-
-    explicit unary_awaitable(const Executor& executor, std::unique_ptr<StubInterface>& stub, grpc::CompletionQueue* queue)
-    : executor_(executor), client_{stub, queue} {}
-
-    template<typename WaitHandler>
-    auto async_call(const Request& request, WaitHandler&& handler) {
-        return asio::async_initiate<WaitHandler, void(asio::error_code)>(
-            initiate_unary_async<Executor, UnaryClient, async_reply_operation, StubInterface, Request, void>{this, request}, handler);
-    }
-
-    const Executor& executor_;
-    UnaryClient client_;
-};
+template<class Executor>
+auto continue_on(Executor&& executor) {
+    return asio::dispatch(asio::bind_executor(std::forward<Executor>(executor), asio::use_awaitable));
+}
 
 } // namespace silkrpc
 
