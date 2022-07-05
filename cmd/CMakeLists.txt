@@ -15,23 +15,26 @@
 ]]
 
 if(MSVC)
-  add_link_options(/STACK:10000000)
+    add_link_options(/STACK:10000000)
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-  add_link_options(-Wl,-stack_size -Wl,0x1000000)
+    add_link_options(-Wl,-stack_size -Wl,0x1000000)
 endif()
 
 find_package(absl CONFIG REQUIRED)
 find_package(gRPC CONFIG REQUIRED)
-find_package(mimalloc 2.0 REQUIRED)
 find_package(protobuf CONFIG REQUIRED)
+if(SILKRPC_USE_MIMALLOC)
+    find_package(mimalloc 2.0 REQUIRED)
+endif()
 
 add_compile_options(-std=c++2a)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  add_compile_options(-fcoroutines)
+    add_compile_options(-fcoroutines)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  add_compile_options(-stdlib=libc++)
+    add_compile_options(-stdlib=libc++)
 endif()
 
+# Silkrpc toolbox
 add_executable(silkrpc_toolbox
     silkrpc_toolbox.cpp
     ethbackend_async.cpp ethbackend_coroutines.cpp ethbackend.cpp
@@ -41,14 +44,19 @@ add_executable(silkrpc_toolbox
 target_include_directories(silkrpc_toolbox PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(silkrpc_toolbox absl::flags_parse gRPC::grpc++_unsecure protobuf::libprotobuf silkrpc)
 
-add_executable(silkrpcdaemon silkrpc_daemon.cpp)
-target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
-target_link_libraries(silkrpcdaemon
+# Silkrpc daemon
+set(SILKRPC_DAEMON_LIBRARIES
     silkrpc-buildinfo
     silkrpc
     absl::flags_parse
-    silkinterfaces
-    mimalloc)
+    silkinterfaces)
+if(SILKRPC_USE_MIMALLOC)
+    list(APPEND SILKRPC_DAEMON_LIBRARIES mimalloc)
+endif()
+
+add_executable(silkrpcdaemon silkrpc_daemon.cpp)
+target_include_directories(silkrpcdaemon PUBLIC ${CMAKE_SOURCE_DIR})
+target_link_libraries(silkrpcdaemon ${SILKRPC_DAEMON_LIBRARIES})
 
 # Unit tests
 enable_testing()

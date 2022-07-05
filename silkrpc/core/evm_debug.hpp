@@ -79,7 +79,7 @@ public:
     void on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
             const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
-    void on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
+    void on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
 
 private:
@@ -88,6 +88,7 @@ private:
     std::map<evmc::address, Storage> storage_;
     const char* const* opcode_names_ = nullptr;
     std::int64_t start_gas_{0};
+    std::int64_t gas_on_precompiled_{0};
 };
 
 class NullTracer : public silkworm::EvmTracer {

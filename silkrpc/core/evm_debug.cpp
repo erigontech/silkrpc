@@ -179,7 +179,12 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
         auto& log = logs_[logs_.size() - 1];
         auto depth = log.depth;
         if (depth == execution_state.msg->depth + 1) {
-            log.gas_cost = log.gas - execution_state.gas_left;
+            if (gas_on_precompiled_) {
+               log.gas_cost = log.gas - gas_on_precompiled_;
+               gas_on_precompiled_ = 0;
+            } else {
+               log.gas_cost = log.gas - execution_state.gas_left;
+            }
             if (!config_.disableMemory) {
                 auto& memory = log.memory;
                 for (int idx = memory.size(); idx < current_memory.size(); idx++) {
@@ -212,6 +217,16 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
     logs_.push_back(log);
 }
 
+void DebugTracer::on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept {
+    SILKRPC_DEBUG << "VmTraceTracer::on_precompiled_run:"
+        << " status: " << result.status_code
+        << ", gas: " << std::dec << gas
+        << "\n";
+
+    gas_on_precompiled_ = gas;
+}
+
+
 void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
     if (logs_.size() > 0) {
         auto& log = logs_[logs_.size() - 1];
@@ -219,15 +234,12 @@ void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::In
         insert_error(log, result.status_code);
 
         switch (result.status_code) {
-        case evmc_status_code::EVMC_REVERT:
-        case evmc_status_code::EVMC_OUT_OF_GAS:
-            log.gas_cost = 0;
-            break;
-
         case evmc_status_code::EVMC_UNDEFINED_INSTRUCTION:
             log.gas_cost = start_gas_ - log.gas;
             break;
 
+        case evmc_status_code::EVMC_REVERT:
+        case evmc_status_code::EVMC_OUT_OF_GAS:
         default:
             log.gas_cost = log.gas - result.gas_left;
             break;
@@ -320,7 +332,7 @@ asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std:
     auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_);
 
     silkrpc::Tracers tracers{debug_tracer};
-    const auto execution_result = co_await executor.call(block, transaction, /* refund */ false, /* gasBailout*/ false, tracers);
+    const auto execution_result = co_await executor.call(block, transaction, /* refund */ true, /* gasBailout*/ false, tracers);
 
     if (execution_result.pre_check_error) {
         result.pre_check_error = "tracing failed: " + execution_result.pre_check_error.value();

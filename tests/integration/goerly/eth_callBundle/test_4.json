@@ -1,0 +1,23 @@
+[
+   {
+        "request": {
+            "jsonrpc": "2.0",
+            "method": "eth_callBundle",
+            "params": [["0xf982ae6b23dfc23623ae88306360bf2d9a3dd5318469a2bbb33d5481d54ae38a"], "0x2DC7D7", 1000],
+            "id": 1
+        },
+        "response": {
+            "result":{"bundleHash":"0xb3c06f0375eb93591e6789a2856739d2890478e97560077f4c65dba24eeed2ce",
+                      "results":[
+                                 {"error":"execution reverted",
+                                  "gasUsed":37419,
+                                  "txHash":"0xf982ae6b23dfc23623ae88306360bf2d9a3dd5318469a2bbb33d5481d54ae38a"
+                                 }
+                                ]
+                     },
+            "id": 1,
+            "jsonrpc": "2.0"
+        }
+  }
+]
+
