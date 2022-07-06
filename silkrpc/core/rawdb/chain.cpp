@@ -342,4 +342,39 @@ asio::awaitable<Transactions> read_transactions(const DatabaseReader& reader, ui
     co_return txns;
 }
 
+
+asio::awaitable<Transactions> read_noncanonical_transactions(const DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count) {
+    Transactions txns{};
+    if (txn_count == 0) {
+        SILKRPC_DEBUG << "txn_count: 0 #txns: 0\n";
+        co_return txns;
+    }
+
+    txns.reserve(txn_count);
+
+    silkworm::Bytes txn_id_key(8, '\0');
+    boost::endian::store_big_u64(&txn_id_key[0], base_txn_id); // tx_id_key.data()?
+    SILKRPC_DEBUG << "txn_count: " << txn_count << " txn_id_key: " << silkworm::to_hex(txn_id_key) << "\n";
+    size_t i{0};
+    Walker walker = [&](const silkworm::Bytes&, const silkworm::Bytes& v) {
+        SILKRPC_TRACE << "v: " << silkworm::to_hex(v) << "\n";
+        silkworm::ByteView value{v};
+        silkworm::Transaction tx{};
+        const auto error = silkworm::rlp::decode(value, tx);
+        if (error != silkworm::DecodingResult::kOk) {
+            SILKRPC_ERROR << "invalid RLP decoding for transaction index " << i << "\n";
+            return false;
+        }
+        SILKRPC_TRACE << "index: " << i << " tx_hash: " << silkworm::to_hex({hash_of(v).bytes, silkworm::kHashLength}) << "\n";
+        txns.emplace(txns.end(), std::move(tx));
+        i++;
+        return i < txn_count;
+    };
+    co_await reader.walk(db::table::kNonCanonicalTx, txn_id_key, 0, walker);
+
+    SILKRPC_DEBUG << "#txns: " << txns.size() << "\n";
+
+    co_return txns;
+}
+
 } // namespace silkrpc::core::rawdb
