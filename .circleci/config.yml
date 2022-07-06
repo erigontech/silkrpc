@@ -46,6 +46,7 @@ commands:
           name: "Install gperftools"
           command: |
             sudo apt-get update
+            sudo apt-get install -y libunwind-dev
             sudo apt-get install -y google-perftools libgoogle-perftools-dev
       - run:
           name: "Install mimalloc"
@@ -87,7 +88,7 @@ jobs:
       TOOLCHAIN_FILE: silkworm/cmake/toolchain/cxx20.cmake
       CLANG_COVERAGE: OFF
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2204:2022.04.2
     resource_class: xlarge
     steps:
       - run:
