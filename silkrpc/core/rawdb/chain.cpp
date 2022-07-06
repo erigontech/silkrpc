@@ -308,7 +308,7 @@ asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const silk
     co_return receipts;
 }
 
-asio::awaitable<Transactions> read_cannonical_transactions(const DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count) {
+asio::awaitable<Transactions> read_canonical_transactions(const DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count) {
     Transactions txns{};
     if (txn_count == 0) {
         SILKRPC_DEBUG << "txn_count: 0 #txns: 0\n";
