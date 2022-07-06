@@ -169,7 +169,7 @@ asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& reader, con
         silkworm::ByteView data_view{data};
         auto stored_body{silkworm::db::detail::decode_stored_block_body(data_view)};
         SILKRPC_DEBUG << "base_txn_id: " << stored_body.base_txn_id << " txn_count: " << stored_body.txn_count << "\n";
-        auto transactions = co_await read_transactions(reader, stored_body.base_txn_id, stored_body.txn_count);
+        auto transactions = co_await read_canonical_transactions(reader, stored_body.base_txn_id, stored_body.txn_count);
         if (transactions.size() != 0) {
             const auto senders = co_await read_senders(reader, block_hash, block_number);
             if (senders.size() == transactions.size()) {
@@ -308,7 +308,7 @@ asio::awaitable<Receipts> read_receipts(const DatabaseReader& reader, const silk
     co_return receipts;
 }
 
-asio::awaitable<Transactions> read_transactions(const DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count) {
+asio::awaitable<Transactions> read_cannonical_transactions(const DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count) {
     Transactions txns{};
     if (txn_count == 0) {
         SILKRPC_DEBUG << "txn_count: 0 #txns: 0\n";
@@ -341,7 +341,6 @@ asio::awaitable<Transactions> read_transactions(const DatabaseReader& reader, ui
 
     co_return txns;
 }
-
 
 asio::awaitable<Transactions> read_noncanonical_transactions(const DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count) {
     Transactions txns{};
