@@ -81,7 +81,7 @@ commands:
           command: cmd/unit_test
 
 jobs:
-  linux-gcc-10:
+  linux-gcc-11:
     environment:
       BUILD_TYPE: Debug
       TOOLCHAIN_FILE: silkworm/cmake/toolchain/cxx20.cmake
@@ -91,12 +91,12 @@ jobs:
     resource_class: xlarge
     steps:
       - run:
-          name: "Install GCC 10"
+          name: "Install GCC"
           command: |
             sudo apt update
-            sudo apt -y install gcc-10 g++-10
-            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 50
-            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 50
+            sudo apt -y install gcc-10 g++-11
+            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 50
+            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 50
             gcc --version
             g++ --version
       - checkout_with_submodules
@@ -104,7 +104,7 @@ jobs:
       - build
       - test
 
-  linux-clang-coverage:
+  linux-clang-13-coverage:
     environment:
       BUILD_TYPE: Debug
       TOOLCHAIN_FILE: cmake/clang-libcxx20-fpic.cmake
@@ -114,21 +114,21 @@ jobs:
     resource_class: large
     steps:
       - run:
-          name: "Install Clang 10"
+          name: "Install Clang"
           command: |
             sudo apt update
-            sudo apt -y install clang-10
-            sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-10 50
-            sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-10 50
-            clang-10 --version
-            clang++-10 --version
+            sudo apt -y install clang-13
+            sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-13 50
+            sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-13 50
+            clang-13 --version
+            clang++-13 --version
       - run:
           name: "Install LLVM C++ Standard Library" # for C++ standard headers clang does not have
           command: |
             sudo apt update
             sudo apt -y install apt-utils
-            sudo apt -y install libc++abi-dev
-            sudo apt -y install libc++-dev
+            sudo apt -y install libc++abi-13-dev
+            sudo apt -y install libc++-13-dev
       - checkout_with_submodules
       - build
       - run:
@@ -159,5 +159,5 @@ workflows:
   version: 2
   silkrpc:
     jobs:
-      - linux-gcc-10
-      - linux-clang-coverage
+      - linux-gcc-11
+      - linux-clang-13-coverage
