@@ -43,12 +43,6 @@ commands:
             sudo apt-get update
             sudo apt-get install -y libgmp3-dev
       - run:
-          name: "Install gperftools"
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y libunwind-dev
-            sudo apt-get install -y google-perftools libgoogle-perftools-dev
-      - run:
           name: "Install mimalloc"
           command: |
             git clone https://github.com/microsoft/mimalloc
