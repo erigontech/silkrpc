@@ -350,11 +350,10 @@ void CoherentStateCache::evict_roots(StateViewId next_view_id) {
     }
     if (next_view_id == 0) {
         // Next view ID is zero with cache not empty => view ID wrapping => clear the cache except for new latest view
-        const auto erased_count = std::erase_if(state_view_roots_, [&](const auto& item) {
+        std::erase_if(state_view_roots_, [&](const auto& item) {
             auto const& [view_id, _] = item;
             return view_id != next_view_id;
         });
-        SILKRPC_DEBUG << "CoherentStateCache::evict_roots " << erased_count << " items erased\n";
         return;
     }
     // Erase older state views in order not to exceed max_views

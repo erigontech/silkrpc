@@ -16,6 +16,7 @@
 
 #include "state_cache.hpp"
 
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
