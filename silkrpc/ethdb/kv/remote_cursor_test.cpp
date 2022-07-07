@@ -33,6 +33,7 @@
 
 namespace silkrpc::ethdb::kv {
 
+/*
 using Catch::Matchers::Message;
 
 class MockBaseStreamingClient : public AsyncTxStreamingClient {
@@ -50,7 +51,7 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success") {
         class MockStreamingClient1 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient1(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient1(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
@@ -81,7 +82,7 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("write_start failure") {
         class MockStreamingClient2 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient2(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient2(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
@@ -112,7 +113,7 @@ TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("read_start failure") {
         class MockStreamingClient3 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient3(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient3(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     read_completed(grpc::Status::CANCELLED, {});
@@ -145,7 +146,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success w/ sync read - sync write") {
         class MockStreamingClient4 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient4(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient4(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
@@ -179,7 +180,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success w/ async read - sync write") {
         class MockStreamingClient5 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient5(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient5(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
@@ -215,7 +216,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success w/ sync read - async write") {
         class MockStreamingClient6 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient6(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient6(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 remote::Pair pair;
                 pair.set_cursorid(3);
@@ -251,7 +252,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success w/ async read - async write") {
         class MockStreamingClient7 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient7(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient7(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
@@ -289,7 +290,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("write_start failure") {
         class MockStreamingClient8 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient8(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient8(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     remote::Pair pair;
@@ -328,7 +329,7 @@ TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("read_start failure") {
         class MockStreamingClient9 : public MockBaseStreamingClient {
         public:
-            MockStreamingClient9(std::shared_ptr<grpc::Channel> /*channel*/, grpc::CompletionQueue* /*queue*/) {}
+            MockStreamingClient9(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
             void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
                 auto result = std::async([&]() {
                     read_completed(grpc::Status::CANCELLED, {});
@@ -577,17 +578,17 @@ TEST_CASE("RemoteCursor::seek_both_exact", "[silkrpc][ethdb][kv][remote_cursor]"
             CHECK(false);
         }
     }
-}
+}*/
 
 struct RemoteCursorTest : test::KVTestBase {
     RemoteCursorTest() {
-        this->expect_request_async_tx();
+        expect_request_async_tx();
         EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, remote::Pair{}));
-        kv_streaming_rpc_.request_and_read(asio::use_future).get();
+        tx_rpc_.request_and_read(asio::use_future).get();
     }
 
-    KVTxStreamingRpc kv_streaming_rpc_{*stub_, grpc_context_};
-    RemoteCursor2 remote_cursor_{kv_streaming_rpc_};
+    KVTxStreamingRpc tx_rpc_{*stub_, grpc_context_};
+    RemoteCursor2 remote_cursor_{tx_rpc_};
 };
 
 TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {

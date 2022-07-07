@@ -26,8 +26,6 @@
 #include <asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
 
-#include <silkrpc/grpc/awaitables.hpp>
-#include <silkrpc/grpc/async_unary_client.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
 #include <silkrpc/types/execution_payload.hpp>

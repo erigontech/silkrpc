@@ -31,7 +31,8 @@ ContextTestBase::ContextTestBase()
                std::make_shared<BlockCache>(), std::make_shared<ethdb::kv::CoherentStateCache>()},
       io_context_{*context_.io_context()},
       grpc_context_{*context_.grpc_context()},
-      context_thread_{[&]() { context_.execute_loop(); }} {}
+      context_thread_{[&]() { context_.execute_loop(); }} {
+}
 
 ContextTestBase::~ContextTestBase() {
     context_.stop();

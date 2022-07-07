@@ -30,13 +30,12 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
-#include <silkrpc/ethdb/kv/awaitables.hpp>
 #include <silkrpc/ethdb/kv/remote_cursor.hpp>
-#include <silkrpc/ethdb/kv/tx_streaming_client.hpp>
 #include <silkrpc/ethdb/transaction.hpp>
 
 namespace silkrpc::ethdb::kv {
 
+/*
 // TODO(canepat): concept to force Client implements StreamingClient
 
 template<typename Client>
@@ -94,7 +93,7 @@ private:
     KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable_;
     std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
     uint64_t tx_id_;
-};
+};*/
 
 class RemoteTransaction2 : public Transaction {
 public:
@@ -115,7 +114,7 @@ public:
 private:
     asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table);
 
-    KVTxStreamingRpc streaming_rpc_;
+    KVTxStreamingRpc tx_rpc_;
     std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
     uint64_t tx_id_;
 };

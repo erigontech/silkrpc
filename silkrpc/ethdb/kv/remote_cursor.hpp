@@ -29,7 +29,6 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/ethdb/kv/awaitables.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
 #include <silkrpc/grpc/bidi_streaming_rpc.hpp>
 #include <silkrpc/interfaces/remote/kv.grpc.pb.h>
@@ -37,6 +36,7 @@
 
 namespace silkrpc::ethdb::kv {
 
+/*
 class RemoteCursor : public CursorDupSort {
 public:
     explicit RemoteCursor(KvAsioAwaitable<asio::io_context::executor_type>& kv_awaitable)
@@ -64,14 +64,14 @@ public:
 private:
     KvAsioAwaitable<asio::io_context::executor_type>& kv_awaitable_;
     uint32_t cursor_id_;
-};
+};*/
 
 using KVTxStreamingRpc = silkrpc::BidiStreamingRpc<&remote::KV::StubInterface::AsyncTx>;
 
 class RemoteCursor2 : public CursorDupSort {
 public:
     explicit RemoteCursor2(KVTxStreamingRpc& streaming_rpc)
-        : streaming_rpc_(streaming_rpc), cursor_id_{0} {}
+        : tx_rpc_(streaming_rpc), cursor_id_{0} {}
 
     uint32_t cursor_id() const override { return cursor_id_; };
 
@@ -90,7 +90,7 @@ public:
     asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) override;
 
 private:
-    KVTxStreamingRpc& streaming_rpc_;
+    KVTxStreamingRpc& tx_rpc_;
     uint32_t cursor_id_;
 };
 

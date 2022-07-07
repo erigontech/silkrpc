@@ -17,8 +17,10 @@
 #ifndef SILKRPC_TEST_KV_TEST_BASE_HPP_
 #define SILKRPC_TEST_KV_TEST_BASE_HPP_
 
-#include <agrpc/test.hpp>
 #include <memory>
+
+#include <agrpc/test.hpp>
+
 #include <silkrpc/config.hpp>
 #include <silkrpc/test/context_test_base.hpp>
 #include <silkrpc/test/grpc_responder.hpp>

@@ -14,6 +14,8 @@
     limitations under the License.
 */
 
+#include "remote_transaction.hpp"
+
 #include <utility>
 
 #include <silkrpc/config.hpp>
@@ -22,24 +24,18 @@
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/log.hpp>
-#include <silkrpc/grpc/awaitables.hpp>
-#include <silkrpc/ethdb/kv/remote_transaction.hpp>
 
 namespace silkrpc::ethdb::kv {
 
 RemoteTransaction2::RemoteTransaction2(remote::KV::StubInterface& stub, agrpc::GrpcContext& grpc_context)
-    : streaming_rpc_{stub, grpc_context} {
-        SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " start\n";
-        SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " end\n";
-    }
+    : tx_rpc_{stub, grpc_context} {
+}
 
 RemoteTransaction2::~RemoteTransaction2() {
-    SILKRPC_TRACE << "RemoteTransaction::dtor " << this << " start\n";
-    SILKRPC_TRACE << "RemoteTransaction::dtor " << this << " end\n";
 }
 
 asio::awaitable<void> RemoteTransaction2::open() {
-    tx_id_ = (co_await streaming_rpc_.request_and_read()).txid();
+    tx_id_ = (co_await tx_rpc_.request_and_read()).txid();
 }
 
 asio::awaitable<std::shared_ptr<Cursor>> RemoteTransaction2::cursor(const std::string& table) {
@@ -51,18 +47,18 @@ asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction2::cursor_dup_s
 }
 
 asio::awaitable<void> RemoteTransaction2::close() {
-    co_await streaming_rpc_.writes_done_and_finish();
+    co_await tx_rpc_.writes_done_and_finish();
     cursors_.clear();
     tx_id_ = 0;
 }
 
 asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction2::get_cursor(const std::string& table) {
-    //co_await silkrpc::continue_on(streaming_rpc_.get_executor()); // TODO(canepat) is really needed?
+    //co_await silkrpc::continue_on(tx_rpc_.get_executor()); // TODO(canepat) is really needed?
     auto cursor_it = cursors_.find(table);
     if (cursor_it != cursors_.end()) {
         co_return cursor_it->second;
     }
-    auto cursor = std::make_shared<RemoteCursor2>(streaming_rpc_);
+    auto cursor = std::make_shared<RemoteCursor2>(tx_rpc_);
     co_await cursor->open_cursor(table);
     cursors_[table] = cursor;
     co_return cursor;

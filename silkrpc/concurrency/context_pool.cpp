@@ -46,7 +46,7 @@ Context::Context(
       state_cache_(state_cache),
       wait_mode_(wait_mode) {
     std::shared_ptr<grpc::Channel> channel = create_channel();
-    database_ = std::make_unique<ethdb::kv::RemoteDatabase<>>(*io_context_, channel, grpc_queue(), state_cache_.get());
+    database_ = std::make_unique<ethdb::kv::RemoteDatabase>(*grpc_context_, channel);
     backend_ = std::make_unique<ethbackend::RemoteBackEnd>(*io_context_, channel, *grpc_context_);
     miner_ = std::make_unique<txpool::Miner>(*io_context_, channel, *grpc_context_);
     tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, channel, *grpc_context_);
@@ -69,12 +69,9 @@ void Context::execute_loop_multi_threaded() {
         grpc_context_->run_completion_queue();
     }};
     io_context_->run();
+
     grpc_context_work_.reset();
     grpc_context_->stop();
-    /**/
-    grpc_context_->get_completion_queue()->Shutdown();
-    agrpc::detail::drain_completion_queue(*grpc_context_);
-    /**/
     completion_runner_thread.join();
     SILKRPC_DEBUG << "Multi-thread execution loop end [" << this << "]\n";
 }

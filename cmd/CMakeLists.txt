@@ -63,10 +63,11 @@ enable_testing()
 
 find_package(Catch2 CONFIG REQUIRED)
 find_package(GTest CONFIG REQUIRED)
+find_package(asio-grpc CONFIG REQUIRED)
 
 file(GLOB_RECURSE SILKRPC_TESTS CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/silkrpc/*_test.cpp")
 add_executable(unit_test unit_test.cpp ${SILKRPC_TESTS})
-target_link_libraries(unit_test silkrpc Catch2::Catch2 GTest::gmock)
+target_link_libraries(unit_test silkrpc Catch2::Catch2 GTest::gmock asio-grpc::asio-grpc-standalone-asio)
 
 include(CTest)
 include(Catch)
