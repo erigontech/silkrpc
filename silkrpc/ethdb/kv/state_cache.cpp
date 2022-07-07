@@ -332,7 +332,7 @@ CoherentStateRoot* CoherentStateCache::advance_root(StateViewId view_id) {
     }
     root->canonical = true;
 
-    evict_roots();
+    evict_roots(view_id);
 
     latest_state_view_id_ = view_id;
     latest_state_view_ = root;
@@ -343,16 +343,21 @@ CoherentStateRoot* CoherentStateCache::advance_root(StateViewId view_id) {
     return root;
 }
 
-void CoherentStateCache::evict_roots() {
-    SILKRPC_DEBUG << "CoherentStateCache::evict_roots latest_state_view_id_=" << latest_state_view_id_ << "\n";
-    if (latest_state_view_id_ <= config_.max_views) {
-        return;
-    }
+void CoherentStateCache::evict_roots(StateViewId next_view_id) {
     SILKRPC_DEBUG << "CoherentStateCache::evict_roots state_view_roots_.size()=" << state_view_roots_.size() << "\n";
-    if (state_view_roots_.size() < config_.max_views) {
+    if (state_view_roots_.size() <= config_.max_views) {
         return;
     }
-    // Erase older state views in order to not exceed max_views
+    if (next_view_id == 0) {
+        // Next view ID is zero with cache not empty => view ID wrapping => clear the cache except for new latest view
+        const auto erased_count = std::erase_if(state_view_roots_, [&](const auto& item) {
+            auto const& [view_id, _] = item;
+            return view_id != next_view_id;
+        });
+        SILKRPC_DEBUG << "CoherentStateCache::evict_roots " << erased_count << " items erased\n";
+        return;
+    }
+    // Erase older state views in order not to exceed max_views
     const auto max_view_id_to_delete = latest_state_view_id_ - config_.max_views + 1;
     SILKRPC_DEBUG << "CoherentStateCache::evict_roots max_view_id_to_delete=" << max_view_id_to_delete << "\n";
     std::erase_if(state_view_roots_, [&](const auto& item) {

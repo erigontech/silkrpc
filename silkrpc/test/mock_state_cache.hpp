@@ -43,6 +43,14 @@ class MockStateCache : public ethdb::kv::StateCache {
     MOCK_METHOD((void), on_new_block, (const remote::StateChangeBatch&), (override));
     MOCK_METHOD((std::size_t), latest_data_size, (), (override));
     MOCK_METHOD((std::size_t), latest_code_size, (), (override));
+    MOCK_METHOD((uint64_t), state_hit_count, (), (const));
+    MOCK_METHOD((uint64_t), state_miss_count, (), (const));
+    MOCK_METHOD((uint64_t), state_key_count, (), (const));
+    MOCK_METHOD((uint64_t), state_eviction_count, (), (const));
+    MOCK_METHOD((uint64_t), code_hit_count, (), (const));
+    MOCK_METHOD((uint64_t), code_miss_count, (), (const));
+    MOCK_METHOD((uint64_t), code_key_count, (), (const));
+    MOCK_METHOD((uint64_t), code_eviction_count, (), (const));
 };
 
 }  // namespace silkrpc::test
