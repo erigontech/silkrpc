@@ -1318,14 +1318,14 @@ TEST_CASE("read_receipts") {
     }
 }
 
-TEST_CASE("read_transactions") {
+TEST_CASE("read_canonical_transactions") {
     asio::thread_pool pool{1};
     MockDatabaseReader db_reader;
 
     SECTION("zero transactions when transaction count is zero") {
         uint64_t base_txn_id; // don't care
         const uint64_t txn_count{0};
-        auto result = asio::co_spawn(pool, read_transactions(db_reader, base_txn_id, txn_count), asio::use_future);
+        auto result = asio::co_spawn(pool, read_canonical_transactions(db_reader, base_txn_id, txn_count), asio::use_future);
         CHECK(result.get() == Transactions{});
     }
 
@@ -1350,7 +1350,7 @@ TEST_CASE("read_transactions") {
                 co_return;
             }
         ));
-        auto result = asio::co_spawn(pool, read_transactions(db_reader, base_txn_id, txn_count), asio::use_future);
+        auto result = asio::co_spawn(pool, read_canonical_transactions(db_reader, base_txn_id, txn_count), asio::use_future);
         CHECK(result.get() == Transactions{silkworm::Transaction{
             Transaction::Type::kLegacy,                         // type
             416268,                                             // nonce
@@ -1394,7 +1394,7 @@ TEST_CASE("read_transactions") {
                 co_return;
             }
         ));
-        auto result = asio::co_spawn(pool, read_transactions(db_reader, base_txn_id, txn_count), asio::use_future);
+        auto result = asio::co_spawn(pool, read_canonical_transactions(db_reader, base_txn_id, txn_count), asio::use_future);
         CHECK(result.get() == Transactions{
             silkworm::Transaction{
                 Transaction::Type::kLegacy,                         // type
