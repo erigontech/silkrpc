@@ -165,7 +165,7 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
     };
     ContextPool context_pool{1, channel_factory};
-    auto pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     SECTION("Call: failed with intrinsic gas too low") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
@@ -205,8 +205,7 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        io_context.stop();
-        pool_thread.join();
+        context_pool.join();
 
         CHECK(result.pre_check_error.has_value() == true);
         CHECK(result.pre_check_error.value() == "intrinsic gas too low: have 50000, want 53072");
@@ -263,8 +262,7 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        io_context.stop();
-        pool_thread.join();
+        context_pool.join();
 
         CHECK(result.pre_check_error.has_value() == false);
         CHECK(result.traces == R"({
@@ -450,8 +448,7 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        io_context.stop();
-        pool_thread.join();
+        context_pool.join();
 
         CHECK(result.pre_check_error.has_value() == false);
         CHECK(result.traces == R"({
@@ -574,8 +571,7 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        io_context.stop();
-        pool_thread.join();
+        context_pool.join();
 
         CHECK(result.pre_check_error.has_value() == false);
         CHECK(result.traces == R"({
@@ -744,8 +740,7 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        io_context.stop();
-        pool_thread.join();
+        context_pool.join();
 
         CHECK(result.pre_check_error.has_value() == false);
         CHECK(result.traces == R"({
@@ -887,8 +882,7 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        io_context.stop();
-        pool_thread.join();
+        context_pool.join();
 
         CHECK(result.pre_check_error.has_value() == false);
         CHECK(result.traces == R"({
@@ -1004,7 +998,7 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
     };
     ContextPool context_pool{1, channel_factory};
-    auto pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     SECTION("Call: TO present") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
@@ -1101,8 +1095,7 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        io_context.stop();
-        pool_thread.join();
+        context_pool.join();
 
         CHECK(result.pre_check_error.has_value() == false);
         CHECK(result.traces == R"({
@@ -1253,7 +1246,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
     };
     ContextPool context_pool{1, channel_factory};
-    auto pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
         .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
@@ -1370,8 +1363,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
     auto result = execution_result.get();
 
     context_pool.stop();
-    io_context.stop();
-    pool_thread.join();
+    context_pool.join();
 
     CHECK(result.pre_check_error.has_value() == false);
     CHECK(result.traces == R"({

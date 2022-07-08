@@ -58,6 +58,7 @@ public:
 
     asio::awaitable<void> open() override {
         tx_id_ = co_await kv_awaitable_.async_start(asio::use_awaitable);
+        SILKRPC_INFO << "RemoteTransaction::open tx_id=" << tx_id_ << "\n";
         co_return;
     }
 

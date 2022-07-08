@@ -53,7 +53,8 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        RemoteDatabase<MockStreamingClient> remote_db(io_context, channel, &queue);
+        CoherentStateCache state_cache;
+        RemoteDatabase<MockStreamingClient> remote_db(io_context, channel, &queue, &state_cache);
         try {
             auto future_remote_tx{asio::co_spawn(io_context, remote_db.begin(), asio::use_future)};
             io_context.run();
@@ -87,7 +88,8 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        RemoteDatabase<MockStreamingClient> remote_db(io_context, channel, &queue);
+        CoherentStateCache state_cache;
+        RemoteDatabase<MockStreamingClient> remote_db(io_context, channel, &queue, &state_cache);
         try {
             auto future_remote_tx{asio::co_spawn(io_context, remote_db.begin(), asio::use_future)};
             io_context.run();
@@ -119,7 +121,8 @@ TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
         asio::io_context io_context;
         auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
         grpc::CompletionQueue queue;
-        RemoteDatabase<MockStreamingClient> remote_db(io_context, channel, &queue);
+        CoherentStateCache state_cache;
+        RemoteDatabase<MockStreamingClient> remote_db(io_context, channel, &queue, &state_cache);
         try {
             auto future_remote_tx{asio::co_spawn(io_context, remote_db.begin(), asio::use_future)};
             io_context.run();

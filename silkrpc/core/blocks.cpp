@@ -17,7 +17,9 @@
 #include "blocks.hpp"
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/stagedsync/stages.hpp>
+#include <silkworm/common/assert.hpp>
 
 namespace silkrpc::core {
 
@@ -49,4 +51,19 @@ asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseRea
     co_return latest_block_number;
 }
 
-} // namespace silkrpc::core
+asio::awaitable<bool> is_latest_block_number(const BlockNumberOrHash& bnoh, const core::rawdb::DatabaseReader& reader) {
+    if (bnoh.is_tag()) {
+        co_return bnoh.tag() == core::kLatestBlockId || bnoh.tag() == core::kPendingBlockId;
+    } else {
+        const auto latest_block_number = co_await get_latest_block_number(reader);
+        if (bnoh.is_number()) {
+            co_return bnoh.number() == latest_block_number;
+        } else {
+            SILKWORM_ASSERT(bnoh.is_hash());
+            const auto block_number = co_await rawdb::read_header_number(reader, bnoh.hash());
+            co_return block_number == latest_block_number;
+        }
+    }
+}
+
+}  // namespace silkrpc::core

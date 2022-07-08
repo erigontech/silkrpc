@@ -49,7 +49,7 @@ typedef asio::awaitable<void> (EthereumRpcApiTest::*HandleTestMethod)(const nloh
 void test_eth_api(HandleTestMethod test_handle_method, const nlohmann::json& request, nlohmann::json& reply) {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     asio::thread_pool workers{1};
     try {
         EthereumRpcApiTest eth_api{cp.next_context(), workers};
@@ -61,7 +61,7 @@ void test_eth_api(HandleTestMethod test_handle_method, const nlohmann::json& req
         CHECK(false);
     }
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("EthereumRpcApi::EthereumRpcApi", "[silkrpc][erigon_api]") {

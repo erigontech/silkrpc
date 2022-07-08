@@ -244,7 +244,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
 
                 intx::uint256 want;
                 if (txn.max_fee_per_gas > 0 || txn.max_priority_fee_per_gas > 0) {
-                    // this method should be called after check (max_fee and base_fee) present in pre_check() method
+                    // This method should be called after check (max_fee and base_fee) present in pre_check() method
                     const intx::uint256 effective_gas_price{txn.effective_gas_price(base_fee_per_gas)};
                     want = txn.gas_limit * effective_gas_price;
                 } else {
@@ -263,7 +263,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                         return;
                     }
                 } else {
-                   state_.subtract_from_balance(*txn.from, want);
+                    state_.subtract_from_balance(*txn.from, want);
                 }
 
                 if (txn.to.has_value()) {
@@ -288,8 +288,9 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                     gas_left = txn.gas_limit - gas_used;
                 }
 
-                // reward the fee recipient
-                const intx::uint256 priority_fee_per_gas{txn.priority_fee_per_gas(base_fee_per_gas)};
+                // Reward the fee recipient
+                const intx::uint256 priority_fee_per_gas{txn.max_fee_per_gas >= base_fee_per_gas ? txn.priority_fee_per_gas(base_fee_per_gas)
+                                                                                                 : txn.max_priority_fee_per_gas};
                 SILKRPC_DEBUG << "EVMExecutor::call evm.beneficiary: " << evm.beneficiary << " balance: " << priority_fee_per_gas * gas_used << "\n";
                 state_.add_to_balance(evm.beneficiary, priority_fee_per_gas * gas_used);
 

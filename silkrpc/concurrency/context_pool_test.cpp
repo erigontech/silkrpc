@@ -174,12 +174,15 @@ ChannelFactory create_channel = []() { return grpc::CreateChannel("localhost", g
 TEST_CASE("Context", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
+    auto block_cache = std::make_shared<BlockCache>();
+    auto state_cache = std::make_shared<ethdb::kv::CoherentStateCache>();
+
     WaitMode all_wait_modes[] = {
         WaitMode::blocking, WaitMode::sleeping, WaitMode::yielding, WaitMode::spin_wait, WaitMode::busy_spin
     };
     for (auto wait_mode : all_wait_modes) {
         SECTION(std::string("Context::Context wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
-            Context context{create_channel, std::make_shared<BlockCache>(), wait_mode};
+            Context context{create_channel, block_cache, state_cache, wait_mode};
             CHECK_NOTHROW(context.io_context() != nullptr);
             CHECK_NOTHROW(context.rpc_end_point() != nullptr);
             CHECK_NOTHROW(context.backend() != nullptr);
@@ -188,7 +191,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
         }
 
         SECTION(std::string("Context::execute_loop wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
-            Context context{create_channel, std::make_shared<BlockCache>(), wait_mode};
+            Context context{create_channel, block_cache, state_cache, wait_mode};
             std::atomic_bool processed{false};
             auto io_context = context.io_context();
             io_context->post([&]() {
@@ -201,7 +204,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
         }
 
         SECTION(std::string("Context::stop wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
-            Context context{create_channel, std::make_shared<BlockCache>(), wait_mode};
+            Context context{create_channel, block_cache, state_cache, wait_mode};
             std::atomic_bool processed{false};
             context.io_context()->post([&]() {
                 processed = true;
@@ -260,15 +263,33 @@ TEST_CASE("start context pool", "[silkrpc][context_pool]") {
 
     SECTION("running 1 thread") {
         ContextPool cp{1, create_channel};
-        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        cp.start();
         cp.stop();
+        cp.join();
+    }
+
+    SECTION("running 3 thread") {
+        ContextPool cp{3, create_channel};
+        cp.start();
+        cp.stop();
+        cp.join();
+    }
+}
+
+TEST_CASE("run context pool", "[silkrpc][context_pool]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("running 1 thread") {
+        ContextPool cp{1, create_channel};
+        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        asio::post(cp.next_io_context(), [&]() { cp.stop(); });
         CHECK_NOTHROW(context_pool_thread.join());
     }
 
     SECTION("running 3 thread") {
         ContextPool cp{3, create_channel};
         auto context_pool_thread = std::thread([&]() { cp.run(); });
-        cp.stop();
+        asio::post(cp.next_io_context(), [&]() { cp.stop(); });
         CHECK_NOTHROW(context_pool_thread.join());
     }
 
@@ -277,8 +298,8 @@ TEST_CASE("start context pool", "[silkrpc][context_pool]") {
         ContextPool cp2{3, create_channel};
         auto context_pool_thread1 = std::thread([&]() { cp1.run(); });
         auto context_pool_thread2 = std::thread([&]() { cp2.run(); });
-        cp1.stop();
-        cp2.stop();
+        asio::post(cp1.next_io_context(), [&]() { cp1.stop(); });
+        asio::post(cp2.next_io_context(), [&]() { cp2.stop(); });
         CHECK_NOTHROW(context_pool_thread1.join());
         CHECK_NOTHROW(context_pool_thread2.join());
     }
@@ -294,35 +315,39 @@ TEST_CASE("stop context pool", "[silkrpc][context_pool]") {
 
     SECTION("already stopped") {
         ContextPool cp{3, create_channel};
-        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        cp.start();
         cp.stop();
         CHECK_NOTHROW(cp.stop());
+        cp.join();
+    }
+
+    SECTION("already stopped after run in dedicated thread") {
+        ContextPool cp{3, create_channel};
+        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        asio::post(cp.next_io_context(), [&]() { cp.stop(); });
+        asio::post(cp.next_io_context(), [&]() { cp.stop(); });
         context_pool_thread.join();
-        CHECK_NOTHROW(cp.stop());
+        asio::post(cp.next_io_context(), [&]() { cp.stop(); });
     }
 }
 
-TEST_CASE("restart context pool", "[silkrpc][context_pool]") {
+TEST_CASE("cannot restart context pool", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     SECTION("running 1 thread") {
         ContextPool cp{1, create_channel};
-        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        cp.start();
         cp.stop();
-        CHECK_NOTHROW(context_pool_thread.join());
-        context_pool_thread = std::thread([&]() { cp.run(); });
-        cp.stop();
-        CHECK_NOTHROW(context_pool_thread.join());
+        cp.join();
+        CHECK_THROWS_AS(cp.start(), std::logic_error);
     }
 
     SECTION("running 3 thread") {
         ContextPool cp{3, create_channel};
         auto context_pool_thread = std::thread([&]() { cp.run(); });
-        cp.stop();
+        asio::post(cp.next_io_context(), [&]() { cp.stop(); });
         CHECK_NOTHROW(context_pool_thread.join());
-        context_pool_thread = std::thread([&]() { cp.run(); });
-        cp.stop();
-        CHECK_NOTHROW(context_pool_thread.join());
+        CHECK_THROWS_AS(cp.start(), std::logic_error);
     }
 }
 

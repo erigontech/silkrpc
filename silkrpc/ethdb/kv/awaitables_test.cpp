@@ -16,11 +16,12 @@
 
 #include "awaitables.hpp"
 
-#include <catch2/catch.hpp>
 #include <silkrpc/config.hpp>
-#include <asio/use_awaitable.hpp>
+
+#include <catch2/catch.hpp>
 #include <asio/co_spawn.hpp>
 #include <asio/thread_pool.hpp>
+#include <asio/use_awaitable.hpp>
 #include <asio/use_future.hpp>
 #include <silkworm/common/util.hpp>
 

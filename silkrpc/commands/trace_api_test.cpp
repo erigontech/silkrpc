@@ -29,7 +29,7 @@ TEST_CASE("TraceRpcApi") {
     ChannelFactory create_channel = []() {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
     };
-    Context context{create_channel, std::make_shared<BlockCache>()};
+    Context context{create_channel, std::make_shared<BlockCache>(), std::make_shared<ethdb::kv::CoherentStateCache>()};
     asio::thread_pool workers{1};
 
     SECTION("CTOR") {
