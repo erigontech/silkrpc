@@ -16,6 +16,7 @@
 
 #include "state_cache.hpp"
 
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -580,6 +581,42 @@ TEST_CASE("CoherentStateCache::on_new_block exceed max keys", "[silkrpc][ethdb][
     CHECK(cache.code_key_count() == kMaxKeys);
     CHECK(cache.state_eviction_count() == kMaxKeys);
     CHECK(cache.code_eviction_count() == kMaxKeys);
+}
+
+TEST_CASE("CoherentStateCache::on_new_block clear the cache on view ID wrapping", "[silkrpc][ethdb][kv][state_cache]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    const CoherentCacheConfig config;
+    const auto kMaxViews{config.max_views};
+    CoherentStateCache cache{config};
+
+    // Create as many state views as the maximum allowed number *up to the max view ID*
+    const uint64_t max_view_id = std::numeric_limits<uint64_t>::max();
+    std::vector<uint64_t> wrapping_view_ids{max_view_id - 4, max_view_id - 3, max_view_id -2, max_view_id -1, max_view_id};
+    SILKWORM_ASSERT(wrapping_view_ids.size() == kMaxViews);
+    for (uint64_t i{0}; i < wrapping_view_ids.size(); ++i) {
+        uint64_t view_id = wrapping_view_ids[i];
+        cache.on_new_block(
+            new_batch_with_upsert(view_id, kTestBlockNumber + i, kTestBlockHash, kTestZeroTxs, /*unwind=*/false));
+        test::MockTransaction txn;
+        EXPECT_CALL(txn, tx_id()).WillRepeatedly(Return(view_id));
+        CHECK(cache.get_view(txn) != nullptr);
+    }
+
+    // Next incoming batch with progressive view ID overflows the state views
+    uint64_t next_view_id = wrapping_view_ids.back() + 1;
+    cache.on_new_block(
+        new_batch_with_upsert(next_view_id, kTestBlockNumber, kTestBlockHash, kTestZeroTxs, /*unwind=*/false));
+    test::MockTransaction txn;
+    EXPECT_CALL(txn, tx_id()).WillRepeatedly(Return(next_view_id));
+    CHECK(cache.get_view(txn) != nullptr);
+
+    // All previous state views should have been erased
+    for (uint64_t i{0}; i < wrapping_view_ids.size(); ++i) {
+        uint64_t old_view_id = wrapping_view_ids[i];
+        test::MockTransaction old_txn;
+        EXPECT_CALL(old_txn, tx_id()).WillRepeatedly(Return(old_view_id));
+        CHECK(cache.get_view(old_txn) == nullptr);
+    }
 }
 
 }  // namespace silkrpc::ethdb::kv

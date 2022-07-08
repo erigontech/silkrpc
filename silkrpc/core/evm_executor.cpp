@@ -251,17 +251,20 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                     want = 0;
                 }
                 const auto have = state_.get_balance(*txn.from);
-                if (have < want + txn.value && !gas_bailout) {
-                    silkworm::Bytes data{};
-                    std::string from = silkworm::to_hex(*txn.from);
-                    std::string error = "insufficient funds for gas * price + value: address 0x" + from + " have " + intx::to_string(have) + " want " + intx::to_string(want+txn.value);
-                    ExecutionResult exec_result{1000, txn.gas_limit, data, error};
-                    asio::post(io_context_, [exec_result, self = std::move(self)]() mutable {
-                        self.complete(exec_result);
-                    });
-                    return;
+                if (have < want + txn.value) {
+                    if (!gas_bailout) {
+                        silkworm::Bytes data{};
+                        std::string from = silkworm::to_hex(*txn.from);
+                        std::string error = "insufficient funds for gas * price + value: address 0x" + from + " have " + intx::to_string(have) + " want " + intx::to_string(want+txn.value);
+                        ExecutionResult exec_result{1000, txn.gas_limit, data, error};
+                        asio::post(io_context_, [exec_result, self = std::move(self)]() mutable {
+                            self.complete(exec_result);
+                        });
+                        return;
+                    }
+                } else {
+                    state_.subtract_from_balance(*txn.from, want);
                 }
-                state_.subtract_from_balance(*txn.from, want);
 
                 if (txn.to.has_value()) {
                     state_.access_account(*txn.to);
@@ -284,7 +287,6 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 if (refund) {
                     gas_left = txn.gas_limit - gas_used;
                 }
-                state_.finalize_transaction();
 
                 // Reward the fee recipient
                 const intx::uint256 priority_fee_per_gas{txn.max_fee_per_gas >= base_fee_per_gas ? txn.priority_fee_per_gas(base_fee_per_gas)
@@ -295,6 +297,7 @@ asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(const silkwor
                 for (auto tracer : evm.tracers()) {
                     tracer.get().on_reward_granted(result, evm.state());
                 }
+                state_.finalize_transaction();
 
                 ExecutionResult exec_result{result.status, gas_left, result.data};
                 asio::post(io_context_, [exec_result, self = std::move(self)]() mutable {

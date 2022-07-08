@@ -53,6 +53,15 @@ public:
 
     virtual std::size_t latest_data_size() = 0;
     virtual std::size_t latest_code_size() = 0;
+
+    virtual uint64_t state_hit_count() const = 0;
+    virtual uint64_t state_miss_count() const = 0;
+    virtual uint64_t state_key_count() const = 0;
+    virtual uint64_t state_eviction_count() const = 0;
+    virtual uint64_t code_hit_count() const = 0;
+    virtual uint64_t code_miss_count() const = 0;
+    virtual uint64_t code_key_count() const = 0;
+    virtual uint64_t code_eviction_count() const = 0;
 };
 
 struct CoherentStateRoot {
@@ -107,14 +116,14 @@ public:
     std::size_t latest_data_size() override;
     std::size_t latest_code_size() override;
 
-    uint64_t state_hit_count() const { return state_hit_count_; }
-    uint64_t state_miss_count() const { return state_miss_count_; }
-    uint64_t state_key_count() const { return state_key_count_; }
-    uint64_t state_eviction_count() const { return state_eviction_count_; }
-    uint64_t code_hit_count() const { return code_hit_count_; }
-    uint64_t code_miss_count() const { return code_miss_count_; }
-    uint64_t code_key_count() const { return code_key_count_; }
-    uint64_t code_eviction_count() const { return code_eviction_count_; }
+    uint64_t state_hit_count() const override { return state_hit_count_; }
+    uint64_t state_miss_count() const override { return state_miss_count_; }
+    uint64_t state_key_count() const override { return state_key_count_; }
+    uint64_t state_eviction_count() const override { return state_eviction_count_; }
+    uint64_t code_hit_count() const override { return code_hit_count_; }
+    uint64_t code_miss_count() const override { return code_miss_count_; }
+    uint64_t code_key_count() const override { return code_key_count_; }
+    uint64_t code_eviction_count() const override { return code_eviction_count_; }
 
 private:
     friend class CoherentStateView;
@@ -129,7 +138,7 @@ private:
     asio::awaitable<std::optional<silkworm::Bytes>> get_code(const silkworm::Bytes& key, Transaction& txn);
     CoherentStateRoot* get_root(StateViewId view_id);
     CoherentStateRoot* advance_root(StateViewId view_id);
-    void evict_roots();
+    void evict_roots(StateViewId next_view_id);
 
     CoherentCacheConfig config_;
 
