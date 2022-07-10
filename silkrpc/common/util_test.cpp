@@ -22,6 +22,15 @@
 
 #include <silkrpc/common/log.hpp>
 
+namespace silkworm {
+
+TEST_CASE("print Bytes", "[silkrpc][common][util]") {
+    silkworm::Bytes b{};
+    CHECK_NOTHROW(silkrpc::null_stream() << b);
+}
+
+} // namespace silkworm
+
 namespace silkrpc {
 
 using Catch::Matchers::Message;
@@ -46,11 +55,6 @@ TEST_CASE("calculate hash of byte array", "[silkrpc][common][util]") {
 TEST_CASE("calculate hash of transaction", "[silkrpc][common][util]") {
     const auto eth_hash{hash_of_transaction(silkworm::Transaction{})};
     CHECK(silkworm::to_bytes32(silkworm::ByteView{eth_hash.bytes, silkworm::kHashLength}) == 0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32);
-}
-
-TEST_CASE("print Bytes", "[silkrpc][common][util]") {
-    const silkworm::Bytes bt1{};
-    CHECK_NOTHROW(null_stream() << bt1);
 }
 
 TEST_CASE("print ByteView", "[silkrpc][common][util]") {

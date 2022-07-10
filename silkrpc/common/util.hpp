@@ -39,6 +39,14 @@ struct KeyValue {
     silkworm::Bytes value;
 };
 
+inline bool operator<(const KeyValue& lhs, const KeyValue& rhs) {
+    return lhs.key < rhs.key;
+}
+
+inline bool operator==(const KeyValue& lhs, const KeyValue& rhs) {
+    return lhs.key == rhs.key;
+}
+
 std::string base64_encode(const uint8_t* bytes_to_encode, size_t len, bool url);
 std::string to_dec(intx::uint256 number);
 bool check_tx_fee_less_cap(float cap, intx::uint256 max_fee_per_gas, uint64_t gas_limit);
@@ -70,7 +78,7 @@ inline Bytes bytes_of_string(const std::string& s) {
     return Bytes(s.begin(), s.end());
 }
 
-inline ByteView full_view(const ethash::hash256& hash) { return {hash.bytes, kHashLength}; }
+//inline ByteView full_view(const ethash::hash256& hash) { return {hash.bytes, kHashLength}; }
 
 inline evmc::bytes32 bytes32_from_hex(const std::string& s) {
     const auto b32_bytes = silkworm::from_hex(s);

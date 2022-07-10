@@ -261,7 +261,7 @@ static auto create_channel = []() {
 
 class ClientServerTestBox {
 public:
-    explicit ClientServerTestBox(grpc::Service* service) : context_{create_channel, std::make_shared<BlockCache>()} {
+    explicit ClientServerTestBox(grpc::Service* service) : context_{create_channel, std::make_shared<BlockCache>(), std::make_shared<ethdb::kv::CoherentStateCache>()} {
         server_address_ << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
         grpc::ServerBuilder builder;
         builder.AddListeningPort(server_address_.str(), grpc::InsecureServerCredentials());

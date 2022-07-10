@@ -23,10 +23,12 @@
 #include <utility>
 
 #include <asio/io_context.hpp>
+#include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/kv/remote_transaction.hpp>
+#include <silkrpc/ethdb/kv/state_cache.hpp>
 #include <silkrpc/ethdb/kv/tx_streaming_client.hpp>
 
 namespace silkrpc::ethdb::kv {
@@ -34,8 +36,15 @@ namespace silkrpc::ethdb::kv {
 template<typename Client = TxStreamingClient>
 class RemoteDatabase: public Database {
 public:
-    RemoteDatabase(asio::io_context& io_context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : io_context_(io_context), stub_{remote::KV::NewStub(channel)}, queue_(queue) {
+    RemoteDatabase(
+        asio::io_context& io_context,
+        std::shared_ptr<grpc::Channel> channel,
+        grpc::CompletionQueue* queue,
+        StateCache* state_cache)
+    : io_context_(io_context),
+      stub_{remote::KV::NewStub(channel)},
+      queue_(queue),
+      state_cache_(state_cache) {
         SILKRPC_TRACE << "RemoteDatabase::ctor " << this << "\n";
     }
 
@@ -58,6 +67,7 @@ private:
     asio::io_context& io_context_;
     std::unique_ptr<remote::KV::StubInterface> stub_;
     grpc::CompletionQueue* queue_;
+    StateCache* state_cache_;
 };
 
 } // namespace silkrpc::ethdb::kv

@@ -44,7 +44,7 @@ using TestHandleMethod = asio::awaitable<void>(ErigonRpcApiTest::*)(const nlohma
 void check_api(TestHandleMethod method, const nlohmann::json& request, nlohmann::json& reply, bool success) {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     try {
         ErigonRpcApiTest erigon_api{cp.next_context()};
         auto result{asio::co_spawn(cp.next_io_context(), [&]() {
@@ -56,7 +56,7 @@ void check_api(TestHandleMethod method, const nlohmann::json& request, nlohmann:
         CHECK(!success);
     }
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 void check_api_ok(TestHandleMethod method, const nlohmann::json& request, nlohmann::json& reply) {

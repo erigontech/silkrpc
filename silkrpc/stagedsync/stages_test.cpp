@@ -25,24 +25,16 @@
 #include <gmock/gmock.h>
 
 #include <silkrpc/ethdb/tables.hpp>
+#include <silkrpc/test/mock_database_reader.hpp>
 
 namespace silkrpc::stages {
 
 using testing::InvokeWithoutArgs;
 using testing::_;
 
-class MockDatabaseReader : public core::rawdb::DatabaseReader {
-public:
-    MOCK_CONST_METHOD2(get, asio::awaitable<KeyValue>(const std::string&, const silkworm::ByteView&));
-    MOCK_CONST_METHOD2(get_one, asio::awaitable<silkworm::Bytes>(const std::string&, const silkworm::ByteView&));
-    MOCK_CONST_METHOD3(get_both_range, asio::awaitable<std::optional<silkworm::Bytes>>(const std::string&, const silkworm::ByteView&, const silkworm::ByteView&));
-    MOCK_CONST_METHOD4(walk, asio::awaitable<void>(const std::string&, const silkworm::ByteView&, uint32_t, core::rawdb::Walker));
-    MOCK_CONST_METHOD3(for_prefix, asio::awaitable<void>(const std::string&, const silkworm::ByteView&, core::rawdb::Walker));
-};
-
 TEST_CASE("get_sync_stage_progress", "[silkrpc][stagedsync]") {
     asio::thread_pool pool{1};
-    MockDatabaseReader db_reader;
+    test::MockDatabaseReader db_reader;
 
     SECTION("empty stage key") {
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, _)).WillOnce(InvokeWithoutArgs(

@@ -63,7 +63,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 10000;
         silkworm::Transaction txn{};
@@ -75,7 +75,7 @@ TEST_CASE("EVMexecutor") {
         auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(result.error_code == 1000);
         CHECK(result.pre_check_error.value() == "intrinsic gas too low: have 0, want 53000");
     }
@@ -88,7 +88,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -102,7 +102,7 @@ TEST_CASE("EVMexecutor") {
         auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(result.error_code == 1000);
         CHECK(result.pre_check_error.value() == "fee cap less than block base fee: address 0xa872626373628737383927236382161739290870, gasFeeCap: 2 baseFee: 7");
     }
@@ -115,7 +115,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -130,7 +130,7 @@ TEST_CASE("EVMexecutor") {
         auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(result.error_code == 1000);
         CHECK(result.pre_check_error.value() == "tip higher than fee cap: address 0xa872626373628737383927236382161739290870, tip: 24 gasFeeCap: 2");
     }
@@ -143,7 +143,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -158,7 +158,7 @@ TEST_CASE("EVMexecutor") {
         auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(result.error_code == 1000);
         CHECK(result.pre_check_error.value() == "insufficient funds for gas * price + value: address 0xa872626373628737383927236382161739290870 have 0 want 60000");
     }
@@ -171,7 +171,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -187,7 +187,7 @@ TEST_CASE("EVMexecutor") {
         auto result = execution_result.get();
         executor.reset();
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(result.error_code == 0);
     }
 
@@ -210,7 +210,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -224,7 +224,7 @@ TEST_CASE("EVMexecutor") {
         auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, true, true, {}), asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(result.error_code == 0);
     }
 
@@ -259,7 +259,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -271,7 +271,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, short_error_data_1);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "execution failed"); // only short answer because error_data is too short */
     }
 
@@ -283,7 +283,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -295,7 +295,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, short_error_data_2);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "execution failed"); // only short answer because error_data is too short */
     }
 
@@ -307,7 +307,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -319,7 +319,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, short_error_data_3);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "execution failed"); // only short answer because error_data is too short */
     }
 
@@ -331,7 +331,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -343,7 +343,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, short_error_data_4);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "execution failed"); // only short answer because error_data is too short */
     }
 
@@ -355,7 +355,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -367,7 +367,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, error_data);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "execution failed: Ownable: caller is not the owner");
     }
 
@@ -379,7 +379,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -391,7 +391,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "execution failed");
     }
 
@@ -403,7 +403,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -415,7 +415,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_REVERT, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "execution reverted");
     }
 
@@ -427,7 +427,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -439,7 +439,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_OUT_OF_GAS, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "out of gas");
     }
 
@@ -451,7 +451,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -463,7 +463,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_INVALID_INSTRUCTION, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "invalid instruction");
     }
 
@@ -475,7 +475,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -487,7 +487,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_UNDEFINED_INSTRUCTION, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "invalid opcode");
     }
 
@@ -499,7 +499,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -511,7 +511,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_STACK_OVERFLOW, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "stack overflow");
     }
 
@@ -523,7 +523,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -535,7 +535,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_STACK_UNDERFLOW, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "stack underflow");
     }
 
@@ -547,7 +547,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -559,7 +559,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_BAD_JUMP_DESTINATION, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "invalid jump destination");
     }
 
@@ -571,7 +571,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -583,7 +583,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_INVALID_MEMORY_ACCESS, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "invalid memory access");
     }
 
@@ -595,7 +595,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -607,7 +607,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_CALL_DEPTH_EXCEEDED, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "call depth exceeded");
     }
 
@@ -619,7 +619,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -631,7 +631,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_STATIC_MODE_VIOLATION, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "static mode violation");
     }
 
@@ -643,7 +643,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -655,7 +655,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_PRECOMPILE_FAILURE, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "precompile failure");
     }
 
@@ -667,7 +667,7 @@ TEST_CASE("EVMexecutor") {
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
         asio::thread_pool workers{1};
-        auto pool_thread = std::thread([&]() { my_pool.run(); });
+        my_pool.start();
 
         const auto block_number = 6000000;
         silkworm::Block block{};
@@ -679,7 +679,7 @@ TEST_CASE("EVMexecutor") {
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
         auto error_message = executor.get_error_message(8888, error_data, false);
         my_pool.stop();
-        pool_thread.join();
+        my_pool.join();
         CHECK(error_message == "unknown error code");
     }
 }

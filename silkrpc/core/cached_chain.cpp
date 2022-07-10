@@ -19,14 +19,15 @@
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 
-namespace silkrpc::core  {
+namespace silkrpc::core {
 
 asio::awaitable<silkworm::BlockWithHash> read_block_by_number(BlockCache& cache, const rawdb::DatabaseReader& reader, uint64_t block_number) {
     const auto block_hash = co_await rawdb::read_canonical_block_hash(reader, block_number);
-    auto option_block = cache.get(block_hash);
-    if (option_block) {
-        co_return *option_block;
+    const auto cached_block = cache.get(block_hash);
+    if (cached_block) {
+        co_return cached_block.value();
     }
+
     auto block_with_hash = co_await rawdb::read_block(reader, block_hash, block_number);
     if (block_with_hash.block.transactions.size() != 0) {
        // calc fields before put to cache
@@ -38,9 +39,9 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_number(BlockCache& cache,
 }
 
 asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(BlockCache& cache, const rawdb::DatabaseReader& reader, const evmc::bytes32& block_hash) {
-    auto option_block = cache.get(block_hash);
-    if (option_block) {
-        co_return *option_block;
+    const auto cached_block = cache.get(block_hash);
+    if (cached_block) {
+        co_return cached_block.value();
     }
     auto block_with_hash = co_await rawdb::read_block_by_hash(reader, block_hash);
     if (block_with_hash.block.transactions.size() != 0) {

@@ -26,6 +26,7 @@
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/concurrency/context_pool.hpp>
+#include <silkrpc/ethdb/kv/state_changes_stream.hpp>
 #include <silkrpc/http/server.hpp>
 #include <silkrpc/protocol/version.hpp>
 
@@ -75,11 +76,25 @@ class Daemon {
     static bool validate_settings(const DaemonSettings& settings);
     static ChannelFactory make_channel_factory(const DaemonSettings& settings);
 
+    //! The RPC daemon configuration settings.
     const DaemonSettings& settings_;
+
+    //! The factory of gRPC client-side channels.
     ChannelFactory create_channel_;
+
+    //! The execution contexts capturing the asynchronous scheduling model.
     ContextPool context_pool_;
+
+    //! The pool of workers for long-running tasks.
     asio::thread_pool worker_pool_;
+
     std::vector<std::unique_ptr<http::Server>> rpc_services_;
+
+    //! The gRPC KV interface client stub.
+    std::unique_ptr<remote::KV::StubInterface> kv_stub_;
+
+    //! The stream handling StateChanges server-streaming RPC.
+    std::unique_ptr<ethdb::kv::StateChangesStream> state_changes_stream_;
 };
 
 } // namespace silkrpc
