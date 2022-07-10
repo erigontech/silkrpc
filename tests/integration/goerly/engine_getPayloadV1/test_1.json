@@ -9,7 +9,7 @@
         "response": {
             "error": {
                 "code": 100,
-                "message": "unknown method EngineGetPayloadV1 for service remote.ETHBACKEND"
+                "message": "not a proof-of-stake chain"
             },
             "id": 1,
             "jsonrpc": "2.0"
