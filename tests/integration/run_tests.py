@@ -41,6 +41,12 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         expected_response = json.loads(process.stdout)
 
     if response != expected_response:
+        if "result" in response and "result" in expected_response and expected_response["result"] is None:
+            # response and expected_response are different but don't care
+            return
+        if "error" in response and "error" in expected_response and expected_response["error"] is None:
+            # response and expected_response are different but don't care
+            return
         if (silk_file != "" and os.path.exists(output_dir) == 0):
             os.mkdir (output_dir)
         if silk_file != "":
@@ -49,12 +55,6 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         if rpc_file != "":
             with open(rpc_file, 'w', encoding='utf8') as json_file_ptr:
                 json_file_ptr.write(json.dumps(expected_response, indent = 6))
-        if "result" in response and "result" in expected_response and expected_response["result"] is None:
-            # response and expected_response are different but don't care
-            return
-        if "error" in response and "error" in expected_response and expected_response["error"] is None:
-            # response and expected_response are different but don't care
-            return
         response_diff = jsondiff.diff(expected_response, response, marshal=True)
         if diff_file != "":
             with open(diff_file, 'w', encoding='utf8') as json_file_ptr:
@@ -100,11 +100,12 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
         if verify_with_rpc == 0:
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = ""
+            output_api_filename = output_dir + json_file[:-5]
+            output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = json_rpc["response"]
-            output_dir_name = ""
-            silk_file = ""
-            rpc_file = ""
-            diff_file = ""
+            silk_file = output_api_filename + "-resonse.json"
+            rpc_file = output_api_filename + "-expectedResponse.json"
+            diff_file = output_api_filename + "-diff.json"
         else:
             output_api_filename = output_dir + json_file[:-5]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
