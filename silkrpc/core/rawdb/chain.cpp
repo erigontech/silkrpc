@@ -168,8 +168,9 @@ asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& reader, con
     try {
         silkworm::ByteView data_view{data};
         auto stored_body{silkworm::db::detail::decode_stored_block_body(data_view)};
-        SILKRPC_DEBUG << "base_txn_id: " << stored_body.base_txn_id << " txn_count: " << stored_body.txn_count << "\n";
-        auto transactions = co_await read_canonical_transactions(reader, stored_body.base_txn_id, stored_body.txn_count);
+        // 1 system txn in the begining of block, and 1 at the end
+        SILKRPC_DEBUG << "base_txn_id: " << stored_body.base_txn_id + 1 << " txn_count: " << stored_body.txn_count -2 << "\n";
+        auto transactions = co_await read_canonical_transactions(reader, stored_body.base_txn_id+1, stored_body.txn_count-2);
         if (transactions.size() != 0) {
             const auto senders = co_await read_senders(reader, block_hash, block_number);
             if (senders.size() == transactions.size()) {
