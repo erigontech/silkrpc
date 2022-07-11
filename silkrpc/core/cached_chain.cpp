@@ -29,12 +29,9 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_number(BlockCache& cache,
     }
 
     auto block_with_hash = co_await rawdb::read_block(reader, block_hash, block_number);
-    if (block_with_hash.block.transactions.size() != 0) {
-       // calc fields before put to cache
+    if (block_with_hash.block.transactions.size() != 0) { // don't save empty blocks to cache, if block become non-canonical, we remove it's transactions,but block can canonical in future
        cache.insert(block_hash, block_with_hash);
     }
-    // don't save empty blocks to cache, because in Erigon
-    // if block become non-canonical - we remove it's transactions, but block can become canonical in future
     co_return block_with_hash;
 }
 
@@ -44,8 +41,7 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(BlockCache& cache, c
         co_return cached_block.value();
     }
     auto block_with_hash = co_await rawdb::read_block_by_hash(reader, block_hash);
-    if (block_with_hash.block.transactions.size() != 0) {
-       // calc fields before put to cache
+    if (block_with_hash.block.transactions.size() != 0) { // don't save empty blocks to cache, if block become non-canonical, we remove it's transactions,but block become canonical in future
        cache.insert(block_hash, block_with_hash);
     }
     co_return block_with_hash;
