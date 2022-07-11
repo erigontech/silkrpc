@@ -25,7 +25,7 @@ namespace silkrpc::commands {
 asio::awaitable<void> TxPoolRpcApi::handle_txpool_status(const nlohmann::json& request, nlohmann::json& reply) {
     try {
         const auto status = co_await tx_pool_->get_status();
-        TxPoolStatusInfo txpool_status{status.pending_count, status.queued_count, status.base_fee_count};
+        TxPoolStatusInfo txpool_status{status.base_fee_count, status.pending_count, status.queued_count};
         reply = make_json_content(request["id"], txpool_status);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -49,6 +49,7 @@ asio::awaitable<void> TxPoolRpcApi::handle_txpool_content(const nlohmann::json& 
         transactions_content["baseFee"];
 
         bool error = false;
+        std::cout << "size: " << txpool_transactions.size() << "\n";
         for (int i = 0; i < txpool_transactions.size(); i++) {
             silkworm::ByteView from{txpool_transactions[i].rlp};
             Transaction txn{};
