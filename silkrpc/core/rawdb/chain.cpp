@@ -349,9 +349,7 @@ asio::awaitable<Transactions> read_noncanonical_transactions(const DatabaseReade
         SILKRPC_DEBUG << "txn_count: 0 #txns: 0\n";
         co_return txns;
     }
-
     txns.reserve(txn_count);
-
     silkworm::Bytes txn_id_key(8, '\0');
     boost::endian::store_big_u64(&txn_id_key[0], base_txn_id); // tx_id_key.data()?
     SILKRPC_DEBUG << "txn_count: " << txn_count << " txn_id_key: " << silkworm::to_hex(txn_id_key) << "\n";
@@ -371,9 +369,7 @@ asio::awaitable<Transactions> read_noncanonical_transactions(const DatabaseReade
         return i < txn_count;
     };
     co_await reader.walk(db::table::kNonCanonicalTx, txn_id_key, 0, walker);
-
     SILKRPC_DEBUG << "#txns: " << txns.size() << "\n";
-
     co_return txns;
 }
 
