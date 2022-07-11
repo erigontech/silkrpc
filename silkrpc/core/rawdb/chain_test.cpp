@@ -1372,6 +1372,32 @@ TEST_CASE("read_canonical_transactions") {
         }});
     }
 
+    SECTION("one transaction bad RLP") {
+        uint64_t base_txn_id{0};
+        Transactions empty_txs{};
+        const uint64_t txn_count{1};
+        EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(Invoke(
+            [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+                silkworm::Bytes key{};
+                silkworm::Bytes value{*silkworm::from_hex(
+                    "00000000000000000000000000830f4240943dd81545f3149538edcb6691a4ffee1898bd2ef080b90124cf10"
+                    "c9690000000000000000000000000214281cf15c1a66b51990e2e65e1f7b7c36331800000000000000000000"
+                    "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+                    "00000000000000989680000000000000000000000000ac399a5dfb9848d9e83d92d5f7dda9ba1a0013200000"
+                    "0000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000"
+                    "00000000000000000000000000000000004182f27f9a01e210e2f3214b036e30229b2ac43e1cf2325bf270ee"
+                    "a067e4f8a58a02154776f0dae16f76d1bfc82b9a9d2022039cfb09598954d05b46fc793e731a1c0000000000"
+                    "00000000000000000000000000000000000000000000000000001ca0a54794fbc1edb3a2a0d3109091984eeb"
+                    "5985b058220fee572147dd99e66b9f34a07dcddb68e3665b6693141c8bd60a12727d29012b7cd6ea452d418c"
+                    "43e84d67dc")};
+                w(key, value);
+                co_return;
+            }
+        ));
+        auto result = asio::co_spawn(pool, read_canonical_transactions(db_reader, base_txn_id, txn_count), asio::use_future);
+        CHECK(result.get() == empty_txs);
+    }
+
     SECTION("many transactions") {
         uint64_t base_txn_id{0};
         const uint64_t txn_count{2};
@@ -1482,6 +1508,32 @@ TEST_CASE("read_noncanonical_transactions") {
             intx::from_string<intx::uint256>("0xa54794fbc1edb3a2a0d3109091984eeb5985b058220fee572147dd99e66b9f34"),  // r
             intx::from_string<intx::uint256>("0x7dcddb68e3665b6693141c8bd60a12727d29012b7cd6ea452d418c43e84d67dc"),  // s
         }});
+    }
+
+    SECTION("one transaction bad RLP") {
+        uint64_t base_txn_id{0};
+        Transactions empty_txs{};
+        const uint64_t txn_count{1};
+        EXPECT_CALL(db_reader, walk(db::table::kNonCanonicalTx, _, _, _)).WillOnce(Invoke(
+            [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+                silkworm::Bytes key{};
+                silkworm::Bytes value{*silkworm::from_hex(
+                    "00000000065a0c85012a05f200830f4240943dd81545f3149538edcb6691a4ffee1898bd2ef080b90124cf10"
+                    "00000000000000000000000000000214281cf15c1a66b51990e2e65e1f7b7c36331800000000000000000000"
+                    "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+                    "00000000000000989680000000000000000000000000ac399a5dfb9848d9e83d92d5f7dda9ba1a0013200000"
+                    "0000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000"
+                    "00000000000000000000000000000000004182f27f9a01e210e2f3214b036e30229b2ac43e1cf2325bf270ee"
+                    "a067e4f8a58a02154776f0dae16f76d1bfc82b9a9d2022039cfb09598954d05b46fc793e731a1c0000000000"
+                    "00000000000000000000000000000000000000000000000000001ca0a54794fbc1edb3a2a0d3109091984eeb"
+                    "5985b058220fee572147dd99e66b9f34a07dcddb68e3665b6693141c8bd60a12727d29012b7cd6ea452d418c"
+                    "43e84d67dc")};
+                w(key, value);
+                co_return;
+            }
+        ));
+        auto result = asio::co_spawn(pool, read_noncanonical_transactions(db_reader, base_txn_id, txn_count), asio::use_future);
+        CHECK(result.get() == empty_txs);
     }
 
     SECTION("many transactions") {
