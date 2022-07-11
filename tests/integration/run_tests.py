@@ -231,17 +231,16 @@ def main(argv):
                     jump_api = 0
                     for exclude_api in tokenize_list:  # -x
                         if exclude_api == api_file:
-                           jump_api = 1
-                           break
+                            jump_api = 1
+                            break
                     test_file = api_file + "/" + test_name
-                    # runs all tests req_test refers global number 
-                    # runs only tests on specific api req_test refers api test 
-                    # api not in exclude list
-                    if ((requested_api == "" and req_test in (-1, global_test_number)) or 
-                        (requested_api != "" and req_test in (-1, test_number))) and jump_api == 0:                                                  
-                        if verbose:
-                            print("Test name: ", test_file)
-                        run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, global_test_number, verify_with_rpc, dump_output)
+                    if jump_api == 0:
+                        # runs all tests req_test refers global test number or
+                        # runs only tests on specific api req_test refers all test on specific api
+                        if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
+                            if verbose:
+                                print("Test name: ", test_file)
+                            run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, global_test_number, verify_with_rpc, dump_output)
                 global_test_number = global_test_number + 1
                 test_number = test_number + 1
 
