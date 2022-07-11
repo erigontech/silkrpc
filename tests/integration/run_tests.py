@@ -136,7 +136,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
 def usage(argv):
     """ Print script usage
     """
-    print("Usage: " + argv[0] + " -h -c -r -v -a <api_name> -t < test_number> -l < no of loops> -d -h <chain Name> -o ")
+    print("Usage: " + argv[0] + " -h -c -r -v -a <requested_api> -t < test_number> -l < no of loops> -d -h <chain Name> -o -x <exclude list>")
     print("")
     print("Launch an automated test sequence on Silkrpc or RPCDaemon")
     print("")
@@ -150,6 +150,7 @@ def usage(argv):
     print("-b blockchain (default goerly)")
     print("-v verbose")
     print("-o dump response")
+    print("-x exclude api list (i.e txpool_content,txpool_status")
 
 
 #
@@ -164,14 +165,15 @@ def main(argv):
     verbose = 0
     req_test = -1
     dump_output = 0
-    api_name = ""
+    requested_api = ""
     verify_with_rpc = 0
     json_dir = "./goerly/"
     results_dir = "results"
     output_dir = json_dir + "/" + results_dir + "/"
+    exclude_list = ""
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:db:o")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:db:ox:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -185,7 +187,7 @@ def main(argv):
             elif option == "-t":
                 req_test = int(optarg)
             elif option == "-a":
-                api_name = optarg
+                requested_api = optarg
             elif option == "-l":
                 loop_number = int(optarg)
             elif option == "-d":
@@ -194,6 +196,8 @@ def main(argv):
                 dump_output = 1
             elif option == "-b":
                 json_dir = "./" + optarg + "/"
+            elif option == "-x":
+                exclude_list = optarg
             else:
                 usage(argv)
                 sys.exit(-1)
@@ -212,20 +216,33 @@ def main(argv):
         if verbose:
             print("Test iteration: ", test_rep + 1)
         dirs = sorted(os.listdir(json_dir))
-        test_number = 0
+        global_test_number = 0
         for api_file in dirs:
             # jump result_dir
             if api_file == results_dir:
                 continue
             test_dir = json_dir + api_file
             test_lists = sorted(os.listdir(test_dir))
+            test_number = 0
             for test_name in test_lists:
-                if api_name in ("", api_file):
+                if requested_api in ("", api_file): # -a
+                    # scans exclude list
+                    tokenize_list = exclude_list.split(",")
+                    jump_api = 0
+                    for exclude_api in tokenize_list:  # -x
+                        if exclude_api == api_file:
+                           jump_api = 1
+                           break
                     test_file = api_file + "/" + test_name
-                    if req_test in (-1, test_number):
+                    # runs all tests req_test refers global number 
+                    # runs only tests on specific api req_test refers api test 
+                    # api not in exclude list
+                    if ((requested_api == "" and req_test in (-1, global_test_number)) or 
+                        (requested_api != "" and req_test in (-1, test_number))) and jump_api == 0:                                                  
                         if verbose:
                             print("Test name: ", test_file)
-                        run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, test_number, verify_with_rpc, dump_output)
+                        run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, global_test_number, verify_with_rpc, dump_output)
+                global_test_number = global_test_number + 1
                 test_number = test_number + 1
 
 #
