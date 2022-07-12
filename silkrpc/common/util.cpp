@@ -164,7 +164,7 @@ std::string decoding_result_to_string(silkworm::DecodingResult decode_result) {
         case silkworm::DecodingResult::kLeadingZero:
             return "rlp: leading Zero";
         case silkworm::DecodingResult::kInputTooShort:
-            return "rlp: element is larger than containing list";
+            return "rlp: value size exceeds available input length";
         case silkworm::DecodingResult::kNonCanonicalSize:
             return "rlp: non-canonical size information";
         case silkworm::DecodingResult::kUnexpectedLength:
