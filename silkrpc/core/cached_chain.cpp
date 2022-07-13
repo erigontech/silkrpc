@@ -27,7 +27,6 @@ asio::awaitable<silkworm::BlockWithHash> read_block_by_number(BlockCache& cache,
     if (cached_block) {
         co_return cached_block.value();
     }
-
     auto block_with_hash = co_await rawdb::read_block(reader, block_hash, block_number);
     if (block_with_hash.block.transactions.size() != 0) { // don't save empty blocks to cache, if block become non-canonical, we remove it's transactions,but block can canonical in future
        cache.insert(block_hash, block_with_hash);
