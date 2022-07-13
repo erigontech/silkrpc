@@ -54,7 +54,7 @@ asio::awaitable<void> TxPoolRpcApi::handle_txpool_content(const nlohmann::json& 
             Transaction txn{};
             const auto result = silkworm::rlp::decode(from, dynamic_cast<silkworm::Transaction&>(txn));
             if (result != silkworm::DecodingResult::kOk) {
-                SILKRPC_ERROR << "handle_txpool_content  rlp::decode failed " << (int)result << "\n";
+                SILKRPC_ERROR << "handle_txpool_content  rlp::decode failed " << static_cast<int>result << "\n";
                 error = true;
                 break;
             }
