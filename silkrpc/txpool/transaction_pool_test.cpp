@@ -44,6 +44,17 @@ inline bool operator==(const Status& lhs, const Status& rhs) {
         lhs.error_details() == rhs.error_details();
 }
 
+::types::H160* make_h160(uint64_t hi_hi, uint64_t hi_lo, uint32_t lo) {
+    auto h128_ptr{new ::types::H128()};
+    h128_ptr->set_hi(hi_hi);
+    h128_ptr->set_lo(hi_lo);
+    auto h160_ptr{new ::types::H160()};
+    h160_ptr->set_allocated_hi(h128_ptr);
+    h160_ptr->set_lo(lo);
+    return h160_ptr;
+}
+
+
 } // namespace grpc
 
 namespace txpool {
@@ -351,8 +362,9 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         public:
             ::grpc::Status All(::grpc::ServerContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response) override {
                 auto tx = response->add_txs();
-                tx->set_type(::txpool::AllReply_Type_QUEUED);
-                tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
+                tx->set_txntype(::txpool::AllReply_TxnType_QUEUED);
+                auto address{grpc::make_h160(0xAAAAEEFFFFEEAAAA, 0x11DDBBAAAABBDD11, 0xCCDDDDCC)};
+                tx->set_allocated_sender(address);
                 tx->set_rlptx("0804");
                 return ::grpc::Status::OK;
             }
@@ -362,7 +374,7 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         auto result{asio::co_spawn(io_context, test_all(&service), asio::use_future)};
         io_context.run();
         auto get_transactions = result.get();
-        const auto sender{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
+        const auto sender{0xaaaaeeffffeeaaaa11ddbbaaaabbdd11ccddddcc_address};
         CHECK(get_transactions.size() == 1);
         CHECK(get_transactions[0].transaction_type == silkrpc::txpool::TransactionType::QUEUED);
         CHECK(get_transactions[0].sender == sender);
@@ -374,16 +386,19 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         public:
             ::grpc::Status All(::grpc::ServerContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response) override {
                 auto tx = response->add_txs();
-                tx->set_type(::txpool::AllReply_Type_QUEUED);
-                tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
+                auto address{grpc::make_h160(0xAAAAEEFFFFEEAAAA, 0x11DDBBAAAABBDD11, 0xCCDDDDCC)};
+                tx->set_allocated_sender(address);
+                tx->set_txntype(::txpool::AllReply_TxnType_QUEUED);
                 tx->set_rlptx("0804");
                 tx = response->add_txs();
-                tx->set_type(::txpool::AllReply_Type_PENDING);
-                tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de735");
+                auto address1{grpc::make_h160(0xBBAAEEFFFFEEAAAA, 0x11DDBBAAAABBDD11, 0xCCDDDDCC)};
+                tx->set_allocated_sender(address1);
+                tx->set_txntype(::txpool::AllReply_TxnType_PENDING);
                 tx->set_rlptx("0806");
                 tx = response->add_txs();
-                tx->set_type(::txpool::AllReply_Type_BASE_FEE);
-                tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de736");
+                auto address2{grpc::make_h160(0xCCAAEEFFFFEEAAAA, 0x11DDBBAAAABBDD11, 0xCCDDDDCC)};
+                tx->set_allocated_sender(address2);
+                tx->set_txntype(::txpool::AllReply_TxnType_BASE_FEE);
                 tx->set_rlptx("0807");
                 return ::grpc::Status::OK;
             }
@@ -393,9 +408,9 @@ TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
         auto result{asio::co_spawn(io_context, test_all(&service), asio::use_future)};
         io_context.run();
         auto get_transactions = result.get();
-        const auto sender{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
-        const auto sender1{0x9988b87991262f6ba471f09758cde1c0fc1de735_address};
-        const auto sender2{0x9988b87991262f6ba471f09758cde1c0fc1de736_address};
+        const auto sender{0xaaaaeeffffeeaaaa11ddbbaaaabbdd11ccddddcc_address};
+        const auto sender1{0xbbaaeeffffeeaaaa11ddbbaaaabbdd11ccddddcc_address};
+        const auto sender2{0xccaaeeffffeeaaaa11ddbbaaaabbdd11ccddddcc_address};
         CHECK(get_transactions.size() == 3);
         CHECK(get_transactions[0].transaction_type == txpool::TransactionType::QUEUED);
         CHECK(get_transactions[0].sender == sender);
