@@ -255,17 +255,14 @@ public:
         const auto reply = co_await all_awaitable.async_call(request, asio::use_awaitable);
         const auto txs_size = reply.txs_size();
         for (int i = 0; i < txs_size; i++) {
-            const auto tx = reply.txs(i);
-            const auto sender_bytes = silkworm::from_hex(tx.sender());
             TransactionInfo element{};
-            if (sender_bytes.has_value()) {
-                element.sender = silkworm::to_evmc_address(sender_bytes.value());
-            }
+            const auto tx = reply.txs(i);
+            element.sender = address_from_H160(tx.sender());
             const auto rlp = tx.rlptx();
             element.rlp = silkworm::Bytes{rlp.begin(), rlp.end()};
-            if (tx.type() == ::txpool::AllReply_Type_PENDING) {
+            if (tx.txntype() == ::txpool::AllReply_TxnType_PENDING) {
                 element.transaction_type = PENDING;
-            } else if (tx.type() == ::txpool::AllReply_Type_QUEUED) {
+            } else if (tx.txntype() == ::txpool::AllReply_TxnType_QUEUED) {
                 element.transaction_type = QUEUED;
             } else {
                 element.transaction_type = BASE_FEE;
@@ -275,7 +272,6 @@ public:
         SILKRPC_DEBUG << "TransactionPool::get_transactions t=" << clock_time::since(start_time) << "\n";
         co_return transactions_in_pool;
     }
-
 
 private:
     types::H160* H160_from_address(const evmc::address& address) {
@@ -291,7 +287,16 @@ private:
         h128->set_lo(boost::endian::load_big_u64(bytes + 8));
         return h128;
     }
-
+    evmc::address address_from_H160(const types::H160& h160) {
+        uint64_t hi_hi = h160.hi().hi();
+        uint64_t hi_lo = h160.hi().lo();
+        uint32_t lo = h160.lo();
+        evmc::address address{};
+        boost::endian::store_big_u64(address.bytes +  0, hi_hi);
+        boost::endian::store_big_u64(address.bytes +  8, hi_lo);
+        boost::endian::store_big_u32(address.bytes + 16, lo);
+        return address;
+    }
     asio::io_context::executor_type executor_;
     std::unique_ptr<::txpool::Txpool::StubInterface> stub_;
     grpc::CompletionQueue* queue_;
