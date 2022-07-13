@@ -51,14 +51,14 @@ asio::awaitable<void> TxPoolRpcApi::handle_txpool_content(const nlohmann::json& 
         bool error = false;
         for (int i = 0; i < txpool_transactions.size(); i++) {
             silkworm::ByteView from{txpool_transactions[i].rlp};
+            std::string sender = silkworm::to_hex(txpool_transactions[i].sender, true);
             Transaction txn{};
             const auto result = silkworm::rlp::decode(from, dynamic_cast<silkworm::Transaction&>(txn));
             if (result != silkworm::DecodingResult::kOk) {
-                SILKRPC_ERROR << "handle_txpool_content  rlp::decode failed " << static_cast<int>result << "\n";
+                SILKRPC_ERROR << "handle_txpool_content  rlp::decode failed sender: " << sender << "\n";
                 error = true;
                 break;
             }
-            std::string sender = silkworm::to_hex(txpool_transactions[i].sender, true);
             txn.queued_in_pool = true;
             if (txpool_transactions[i].transaction_type == silkrpc::txpool::TransactionType::QUEUED) {
                 transactions_content["queued"][sender].insert(std::make_pair(std::to_string(txn.nonce), txn));
