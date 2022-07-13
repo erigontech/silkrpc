@@ -40,16 +40,13 @@ TEST_CASE_METHOD(RemoteDatabaseTest, "RemoteDatabase::begin", "[silkrpc][ethdb][
     SECTION("success") {
         // Set the call expectations:
         // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
-        EXPECT_CALL(*kv_stub_, AsyncTxRaw).WillOnce([&](auto&&, auto&&, void* tag) {
-            agrpc::process_grpc_tag(grpc_context_, tag, /*ok=*/true);
-            return reader_writer_ptr_.release();
-        });
-        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds
+        expect_request_async_tx(*kv_stub_, true);
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified transaction ID
         remote::Pair pair;
         pair.set_txid(4);
         EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, pair));
 
-        // Execute the test: RemoteDatabase::begin should return transaction w/ expected tx_id
+        // Execute the test: RemoteDatabase::begin should return transaction w/ expected transaction ID
         const auto txn = spawn_and_wait(remote_db_.begin());
         CHECK(txn->tx_id() == 4);
     }
@@ -57,10 +54,7 @@ TEST_CASE_METHOD(RemoteDatabaseTest, "RemoteDatabase::begin", "[silkrpc][ethdb][
     SECTION("open failure") {
         // Set the call expectations:
         // 1. remote::KV::StubInterface::AsyncTxRaw call fails
-        EXPECT_CALL(*kv_stub_, AsyncTxRaw).WillOnce([&](auto&&, auto&&, void* tag) {
-            agrpc::process_grpc_tag(grpc_context_, tag, /*ok=*/false);
-            return reader_writer_ptr_.release();
-        });
+        expect_request_async_tx(*kv_stub_, false);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
         EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_with_status(grpc_context_, grpc::Status::CANCELLED));
 
@@ -73,10 +67,7 @@ TEST_CASE_METHOD(RemoteDatabaseTest, "RemoteDatabase::begin", "[silkrpc][ethdb][
     SECTION("read failure") {
         // Set the call expectations:
         // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
-        EXPECT_CALL(*kv_stub_, AsyncTxRaw).WillOnce([&](auto&&, auto&&, void* tag) {
-            agrpc::process_grpc_tag(grpc_context_, tag, /*ok=*/true);
-            return reader_writer_ptr_.release();
-        });
+        expect_request_async_tx(*kv_stub_, true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call fails
         EXPECT_CALL(reader_writer_, Read).WillOnce([&](auto* , void* tag) {
             agrpc::process_grpc_tag(grpc_context_, tag, /*ok=*/false);

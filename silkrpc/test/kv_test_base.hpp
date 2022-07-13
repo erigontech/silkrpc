@@ -29,9 +29,14 @@
 namespace silkrpc::test {
 
 struct KVTestBase : test::ContextTestBase {
-    testing::Expectation expect_request_async_tx() {
-        return EXPECT_CALL(*stub_, AsyncTxRaw).WillOnce([&](auto&&, auto&&, void* tag) {
-            agrpc::process_grpc_tag(grpc_context_, tag, true);
+    testing::Expectation expect_request_async_tx(bool ok) {
+        return expect_request_async_tx(*stub_, ok);
+    }
+
+    testing::Expectation expect_request_async_tx(remote::MockKVStub& stub, bool ok) {
+        return EXPECT_CALL(stub, AsyncTxRaw).WillOnce([&, ok](auto&&, auto&&, void* tag) {
+            //agrpc::process_grpc_tag(grpc_context_, tag, true);
+            asio::post(io_context_, [&, tag, ok]() { agrpc::process_grpc_tag(grpc_context_, tag, ok); });
             return reader_writer_ptr_.release();
         });
     }

@@ -538,21 +538,25 @@ struct RemoteTransactionTest : test::KVTestBase {
 
 TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::open", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("request fails") {
-        EXPECT_CALL(*stub_, AsyncTxRaw).WillOnce([&](auto&&, auto&&, void* tag) {
-            agrpc::process_grpc_tag(grpc_context_, tag, false);
-            return reader_writer_ptr_.release();
-        });
-        EXPECT_CALL(reader_writer_, Finish).WillOnce([&](grpc::Status* status, void* tag) {
-            *status = grpc::Status::CANCELLED;
-            agrpc::process_grpc_tag(grpc_context_, tag, true);
-        });
+        // Set the call expectations:
+        // 1. remote::KV::StubInterface::AsyncTxRaw call fails
+        expect_request_async_tx(/*ok=*/false);
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_with_status(grpc_context_, grpc::Status::CANCELLED));
+
+        // Execute the test: opening a transaction should raise an exception w/ expected gRPC status code
         CHECK_THROWS_MATCHES(spawn_and_wait(remote_tx_.open()), asio::system_error, test::exception_has_cancelled_grpc_status_code());
     }
     SECTION("success") {
-        this->expect_request_async_tx();
+        // Set the call expectations:
+        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        expect_request_async_tx(/*ok=*/true);
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified transaction ID
         remote::Pair pair;
         pair.set_txid(4);
         EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, pair));
+
+        // Execute the test: opening a transaction should succeed and transaction should have expected tx_id
         CHECK_NOTHROW(spawn_and_wait(remote_tx_.open()));
         CHECK(remote_tx_.tx_id() == 4);
     }
@@ -560,17 +564,31 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::open", "[silkrpc][e
 
 TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::close", "[silkrpc][ethdb][kv][remote_transaction]") {
     using namespace testing;  // NOLINT(build/namespaces)
-    this->expect_request_async_tx();
+
     SECTION("success with cursor in table") {
+        // Set the call expectations:
+        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        expect_request_async_tx(/*ok=*/true);
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds w/ expected tx_id set in pair
         remote::Pair pair;
         pair.set_txid(4);
         EXPECT_CALL(reader_writer_, Read).Times(2).WillRepeatedly(test::read_success_with(grpc_context_, pair));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call succeeds
         EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_success(grpc_context_));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::WritesDone call succeeds
         EXPECT_CALL(reader_writer_, WritesDone).WillOnce(test::writes_done_success(grpc_context_));
+        // 5. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status OK
         EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_with_status(grpc_context_, grpc::Status::OK));
-        CHECK_NOTHROW(spawn_and_wait(remote_tx_.open()));
+
+        // Execute the test preconditions:
+        // open a new transaction w/ expected tx_id
+        REQUIRE_NOTHROW(spawn_and_wait(remote_tx_.open()));
+        REQUIRE(remote_tx_.tx_id() == 4);
+        // open a cursor within such transaction
         const auto cursor = spawn_and_wait(remote_tx_.cursor("table1"));
-        CHECK(cursor != nullptr);
+        REQUIRE(cursor != nullptr);
+
+        // Execute the test: closing the transaction should succeed and transaction should have zero tx_id
         CHECK_NOTHROW(spawn_and_wait(remote_tx_.close()));
         CHECK(remote_tx_.tx_id() == 0);
     }

@@ -72,6 +72,10 @@ auto read_success_with(agrpc::GrpcContext& grpc_context, Reply&& reply) {
     };
 }
 
+inline auto read_failure(agrpc::GrpcContext& grpc_context) {
+    return [&grpc_context](auto*, void* tag) { agrpc::process_grpc_tag(grpc_context, tag, false); };
+}
+
 inline auto finish_streaming_with_status(agrpc::GrpcContext& grpc_context, grpc::Status status) {
     return [&grpc_context, status](::grpc::Status* status_ptr, void* tag) {
         *status_ptr = status;

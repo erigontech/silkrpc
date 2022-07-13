@@ -582,9 +582,14 @@ TEST_CASE("RemoteCursor::seek_both_exact", "[silkrpc][ethdb][kv][remote_cursor]"
 
 struct RemoteCursorTest : test::KVTestBase {
     RemoteCursorTest() {
-        expect_request_async_tx();
+        // Set the call expectations common to all RemoteCursor tests:
+        // remote::KV::StubInterface::AsyncTxRaw call succeeds
+        expect_request_async_tx(true);
+        // AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds w/ tx_id set in pair ignored
         EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, remote::Pair{}));
-        tx_rpc_.request_and_read(asio::use_future).get();
+
+        // Execute the test preconditions: start a new Tx RPC and read first incoming message (tx_id)
+        REQUIRE_NOTHROW(tx_rpc_.request_and_read(asio::use_future).get());
     }
 
     KVTxStreamingRpc tx_rpc_{*stub_, grpc_context_};
@@ -593,29 +598,44 @@ struct RemoteCursorTest : test::KVTestBase {
 
 TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     using namespace testing;  // NOLINT(build/namespaces)
+
     SECTION("success") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor on specified table succeeds
         EXPECT_CALL(reader_writer_, Write(
                 AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
             .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified cursor ID
         remote::Pair pair;
         pair.set_cursorid(3);
         EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, pair));
+
+        // Execute the test: opening a cursor on specified table should succeed and cursor should have expected cursor ID
         CHECK_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
         CHECK(remote_cursor_.cursor_id() == 3);
     }
     SECTION("write failure") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor on specified table fails
         EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_failure(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
         EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_with_status(grpc_context_, grpc::Status::CANCELLED));
+
+        // Execute the test: opening a cursor should raise an exception w/ expected gRPC status code
         CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.open_cursor("table1")),
             asio::system_error,
             test::exception_has_cancelled_grpc_status_code());
     }
     SECTION("read failure") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor on specified table succeeds
         EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_success(grpc_context_));
-        EXPECT_CALL(reader_writer_, Read).WillOnce([&](auto* , void* tag) {
-            agrpc::process_grpc_tag(grpc_context_, tag, false);
-        });
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call fails
+        EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_failure(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
         EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_with_status(grpc_context_, grpc::Status::CANCELLED));
+
+        // Execute the test: opening a cursor should raise an exception w/ expected gRPC status code
         CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.open_cursor("table1")),
             asio::system_error,
             test::exception_has_cancelled_grpc_status_code());
@@ -624,16 +644,25 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::open_cursor", "[silkrpc][ethd
 
 TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     using namespace testing;  // NOLINT(build/namespaces)
+
     SECTION("success") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
         Expectation open = EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to close cursor w/ specified cursor ID succeeds
         EXPECT_CALL(reader_writer_, Write(
                 AllOf(Property(&remote::Cursor::op, Eq(remote::Op::CLOSE)), Property(&remote::Cursor::cursor, Eq(3))), _))
             .After(open)
             .WillOnce(test::write_success(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read calls succeed setting the specified cursor ID
         remote::Pair pair;
         pair.set_cursorid(3);
         EXPECT_CALL(reader_writer_, Read).Times(2).WillRepeatedly(test::read_success_with(grpc_context_, pair));
-        CHECK_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: closing a cursor should succeed and reset the cursor ID
         CHECK_NOTHROW(spawn_and_wait(remote_cursor_.close_cursor()));
         CHECK(remote_cursor_.cursor_id() == 0);
     }
