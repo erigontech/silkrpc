@@ -203,7 +203,7 @@ TEST_CASE("decoding_result_to_string(kLeadingZero)", "[silkrpc][common][util]") 
 }
 
 TEST_CASE("decoding_result_to_string(kInputTooShort)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInputTooShort) == "rlp: element is larger than containing list");
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInputTooShort) == "rlp: value size exceeds available input length");
 }
 
 TEST_CASE("decoding_result_to_string(kNonCanonicalSize)", "[silkrpc][common][util]") {
