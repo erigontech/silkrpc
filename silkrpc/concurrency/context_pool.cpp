@@ -105,7 +105,7 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, W
     if (pool_size == 0) {
         throw std::logic_error("ContextPool::ContextPool pool_size is 0");
     }
-    SILKRPC_INFO << "ContextPool::ContextPool creating pool with size: " << pool_size << "\n";
+    SILKRPC_DEBUG << "ContextPool::ContextPool creating pool with size: " << pool_size << "\n";
 
     // Create the unique block cache to be shared among the execution contexts
     auto block_cache = std::make_shared<BlockCache>();

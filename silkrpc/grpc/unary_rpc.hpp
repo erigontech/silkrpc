@@ -30,6 +30,7 @@
 
 #include <silkrpc/grpc/dispatcher.hpp>
 #include <silkrpc/grpc/error.hpp>
+#include <silkrpc/grpc/util.hpp>
 #include <silkrpc/common/log.hpp>
 
 namespace silkrpc {
@@ -71,15 +72,11 @@ private:
 
         template<typename Op>
         void operator()(Op& op, detail::DoneTag) {
-            auto& status = self_.status_;
-            SILKRPC_TRACE << "UnaryRpc::completed result: " << status.ok() << "\n";
-            if (status.ok()) {
+            SILKRPC_DEBUG << "UnaryRpc::completed " << self_.status_ << "\n";
+            if (self_.status_.ok()) {
                 op.complete({}, std::move(self_.reply_));
             } else {
-                SILKRPC_WARN << "UnaryRpc::completed error_code: " << status.error_code() << "\n";
-                SILKRPC_WARN << "UnaryRpc::completed error_message: " << status.error_message() << "\n";
-                SILKRPC_WARN << "UnaryRpc::completed error_details: " << status.error_details() << "\n";
-                op.complete(make_error_code(status.error_code(), status.error_message()), {});
+                op.complete(make_error_code(self_.status_.error_code(), self_.status_.error_message()), {});
             }
         }
     };

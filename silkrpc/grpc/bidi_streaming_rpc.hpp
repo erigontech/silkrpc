@@ -31,6 +31,7 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/error.hpp>
+#include <silkrpc/grpc/util.hpp>
 
 namespace silkrpc {
 
@@ -138,15 +139,12 @@ private:
         }
 
         template<typename Op>
-        void operator()(Op& op, bool /*ok*/) {
-            auto& status = self_.status_;
-            if (status.ok()) {
+        void operator()(Op& op, bool ok) {
+            SILKRPC_DEBUG << "BidiStreamingRpc::Finish::completed ok=" << ok << " " << self_.status_ << "\n";
+            if (self_.status_.ok()) {
                 op.complete({});
             } else {
-                SILKRPC_ERROR << "BidiStreamingRpc::Finish::completed error_code: " << status.error_code() << "\n";
-                SILKRPC_ERROR << "BidiStreamingRpc::Finish::completed error_message: " << status.error_message() << "\n";
-                SILKRPC_ERROR << "BidiStreamingRpc::Finish::completed error_details: " << status.error_details() << "\n";
-                op.complete(make_error_code(status.error_code(), status.error_message()));
+                op.complete(make_error_code(self_.status_.error_code(), self_.status_.error_message()));
             }
         }
     };

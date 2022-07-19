@@ -32,6 +32,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/error.hpp>
 #include <silkrpc/grpc/dispatcher.hpp>
+#include <silkrpc/grpc/util.hpp>
 
 namespace silkrpc {
 
@@ -111,7 +112,7 @@ private:
 
         template<typename Op>
         void operator()(Op& op, bool ok, detail::ReadTag) {
-            SILKRPC_TRACE << "ServerStreamingRpc::Read(op, ok): r=" << self_.reader_.get() << " ok=" << ok << "\n";
+            SILKRPC_TRACE << "ServerStreamingRpc::Read::completed r=" << self_.reader_.get() << " ok=" << ok << "\n";
             if (ok) {
                 op.complete({}, std::move(self_.reply_));
             } else {
@@ -123,7 +124,7 @@ private:
 
         template<typename Op>
         void operator()(Op& op, const asio::error_code& ec) {
-            SILKRPC_TRACE << "ServerStreamingRpc::Read(op, ec): r=" << self_.reader_.get() << " ec=" << ec << "\n";
+            SILKRPC_TRACE << "ServerStreamingRpc::Read::error r=" << self_.reader_.get() << " ec=" << ec << "\n";
             op.complete(ec, {});
         }
     };
@@ -144,18 +145,14 @@ private:
             // try to detect such condition by filtering on "empty" (default-constructed) reply, which is not necessarily invalid.
             // It is legit using gRPC codes for application-level errors: https://grpc.github.io/grpc/core/md_doc_statuscodes.html
             if (self_.status_.ok() && self_.read_failed_) {
-                self_.status_ = grpc::Status{grpc::StatusCode::ABORTED, "Operation closed by server"};
+                self_.status_ = grpc::Status{grpc::StatusCode::ABORTED, "operation closed by server"};
             }
 
-            auto& status = self_.status_;
-            SILKRPC_TRACE << "ServerStreamingRpc::Finish::completed ok=" << ok << "" << " status.ec=" << status.error_code() << "\n";
-            if (status.ok()) {
+            SILKRPC_DEBUG << "ServerStreamingRpc::Finish::completed ok=" << ok << " " << self_.status_ << "\n";
+            if (self_.status_.ok()) {
                 op.complete({});
             } else {
-                SILKRPC_WARN << "ServerStreamingRpc::Finish::completed error_code: " << status.error_code() << "\n";
-                SILKRPC_WARN << "ServerStreamingRpc::Finish::completed error_message: " << status.error_message() << "\n";
-                SILKRPC_WARN << "ServerStreamingRpc::Finish::completed error_details: " << status.error_details() << "\n";
-                op.complete(make_error_code(status.error_code(), status.error_message()));
+                op.complete(make_error_code(self_.status_.error_code(), self_.status_.error_message()));
             }
         }
     };
