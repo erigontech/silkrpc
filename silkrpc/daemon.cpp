@@ -17,6 +17,7 @@
 #include "daemon.hpp"
 
 #include <cxxabi.h>
+
 #include <filesystem>
 #include <stdexcept>
 
@@ -103,7 +104,7 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
             rpc_daemon.stop();
         });
 
-        SILKRPC_LOG << "Silkrpc starting ETH RPC API at " << settings.http_port << " ENGINE RPC API at " << settings.engine_port << "\n";
+        SILKRPC_LOG << "Starting ETH RPC API at " << settings.http_port << " ENGINE RPC API at " << settings.engine_port << "\n";
 
         rpc_daemon.start();
 
@@ -198,8 +199,7 @@ Daemon::Daemon(const DaemonSettings& settings)
       kv_stub_{remote::KV::NewStub(create_channel_())} {
     // Create the unique KV state-changes stream feeding the state cache
     auto& context = context_pool_.next_context();
-    state_changes_stream_ = std::make_unique<ethdb::kv::StateChangesStream>(
-        *context.io_context(), context.grpc_queue(), kv_stub_.get(), context.state_cache().get());
+    state_changes_stream_ = std::make_unique<ethdb::kv::StateChangesStream>(context, kv_stub_.get());
 }
 
 DaemonChecklist Daemon::run_checklist() {
@@ -210,12 +210,7 @@ DaemonChecklist Daemon::run_checklist() {
     const auto mining_protocol_check{silkrpc::wait_for_mining_protocol_check(core_service_channel)};
     const auto txpool_protocol_check{silkrpc::wait_for_txpool_protocol_check(core_service_channel)};
 
-    DaemonChecklist checklist{{
-        kv_protocol_check,
-        ethbackend_protocol_check,
-        mining_protocol_check,
-        txpool_protocol_check
-    }};
+    DaemonChecklist checklist{{kv_protocol_check, ethbackend_protocol_check, mining_protocol_check, txpool_protocol_check}};
     return checklist;
 }
 

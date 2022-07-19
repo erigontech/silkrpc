@@ -17,11 +17,11 @@
 #ifndef SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_
 #define SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_
 
-#include <silkrpc/config.hpp>
-
 #include <memory>
 #include <string>
 #include <utility>
+
+#include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
@@ -30,8 +30,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
-#include <silkrpc/grpc/bidi_streaming_rpc.hpp>
-#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
+#include <silkrpc/ethdb/kv/rpc.hpp>
 #include <silkworm/common/util.hpp>
 
 namespace silkrpc::ethdb::kv {
@@ -66,12 +65,9 @@ private:
     uint32_t cursor_id_;
 };*/
 
-using KVTxStreamingRpc = silkrpc::BidiStreamingRpc<&remote::KV::StubInterface::AsyncTx>;
-
 class RemoteCursor2 : public CursorDupSort {
 public:
-    explicit RemoteCursor2(KVTxStreamingRpc& streaming_rpc)
-        : tx_rpc_(streaming_rpc), cursor_id_{0} {}
+    explicit RemoteCursor2(TxRpc& tx_rpc) : tx_rpc_(tx_rpc), cursor_id_{0} {}
 
     uint32_t cursor_id() const override { return cursor_id_; };
 
@@ -90,10 +86,10 @@ public:
     asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) override;
 
 private:
-    KVTxStreamingRpc& tx_rpc_;
+    TxRpc& tx_rpc_;
     uint32_t cursor_id_;
 };
 
 } // namespace silkrpc::ethdb::kv
 
-#endif  // SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_
+#endif // SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_

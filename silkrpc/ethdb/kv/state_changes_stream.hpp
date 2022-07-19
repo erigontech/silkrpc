@@ -17,85 +17,59 @@
 #ifndef SILKRPC_ETHDB_KV_STATE_CHANGES_STREAM_HPP_
 #define SILKRPC_ETHDB_KV_STATE_CHANGES_STREAM_HPP_
 
+#include <chrono>
 #include <functional>
 #include <memory>
 
+#include <silkrpc/config.hpp>
+
+#include <asio/awaitable.hpp>
 #ifndef ASIO_HAS_BOOST_DATE_TIME
 #define ASIO_HAS_BOOST_DATE_TIME
 #endif
+#include <asio/cancellation_signal.hpp>
 #include <asio/deadline_timer.hpp>
 #include <asio/io_context.hpp>
-#include <grpcpp/grpcpp.h>
 
+#include <silkrpc/concurrency/context_pool.hpp>
+#include <silkrpc/ethdb/kv/rpc.hpp>
 #include <silkrpc/ethdb/kv/state_cache.hpp>
-#include <silkworm/common/assert.hpp>
-#include <silkworm/rpc/completion_tag.hpp>
-#include <silkworm/rpc/client/call.hpp>
-#include <remote/kv.grpc.pb.h>
 
 namespace silkrpc::ethdb::kv {
 
-using silkworm::rpc::AsyncServerStreamingCall;
-
-class AsyncStateChangesCall
-    : public AsyncServerStreamingCall<remote::StateChangeRequest, remote::StateChangeBatch, remote::KV::StubInterface,
-                                      &remote::KV::StubInterface::PrepareAsyncStateChanges> {
-  public:
-    using TerminationHook = std::function<void(bool)>;
-
-    explicit AsyncStateChangesCall(
-        grpc::CompletionQueue* queue,
-        remote::KV::StubInterface* stub,
-        StateCache* cache,
-        TerminationHook termination_hook);
-
-    void handle_read() override;
-
-    void handle_finish() override;
-
-  private:
-    StateCache* cache_;
-    TerminationHook termination_hook_;
-};
-
-//! The registration interval.
+//! The default registration interval.
 constexpr boost::posix_time::milliseconds kDefaultRegistrationInterval{10'000};
 
 class StateChangesStream {
-  public:
+public:
     static void set_registration_interval(boost::posix_time::milliseconds registration_interval);
 
-    explicit StateChangesStream(
-        asio::io_context& scheduler,
-        grpc::CompletionQueue* queue,
-        remote::KV::StubInterface* stub,
-        StateCache* cache);
+    explicit StateChangesStream(Context& context, remote::KV::StubInterface* stub);
 
     void open();
 
     void close();
 
-  private:
-    void schedule_open();
+private:
+    asio::awaitable<void> run();
 
     static boost::posix_time::milliseconds registration_interval_;
 
-    grpc::CompletionQueue* queue_;
+    asio::io_context& scheduler_;
+
+    agrpc::GrpcContext& grpc_context_;
 
     remote::KV::StubInterface* stub_;
 
     StateCache* cache_;
 
-    std::unique_ptr<AsyncStateChangesCall> state_changes_call_;
+    asio::cancellation_signal cancellation_signal_;
 
     //! The state changes options.
     remote::StateChangeRequest request_;
 
-    //! The timer to reschedule registration for state changes.
-    asio::deadline_timer registration_timer_;
-
-    //! Flag indicating if the stream has been cancelled or not.
-    bool cancelled_{false};
+    //! The timer to reschedule retries for state changes.
+    asio::deadline_timer retry_timer_;
 };
 
 } // namespace silkrpc::ethdb::kv

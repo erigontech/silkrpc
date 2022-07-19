@@ -31,6 +31,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
 #include <silkrpc/ethdb/kv/remote_cursor.hpp>
+#include <silkrpc/ethdb/kv/rpc.hpp>
 #include <silkrpc/ethdb/transaction.hpp>
 
 namespace silkrpc::ethdb::kv {
@@ -43,10 +44,9 @@ class RemoteTransaction : public Transaction {
     static_assert(std::is_base_of<AsyncTxStreamingClient, Client>::value && !std::is_same<AsyncTxStreamingClient, Client>::value);
 
 public:
-    explicit RemoteTransaction(asio::io_context& context, std::unique_ptr<remote::KV::StubInterface>& stub, grpc::CompletionQueue* queue)
-    : context_(context), client_{stub, queue}, kv_awaitable_{context_, client_} {
-        SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " start\n";
-        SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " end\n";
+    explicit RemoteTransaction(asio::io_context& context, std::unique_ptr<remote::KV::StubInterface>& stub, grpc::CompletionQueue*
+queue) : context_(context), client_{stub, queue}, kv_awaitable_{context_, client_} { SILKRPC_TRACE << "RemoteTransaction::ctor "
+<< this << " start\n"; SILKRPC_TRACE << "RemoteTransaction::ctor " << this << " end\n";
     }
 
     ~RemoteTransaction() {
@@ -114,7 +114,7 @@ public:
 private:
     asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table);
 
-    KVTxStreamingRpc tx_rpc_;
+    TxRpc tx_rpc_;
     std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
     uint64_t tx_id_;
 };

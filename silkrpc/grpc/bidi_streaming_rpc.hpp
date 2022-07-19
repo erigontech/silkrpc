@@ -17,11 +17,11 @@
 #ifndef SILKRPC_GRPC_BIDI_STREAMING_RPC_HPP_
 #define SILKRPC_GRPC_BIDI_STREAMING_RPC_HPP_
 
-#include <silkrpc/config.hpp>
-
 #include <memory>
 #include <system_error>
 #include <utility>
+
+#include <silkrpc/config.hpp>
 
 #include <agrpc/rpc.hpp>
 #include <asio/compose.hpp>
@@ -56,9 +56,12 @@ private:
 
         template<typename Op>
         void operator()(Op& op, bool ok) {
+            SILKRPC_TRACE << "BidiStreamingRpc::ReadNext(op, ok): " << this << " START\n";
             if (ok) {
+                SILKRPC_DEBUG << "BidiStreamingRpc::ReadNext(op, ok): rw=" << self_.reader_writer_.get() << " before read\n";
                 agrpc::read(self_.reader_writer_, self_.reply_,
                     asio::bind_executor(self_.grpc_context_, asio::experimental::append(std::move(op), detail::ReadDoneTag{})));
+                SILKRPC_DEBUG << "BidiStreamingRpc::ReadNext(op, ok): rw=" << self_.reader_writer_.get() << " after read\n";
             } else {
                 self_.finish(std::move(op));
             }
@@ -66,6 +69,7 @@ private:
 
         template<typename Op>
         void operator()(Op& op, bool ok, detail::ReadDoneTag) {
+            SILKRPC_TRACE << "BidiStreamingRpc::ReadNext(op, ok, ReadDoneTag): " << this << " ok=" << ok << "\n";
             if (ok) {
                 op.complete({}, self_.reply_);
             } else {
@@ -75,6 +79,7 @@ private:
 
         template<typename Op>
         void operator()(Op& op, const asio::error_code& ec) {
+            SILKRPC_TRACE << "BidiStreamingRpc::ReadNext(op, ec): " << this << " ec=" << ec << "\n";
             op.complete(ec, self_.reply_);
         }
     };
@@ -82,9 +87,10 @@ private:
     struct RequestAndRead : ReadNext {
         template<typename Op>
         void operator()(Op& op) {
-            SILKRPC_TRACE << "BidiStreamingRpc::RequestAndRead::initiate " << this << "\n";
+            SILKRPC_TRACE << "BidiStreamingRpc::RequestAndRead::initiate rw=" << this->self_.reader_writer_.get() << " START\n";
             agrpc::request(Async, this->self_.stub_, this->self_.context_, this->self_.reader_writer_,
                 asio::bind_executor(this->self_.grpc_context_, std::move(op)));
+            SILKRPC_TRACE << "BidiStreamingRpc::RequestAndRead::initiate rw=" << this->self_.reader_writer_.get() << " END\n";
         }
 
         using ReadNext::operator();
@@ -147,7 +153,7 @@ private:
 
 public:
     explicit BidiStreamingRpc(Stub& stub, agrpc::GrpcContext& grpc_context)
-    : stub_(stub), grpc_context_(grpc_context) {}
+        : stub_(stub), grpc_context_(grpc_context) {}
 
     template<typename CompletionToken = agrpc::DefaultCompletionToken>
     auto request_and_read(CompletionToken&& token = {}) {

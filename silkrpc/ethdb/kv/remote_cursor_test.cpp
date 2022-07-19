@@ -592,7 +592,7 @@ struct RemoteCursorTest : test::KVTestBase {
         REQUIRE_NOTHROW(tx_rpc_.request_and_read(asio::use_future).get());
     }
 
-    KVTxStreamingRpc tx_rpc_{*stub_, grpc_context_};
+    TxRpc tx_rpc_{*stub_, grpc_context_};
     RemoteCursor2 remote_cursor_{tx_rpc_};
 };
 

@@ -17,17 +17,18 @@
 #ifndef SILKRPC_GRPC_UNARY_RPC_HPP_
 #define SILKRPC_GRPC_UNARY_RPC_HPP_
 
-#include <silkrpc/config.hpp>
-
 #include <memory>
 #include <system_error>
 #include <utility>
+
+#include <silkrpc/config.hpp>
 
 #include <agrpc/rpc.hpp>
 #include <asio/compose.hpp>
 #include <asio/experimental/append.hpp>
 #include <grpcpp/grpcpp.h>
 
+#include <silkrpc/grpc/dispatcher.hpp>
 #include <silkrpc/grpc/error.hpp>
 #include <silkrpc/common/log.hpp>
 
@@ -35,23 +36,6 @@ namespace silkrpc {
 
 namespace detail {
 struct DoneTag {
-};
-
-template<typename Executor>
-struct ExecutorDispatcher {
-    Executor executor_;
-
-    template<typename CompletionToken, typename... Args>
-    void dispatch(CompletionToken&& token, Args&&... args) {
-        asio::dispatch(asio::bind_executor(executor_, asio::experimental::append(std::forward<CompletionToken>(token), std::forward<Args>(args)...)));
-    }
-};
-
-struct InlineDispatcher {
-    template<typename CompletionToken, typename... Args>
-    void dispatch(CompletionToken&& token, Args&&... args) {
-        std::forward<CompletionToken>(token)(std::forward<Args>(args)...);
-    }
 };
 } // namespace detail
 
@@ -92,9 +76,9 @@ private:
             if (status.ok()) {
                 op.complete({}, std::move(self_.reply_));
             } else {
-                SILKRPC_ERROR << "UnaryRpc::completed error_code: " << status.error_code() << "\n";
-                SILKRPC_ERROR << "UnaryRpc::completed error_message: " << status.error_message() << "\n";
-                SILKRPC_ERROR << "UnaryRpc::completed error_details: " << status.error_details() << "\n";
+                SILKRPC_WARN << "UnaryRpc::completed error_code: " << status.error_code() << "\n";
+                SILKRPC_WARN << "UnaryRpc::completed error_message: " << status.error_message() << "\n";
+                SILKRPC_WARN << "UnaryRpc::completed error_details: " << status.error_details() << "\n";
                 op.complete(make_error_code(status.error_code(), status.error_message()), {});
             }
         }
@@ -102,7 +86,7 @@ private:
 
 public:
     explicit UnaryRpc(Stub& stub, agrpc::GrpcContext& grpc_context)
-    : stub_(stub), grpc_context_(grpc_context) {}
+        : stub_(stub), grpc_context_(grpc_context) {}
 
     template<typename CompletionToken = agrpc::DefaultCompletionToken>
     auto finish(const Request& request, CompletionToken&& token = {}) {
