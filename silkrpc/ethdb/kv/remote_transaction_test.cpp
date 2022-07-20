@@ -334,10 +334,15 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::cursor", "[silkrpc]
         REQUIRE_NOTHROW(spawn_and_wait(remote_tx_.open()));
         REQUIRE(remote_tx_.tx_id() == 4);
 
-        // Execute the test: opening a cursor should succeed and cursor should have expected cursor ID
-        std::shared_ptr<Cursor> cursor;
-        CHECK_NOTHROW(cursor = spawn_and_wait(remote_tx_.cursor("table1")));
-        CHECK(cursor->cursor_id() == 0x23);
+        // Execute the test:
+        // 1. opening a cursor should succeed and cursor should have expected cursor ID
+        std::shared_ptr<Cursor> cursor1;
+        CHECK_NOTHROW(cursor1 = spawn_and_wait(remote_tx_.cursor("table1")));
+        CHECK(cursor1->cursor_id() == 0x23);
+        // 2. opening another cursor on the same table should succeed and cursor should have expected cursor ID
+        std::shared_ptr<Cursor> cursor2;
+        CHECK_NOTHROW(cursor2 = spawn_and_wait(remote_tx_.cursor("table1")));
+        CHECK(cursor2->cursor_id() == 0x23);
     }
     SECTION("failure in read") {
         // Set the call expectations:
@@ -360,7 +365,8 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::cursor", "[silkrpc]
         REQUIRE(remote_tx_.tx_id() == 4);
 
         // Execute the test: opening a cursor should raise an exception w/ expected gRPC status code
-        CHECK_THROWS_MATCHES(spawn_and_wait(remote_tx_.cursor("table1")), asio::system_error, test::exception_has_cancelled_grpc_status_code());
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_tx_.cursor("table1")), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
     }
     SECTION("failure in write") {
         // Set the call expectations:
@@ -381,7 +387,87 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::cursor", "[silkrpc]
         REQUIRE(remote_tx_.tx_id() == 4);
 
         // Execute the test: opening a cursor should raise an exception w/ expected gRPC status code
-        CHECK_THROWS_MATCHES(spawn_and_wait(remote_tx_.cursor("table1")), asio::system_error, test::exception_has_cancelled_grpc_status_code());
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_tx_.cursor("table1")), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+}
+
+TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
+    SECTION("success") {
+        // Set the call expectations:
+        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        expect_request_async_tx(/*ok=*/true);
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read calls succeed w/ specified transaction and cursor IDs
+        remote::Pair txid_pair;
+        txid_pair.set_txid(4);
+        remote::Pair cursorid_pair;
+        cursorid_pair.set_cursorid(0x23);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, txid_pair))
+            .WillOnce(test::read_success_with(grpc_context_, cursorid_pair));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call succeeds
+        EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_success(grpc_context_));
+
+        // Execute the test preconditions:
+        // open a new transaction w/ expected transaction ID
+        REQUIRE_NOTHROW(spawn_and_wait(remote_tx_.open()));
+        REQUIRE(remote_tx_.tx_id() == 4);
+
+        // Execute the test:
+        // 1. opening a cursor should succeed and cursor should have expected cursor ID
+        std::shared_ptr<Cursor> cursor1;
+        CHECK_NOTHROW(cursor1 = spawn_and_wait(remote_tx_.cursor_dup_sort("table1")));
+        CHECK(cursor1->cursor_id() == 0x23);
+        // 2. opening another cursor on the same table should succeed and cursor should have expected cursor ID
+        std::shared_ptr<Cursor> cursor2;
+        CHECK_NOTHROW(cursor2 = spawn_and_wait(remote_tx_.cursor_dup_sort("table1")));
+        CHECK(cursor2->cursor_id() == 0x23);
+    }
+    SECTION("failure in read") {
+        // Set the call expectations:
+        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        expect_request_async_tx(/*ok=*/true);
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read 1st call succeeds w/ specified transaction ID, 2nd call fails
+        remote::Pair txid_pair;
+        txid_pair.set_txid(4);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, txid_pair))
+            .WillOnce(test::read_failure(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call succeeds
+        EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_success(grpc_context_));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions:
+        // open a new transaction w/ expected transaction ID
+        REQUIRE_NOTHROW(spawn_and_wait(remote_tx_.open()));
+        REQUIRE(remote_tx_.tx_id() == 4);
+
+        // Execute the test: opening a cursor should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_tx_.cursor_dup_sort("table1")), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+    SECTION("failure in write") {
+        // Set the call expectations:
+        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        expect_request_async_tx(/*ok=*/true);
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds w/ specified transaction ID
+        remote::Pair txid_pair;
+        txid_pair.set_txid(4);
+        EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, txid_pair));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call fails
+        EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_failure(grpc_context_));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions:
+        // open a new transaction w/ expected transaction ID
+        REQUIRE_NOTHROW(spawn_and_wait(remote_tx_.open()));
+        REQUIRE(remote_tx_.tx_id() == 4);
+
+        // Execute the test: opening a cursor should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_tx_.cursor_dup_sort("table1")), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
     }
 }
 

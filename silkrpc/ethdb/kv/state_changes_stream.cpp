@@ -60,9 +60,6 @@ void StateChangesStream::open() {
 }
 
 void StateChangesStream::close() {
-    retry_timer_.cancel();
-    SILKRPC_DEBUG << "Retry timer cancelled\n";
-
     cancellation_signal_.emit(asio::cancellation_type::all);
     SILKRPC_WARN << "Registration for state changes cancelled\n";
 }
@@ -77,18 +74,21 @@ asio::awaitable<void> StateChangesStream::run() {
         StateChangesRpc state_changes_rpc{*stub_, grpc_context_};
 
         cancellation_slot.assign([&](asio::cancellation_type /*type*/) {
+            retry_timer_.cancel();
+            SILKRPC_DEBUG << "Retry timer cancelled\n";
+
             state_changes_rpc.cancel();
             SILKRPC_WARN << "State changes stream cancelled\n";
         });
 
         SILKRPC_INFO << "Registration for state changes started\n";
-        const auto [sc] = co_await state_changes_rpc.request_on(scheduler_.get_executor(), request_, use_nothrow_awaitable);
-        if (sc) {
-            if (sc.value() == grpc::StatusCode::CANCELLED) {
+        const auto [req_ec] = co_await state_changes_rpc.request_on(scheduler_.get_executor(), request_, use_nothrow_awaitable);
+        if (req_ec) {
+            if (req_ec.value() == grpc::StatusCode::CANCELLED) {
                 cancelled = true;
-                SILKRPC_DEBUG << "State changes stream cancelled immediately\n";
+                SILKRPC_DEBUG << "State changes stream cancelled immediately after request cancelled\n";
             } else {
-                SILKRPC_WARN << "State changes stream error [" << sc.message() << "], schedule reopen\n";
+                SILKRPC_WARN << "State changes stream request error [" << req_ec.message() << "], schedule reopen\n";
                 retry_timer_.expires_from_now(registration_interval_);
                 const auto [ec] = co_await retry_timer_.async_wait(use_nothrow_awaitable);
                 if (ec == asio::error::operation_aborted) {
@@ -100,14 +100,19 @@ asio::awaitable<void> StateChangesStream::run() {
         }
         SILKRPC_INFO << "State changes stream opened\n";
 
-        while (true) {
-            const auto [sc, reply] = co_await state_changes_rpc.read_on(scheduler_.get_executor(), use_nothrow_awaitable);
-            if (sc) {
-                if (sc.value() == grpc::StatusCode::CANCELLED) {
+        asio::error_code read_ec;
+        remote::StateChangeBatch reply;
+        while (!read_ec) {
+            std::tie(read_ec, reply) = co_await state_changes_rpc.read_on(scheduler_.get_executor(), use_nothrow_awaitable);
+            if (!read_ec) {
+                SILKRPC_INFO << "State changes batch received: " << reply << "\n";
+                cache_->on_new_block(reply);
+            } else {
+                if (read_ec.value() == grpc::StatusCode::CANCELLED) {
                     cancelled = true;
-                    SILKRPC_DEBUG << "State changes stream cancelled immediately\n";
+                    SILKRPC_DEBUG << "State changes stream cancelled immediately after read cancelled\n";
                 } else {
-                    SILKRPC_WARN << "State changes stream error [" << sc.message() << "], schedule reopen\n";
+                    SILKRPC_WARN << "State changes stream read error [" << read_ec.message() << "], schedule reopen\n";
                     retry_timer_.expires_from_now(registration_interval_);
                     const auto [ec] = co_await retry_timer_.async_wait(use_nothrow_awaitable);
                     if (ec == asio::error::operation_aborted) {
@@ -115,10 +120,7 @@ asio::awaitable<void> StateChangesStream::run() {
                         SILKRPC_DEBUG << "State changes wait before retry cancelled\n";
                     }
                 }
-                break;
             }
-            SILKRPC_INFO << "State changes batch received: " << reply << "\n";
-            cache_->on_new_block(reply);
         }
     }
 
