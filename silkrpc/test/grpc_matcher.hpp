@@ -33,6 +33,10 @@ inline auto exception_has_cancelled_grpc_status_code() {
     return test::exception_has_grpc_status_code(grpc::StatusCode::CANCELLED);
 }
 
+inline auto exception_has_unknown_grpc_status_code() {
+    return test::exception_has_grpc_status_code(grpc::StatusCode::UNKNOWN);
+}
+
 }  // namespace silkrpc::test
 
 #endif  // SILKRPC_TEST_GRPC_MATCHER_HPP_

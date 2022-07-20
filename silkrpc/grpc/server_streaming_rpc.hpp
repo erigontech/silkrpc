@@ -141,6 +141,10 @@ private:
 
         template<typename Op>
         void operator()(Op& op, bool ok) {
+            // Check Finish result to treat any unknown error as such (strict)
+            if (!ok) {
+                self_.status_ = grpc::Status{grpc::StatusCode::UNKNOWN, "unknown error in finish"};
+            }
             // Check OK status AND read failure to treat graceful close on server-side as operation aborted. Otherwise the user should
             // try to detect such condition by filtering on "empty" (default-constructed) reply, which is not necessarily invalid.
             // It is legit using gRPC codes for application-level errors: https://grpc.github.io/grpc/core/md_doc_statuscodes.html

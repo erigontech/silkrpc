@@ -140,6 +140,11 @@ private:
 
         template<typename Op>
         void operator()(Op& op, bool ok) {
+            // Check Finish result to treat any unknown error as such (strict)
+            if (!ok) {
+                self_.status_ = grpc::Status{grpc::StatusCode::UNKNOWN, "unknown error in finish"};
+            }
+
             SILKRPC_DEBUG << "BidiStreamingRpc::Finish::completed ok=" << ok << " " << self_.status_ << "\n";
             if (self_.status_.ok()) {
                 op.complete({});
