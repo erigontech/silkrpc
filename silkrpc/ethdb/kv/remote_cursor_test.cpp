@@ -34,335 +34,6 @@
 namespace silkrpc::ethdb::kv {
 
 /*
-using Catch::Matchers::Message;
-
-class MockBaseStreamingClient : public AsyncTxStreamingClient {
-public:
-    void start_call(std::function<void(const grpc::Status&)> start_completed) override {}
-
-    void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-
-    void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {}
-
-    void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-};
-
-TEST_CASE("RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
-    SECTION("success") {
-        class MockStreamingClient1 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient1(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                auto result = std::async([&]() {
-                    remote::Pair pair;
-                    pair.set_cursorid(3);
-                    read_completed(grpc::Status::OK, pair);
-                });
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                write_completed(grpc::Status::OK);
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient1 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result.get();
-            CHECK(remote_cursor.cursor_id() == 3);
-        } catch (...) {
-            CHECK(false);
-        }
-    }
-
-    SECTION("write_start failure") {
-        class MockStreamingClient2 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient2(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                auto result = std::async([&]() {
-                    remote::Pair pair;
-                    pair.set_cursorid(3);
-                    read_completed(grpc::Status::OK, pair);
-                });
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                write_completed(grpc::Status::CANCELLED);
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient2 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result.get();
-            CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
-        }
-    }
-
-    SECTION("read_start failure") {
-        class MockStreamingClient3 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient3(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                auto result = std::async([&]() {
-                    read_completed(grpc::Status::CANCELLED, {});
-                });
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                auto result = std::async([&]() {
-                    write_completed(grpc::Status::OK);
-                });
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient3 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result.get();
-            CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
-        }
-    }
-}
-
-TEST_CASE("RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
-    SECTION("success w/ sync read - sync write") {
-        class MockStreamingClient4 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient4(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                remote::Pair pair;
-                pair.set_cursorid(3);
-                read_completed(grpc::Status::OK, pair);
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                write_completed(grpc::Status::OK);
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient4 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result1.get();
-            CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            result2.get();
-            CHECK(remote_cursor.cursor_id() == 0);
-        } catch (...) {
-            CHECK(false);
-        }
-    }
-
-    SECTION("success w/ async read - sync write") {
-        class MockStreamingClient5 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient5(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                auto result = std::async([&]() {
-                    remote::Pair pair;
-                    pair.set_cursorid(3);
-                    read_completed(grpc::Status::OK, pair);
-                });
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                write_completed(grpc::Status::OK);
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient5 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result1.get();
-            CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            result2.get();
-            CHECK(remote_cursor.cursor_id() == 0);
-        } catch (...) {
-            CHECK(false);
-        }
-    }
-
-    SECTION("success w/ sync read - async write") {
-        class MockStreamingClient6 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient6(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                remote::Pair pair;
-                pair.set_cursorid(3);
-                read_completed(grpc::Status::OK, pair);
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                auto result = std::async([&]() {
-                    write_completed(grpc::Status::OK);
-                });
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient6 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result1.get();
-            CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            result2.get();
-            CHECK(remote_cursor.cursor_id() == 0);
-        } catch (...) {
-            CHECK(false);
-        }
-    }
-
-    SECTION("success w/ async read - async write") {
-        class MockStreamingClient7 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient7(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                auto result = std::async([&]() {
-                    remote::Pair pair;
-                    pair.set_cursorid(3);
-                    read_completed(grpc::Status::OK, pair);
-                });
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                auto result = std::async([&]() {
-                    write_completed(grpc::Status::OK);
-                });
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient7 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result1.get();
-            CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            result2.get();
-            CHECK(remote_cursor.cursor_id() == 0);
-        } catch (...) {
-            CHECK(false);
-        }
-    }
-
-    SECTION("write_start failure") {
-        class MockStreamingClient8 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient8(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                auto result = std::async([&]() {
-                    remote::Pair pair;
-                    pair.set_cursorid(3);
-                    read_completed(grpc::Status::OK, pair);
-                });
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                auto result = std::async([&]() {
-                    write_completed(grpc::Status::CANCELLED);
-                });
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient8 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result1.get();
-            CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            result2.get();
-            CHECK(remote_cursor.cursor_id() == 0);
-            CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
-        }
-    }
-
-    SECTION("read_start failure") {
-        class MockStreamingClient9 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient9(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                auto result = std::async([&]() {
-                    read_completed(grpc::Status::CANCELLED, {});
-                });
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                auto result = std::async([&]() {
-                    write_completed(grpc::Status::OK);
-                });
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient9 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result1.get();
-            CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            result2.get();
-            CHECK(remote_cursor.cursor_id() == 0);
-            CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
-        }
-    }
-}
 
 TEST_CASE("RemoteCursor::seek", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success w/ sync read - sync write") {
@@ -580,6 +251,12 @@ TEST_CASE("RemoteCursor::seek_both_exact", "[silkrpc][ethdb][kv][remote_cursor]"
     }
 }*/
 
+using testing::_;
+using testing::AllOf;
+using testing::Eq;
+using testing::Expectation;
+using testing::Property;
+
 struct RemoteCursorTest : test::KVTestBase {
     RemoteCursorTest() {
         // Set the call expectations common to all RemoteCursor tests:
@@ -597,8 +274,6 @@ struct RemoteCursorTest : test::KVTestBase {
 };
 
 TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
-    using namespace testing;  // NOLINT(build/namespaces)
-
     SECTION("success") {
         // Set the call expectations:
         // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor on specified table succeeds
@@ -614,7 +289,7 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::open_cursor", "[silkrpc][ethd
         CHECK_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
         CHECK(remote_cursor_.cursor_id() == 3);
     }
-    SECTION("write failure") {
+    SECTION("failure in write") {
         // Set the call expectations:
         // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor on specified table fails
         EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_failure(grpc_context_));
@@ -626,7 +301,7 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::open_cursor", "[silkrpc][ethd
             asio::system_error,
             test::exception_has_cancelled_grpc_status_code());
     }
-    SECTION("read failure") {
+    SECTION("failure in read") {
         // Set the call expectations:
         // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor on specified table succeeds
         EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_success(grpc_context_));
@@ -643,8 +318,6 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::open_cursor", "[silkrpc][ethd
 }
 
 TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
-    using namespace testing;  // NOLINT(build/namespaces)
-
     SECTION("success") {
         // Set the call expectations:
         // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
@@ -657,7 +330,9 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::close_cursor", "[silkrpc][eth
         // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read calls succeed setting the specified cursor ID
         remote::Pair pair;
         pair.set_cursorid(3);
-        EXPECT_CALL(reader_writer_, Read).Times(2).WillRepeatedly(test::read_success_with(grpc_context_, pair));
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, pair))
+            .WillOnce(test::read_success_with(grpc_context_, remote::Pair{}));
 
         // Execute the test preconditions: open a new cursor on specified table
         REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
@@ -665,6 +340,54 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::close_cursor", "[silkrpc][eth
         // Execute the test: closing a cursor should succeed and reset the cursor ID
         CHECK_NOTHROW(spawn_and_wait(remote_cursor_.close_cursor()));
         CHECK(remote_cursor_.cursor_id() == 0);
+    }
+    SECTION("failure in write") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to close cursor w/ specified cursor ID fails
+        EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::CLOSE)), Property(&remote::Cursor::cursor, Eq(3))), _))
+            .After(open)
+            .WillOnce(test::write_failure(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified cursor ID
+        remote::Pair pair;
+        pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, pair));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: closing a cursor should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.close_cursor()), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+    SECTION("failure in read") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(_, _)).WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to close cursor w/ specified cursor ID succeeds
+        EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::CLOSE)), Property(&remote::Cursor::cursor, Eq(3))), _))
+            .After(open)
+            .WillOnce(test::write_success(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read 1st call succeeds setting the specified cursor ID, 2nd fails
+        remote::Pair pair;
+        pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, pair))
+            .WillOnce(test::read_failure(grpc_context_));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: closing a cursor should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.close_cursor()), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
     }
 }
 
