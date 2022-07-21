@@ -39,15 +39,15 @@ using testing::Eq;
 using testing::Expectation;
 using testing::Property;
 
-static const std::string kPlainStateKey{"e0a2bd4258d2768837baa26a28fe71dc079f84c7"};
-static const std::string kPlainStateValue{""};
+static const char* kPlainStateKey{"e0a2bd4258d2768837baa26a28fe71dc079f84c7"};
+static const char* kPlainStateValue{""};
 
 static const silkworm::Bytes kPlainStateKeyBytes{silkworm::bytes_of_string(kPlainStateKey)};
 static const silkworm::Bytes kPlainStateValueBytes{silkworm::bytes_of_string(kPlainStateValue)};
 
-static const std::string kAccountChangeSetKey{"0000000000532b9f"};
-static const std::string kAccountChangeSetSubkey{"0000000000000000000000000000000000000000"};
-static const std::string kAccountChangeSetValue{"020944ed67f28fd50bb8e9"};
+static const char* kAccountChangeSetKey{"0000000000532b9f"};
+static const char* kAccountChangeSetSubkey{"0000000000000000000000000000000000000000"};
+static const char* kAccountChangeSetValue{"020944ed67f28fd50bb8e9"};
 
 static const silkworm::Bytes kAccountChangeSetKeyBytes{silkworm::bytes_of_string(kAccountChangeSetKey)};
 static const silkworm::Bytes kAccountChangeSetSubkeyBytes{silkworm::bytes_of_string(kAccountChangeSetSubkey)};
