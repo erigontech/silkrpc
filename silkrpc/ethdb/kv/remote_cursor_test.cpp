@@ -33,229 +33,25 @@
 
 namespace silkrpc::ethdb::kv {
 
-/*
-
-TEST_CASE("RemoteCursor::seek", "[silkrpc][ethdb][kv][remote_cursor]") {
-    SECTION("success w/ sync read - sync write") {
-        class MockStreamingClient10 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient10(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                remote::Pair pair;
-                pair.set_cursorid(3);
-                pair.set_k("6080");
-                pair.set_v("6080");
-                read_completed(grpc::Status::OK, pair);
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                write_completed(grpc::Status::OK);
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient10 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result1.get();
-            CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.seek(silkworm::Bytes{}), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            const auto kv_pair = result2.get();
-            CHECK(silkworm::to_hex(kv_pair.key) == "36303830");
-            CHECK(silkworm::to_hex(kv_pair.value) == "36303830");
-            auto result3{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            result3.get();
-            CHECK(remote_cursor.cursor_id() == 0);
-        } catch (...) {
-            CHECK(false);
-        }
-    }
-}
-
-TEST_CASE("RemoteCursor::seek_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
-    SECTION("success w/ sync read - sync write") {
-        class MockStreamingClient11 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient11(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                remote::Pair pair;
-                pair.set_cursorid(3);
-                pair.set_v("6080");
-                read_completed(grpc::Status::OK, pair);
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                write_completed(grpc::Status::OK);
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient11 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result1.get();
-            CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.seek_exact(silkworm::Bytes{}), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            const auto kv_pair = result2.get();
-            CHECK(kv_pair.key == silkworm::Bytes{});
-            CHECK(silkworm::to_hex(kv_pair.value) == "36303830");
-            auto result3{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            result3.get();
-            CHECK(remote_cursor.cursor_id() == 0);
-        } catch (...) {
-            CHECK(false);
-        }
-    }
-}
-
-TEST_CASE("RemoteCursor::next", "[silkrpc][ethdb][kv][remote_cursor]") {
-    SECTION("success w/ sync read - sync write") {
-        class MockStreamingClient12 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient12(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                remote::Pair pair;
-                pair.set_cursorid(3);
-                pair.set_k("0001");
-                pair.set_v("0002");
-                read_completed(grpc::Status::OK, pair);
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                write_completed(grpc::Status::OK);
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient12 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result1.get();
-            CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.next(), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            const auto kv_pair = result2.get();
-            CHECK(silkworm::to_hex(kv_pair.key) == "30303031");
-            CHECK(silkworm::to_hex(kv_pair.value) == "30303032");
-            auto result3{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            result3.get();
-            CHECK(remote_cursor.cursor_id() == 0);
-        } catch (...) {
-            CHECK(false);
-        }
-    }
-}
-
-TEST_CASE("RemoteCursor::seek_both", "[silkrpc][ethdb][kv][remote_cursor]") {
-    SECTION("success w/ sync read - sync write") {
-        class MockStreamingClient13 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient13(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                remote::Pair pair;
-                pair.set_cursorid(3);
-                pair.set_v("6080");
-                read_completed(grpc::Status::OK, pair);
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                write_completed(grpc::Status::OK);
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient13 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result1.get();
-            CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.seek_both(silkworm::Bytes{}, silkworm::Bytes{}), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            const auto value = result2.get();
-            CHECK(silkworm::to_hex(value) == "36303830");
-            auto result3{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            result3.get();
-            CHECK(remote_cursor.cursor_id() == 0);
-        } catch (...) {
-            CHECK(false);
-        }
-    }
-}
-
-TEST_CASE("RemoteCursor::seek_both_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
-    SECTION("success w/ sync read - sync write") {
-        class MockStreamingClient14 : public MockBaseStreamingClient {
-        public:
-            MockStreamingClient14(std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue) {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                remote::Pair pair;
-                pair.set_cursorid(3);
-                pair.set_v("6080");
-                read_completed(grpc::Status::OK, pair);
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {
-                write_completed(grpc::Status::OK);
-            }
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        MockStreamingClient14 client{channel, &queue};
-        KvAsioAwaitable<asio::io_context::executor_type> kv_awaitable{io_context, client};
-        RemoteCursor remote_cursor{kv_awaitable};
-        try {
-            auto result1{asio::co_spawn(io_context, remote_cursor.open_cursor("table1"), asio::use_future)};
-            io_context.run();
-            result1.get();
-            CHECK(remote_cursor.cursor_id() == 3);
-            auto result2{asio::co_spawn(io_context, remote_cursor.seek_both_exact(silkworm::Bytes{}, silkworm::Bytes{}), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            const auto kv_pair = result2.get();
-            CHECK(kv_pair.key == silkworm::Bytes{});
-            CHECK(silkworm::to_hex(kv_pair.value) == "36303830");
-            auto result3{asio::co_spawn(io_context, remote_cursor.close_cursor(), asio::use_future)};
-            io_context.reset();
-            io_context.run();
-            result3.get();
-            CHECK(remote_cursor.cursor_id() == 0);
-        } catch (...) {
-            CHECK(false);
-        }
-    }
-}*/
-
 using testing::_;
 using testing::AllOf;
 using testing::Eq;
 using testing::Expectation;
 using testing::Property;
+
+static const std::string kPlainStateKey{"e0a2bd4258d2768837baa26a28fe71dc079f84c7"};
+static const std::string kPlainStateValue{""};
+
+static const silkworm::Bytes kPlainStateKeyBytes{silkworm::bytes_of_string(kPlainStateKey)};
+static const silkworm::Bytes kPlainStateValueBytes{silkworm::bytes_of_string(kPlainStateValue)};
+
+static const std::string kAccountChangeSetKey{"0000000000532b9f"};
+static const std::string kAccountChangeSetSubkey{"0000000000000000000000000000000000000000"};
+static const std::string kAccountChangeSetValue{"020944ed67f28fd50bb8e9"};
+
+static const silkworm::Bytes kAccountChangeSetKeyBytes{silkworm::bytes_of_string(kAccountChangeSetKey)};
+static const silkworm::Bytes kAccountChangeSetSubkeyBytes{silkworm::bytes_of_string(kAccountChangeSetSubkey)};
+static const silkworm::Bytes kAccountChangeSetValueBytes{silkworm::bytes_of_string(kAccountChangeSetValue)};
 
 struct RemoteCursorTest : test::KVTestBase {
     RemoteCursorTest() {
@@ -281,9 +77,9 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::open_cursor", "[silkrpc][ethd
                 AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
             .WillOnce(test::write_success(grpc_context_));
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified cursor ID
-        remote::Pair pair;
-        pair.set_cursorid(3);
-        EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, pair));
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, open_pair));
 
         // Execute the test: opening a cursor on specified table should succeed and cursor should have expected cursor ID
         CHECK_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
@@ -328,10 +124,10 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::close_cursor", "[silkrpc][eth
             .After(open)
             .WillOnce(test::write_success(grpc_context_));
         // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read calls succeed setting the specified cursor ID
-        remote::Pair pair;
-        pair.set_cursorid(3);
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
         EXPECT_CALL(reader_writer_, Read)
-            .WillOnce(test::read_success_with(grpc_context_, pair))
+            .WillOnce(test::read_success_with(grpc_context_, open_pair))
             .WillOnce(test::read_success_with(grpc_context_, remote::Pair{}));
 
         // Execute the test preconditions: open a new cursor on specified table
@@ -351,9 +147,9 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::close_cursor", "[silkrpc][eth
             .After(open)
             .WillOnce(test::write_failure(grpc_context_));
         // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified cursor ID
-        remote::Pair pair;
-        pair.set_cursorid(3);
-        EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, pair));
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, open_pair));
         // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
         EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
 
@@ -374,10 +170,10 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::close_cursor", "[silkrpc][eth
             .After(open)
             .WillOnce(test::write_success(grpc_context_));
         // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read 1st call succeeds setting the specified cursor ID, 2nd fails
-        remote::Pair pair;
-        pair.set_cursorid(3);
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
         EXPECT_CALL(reader_writer_, Read)
-            .WillOnce(test::read_success_with(grpc_context_, pair))
+            .WillOnce(test::read_success_with(grpc_context_, open_pair))
             .WillOnce(test::read_failure(grpc_context_));
         // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
         EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
@@ -387,6 +183,449 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::close_cursor", "[silkrpc][eth
 
         // Execute the test: closing a cursor should raise an exception w/ expected gRPC status code
         CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.close_cursor()), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+}
+
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::seek", "[silkrpc][ethdb][kv][remote_cursor]") {
+    SECTION("success") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek w/ specified cursor ID succeeds
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::SEEK)), Property(&remote::Cursor::cursor, Eq(3)),
+                    Property(&remote::Cursor::k, Eq(kPlainStateKey))), _))
+            .After(open)
+            .WillOnce(test::write_success(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read calls succeed setting the specified cursor ID
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        remote::Pair seek_pair;
+        seek_pair.set_cursorid(3);
+        seek_pair.set_k(kPlainStateKey);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair))
+            .WillOnce(test::read_success_with(grpc_context_, seek_pair));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should succeed and return the expected value
+        KeyValue kv;
+        CHECK_NOTHROW(kv = spawn_and_wait(remote_cursor_.seek(kPlainStateKeyBytes)));
+        CHECK(kv.key == kPlainStateKeyBytes);
+        CHECK(kv.value == kPlainStateValueBytes);
+    }
+    SECTION("failure in write") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek w/ specified cursor ID fails
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::SEEK)), Property(&remote::Cursor::cursor, Eq(3)),
+                    Property(&remote::Cursor::k, Eq(kPlainStateKey))), _))
+            .After(open)
+            .WillOnce(test::write_failure(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified cursor ID
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.seek(kPlainStateKeyBytes)), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+    SECTION("failure in read") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek w/ specified cursor ID succeeds
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::SEEK)), Property(&remote::Cursor::cursor, Eq(3)),
+                    Property(&remote::Cursor::k, Eq(kPlainStateKey))), _))
+            .After(open)
+            .WillOnce(test::write_success(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read 1st call succeeds setting the specified cursor ID, 2nd fails
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair))
+            .WillOnce(test::read_failure(grpc_context_));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.seek(kPlainStateKeyBytes)), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+}
+
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::seek_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
+    SECTION("success") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek w/ specified cursor ID succeeds
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::SEEK_EXACT)), Property(&remote::Cursor::cursor, Eq(3)),
+                    Property(&remote::Cursor::k, Eq(kPlainStateKey))), _))
+            .After(open)
+            .WillOnce(test::write_success(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read calls succeed setting the specified cursor ID
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        remote::Pair seek_pair;
+        seek_pair.set_cursorid(3);
+        seek_pair.set_k(kPlainStateKey);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair))
+            .WillOnce(test::read_success_with(grpc_context_, seek_pair));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should succeed and return the expected value
+        KeyValue kv;
+        CHECK_NOTHROW(kv = spawn_and_wait(remote_cursor_.seek_exact(kPlainStateKeyBytes)));
+        CHECK(kv.key == kPlainStateKeyBytes);
+        CHECK(kv.value == kPlainStateValueBytes);
+    }
+    SECTION("failure in write") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek w/ specified cursor ID fails
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::SEEK_EXACT)), Property(&remote::Cursor::cursor, Eq(3)),
+                    Property(&remote::Cursor::k, Eq(kPlainStateKey))), _))
+            .After(open)
+            .WillOnce(test::write_failure(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified cursor ID
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.seek_exact(kPlainStateKeyBytes)), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+    SECTION("failure in read") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek w/ specified cursor ID succeeds
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::SEEK_EXACT)), Property(&remote::Cursor::cursor, Eq(3)),
+                    Property(&remote::Cursor::k, Eq(kPlainStateKey))), _))
+            .After(open)
+            .WillOnce(test::write_success(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read 1st call succeeds setting the specified cursor ID, 2nd fails
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair))
+            .WillOnce(test::read_failure(grpc_context_));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.seek_exact(kPlainStateKeyBytes)), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+}
+
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::next", "[silkrpc][ethdb][kv][remote_cursor]") {
+    SECTION("success") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek next w/ specified cursor ID succeeds
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::NEXT)), Property(&remote::Cursor::cursor, Eq(3))), _))
+            .After(open)
+            .WillOnce(test::write_success(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read calls succeed setting the specified cursor ID
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        remote::Pair next_pair;
+        next_pair.set_cursorid(3);
+        next_pair.set_k(kPlainStateKey);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair))
+            .WillOnce(test::read_success_with(grpc_context_, next_pair));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking next key should succeed and return the expected value
+        KeyValue kv;
+        CHECK_NOTHROW(kv = spawn_and_wait(remote_cursor_.next()));
+        CHECK(kv.key == kPlainStateKeyBytes);
+        CHECK(kv.value == kPlainStateValueBytes);
+    }
+    SECTION("failure in write") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek next w/ specified cursor ID fails
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::NEXT)), Property(&remote::Cursor::cursor, Eq(3))), _))
+            .After(open)
+            .WillOnce(test::write_failure(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified cursor ID
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking next key should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.next()), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+    SECTION("failure in read") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek next w/ specified cursor ID succeeds
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::NEXT)), Property(&remote::Cursor::cursor, Eq(3))), _))
+            .After(open)
+            .WillOnce(test::write_success(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read 1st call succeeds setting the specified cursor ID, 2nd fails
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair))
+            .WillOnce(test::read_failure(grpc_context_));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.next()), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+}
+
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::seek_both", "[silkrpc][ethdb][kv][remote_cursor]") {
+    SECTION("success") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek w/ specified cursor ID succeeds
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::SEEK_BOTH)), Property(&remote::Cursor::cursor, Eq(3)),
+                    Property(&remote::Cursor::k, Eq(kAccountChangeSetKey)), Property(&remote::Cursor::v, Eq(kAccountChangeSetSubkey))), _))
+            .After(open)
+            .WillOnce(test::write_success(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read calls succeed setting the specified cursor ID
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        remote::Pair seek_pair;
+        seek_pair.set_cursorid(3);
+        seek_pair.set_k(kAccountChangeSetKey);
+        seek_pair.set_v(kAccountChangeSetValue);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair))
+            .WillOnce(test::read_success_with(grpc_context_, seek_pair));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should succeed and return the expected value
+        silkworm::Bytes value;
+        CHECK_NOTHROW(value = spawn_and_wait(remote_cursor_.seek_both(kAccountChangeSetKeyBytes, kAccountChangeSetSubkeyBytes)));
+        CHECK(value == kAccountChangeSetValueBytes);
+    }
+    SECTION("failure in write") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek w/ specified cursor ID succeeds
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::SEEK_BOTH)), Property(&remote::Cursor::cursor, Eq(3)),
+                    Property(&remote::Cursor::k, Eq(kAccountChangeSetKey)), Property(&remote::Cursor::v, Eq(kAccountChangeSetSubkey))), _))
+            .After(open)
+            .WillOnce(test::write_failure(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified cursor ID
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.seek_both(kAccountChangeSetKeyBytes, kAccountChangeSetSubkeyBytes)), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+    SECTION("failure in read") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek w/ specified cursor ID succeeds
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::SEEK_BOTH)), Property(&remote::Cursor::cursor, Eq(3)),
+                    Property(&remote::Cursor::k, Eq(kAccountChangeSetKey)), Property(&remote::Cursor::v, Eq(kAccountChangeSetSubkey))), _))
+            .After(open)
+            .WillOnce(test::write_success(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read 1st call succeeds setting the specified cursor ID, 2nd fails
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair))
+            .WillOnce(test::read_failure(grpc_context_));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.seek_both(kAccountChangeSetKeyBytes, kAccountChangeSetSubkeyBytes)), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+}
+
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::seek_both_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
+    SECTION("success") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek w/ specified cursor ID succeeds
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::SEEK_BOTH_EXACT)), Property(&remote::Cursor::cursor, Eq(3)),
+                    Property(&remote::Cursor::k, Eq(kAccountChangeSetKey)), Property(&remote::Cursor::v, Eq(kAccountChangeSetSubkey))), _))
+            .After(open)
+            .WillOnce(test::write_success(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read calls succeed setting the specified cursor ID
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        remote::Pair seek_pair;
+        seek_pair.set_cursorid(3);
+        seek_pair.set_k(kAccountChangeSetKey);
+        seek_pair.set_v(kAccountChangeSetValue);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair))
+            .WillOnce(test::read_success_with(grpc_context_, seek_pair));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should succeed and return the expected value
+        KeyValue kv;
+        CHECK_NOTHROW(kv = spawn_and_wait(remote_cursor_.seek_both_exact(kAccountChangeSetKeyBytes, kAccountChangeSetSubkeyBytes)));
+        CHECK(kv.key == kAccountChangeSetKeyBytes);
+        CHECK(kv.value == kAccountChangeSetValueBytes);
+    }
+    SECTION("failure in write") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek w/ specified cursor ID succeeds
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::SEEK_BOTH_EXACT)), Property(&remote::Cursor::cursor, Eq(3)),
+                    Property(&remote::Cursor::k, Eq(kAccountChangeSetKey)), Property(&remote::Cursor::v, Eq(kAccountChangeSetSubkey))), _))
+            .After(open)
+            .WillOnce(test::write_failure(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified cursor ID
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.seek_both_exact(kAccountChangeSetKeyBytes, kAccountChangeSetSubkeyBytes)), asio::system_error,
+            test::exception_has_cancelled_grpc_status_code());
+    }
+    SECTION("failure in read") {
+        // Set the call expectations:
+        // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
+        Expectation open = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::OPEN)), Property(&remote::Cursor::bucketname, Eq("table1"))), _))
+            .WillOnce(test::write_success(grpc_context_));
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to seek w/ specified cursor ID succeeds
+        Expectation seek = EXPECT_CALL(reader_writer_, Write(
+                AllOf(Property(&remote::Cursor::op, Eq(remote::Op::SEEK_BOTH_EXACT)), Property(&remote::Cursor::cursor, Eq(3)),
+                    Property(&remote::Cursor::k, Eq(kAccountChangeSetKey)), Property(&remote::Cursor::v, Eq(kAccountChangeSetSubkey))), _))
+            .After(open)
+            .WillOnce(test::write_success(grpc_context_));
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read 1st call succeeds setting the specified cursor ID, 2nd fails
+        remote::Pair open_pair;
+        open_pair.set_cursorid(3);
+        EXPECT_CALL(reader_writer_, Read)
+            .WillOnce(test::read_success_with(grpc_context_, open_pair))
+            .WillOnce(test::read_failure(grpc_context_));
+        // 4. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test preconditions: open a new cursor on specified table
+        REQUIRE_NOTHROW(spawn_and_wait(remote_cursor_.open_cursor("table1")));
+
+        // Execute the test: seeking a key should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_cursor_.seek_both_exact(kAccountChangeSetKeyBytes, kAccountChangeSetSubkeyBytes)), asio::system_error,
             test::exception_has_cancelled_grpc_status_code());
     }
 }
