@@ -103,8 +103,8 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
             output_api_filename = output_dir + json_file[:-5]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = json_rpc["response"]
-            silk_file = output_api_filename + "-resonse.json"
-            rpc_file = output_api_filename + "-expectedResponse.json"
+            silk_file = output_api_filename + "-response.json"
+            rpc_file = output_api_filename + "-expResponse.json"
             diff_file = output_api_filename + "-diff.json"
         else:
             output_api_filename = output_dir + json_file[:-5]
