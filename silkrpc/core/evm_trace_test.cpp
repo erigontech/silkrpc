@@ -67,7 +67,7 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("e0a2bd4258d2768837baa26a28fe71dc079f84c700000000005279a8")};
+    static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("e0a2bd4258d2768837baa26a28fe71dc079f84c700000000005279a7")};
     static silkworm::Bytes kAccountHistoryValue1{*silkworm::from_hex(
         "0100000000000000000000003a300000010000005200c003100000008a5e905e9c5ea55ead5eb25eb75ebf5ec95ed25ed75ee15eed5ef25efa"
         "5eff5e085f115f1a5f235f2c5f355f3e5f475f505f595f625f6b5f745f7c5f865f8f5f985fa15faa5faf5fb45fb95fc15fce5fd75fe05fe65f"
@@ -105,10 +105,10 @@ TEST_CASE("TraceCallExecutor::execute call 1") {
         "7e647e6a7e727e7f7e887e917e967ea37eac7eb57ebe7ec77ed07ed67ee27eeb7ef47efd7e037f0f7f187f217f2a7f337f3c7f457f4e7f577f"
         "607f667f727f7b7f847f8d7f")};
 
-    static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("52728289eba496b6080d57d0250a90663a07e55600000000005279a8")};
+    static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("52728289eba496b6080d57d0250a90663a07e55600000000005279a7")};
     static silkworm::Bytes kAccountHistoryValue2{*silkworm::from_hex("0100000000000000000000003a300000010000004e00000010000000d63b")};
 
-    static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000005279a8")};
+    static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000005279a7")};
     static silkworm::Bytes kAccountHistoryValue3{*silkworm::from_hex(
         "0100000000000000000000003b30270000000040202b003f002c001c002d0009002e000a002f000000300000003100000032000b003300"
         "0200340011003500030036000a003700040038000800390000003a0000003b0007003c0000003d000a003e0003003f0002004000060041"
@@ -898,7 +898,7 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("8ced5ad0d8da4ec211c17355ed3dbfec4cf0e5b900000000004366ad")};
+    static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("8ced5ad0d8da4ec211c17355ed3dbfec4cf0e5b900000000004366ac")};
     static silkworm::Bytes kAccountHistoryValue1{*silkworm::from_hex(
         "0100000000000000000000003a300000010000004300c00310000000d460da60de60f86008610d611161136125612d6149615c61626182"
         "619161bd61bf61cb61cd61d361e761e961f061f461f761f961026208620a620f621162176219621c621e621f622162246228622a622d62"
@@ -937,12 +937,12 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
         "ff7b067c0d7c167c1d7c1f7c207c227c247c2c7c2e7c317c3d7c3f7c497c597c627c647c667c817c827c857c8d7c917c997c9b7c9c7c9f"
         "7ca47ca67ca87caa7cac7caf7cb37cc97ce57cf57c077d087d")};
 
-    static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("5e1f0c9ddbe3cb57b80c933fab5151627d7966fa00000000004366ad")};
+    static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("5e1f0c9ddbe3cb57b80c933fab5151627d7966fa00000000004366ac")};
     static silkworm::Bytes kAccountHistoryValue2{*silkworm::from_hex(
             "0100000000000000000000003a300000020000004000020043000c00180000001e0000005e8d618d628d826688668d668f66a466ac"
             "66b866bb66cf66db6623678e67d167")};
 
-    static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000004366ad")};
+    static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000004366ac")};
     static silkworm::Bytes kAccountHistoryValue3{*silkworm::from_hex(
         "0100000000000000000000003b30270000000040202b003f002c001c002d0009002e000a002f000000300000003100000032000b003300"
         "0200340011003500030036000a003700040038000800390000003a0000003b0007003c0000003d000a003e0003003f0002004000060041"
@@ -981,11 +981,11 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
         "7b0e7b137b197b257b377b437b497b557b5f7b6a7b6c7b6d7b8d7b9f7ba97baf7bb57bbe7bc47bc57bd57bad7db37dbe7dbf7dd17de57d"
         "f17dfb7d017e0b7e157e207e287e2b7e397e4b7e517e5f7e")};
 
-    static silkworm::Bytes kAccountChangeSetKey1{*silkworm::from_hex("00000000004366ae")};
+    static silkworm::Bytes kAccountChangeSetKey1{*silkworm::from_hex("00000000004366ac")}; 
     static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("8ced5ad0d8da4ec211c17355ed3dbfec4cf0e5b9")};
     static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("0303038c330a01a098914888dc0516d2")};
 
-    static silkworm::Bytes kAccountChangeSetKey2{*silkworm::from_hex("00000000004366b8")};
+    static silkworm::Bytes kAccountChangeSetKey2{*silkworm::from_hex("00000000004366ac")};
     static silkworm::Bytes kAccountChangeSetSubkey2{*silkworm::from_hex("5e1f0c9ddbe3cb57b80c933fab5151627d7966fa")};
     static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("03010408014219564ff26a00")};
 
@@ -1172,7 +1172,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
-    static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("578f0a154b23be77fc2033197fbc775637648ad400000000005279a8")};
+    static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("578f0a154b23be77fc2033197fbc775637648ad400000000005279a7")};
     static silkworm::Bytes kAccountHistoryValue1{*silkworm::from_hex(
         "0100000000000000000000003a300000010000005200650010000000a074f7740275247527752b75307549756d75787581758a75937598"
         "759e75a275a775a975af75b775ce75eb75f67508760f7613769f76a176a376be76ca76ce76d876e576fb76267741776177627769777077"
@@ -1180,13 +1180,13 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
         "a117a11ba131a135a139a152a154a158a15aa15da171a175a17ca1b4a1e4a124a21fbb22bb26bb2bbb2dbb2fbb34bb38bb3fbb0bd14ed2"
         "a0e5a3e550eb60eb6ceb72eb")};
 
-    static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("6951c35e335fa18c97cb207119133cd8009580cd00000000005279a8")};
+    static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("6951c35e335fa18c97cb207119133cd8009580cd00000000005279a7")};
     static silkworm::Bytes kAccountHistoryValue2{*silkworm::from_hex(
         "0100000000000000000000003a3000000700000044000a004600010048000100490005004c0001004d0001005e"
         "00000040000000560000005a0000005e0000006a0000006e000000720000005da562a563a565a567a56aa59da5"
         "a0a5f0a5f5a57ef926a863a8eb520b535d1b951bb71b3c1c741caa4f53f5b0f5184f536018f6")};
 
-    static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000005279a8")};
+    static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000005279a7")};
     static silkworm::Bytes kAccountHistoryValue3{*silkworm::from_hex(
         "0100000000000000000000003b30270000000040202b003f002c001c002d0009002e000a002f000000300000003100000032000b003300"
         "0200340011003500030036000a003700040038000800390000003a0000003b0007003c0000003d000a003e0003003f0002004000060041"
@@ -1225,7 +1225,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
         "7b0e7b137b197b257b377b437b497b557b5f7b6a7b6c7b6d7b8d7b9f7ba97baf7bb57bbe7bc47bc57bd57bad7db37dbe7dbf7dd17de57d"
         "f17dfb7d017e0b7e157e207e287e2b7e397e4b7e517e5f7e")};
 
-    static silkworm::Bytes kAccountChangeSetKey{*silkworm::from_hex("00000000005279ad")};
+    static silkworm::Bytes kAccountChangeSetKey{*silkworm::from_hex("00000000005279a7")};
     static silkworm::Bytes kAccountChangeSetSubkey{*silkworm::from_hex("578f0a154b23be77fc2033197fbc775637648ad4")};
     static silkworm::Bytes kAccountChangeSetValue{*silkworm::from_hex("03012f090207fbc719f215d705")};
 
@@ -1233,7 +1233,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
 
     static silkworm::Bytes kAccountChangeSetKey1{*silkworm::from_hex("00000000005EF618")};
     static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("6951c35e335fa18c97cb207119133cd8009580cd")};
-    static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("00000000005279a8")};
+    static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("00000000005279a7")};
 
     static silkworm::Bytes kAccountChangeSetKey2{*silkworm::from_hex("0000000000532b9f")};
     static silkworm::Bytes kAccountChangeSetSubkey2{*silkworm::from_hex("0000000000000000000000000000000000000000")};
@@ -1447,6 +1447,7 @@ TEST_CASE("TraceCallExecutor::execute call with error") {
         }
     })"_json);
 }
+
 
 TEST_CASE("VmTrace json serialization") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
