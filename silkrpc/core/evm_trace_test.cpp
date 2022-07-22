@@ -981,7 +981,7 @@ TEST_CASE("TraceCallExecutor::execute call 2") {
         "7b0e7b137b197b257b377b437b497b557b5f7b6a7b6c7b6d7b8d7b9f7ba97baf7bb57bbe7bc47bc57bd57bad7db37dbe7dbf7dd17de57d"
         "f17dfb7d017e0b7e157e207e287e2b7e397e4b7e517e5f7e")};
 
-    static silkworm::Bytes kAccountChangeSetKey1{*silkworm::from_hex("00000000004366ac")}; 
+    static silkworm::Bytes kAccountChangeSetKey1{*silkworm::from_hex("00000000004366ac")};
     static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("8ced5ad0d8da4ec211c17355ed3dbfec4cf0e5b9")};
     static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("0303038c330a01a098914888dc0516d2")};
 
