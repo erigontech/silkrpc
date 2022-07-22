@@ -33,10 +33,10 @@ namespace silkrpc::ethdb::kv {
 using testing::_;
 
 struct RemoteTransactionTest : test::KVTestBase {
-    RemoteTransaction2 remote_tx_{*stub_, grpc_context_};
+    RemoteTransaction remote_tx_{*stub_, grpc_context_};
 };
 
-TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::open", "[silkrpc][ethdb][kv][remote_transaction]") {
+TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
         // Set the call expectations:
         // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
@@ -74,7 +74,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::open", "[silkrpc][e
     }
 }
 
-TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::close", "[silkrpc][ethdb][kv][remote_transaction]") {
+TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]") {
     //TODO(canepat) waiting for PrepareAsync in asio-grpc
     /*SECTION("success w/o open") {
         // Set the call expectations:
@@ -182,7 +182,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::close", "[silkrpc][
     }
 }
 
-TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
+TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
         // Set the call expectations:
         // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
@@ -261,7 +261,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::cursor", "[silkrpc]
     }
 }
 
-TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
+TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
         // Set the call expectations:
         // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds

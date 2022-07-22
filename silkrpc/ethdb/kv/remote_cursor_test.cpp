@@ -66,10 +66,10 @@ struct RemoteCursorTest : test::KVTestBase {
     }
 
     TxRpc tx_rpc_{*stub_, grpc_context_};
-    RemoteCursor2 remote_cursor_{tx_rpc_};
+    RemoteCursor remote_cursor_{tx_rpc_};
 };
 
-TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor::open_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success") {
         // Set the call expectations:
         // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor on specified table succeeds
@@ -113,7 +113,7 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::open_cursor", "[silkrpc][ethd
     }
 }
 
-TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor::close_cursor", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success") {
         // Set the call expectations:
         // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
@@ -187,7 +187,7 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::close_cursor", "[silkrpc][eth
     }
 }
 
-TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::seek", "[silkrpc][ethdb][kv][remote_cursor]") {
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor::seek", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success") {
         // Set the call expectations:
         // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
@@ -276,7 +276,7 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::seek", "[silkrpc][ethdb][kv][
     }
 }
 
-TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::seek_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor::seek_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success") {
         // Set the call expectations:
         // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
@@ -365,7 +365,7 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::seek_exact", "[silkrpc][ethdb
     }
 }
 
-TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::next", "[silkrpc][ethdb][kv][remote_cursor]") {
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor::next", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success") {
         // Set the call expectations:
         // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
@@ -451,7 +451,7 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::next", "[silkrpc][ethdb][kv][
     }
 }
 
-TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::seek_both", "[silkrpc][ethdb][kv][remote_cursor]") {
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor::seek_both", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success") {
         // Set the call expectations:
         // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
@@ -540,7 +540,7 @@ TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::seek_both", "[silkrpc][ethdb]
     }
 }
 
-TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor2::seek_both_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
+TEST_CASE_METHOD(RemoteCursorTest, "RemoteCursor::seek_both_exact", "[silkrpc][ethdb][kv][remote_cursor]") {
     SECTION("success") {
         // Set the call expectations:
         // 1. AsyncReaderWriter<remote::Cursor, remote::Pair>::Write call to open cursor succeeds
