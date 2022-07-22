@@ -27,7 +27,7 @@
 
 #include <boost/asio/use_awaitable.hpp>
 #include <grpcpp/grpcpp.h>
-#include <agrpc/grpcContext.hpp>
+#include <agrpc/grpc_context.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/cursor.hpp>

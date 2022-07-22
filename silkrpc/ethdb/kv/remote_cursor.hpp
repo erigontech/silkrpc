@@ -66,7 +66,7 @@ private:
     uint32_t cursor_id_;
 };
 
-using KVStreamingRpc = silkrpc::BidiStreamingRpc<&remote::KV::StubInterface::AsyncTx>;
+using KVStreamingRpc = silkrpc::BidiStreamingRpc<&remote::KV::StubInterface::PrepareAsyncTx>;
 
 class RemoteCursor2 : public CursorDupSort {
 public:

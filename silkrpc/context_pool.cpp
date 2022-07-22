@@ -20,8 +20,8 @@
 #include <thread>
 #include <utility>
 
-#include <agrpc/grpcExecutor.hpp>
-#include <agrpc/grpcContext.hpp>
+#include <agrpc/grpc_executor.hpp>
+#include <agrpc/grpc_context.hpp>
 #include <agrpc/run.hpp>
 
 #include <silkrpc/common/log.hpp>

@@ -535,9 +535,9 @@ struct RemoteTransactionTest : test::KVTestBase {
 
 TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction2::open", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("request fails") {
-        EXPECT_CALL(*stub_, AsyncTxRaw).WillOnce([&](auto&&, auto&&, void* tag) {
+        EXPECT_CALL(*stub_, PrepareAsyncTxRaw).WillOnce(Return(reader_writer_ptr_.release()));        
+        EXPECT_CALL(reader_writer_, StartCall).WillOnce([&](void* tag) {
             agrpc::process_grpc_tag(grpc_context_, tag, false);
-            return reader_writer_ptr_.release();
         });
         EXPECT_CALL(reader_writer_, Finish).WillOnce([&](grpc::Status* status, void* tag) {
             *status = grpc::Status::CANCELLED;

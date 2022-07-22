@@ -26,7 +26,7 @@
 #include <thread>
 #include <utility>
 
-#include <agrpc/grpcContext.hpp>
+#include <agrpc/grpc_context.hpp>
 #include <boost/asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
