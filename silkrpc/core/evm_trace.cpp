@@ -882,7 +882,7 @@ void StateDiffTracer::on_reward_granted(const silkworm::CallResult& result, cons
 template<typename WorldState, typename VM>
 asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(const silkworm::Block& block, const silkrpc::Call& call) {
     silkrpc::Transaction transaction{call.to_transaction()};
-    auto result = co_await execute(block.header.number, block, transaction, -1);
+    auto result = co_await execute(block.header.number-1, block, transaction, -1);
     co_return result;
 }
 
