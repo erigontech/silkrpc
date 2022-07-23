@@ -69,6 +69,10 @@ inline auto finish_streaming_cancelled(agrpc::GrpcContext& grpc_context) {
     return finish_streaming_with_status(grpc_context, grpc::Status::CANCELLED, /*ok=*/true);
 }
 
+inline auto finish_streaming_aborted(agrpc::GrpcContext& grpc_context) {
+    return finish_streaming_with_status(grpc_context, grpc::Status{grpc::StatusCode::ABORTED, ""}, /*ok=*/true);
+}
+
 inline auto finish_streaming_error(agrpc::GrpcContext& grpc_context) {
     return finish_streaming_with_status(grpc_context, grpc::Status::OK, /*ok=*/false);
 }

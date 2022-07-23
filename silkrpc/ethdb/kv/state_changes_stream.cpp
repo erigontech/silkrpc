@@ -60,8 +60,9 @@ void StateChangesStream::open() {
 }
 
 void StateChangesStream::close() {
+    SILKRPC_DEBUG << "Close state changes stream: emitting cancellation\n";
     cancellation_signal_.emit(asio::cancellation_type::all);
-    SILKRPC_WARN << "Registration for state changes cancelled\n";
+    SILKRPC_WARN << "Close state changes stream: cancellation emitted\n";
 }
 
 asio::awaitable<void> StateChangesStream::run() {
