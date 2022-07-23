@@ -37,38 +37,52 @@
 
 namespace silkrpc::ethdb::kv {
 
-//! The default registration interval.
+//! The default registration interval
 constexpr boost::posix_time::milliseconds kDefaultRegistrationInterval{10'000};
 
+//! End-point of the stream of state changes coming from the node Core component
 class StateChangesStream {
 public:
+    //! Return the retry interval between successive registration attempts
+    static boost::posix_time::milliseconds registration_interval() { return registration_interval_; }
+
+    //! Set the retry interval between successive registration attempts
     static void set_registration_interval(boost::posix_time::milliseconds registration_interval);
 
     explicit StateChangesStream(Context& context, remote::KV::StubInterface* stub);
 
+    //! Open up the stream, starting the register-and-receive loop
     void open();
 
+    //! Close down the stream, stopping the register-and-receive loop
     void close();
 
-private:
+    // The register-and-receive asynchronous loop
     asio::awaitable<void> run();
 
+private:
+    //! The retry interval between successive registration attempts
     static boost::posix_time::milliseconds registration_interval_;
 
+    //! Asio execution scheduler running the register-and-receive asynchronous loop
     asio::io_context& scheduler_;
 
+    //! gRPC execution scheduler running the register-and-receive asynchronous loop
     agrpc::GrpcContext& grpc_context_;
 
+    //! The gRPC stub for remote KV interface of the Core component
     remote::KV::StubInterface* stub_;
 
+    //! The local state cache where the received state changes will be applied
     StateCache* cache_;
 
+    //! The signal used to cancel the register-and-receive stream loop
     asio::cancellation_signal cancellation_signal_;
 
-    //! The state changes options.
+    //! The state changes request options
     remote::StateChangeRequest request_;
 
-    //! The timer to reschedule retries for state changes.
+    //! The timer to schedule retries for stream opening
     asio::deadline_timer retry_timer_;
 };
 

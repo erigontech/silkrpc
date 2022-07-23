@@ -33,6 +33,10 @@ struct KVTestBase : test::ContextTestBase {
         return expect_request_async_tx(*stub_, ok);
     }
 
+    testing::Expectation expect_request_async_statechanges(bool ok) {
+        return expect_request_async_statechanges(*stub_, ok);
+    }
+
     testing::Expectation expect_request_async_tx(remote::MockKVStub& stub, bool ok) {
         return EXPECT_CALL(stub, AsyncTxRaw).WillOnce([&, ok](auto&&, auto&&, void* tag) {
             //agrpc::process_grpc_tag(grpc_context_, tag, true);
@@ -41,13 +45,30 @@ struct KVTestBase : test::ContextTestBase {
         });
     }
 
-    using StrictMockKVStub = testing::StrictMock<remote::MockKVStub>;
-    using StrictMockKVAsyncReaderWriter = test::StrictMockAsyncReaderWriter<remote::Cursor, remote::Pair>;
+    testing::Expectation expect_request_async_statechanges(remote::MockKVStub& stub, bool ok) {
+        return EXPECT_CALL(stub, AsyncStateChangesRaw).WillOnce([&, ok](auto&&, auto&, auto&&, void* tag) {
+            //agrpc::process_grpc_tag(grpc_context_, tag, true);
+            asio::post(io_context_, [&, tag, ok]() { agrpc::process_grpc_tag(grpc_context_, tag, ok); });
+            return statechanges_reader_ptr_.release();
+        });
+    }
 
+    using StrictMockKVStub = testing::StrictMock<remote::MockKVStub>;
+    using StrictMockKVTxAsyncReaderWriter = test::StrictMockAsyncReaderWriter<remote::Cursor, remote::Pair>;
+    using StrictMockKVStateChangesAsyncReader = test::StrictMockAsyncReader<remote::StateChangeBatch>;
+
+    //! Mocked stub of gRPC KV interface
     std::unique_ptr<StrictMockKVStub> stub_{std::make_unique<StrictMockKVStub>()};
-    std::unique_ptr<StrictMockKVAsyncReaderWriter> reader_writer_ptr_{
-        std::make_unique<StrictMockKVAsyncReaderWriter>()};
-    StrictMockKVAsyncReaderWriter& reader_writer_{*reader_writer_ptr_};
+
+    //! Mocked reader/writer for Tx bidi streaming RPC of gRPC KV interface
+    std::unique_ptr<StrictMockKVTxAsyncReaderWriter> reader_writer_ptr_{
+        std::make_unique<StrictMockKVTxAsyncReaderWriter>()};
+    StrictMockKVTxAsyncReaderWriter& reader_writer_{*reader_writer_ptr_};
+
+    //! Mocked reader for StateChanges server streaming RPC of gRPC KV interface
+    std::unique_ptr<StrictMockKVStateChangesAsyncReader> statechanges_reader_ptr_{
+        std::make_unique<StrictMockKVStateChangesAsyncReader>()};
+    StrictMockKVStateChangesAsyncReader* statechanges_reader_{statechanges_reader_ptr_.get()};
 };
 
 }  // namespace silkrpc::test
