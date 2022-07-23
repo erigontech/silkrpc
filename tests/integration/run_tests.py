@@ -243,7 +243,7 @@ def main(argv):
                                 print("Test name: ", test_file)
                             run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, global_test_number, verify_with_rpc, dump_output)
                             if req_test != -1 or requested_api != "":
-                               match = 1
+                                match = 1
                 global_test_number = global_test_number + 1
                 test_number = test_number + 1
 
