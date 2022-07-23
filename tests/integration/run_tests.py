@@ -212,18 +212,19 @@ def main(argv):
         shutil.rmtree(output_dir)
 
     os.mkdir (output_dir)
+    match = 0
     for test_rep in range(0, loop_number):
         if verbose:
             print("Test iteration: ", test_rep + 1)
         dirs = sorted(os.listdir(json_dir))
-        global_test_number = 0
+        global_test_number = 1
         for api_file in dirs:
             # jump result_dir
             if api_file == results_dir:
                 continue
             test_dir = json_dir + api_file
             test_lists = sorted(os.listdir(test_dir))
-            test_number = 0
+            test_number = 1
             for test_name in test_lists:
                 if requested_api in ("", api_file): # -a
                     # scans exclude list
@@ -241,9 +242,13 @@ def main(argv):
                             if verbose:
                                 print("Test name: ", test_file)
                             run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, global_test_number, verify_with_rpc, dump_output)
+                            if req_test != -1 or requested_api != "":
+                               match = 1
                 global_test_number = global_test_number + 1
                 test_number = test_number + 1
 
+    if (req_test != -1 or requested_api != "") and match == 0:
+        print ("ERROR: test not found")
 #
 # module as main
 #
