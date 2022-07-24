@@ -634,7 +634,6 @@ void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::In
         break;
         case evmc_status_code::EVMC_REVERT:
             trace.error = "Reverted";
-            trace.trace_result.reset();
             break;
         case evmc_status_code::EVMC_OUT_OF_GAS:
         case evmc_status_code::EVMC_STACK_OVERFLOW:
@@ -694,7 +693,14 @@ void TraceTracer::on_reward_granted(const silkworm::CallResult& result, const si
             break;
         case evmc_status_code::EVMC_REVERT:
             trace.error = "Reverted";
-            trace.trace_result.reset();
+            trace.trace_result->gas_used = initial_gas_ - result.gas_left;
+            if (result.data.size() > 0) {
+                if (trace.trace_result->code) {
+                    trace.trace_result->code = result.data;
+                } else if (trace.trace_result->output) {
+                    trace.trace_result->output = result.data;
+                }
+            }
             break;
         case evmc_status_code::EVMC_OUT_OF_GAS:
         case evmc_status_code::EVMC_STACK_OVERFLOW:
@@ -882,7 +888,7 @@ void StateDiffTracer::on_reward_granted(const silkworm::CallResult& result, cons
 template<typename WorldState, typename VM>
 asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(const silkworm::Block& block, const silkrpc::Call& call) {
     silkrpc::Transaction transaction{call.to_transaction()};
-    auto result = co_await execute(block.header.number-1, block, transaction, -1);
+    auto result = co_await execute(block.header.number, block, transaction, -1);
     co_return result;
 }
 
