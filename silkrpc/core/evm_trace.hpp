@@ -52,6 +52,8 @@ struct TraceConfig {
 
 static const TraceConfig DEFAULT_TRACE_CONFIG{false, false, false};
 
+void from_json(const nlohmann::json& json, TraceConfig& tc);
+
 std::string get_op_name(const char* const* names, std::uint8_t opcode);
 std::string to_string(intx::uint256 value);
 std::ostream& operator<<(std::ostream& out, const TraceConfig& tc);

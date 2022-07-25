@@ -2689,4 +2689,27 @@ TEST_CASE("to_string") {
         CHECK(out == "0x00000000000000000000000000000000000000000000000000000000deadbeaf");
     }
 }
+
+TEST_CASE("TraceConfig json deserialization") {
+    SECTION("empty") {
+        nlohmann::json json = R"([])"_json;
+
+        TraceConfig config;
+        from_json(json, config);
+
+        CHECK(config.trace == false);
+        CHECK(config.vm_trace == false);
+        CHECK(config.state_diff == false);
+    }
+    SECTION("full") {
+        nlohmann::json json = R"(["trace", "vmTrace", "stateDiff"])"_json;
+
+        TraceConfig config;
+        from_json(json, config);
+
+        CHECK(config.trace == true);
+        CHECK(config.vm_trace == true);
+        CHECK(config.state_diff == true);
+    }
+}
 }  // namespace silkrpc::trace

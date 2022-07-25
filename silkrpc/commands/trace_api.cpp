@@ -43,21 +43,8 @@ asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json& reque
         co_return;
     }
     const auto call = params[0].get<Call>();
-    const auto trace_type = params[1].get<std::vector<std::string>>();
+    const auto config = params[1].get<trace::TraceConfig>();
     const auto block_number_or_hash = params[2].get<BlockNumberOrHash>();
-
-    trace::TraceConfig config;
-    for (auto entry : trace_type) {
-        if (entry == "trace") {
-            config.trace = true;
-        }
-        if (entry == "vmTrace") {
-            config.vm_trace = true;
-        }
-        if (entry == "stateDiff") {
-            config.state_diff = true;
-        }
-    }
 
     SILKRPC_INFO << "call: " << call << " block_number_or_hash: " << block_number_or_hash << " config: " << config << "\n";
 
@@ -138,20 +125,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_replay_block_transactions(const 
         co_return;
     }
     const auto block_number_or_hash = params[0].get<BlockNumberOrHash>();
-    const auto trace_type = params[1].get<std::vector<std::string>>();
-
-    trace::TraceConfig config;
-    for (auto entry : trace_type) {
-        if (entry == "trace") {
-            config.trace = true;
-        }
-        if (entry == "vmTrace") {
-            config.vm_trace = true;
-        }
-        if (entry == "stateDiff") {
-            config.state_diff = true;
-        }
-    }
+    const auto config = params[1].get<trace::TraceConfig>();
 
     SILKRPC_INFO << " block_number_or_hash: " << block_number_or_hash << " config: " << config << "\n";
 
@@ -187,20 +161,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_replay_transaction(const nlohman
         co_return;
     }
     const auto transaction_hash = params[0].get<evmc::bytes32>();
-    const auto trace_type = params[1].get<std::vector<std::string>>();
-
-    trace::TraceConfig config;
-    for (const auto entry : trace_type) {
-        if (entry == "trace") {
-            config.trace = true;
-        }
-        if (entry == "vmTrace") {
-            config.vm_trace = true;
-        }
-        if (entry == "stateDiff") {
-            config.state_diff = true;
-        }
-    }
+    const auto config = params[1].get<trace::TraceConfig>();
 
     SILKRPC_INFO << "transaction_hash: " << transaction_hash << " config: " << config << "\n";
 

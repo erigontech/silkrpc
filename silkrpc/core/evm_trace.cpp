@@ -43,6 +43,15 @@ using evmc::literals::operator""_address;
 const std::uint8_t CODE_PUSH1 = evmc_opcode::OP_PUSH1;
 const std::uint8_t CODE_DUP1 = evmc_opcode::OP_DUP1;
 
+void from_json(const nlohmann::json& json, TraceConfig& tc) {
+    std::vector<std::string> config;
+    json.get_to(config);
+
+    tc.vm_trace = std::find(config.begin(), config.end(), "vmTrace") != config.end();
+    tc.trace = std::find(config.begin(), config.end(), "trace") != config.end();
+    tc.state_diff = std::find(config.begin(), config.end(), "stateDiff") != config.end();
+}
+
 std::ostream& operator<<(std::ostream& out, const TraceConfig& tc) {
     out << "vmTrace: " << std::boolalpha << tc.vm_trace;
     out << " Trace: " << std::boolalpha << tc.trace;
@@ -967,7 +976,6 @@ asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldState, VM>:
         if (!transaction.from) {
             transaction.recover_sender();
         }
-        SILKRPC_LOG << "processing transaction: index: " << index << " txn: " << transaction << "\n";
 
         auto& result = trace_call_result.at(index);
         TraceCallTraces& traces = result.traces;
