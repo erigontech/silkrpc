@@ -52,9 +52,9 @@ template<
     typename Request,
     template<typename> typename Responder,
     typename Reply,
-    std::unique_ptr<Responder<Reply>>(Stub::*Async)(grpc::ClientContext*, const Request&, grpc::CompletionQueue*, void*)
+    std::unique_ptr<Responder<Reply>>(Stub::*PrepareAsync)(grpc::ClientContext*, const Request&, grpc::CompletionQueue*)
 >
-class ServerStreamingRpc<Async> {
+class ServerStreamingRpc<PrepareAsync> {
 private:
     template<typename Dispatcher>
     struct StartRequest {
@@ -65,7 +65,7 @@ private:
         template<typename Op>
         void operator()(Op& op) {
             SILKRPC_TRACE << "ServerStreamingRpc::StartRequest::initiate r=" << self_.reader_.get() << " START\n";
-            agrpc::request(Async, self_.stub_, self_.context_, request, self_.reader_,
+            agrpc::request(PrepareAsync, self_.stub_, self_.context_, request, self_.reader_,
                 asio::bind_executor(self_.grpc_context_, std::move(op)));
             SILKRPC_TRACE << "ServerStreamingRpc::StartRequest::initiate r=" << self_.reader_.get() << " END\n";
         }

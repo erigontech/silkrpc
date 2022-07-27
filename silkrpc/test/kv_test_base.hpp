@@ -28,6 +28,8 @@
 
 namespace silkrpc::test {
 
+using testing::Return;
+
 struct KVTestBase : test::ContextTestBase {
     testing::Expectation expect_request_async_tx(bool ok) {
         return expect_request_async_tx(*stub_, ok);
@@ -38,18 +40,16 @@ struct KVTestBase : test::ContextTestBase {
     }
 
     testing::Expectation expect_request_async_tx(remote::MockKVStub& stub, bool ok) {
-        return EXPECT_CALL(stub, AsyncTxRaw).WillOnce([&, ok](auto&&, auto&&, void* tag) {
-            //agrpc::process_grpc_tag(grpc_context_, tag, true);
-            asio::post(io_context_, [&, tag, ok]() { agrpc::process_grpc_tag(grpc_context_, tag, ok); });
-            return reader_writer_ptr_.release();
+        EXPECT_CALL(stub, PrepareAsyncTxRaw).WillOnce(Return(reader_writer_ptr_.release()));
+        return EXPECT_CALL(reader_writer_, StartCall).WillOnce([&, ok](void* tag) {
+            agrpc::process_grpc_tag(grpc_context_, tag, ok);
         });
     }
 
     testing::Expectation expect_request_async_statechanges(remote::MockKVStub& stub, bool ok) {
-        return EXPECT_CALL(stub, AsyncStateChangesRaw).WillOnce([&, ok](auto&&, auto&, auto&&, void* tag) {
-            //agrpc::process_grpc_tag(grpc_context_, tag, true);
-            asio::post(io_context_, [&, tag, ok]() { agrpc::process_grpc_tag(grpc_context_, tag, ok); });
-            return statechanges_reader_ptr_.release();
+        EXPECT_CALL(stub, PrepareAsyncStateChangesRaw).WillOnce(Return(statechanges_reader_ptr_.release()));
+        return EXPECT_CALL(*statechanges_reader_, StartCall).WillOnce([&, ok](void* tag) {
+            agrpc::process_grpc_tag(grpc_context_, tag, ok);
         });
     }
 

@@ -48,9 +48,9 @@ template<
     typename Request,
     template<typename, typename> typename Responder,
     typename Reply,
-    std::unique_ptr<Responder<Request, Reply>>(Stub::*Async)(grpc::ClientContext*, grpc::CompletionQueue*, void*)
+    std::unique_ptr<Responder<Request, Reply>>(Stub::*PrepareAsync)(grpc::ClientContext*, grpc::CompletionQueue*)
 >
-class BidiStreamingRpc<Async> {
+class BidiStreamingRpc<PrepareAsync> {
 private:
      struct ReadNext {
         BidiStreamingRpc& self_;
@@ -89,7 +89,7 @@ private:
         template<typename Op>
         void operator()(Op& op) {
             SILKRPC_TRACE << "BidiStreamingRpc::RequestAndRead::initiate rw=" << this->self_.reader_writer_.get() << " START\n";
-            agrpc::request(Async, this->self_.stub_, this->self_.context_, this->self_.reader_writer_,
+            agrpc::request(PrepareAsync, this->self_.stub_, this->self_.context_, this->self_.reader_writer_,
                 asio::bind_executor(this->self_.grpc_context_, std::move(op)));
             SILKRPC_TRACE << "BidiStreamingRpc::RequestAndRead::initiate rw=" << this->self_.reader_writer_.get() << " END\n";
         }

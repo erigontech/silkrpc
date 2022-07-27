@@ -56,7 +56,7 @@ static const silkworm::Bytes kAccountChangeSetValueBytes{silkworm::bytes_of_stri
 struct RemoteCursorTest : test::KVTestBase {
     RemoteCursorTest() {
         // Set the call expectations common to all RemoteCursor tests:
-        // remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(true);
         // AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds w/ tx_id set in pair ignored
         EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, remote::Pair{}));

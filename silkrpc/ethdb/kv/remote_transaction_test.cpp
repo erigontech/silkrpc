@@ -39,7 +39,7 @@ struct RemoteTransactionTest : test::KVTestBase {
 TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::open", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(/*ok=*/true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified transaction ID
         remote::Pair pair;
@@ -52,7 +52,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::open", "[silkrpc][et
     }
     SECTION("failure in request") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call fails
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call fails
         expect_request_async_tx(/*ok=*/false);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
         EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
@@ -62,7 +62,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::open", "[silkrpc][et
     }
     SECTION("failure in read") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(/*ok=*/true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call fails
         EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_failure(grpc_context_));
@@ -78,7 +78,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::close", "[silkrpc][e
     //TODO(canepat) waiting for PrepareAsync in asio-grpc
     /*SECTION("success w/o open") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(.ok=true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::WritesDone call succeeds
         EXPECT_CALL(reader_writer_, WritesDone).WillOnce(test::writes_done_success(grpc_context_));
@@ -91,7 +91,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::close", "[silkrpc][e
     }*/
     SECTION("success w/ open w/o cursor in table") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(/*ok=*/true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds w/ expected transaction ID set in pair
         remote::Pair pair;
@@ -113,7 +113,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::close", "[silkrpc][e
     }
     SECTION("success w/ open w/ cursor in table") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(/*ok=*/true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds w/ expected transaction ID set in pair
         remote::Pair pair;
@@ -140,7 +140,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::close", "[silkrpc][e
     }
     SECTION("failure in write") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(/*ok=*/true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds w/ expected transaction ID set in pair
         remote::Pair pair;
@@ -161,7 +161,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::close", "[silkrpc][e
     }
     SECTION("failure in finish") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(/*ok=*/true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds w/ expected transaction ID set in pair
         remote::Pair pair;
@@ -185,7 +185,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::close", "[silkrpc][e
 TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(/*ok=*/true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read calls succeed w/ specified transaction and cursor IDs
         remote::Pair txid_pair;
@@ -215,7 +215,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::cursor", "[silkrpc][
     }
     SECTION("failure in read") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(/*ok=*/true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read 1st call succeeds w/ specified transaction ID, 2nd call fails
         remote::Pair txid_pair;
@@ -239,7 +239,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::cursor", "[silkrpc][
     }
     SECTION("failure in write") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(/*ok=*/true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds w/ specified transaction ID
         remote::Pair txid_pair;
@@ -264,7 +264,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::cursor", "[silkrpc][
 TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
     SECTION("success") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(/*ok=*/true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read calls succeed w/ specified transaction and cursor IDs
         remote::Pair txid_pair;
@@ -294,7 +294,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::cursor_dup_sort", "[
     }
     SECTION("failure in read") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(/*ok=*/true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read 1st call succeeds w/ specified transaction ID, 2nd call fails
         remote::Pair txid_pair;
@@ -318,7 +318,7 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::cursor_dup_sort", "[
     }
     SECTION("failure in write") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncTxRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
         expect_request_async_tx(/*ok=*/true);
         // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds w/ specified transaction ID
         remote::Pair txid_pair;

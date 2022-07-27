@@ -32,6 +32,8 @@
 namespace silkrpc::ethdb::kv {
 
 using namespace std::chrono_literals; // NOLINT(build/namespaces)
+using testing::InvokeWithoutArgs;
+using testing::Return;
 
 TEST_CASE("StateChangesStream::set_registration_interval", "[silkrpc][ethdb][kv][state_changes_stream]") {
     CHECK(StateChangesStream::registration_interval() == kDefaultRegistrationInterval);
@@ -59,51 +61,57 @@ TEST_CASE_METHOD(StateChangesStreamTest, "StateChangesStream::open", "[silkrpc][
 
     SECTION("stream closed-by-peer/reopened/cancelled") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncStateChangesRaw calls succeed
-        EXPECT_CALL(*stub_, AsyncStateChangesRaw)
-            .WillOnce([&](auto&&, auto&, auto&&, void* tag) {
-                //agrpc::process_grpc_tag(grpc_context_, tag, true);
-                asio::post(io_context_, [&, tag]() { agrpc::process_grpc_tag(grpc_context_, tag, true); });
+        // 1. remote::KV::StubInterface::PrepareAsyncStateChangesRaw calls succeed
+        EXPECT_CALL(*stub_, PrepareAsyncStateChangesRaw)
+            .WillOnce(InvokeWithoutArgs([&]() {
+                // 2. AsyncReader<remote::StateChangeBatch>::StartCall call succeed
+                EXPECT_CALL(*statechanges_reader_, StartCall)
+                    .WillOnce([&](void* tag) {
+                        agrpc::process_grpc_tag(grpc_context_, tag, true);
 
-                // 2. AsyncReader<remote::StateChangeBatch>::Read 1st/2nd/3rd calls succeed, 4th fails
-                EXPECT_CALL(*statechanges_reader_, Read)
-                    .WillOnce(test::read_success_with(grpc_context_, make_batch()))
-                    .WillOnce(test::read_success_with(grpc_context_, make_batch()))
-                    .WillOnce(test::read_success_with(grpc_context_, make_batch()))
-                    .WillOnce(test::read_failure(grpc_context_));
-                // 3. AsyncReader<remote::StateChangeBatch>::Finish call succeeds w/ status aborted
-                EXPECT_CALL(*statechanges_reader_, Finish)
-                    .WillOnce(test::finish_streaming_aborted(grpc_context_));
+                        // 3. AsyncReader<remote::StateChangeBatch>::Read 1st/2nd/3rd calls succeed, 4th fails
+                        EXPECT_CALL(*statechanges_reader_, Read)
+                            .WillOnce(test::read_success_with(grpc_context_, make_batch()))
+                            .WillOnce(test::read_success_with(grpc_context_, make_batch()))
+                            .WillOnce(test::read_success_with(grpc_context_, make_batch()))
+                            .WillOnce(test::read_failure(grpc_context_));
+                        // 4. AsyncReader<remote::StateChangeBatch>::Finish call succeeds w/ status aborted
+                        EXPECT_CALL(*statechanges_reader_, Finish)
+                            .WillOnce(test::finish_streaming_aborted(grpc_context_));
+                    });
 
                 return statechanges_reader_ptr_.release();
-            })
-            .WillOnce([&](auto&&, auto&, auto&&, void* tag) {
-                //agrpc::process_grpc_tag(grpc_context_, tag, true);
-                asio::post(io_context_, [&, tag]() { agrpc::process_grpc_tag(grpc_context_, tag, true); });
-
-                // Recreate mocked reader for StateChanges RPC
+            }))
+            .WillOnce(InvokeWithoutArgs([&]() {
+                // Recreate mocked reader for StateChanges RPC because StateChanges RPC has been *recreated*
                 statechanges_reader_ptr_ = std::make_unique<StrictMockKVStateChangesAsyncReader>();
                 statechanges_reader_ = statechanges_reader_ptr_.get();
 
-                // 2. AsyncReader<remote::StateChangeBatch>::Read 1st/2nd/3rd calls succeed, 4th fails
-                EXPECT_CALL(*statechanges_reader_, Read)
-                    .WillOnce(test::read_success_with(grpc_context_, make_batch()))
-                    .WillOnce(test::read_success_with(grpc_context_, make_batch()))
-                    .WillOnce(test::read_success_with(grpc_context_, make_batch()))
-                    .WillOnce(test::read_failure(grpc_context_));
-                // 3. AsyncReader<remote::StateChangeBatch>::Finish call succeeds w/ status cancelled
-                EXPECT_CALL(*statechanges_reader_, Finish)
-                    .WillOnce(test::finish_streaming_cancelled(grpc_context_));
+                // 2. AsyncReader<remote::StateChangeBatch>::StartCall call succeed
+                EXPECT_CALL(*statechanges_reader_, StartCall)
+                    .WillOnce([&](void* tag) {
+                        agrpc::process_grpc_tag(grpc_context_, tag, true);
+
+                        // 3. AsyncReader<remote::StateChangeBatch>::Read 1st/2nd/3rd calls succeed, 4th fails
+                        EXPECT_CALL(*statechanges_reader_, Read)
+                            .WillOnce(test::read_success_with(grpc_context_, make_batch()))
+                            .WillOnce(test::read_success_with(grpc_context_, make_batch()))
+                            .WillOnce(test::read_success_with(grpc_context_, make_batch()))
+                            .WillOnce(test::read_failure(grpc_context_));
+                        // 4. AsyncReader<remote::StateChangeBatch>::Finish call succeeds w/ status cancelled
+                        EXPECT_CALL(*statechanges_reader_, Finish)
+                            .WillOnce(test::finish_streaming_cancelled(grpc_context_));
+                    });
 
                 return statechanges_reader_ptr_.release();
-            });
+            }));
 
         // Execute the test: running the stream should succeed until finishes
         CHECK_NOTHROW(spawn_and_wait(stream_.run()));
     }
     SECTION("failure in first read") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncStateChangesRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncStateChangesRaw call succeeds
         expect_request_async_statechanges(/*.ok=*/true);
         // 2. AsyncReader<remote::StateChangeBatch>::Read call fails
         EXPECT_CALL(*statechanges_reader_, Read).WillOnce(test::read_failure(grpc_context_));
@@ -115,7 +123,7 @@ TEST_CASE_METHOD(StateChangesStreamTest, "StateChangesStream::open", "[silkrpc][
     }
     SECTION("failure in second read") {
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncStateChangesRaw call succeeds
+        // 1. remote::KV::StubInterface::PrepareAsyncStateChangesRaw call succeeds
         expect_request_async_statechanges(/*.ok=*/true);
         // 2. AsyncReader<remote::StateChangeBatch>::Read 1st call succeeds, 2nd call fails
         EXPECT_CALL(*statechanges_reader_, Read)
@@ -134,23 +142,18 @@ TEST_CASE_METHOD(StateChangesStreamTest, "StateChangesStream::close", "[silkrpc]
         StateChangesStream::set_registration_interval(boost::posix_time::milliseconds{10});
 
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncStateChangesRaw calls succeed
-        EXPECT_CALL(*stub_, AsyncStateChangesRaw)
-            .WillOnce([&](auto&&, auto&, auto&&, void* tag) {
-                //agrpc::process_grpc_tag(grpc_context_, tag, false);
-                asio::post(io_context_, [&, tag]() { agrpc::process_grpc_tag(grpc_context_, tag, false); });
-
-                return statechanges_reader_ptr_.release();
+        // 1. remote::KV::StubInterface::PrepareAsyncStateChangesRaw calls succeed
+        EXPECT_CALL(*stub_, PrepareAsyncStateChangesRaw).WillOnce(Return(statechanges_reader_ptr_.release()));
+        EXPECT_CALL(*statechanges_reader_, StartCall)
+            .WillOnce([&](void* tag) {
+                agrpc::process_grpc_tag(grpc_context_, tag, false);
             })
-            .WillRepeatedly([&](auto&&, auto&, auto&&, void* tag) {
-                //agrpc::process_grpc_tag(grpc_context_, tag, false);
-                asio::post(io_context_, [&, tag]() { agrpc::process_grpc_tag(grpc_context_, tag, false); });
+            .WillRepeatedly([&](void* tag) {
+                agrpc::process_grpc_tag(grpc_context_, tag, false);
 
                 // Recreate mocked reader for StateChanges RPC
                 statechanges_reader_ptr_ = std::make_unique<StrictMockKVStateChangesAsyncReader>();
                 statechanges_reader_ = statechanges_reader_ptr_.get();
-
-                return statechanges_reader_ptr_.release();
             });
         // 2. AsyncReader<remote::StateChangeBatch>::Finish call succeeds w/ status cancelled
         EXPECT_CALL(*statechanges_reader_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
@@ -170,23 +173,18 @@ TEST_CASE_METHOD(StateChangesStreamTest, "StateChangesStream::close", "[silkrpc]
         StateChangesStream::set_registration_interval(boost::posix_time::milliseconds{10});
 
         // Set the call expectations:
-        // 1. remote::KV::StubInterface::AsyncStateChangesRaw calls succeed
-        EXPECT_CALL(*stub_, AsyncStateChangesRaw)
-            .WillOnce([&](auto&&, auto&, auto&&, void* tag) {
-                //agrpc::process_grpc_tag(grpc_context_, tag, false);
-                asio::post(io_context_, [&, tag]() { agrpc::process_grpc_tag(grpc_context_, tag, false); });
-
-                return statechanges_reader_ptr_.release();
+        // 1. remote::KV::StubInterface::PrepareAsyncStateChangesRaw calls succeed
+        EXPECT_CALL(*stub_, PrepareAsyncStateChangesRaw).WillOnce(Return(statechanges_reader_ptr_.release()));
+        EXPECT_CALL(*statechanges_reader_, StartCall)
+            .WillOnce([&](void* tag) {
+                agrpc::process_grpc_tag(grpc_context_, tag, false);
             })
-            .WillRepeatedly([&](auto&&, auto&, auto&&, void* tag) {
-                //agrpc::process_grpc_tag(grpc_context_, tag, false);
-                asio::post(io_context_, [&, tag]() { agrpc::process_grpc_tag(grpc_context_, tag, false); });
+            .WillRepeatedly([&](void* tag) {
+                agrpc::process_grpc_tag(grpc_context_, tag, false);
 
                 // Recreate mocked reader for StateChanges RPC
                 statechanges_reader_ptr_ = std::make_unique<StrictMockKVStateChangesAsyncReader>();
                 statechanges_reader_ = statechanges_reader_ptr_.get();
-
-                return statechanges_reader_ptr_.release();
             });
         // 2. AsyncReader<remote::StateChangeBatch>::Read calls succeed until atomic value changes
         EXPECT_CALL(*statechanges_reader_, Read)
