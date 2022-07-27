@@ -138,9 +138,9 @@ TEST_CASE_METHOD(StateChangesStreamTest, "StateChangesStream::open", "[silkrpc][
 }
 
 TEST_CASE_METHOD(StateChangesStreamTest, "StateChangesStream::close", "[silkrpc][ethdb][kv][state_changes_stream]") {
-    SECTION("while requesting w/ error every 10ms") {
-        StateChangesStream::set_registration_interval(boost::posix_time::milliseconds{10});
+    StateChangesStream::set_registration_interval(boost::posix_time::milliseconds{10});
 
+    SECTION("while requesting w/ error every 10ms") {
         // Set the call expectations:
         // 1. remote::KV::StubInterface::PrepareAsyncStateChangesRaw calls succeed
         EXPECT_CALL(*stub_, PrepareAsyncStateChangesRaw).WillOnce(Return(statechanges_reader_ptr_.release()));
@@ -168,10 +168,7 @@ TEST_CASE_METHOD(StateChangesStreamTest, "StateChangesStream::close", "[silkrpc]
         // Execute the postcondition: the running stream finishes
         CHECK_NOTHROW(run_result.get());
     }
-
     SECTION("while reading w/ error every 10ms") {
-        StateChangesStream::set_registration_interval(boost::posix_time::milliseconds{10});
-
         // Set the call expectations:
         // 1. remote::KV::StubInterface::PrepareAsyncStateChangesRaw calls succeed
         EXPECT_CALL(*stub_, PrepareAsyncStateChangesRaw).WillOnce(Return(statechanges_reader_ptr_.release()));
