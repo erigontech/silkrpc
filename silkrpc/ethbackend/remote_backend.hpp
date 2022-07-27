@@ -21,7 +21,7 @@
 #include <string>
 #include <memory>
 
-#include <agrpc/grpcContext.hpp>
+#include <agrpc/grpc_context.hpp>
 #include <asio/io_context.hpp>
 #include <asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>

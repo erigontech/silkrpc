@@ -20,8 +20,6 @@
 #include <thread>
 #include <utility>
 
-#include <agrpc/detail/grpcContext.ipp>
-
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/ethbackend/remote_backend.hpp>
 #include <silkrpc/ethdb/kv/remote_database.hpp>

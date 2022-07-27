@@ -16,7 +16,7 @@
 
 #include "net_api.hpp"
 
-#include <agrpc/grpcContext.hpp>
+#include <agrpc/grpc_context.hpp>
 #include <agrpc/test.hpp>
 #include <catch2/catch.hpp>
 #include <grpcpp/grpcpp.h>

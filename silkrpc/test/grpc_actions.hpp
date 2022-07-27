@@ -21,7 +21,7 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include <agrpc/grpcContext.hpp>
+#include <agrpc/grpc_context.hpp>
 #include <agrpc/test.hpp>
 
 namespace silkrpc::test {
