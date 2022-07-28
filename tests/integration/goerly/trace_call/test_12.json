@@ -9,12 +9,12 @@
                 {
                     "from": "0xe0a2Bd4258D2768837BAa26A28fE71Dc079f84c7",
                     "gas": "0xC350",
-                    "gasPrice": "0x8",
+                    "gasPrice": "0x7",
                     "value": "0x0",
                     "data": "0x602a6000556101c960015560068060166000396000f3600035600055"
                 },
                 ["vmTrace", "trace", "stateDiff"],
-                "0x5279A7"
+                "0x5279A6"
             ],
             "id":1
         },

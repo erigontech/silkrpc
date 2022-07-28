@@ -14,7 +14,7 @@
                     "data": "0x00"
                 },
                 ["vmTrace", "trace", "stateDiff"],
-                "0x5279A7"
+                "0x5279A6"
             ],
             "id":1
         },
@@ -22,8 +22,8 @@
             "id": 1,
             "jsonrpc": "2.0",
             "result": {
-              "output": "0x",
-              "stateDiff": {
+               "output": "0x",
+               "stateDiff": {
                   "0x894c12d71b9711ebe4533aff76b61053be18b325": {
                         "balance": {
                               "+": "0x165a0bc00"
