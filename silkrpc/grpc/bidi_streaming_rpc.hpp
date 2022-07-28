@@ -103,7 +103,11 @@ private:
         template<typename Op>
         void operator()(Op& op) {
             SILKRPC_TRACE << "BidiStreamingRpc::WriteAndRead::initiate " << this << "\n";
-            agrpc::write(this->self_.reader_writer_, request, asio::bind_executor(this->self_.grpc_context_, std::move(op)));
+            if (this->self_.reader_writer_) {
+                agrpc::write(this->self_.reader_writer_, request, asio::bind_executor(this->self_.grpc_context_, std::move(op)));
+            } else {
+                op.complete(make_error_code(grpc::StatusCode::INTERNAL, "agrpc::write called before agrpc::request"), this->self_.reply_);
+            }
         }
 
         using ReadNext::operator();
@@ -115,7 +119,11 @@ private:
         template<typename Op>
         void operator()(Op& op) {
             SILKRPC_TRACE << "BidiStreamingRpc::WritesDoneAndFinish::initiate " << this << "\n";
-            agrpc::writes_done(self_.reader_writer_, asio::bind_executor(self_.grpc_context_, std::move(op)));
+            if (self_.reader_writer_) {
+                agrpc::writes_done(self_.reader_writer_, asio::bind_executor(self_.grpc_context_, std::move(op)));
+            } else {
+                op.complete(make_error_code(grpc::StatusCode::INTERNAL, "agrpc::writes_done called before agrpc::request"));
+            }
         }
 
         template<typename Op>

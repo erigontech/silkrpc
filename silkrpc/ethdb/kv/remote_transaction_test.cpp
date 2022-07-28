@@ -75,20 +75,10 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::open", "[silkrpc][et
 }
 
 TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::close", "[silkrpc][ethdb][kv][remote_transaction]") {
-    //TODO(canepat) waiting for PrepareAsync in asio-grpc
-    /*SECTION("success w/o open") {
-        // Set the call expectations:
-        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
-        expect_request_async_tx(.ok=true);
-        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::WritesDone call succeeds
-        EXPECT_CALL(reader_writer_, WritesDone).WillOnce(test::writes_done_success(grpc_context_));
-        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status OK
-        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_ok(grpc_context_));
-
-        // Execute the test: closing the transaction should succeed and transaction should have zero transaction ID
-        CHECK_NOTHROW(spawn_and_wait(remote_tx_.close()));
-        CHECK(remote_tx_.tx_id() == 0);
-    }*/
+    SECTION("throw w/o open") {
+        // Execute the test: closing the transaction should throw
+        CHECK_THROWS_AS(spawn_and_wait(remote_tx_.close()), asio::system_error);
+    }
     SECTION("success w/ open w/o cursor in table") {
         // Set the call expectations:
         // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
@@ -183,6 +173,10 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::close", "[silkrpc][e
 }
 
 TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::cursor", "[silkrpc][ethdb][kv][remote_transaction]") {
+    SECTION("throw w/o open") {
+        // Execute the test: getting cursor from the transaction should throw
+        CHECK_THROWS_AS(spawn_and_wait(remote_tx_.cursor("table1")), asio::system_error);
+    }
     SECTION("success") {
         // Set the call expectations:
         // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
@@ -262,6 +256,10 @@ TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::cursor", "[silkrpc][
 }
 
 TEST_CASE_METHOD(RemoteTransactionTest, "RemoteTransaction::cursor_dup_sort", "[silkrpc][ethdb][kv][remote_transaction]") {
+    SECTION("throw w/o open") {
+        // Execute the test: getting cursor_dup_sort from the transaction should throw
+        CHECK_THROWS_AS(spawn_and_wait(remote_tx_.cursor_dup_sort("table1")), asio::system_error);
+    }
     SECTION("success") {
         // Set the call expectations:
         // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
