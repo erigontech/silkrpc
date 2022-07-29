@@ -11,6 +11,7 @@ import tarfile
 
 import getopt
 import jsondiff
+import gzip
 
 
 def get_target(silk: bool, method: str):
@@ -87,6 +88,10 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
             file = tar.extractfile(files[0])
             buff = file.read()
             tar.close()
+            jsonrpc_commands = json.loads(buff)
+    elif ext in (".gzip"):
+        with gzip.open(json_filename,'rb') as f:
+            buff=f.read()
             jsonrpc_commands = json.loads(buff)
     else:
         with open(json_filename, encoding='utf8') as json_file_ptr:
