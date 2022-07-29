@@ -51,8 +51,6 @@ struct TraceConfig {
     bool state_diff{false};
 };
 
-// static const TraceConfig DEFAULT_TRACE_CONFIG{false, true, false};
-
 void from_json(const nlohmann::json& json, TraceConfig& tc);
 
 std::string get_op_name(const char* const* names, std::uint8_t opcode);
@@ -171,7 +169,8 @@ struct Trace {
     std::optional<std::uint32_t> transaction_position;
 };
 
-void to_json(nlohmann::json& json, const TraceAction& trace_action);
+void to_json(nlohmann::json& json, const TraceAction& action);
+void to_json(nlohmann::json& json, const RewardAction& action);
 void to_json(nlohmann::json& json, const TraceResult& trace_result);
 void to_json(nlohmann::json& json, const Trace& trace);
 
@@ -343,12 +342,12 @@ public:
     }
 
 private:
-    asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block, const silkrpc::Transaction& transaction, std::int32_t index, const TraceConfig& config);
+    asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block,
+        const silkrpc::Transaction& transaction, std::int32_t index, const TraceConfig& config);
 
     asio::io_context& io_context_;
     const core::rawdb::DatabaseReader& database_reader_;
     asio::thread_pool& workers_;
-    // const TraceConfig& config_;
 };
 } // namespace silkrpc::trace
 

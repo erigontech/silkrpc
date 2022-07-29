@@ -32,6 +32,7 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/consensus/ethash.hpp>
 #include <silkrpc/core/evm_executor.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/json/types.hpp>
@@ -110,24 +111,30 @@ void to_json(nlohmann::json& json, const TraceStorage& trace_storage) {
     };
 }
 
-void to_json(nlohmann::json& json, const TraceAction& trace_action) {
-    if (trace_action.call_type) {
-        json["callType"] = trace_action.call_type.value();
+void to_json(nlohmann::json& json, const TraceAction& action) {
+    if (action.call_type) {
+        json["callType"] = action.call_type.value();
     }
-    json["from"] = trace_action.from;
-    if (trace_action.to) {
-        json["to"] = trace_action.to.value();
+    json["from"] = action.from;
+    if (action.to) {
+        json["to"] = action.to.value();
     }
     std::ostringstream ss;
-    ss << "0x" << std::hex << trace_action.gas;
+    ss << "0x" << std::hex << action.gas;
     json["gas"] = ss.str();
-    if (trace_action.input) {
-        json["input"] = "0x" + silkworm::to_hex(trace_action.input.value());
+    if (action.input) {
+        json["input"] = "0x" + silkworm::to_hex(action.input.value());
     }
-    if (trace_action.init) {
-        json["init"] = "0x" + silkworm::to_hex(trace_action.init.value());
+    if (action.init) {
+        json["init"] = "0x" + silkworm::to_hex(action.init.value());
     }
-    json["value"] = to_quantity(trace_action.value);
+    json["value"] = to_quantity(action.value);
+}
+
+void to_json(nlohmann::json& json, const RewardAction& action) {
+    json["author"] = action.author;
+    json["rewardType"] = action.reward_type;
+    json["value"] = to_quantity(action.value);
 }
 
 void to_json(nlohmann::json& json, const TraceResult& trace_result) {
@@ -149,6 +156,7 @@ void to_json(nlohmann::json& json, const Trace& trace) {
     if (std::holds_alternative<TraceAction>(trace.action)) {
         json["action"] = std::get<TraceAction>(trace.action);
     } else if (std::holds_alternative<RewardAction>(trace.action)) {
+        json["action"] = std::get<RewardAction>(trace.action);
     }
     if (trace.trace_result) {
         json["result"] = trace.trace_result.value();
@@ -993,6 +1001,23 @@ asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_blo
             traces.push_back(trace);
         }
     }
+
+    const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(database_reader_)};
+    auto block_rewards = ethash::compute_reward(chain_config, block_with_hash.block);
+
+    RewardAction action;
+    action.author = block_with_hash.block.header.beneficiary;
+    action.reward_type = "block";
+    action.value = block_rewards.miner_reward;
+
+    Trace trace;
+    trace.block_number = block_with_hash.block.header.number;
+    trace.block_hash = block_with_hash.hash;
+    trace.type = "reward";
+    trace.action = action;
+
+    traces.push_back(trace);
+
     co_return traces;
 }
 
