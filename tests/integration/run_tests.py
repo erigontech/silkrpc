@@ -24,7 +24,7 @@ def get_target(silk: bool, method: str):
     return "localhost:8545"
 
 def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool, output_dir: str, silk_file: str,
-                      rpc_file: str, diff_file: str, dump_output, json_file: str):
+                      rpc_file: str, diff_file: str, dump_output, json_file: str, test_number):
     """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
 
     command_and_args = shlex.split(command)
@@ -32,6 +32,7 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
     if process.returncode != 0:
         sys.exit(process.returncode)
     process.stdout = process.stdout.strip('\n')
+    #print (process.stdout)
     response = json.loads(process.stdout)
     if command1 != "":
         command_and_args = shlex.split(command1)
@@ -67,7 +68,7 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         if verbose:
             print("--> FAILED")
         else:
-            print(json_file + " Test Failed")
+            print(str(test_number) + ". " + json_file + " Test Failed")
         if exit_on_fail:
             print("TEST ABORTED!")
             sys.exit(1)
@@ -81,7 +82,7 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
                 with open(silk_file, 'w', encoding='utf8') as json_file_ptr:
                     json_file_ptr.write(json.dumps(response, indent = 6))
 
-def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, verify_with_rpc: bool, dump_output: bool):
+def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, verify_with_rpc: bool, dump_output: bool, test_number):
     """ Run integration tests. """
     json_filename = test_dir + json_file
     ext = os.path.splitext(json_file)[1]
@@ -139,7 +140,8 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
                 rpc_file,
                 diff_file,
                 dump_output,
-                json_file)
+                json_file,
+                test_number)
 
 #
 # usage
@@ -252,7 +254,7 @@ def main(argv):
                         if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
                             if verbose:
                                 print(str(global_test_number) + ". " + test_file, end = '')
-                            run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, verify_with_rpc, dump_output)
+                            run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, verify_with_rpc, dump_output, global_test_number)
                             if req_test != -1 or requested_api != "":
                                 match = 1
                 global_test_number = global_test_number + 1
