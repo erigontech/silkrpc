@@ -45,12 +45,12 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         if "result" in response and "result" in expected_response and expected_response["result"] is None:
             # response and expected_response are different but don't care
             if verbose:
-              print("--> OK")
+                print("--> OK")
             return
         if "error" in response and "error" in expected_response and expected_response["error"] is None:
             # response and expected_response are different but don't care
             if verbose:
-              print("--> OK")
+                print("--> OK")
             return
         if (silk_file != "" and os.path.exists(output_dir) == 0):
             os.mkdir (output_dir)
@@ -65,7 +65,7 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
             with open(diff_file, 'w', encoding='utf8') as json_file_ptr:
                 json_file_ptr.write(json.dumps(response_diff, indent = 6))
         if verbose:
-           print("--> FAILED")
+            print("--> FAILED")
         else:
             print(json_file + " Test Failed")
         if exit_on_fail:
@@ -81,7 +81,7 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
                 with open(silk_file, 'w', encoding='utf8') as json_file_ptr:
                     json_file_ptr.write(json.dumps(response, indent = 6))
 
-def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, test_number: int, verify_with_rpc: bool, dump_output: bool):
+def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, verify_with_rpc: bool, dump_output: bool):
     """ Run integration tests. """
     json_filename = test_dir + json_file
     ext = os.path.splitext(json_file)[1]
@@ -97,8 +97,8 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
             tar.close()
             jsonrpc_commands = json.loads(buff)
     elif ext in (".gzip"):
-        with gzip.open(json_filename,'rb') as zippedFile:
-            buff=zippedFile.read()
+        with gzip.open(json_filename,'rb') as zipped_file:
+            buff=zipped_file.read()
             jsonrpc_commands = json.loads(buff)
     else:
         with open(json_filename, encoding='utf8') as json_file_ptr:
@@ -251,8 +251,8 @@ def main(argv):
                         # runs only tests on specific api req_test refers all test on specific api
                         if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
                             if verbose:
-                                print('%3d: %s ' %(global_test_number ,test_file), end = '')
-                            run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, global_test_number, verify_with_rpc, dump_output)
+                                print(f'%3d: %s ' %(global_test_number ,test_file), end = '')
+                            run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, verify_with_rpc, dump_output)
                             if req_test != -1 or requested_api != "":
                                 match = 1
                 global_test_number = global_test_number + 1
