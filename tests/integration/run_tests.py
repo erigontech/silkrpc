@@ -10,8 +10,8 @@ import shutil
 import tarfile
 
 import getopt
-import jsondiff
 import gzip
+import jsondiff
 
 
 def get_target(silk: bool, method: str):
@@ -24,7 +24,7 @@ def get_target(silk: bool, method: str):
     return "localhost:8545"
 
 def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool, output_dir: str, silk_file: str,
-                      rpc_file: str, diff_file: str, dump_output):
+                      rpc_file: str, diff_file: str, dump_output, json_file: str):
     """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
 
     command_and_args = shlex.split(command)
@@ -44,9 +44,13 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
     if response != expected_response:
         if "result" in response and "result" in expected_response and expected_response["result"] is None:
             # response and expected_response are different but don't care
+            if verbose:
+              print("--> OK")
             return
         if "error" in response and "error" in expected_response and expected_response["error"] is None:
             # response and expected_response are different but don't care
+            if verbose:
+              print("--> OK")
             return
         if (silk_file != "" and os.path.exists(output_dir) == 0):
             os.mkdir (output_dir)
@@ -60,13 +64,16 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         if diff_file != "":
             with open(diff_file, 'w', encoding='utf8') as json_file_ptr:
                 json_file_ptr.write(json.dumps(response_diff, indent = 6))
-        print(f"--> KO: unexpected result for command: {command}\n--> DIFF expected-received: {response_diff}")
         if verbose:
-            print(f"\n--> expected_response: {expected_response}")
-            print(f"\n--> response: {response}")
+           print("--> FAILED")
+        else:
+            print(json_file + " Test Failed")
         if exit_on_fail:
+            print("TEST ABORTED!")
             sys.exit(1)
     else:
+        if verbose:
+            print("--> OK")
         if dump_output:
             if (silk_file != "" and os.path.exists(output_dir) == 0):
                 os.mkdir (output_dir)
@@ -90,8 +97,8 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
             tar.close()
             jsonrpc_commands = json.loads(buff)
     elif ext in (".gzip"):
-        with gzip.open(json_filename,'rb') as f:
-            buff=f.read()
+        with gzip.open(json_filename,'rb') as zippedFile:
+            buff=zippedFile.read()
             jsonrpc_commands = json.loads(buff)
     else:
         with open(json_filename, encoding='utf8') as json_file_ptr:
@@ -100,8 +107,6 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
         request = json_rpc["request"]
         request_dumps = json.dumps(request)
         target = get_target(silk, request["method"])
-        if verbose:
-            print (str(test_number) + ") " + request_dumps)
         if verify_with_rpc == 0:
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = ""
@@ -133,7 +138,8 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
                 silk_file,
                 rpc_file,
                 diff_file,
-                dump_output)
+                dump_output,
+                json_file)
 
 #
 # usage
@@ -245,7 +251,7 @@ def main(argv):
                         # runs only tests on specific api req_test refers all test on specific api
                         if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
                             if verbose:
-                                print("Test name: ", test_file)
+                                print('%3d: %s ' %(global_test_number ,test_file), end = '')
                             run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, global_test_number, verify_with_rpc, dump_output)
                             if req_test != -1 or requested_api != "":
                                 match = 1
