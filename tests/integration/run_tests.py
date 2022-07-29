@@ -261,7 +261,7 @@ def main(argv):
                 test_number = test_number + 1
 
     if (req_test != -1 or requested_api != "") and match == 0:
-        print ("ERROR: test not found")
+        print ("ERROR: api or testNumber not found")
 #
 # module as main
 #
