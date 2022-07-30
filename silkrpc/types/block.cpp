@@ -65,7 +65,7 @@ uint64_t Block::get_block_size() const {
 
 std::ostream& operator<<(std::ostream& out, const BlockNumberOrHash& bnoh) {
     if (bnoh.is_number()) {
-        out << "0x" << std::hex << bnoh.number();
+        out << "0x" << std::hex << bnoh.number() << std::dec;
     } else if (bnoh.is_hash()) {
         out << "0x" << bnoh.hash();
     } else {
