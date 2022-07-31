@@ -34,6 +34,18 @@
 #include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/ethdb/kv/rpc.hpp>
 #include <silkrpc/ethdb/kv/state_cache.hpp>
+#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
+
+//! Unfortunately gRPC does not define operator<< for generated data types
+namespace remote {
+
+inline std::ostream& operator<<(std::ostream& out, const remote::StateChangeBatch& batch) {
+    out << "changebatch_size=" << batch.changebatch_size() << " databaseviewid=" << batch.databaseviewid()
+        << " pendingblockbasefee=" << batch.pendingblockbasefee() << " blockgaslimit=" << batch.blockgaslimit();
+    return out;
+}
+
+} // namespace remote
 
 namespace silkrpc::ethdb::kv {
 

@@ -35,6 +35,10 @@ using namespace std::chrono_literals; // NOLINT(build/namespaces)
 using testing::InvokeWithoutArgs;
 using testing::Return;
 
+TEST_CASE("StateChangeBatch::operator<<", "[silkrpc][ethdb][kv][state_changes_stream]") {
+    CHECK(null_stream() << remote::StateChangeBatch{});
+}
+
 TEST_CASE("StateChangesStream::set_registration_interval", "[silkrpc][ethdb][kv][state_changes_stream]") {
     CHECK(StateChangesStream::registration_interval() == kDefaultRegistrationInterval);
     constexpr boost::posix_time::milliseconds new_registration_interval{5'000};
@@ -57,6 +61,13 @@ static remote::StateChangeBatch make_batch() {
 }
 
 TEST_CASE_METHOD(StateChangesStreamTest, "StateChangesStream::open", "[silkrpc][ethdb][kv][state_changes_stream]") {
+    StateChangesStream::set_registration_interval(boost::posix_time::milliseconds{10});
+    // Execute the test: opening the stream should succeed until finishes
+    CHECK_NOTHROW(stream_.open());
+    stream_.close();
+}
+
+TEST_CASE_METHOD(StateChangesStreamTest, "StateChangesStream::run", "[silkrpc][ethdb][kv][state_changes_stream]") {
     StateChangesStream::set_registration_interval(boost::posix_time::milliseconds{10});
 
     SECTION("stream closed-by-peer/reopened/cancelled") {

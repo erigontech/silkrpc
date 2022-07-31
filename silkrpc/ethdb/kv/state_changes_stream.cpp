@@ -25,16 +25,6 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/grpc/util.hpp>
 
-namespace remote {
-
-inline std::ostream& operator<<(std::ostream& out, const remote::StateChangeBatch& batch) {
-    out << "changebatch_size=" << batch.changebatch_size() << " databaseviewid=" << batch.databaseviewid()
-        << " pendingblockbasefee=" << batch.pendingblockbasefee() << " blockgaslimit=" << batch.blockgaslimit();
-    return out;
-}
-
-} // namespace remote
-
 namespace silkrpc::ethdb::kv {
 
 //! Define Asio coroutine-based completion token using error codes instead of exceptions for errors
