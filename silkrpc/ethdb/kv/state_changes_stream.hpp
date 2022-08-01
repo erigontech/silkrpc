@@ -19,6 +19,7 @@
 
 #include <chrono>
 #include <functional>
+#include <future>
 #include <memory>
 
 #include <silkrpc/config.hpp>
@@ -64,7 +65,7 @@ public:
     explicit StateChangesStream(Context& context, remote::KV::StubInterface* stub);
 
     //! Open up the stream, starting the register-and-receive loop
-    void open();
+    std::future<void> open();
 
     //! Close down the stream, stopping the register-and-receive loop
     void close();

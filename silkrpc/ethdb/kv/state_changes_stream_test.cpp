@@ -60,15 +60,19 @@ static remote::StateChangeBatch make_batch() {
     return state_changes;
 }
 
-/*TEST_CASE_METHOD(StateChangesStreamTest, "StateChangesStream::open", "[silkrpc][ethdb][kv][state_changes_stream]") {
+TEST_CASE_METHOD(StateChangesStreamTest, "StateChangesStream::open", "[silkrpc][ethdb][kv][state_changes_stream]") {
     StateChangesStream::set_registration_interval(boost::posix_time::milliseconds{10});
     // Set the call expectations:
     // 1. remote::KV::StubInterface::PrepareAsyncStateChangesRaw call succeeds
-    expect_request_async_statechanges(.ok=true);
+    expect_request_async_statechanges(/*.ok=*/false);
+    // 2. AsyncReader<remote::StateChangeBatch>::Finish call succeeds w/ status cancelled
+    EXPECT_CALL(*statechanges_reader_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
     // Execute the test: opening the stream should succeed until finishes
-    CHECK_NOTHROW(stream_.open());
+    std::future<void> run_completed;
+    CHECK_NOTHROW(run_completed = stream_.open());
     stream_.close();
-}*/
+    CHECK_NOTHROW(run_completed.get());
+}
 
 TEST_CASE_METHOD(StateChangesStreamTest, "StateChangesStream::run", "[silkrpc][ethdb][kv][state_changes_stream]") {
     StateChangesStream::set_registration_interval(boost::posix_time::milliseconds{10});

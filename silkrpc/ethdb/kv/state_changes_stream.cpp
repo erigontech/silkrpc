@@ -20,6 +20,7 @@
 
 #include <asio/experimental/as_tuple.hpp>
 #include <asio/this_coro.hpp>
+#include <asio/use_future.hpp>
 #include <grpc/grpc.h>
 
 #include <silkrpc/common/log.hpp>
@@ -43,10 +44,8 @@ StateChangesStream::StateChangesStream(Context& context, remote::KV::StubInterfa
       stub_(stub),
       retry_timer_{scheduler_} {}
 
-void StateChangesStream::open() {
-    asio::co_spawn(scheduler_, run(), [&](std::exception_ptr eptr) {
-        if (eptr) std::rethrow_exception(eptr);
-    });
+std::future<void> StateChangesStream::open() {
+    return asio::co_spawn(scheduler_, run(), asio::use_future);
 }
 
 void StateChangesStream::close() {
