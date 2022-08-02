@@ -43,9 +43,6 @@ struct StateReaderTest : public test::ContextTestBase {
 };
 
 TEST_CASE_METHOD(StateReaderTest, "StateReader::read_account") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::Trace);
-    SILKRPC_DEBUG << "kEncodedAccount: " << silkworm::to_hex(kEncodedAccount) << "\n";
-
     SECTION("no account for history empty and current state empty") {
         // Set the call expectations:
         // 1. DatabaseReader::get call on kAccountHistory returns empty key-value
