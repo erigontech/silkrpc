@@ -49,6 +49,9 @@ static const silkworm::Bytes kEncodedStorageHistory{*silkworm::from_hex(
     "00000040000000560000005a0000005e0000006a0000006e000000720000005da562a563a565a567a56aa59da5"
     "a0a5f0a5f5a57ef926a863a8eb520b535d1b951bb71b3c1c741caa4f53f5b0f5184f536018f6")};
 
+static const silkworm::Bytes kBinaryCode{*silkworm::from_hex("0x60045e005c60016000555d")};
+static const evmc::bytes32 kCodeHash{0xef722d9baf50b9983c2fce6329c5a43a15b8d5ba79cd792e7199d615be88284d_bytes32};
+
 struct StateReaderTest : public test::ContextTestBase {
     test::MockDatabaseReader database_reader_;
     StateReader state_reader_{database_reader_};
@@ -71,7 +74,7 @@ TEST_CASE_METHOD(StateReaderTest, "StateReader::read_account") {
         // Execute the test: calling read_account should return no account
         std::optional<silkworm::Account> account;
         CHECK_NOTHROW(account = spawn_and_wait(state_reader_.read_account(kZeroAddress, core::kEarliestBlockNumber)));
-        CHECK(!account.has_value());
+        CHECK(!account);
     }
 
     SECTION("account found in current state") {
@@ -88,11 +91,13 @@ TEST_CASE_METHOD(StateReaderTest, "StateReader::read_account") {
         // Execute the test: calling read_account should return the expected account
         std::optional<silkworm::Account> account;
         CHECK_NOTHROW(account = spawn_and_wait(state_reader_.read_account(kZeroAddress, core::kEarliestBlockNumber)));
-        CHECK(account.has_value());
-        CHECK(account->nonce == 2);
-        CHECK(account->balance == 1000);
-        CHECK(account->code_hash == 0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239_bytes32);
-        CHECK(account->incarnation == 5);
+        CHECK(account);
+        if (account) {
+            CHECK(account->nonce == 2);
+            CHECK(account->balance == 1000);
+            CHECK(account->code_hash == 0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239_bytes32);
+            CHECK(account->incarnation == 5);
+        }
     }
 
     SECTION("account found in history") {
@@ -111,11 +116,13 @@ TEST_CASE_METHOD(StateReaderTest, "StateReader::read_account") {
         // Execute the test: calling read_account should return expected account
         std::optional<silkworm::Account> account;
         CHECK_NOTHROW(account = spawn_and_wait(state_reader_.read_account(kZeroAddress, core::kEarliestBlockNumber)));
-        CHECK(account.has_value());
-        CHECK(account->nonce == 2);
-        CHECK(account->balance == 1000);
-        CHECK(account->code_hash == 0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239_bytes32);
-        CHECK(account->incarnation == 5);
+        CHECK(account);
+        if (account) {
+            CHECK(account->nonce == 2);
+            CHECK(account->balance == 1000);
+            CHECK(account->code_hash == 0xf1885eda54b7a053318cd41e2093220dab15d65381b1157a3633a83bfd5c9239_bytes32);
+            CHECK(account->incarnation == 5);
+        }
     }
 }
 
@@ -176,6 +183,49 @@ TEST_CASE_METHOD(StateReaderTest, "StateReader::read_storage") {
         evmc::bytes32 location;
         CHECK_NOTHROW(location = spawn_and_wait(state_reader_.read_storage(kZeroAddress, 0, kLocationHash, core::kEarliestBlockNumber)));
         CHECK(location == silkworm::to_bytes32(kStorageLocation));
+    }
+}
+
+TEST_CASE_METHOD(StateReaderTest, "StateReader::read_code") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("no code for empty code hash") {
+        // Execute the test: calling read_code should return no code for empty hash
+        std::optional<silkworm::Bytes> code;
+        CHECK_NOTHROW(code = spawn_and_wait(state_reader_.read_code(silkworm::kEmptyHash)));
+        CHECK(!code);
+    }
+
+    SECTION("empty code found for code hash") {
+        // Set the call expectations:
+        // 1. DatabaseReader::get_one call on kCode returns the binary code
+        EXPECT_CALL(database_reader_, get_one(db::table::kCode, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<silkworm::Bytes> { co_return silkworm::Bytes{}; }
+        ));
+
+        // Execute the test: calling read_code should return an empty code
+        std::optional<silkworm::Bytes> code;
+        CHECK_NOTHROW(code = spawn_and_wait(state_reader_.read_code(kCodeHash)));
+        CHECK(code);
+        if (code) {
+            CHECK(code->empty());
+        }
+    }
+
+    SECTION("non-empty code found for code hash") {
+        // Set the call expectations:
+        // 1. DatabaseReader::get_one call on kCode returns the binary code
+        EXPECT_CALL(database_reader_, get_one(db::table::kCode, _)).WillOnce(InvokeWithoutArgs(
+            []() -> asio::awaitable<silkworm::Bytes> { co_return kBinaryCode; }
+        ));
+
+        // Execute the test: calling read_code should return a non-empty code
+        std::optional<silkworm::Bytes> code;
+        CHECK_NOTHROW(code = spawn_and_wait(state_reader_.read_code(kCodeHash)));
+        CHECK(code);
+        if (code) {
+            CHECK(silkworm::to_hex(*code) == silkworm::to_hex(kBinaryCode));
+        }
     }
 }
 

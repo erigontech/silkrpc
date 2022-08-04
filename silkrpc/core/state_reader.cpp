@@ -76,8 +76,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_code(const evm
     if (code_hash == silkworm::kEmptyHash) {
         co_return std::nullopt;
     }
-    auto code{co_await db_reader_.get_one(db::table::kCode, full_view(code_hash))};
-    co_return code;
+    co_return co_await db_reader_.get_one(db::table::kCode, full_view(code_hash));
 }
 
 asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_account(const evmc::address& address, uint64_t block_number) const {
