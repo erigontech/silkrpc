@@ -18,6 +18,7 @@
 #define SILKRPC_GRPC_BIDI_STREAMING_RPC_HPP_
 
 #include <memory>
+#include <optional>
 #include <system_error>
 #include <utility>
 
@@ -118,6 +119,15 @@ private:
 
         template<typename Op>
         void operator()(Op& op) {
+            if (self_.status_) {
+                SILKRPC_DEBUG << "BidiStreamingRpc::WritesDoneAndFinish " << this << " already finished\n";
+                if (self_.status_->ok()) {
+                    op.complete({});
+                } else {
+                    op.complete(make_error_code(self_.status_->error_code(), self_.status_->error_message()));
+                }
+                return;
+            }
             SILKRPC_TRACE << "BidiStreamingRpc::WritesDoneAndFinish::initiate " << this << "\n";
             if (self_.reader_writer_) {
                 agrpc::writes_done(self_.reader_writer_, asio::bind_executor(self_.grpc_context_, std::move(op)));
@@ -127,7 +137,8 @@ private:
         }
 
         template<typename Op>
-        void operator()(Op& op, bool /*ok*/) {
+        void operator()(Op& op, bool ok) {
+            SILKRPC_TRACE << "BidiStreamingRpc::WritesDoneAndFinish::completed " << this << " ok=" << ok << "\n";
             self_.finish(std::move(op));
         }
 
@@ -143,7 +154,8 @@ private:
         template<typename Op>
         void operator()(Op& op) {
             SILKRPC_TRACE << "BidiStreamingRpc::Finish::initiate " << this << "\n";
-            agrpc::finish(self_.reader_writer_, self_.status_, asio::bind_executor(self_.grpc_context_, std::move(op)));
+            self_.status_ = std::make_optional<grpc::Status>();
+            agrpc::finish(self_.reader_writer_, *self_.status_, asio::bind_executor(self_.grpc_context_, std::move(op)));
         }
 
         template<typename Op>
@@ -153,11 +165,11 @@ private:
                 self_.status_ = grpc::Status{grpc::StatusCode::UNKNOWN, "unknown error in finish"};
             }
 
-            SILKRPC_DEBUG << "BidiStreamingRpc::Finish::completed ok=" << ok << " " << self_.status_ << "\n";
-            if (self_.status_.ok()) {
+            SILKRPC_DEBUG << "BidiStreamingRpc::Finish::completed ok=" << ok << " " << *self_.status_ << "\n";
+            if (self_.status_->ok()) {
                 op.complete({});
             } else {
-                op.complete(make_error_code(self_.status_.error_code(), self_.status_.error_message()));
+                op.complete(make_error_code(self_.status_->error_code(), self_.status_->error_message()));
             }
         }
     };
@@ -196,7 +208,7 @@ private:
     grpc::ClientContext context_;
     std::unique_ptr<Responder<Request, Reply>> reader_writer_;
     Reply reply_;
-    grpc::Status status_;
+    std::optional<grpc::Status> status_;
 };
 
 } // namespace silkrpc
