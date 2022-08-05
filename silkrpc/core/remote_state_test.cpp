@@ -25,7 +25,8 @@
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
-
+#include <silkrpc/test/context_test_base.hpp>
+#include <silkrpc/test/mock_database_reader.hpp>
 
 namespace silkrpc::state {
 
@@ -422,5 +423,23 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
     }
 }
 
-} // namespace silkrpc::state
+struct RemoteStateTest : public test::ContextTestBase {
+    test::MockDatabaseReader database_reader_;
+    RemoteState remote_state_{io_context_, database_reader_, 0};
+};
 
+TEST_CASE_METHOD(RemoteStateTest, "RemoteState") {
+    SECTION("overridden write methods do nothing") {
+        CHECK_NOTHROW(remote_state_.insert_block(silkworm::Block{}, evmc::bytes32{}));
+        CHECK_NOTHROW(remote_state_.canonize_block(0, evmc::bytes32{}));
+        CHECK_NOTHROW(remote_state_.decanonize_block(0));
+        CHECK_NOTHROW(remote_state_.insert_receipts(0, std::vector<silkworm::Receipt>{}));
+        CHECK_NOTHROW(remote_state_.begin_block(0));
+        CHECK_NOTHROW(remote_state_.update_account(evmc::address{}, std::nullopt, std::nullopt));
+        CHECK_NOTHROW(remote_state_.update_account_code(evmc::address{}, 0, evmc::bytes32{}, silkworm::ByteView{}));
+        CHECK_NOTHROW(remote_state_.update_storage(evmc::address{}, 0, evmc::bytes32{}, evmc::bytes32{}, evmc::bytes32{}));
+        CHECK_NOTHROW(remote_state_.unwind_state_changes(0));
+    }
+}
+
+} // namespace silkrpc::state
