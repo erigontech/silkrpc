@@ -262,6 +262,8 @@ def main(argv):
 
     if (req_test != -1 or requested_api != "") and match == 0:
         print ("ERROR: api or testNumber not found")
+    else:
+       print ("Number of executed tests: " + str(global_test_number))
 #
 # module as main
 #
