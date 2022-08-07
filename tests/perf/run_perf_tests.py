@@ -8,7 +8,6 @@ import os
 import csv
 import sys
 import getopt
-import multiprocessing
 from datetime import datetime
 
 DEFAULT_TEST_SEQUENCE = "50:30,200:30,500:30,700:30,1000:30,1500:30,1700:30,2000:30"
@@ -18,7 +17,7 @@ DEFAULT_DAEMON_VEGETA_ON_CORE = "-:-"
 DEFAULT_ERIGON_ADDRESS = "localhost:9090"
 DEFAULT_ERIGON_BUILD_DIR = "../../../erigon/build/"
 DEFAULT_SILKRPC_BUILD_DIR = "../../build_gcc_release/"
-DEFAULT_SILKRPC_NUM_CONTEXTS = "" 
+DEFAULT_SILKRPC_NUM_CONTEXTS = ""
 DEFAULT_RPCDAEMON_ADDRESS = "localhost"
 DEFAULT_TEST_MODE = "3"
 DEFAULT_WAITING_TIME = "5"
@@ -79,7 +78,7 @@ class Config:
         self.test_type = DEFAULT_TEST_TYPE
         self.waiting_time = DEFAULT_WAITING_TIME
         self.user_perf_command = ""
-        self.workers = DEFAULT_WORKERS 
+        self.workers = DEFAULT_WORKERS
         self.start_server = "1"
         self.wait_mode = DEFAULT_WAIT_MODE
 
@@ -144,7 +143,6 @@ class Config:
                         print ("ERROR: incompatible option -d with -a -g -s -n")
                         usage(argv)
                     local_config = 1
-                    on_core = self.daemon_vegeta_on_core.split(':')
                     self.silkrpc_num_contexts = optarg
                 else:
                     usage(argv)
@@ -279,8 +277,7 @@ class PerfTest:
                       + str(self.config.workers)
 
         if self.config.silkrpc_num_contexts != "":
-             base_params += " --num_contexts " + str(self.config.silkrpc_num_contexts) 
-         
+            base_params += " --num_contexts " + str(self.config.silkrpc_num_contexts)
         if on_core[0] == "-":
             cmd = perf_cmd  + base_params + wait_mode_str + " &"
         else:
