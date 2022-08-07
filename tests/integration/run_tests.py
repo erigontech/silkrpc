@@ -10,6 +10,7 @@ import shutil
 import tarfile
 
 import getopt
+import gzip
 import jsondiff
 
 
@@ -23,7 +24,7 @@ def get_target(silk: bool, method: str):
     return "localhost:8545"
 
 def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool, output_dir: str, silk_file: str,
-                      rpc_file: str, diff_file: str, dump_output):
+                      rpc_file: str, diff_file: str, dump_output, json_file: str, test_number):
     """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
 
     command_and_args = shlex.split(command)
@@ -31,6 +32,7 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
     if process.returncode != 0:
         sys.exit(process.returncode)
     process.stdout = process.stdout.strip('\n')
+    #print (process.stdout)
     response = json.loads(process.stdout)
     if command1 != "":
         command_and_args = shlex.split(command1)
@@ -41,6 +43,16 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         expected_response = json.loads(process.stdout)
 
     if response != expected_response:
+        if "result" in response and "result" in expected_response and expected_response["result"] is None:
+            # response and expected_response are different but don't care
+            if verbose:
+                print("--> OK")
+            return
+        if "error" in response and "error" in expected_response and expected_response["error"] is None:
+            # response and expected_response are different but don't care
+            if verbose:
+                print("--> OK")
+            return
         if (silk_file != "" and os.path.exists(output_dir) == 0):
             os.mkdir (output_dir)
         if silk_file != "":
@@ -49,23 +61,20 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         if rpc_file != "":
             with open(rpc_file, 'w', encoding='utf8') as json_file_ptr:
                 json_file_ptr.write(json.dumps(expected_response, indent = 6))
-        if "result" in response and "result" in expected_response and expected_response["result"] is None:
-            # response and expected_response are different but don't care
-            return
-        if "error" in response and "error" in expected_response and expected_response["error"] is None:
-            # response and expected_response are different but don't care
-            return
         response_diff = jsondiff.diff(expected_response, response, marshal=True)
         if diff_file != "":
             with open(diff_file, 'w', encoding='utf8') as json_file_ptr:
                 json_file_ptr.write(json.dumps(response_diff, indent = 6))
-        print(f"--> KO: unexpected result for command: {command}\n--> DIFF expected-received: {response_diff}")
         if verbose:
-            print(f"\n--> expected_response: {expected_response}")
-            print(f"\n--> response: {response}")
+            print("--> FAILED")
+        else:
+            print(str(test_number) + ". " + json_file + " Test Failed")
         if exit_on_fail:
+            print("TEST ABORTED!")
             sys.exit(1)
     else:
+        if verbose:
+            print("--> OK")
         if dump_output:
             if (silk_file != "" and os.path.exists(output_dir) == 0):
                 os.mkdir (output_dir)
@@ -73,7 +82,7 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
                 with open(silk_file, 'w', encoding='utf8') as json_file_ptr:
                     json_file_ptr.write(json.dumps(response, indent = 6))
 
-def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, test_number: int, verify_with_rpc: bool, dump_output: bool):
+def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, verify_with_rpc: bool, dump_output: bool, test_number):
     """ Run integration tests. """
     json_filename = test_dir + json_file
     ext = os.path.splitext(json_file)[1]
@@ -88,6 +97,10 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
             buff = file.read()
             tar.close()
             jsonrpc_commands = json.loads(buff)
+    elif ext in (".gzip"):
+        with gzip.open(json_filename,'rb') as zipped_file:
+            buff=zipped_file.read()
+            jsonrpc_commands = json.loads(buff)
     else:
         with open(json_filename, encoding='utf8') as json_file_ptr:
             jsonrpc_commands = json.load(json_file_ptr)
@@ -95,16 +108,15 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
         request = json_rpc["request"]
         request_dumps = json.dumps(request)
         target = get_target(silk, request["method"])
-        if verbose:
-            print (str(test_number) + ") " + request_dumps)
         if verify_with_rpc == 0:
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = ""
+            output_api_filename = output_dir + json_file[:-5]
+            output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = json_rpc["response"]
-            output_dir_name = ""
-            silk_file = ""
-            rpc_file = ""
-            diff_file = ""
+            silk_file = output_api_filename + "-response.json"
+            rpc_file = output_api_filename + "-expResponse.json"
+            diff_file = output_api_filename + "-diff.json"
         else:
             output_api_filename = output_dir + json_file[:-5]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
@@ -127,7 +139,9 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
                 silk_file,
                 rpc_file,
                 diff_file,
-                dump_output)
+                dump_output,
+                json_file,
+                test_number)
 
 #
 # usage
@@ -135,7 +149,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
 def usage(argv):
     """ Print script usage
     """
-    print("Usage: " + argv[0] + " -h -c -r -v -a <api_name> -t < test_number> -l < no of loops> -d -h <chain Name> -o ")
+    print("Usage: " + argv[0] + " -h -c -r -v -a <requested_api> -t < test_number> -l < no of loops> -d -h <chain Name> -o -x <exclude list>")
     print("")
     print("Launch an automated test sequence on Silkrpc or RPCDaemon")
     print("")
@@ -149,6 +163,7 @@ def usage(argv):
     print("-b blockchain (default goerly)")
     print("-v verbose")
     print("-o dump response")
+    print("-x exclude api list (i.e txpool_content,txpool_status")
 
 
 #
@@ -163,14 +178,15 @@ def main(argv):
     verbose = 0
     req_test = -1
     dump_output = 0
-    api_name = ""
+    requested_api = ""
     verify_with_rpc = 0
     json_dir = "./goerly/"
     results_dir = "results"
     output_dir = json_dir + "/" + results_dir + "/"
+    exclude_list = ""
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:db:o")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:db:ox:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -184,7 +200,7 @@ def main(argv):
             elif option == "-t":
                 req_test = int(optarg)
             elif option == "-a":
-                api_name = optarg
+                requested_api = optarg
             elif option == "-l":
                 loop_number = int(optarg)
             elif option == "-d":
@@ -193,6 +209,8 @@ def main(argv):
                 dump_output = 1
             elif option == "-b":
                 json_dir = "./" + optarg + "/"
+            elif option == "-x":
+                exclude_list = optarg
             else:
                 usage(argv)
                 sys.exit(-1)
@@ -207,26 +225,45 @@ def main(argv):
         shutil.rmtree(output_dir)
 
     os.mkdir (output_dir)
+    match = 0
     for test_rep in range(0, loop_number):
         if verbose:
             print("Test iteration: ", test_rep + 1)
         dirs = sorted(os.listdir(json_dir))
-        test_number = 0
+        global_test_number = 1
         for api_file in dirs:
             # jump result_dir
             if api_file == results_dir:
                 continue
             test_dir = json_dir + api_file
             test_lists = sorted(os.listdir(test_dir))
+            test_number = 1
             for test_name in test_lists:
-                if api_name in ("", api_file):
+                if requested_api in ("", api_file): # -a
+                    # scans exclude list
+                    tokenize_list = exclude_list.split(",")
+                    jump_api = 0
+                    for exclude_api in tokenize_list:  # -x
+                        if exclude_api == api_file:
+                            jump_api = 1
+                            break
                     test_file = api_file + "/" + test_name
-                    if req_test in (-1, test_number):
-                        if verbose:
-                            print("Test name: ", test_file)
-                        run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, test_number, verify_with_rpc, dump_output)
+                    if jump_api == 0:
+                        # runs all tests req_test refers global test number or
+                        # runs only tests on specific api req_test refers all test on specific api
+                        if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
+                            if verbose:
+                                print(str(global_test_number) + ". " + test_file, end = '')
+                            run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, verify_with_rpc, dump_output, global_test_number)
+                            if req_test != -1 or requested_api != "":
+                                match = 1
+                global_test_number = global_test_number + 1
                 test_number = test_number + 1
 
+    if (req_test != -1 or requested_api != "") and match == 0:
+        print ("ERROR: api or testNumber not found")
+    else:
+        print ("Number of executed tests: " + str(global_test_number))
 #
 # module as main
 #

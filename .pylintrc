@@ -17,7 +17,7 @@ disable=too-many-ancestors,duplicate-code,not-callable,too-few-public-methods
 
 # Maximum number of arguments for function / method
 max-args=15
-max-nested-blocks=6
+max-nested-blocks=10
 
 
 [FORMAT]
@@ -25,6 +25,6 @@ max-nested-blocks=6
 # Maximum number of characters on a single line.
 max-line-length=200
 
-max-branches=25
+max-branches=30
 max-statements=80
-max-locals=30
+max-locals=40
