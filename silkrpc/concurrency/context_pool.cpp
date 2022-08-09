@@ -51,26 +51,27 @@ Context::Context(
 }
 
 template <typename WaitStrategy>
-void Context::execute_loop_single_threaded(WaitStrategy&& wait_strategy) {
+void Context::execute_loop_single_threaded(WaitStrategy&& /*wait_strategy*/) {
     SILKRPC_DEBUG << "Single-thread execution loop start [" << this << "]\n";
-    while (!io_context_->stopped()) {
+    /*while (!io_context_->stopped()) {
         int work_count = grpc_context_->poll_completion_queue();
         work_count += io_context_->poll();
         wait_strategy.idle(work_count);
-    }
+    }*/
+    agrpc::run(*grpc_context_, *io_context_, [&] { return io_context_->stopped(); });
     SILKRPC_DEBUG << "Single-thread execution loop end [" << this << "]\n";
 }
 
 void Context::execute_loop_multi_threaded() {
     SILKRPC_DEBUG << "Multi-thread execution loop start [" << this << "]\n";
-    std::thread completion_runner_thread{[&]() {
+    std::thread grpc_context_thread{[&]() {
         grpc_context_->run_completion_queue();
     }};
     io_context_->run();
 
     grpc_context_work_.reset();
     grpc_context_->stop();
-    completion_runner_thread.join();
+    grpc_context_thread.join();
     SILKRPC_DEBUG << "Multi-thread execution loop end [" << this << "]\n";
 }
 
