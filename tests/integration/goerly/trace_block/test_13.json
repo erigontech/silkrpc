@@ -37,7 +37,7 @@
           "action": {
             "author": "0x0000000000000000000000000000000000000000",
             "rewardType": "block",
-            "value": "0x0"
+            "value": "0x1bc16d674ec80000"
           },
           "blockHash": "0x272a37b44278d9dda4a368f2b2d0644d890456789be8275dcfd1b80726115931",
           "blockNumber": 2000330,
