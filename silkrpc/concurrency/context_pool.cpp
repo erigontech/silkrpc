@@ -50,15 +50,20 @@ Context::Context(
     tx_pool_ = std::make_unique<txpool::TransactionPool>(*io_context_, channel, *grpc_context_);
 }
 
+void Context::execute_loop_agrpc() {
+    SILKRPC_DEBUG << "Asio-grpc execution loop start [" << this << "]\n";
+    agrpc::run(*grpc_context_, *io_context_, [&] { return io_context_->stopped(); });
+    SILKRPC_DEBUG << "Asio-grpc execution loop end [" << this << "]\n";
+}
+
 template <typename WaitStrategy>
-void Context::execute_loop_single_threaded(WaitStrategy&& /*wait_strategy*/) {
+void Context::execute_loop_single_threaded(WaitStrategy&& wait_strategy) {
     SILKRPC_DEBUG << "Single-thread execution loop start [" << this << "]\n";
-    /*while (!io_context_->stopped()) {
+    while (!io_context_->stopped()) {
         int work_count = grpc_context_->poll_completion_queue();
         work_count += io_context_->poll();
         wait_strategy.idle(work_count);
-    }*/
-    agrpc::run(*grpc_context_, *io_context_, [&] { return io_context_->stopped(); });
+    }
     SILKRPC_DEBUG << "Single-thread execution loop end [" << this << "]\n";
 }
 
@@ -77,6 +82,9 @@ void Context::execute_loop_multi_threaded() {
 
 void Context::execute_loop() {
     switch (wait_mode_) {
+        case WaitMode::backoff:
+            execute_loop_agrpc();
+        break;
         case WaitMode::blocking:
             execute_loop_multi_threaded();
         break;

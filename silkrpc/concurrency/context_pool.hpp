@@ -69,6 +69,9 @@ class Context {
     void stop();
 
   private:
+    //! Execute asio-grpc loop until stopped.
+    void execute_loop_agrpc();
+
     //! Execute single-threaded loop until stopped.
     template <typename WaitStrategy>
     void execute_loop_single_threaded(WaitStrategy&& wait_strategy);
