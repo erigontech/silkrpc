@@ -1088,6 +1088,30 @@ asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::trace_call(c
 }
 
 template<typename WorldState, typename VM>
+asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_transaction(const silkworm::BlockWithHash& block_with_hash, const silkrpc::Transaction& transaction) {
+    std::vector<Trace> traces;
+
+    const auto result = co_await execute(block_with_hash.block.header.number-1, block_with_hash.block, transaction, transaction.transaction_index, {false, true, false});
+    const auto& trace_result = result.traces.trace;
+
+    const auto hash = hash_of_transaction(transaction);
+    const auto tnx_hash = silkworm::to_bytes32({hash.bytes, silkworm::kHashLength});
+
+    for (const auto& call_trace : trace_result) {
+        Trace trace{call_trace};
+
+        trace.block_number = block_with_hash.block.header.number;
+        trace.block_hash = block_with_hash.hash;
+        trace.transaction_position = transaction.transaction_index;
+        trace.transaction_hash = tnx_hash;
+
+        traces.push_back(trace);
+    }
+
+    co_return traces;
+}
+
+template<typename WorldState, typename VM>
 asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
     const silkrpc::Transaction& transaction, std::int32_t index, const TraceConfig& config) {
     SILKRPC_INFO << "execute: "

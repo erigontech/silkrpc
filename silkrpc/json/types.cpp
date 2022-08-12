@@ -634,6 +634,10 @@ void to_json(nlohmann::json& json, const std::set<evmc::address>& addresses) {
     }
 }
 
+nlohmann::json make_json_content(uint32_t id) {
+    return {{"jsonrpc", "2.0"}, {"id", id}, {"result", nullptr}};
+}
+
 nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result) {
     return {{"jsonrpc", "2.0"}, {"id", id}, {"result", result}};
 }
