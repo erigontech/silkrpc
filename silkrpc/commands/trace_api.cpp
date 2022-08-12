@@ -56,8 +56,8 @@ asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json& reque
 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
-        trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_, config};
-        auto result = co_await executor.execute(block_with_hash.block, call);
+        trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+        const auto result = co_await executor.trace_call(block_with_hash.block, call, config);
 
         if (result.pre_check_error) {
             reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
@@ -137,8 +137,8 @@ asio::awaitable<void> TraceRpcApi::handle_trace_replay_block_transactions(const 
 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
-        trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_, config};
-        auto result = co_await executor.execute(block_with_hash.block);
+        trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+        const auto result = co_await executor.trace_block_transactions(block_with_hash.block, config);
         reply = make_json_content(request["id"], result);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -176,8 +176,8 @@ asio::awaitable<void> TraceRpcApi::handle_trace_replay_transaction(const nlohman
             oss << "transaction 0x" << transaction_hash << " not found";
             reply = make_json_error(request["id"], -32000, oss.str());
         } else {
-            trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_, config};
-            const auto result = co_await executor.execute(tx_with_block->block_with_hash.block, tx_with_block->transaction);
+            trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+            const auto result = co_await executor.trace_transaction(tx_with_block->block_with_hash.block, tx_with_block->transaction, config);
 
             if (result.pre_check_error) {
                 reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
@@ -199,12 +199,27 @@ asio::awaitable<void> TraceRpcApi::handle_trace_replay_transaction(const nlohman
 
 // https://eth.wiki/json-rpc/API#trace_block
 asio::awaitable<void> TraceRpcApi::handle_trace_block(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() < 1) {
+        auto error_msg = "invalid trace_block params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto block_number_or_hash = params[0].get<BlockNumberOrHash>();
+
+    SILKRPC_INFO << " block_number_or_hash: " << block_number_or_hash;
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_error(request["id"], 500, "not yet implemented");
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
+
+        trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+        const auto result = co_await executor.trace_block(block_with_hash);
+        reply = make_json_content(request["id"], result);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
