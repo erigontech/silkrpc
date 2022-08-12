@@ -124,6 +124,7 @@ std::string to_quantity(uint64_t number);
 std::string to_quantity(intx::uint256 number);
 std::string to_quantity(silkworm::ByteView bytes);
 
+nlohmann::json make_json_content(uint32_t id);
 nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result);
 nlohmann::json make_json_error(uint32_t id, int32_t code, const std::string& message);
 nlohmann::json make_json_error(uint32_t id, const RevertError& error);

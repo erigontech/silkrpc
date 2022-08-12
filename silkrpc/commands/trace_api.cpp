@@ -274,15 +274,31 @@ asio::awaitable<void> TraceRpcApi::handle_trace_get(const nlohmann::json& reques
 
 // https://eth.wiki/json-rpc/API#trace_transaction
 asio::awaitable<void> TraceRpcApi::handle_trace_transaction(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() < 1) {
+        auto error_msg = "invalid trace_transaction params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto transaction_hash = params[0].get<evmc::bytes32>();
+
+    SILKRPC_INFO << "transaction_hash: " << transaction_hash << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-
-        reply = make_json_error(request["id"], 500, "not yet implemented");
+        const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache(), tx_database, transaction_hash);
+        if (!tx_with_block) {
+            reply = make_json_content(request["id"]);
+        } else {
+            trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+            auto result = co_await executor.trace_transaction(tx_with_block->block_with_hash, tx_with_block->transaction);
+            reply = make_json_content(request["id"], result);
+        }
     } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
+        reply = make_json_content(request["id"]);
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");

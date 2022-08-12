@@ -340,6 +340,7 @@ public:
     asio::awaitable<TraceCallResult> trace_transaction(const silkworm::Block& block, const silkrpc::Transaction& transaction, const TraceConfig& config) {
         return execute(block.header.number-1, block, transaction, transaction.transaction_index, config);
     }
+    asio::awaitable<std::vector<Trace>> trace_transaction(const silkworm::BlockWithHash& block, const silkrpc::Transaction& transaction);
 
 private:
     asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block,
