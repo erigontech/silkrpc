@@ -16,6 +16,7 @@
 
 #include "trace_api.hpp"
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -254,15 +255,49 @@ asio::awaitable<void> TraceRpcApi::handle_trace_filter(const nlohmann::json& req
 
 // https://eth.wiki/json-rpc/API#trace_get
 asio::awaitable<void> TraceRpcApi::handle_trace_get(const nlohmann::json& request, nlohmann::json& reply) {
-    auto tx = co_await database_->begin();
+    auto params = request["params"];
+    if (params.size() < 2) {
+        auto error_msg = "invalid trace_get params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto transaction_hash = params[0].get<evmc::bytes32>();
+    const auto str_indices = params[1].get<std::vector<std::string>>();
 
+    std::vector<std::uint16_t> indices;
+    std::transform(str_indices.begin(), str_indices.end(), std::back_inserter(indices),
+               [](const std::string& str) { return std::stoi(str, nullptr, 16); });
+    SILKRPC_INFO << "transaction_hash: " << transaction_hash << ", #indices: " << indices.size() << "\n";
+
+    // TODO(sixtysixter) for RPCDAEMON compatibility
+    // Parity fails if it gets more than a single index. It returns nothing in this case. Must we?
+    if (indices.size() > 1) {
+        reply = make_json_content(request["id"]);
+        co_return;
+    }
+
+    auto tx = co_await database_->begin();
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_error(request["id"], 500, "not yet implemented");
+        const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache(), tx_database, transaction_hash);
+        if (!tx_with_block) {
+            reply = make_json_content(request["id"]);
+        } else {
+            trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+            auto result = co_await executor.trace_transaction(tx_with_block->block_with_hash, tx_with_block->transaction);
+
+            // TODO(sixtysixter) for RPCDAEMON compatibility
+            auto index = indices[0] + 1;
+            if (result.size() > index) {
+                reply = make_json_content(request["id"], result[index]);
+            } else {
+                reply = make_json_content(request["id"]);
+            }
+        }
     } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
+        reply = make_json_content(request["id"]);
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");

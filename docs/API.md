@@ -96,7 +96,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | trace_replayTransaction                    | Yes          |                                            |
 | trace_block                                | Yes          |                                            |
 | trace_filter                               | -            | not yet implemented                        |
-| trace_get                                  | -            | not yet implemented                        |
+| trace_get                                  | Yes          |                                            |
 | trace_transaction                          | Yes          |                                            |
 |                                            |              |                                            |
 | txpool_content                             | Yes          |                                            |
