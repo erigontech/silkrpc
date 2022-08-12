@@ -57,7 +57,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json& reque
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
         trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
-        auto result = co_await executor.trace_call(block_with_hash.block, call, config);
+        const auto result = co_await executor.trace_call(block_with_hash.block, call, config);
 
         if (result.pre_check_error) {
             reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
@@ -138,7 +138,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_replay_block_transactions(const 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
         trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
-        auto result = co_await executor.trace_blockTransactions(block_with_hash.block, config);
+        const auto result = co_await executor.trace_block_transactions(block_with_hash.block, config);
         reply = make_json_content(request["id"], result);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -218,7 +218,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_block(const nlohmann::json& requ
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
         trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
-        auto result = co_await executor.trace_block(block_with_hash);
+        const auto result = co_await executor.trace_block(block_with_hash);
         reply = make_json_content(request["id"], result);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";

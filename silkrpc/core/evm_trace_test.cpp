@@ -1453,7 +1453,7 @@ TEST_CASE("TraceCallExecutor::trace_call with error") {
     })"_json);
 }
 
-TEST_CASE("TraceCallExecutor::trace_blockTransactions") {
+TEST_CASE("TraceCallExecutor::trace_block_transactions") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -1640,7 +1640,7 @@ TEST_CASE("TraceCallExecutor::trace_blockTransactions") {
     TraceConfig config{true, true, true};
     TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
     asio::io_context& io_context = context_pool.next_io_context();
-    auto execution_result = asio::co_spawn(io_context.get_executor(), executor.trace_blockTransactions(block, config), asio::use_future);
+    auto execution_result = asio::co_spawn(io_context.get_executor(), executor.trace_block_transactions(block, config), asio::use_future);
     auto result = execution_result.get();
 
     context_pool.stop();

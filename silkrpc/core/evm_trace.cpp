@@ -979,18 +979,18 @@ template<typename WorldState, typename VM>
 asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_block(const silkworm::BlockWithHash& block_with_hash) {
     std::vector<Trace> traces;
 
-    auto trace_call_results = co_await trace_blockTransactions(block_with_hash.block, {false, true, false});
+    const auto trace_call_results = co_await trace_block_transactions(block_with_hash.block, {false, true, false});
     for (std::uint64_t pos = 0; pos < trace_call_results.size(); pos++) {
         silkrpc::Transaction transaction{block_with_hash.block.transactions[pos]};
         if (!transaction.from) {
             transaction.recover_sender();
         }
-        auto hash = hash_of_transaction(transaction);
-        auto tnx_hash = silkworm::to_bytes32({hash.bytes, silkworm::kHashLength});
+        const auto hash = hash_of_transaction(transaction);
+        const auto tnx_hash = silkworm::to_bytes32({hash.bytes, silkworm::kHashLength});
 
-        auto& trace_call_result = trace_call_results.at(pos);
-        auto& call_traces = trace_call_result.traces.trace;
-        for (auto& call_trace : call_traces) {
+        const auto& trace_call_result = trace_call_results.at(pos);
+        const auto& call_traces = trace_call_result.traces.trace;
+        for (const auto& call_trace : call_traces) {
             Trace trace{call_trace};
 
             trace.block_number = block_with_hash.block.header.number;
@@ -1003,7 +1003,7 @@ asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_blo
     }
 
     const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(database_reader_)};
-    auto block_rewards = ethash::compute_reward(chain_config, block_with_hash.block);
+    const auto block_rewards = ethash::compute_reward(chain_config, block_with_hash.block);
 
     RewardAction action;
     action.author = block_with_hash.block.header.beneficiary;
@@ -1022,7 +1022,7 @@ asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_blo
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldState, VM>::trace_blockTransactions(const silkworm::Block& block, const TraceConfig& config) {
+asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldState, VM>::trace_block_transactions(const silkworm::Block& block, const TraceConfig& config) {
     auto block_number = block.header.number;
     const auto& transactions = block.transactions;
 

@@ -22,8 +22,12 @@
 namespace silkrpc::ethash {
 
 BlockReward compute_reward(const ChainConfig& config, const silkworm::Block& block) {
-    auto chain_config = silkworm::ChainConfig::from_json(config.config).value();
-    auto revision = chain_config.revision(block.header.number);
+    const auto cc_optional = silkworm::ChainConfig::from_json(config.config);
+    if (!cc_optional) {
+        throw std::runtime_error("Invalid chain config");
+    }
+    const auto chain_config = cc_optional.value();
+    const auto revision = chain_config.revision(block.header.number);
     BlockReward block_reward;
     block_reward.miner_reward = silkworm::param::kBlockRewardFrontier;
     if (revision > evmc_revision::EVMC_BYZANTIUM) {
@@ -35,8 +39,8 @@ BlockReward compute_reward(const ChainConfig& config, const silkworm::Block& blo
 
     // Accumulate the rewards for the miner and any included uncles
     intx::uint256 ommer_reward;
-    auto header_number = block.header.number;
-    for (auto uncle : block.ommers) {
+    const auto header_number = block.header.number;
+    for (const auto& uncle : block.ommers) {
         ommer_reward = uncle.number + 8;
         ommer_reward -= header_number;
         ommer_reward *= block_reward.miner_reward;
