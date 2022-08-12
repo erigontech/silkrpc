@@ -286,7 +286,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_get(const nlohmann::json& reques
             reply = make_json_content(request["id"]);
         } else {
             trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
-            auto result = co_await executor.trace_transaction(tx_with_block->block_with_hash, tx_with_block->transaction);
+            const auto result = co_await executor.trace_transaction(tx_with_block->block_with_hash, tx_with_block->transaction);
 
             // TODO(sixtysixter) for RPCDAEMON compatibility
             auto index = indices[0] + 1;
