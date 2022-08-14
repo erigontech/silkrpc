@@ -30,12 +30,12 @@
 #include <silkrpc/types/call.hpp>
 #include <silkrpc/types/chain_config.hpp>
 #include <silkrpc/types/error.hpp>
+#include <silkrpc/types/execution_payload.hpp>
 #include <silkrpc/types/filter.hpp>
 #include <silkrpc/types/issuance.hpp>
 #include <silkrpc/types/log.hpp>
-#include <silkrpc/types/transaction.hpp>
-#include <silkrpc/types/execution_payload.hpp>
 #include <silkrpc/types/receipt.hpp>
+#include <silkrpc/types/transaction.hpp>
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 

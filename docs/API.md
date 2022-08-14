@@ -125,7 +125,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 |                                            |              |                                            |
 | erigon_getHeaderByHash                     | Yes          |                                            |
 | erigon_getHeaderByNumber                   | Yes          |                                            |
-| erigon_getBlockByTimestamp                 | -            | not yet implemented                        |
+| erigon_getBlockByTimestamp                 | Yes          |                                            |
 | erigon_getLogsByHash                       | Yes          |                                            |
 | erigon_forks                               | Yes          |                                            |
 | erigon_issuance                            | Yes          |                                            |

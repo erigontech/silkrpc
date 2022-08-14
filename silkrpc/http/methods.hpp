@@ -103,6 +103,7 @@ constexpr const char* k_trace_filter{"trace_filter"};
 constexpr const char* k_trace_get{"trace_get"};
 constexpr const char* k_trace_transaction{"trace_transaction"};
 
+constexpr const char* k_erigon_getBlockByTimestamp{"erigon_getBlockByTimestamp"};
 constexpr const char* k_erigon_getHeaderByHash{"erigon_getHeaderByHash"};
 constexpr const char* k_erigon_getHeaderByNumber{"erigon_getHeaderByNumber"};
 constexpr const char* k_erigon_getLogsByHash{"erigon_getLogsByHash"};
