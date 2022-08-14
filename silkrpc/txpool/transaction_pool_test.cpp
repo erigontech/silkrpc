@@ -45,8 +45,7 @@ using testing::_;
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 using StrictMockTxpoolStub = testing::StrictMock<::txpool::MockTxpoolStub>;
 
-struct TransactionPoolTest : test::ApiTestBase<TransactionPool, StrictMockTxpoolStub>{
-};
+using TransactionPoolTest = test::GrpcApiTestBase<TransactionPool, StrictMockTxpoolStub>;
 
 TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::add_transaction", "[silkrpc][txpool][transaction_pool]") {
     test::StrictMockAsyncResponseReader<::txpool::AddReply> reader;

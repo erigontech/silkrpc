@@ -63,8 +63,7 @@ using evmc::literals::operator""_bytes32;
 
 using StrictMockEthBackendStub = testing::StrictMock<::remote::MockETHBACKENDStub>;
 
-struct EthBackendTest : test::ApiTestBase<ethbackend::RemoteBackEnd, StrictMockEthBackendStub>{
-};
+using EthBackendTest = test::GrpcApiTestBase<ethbackend::RemoteBackEnd, StrictMockEthBackendStub>;
 
 TEST_CASE_METHOD(EthBackendTest, "BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
     test::StrictMockAsyncResponseReader<::remote::EtherbaseReply> reader;
