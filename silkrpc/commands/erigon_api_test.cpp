@@ -29,6 +29,7 @@ class ErigonRpcApi_ForTest : public ErigonRpcApi {
 public:
     explicit ErigonRpcApi_ForTest(Context& context) : ErigonRpcApi{context} {}
 
+    using ErigonRpcApi::handle_erigon_get_block_by_timestamp;
     using ErigonRpcApi::handle_erigon_get_header_by_hash;
     using ErigonRpcApi::handle_erigon_get_header_by_number;
     using ErigonRpcApi::handle_erigon_get_logs_by_hash;
@@ -37,6 +38,77 @@ public:
 };
 
 using ErigonRpcApiTest = test::JsonApiTestBase<ErigonRpcApi_ForTest>;
+
+TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_get_block_by_timestamp", "[silkrpc][erigon_api]") {
+    nlohmann::json reply;
+
+    SECTION("request params is empty: return error") {
+        run<&ErigonRpcApi_ForTest::handle_erigon_get_block_by_timestamp>(R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"erigon_getBlockByTimestamp",
+            "params":[]
+        })"_json, reply);
+        CHECK(reply == R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "error":{"code":100,"message":"invalid erigon_getBlockByTimestamp params: []"}
+        })"_json);
+    }
+    SECTION("request params are incomplete: return error") {
+        run<&ErigonRpcApi_ForTest::handle_erigon_get_block_by_timestamp>(R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"erigon_getBlockByTimestamp",
+            "params":["1658865942"]
+        })"_json, reply);
+        CHECK(reply == R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "error":{"code":100,"message":"invalid erigon_getBlockByTimestamp params: [\"1658865942\"]"}
+        })"_json);
+    }
+    SECTION("request 1st param is invalid: return error") {
+        run<&ErigonRpcApi_ForTest::handle_erigon_get_block_by_timestamp>(R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"erigon_getBlockByTimestamp",
+            "params":[true, true]
+        })"_json, reply);
+        CHECK(reply == R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "error":{"code":100,"message":"[json.exception.type_error.302] type must be string, but is boolean"}
+        })"_json);
+    }
+    SECTION("request 2nd param is invalid: return error") {
+        run<&ErigonRpcApi_ForTest::handle_erigon_get_block_by_timestamp>(R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"erigon_getBlockByTimestamp",
+            "params":["1658865942", "abc"]
+        })"_json, reply);
+        CHECK(reply == R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "error":{"code":100,"message":"[json.exception.type_error.302] type must be boolean, but is string"}
+        })"_json);
+    }
+    // TODO(canepat) we need to mock silkrpc::core functions properly, then we must change expected reply here
+    SECTION("request params are valid: return block w/ full transactions") {
+        run<&ErigonRpcApi_ForTest::handle_erigon_get_block_by_timestamp>(R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"erigon_getBlockByTimestamp",
+            "params":["1658865942", true]
+        })"_json, reply);
+        CHECK(reply == R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "error":{"code":100,"message":"failed to connect to all addresses"}
+        })"_json);
+    }
+}
 
 TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_get_header_by_hash", "[silkrpc][erigon_api]") {
     nlohmann::json reply;
