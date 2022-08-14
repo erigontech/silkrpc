@@ -80,10 +80,11 @@ asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohm
     co_return;
 }
 
+// TODO(canepat) will raise error until Silkrpc implements Erigon2u1 https://github.com/ledgerwatch/erigon-lib/pull/559
 asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
+    const auto params = request["params"];
     if (params.size() < 2) {
-        auto error_msg = "invalid parity_listStorageKey params: " + params.dump();
+        auto error_msg = "invalid parity_listStorageKeys params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
@@ -91,22 +92,25 @@ asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohma
     const auto address = params[0].get<evmc::address>();
     const auto quantity = params[1].get<uint64_t>();
     std::optional<silkworm::Bytes> offset = std::nullopt;
-    if (params.size() >= 3) {
+    if (params.size() >= 3 && !params[2].is_null()) {
         offset = std::make_optional(params[2].get<silkworm::Bytes>());
+    }
+    std::string block_id = core::kLatestBlockId;
+    if (params.size() >= 4) {
+        block_id = params[3].get<std::string>();
     }
 
     SILKRPC_DEBUG << "address: 0x" << silkworm::to_hex(address)
         << " quantity: " << quantity
         << " offset: 0x" << (offset ? silkworm::to_hex(offset.value()) : silkworm::to_hex(silkworm::Bytes{})) << "\n";
 
-    auto tx = co_await database_->begin();
-
     try {
+        auto tx = co_await database_->begin();
+
         ethdb::TransactionDatabase tx_database{*tx};
         silkrpc::StateReader state_reader{tx_database};
-        const auto block_number = co_await silkrpc::core::get_block_number(silkrpc::core::kLatestBlockId, tx_database);
-        SILKRPC_DEBUG << "read account with address: 0x" << silkworm::to_hex(address)
-            << "block number: " << block_number << "\n";
+        const auto block_number = co_await silkrpc::core::get_block_number(block_id, tx_database);
+        SILKRPC_DEBUG << "read account with address: " << silkworm::to_hex(address) << " block number: " << block_number << "\n";
         std::optional<silkworm::Account> account = co_await state_reader.read_account(address, block_number);
         if (account == std::nullopt) {
             SILKRPC_ERROR << "account not found\n";
@@ -122,7 +126,7 @@ asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohma
         silkworm::Bytes seek_val = offset ? offset.value() : silkworm::Bytes{};
         std::vector<silkworm::Bytes> keys;
         auto v = co_await cursor->seek_both(seek_bytes, seek_val);
-        // we look for keys until we have the quantity we want or the key is invalid/empty
+        // We look for keys until we have the quantity we want or the key is invalid/empty
         while (v.size() >= silkworm::kHashLength && keys.size() != quantity) {
             keys.push_back(v.substr(0, silkworm::kHashLength));
             const auto kv_pair = co_await cursor->next();
@@ -132,6 +136,8 @@ asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohma
             v = kv_pair.value;
         }
         reply = make_json_content(reply["id"], keys);
+
+        co_await tx->close(); // RAII not (yet) available with coroutines
     } catch (const std::invalid_argument& iv) {
         SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_content(request["id"], {});
@@ -142,7 +148,7 @@ asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohma
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
-    co_await tx->close();
+
     co_return;
 }
 } // namespace silkrpc::commands
