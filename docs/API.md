@@ -123,9 +123,11 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | shh_getFilterChanges                       | No           | deprecated                                 |
 | shh_getMessages                            | No           | deprecated                                 |
 |                                            |              |                                            |
+| erigon_cumulativeChainTraffic              | -            | not yet implemented                        |
 | erigon_getHeaderByHash                     | Yes          |                                            |
 | erigon_getHeaderByNumber                   | Yes          |                                            |
 | erigon_getBlockByTimestamp                 | -            | not yet implemented                        |
+| erigon_getBalanceChangesInBlock            | -            | not yet implemented                        |
 | erigon_getLogsByHash                       | Yes          |                                            |
 | erigon_forks                               | Yes          |                                            |
 | erigon_issuance                            | Yes          |                                            |
