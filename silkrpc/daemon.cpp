@@ -186,7 +186,10 @@ bool Daemon::validate_settings(const DaemonSettings& settings) {
 ChannelFactory Daemon::make_channel_factory(const DaemonSettings& settings) {
     return [&settings]() {
         grpc::ChannelArguments channel_args;
+        // Allow receive messages up to specified max size
         channel_args.SetMaxReceiveMessageSize(kRpcMaxReceiveMessageSize);
+        // Allow each client to open its own TCP connection to server (sharing one single connection becomes a bottleneck under high load)
+        channel_args.SetInt(GRPC_ARG_USE_LOCAL_SUBCHANNEL_POOL, 1);
         return grpc::CreateCustomChannel(settings.target, grpc::InsecureChannelCredentials(), channel_args);
     };
 }
