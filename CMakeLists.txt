@@ -15,6 +15,7 @@
 ]]
 
 cmake_minimum_required(VERSION 3.16)
+set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE INTERNAL "" FORCE)
 
 # Check that submodules initialization has been done
 if(NOT EXISTS ${CMAKE_SOURCE_DIR}/silkworm/.git)
