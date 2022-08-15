@@ -47,26 +47,26 @@ ErigonRpcApi::ErigonRpcApi(Context& context)
 
 // https://eth.wiki/json-rpc/API#erigon_getBlockByTimestamp
 asio::awaitable<void> ErigonRpcApi::handle_erigon_get_block_by_timestamp(const nlohmann::json& request, nlohmann::json& reply) {
+    // Decode request parameters
+    const auto params = request["params"];
+    if (params.size() != 2) {
+        auto error_msg = "invalid erigon_getBlockByTimestamp params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto block_timestamp = params[0].get<std::string>();
+    const auto full_tx = params[1].get<bool>();
+    SILKRPC_DEBUG << "block_timestamp: " << block_timestamp << " full_tx: " << full_tx << "\n";
+
+    const std::string::size_type begin = block_timestamp.find_first_not_of(" \"");
+    const std::string::size_type end = block_timestamp.find_last_not_of(" \"");
+    const uint64_t timestamp = std::stol(block_timestamp.substr(begin, end - begin + 1), 0, 0);
+
+    // Open a new remote database transaction (no need to close if code throws before the end)
+    auto tx = co_await database_->begin();
+
     try {
-        // Decode request parameters
-        const auto params = request["params"];
-        if (params.size() != 2) {
-            auto error_msg = "invalid erigon_getBlockByTimestamp params: " + params.dump();
-            SILKRPC_ERROR << error_msg << "\n";
-            reply = make_json_error(request["id"], 100, error_msg);
-            co_return;
-        }
-        const auto block_timestamp = params[0].get<std::string>();
-        const auto full_tx = params[1].get<bool>();
-        SILKRPC_DEBUG << "block_timestamp: " << block_timestamp << " full_tx: " << full_tx << "\n";
-
-        const std::string::size_type begin = block_timestamp.find_first_not_of(" \"");
-        const std::string::size_type end = block_timestamp.find_last_not_of(" \"");
-        uint64_t timestamp = std::stol(block_timestamp.substr(begin, end - begin + 1), 0, 0);
-
-        // Open a new remote database transaction (no need to close if code throws before the end)
-        auto tx = co_await database_->begin();
-
         ethdb::TransactionDatabase tx_database{*tx};
 
         // Lookup the first and last block headers
@@ -101,9 +101,6 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_block_by_timestamp(const n
         const Block extended_block{block_with_hash, total_difficulty, full_tx};
 
         reply = make_json_content(request["id"], extended_block);
-
-        // Close remote database transaction, RAII not available with coroutines
-        co_await tx->close();
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -111,6 +108,9 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_block_by_timestamp(const n
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
+
+    // Close remote database transaction, RAII not available with coroutines
+    co_await tx->close();
     co_return;
 }
 
