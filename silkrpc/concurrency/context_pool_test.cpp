@@ -40,7 +40,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
     auto state_cache = std::make_shared<ethdb::kv::CoherentStateCache>();
 
     WaitMode all_wait_modes[] = {
-        WaitMode::blocking, WaitMode::sleeping, /*WaitMode::yielding, WaitMode::spin_wait, WaitMode::busy_spin*/
+        WaitMode::backoff, WaitMode::blocking, WaitMode::sleeping, WaitMode::yielding, WaitMode::spin_wait, WaitMode::busy_spin
     };
     for (auto wait_mode : all_wait_modes) {
         SECTION(std::string("Context::Context wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
