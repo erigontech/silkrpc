@@ -34,6 +34,7 @@ asio::awaitable<std::optional<silkworm::Account>> StateReader::read_account(cons
     if (!encoded) {
         encoded = co_await db_reader_.get_one(db::table::kPlainState, full_view(address));
     }
+    SILKRPC_DEBUG << "StateReader::read_account encoded: " << (encoded ? *encoded : silkworm::Bytes{}) << "\n";
     if (!encoded || encoded->empty()) {
         co_return std::nullopt;
     }
@@ -75,8 +76,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_code(const evm
     if (code_hash == silkworm::kEmptyHash) {
         co_return std::nullopt;
     }
-    auto code{co_await db_reader_.get_one(db::table::kCode, full_view(code_hash))};
-    co_return code;
+    co_return co_await db_reader_.get_one(db::table::kCode, full_view(code_hash));
 }
 
 asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_account(const evmc::address& address, uint64_t block_number) const {
@@ -84,11 +84,13 @@ asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_historical_acc
     SILKRPC_DEBUG << "StateReader::read_historical_account account_history_key: " << account_history_key << "\n";
     const auto kv_pair{co_await db_reader_.get(db::table::kAccountHistory, account_history_key)};
 
+    SILKRPC_DEBUG << "StateReader::read_historical_account kv_pair.key: " << silkworm::to_hex(kv_pair.key) << "\n";
     const auto address_view{full_view(address)};
     if (kv_pair.key.substr(0, silkworm::kAddressLength) != address_view) {
         co_return std::nullopt;
     }
 
+    SILKRPC_DEBUG << "StateReader::read_historical_account kv_pair.value: " << silkworm::to_hex(kv_pair.value) << "\n";
     const auto bitmap{silkworm::db::bitmap::read(kv_pair.value)};
     SILKRPC_DEBUG << "StateReader::read_historical_account bitmap: " << bitmap.toString() << "\n";
 

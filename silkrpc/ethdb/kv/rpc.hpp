@@ -1,5 +1,5 @@
 /*
-   Copyright 2021 The Silkrpc Authors
+   Copyright 2022 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,13 +14,19 @@
    limitations under the License.
 */
 
-#include "awaitables.hpp"
+#ifndef SILKRPC_ETHDB_KV_RPC_HPP_
+#define SILKRPC_ETHDB_KV_RPC_HPP_
 
-#include <catch2/catch.hpp>
+#include <silkrpc/grpc/bidi_streaming_rpc.hpp>
+#include <silkrpc/grpc/server_streaming_rpc.hpp>
+#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 
-namespace silkrpc {
+namespace silkrpc::ethdb::kv {
 
-using Catch::Matchers::Message;
+using TxRpc = BidiStreamingRpc<&remote::KV::StubInterface::PrepareAsyncTx>;
 
-} // namespace silkrpc
+using StateChangesRpc = ServerStreamingRpc<&remote::KV::StubInterface::PrepareAsyncStateChanges>;
 
+} // namespace silkrpc::ethdb::kv
+
+#endif // SILKRPC_ETHDB_KV_RPC_HPP_

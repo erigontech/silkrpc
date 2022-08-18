@@ -43,11 +43,6 @@ commands:
             sudo apt-get update
             sudo apt-get install -y libgmp3-dev
       - run:
-          name: "Install gperftools"
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y google-perftools libgoogle-perftools-dev
-      - run:
           name: "Install mimalloc"
           command: |
             git clone https://github.com/microsoft/mimalloc
@@ -73,6 +68,16 @@ commands:
           name: "Build"
           command: cmake --build ~/build -j
 
+  # libc++ is an alternative standard library needed for coroutines support on Clang
+  # https://libcxx.llvm.org
+  install_libcpp:
+    steps:
+      - run:
+          name: "Install LLVM C++ Standard Library"
+          command: |
+            sudo apt-get update
+            sudo apt -y install libc++-$CLANG_VERSION-dev libc++abi-$CLANG_VERSION-dev
+
   test:
     steps:
       - run:
@@ -81,22 +86,22 @@ commands:
           command: cmd/unit_test
 
 jobs:
-  linux-gcc-10:
+  linux-gcc-11:
     environment:
       BUILD_TYPE: Debug
       TOOLCHAIN_FILE: silkworm/cmake/toolchain/cxx20.cmake
       CLANG_COVERAGE: OFF
     machine:
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2204:2022.04.2
     resource_class: xlarge
     steps:
       - run:
-          name: "Install GCC 10"
+          name: "Install GCC"
           command: |
             sudo apt update
-            sudo apt -y install gcc-10 g++-10
-            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 50
-            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 50
+            sudo apt -y install gcc-11 g++-11
+            sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 50
+            sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 50
             gcc --version
             g++ --version
       - checkout_with_submodules
@@ -104,31 +109,17 @@ jobs:
       - build
       - test
 
-  linux-clang-coverage:
+  linux-clang-13-coverage:
     environment:
+      CLANG_VERSION: 13
       BUILD_TYPE: Debug
       TOOLCHAIN_FILE: cmake/clang-libcxx20-fpic.cmake
       CLANG_COVERAGE: ON
-    machine:
-      image: ubuntu-2004:202101-01
-    resource_class: large
+    docker:
+      - image: ethereum/cpp-build-env:17-clang-13
+    resource_class: xlarge
     steps:
-      - run:
-          name: "Install Clang 10"
-          command: |
-            sudo apt update
-            sudo apt -y install clang-10
-            sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-10 50
-            sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-10 50
-            clang-10 --version
-            clang++-10 --version
-      - run:
-          name: "Install LLVM C++ Standard Library" # for C++ standard headers clang does not have
-          command: |
-            sudo apt update
-            sudo apt -y install apt-utils
-            sudo apt -y install libc++abi-dev
-            sudo apt -y install libc++-dev
+      - install_libcpp
       - checkout_with_submodules
       - build
       - run:
@@ -159,5 +150,5 @@ workflows:
   version: 2
   silkrpc:
     jobs:
-      - linux-gcc-10
-      - linux-clang-coverage
+      - linux-gcc-11
+      - linux-clang-13-coverage

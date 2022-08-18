@@ -1,5 +1,5 @@
-#[[
-   Copyright 2020 The SilkRpc Authors
+/*
+   Copyright 2022 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -12,15 +12,19 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
-]]
+*/
 
-hunter_add_package(abseil)
-hunter_add_package(asio)
-hunter_add_package(asio-grpc)
-hunter_add_package(Catch)
-hunter_add_package(ethash)
-hunter_add_package(gRPC)
-hunter_add_package(GTest)
-hunter_add_package(intx)
-hunter_add_package(nlohmann_json)
-hunter_add_package(Protobuf)
+#include "util.hpp"
+
+#include <catch2/catch.hpp>
+
+#include <silkrpc/common/log.hpp>
+
+namespace silkrpc {
+
+TEST_CASE("print grpc::Status", "[silkrpc][grpc][util]") {
+    CHECK_NOTHROW(null_stream() << grpc::Status::OK);
+    CHECK_NOTHROW(null_stream() << grpc::Status::CANCELLED);
+}
+
+} // namespace silkrpc

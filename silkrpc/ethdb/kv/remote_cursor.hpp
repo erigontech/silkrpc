@@ -17,30 +17,27 @@
 #ifndef SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_
 #define SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_
 
-#include <silkrpc/config.hpp>
-
 #include <memory>
 #include <string>
+#include <utility>
+
+#include <silkrpc/config.hpp>
 
 #include <asio/awaitable.hpp>
 #include <asio/io_context.hpp>
 #include <asio/use_awaitable.hpp>
 
-#include <silkworm/common/util.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
-#include <silkrpc/ethdb/kv/awaitables.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
+#include <silkrpc/ethdb/kv/rpc.hpp>
+#include <silkworm/common/util.hpp>
 
 namespace silkrpc::ethdb::kv {
 
 class RemoteCursor : public CursorDupSort {
 public:
-    explicit RemoteCursor(KvAsioAwaitable<asio::io_context::executor_type>& kv_awaitable)
-    : kv_awaitable_(kv_awaitable), cursor_id_{0} {}
-
-    RemoteCursor(const RemoteCursor&) = delete;
-    RemoteCursor& operator=(const RemoteCursor&) = delete;
+    explicit RemoteCursor(TxRpc& tx_rpc) : tx_rpc_(tx_rpc), cursor_id_{0} {}
 
     uint32_t cursor_id() const override { return cursor_id_; };
 
@@ -59,10 +56,10 @@ public:
     asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) override;
 
 private:
-    KvAsioAwaitable<asio::io_context::executor_type>& kv_awaitable_;
+    TxRpc& tx_rpc_;
     uint32_t cursor_id_;
 };
 
 } // namespace silkrpc::ethdb::kv
 
-#endif  // SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_
+#endif // SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_
