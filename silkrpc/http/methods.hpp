@@ -110,6 +110,7 @@ constexpr const char* k_erigon_forks{"erigon_forks"};
 constexpr const char* k_erigon_issuance{"erigon_issuance"};
 
 constexpr const char* k_parity_getBlockReceipts{"parity_getBlockReceipts"};
+constexpr const char* k_parity_listStorageKeys{"parity_listStorageKeys"};
 
 constexpr const char* k_engine_getPayloadV1{"engine_getPayloadV1"};
 constexpr const char* k_engine_newPayloadV1{"engine_newPayloadV1"};

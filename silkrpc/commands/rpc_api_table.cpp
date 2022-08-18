@@ -140,6 +140,7 @@ void RpcApiTable::add_net_handlers() {
 
 void RpcApiTable::add_parity_handlers() {
     handlers_[http::method::k_parity_getBlockReceipts] = &commands::RpcApi::handle_parity_get_block_receipts;
+    handlers_[http::method::k_parity_listStorageKeys] = &commands::RpcApi::handle_parity_list_storage_keys;
 }
 
 void RpcApiTable::add_erigon_handlers() {
