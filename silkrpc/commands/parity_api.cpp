@@ -16,6 +16,7 @@
 
 #include "parity_api.hpp"
 
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -104,26 +105,22 @@ asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohma
         << " quantity: " << quantity
         << " offset: 0x" << (offset ? silkworm::to_hex(offset.value()) : silkworm::to_hex(silkworm::Bytes{})) << "\n";
 
-    try {
-        auto tx = co_await database_->begin();
+    auto tx = co_await database_->begin();
 
+    try {
         ethdb::TransactionDatabase tx_database{*tx};
         silkrpc::StateReader state_reader{tx_database};
+
         const auto block_number = co_await silkrpc::core::get_block_number(block_id, tx_database);
         SILKRPC_DEBUG << "read account with address: " << silkworm::to_hex(address) << " block number: " << block_number << "\n";
         std::optional<silkworm::Account> account = co_await state_reader.read_account(address, block_number);
-        if (account == std::nullopt) {
-            SILKRPC_ERROR << "account not found\n";
-            reply = make_json_error(request["id"], 100, "no account has been found");
-            co_await tx->close();
-            co_return;
-        }
-        silkworm::Bytes seek_bytes = silkworm::db::storage_prefix(full_view(address), account->incarnation);
+        if (!account) throw std::domain_error{"account not found"};
 
+        silkworm::Bytes seek_bytes = silkworm::db::storage_prefix(full_view(address), account->incarnation);
         const auto cursor = co_await tx->cursor_dup_sort(db::table::kPlainState);
         SILKRPC_TRACE << "ParityRpcApi::handle_parity_list_storage_keys cursor id: " << cursor->cursor_id() << "\n";
-
         silkworm::Bytes seek_val = offset ? offset.value() : silkworm::Bytes{};
+
         std::vector<silkworm::Bytes> keys;
         auto v = co_await cursor->seek_both(seek_bytes, seek_val);
         // We look for keys until we have the quantity we want or the key is invalid/empty
@@ -135,9 +132,8 @@ asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohma
             }
             v = kv_pair.value;
         }
-        reply = make_json_content(reply["id"], keys);
 
-        co_await tx->close(); // RAII not (yet) available with coroutines
+        reply = make_json_content(reply["id"], keys);
     } catch (const std::invalid_argument& iv) {
         SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_content(request["id"], {});
@@ -149,6 +145,7 @@ asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohma
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
 
+    co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
 }
 } // namespace silkrpc::commands
