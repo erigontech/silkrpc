@@ -17,6 +17,7 @@
 #include "estimate_gas_oracle.hpp"
 
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 
 #include <asio/co_spawn.hpp>
@@ -31,6 +32,27 @@
 namespace silkrpc::ego {
 
 using Catch::Matchers::Message;
+
+TEST_CASE("EstimateGasException") {
+    SECTION("EstimateGasException(int64_t, std::string const&)") {
+        const char* kErrorMessage{"insufficient funds for transfer"};
+        const int64_t kErrorCode{-1};
+        EstimateGasException ex{kErrorCode, kErrorMessage};
+        CHECK(ex.error_code() == kErrorCode);
+        CHECK(ex.message() == kErrorMessage);
+        CHECK(std::strcmp(ex.what(), kErrorMessage) == 0);
+    }
+    SECTION("EstimateGasException(int64_t, std::string const&, silkworm::Bytes const&)") {
+        const char* kErrorMessage{"execution failed"};
+        const int64_t kErrorCode{3};
+        const silkworm::Bytes kData{*silkworm::from_hex("0x00")};
+        EstimateGasException ex{kErrorCode, kErrorMessage, kData};
+        CHECK(ex.error_code() == kErrorCode);
+        CHECK(ex.message() == kErrorMessage);
+        CHECK(ex.data() == kData);
+        CHECK(std::strcmp(ex.what(), kErrorMessage) == 0);
+    }
+}
 
 TEST_CASE("estimate gas") {
     asio::thread_pool pool{1};

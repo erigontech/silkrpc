@@ -41,7 +41,7 @@ struct Forks {
         if (!cc) {
             throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Chain config missing"};
         }
-        for (auto& fork_block : cc->fork_blocks) {
+        for (auto& fork_block : cc->evmc_fork_blocks) {
             if (fork_block) {
                 block_numbers.push_back(*fork_block);
             }

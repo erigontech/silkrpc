@@ -61,7 +61,7 @@ std::ostream& operator<<(std::ostream& out, const Transaction& t) {
     out << " transaction_index: " << t.transaction_index;
     out << " type: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(t.type);
     out << " value: " << silkworm::to_hex(silkworm::endian::to_big_compact(t.value));
-
+    out << std::dec;
     return out;
 }
 
@@ -92,7 +92,7 @@ std::ostream& operator<<(std::ostream& out, const silkworm::Transaction& t) {
     } else {
         out << " to: null";
     }
-    out << " type: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(t.type);
+    out << " type: 0x" << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(t.type) << std::dec;
     out << " value: " << silkworm::to_hex(silkworm::endian::to_big_compact(t.value));
 
     return out;

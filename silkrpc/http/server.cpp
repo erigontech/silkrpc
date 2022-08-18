@@ -73,18 +73,18 @@ asio::awaitable<void> Server::run() {
         while (acceptor_.is_open()) {
             auto io_context = context_.io_context();
 
-            SILKRPC_DEBUG << "Server::start accepting using io_context " << io_context << "...\n" << std::flush;
+            SILKRPC_DEBUG << "Server::run accepting using io_context " << io_context << "...\n" << std::flush;
 
             auto new_connection = std::make_shared<Connection>(context_, workers_, handler_table_);
             co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);
             if (!acceptor_.is_open()) {
-                SILKRPC_TRACE << "Server::start returning...\n";
+                SILKRPC_TRACE << "Server::run returning...\n";
                 co_return;
             }
 
             new_connection->socket().set_option(asio::ip::tcp::socket::keep_alive(true));
 
-            SILKRPC_TRACE << "Server::start starting connection for socket: " << &new_connection->socket() << "\n";
+            SILKRPC_TRACE << "Server::run starting connection for socket: " << &new_connection->socket() << "\n";
             auto new_connection_starter = [=]() -> asio::awaitable<void> { co_await new_connection->start(); };
 
             asio::co_spawn(*io_context, new_connection_starter, [&](std::exception_ptr eptr) {
@@ -93,13 +93,13 @@ asio::awaitable<void> Server::run() {
         }
     } catch (const std::system_error& se) {
         if (se.code() != asio::error::operation_aborted) {
-            SILKRPC_ERROR << "Server::start system_error: " << se.what() << "\n" << std::flush;
+            SILKRPC_ERROR << "Server::run system_error: " << se.what() << "\n" << std::flush;
             std::rethrow_exception(std::make_exception_ptr(se));
         } else {
-            SILKRPC_DEBUG << "Server::start operation_aborted: " << se.what() << "\n" << std::flush;
+            SILKRPC_DEBUG << "Server::run operation_aborted: " << se.what() << "\n" << std::flush;
         }
     }
-    SILKRPC_DEBUG << "Server::start exiting...\n" << std::flush;
+    SILKRPC_DEBUG << "Server::run exiting...\n" << std::flush;
 }
 
 void Server::stop() {
