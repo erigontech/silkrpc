@@ -24,12 +24,22 @@
 
 namespace silkrpc::test {
 
-template <typename Api, typename Stub>
-class ApiTestBase : public ContextTestBase {
+template <typename JsonApi>
+class JsonApiTestBase : public ContextTestBase {
   public:
     template <auto method, typename... Args>
     auto run(Args&&... args) {
-        Api api{io_context_.get_executor(), std::move(stub_), grpc_context_};
+        JsonApi api{context_};
+        return spawn_and_wait((api.*method)(std::forward<Args>(args)...));
+    }
+};
+
+template <typename GrpcApi, typename Stub>
+class GrpcApiTestBase : public ContextTestBase {
+  public:
+    template <auto method, typename... Args>
+    auto run(Args&&... args) {
+        GrpcApi api{io_context_.get_executor(), std::move(stub_), grpc_context_};
         return spawn_and_wait((api.*method)(std::forward<Args>(args)...));
     }
 

@@ -158,6 +158,22 @@ asio::awaitable<silkworm::BlockHeader> read_header(const DatabaseReader& reader,
     co_return header;
 }
 
+asio::awaitable<silkworm::BlockHeader> read_current_header(const DatabaseReader& reader) {
+    const auto head_header_hash = co_await read_head_header_hash(reader);
+    co_return co_await read_header_by_hash(reader, head_header_hash);
+}
+
+asio::awaitable<evmc::bytes32> read_head_header_hash(const DatabaseReader& reader) {
+    const silkworm::Bytes kHeadHeaderKey = silkworm::bytes_of_string(db::table::kHeadHeader);
+    const auto value = co_await reader.get_one(db::table::kHeadHeader, kHeadHeaderKey);
+    if (value.empty()) {
+        throw std::invalid_argument{"empty head header hash value in read_head_header_hash"};
+    }
+    const auto head_header_hash{silkworm::to_bytes32(value)};
+    SILKRPC_DEBUG << "head header hash: " << head_header_hash << "\n";
+    co_return head_header_hash;
+}
+
 asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     const auto data = co_await read_body_rlp(reader, block_hash, block_number);
     if (data.empty()) {

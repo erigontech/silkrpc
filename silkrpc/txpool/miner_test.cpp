@@ -44,8 +44,7 @@ using testing::_;
 using evmc::literals::operator""_bytes32;
 using StrictMockMiningStub = testing::StrictMock<::txpool::MockMiningStub>;
 
-struct MinerTest : test::ApiTestBase<Miner, StrictMockMiningStub>{
-};
+using MinerTest = test::GrpcApiTestBase<Miner, StrictMockMiningStub>;
 
 TEST_CASE_METHOD(MinerTest, "Miner::get_work", "[silkrpc][txpool][miner]") {
     test::StrictMockAsyncResponseReader<::txpool::GetWorkReply> reader;
