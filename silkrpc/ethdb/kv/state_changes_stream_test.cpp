@@ -19,9 +19,9 @@
 #include <future>
 #include <system_error>
 
-#include <asio/co_spawn.hpp>
-#include <asio/use_awaitable.hpp>
-#include <asio/io_context.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/use_awaitable.hpp>
+#include <boost/asio/io_context.hpp>
 #include <catch2/catch.hpp>
 
 #include <silkrpc/common/log.hpp>
