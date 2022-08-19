@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include <asio/system_error.hpp>
+#include <boost/system/system_error.hpp>
 #include <catch2/catch.hpp>
 
 #include <silkrpc/test/kv_test_base.hpp>
@@ -60,7 +60,7 @@ TEST_CASE_METHOD(RemoteDatabaseTest, "RemoteDatabase::begin", "[silkrpc][ethdb][
 
         // Execute the test: RemoteDatabase::begin should raise an exception w/ expected gRPC status code
         CHECK_THROWS_MATCHES(spawn_and_wait(remote_db_.begin()),
-            boost::asio::error_code,
+            boost::system::system_error,
             test::exception_has_cancelled_grpc_status_code());
     }
 
@@ -77,7 +77,7 @@ TEST_CASE_METHOD(RemoteDatabaseTest, "RemoteDatabase::begin", "[silkrpc][ethdb][
 
         // Execute the test: RemoteDatabase::begin should raise an exception w/ expected gRPC status code
         CHECK_THROWS_MATCHES(spawn_and_wait(remote_db_.begin()),
-            boost::asio::error_code,
+            boost::system::system_error,
             test::exception_has_cancelled_grpc_status_code());
     }
 }

@@ -18,7 +18,7 @@
 
 namespace silkrpc {
 
-asio::awaitable<std::size_t> binary_search(std::size_t n, BinaryPredicate pred) {
+boost::asio::awaitable<std::size_t> binary_search(std::size_t n, BinaryPredicate pred) {
     std::size_t i{0};
     std::size_t j{n};
     while (j > i) {

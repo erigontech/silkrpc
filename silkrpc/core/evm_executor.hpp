@@ -68,6 +68,7 @@ public:
 
     boost::asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, bool refund = true, bool gas_bailout = false, const Tracers& tracers = {});
     void reset();
+
 private:
     std::optional<std::string> pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0);
     uint64_t refund_gas(const VM& evm, const silkworm::Transaction& txn, uint64_t gas_left);

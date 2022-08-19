@@ -20,7 +20,6 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/use_awaitable.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/log.hpp>

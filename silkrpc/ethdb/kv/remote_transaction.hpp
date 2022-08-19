@@ -25,7 +25,7 @@
 #include <silkrpc/config.hpp>
 
 #include <agrpc/grpc_context.hpp>
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/log.hpp>

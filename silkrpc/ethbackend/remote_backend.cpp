@@ -55,7 +55,7 @@ boost::asio::awaitable<evmc::address> RemoteBackEnd::etherbase() {
     co_return evmc_address;
 }
 
-asio::awaitable<uint64_t> RemoteBackEnd::protocol_version() {
+boost::asio::awaitable<uint64_t> RemoteBackEnd::protocol_version() {
     const auto start_time = clock_time::now();
     UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncProtocolVersion> pv_rpc{*stub_, grpc_context_};
     const auto reply = co_await pv_rpc.finish_on(executor_, ::remote::ProtocolVersionRequest{});

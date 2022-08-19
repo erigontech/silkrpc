@@ -51,7 +51,7 @@ boost::asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::Data
     co_return latest_block_number;
 }
 
-asio::awaitable<bool> is_latest_block_number(const BlockNumberOrHash& bnoh, const core::rawdb::DatabaseReader& reader) {
+boost::asio::awaitable<bool> is_latest_block_number(const BlockNumberOrHash& bnoh, const core::rawdb::DatabaseReader& reader) {
     if (bnoh.is_tag()) {
         co_return bnoh.tag() == core::kLatestBlockId || bnoh.tag() == core::kPendingBlockId;
     } else {

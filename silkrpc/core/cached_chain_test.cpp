@@ -447,7 +447,7 @@ TEST_CASE("read_transaction_by_hash") {
             }
         ));
         EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> {
+            []() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{
                     *silkworm::from_hex("00000000003d0900439816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff"),
                     *silkworm::from_hex("70A5C9D346416f901826581d423Cd5B92d44Ff5a")};

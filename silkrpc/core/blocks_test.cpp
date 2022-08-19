@@ -50,20 +50,20 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
     SECTION("kLatestBlockId") {
         const std::string LATEST_BLOCK_ID = kLatestBlockId;
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")};
             }));
-        auto result = boost::asio::co_spawn(pool, get_block_number(LATEST_BLOCK_ID, db_reader), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_block_number(LATEST_BLOCK_ID, db_reader), boost::asio::use_future);
         CHECK(result.get() == 0x1234567890123456);
     }
 
     SECTION("kPendingBlockId") {
         const std::string PENDING_BLOCK_ID = kPendingBlockId;
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")};
             }));
-        auto result = boost::asio::co_spawn(pool, get_block_number(PENDING_BLOCK_ID, db_reader), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_block_number(PENDING_BLOCK_ID, db_reader), boost::asio::use_future);
         CHECK(result.get() == 0x1234567890123456);
     }
 
@@ -86,10 +86,10 @@ TEST_CASE("get_current_block_number", "[silkrpc][core][blocks]") {
     boost::asio::thread_pool pool{1};
 
     EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kFinishStage))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("0000ddff12121212")};
         }));
-    auto result = boost::asio::co_spawn(pool, get_current_block_number(db_reader), asio::use_future);
+    auto result = boost::asio::co_spawn(pool, get_current_block_number(db_reader), boost::asio::use_future);
     CHECK(result.get() == 0x0000ddff12121212);
 }
 
@@ -99,10 +99,10 @@ TEST_CASE("get_highest_block_number", "[silkrpc][core][blocks]") {
     boost::asio::thread_pool pool{1};
 
     EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kHeadersStage))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("0000ddff12345678")};
         }));
-    auto result = boost::asio::co_spawn(pool, get_highest_block_number(db_reader), asio::use_future);
+    auto result = boost::asio::co_spawn(pool, get_highest_block_number(db_reader), boost::asio::use_future);
     CHECK(result.get() == 0x0000ddff12345678);
 }
 
@@ -112,10 +112,10 @@ TEST_CASE("get_latest_block_number", "[silkrpc][core][blocks]") {
     boost::asio::thread_pool pool{1};
 
     EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("0000ddff12345678")};
         }));
-    auto result = boost::asio::co_spawn(pool, get_latest_block_number(db_reader), asio::use_future);
+    auto result = boost::asio::co_spawn(pool, get_latest_block_number(db_reader), boost::asio::use_future);
     CHECK(result.get() == 0x0000ddff12345678);
 }
 
@@ -126,13 +126,13 @@ TEST_CASE("is_latest_block_number", "[silkrpc][core][blocks]") {
 
     SECTION("tag: latest") {
         BlockNumberOrHash bnoh{"latest"};
-        auto result = boost::asio::co_spawn(pool, is_latest_block_number(bnoh, db_reader), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, is_latest_block_number(bnoh, db_reader), boost::asio::use_future);
         CHECK(result.get());
     }
 
     SECTION("tag: pending") {
         BlockNumberOrHash bnoh{"pending"};
-        auto result = boost::asio::co_spawn(pool, is_latest_block_number(bnoh, db_reader), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, is_latest_block_number(bnoh, db_reader), boost::asio::use_future);
         CHECK(result.get());
     }
 
@@ -140,10 +140,10 @@ TEST_CASE("is_latest_block_number", "[silkrpc][core][blocks]") {
         BlockNumberOrHash bnoh{1'000'000};
         // Mock reader shall be used to read latest block from Execution stage in table SyncStageProgress
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("00000000000F4240")};
             }));
-        auto result = boost::asio::co_spawn(pool, is_latest_block_number(bnoh, db_reader), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, is_latest_block_number(bnoh, db_reader), boost::asio::use_future);
         CHECK(result.get());
     }
 
@@ -151,10 +151,10 @@ TEST_CASE("is_latest_block_number", "[silkrpc][core][blocks]") {
         BlockNumberOrHash bnoh{1'000'000};
         // Mock reader shall be used to read latest block from Execution stage in table SyncStageProgress
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("00000000000F4241")};
             }));
-        auto result = boost::asio::co_spawn(pool, is_latest_block_number(bnoh, db_reader), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, is_latest_block_number(bnoh, db_reader), boost::asio::use_future);
         CHECK(!result.get());
     }
 }

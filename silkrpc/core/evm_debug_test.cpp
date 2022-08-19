@@ -527,7 +527,7 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
     SECTION("Call: no storage") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
-            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
                 co_return kZeroHeader;
             }));
         EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
@@ -882,7 +882,7 @@ TEST_CASE("DebugExecutor::execute call 2") {
                 co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
             }));
         EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
-            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 SILKRPC_LOG << "EXPECT_CALL::get "
                     << " table: " << db::table::kAccountHistory
                     << " key: " << silkworm::to_hex(kAccountHistoryKey3)
@@ -905,7 +905,7 @@ TEST_CASE("DebugExecutor::execute call 2") {
         EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey3},
                                 silkworm::ByteView{kAccountChangeSetSubkey3}))
             .WillOnce(InvokeWithoutArgs(
-                []() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+                []() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
                     SILKRPC_LOG << "EXPECT_CALL::get_both_range "
                         << " table: " << db::table::kPlainAccountChangeSet
                         << " key: " << silkworm::to_hex(kAccountChangeSetKey3)
@@ -1079,7 +1079,7 @@ TEST_CASE("DebugExecutor::execute call with error") {
     EXPECT_CALL(db_reader,
             get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey2},
                             silkworm::ByteView{kAccountChangeSetSubkey2}))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
             SILKRPC_LOG << "NON DOVREBBE SUCCEDERE EXPECT_CALL::get_both_range "
                 << " table: " << db::table::kPlainAccountChangeSet
                 << " key: " << silkworm::to_hex(kAccountChangeSetKey2)
@@ -1282,7 +1282,7 @@ TEST_CASE("DebugExecutor::execute block") {
             co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
         }));
     EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
-        .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             SILKRPC_LOG << "EXPECT_CALL::get "
                 << " table: " << db::table::kAccountHistory
                 << " key: " << silkworm::to_hex(kAccountHistoryKey3)
@@ -1320,7 +1320,7 @@ TEST_CASE("DebugExecutor::execute block") {
             get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey3},
                             silkworm::ByteView{kAccountChangeSetSubkey3}))
         .WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+            []() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
             SILKRPC_LOG << "EXPECT_CALL::get_both_range "
                 << " table: " << db::table::kPlainAccountChangeSet
                 << " key: " << silkworm::to_hex(kAccountChangeSetKey3)

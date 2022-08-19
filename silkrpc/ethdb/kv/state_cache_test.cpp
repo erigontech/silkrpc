@@ -22,9 +22,9 @@
 #include <utility>
 #include <vector>
 
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
@@ -203,9 +203,9 @@ void get_and_check_upsert(CoherentStateCache& cache, Transaction& txn, const evm
     std::unique_ptr<StateView> view = cache.get_view(txn);
     CHECK(view != nullptr);
     if (view) {
-        asio::thread_pool pool{1};
+        boost::asio::thread_pool pool{1};
         const silkworm::Bytes address_key{address.bytes, silkworm::kAddressLength};
-        auto result = asio::co_spawn(pool, view->get(address_key), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, view->get(address_key), boost::asio::use_future);
         const auto value = result.get();
         CHECK(value.has_value());
         if (value) {
@@ -218,10 +218,10 @@ void get_and_check_code(CoherentStateCache& cache, Transaction& txn, silkworm::B
     std::unique_ptr<StateView> view = cache.get_view(txn);
     CHECK(view != nullptr);
     if (view) {
-        asio::thread_pool pool{1};
+        boost::asio::thread_pool pool{1};
         const ethash::hash256 code_hash{silkworm::keccak256(code)};
         const silkworm::Bytes code_hash_key{code_hash.bytes, silkworm::kHashLength};
-        auto result = asio::co_spawn(pool, view->get_code(code_hash_key), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, view->get_code(code_hash_key), boost::asio::use_future);
         const auto value = result.get();
         CHECK(value.has_value());
         if (value) {
@@ -249,7 +249,7 @@ TEST_CASE("CoherentStateCache::CoherentStateCache", "[silkrpc][ethdb][kv][state_
 
 TEST_CASE("CoherentStateCache::get_view returns no view", "[silkrpc][ethdb][kv][state_cache]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
 
     SECTION("no batch") {
         CoherentStateCache cache;
@@ -281,7 +281,7 @@ TEST_CASE("CoherentStateCache::get_view returns no view", "[silkrpc][ethdb][kv][
 TEST_CASE("CoherentStateCache::get_view one view", "[silkrpc][ethdb][kv][state_cache]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     CoherentStateCache cache;
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
 
     SECTION("single upsert change batch => search hit") {
         cache.on_new_block(
@@ -339,7 +339,7 @@ TEST_CASE("CoherentStateCache::get_view one view", "[silkrpc][ethdb][kv][state_c
         CHECK(view != nullptr);
         if (view) {
             const silkworm::Bytes address_key{kTestAddress1.bytes, silkworm::kAddressLength};
-            auto result1 = asio::co_spawn(pool, view->get(address_key), asio::use_future);
+            auto result1 = boost::asio::co_spawn(pool, view->get(address_key), boost::asio::use_future);
             const auto value1 = result1.get();
             CHECK(value1.has_value());
             if (value1) {
@@ -365,7 +365,7 @@ TEST_CASE("CoherentStateCache::get_view one view", "[silkrpc][ethdb][kv][state_c
         CHECK(view != nullptr);
         if (view) {
             const auto storage_key1 = composite_storage_key(kTestAddress1, kTestIncarnation, kTestHashedLocation1.bytes);
-            auto result = asio::co_spawn(pool, view->get(storage_key1), asio::use_future);
+            auto result = boost::asio::co_spawn(pool, view->get(storage_key1), boost::asio::use_future);
             const auto value = result.get();
             CHECK(value.has_value());
             if (value) {
@@ -390,12 +390,12 @@ TEST_CASE("CoherentStateCache::get_view one view", "[silkrpc][ethdb][kv][state_c
         std::unique_ptr<StateView> view = cache.get_view(txn);
         CHECK(view != nullptr);
         if (view) {
-            EXPECT_CALL(*mock_cursor, seek_exact(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+            EXPECT_CALL(*mock_cursor, seek_exact(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{silkworm::Bytes{}, kTestStorageData2};
             }));
 
             const auto storage_key2 = composite_storage_key(kTestAddress1, kTestIncarnation, kTestHashedLocation2.bytes);
-            auto result = asio::co_spawn(pool, view->get(storage_key2), asio::use_future);
+            auto result = boost::asio::co_spawn(pool, view->get(storage_key2), boost::asio::use_future);
             const auto value = result.get();
             CHECK(value.has_value());
             if (value) {
@@ -421,14 +421,14 @@ TEST_CASE("CoherentStateCache::get_view one view", "[silkrpc][ethdb][kv][state_c
         CHECK(view != nullptr);
         if (view) {
             const auto storage_key1 = composite_storage_key(kTestAddress1, kTestIncarnation, kTestHashedLocation1.bytes);
-            auto result1 = asio::co_spawn(pool, view->get(storage_key1), asio::use_future);
+            auto result1 = boost::asio::co_spawn(pool, view->get(storage_key1), boost::asio::use_future);
             const auto value1 = result1.get();
             CHECK(value1.has_value());
             if (value1) {
                 CHECK(*value1 == kTestStorageData1);
             }
             const auto storage_key2 = composite_storage_key(kTestAddress1, kTestIncarnation, kTestHashedLocation2.bytes);
-            auto result2 = asio::co_spawn(pool, view->get(storage_key2), asio::use_future);
+            auto result2 = boost::asio::co_spawn(pool, view->get(storage_key2), boost::asio::use_future);
             const auto value2 = result2.get();
             CHECK(value2.has_value());
             if (value2) {
@@ -455,7 +455,7 @@ TEST_CASE("CoherentStateCache::get_view one view", "[silkrpc][ethdb][kv][state_c
         if (view) {
             const ethash::hash256 code_hash{silkworm::keccak256(kTestCode1)};
             const silkworm::Bytes code_hash_key{code_hash.bytes, silkworm::kHashLength};
-            auto result = asio::co_spawn(pool, view->get_code(code_hash_key), asio::use_future);
+            auto result = boost::asio::co_spawn(pool, view->get_code(code_hash_key), boost::asio::use_future);
             const auto value = result.get();
             CHECK(value.has_value());
             if (value) {

@@ -205,7 +205,7 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
         boost::asio::io_context& io_context = context_pool.next_io_context();
         TraceConfig config{false, false, false};
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-        auto execution_result = boost::asio::co_spawn(io_context, executor.trace_call(block, call, config), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(io_context, executor.trace_call(block, call, config), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -261,8 +261,8 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
 
         TraceConfig config{true, true, true};
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -447,8 +447,8 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
 
         TraceConfig config{false, true, true};
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -570,8 +570,8 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
 
         TraceConfig config{true, false, true};
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -739,8 +739,8 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
 
         TraceConfig config{true, true, false};
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -881,8 +881,8 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
 
         TraceConfig config{false, false, false};
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -1094,9 +1094,9 @@ TEST_CASE("TraceCallExecutor::trace_call 2") {
 
         TraceConfig config{true, true, true};
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-        asio::io_context& io_context = context_pool.next_io_context();
+        boost::asio::io_context& io_context = context_pool.next_io_context();
 
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -1245,7 +1245,7 @@ TEST_CASE("TraceCallExecutor::trace_call with error") {
     static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("020944ed67f28fd50bb8e9")};
 
     EvmTraceMockDatabaseReader db_reader;
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -1363,8 +1363,8 @@ TEST_CASE("TraceCallExecutor::trace_call with error") {
 
     TraceConfig config{true, true, true};
     TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-    asio::io_context& io_context = context_pool.next_io_context();
-    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), asio::use_future);
+    boost::asio::io_context& io_context = context_pool.next_io_context();
+    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_call(block, call, config), boost::asio::use_future);
     auto result = execution_result.get();
 
     context_pool.stop();
@@ -1524,7 +1524,7 @@ TEST_CASE("TraceCallExecutor::trace_block_transactions") {
     static silkworm::Bytes kAccountChangeSetValue3{*silkworm::from_hex("030127080334e1d62a9e3440")};
 
     EvmTraceMockDatabaseReader db_reader;
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -1639,8 +1639,8 @@ TEST_CASE("TraceCallExecutor::trace_block_transactions") {
 
     TraceConfig config{true, true, true};
     TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-    asio::io_context& io_context = context_pool.next_io_context();
-    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_block_transactions(block, config), asio::use_future);
+    boost::asio::io_context& io_context = context_pool.next_io_context();
+    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_block_transactions(block, config), boost::asio::use_future);
     auto result = execution_result.get();
 
     context_pool.stop();
@@ -2092,7 +2092,7 @@ TEST_CASE("TraceCallExecutor::trace_block") {
     static silkworm::Bytes kAccountChangeSetValue3{*silkworm::from_hex("030127080334e1d62a9e3440")};
 
     EvmTraceMockDatabaseReader db_reader;
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -2207,8 +2207,8 @@ TEST_CASE("TraceCallExecutor::trace_block") {
     block_with_hash.block.transactions.push_back(transaction);
 
     TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-    asio::io_context& io_context = context_pool.next_io_context();
-    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_block(block_with_hash), asio::use_future);
+    boost::asio::io_context& io_context = context_pool.next_io_context();
+    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_block(block_with_hash), boost::asio::use_future);
     auto result = execution_result.get();
 
     context_pool.stop();
@@ -2323,7 +2323,7 @@ TEST_CASE("TraceCallExecutor::trace_replayTransaction") {
     static silkworm::Bytes kAccountChangeSetValue3{*silkworm::from_hex("030127080334e1d62a9e3440")};
 
     EvmTraceMockDatabaseReader db_reader;
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -2442,8 +2442,9 @@ TEST_CASE("TraceCallExecutor::trace_replayTransaction") {
 
     SECTION("Call: only vmTrace") {
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_transaction(block_with_hash.block, transaction, {true, false, false}), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(),
+            executor.trace_transaction(block_with_hash.block, transaction, {true, false, false}), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -2762,8 +2763,9 @@ TEST_CASE("TraceCallExecutor::trace_replayTransaction") {
 
     SECTION("Call: only trace") {
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_transaction(block_with_hash.block, transaction, {false, true, false}), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(),
+            executor.trace_transaction(block_with_hash.block, transaction, {false, true, false}), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -2796,8 +2798,9 @@ TEST_CASE("TraceCallExecutor::trace_replayTransaction") {
     }
     SECTION("Call: only stateDiff") {
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_transaction(block_with_hash.block, transaction, {false, false, true}), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(),
+            executor.trace_transaction(block_with_hash.block, transaction, {false, false, true}), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -2857,8 +2860,8 @@ TEST_CASE("TraceCallExecutor::trace_replayTransaction") {
     }
     SECTION("Call: full output") {
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-        asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_transaction(block_with_hash.block, transaction, {true, true, true}), asio::use_future);
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_transaction(block_with_hash.block, transaction, {true, true, true}), boost::asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -3308,7 +3311,7 @@ TEST_CASE("TraceCallExecutor::trace_transaction") {
     static silkworm::Bytes kAccountChangeSetValue3{*silkworm::from_hex("030127080334e1d62a9e3440")};
 
     EvmTraceMockDatabaseReader db_reader;
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
@@ -3426,8 +3429,8 @@ TEST_CASE("TraceCallExecutor::trace_transaction") {
     block_with_hash.block.transactions.push_back(transaction);
 
     TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-    asio::io_context& io_context = context_pool.next_io_context();
-    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_transaction(block_with_hash, transaction), asio::use_future);
+    boost::asio::io_context& io_context = context_pool.next_io_context();
+    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_transaction(block_with_hash, transaction), boost::asio::use_future);
     auto result = execution_result.get();
 
     context_pool.stop();

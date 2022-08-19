@@ -42,7 +42,7 @@ boost::asio::awaitable<uint64_t> get_highest_block_number(const core::rawdb::Dat
 
 boost::asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader);
 
-asio::awaitable<bool> is_latest_block_number(const BlockNumberOrHash& bnoh, const core::rawdb::DatabaseReader& reader);
+boost::asio::awaitable<bool> is_latest_block_number(const BlockNumberOrHash& bnoh, const core::rawdb::DatabaseReader& reader);
 
 }  // namespace silkrpc::core
 

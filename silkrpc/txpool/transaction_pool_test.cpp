@@ -85,7 +85,7 @@ TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::add_transaction", "[silk
 
     SECTION("call add_transaction and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&TransactionPool::add_transaction>(tx_rlp)), boost::asio::error_code);
+        CHECK_THROWS_AS((run<&TransactionPool::add_transaction>(tx_rlp)), boost::system::system_error);
     }
 }
 
@@ -122,7 +122,7 @@ TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::get_transaction", "[silk
 
     SECTION("call get_transaction and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&TransactionPool::get_transaction>(tx_hash)), boost::asio::error_code);
+        CHECK_THROWS_AS((run<&TransactionPool::get_transaction>(tx_hash)), boost::system::system_error);
     }
 }
 
@@ -159,7 +159,7 @@ TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::nonce", "[silkrpc][txpoo
 
     SECTION("call nonce and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&TransactionPool::nonce>(account)), boost::asio::error_code);
+        CHECK_THROWS_AS((run<&TransactionPool::nonce>(account)), boost::system::system_error);
     }
 }
 
@@ -189,7 +189,7 @@ TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::get_status", "[silkrpc][
 
     SECTION("call get_status and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&TransactionPool::get_status>()), boost::asio::error_code);
+        CHECK_THROWS_AS((run<&TransactionPool::get_status>()), boost::system::system_error);
     }
 }
 
@@ -251,7 +251,7 @@ TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::get_transactions", "[sil
 
     SECTION("call get_transactions and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&TransactionPool::get_transactions>()), boost::asio::error_code);
+        CHECK_THROWS_AS((run<&TransactionPool::get_transactions>()), boost::system::system_error);
     }
 }
 

@@ -976,7 +976,7 @@ void IntraBlockStateTracer::on_reward_granted(const silkworm::CallResult& result
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_block(const silkworm::BlockWithHash& block_with_hash) {
+boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_block(const silkworm::BlockWithHash& block_with_hash) {
     std::vector<Trace> traces;
 
     const auto trace_call_results = co_await trace_block_transactions(block_with_hash.block, {false, true, false});
@@ -1022,7 +1022,7 @@ asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_blo
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldState, VM>::trace_block_transactions(const silkworm::Block& block, const TraceConfig& config) {
+boost::asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldState, VM>::trace_block_transactions(const silkworm::Block& block, const TraceConfig& config) {
     auto block_number = block.header.number;
     const auto& transactions = block.transactions;
 

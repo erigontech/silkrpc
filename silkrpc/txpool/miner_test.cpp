@@ -167,7 +167,7 @@ TEST_CASE_METHOD(MinerTest, "Miner::submit_work", "[silkrpc][txpool][miner]") {
         evmc::bytes32 pow_hash{silkworm::kEmptyHash}; // don't care
         evmc::bytes32 digest{silkworm::kEmptyHash}; // don't care
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&Miner::submit_work>(block_nonce, pow_hash, digest)), asio::system_error);
+        CHECK_THROWS_AS((run<&Miner::submit_work>(block_nonce, pow_hash, digest)), boost::system::system_error);
     }
 }
 

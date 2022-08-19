@@ -22,8 +22,8 @@
 #include <memory>
 
 #include <agrpc/grpc_context.hpp>
-#include <asio/io_context.hpp>
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
 
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
@@ -35,21 +35,21 @@ namespace silkrpc::ethbackend {
 
 class RemoteBackEnd final: public BackEnd {
 public:
-    explicit RemoteBackEnd(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context);
+    explicit RemoteBackEnd(boost::asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context);
 
-    explicit RemoteBackEnd(asio::io_context::executor_type executor, std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub,
+    explicit RemoteBackEnd(boost::asio::io_context::executor_type executor, std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub,
         agrpc::GrpcContext& grpc_context);
 
     ~RemoteBackEnd();
 
-    asio::awaitable<evmc::address> etherbase();
-    asio::awaitable<uint64_t> protocol_version();
-    asio::awaitable<uint64_t> net_version();
-    asio::awaitable<std::string> client_version();
-    asio::awaitable<uint64_t> net_peer_count();
-    asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id);
-    asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload);
-    asio::awaitable<ForkchoiceUpdatedReply> engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request);
+    boost::asio::awaitable<evmc::address> etherbase();
+    boost::asio::awaitable<uint64_t> protocol_version();
+    boost::asio::awaitable<uint64_t> net_version();
+    boost::asio::awaitable<std::string> client_version();
+    boost::asio::awaitable<uint64_t> net_peer_count();
+    boost::asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id);
+    boost::asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload);
+    boost::asio::awaitable<ForkchoiceUpdatedReply> engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request);
 
 private:
     evmc::address address_from_H160(const types::H160& h160);
@@ -76,7 +76,7 @@ private:
     PayloadStatus decode_payload_status(const remote::EnginePayloadStatus& payload_status_grpc);
     std::string decode_status_message(const remote::EngineStatus& status);
 
-    asio::io_context::executor_type executor_;
+    boost::asio::io_context::executor_type executor_;
     std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub_;
     agrpc::GrpcContext& grpc_context_;
 };

@@ -855,7 +855,7 @@ TEST_CASE("read_body") {
                     "Dd74564BC9ff247C23f02cFbA1083c805829D981")};
             }
         ));
-        auto result = boost::asio::co_spawn(pool, read_body(db_reader, block_hash, block_number), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, read_body(db_reader, block_hash, block_number), boost::asio::use_future);
         const silkworm::BlockBody body = result.get();
         CHECK(body.transactions.size() == 1);
         if (body.transactions.size() > 0) {
@@ -932,7 +932,7 @@ TEST_CASE("read_senders") {
         const auto block_hash{0x8059c265f40cdb2d3b3245847c21ed154eebf299fd0ff01ee3afded43cdadc45_bytes32};
         const uint64_t block_number{3'529'603};
         EXPECT_CALL(db_reader, get(db::table::kSenders, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> {
+            []() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{
                     *silkworm::from_hex("000000000035db838059c265f40cdb2d3b3245847c21ed154eebf299fd0ff01ee3afded43cdadc45"),
                     *silkworm::from_hex("70A5C9D346416f901826581d423Cd5B92d44Ff5a")};

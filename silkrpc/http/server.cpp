@@ -39,7 +39,7 @@
 
 namespace silkrpc::http {
 
-using reuse_port = asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT>;
+using reuse_port = boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT>;
 
 std::tuple<std::string, std::string> Server::parse_endpoint(const std::string& tcp_end_point) {
     const auto host = tcp_end_point.substr(0, tcp_end_point.find(kAddressPortSeparator));
@@ -76,7 +76,7 @@ boost::asio::awaitable<void> Server::run() {
             SILKRPC_DEBUG << "Server::run accepting using io_context " << io_context << "...\n" << std::flush;
 
             auto new_connection = std::make_shared<Connection>(context_, workers_, handler_table_);
-            co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);
+            co_await acceptor_.async_accept(new_connection->socket(), boost::asio::use_awaitable);
             if (!acceptor_.is_open()) {
                 SILKRPC_TRACE << "Server::run returning...\n";
                 co_return;
@@ -87,7 +87,7 @@ boost::asio::awaitable<void> Server::run() {
             SILKRPC_TRACE << "Server::run starting connection for socket: " << &new_connection->socket() << "\n";
             auto new_connection_starter = [=]() -> boost::asio::awaitable<void> { co_await new_connection->start(); };
 
-            asio::co_spawn(*io_context, new_connection_starter, [&](std::exception_ptr eptr) {
+            boost::asio::co_spawn(*io_context, new_connection_starter, [&](std::exception_ptr eptr) {
                 if (eptr) std::rethrow_exception(eptr);
             });
         }
