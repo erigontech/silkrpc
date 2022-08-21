@@ -236,7 +236,7 @@ void to_json(nlohmann::json& json, const TraceCallResult& result) {
 
 void to_json(nlohmann::json& json, const TraceManyCallResult& result) {
     json = nlohmann::json::array();
-    for (const auto& trace: result.traces) {
+    for (const auto& trace : result.traces) {
         json.push_back(nlohmann::json::value_t::null);
         to_json(json.at(json.size() - 1), trace);
     }
