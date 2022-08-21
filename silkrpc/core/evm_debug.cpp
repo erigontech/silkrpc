@@ -218,7 +218,7 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
 }
 
 void DebugTracer::on_precompiled_run(const evmc_result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept {
-    SILKRPC_DEBUG << "VmTraceTracer::on_precompiled_run:"
+    SILKRPC_DEBUG << "DebugTracer::on_precompiled_run:"
         << " status: " << result.status_code
         << ", gas: " << std::dec << gas
         << "\n";

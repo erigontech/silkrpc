@@ -32,6 +32,7 @@
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/ethdb/tables.hpp>
+#include <silkrpc/test/mock_database_reader.hpp>
 #include <silkrpc/types/transaction.hpp>
 
 namespace silkrpc::trace {
@@ -56,15 +57,6 @@ static silkworm::Bytes kConfigValue{*silkworm::from_hex(
     "797a616e7469756d426c6f636b223a302c22636f6e7374616e74696e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b"
     "223a302c22697374616e62756c426c6f636b223a313536313635312c226265726c696e426c6f636b223a343436303634342c226c6f6e646f6e"
     "426c6f636b223a353036323630352c22636c69717565223a7b22706572696f64223a31352c2265706f6368223a33303030307d7d")};
-
-class EvmTraceMockDatabaseReader : public core::rawdb::DatabaseReader {
-  public:
-    MOCK_CONST_METHOD2(get, asio::awaitable<KeyValue>(const std::string&, const silkworm::ByteView&));
-    MOCK_CONST_METHOD2(get_one, asio::awaitable<silkworm::Bytes>(const std::string&, const silkworm::ByteView&));
-    MOCK_CONST_METHOD3(get_both_range, asio::awaitable<std::optional<silkworm::Bytes>>(const std::string&, const silkworm::ByteView&, const silkworm::ByteView&));
-    MOCK_CONST_METHOD4(walk, asio::awaitable<void>(const std::string&, const silkworm::ByteView&, uint32_t, core::rawdb::Walker));
-    MOCK_CONST_METHOD3(for_prefix, asio::awaitable<void>(const std::string&, const silkworm::ByteView&, core::rawdb::Walker));
-};
 
 TEST_CASE("TraceCallExecutor::trace_call 1") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
@@ -161,7 +153,7 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
     static silkworm::Bytes kPlainStateKey1{*silkworm::from_hex("e0a2bd4258d2768837baa26a28fe71dc079f84c7")};
     static silkworm::Bytes kPlainStateKey2{*silkworm::from_hex("52728289eba496b6080d57d0250a90663a07e556")};
 
-    EvmTraceMockDatabaseReader db_reader;
+    test::MockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -995,7 +987,7 @@ TEST_CASE("TraceCallExecutor::trace_call 2") {
 
     static silkworm::Bytes kPlainStateKey{*silkworm::from_hex("0000000000000000000000000000000000000000")};
 
-    EvmTraceMockDatabaseReader db_reader;
+    test::MockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -1244,7 +1236,7 @@ TEST_CASE("TraceCallExecutor::trace_call with error") {
     static silkworm::Bytes kAccountChangeSetSubkey2{*silkworm::from_hex("0000000000000000000000000000000000000000")};
     static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("020944ed67f28fd50bb8e9")};
 
-    EvmTraceMockDatabaseReader db_reader;
+    test::MockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -1523,7 +1515,7 @@ TEST_CASE("TraceCallExecutor::trace_block_transactions") {
     static silkworm::Bytes kAccountChangeSetSubkey3{*silkworm::from_hex("daae090d53f9ed9e2e1fd25258c01bac4dd6d1c5")};
     static silkworm::Bytes kAccountChangeSetValue3{*silkworm::from_hex("030127080334e1d62a9e3440")};
 
-    EvmTraceMockDatabaseReader db_reader;
+    test::MockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -2091,7 +2083,7 @@ TEST_CASE("TraceCallExecutor::trace_block") {
     static silkworm::Bytes kAccountChangeSetSubkey3{*silkworm::from_hex("daae090d53f9ed9e2e1fd25258c01bac4dd6d1c5")};
     static silkworm::Bytes kAccountChangeSetValue3{*silkworm::from_hex("030127080334e1d62a9e3440")};
 
-    EvmTraceMockDatabaseReader db_reader;
+    test::MockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -2322,7 +2314,7 @@ TEST_CASE("TraceCallExecutor::trace_replayTransaction") {
     static silkworm::Bytes kAccountChangeSetSubkey3{*silkworm::from_hex("daae090d53f9ed9e2e1fd25258c01bac4dd6d1c5")};
     static silkworm::Bytes kAccountChangeSetValue3{*silkworm::from_hex("030127080334e1d62a9e3440")};
 
-    EvmTraceMockDatabaseReader db_reader;
+    test::MockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
@@ -3307,7 +3299,7 @@ TEST_CASE("TraceCallExecutor::trace_transaction") {
     static silkworm::Bytes kAccountChangeSetSubkey3{*silkworm::from_hex("daae090d53f9ed9e2e1fd25258c01bac4dd6d1c5")};
     static silkworm::Bytes kAccountChangeSetValue3{*silkworm::from_hex("030127080334e1d62a9e3440")};
 
-    EvmTraceMockDatabaseReader db_reader;
+    test::MockDatabaseReader db_reader;
     asio::thread_pool workers{1};
 
     ChannelFactory channel_factory = []() {
