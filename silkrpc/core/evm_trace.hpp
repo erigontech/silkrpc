@@ -53,6 +53,13 @@ struct TraceConfig {
 
 void from_json(const nlohmann::json& json, TraceConfig& tc);
 
+struct TraceCall {
+    silkrpc::Call call;
+    TraceConfig trace_config;
+};
+
+void from_json(const nlohmann::json& json, TraceCall& tc);
+
 std::string get_op_name(const char* const* names, std::uint8_t opcode);
 std::string to_string(intx::uint256 value);
 std::ostream& operator<<(std::ostream& out, const TraceConfig& tc);
@@ -302,8 +309,14 @@ struct TraceCallResult {
     std::optional<std::string> pre_check_error{std::nullopt};
 };
 
+struct TraceManyCallResult {
+    std::vector<TraceCallTraces> traces;
+    std::optional<std::string> pre_check_error{std::nullopt};
+};
+
 void to_json(nlohmann::json& json, const TraceCallTraces& result);
 void to_json(nlohmann::json& json, const TraceCallResult& result);
+void to_json(nlohmann::json& json, const TraceManyCallResult& result);
 
 class IntraBlockStateTracer : public silkworm::EvmTracer {
 public:
@@ -337,6 +350,7 @@ public:
     asio::awaitable<std::vector<Trace>> trace_block(const silkworm::BlockWithHash& block_with_hash);
     asio::awaitable<std::vector<TraceCallResult>> trace_block_transactions(const silkworm::Block& block, const TraceConfig& config);
     asio::awaitable<TraceCallResult> trace_call(const silkworm::Block& block, const silkrpc::Call& call, const TraceConfig& config);
+    asio::awaitable<TraceManyCallResult> trace_call_many(const silkworm::Block& block, const std::vector<TraceCall>& calls);
     asio::awaitable<TraceCallResult> trace_transaction(const silkworm::Block& block, const silkrpc::Transaction& transaction, const TraceConfig& config) {
         return execute(block.header.number-1, block, transaction, transaction.transaction_index, config);
     }

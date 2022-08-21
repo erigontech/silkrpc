@@ -61,6 +61,13 @@ std::ostream& operator<<(std::ostream& out, const TraceConfig& tc) {
     return out;
 }
 
+void from_json(const nlohmann::json& json, TraceCall& cm) {
+    if (json.is_array()) {
+        cm.call = json.at(0);
+        cm.trace_config = json.at(1);
+    }
+}
+
 void to_json(nlohmann::json& json, const VmTrace& vm_trace) {
     json["code"] = vm_trace.code;
     json["ops"] = vm_trace.ops;
@@ -227,6 +234,14 @@ void to_json(nlohmann::json& json, const TraceCallResult& result) {
     to_json(json, result.traces);
 }
 
+void to_json(nlohmann::json& json, const TraceManyCallResult& result) {
+    json = nlohmann::json::array();
+    for (const auto& trace: result.traces) {
+        json.push_back(nlohmann::json::value_t::null);
+        to_json(json.at(json.size() - 1), trace);
+    }
+}
+
 int get_stack_count(std::uint8_t op_code) {
     int count = 0;
     switch (op_code) {
@@ -308,6 +323,7 @@ void copy_stack(std::uint8_t op_code, const evmone::uint256* stack, std::vector<
     int top = get_stack_count(op_code);
     trace_stack.reserve(top);
     for (int i = top - 1; i >= 0; i--) {
+        const auto str = intx::to_string(stack[-i], 16);
         trace_stack.push_back("0x" + intx::to_string(stack[-i], 16));
     }
 }
@@ -1088,6 +1104,22 @@ asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::trace_call(c
 }
 
 template<typename WorldState, typename VM>
+asio::awaitable<TraceManyCallResult> TraceCallExecutor<WorldState, VM>::trace_call_many(const silkworm::Block& block, const std::vector<TraceCall>& calls) {
+    TraceManyCallResult result;
+    for (auto index{0}; index < calls.size(); index++) {
+        silkrpc::Transaction transaction{calls[index].call.to_transaction()};
+        auto res = co_await execute(block.header.number, block, transaction, index, calls[index].trace_config);
+        if (res.pre_check_error) {
+            result.pre_check_error = "first run for txIndex " + std::to_string(index) + " error: " + res.pre_check_error.value();
+            result.traces.clear();
+            break;
+        }
+        result.traces.push_back(res.traces);
+    }
+    co_return result;
+}
+
+template<typename WorldState, typename VM>
 asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_transaction(const silkworm::BlockWithHash& block_with_hash, const silkrpc::Transaction& transaction) {
     std::vector<Trace> traces;
 
@@ -1133,7 +1165,7 @@ asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std:
     tracers.push_back(tracer);
 
     EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number};
-    for (auto idx = 0; idx < index; idx++) {
+    for (auto idx = 0; idx < transaction.transaction_index; idx++) {
         silkrpc::Transaction txn{block.transactions[idx]};
 
         if (!txn.from) {
