@@ -824,7 +824,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohm
         ethdb::kv::CachedDatabase tx_database{block_number_or_hash, *tx, *state_cache_};
 
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
         const auto latest_block_number = co_await core::get_block_number(core::kLatestBlockId, tx_database);
         SILKRPC_DEBUG << "chain_id: " << chain_id << ", latest_block_number: " << latest_block_number << "\n";
 
@@ -1043,7 +1043,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::jso
         ethdb::kv::CachedDatabase tx_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
 
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
 
         EVMExecutor executor{*context_.io_context(), tx_database, *chain_config_ptr, workers_, block_number};
@@ -1096,7 +1096,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const
 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*block_cache_, tx_database, block_number_or_hash);
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         StateReader state_reader{tx_database};
 
@@ -1193,7 +1193,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohma
 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*block_cache_, tx_database, block_number_or_hash);
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         StateReader state_reader{tx_database};
         auto block_number = block_with_hash.block.header.number + 1;

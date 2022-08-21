@@ -21,6 +21,7 @@
 
 #include <silkworm/core/silkworm/common/endian.hpp>
 #include <silkworm/core/silkworm/trie/hash_builder.hpp>
+#include <silkworm/core/silkworm/trie/nibbles.hpp>
 #include <silkworm/node/silkworm/common/rlp_err.hpp>
 #include <silkworm/node/silkworm/db/bitmap.hpp>
 #include <silkworm/node/silkworm/db/util.hpp>

@@ -498,7 +498,7 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
         << "}\n";
 }
 
-void VmTraceTracer::on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept {
+void VmTraceTracer::on_precompiled_run(const evmc_result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept {
     SILKRPC_DEBUG << "VmTraceTracer::on_precompiled_run:" << " status: " << result.status_code << ", gas: " << std::dec << gas << "\n";
 
     if (vm_trace_.ops.size() > 0) {
@@ -1029,7 +1029,7 @@ boost::asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldStat
     SILKRPC_INFO << "execute: block_number: " << block_number << " #txns: " << transactions.size() << " config: " << config << "\n";
 
     const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
-    const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+    const auto chain_config_ptr = lookup_chain_config(chain_id);
 
     state::RemoteState remote_state{io_context_, database_reader_, block_number-1};
     silkworm::IntraBlockState initial_ibs{remote_state};
@@ -1122,8 +1122,7 @@ boost::asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execu
         << "\n";
 
     const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
-
-    const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+    const auto chain_config_ptr = lookup_chain_config(chain_id);
 
     state::RemoteState remote_state{io_context_, database_reader_, block_number};
     silkworm::IntraBlockState initial_ibs{remote_state};

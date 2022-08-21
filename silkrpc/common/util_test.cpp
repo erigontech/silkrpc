@@ -237,5 +237,18 @@ TEST_CASE("decoding_result_to_string(kUnsupportedTransactionType)", "[silkrpc][c
 TEST_CASE("decoding_result_to_string(kOk)", "[silkrpc][common][util]") {
     CHECK(decoding_result_to_string(silkworm::DecodingResult::kOk) == "unknownError");
 }
+
+TEST_CASE("lookup_chain_config", "[silkrpc][common][util]") {
+    SECTION("lookup known chain") {
+        const auto known_chains{silkworm::get_known_chains_map()};
+        for (const auto& [_, known_chain_id] : known_chains) {
+            CHECK_NOTHROW(lookup_chain_config(known_chain_id) != nullptr);
+        }
+    }
+    SECTION("lookup unknown chain") {
+        CHECK_THROWS_AS(lookup_chain_config(0), std::runtime_error);
+    }
+}
+
 } // namespace silkrpc
 

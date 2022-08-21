@@ -217,8 +217,6 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_storage_range_at(const nl
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
         const auto block_with_hash = co_await core::rawdb::read_block_by_hash(tx_database, block_hash);
         auto block_number = block_with_hash.block.header.number - 1;
 
