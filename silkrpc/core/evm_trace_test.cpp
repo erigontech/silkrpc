@@ -24,7 +24,7 @@
 #include <asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
-
+#include <silkpre/precompile.h>
 #include <silkworm/common/util.hpp>
 
 #include <silkrpc/common/log.hpp>
@@ -57,6 +57,120 @@ static silkworm::Bytes kConfigValue{*silkworm::from_hex(
     "797a616e7469756d426c6f636b223a302c22636f6e7374616e74696e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b"
     "223a302c22697374616e62756c426c6f636b223a313536313635312c226265726c696e426c6f636b223a343436303634342c226c6f6e646f6e"
     "426c6f636b223a353036323630352c22636c69717565223a7b22706572696f64223a31352c2265706f6368223a33303030307d7d")};
+
+TEST_CASE("TraceCallExecutor::trace_call precompiled") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("0a6bb546b9208cfab9e8fa2b9b2c042b18df703000000000009db707")};
+    static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("000000000000000000000000000000000000000900000000009db707")};
+    static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000009db707")};
+
+    static silkworm::Bytes kPlainStateKey1{*silkworm::from_hex("0a6bb546b9208cfab9e8fa2b9b2c042b18df7030")};
+    static silkworm::Bytes kPlainStateKey2{*silkworm::from_hex("0000000000000000000000000000000000000009")};
+    static silkworm::Bytes kPlainStateKey3{*silkworm::from_hex("000000000000000000000000000000000000000")};
+
+    test::MockDatabaseReader db_reader;
+    asio::thread_pool workers{1};
+
+    ChannelFactory channel_factory = []() {
+        return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+    };
+    ContextPool context_pool{1, channel_factory};
+    context_pool.start();
+
+    SECTION("precompiled contract failure") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+                co_return kZeroHeader;
+            }));
+        EXPECT_CALL(db_reader, get(db::table::kConfig, silkworm::ByteView{kConfigKey}))
+            .WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{kConfigKey, kConfigValue};
+            }));
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey1, silkworm::Bytes{}};
+            }));
+        EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey1}))
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+                co_return silkworm::Bytes{};
+            }));
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey2, silkworm::Bytes{}};
+            }));
+        EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey2}))
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+                co_return silkworm::Bytes{};
+            }));
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey2, silkworm::Bytes{}};
+            }));
+        EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey3}))
+            .WillRepeatedly(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+                co_return silkworm::Bytes{};
+            }));
+
+        evmc::address max_precompiled{};
+        max_precompiled.bytes[silkworm::kAddressLength - 1] = SILKPRE_NUMBER_OF_ISTANBUL_CONTRACTS;
+
+        Call call;
+        call.from = 0x0a6bb546b9208cfab9e8fa2b9b2c042b18df7030_address;
+        call.to = max_precompiled;
+        call.gas = 50'000;
+        call.gas_price = 7;
+
+        silkworm::Block block{};
+        block.header.number = 10'336'006;
+
+        asio::io_context& io_context = context_pool.next_io_context();
+        TraceConfig config{true, true, true};
+        TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
+        auto execution_result = asio::co_spawn(io_context, executor.trace_call(block, call, config), asio::use_future);
+        const auto result = execution_result.get();
+
+        context_pool.stop();
+        context_pool.join();
+
+        CHECK(!result.pre_check_error);
+        CHECK(result.traces == R"({
+            "output": "0x",
+            "stateDiff": {
+                "0x0000000000000000000000000000000000000000": {
+                    "balance":{
+                        "+":"0x55730"
+                    },
+                    "code":{
+                        "+":"0x"
+                    },
+                    "nonce":{
+                        "+":"0x0"
+                    },
+                    "storage":{}
+                },
+                "0x0a6bb546b9208cfab9e8fa2b9b2c042b18df7030":{
+                    "balance":{
+                        "+":"0x0"
+                    },
+                    "code":{
+                        "+":"0x"
+                    },
+                    "nonce":{
+                        "+":"0x1"
+                    },
+                    "storage":{}
+                }
+            },
+            "trace": [],
+            "vmTrace": {
+                "code": "0x",
+                "ops": []
+            }
+        })"_json);
+    }
+}
 
 TEST_CASE("TraceCallExecutor::trace_call 1") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
