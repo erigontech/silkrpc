@@ -230,6 +230,7 @@ def main(argv):
         if verbose:
             print("Test iteration: ", test_rep + 1)
         dirs = sorted(os.listdir(json_dir))
+        executed_tests = 0
         global_test_number = 1
         for api_file in dirs:
             # jump result_dir
@@ -253,17 +254,18 @@ def main(argv):
                         # runs only tests on specific api req_test refers all test on specific api
                         if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
                             if verbose:
-                                print(str(global_test_number) + ". " + test_file, end = '')
+                                print(f"{global_test_number:03d}. {test_file}", end = '')
                             run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, verify_with_rpc, dump_output, global_test_number)
+                            executed_tests = executed_tests + 1
                             if req_test != -1 or requested_api != "":
                                 match = 1
                 global_test_number = global_test_number + 1
                 test_number = test_number + 1
 
     if (req_test != -1 or requested_api != "") and match == 0:
-        print ("ERROR: api or testNumber not found")
+        print("ERROR: api or testNumber not found")
     else:
-        print ("Number of executed tests: " + str(global_test_number))
+        print(f"Number of executed tests: {executed_tests}")
 #
 # module as main
 #
