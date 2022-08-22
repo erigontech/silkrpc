@@ -13,7 +13,7 @@
             "jsonrpc":"2.0",
             "error":{
                 "code":-32000,
-                "message":"rlp: unknown tx type prefix"
+                "message":"rlp: unexpected EIP-2178 serialization"
             }
         }
     }
