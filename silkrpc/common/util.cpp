@@ -179,8 +179,16 @@ std::string decoding_result_to_string(silkworm::DecodingResult decode_result) {
             return "rlp: invalid V in signature";
         case silkworm::DecodingResult::kUnsupportedTransactionType:
             return "rlp: unknown tx type prefix";
+        case silkworm::DecodingResult::kInvalidFieldset:
+            return "rlp: invalid field set";
+        case silkworm::DecodingResult::kUnexpectedEip2718Serialization:
+            return "rlp: unexpected EIP-2178 serialization";
+        case silkworm::DecodingResult::kInvalidHashesLength:
+            return "rlp: invalid hashes length";
+        case silkworm::DecodingResult::kInvalidMasksSubsets:
+            return "rlp: invalid masks subsets";
         default:
-            return "unknownError";
+            return "rlp: unknown error [" + std::to_string(static_cast<int>(decode_result)) + "]";
     }
 }
 

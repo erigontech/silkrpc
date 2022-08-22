@@ -234,8 +234,24 @@ TEST_CASE("decoding_result_to_string(kUnsupportedTransactionType)", "[silkrpc][c
     CHECK(decoding_result_to_string(silkworm::DecodingResult::kUnsupportedTransactionType) == "rlp: unknown tx type prefix");
 }
 
+TEST_CASE("decoding_result_to_string(kInvalidFieldset)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidFieldset) == "rlp: invalid field set");
+}
+
+TEST_CASE("decoding_result_to_string(kUnexpectedEip2718Serialization)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kUnexpectedEip2718Serialization) == "rlp: unexpected EIP-2178 serialization");
+}
+
+TEST_CASE("decoding_result_to_string(kInvalidHashesLength)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidHashesLength) == "rlp: invalid hashes length");
+}
+
+TEST_CASE("decoding_result_to_string(kInvalidMasksSubsets)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidMasksSubsets) == "rlp: invalid masks subsets");
+}
+
 TEST_CASE("decoding_result_to_string(kOk)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kOk) == "unknownError");
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kOk) == "rlp: unknown error [0]");
 }
 
 TEST_CASE("lookup_chain_config", "[silkrpc][common][util]") {
