@@ -62,10 +62,8 @@ std::ostream& operator<<(std::ostream& out, const TraceConfig& tc) {
 }
 
 void from_json(const nlohmann::json& json, TraceCall& cm) {
-    if (json.is_array()) {
-        cm.call = json.at(0);
-        cm.trace_config = json.at(1);
-    }
+    cm.call = json.at(0);
+    cm.trace_config = json.at(1);
 }
 
 void to_json(nlohmann::json& json, const VmTrace& vm_trace) {
