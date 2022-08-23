@@ -290,7 +290,6 @@ public:
 private:
     StateDiff& state_diff_;
     StateAddresses& state_addresses_;
-    // silkworm::IntraBlockState& initial_ibs_;
     std::map<evmc::address, std::set<std::string>> diff_storage_;
     std::map<evmc::address, silkworm::ByteView> code_;
     const char* const* opcode_names_ = nullptr;

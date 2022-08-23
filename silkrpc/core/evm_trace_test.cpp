@@ -4617,6 +4617,7 @@ TEST_CASE("TraceConfig") {
         CHECK(config.state_diff == true);
     }
 }
+
 TEST_CASE("TraceCall") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -4647,6 +4648,106 @@ TEST_CASE("TraceCall") {
         CHECK(trace_call.trace_config.trace == true);
         CHECK(trace_call.trace_config.vm_trace == true);
         CHECK(trace_call.trace_config.state_diff == true);
+    }
+}
+
+TEST_CASE("TraceCallTraces: json serialization") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    TraceCallTraces tct;
+    tct.output = "0xdeadbeaf";
+
+    SECTION("with transaction_hash") {
+        tct.transaction_hash = 0xe0d4933284f1254835aac8823535278f0eb9608b137266cf3d3d8df8240bbe48_bytes32;
+        CHECK(tct == R"({
+            "output": "0xdeadbeaf",
+            "stateDiff": null,
+            "trace": [],
+            "transactionHash": "0xe0d4933284f1254835aac8823535278f0eb9608b137266cf3d3d8df8240bbe48",
+            "vmTrace": null
+        })"_json);
+    }
+
+    SECTION("with state_diff") {
+        tct.state_diff = StateDiff{};
+        CHECK(tct == R"({
+            "output": "0xdeadbeaf",
+            "stateDiff": {},
+            "trace": [],
+            "vmTrace": null
+        })"_json);
+    }
+
+    SECTION("with trace") {
+        tct.trace.push_back(Trace{});
+        CHECK(tct == R"({
+            "output": "0xdeadbeaf",
+            "stateDiff": null,
+            "trace": [
+                {
+                "action": {
+                    "from": "0x0000000000000000000000000000000000000000",
+                    "gas": "0x0",
+                    "value": "0x0"
+                },
+                "result": null,
+                "subtraces": 0,
+                "traceAddress": [],
+                "type": ""
+                }
+            ],
+            "vmTrace": null
+        })"_json);
+    }
+
+    SECTION("with vm_trace") {
+        tct.vm_trace = VmTrace{};
+        CHECK(tct == R"({
+            "output": "0xdeadbeaf",
+            "stateDiff": null,
+            "trace": [],
+            "vmTrace": {
+                "code": "0x",
+                "ops": []
+            }
+        })"_json);
+    }
+}
+
+TEST_CASE("TraceCallResult: json serialization") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    TraceCallResult tcr;
+
+    SECTION("with traces") {
+        tcr.traces = TraceCallTraces{};
+        CHECK(tcr == R"({
+            "output": "0x",
+            "stateDiff": null,
+            "trace": [],
+            "vmTrace": null
+        })"_json);
+    }
+}
+
+TEST_CASE("TraceManyCallResult: json serialization") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    TraceManyCallResult tmcr;
+
+    SECTION("with traces") {
+        tmcr.traces.push_back(TraceCallTraces{});
+        CHECK(tmcr == R"([
+            {
+                "output": "0x",
+                "stateDiff": null,
+                "trace": [],
+                "vmTrace": null
+            }
+        ])"_json);
     }
 }
 }  // namespace silkrpc::trace
