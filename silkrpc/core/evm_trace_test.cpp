@@ -1559,7 +1559,7 @@ TEST_CASE("TraceCallExecutor::trace_call with error") {
     })"_json);
 }
 
-TEST_CASE("TraceCallExecutor::trace_callMany") {
+TEST_CASE("TraceCallExecutor::trace_calls") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -1702,7 +1702,7 @@ TEST_CASE("TraceCallExecutor::trace_callMany") {
 
         asio::io_context& io_context = context_pool.next_io_context();
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
-        auto execution_result = asio::co_spawn(io_context, executor.trace_call_many(block, calls), asio::use_future);
+        auto execution_result = asio::co_spawn(io_context, executor.trace_calls(block, calls), asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -1762,7 +1762,7 @@ TEST_CASE("TraceCallExecutor::trace_callMany") {
 
         TraceCallExecutor executor{context_pool.next_io_context(), db_reader, workers};
         asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = asio::co_spawn(io_context.get_executor(), executor.trace_call_many(block, calls), asio::use_future);
+        auto execution_result = asio::co_spawn(io_context.get_executor(), executor.trace_calls(block, calls), asio::use_future);
         auto result = execution_result.get();
 
         context_pool.stop();
@@ -4220,18 +4220,6 @@ TEST_CASE("DiffValue json serialization") {
     }
 }
 
-TEST_CASE("TraceConfig") {
-    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
-    SECTION("dump on stream") {
-        TraceConfig config{true, false, true};
-
-        std::ostringstream os;
-        os << config;
-        CHECK(os.str() == "vmTrace: true Trace: false stateDiff: true");
-    }
-}
-
 TEST_CASE("copy_stack") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -4598,8 +4586,17 @@ TEST_CASE("to_string") {
     }
 }
 
-TEST_CASE("TraceConfig json deserialization") {
-    SECTION("empty") {
+TEST_CASE("TraceConfig") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+    SECTION("dump on stream") {
+        TraceConfig config{true, false, true};
+
+        std::ostringstream os;
+        os << config;
+        CHECK(os.str() == "vmTrace: true Trace: false stateDiff: true");
+    }
+    SECTION("json deserialization: empty") {
         nlohmann::json json = R"([])"_json;
 
         TraceConfig config;
@@ -4609,7 +4606,7 @@ TEST_CASE("TraceConfig json deserialization") {
         CHECK(config.vm_trace == false);
         CHECK(config.state_diff == false);
     }
-    SECTION("full") {
+    SECTION("json deserialization: full") {
         nlohmann::json json = R"(["trace", "vmTrace", "stateDiff"])"_json;
 
         TraceConfig config;
@@ -4618,6 +4615,38 @@ TEST_CASE("TraceConfig json deserialization") {
         CHECK(config.trace == true);
         CHECK(config.vm_trace == true);
         CHECK(config.state_diff == true);
+    }
+}
+TEST_CASE("TraceCall") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("json deserialization") {
+        nlohmann::json json = R"([
+            {
+                "from": "0x8ced5ad0d8da4ec211c17355ed3dbfec4cf0e5b9",
+                "to": "0x5e1f0c9ddbe3cb57b80c933fab5151627d7966fa",
+                "gas": "0x7530",
+                "gasPrice": "0x3b9aca00",
+                "value": "0x2FAF080",
+                "data": "0x01"
+            },
+            ["trace", "vmTrace", "stateDiff"]
+       ])"_json;
+
+        TraceCall trace_call;
+        from_json(json, trace_call);
+
+        CHECK(trace_call.call.from == 0x8ced5ad0d8da4ec211c17355ed3dbfec4cf0e5b9_address);
+        CHECK(trace_call.call.to == 0x5e1f0c9ddbe3cb57b80c933fab5151627d7966fa_address);
+        CHECK(trace_call.call.gas == 0x7530);
+        CHECK(trace_call.call.gas_price == 0x3b9aca00);
+        CHECK(trace_call.call.value == 0x2FAF080);
+        CHECK(trace_call.call.data == *silkworm::from_hex("01"));
+
+        CHECK(trace_call.trace_config.trace == true);
+        CHECK(trace_call.trace_config.vm_trace == true);
+        CHECK(trace_call.trace_config.state_diff == true);
     }
 }
 }  // namespace silkrpc::trace

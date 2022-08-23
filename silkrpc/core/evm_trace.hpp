@@ -350,7 +350,7 @@ public:
     asio::awaitable<std::vector<Trace>> trace_block(const silkworm::BlockWithHash& block_with_hash);
     asio::awaitable<std::vector<TraceCallResult>> trace_block_transactions(const silkworm::Block& block, const TraceConfig& config);
     asio::awaitable<TraceCallResult> trace_call(const silkworm::Block& block, const silkrpc::Call& call, const TraceConfig& config);
-    asio::awaitable<TraceManyCallResult> trace_call_many(const silkworm::Block& block, const std::vector<TraceCall>& calls);
+    asio::awaitable<TraceManyCallResult> trace_calls(const silkworm::Block& block, const std::vector<TraceCall>& calls);
     asio::awaitable<TraceCallResult> trace_transaction(const silkworm::Block& block, const silkrpc::Transaction& transaction, const TraceConfig& config) {
         return execute(block.header.number-1, block, transaction, transaction.transaction_index, config);
     }

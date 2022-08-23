@@ -44,6 +44,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json& reque
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
+
     const auto call = params[0].get<Call>();
     const auto config = params[1].get<trace::TraceConfig>();
     const auto block_number_or_hash = params[2].get<BlockNumberOrHash>();
@@ -99,7 +100,7 @@ asio::awaitable<void> TraceRpcApi::handle_trace_call_many(const nlohmann::json& 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
         trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
-        const auto result = co_await executor.trace_call_many(block_with_hash.block, trace_calls);
+        const auto result = co_await executor.trace_calls(block_with_hash.block, trace_calls);
 
         if (result.pre_check_error) {
             reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
