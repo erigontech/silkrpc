@@ -155,7 +155,6 @@ $ cmd/silkrpcdaemon --help
 silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
 
   Flags from main.cpp:
-    --chaindata (chain data path as string); default: "";
     --http_port (Ethereum JSON RPC API local binding as string <address>:<port>); default: "localhost:8545";
     --engine_port (Engine JSON RPC API local binding as string <address>:<port>); default: "localhost:8550";
     --log_verbosity (logging verbosity level); default: c;
@@ -175,6 +174,6 @@ silkrpcdaemon version: 0.0.7-109+commit.bfe634dd
 
 ## Running Silkrpc with Erigon
 
-Currently Silkrpc is _compatible only with Erigon1 [`stable`](https://github.com/ledgerwatch/erigon/tree/stable)_ version: last integration and performance test sessions has been performed using Erigon1 at [363d9fc](https://github.com/ledgerwatch/erigon/commit/363d9fc9cab7eb4df610091765ccf363f18003f2).
+Currently Silkrpc is _compatible only with Erigon1 [`stable`](https://github.com/ledgerwatch/erigon/tree/stable)_ version: last integration and performance test sessions has been performed using Erigon1 at [363d9fc](https://github.com/ledgerwatch/erigon/commit/363d9fc9cab7eb4df610091765ccf363f18003f2). In order to run Silkrpc with Erigon1, you must install and build Erigon1 following the usage instructions [here](https://github.com/ledgerwatch/erigon/tree/stable#usage).
 
-In order to run Silkrpc with Erigon1, you must install and build Erigon1 following the usage instructions [here](https://github.com/ledgerwatch/erigon/tree/stable#usage). If you launch Silkrpc and Erigon1 using the default settings on the same machine, you won't need to customize gRPC client/server addresses/ports; otherwise, you need to make sure that Silkrpc `target` setting matches Erigon1 `private.api` setting.
+If you launch Silkrpc and Erigon1 using the default settings on the same machine, you won't need to customize gRPC client/server addresses/ports; otherwise, you need to make sure that Silkrpc `target` setting matches Erigon1 `private.api` setting.
