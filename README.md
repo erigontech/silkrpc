@@ -148,20 +148,20 @@ $ cmd/silkrpcdaemon --target <core_service_host_address>:9090
 
 where `<core_service_host_address>` is the hostname or IP address of the Core services to connect to.
 
+## Command-line parameters
+
 You can check all command-line parameters supported by Silkrpc using:
 
 ```
 $ cmd/silkrpcdaemon --help
 silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
 
-  Flags from main.cpp:
+  Flags from silkrpc_daemon.cpp:
     --http_port (Ethereum JSON RPC API local binding as string <address>:<port>); default: "localhost:8545";
-    --engine_port (Engine JSON RPC API local binding as string <address>:<port>); default: "localhost:8550";
     --log_verbosity (logging verbosity level); default: c;
     --num_contexts (number of running I/O contexts as integer); default: number of hardware thread contexts / 3;
     --num_workers (number of worker threads as integer); default: 16;
     --target (Core gRPC service location as string <address>:<port>); default: "localhost:9090";
-    --timeout (gRPC call timeout as integer); default: 10000;
     --wait_mode (I/O scheduler wait mode); default: blocking;
 ```
 
@@ -176,4 +176,6 @@ silkrpcdaemon version: 0.0.7-109+commit.bfe634dd
 
 Currently Silkrpc is _compatible only with Erigon1 [`stable`](https://github.com/ledgerwatch/erigon/tree/stable)_ version: last integration and performance test sessions has been performed using Erigon1 at [363d9fc](https://github.com/ledgerwatch/erigon/commit/363d9fc9cab7eb4df610091765ccf363f18003f2). In order to run Silkrpc with Erigon1, you must install and build Erigon1 following the usage instructions [here](https://github.com/ledgerwatch/erigon/tree/stable#usage).
 
-If you launch Silkrpc and Erigon1 using the default settings on the same machine, you won't need to customize gRPC client/server addresses/ports; otherwise, you need to make sure that Silkrpc `target` setting matches Erigon1 `private.api` setting.
+If you launch Silkrpc and Erigon1 using the default settings on the same machine, you won't need to customize gRPC client/server addresses/ports; otherwise, you need to make sure that Silkrpc `target` setting matches Erigon1 `private.api.addr` setting.
+
+Please note that just the flags described above in the [Command-line parameters](#command-line-parameters) section are actually supported by Silkrpc.
