@@ -24,6 +24,7 @@
 #include <set>
 #include <stack>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include <asio/awaitable.hpp>
@@ -49,8 +50,6 @@ struct TraceConfig {
     bool trace{false};
     bool state_diff{false};
 };
-
-static const TraceConfig DEFAULT_TRACE_CONFIG{false, false, false};
 
 void from_json(const nlohmann::json& json, TraceConfig& tc);
 
@@ -119,7 +118,7 @@ public:
     void on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
             const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
-    void on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override;
+    void on_precompiled_run(const evmc_result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
 
 private:
@@ -142,6 +141,14 @@ struct TraceAction {
     intx::uint256 value{0};
 };
 
+struct RewardAction {
+    evmc::address author;
+    std::string reward_type;
+    intx::uint256 value{0};
+};
+
+using Action = std::variant<TraceAction, RewardAction>;
+
 struct TraceResult {
     std::optional<evmc::address> address;
     std::optional<silkworm::Bytes> code;
@@ -150,15 +157,20 @@ struct TraceResult {
 };
 
 struct Trace {
-    TraceAction trace_action;
+    Action action;
     std::optional<TraceResult> trace_result;
     std::int32_t sub_traces{0};
     std::vector<std::uint32_t> trace_address;
     std::optional<std::string> error;
     std::string type;
+    std::optional<evmc::bytes32> block_hash;
+    std::optional<std::uint64_t> block_number;
+    std::optional<evmc::bytes32> transaction_hash;
+    std::optional<std::uint32_t> transaction_position;
 };
 
-void to_json(nlohmann::json& json, const TraceAction& trace_action);
+void to_json(nlohmann::json& json, const TraceAction& action);
+void to_json(nlohmann::json& json, const RewardAction& action);
 void to_json(nlohmann::json& json, const TraceResult& trace_result);
 void to_json(nlohmann::json& json, const Trace& trace);
 
@@ -185,7 +197,7 @@ public:
     void on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
             const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
-    void on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
+    void on_precompiled_run(const evmc_result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
     void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
 
 private:
@@ -265,7 +277,7 @@ public:
     void on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
             const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
-    void on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
+    void on_precompiled_run(const evmc_result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
     void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
 
 private:
@@ -305,7 +317,7 @@ public:
     void on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
             const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
-    void on_precompiled_run(const evmc::result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
+    void on_precompiled_run(const evmc_result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
     void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
 
 private:
@@ -315,26 +327,28 @@ private:
 template<typename WorldState = silkworm::IntraBlockState, typename VM = silkworm::EVM>
 class TraceCallExecutor {
 public:
-    explicit TraceCallExecutor(asio::io_context& io_context, const core::rawdb::DatabaseReader& database_reader, asio::thread_pool& workers, const TraceConfig& config = DEFAULT_TRACE_CONFIG)
-    : io_context_(io_context), database_reader_(database_reader), workers_{workers}, config_{config} {}
+    explicit TraceCallExecutor(asio::io_context& io_context, const core::rawdb::DatabaseReader& database_reader, asio::thread_pool& workers)
+    : io_context_(io_context), database_reader_(database_reader), workers_{workers} {}
     virtual ~TraceCallExecutor() {}
 
     TraceCallExecutor(const TraceCallExecutor&) = delete;
     TraceCallExecutor& operator=(const TraceCallExecutor&) = delete;
 
-    asio::awaitable<std::vector<TraceCallResult>> execute(const silkworm::Block& block);
-    asio::awaitable<TraceCallResult> execute(const silkworm::Block& block, const silkrpc::Call& call);
-    asio::awaitable<TraceCallResult> execute(const silkworm::Block& block, const silkrpc::Transaction& transaction) {
-        return execute(block.header.number-1, block, transaction, transaction.transaction_index);
+    asio::awaitable<std::vector<Trace>> trace_block(const silkworm::BlockWithHash& block_with_hash);
+    asio::awaitable<std::vector<TraceCallResult>> trace_block_transactions(const silkworm::Block& block, const TraceConfig& config);
+    asio::awaitable<TraceCallResult> trace_call(const silkworm::Block& block, const silkrpc::Call& call, const TraceConfig& config);
+    asio::awaitable<TraceCallResult> trace_transaction(const silkworm::Block& block, const silkrpc::Transaction& transaction, const TraceConfig& config) {
+        return execute(block.header.number-1, block, transaction, transaction.transaction_index, config);
     }
+    asio::awaitable<std::vector<Trace>> trace_transaction(const silkworm::BlockWithHash& block, const silkrpc::Transaction& transaction);
 
 private:
-    asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block, const silkrpc::Transaction& transaction, std::int32_t = -1);
+    asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block,
+        const silkrpc::Transaction& transaction, std::int32_t index, const TraceConfig& config);
 
     asio::io_context& io_context_;
     const core::rawdb::DatabaseReader& database_reader_;
     asio::thread_pool& workers_;
-    const TraceConfig& config_;
 };
 } // namespace silkrpc::trace
 

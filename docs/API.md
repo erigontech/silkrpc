@@ -94,10 +94,10 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | trace_rawTransaction                       | -            | not yet implemented                        |
 | trace_replayBlockTransactions              | Yes          |                                            |
 | trace_replayTransaction                    | Yes          |                                            |
-| trace_block                                | -            | not yet implemented                        |
+| trace_block                                | Yes          |                                            |
 | trace_filter                               | -            | not yet implemented                        |
-| trace_get                                  | -            | not yet implemented                        |
-| trace_transaction                          | -            | not yet implemented                        |
+| trace_get                                  | Yes          |                                            |
+| trace_transaction                          | Yes          |                                            |
 |                                            |              |                                            |
 | txpool_content                             | Yes          |                                            |
 | txpool_status                              | Yes          |                                            |
@@ -123,9 +123,11 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | shh_getFilterChanges                       | No           | deprecated                                 |
 | shh_getMessages                            | No           | deprecated                                 |
 |                                            |              |                                            |
+| erigon_cumulativeChainTraffic              | -            | not yet implemented                        |
 | erigon_getHeaderByHash                     | Yes          |                                            |
 | erigon_getHeaderByNumber                   | Yes          |                                            |
-| erigon_getBlockByTimestamp                 | -            | not yet implemented                        |
+| erigon_getBlockByTimestamp                 | Yes          |                                            |
+| erigon_getBalanceChangesInBlock            | -            | not yet implemented                        |
 | erigon_getLogsByHash                       | Yes          |                                            |
 | erigon_forks                               | Yes          |                                            |
 | erigon_issuance                            | Yes          |                                            |

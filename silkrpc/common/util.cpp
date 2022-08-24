@@ -179,9 +179,24 @@ std::string decoding_result_to_string(silkworm::DecodingResult decode_result) {
             return "rlp: invalid V in signature";
         case silkworm::DecodingResult::kUnsupportedTransactionType:
             return "rlp: unknown tx type prefix";
+        case silkworm::DecodingResult::kInvalidFieldset:
+            return "rlp: invalid field set";
+        case silkworm::DecodingResult::kUnexpectedEip2718Serialization:
+            return "rlp: unexpected EIP-2178 serialization";
+        case silkworm::DecodingResult::kInvalidHashesLength:
+            return "rlp: invalid hashes length";
+        case silkworm::DecodingResult::kInvalidMasksSubsets:
+            return "rlp: invalid masks subsets";
         default:
-            return "unknownError";
+            return "rlp: unknown error [" + std::to_string(static_cast<int>(decode_result)) + "]";
     }
+}
+
+const silkworm::ChainConfig* lookup_chain_config(uint64_t chain_id) {
+    // TODO(canepat) we should read chain config from db
+    const auto chain_info = silkworm::lookup_known_chain(chain_id);
+    if (!chain_info) throw std::runtime_error{"unknown chain ID: " + std::to_string(chain_id)};
+    return chain_info->second;
 }
 
 } // namespace silkrpc

@@ -27,6 +27,7 @@
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/types/transaction.hpp>
 
 namespace silkrpc {
@@ -58,7 +59,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("failed if gas_limit < intrisicgas") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -83,7 +84,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("failed if base_fee_per_gas > max_fee_per_gas ") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -110,7 +111,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("failed if  max_priority_fee_per_gas > max_fee_per_gas ") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -138,7 +139,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("failed if transaction cost greater user amount") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -166,7 +167,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("doesn t fail if transaction cost greater user amount && gasBailout == true") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -205,7 +206,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("call returns SUCCESS") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -254,7 +255,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_FAILURE) with short error_data_1") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -278,7 +279,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_FAILURE) with short error_data_2") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -302,7 +303,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_FAILURE) with short error_data_3") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -326,7 +327,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_FAILURE) with short error_data_4") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -350,7 +351,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_FAILURE) with full error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -374,7 +375,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_FAILURE) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -398,7 +399,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_REVERT) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -422,7 +423,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_OUT_OF_GAS) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -446,7 +447,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_INVALID_INSTRUCTION) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -470,7 +471,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_UNDEFINED_INSTRUCTION) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -494,7 +495,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_STACK_OVERFLOW) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -518,7 +519,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_STACK_UNDERFLOW) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -542,7 +543,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_BAD_JUMP_DESTINATION) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -566,7 +567,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_INVALID_MEMORY_ACCESS) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -590,7 +591,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_CALL_DEPTH_EXCEEDED) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -614,7 +615,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_STATIC_MODE_VIOLATION) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -638,7 +639,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_PRECOMPILE_FAILURE) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
@@ -710,7 +711,7 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(wrong status_code) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};

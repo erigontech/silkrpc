@@ -94,11 +94,12 @@ asio::awaitable<silkrpc::ethdb::SplittedKeyValue> next(silkrpc::ethdb::SplitCurs
     co_return skv;
 }
 
-asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_number, const evmc::address& start_address,
+asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_number, const evmc::address& address,
         const evmc::bytes32& location_hash, uint64_t incarnation, AccountCollector& collector) {
-    auto ps_cursor = co_await transaction_.cursor(db::table::kPlainState);
+    SILKRPC_TRACE << "block_number=" << block_number << " address=" << address << " START\n";
 
-    auto ps_key{make_key(start_address, incarnation, location_hash)};
+    auto ps_cursor = co_await transaction_.cursor(db::table::kPlainState);
+    auto ps_key{make_key(address, incarnation, location_hash)};
     silkrpc::ethdb::SplitCursor ps_split_cursor{*ps_cursor,
         ps_key,
         8 * (silkworm::kAddressLength + 8),
@@ -106,8 +107,8 @@ asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_number, con
         silkworm::kAddressLength + 8,
         silkworm::kAddressLength + 8 + silkworm::kHashLength};
 
-    auto sh_key{make_key(start_address, location_hash)};
     auto sh_cursor = co_await transaction_.cursor(db::table::kStorageHistory);
+    auto sh_key{make_key(address, location_hash)};
     silkrpc::ethdb::SplitCursor sh_split_cursor{*sh_cursor,
         sh_key,
         8 * silkworm::kAddressLength,
@@ -146,7 +147,7 @@ asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_number, con
             const auto bitmap = silkworm::db::bitmap::read(sh_skv.value);
             const auto found = silkworm::db::bitmap::seek(bitmap, block_number);
             if (found) {
-                auto dup_key{silkworm::db::storage_change_key(found.value(), start_address, incarnation)};
+                auto dup_key{silkworm::db::storage_change_key(found.value(), address, incarnation)};
 
                 auto data = co_await cs_cursor->seek_both(dup_key, h_loc);
                 if (data.length() > silkworm::kHashLength) { // Skip deleted entries
@@ -170,7 +171,7 @@ asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_number, con
             }
         }
     }
-
+    SILKRPC_TRACE << "block_number=" << block_number << " address=" << address << " END\n";
     co_return;
 }
 

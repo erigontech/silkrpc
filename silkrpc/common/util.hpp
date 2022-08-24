@@ -30,6 +30,7 @@
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/transaction.hpp>
 #include <silkworm/core/silkworm/types/account.hpp>
+#include <silkworm/core/silkworm/chain/config.hpp>
 #include <silkworm/core/silkworm/types/bloom.hpp>
 
 namespace silkrpc {
@@ -48,9 +49,13 @@ inline bool operator==(const KeyValue& lhs, const KeyValue& rhs) {
 }
 
 std::string base64_encode(const uint8_t* bytes_to_encode, size_t len, bool url);
+
 std::string to_dec(intx::uint256 number);
+
 bool check_tx_fee_less_cap(float cap, intx::uint256 max_fee_per_gas, uint64_t gas_limit);
+
 bool is_replay_protected(const silkworm::Transaction& txn);
+
 std::string decoding_result_to_string(silkworm::DecodingResult decode_result);
 
 template <unsigned N>
@@ -66,6 +71,8 @@ inline silkworm::ByteView full_view(const silkworm::Bloom& bloom) { return {bloo
 
 inline silkworm::ByteView full_view(const ethash::hash256& hash) { return {hash.bytes, silkworm::kHashLength}; }
 
+const silkworm::ChainConfig* lookup_chain_config(uint64_t chain_id);
+
 } // namespace silkrpc
 
 namespace silkworm {
@@ -77,8 +84,6 @@ inline ByteView byte_view_of_string(const std::string& s) {
 inline Bytes bytes_of_string(const std::string& s) {
     return Bytes(s.begin(), s.end());
 }
-
-//inline ByteView full_view(const ethash::hash256& hash) { return {hash.bytes, kHashLength}; }
 
 inline evmc::bytes32 bytes32_from_hex(const std::string& s) {
     const auto b32_bytes = silkworm::from_hex(s);

@@ -28,6 +28,7 @@
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/database.hpp>
+#include <silkrpc/ethdb/kv/state_cache.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 
@@ -35,13 +36,14 @@ namespace silkrpc::commands {
 
 class ErigonRpcApi {
 public:
-    explicit ErigonRpcApi(Context& context) : database_(context.database()), context_(context) {}
+    explicit ErigonRpcApi(Context& context);
     virtual ~ErigonRpcApi() {}
 
     ErigonRpcApi(const ErigonRpcApi&) = delete;
     ErigonRpcApi& operator=(const ErigonRpcApi&) = delete;
 
 protected:
+    asio::awaitable<void> handle_erigon_get_block_by_timestamp(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_erigon_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_erigon_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply);
     asio::awaitable<void> handle_erigon_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply);
@@ -50,6 +52,8 @@ protected:
 
 private:
     Context& context_;
+    std::shared_ptr<BlockCache>& block_cache_;
+    std::shared_ptr<ethdb::kv::StateCache>& state_cache_;
     std::unique_ptr<ethdb::Database>& database_;
 
     friend class silkrpc::http::RequestHandler;

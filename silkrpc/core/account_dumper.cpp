@@ -21,6 +21,7 @@
 
 #include <silkworm/core/silkworm/common/endian.hpp>
 #include <silkworm/core/silkworm/trie/hash_builder.hpp>
+#include <silkworm/core/silkworm/trie/nibbles.hpp>
 #include <silkworm/node/silkworm/common/rlp_err.hpp>
 #include <silkworm/node/silkworm/db/bitmap.hpp>
 #include <silkworm/node/silkworm/db/util.hpp>
@@ -113,6 +114,7 @@ asio::awaitable<void> AccountDumper::load_accounts(ethdb::TransactionDatabase& t
 }
 
 asio::awaitable<void> AccountDumper::load_storage(uint64_t block_number, DumpAccounts& dump_accounts) {
+    SILKRPC_TRACE << "block_number " << block_number << " START\n";
     StorageWalker storage_walker{transaction_};
     evmc::bytes32 start_location{};
     for (AccountsMap::iterator itr = dump_accounts.accounts.begin(); itr != dump_accounts.accounts.end(); itr++) {
@@ -146,7 +148,7 @@ asio::awaitable<void> AccountDumper::load_storage(uint64_t block_number, DumpAcc
 
         account.root = hb.root_hash();
     }
-
+    SILKRPC_TRACE << "block_number " << block_number << " END\n";
     co_return;
 }
 
