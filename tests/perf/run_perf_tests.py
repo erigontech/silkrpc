@@ -6,6 +6,7 @@
 
 import os
 import csv
+import pathlib
 import sys
 import getopt
 from datetime import datetime
@@ -34,27 +35,28 @@ VEGETA_PATTERN_RPCDAEMON_BASE = "/tmp/" + VEGETA_PATTERN_DIRNAME + "/vegeta_erig
 def usage(argv):
     """ Print script usage
     """
-    print("Usage: " + argv[0] + " -h -p vegetaPatternTarFile -c daemonOnCore  -t erigonAddress -g erigonBuildDir -s silkrpcBuildDir -r testRepetitions - t testSequence")
+    print("Usage: " + argv[0] + " [options]")
     print("")
     print("Launch an automated performance test sequence on Silkrpc and RPCDaemon using Vegeta")
     print("")
     print("-h                      print this help")
     print("-D                      perf command")
-    print("-z                      do not start server                                                                    ")
-    print("-y                      test type (i.e eth_call, eth_logs, ...)                                                [default: " + DEFAULT_TEST_TYPE + "]")
-    print("-d rpcDaemonAddress     address of daemon eg (10.1.1.20)                                                       [default: " + DEFAULT_RPCDAEMON_ADDRESS +"]")
+    print("-z                      do not start server")
+    print("-u                      save test report in Git repo")
+    print("-y testType             test type: eth_call, eth_getLogs                                                       [default: " + DEFAULT_TEST_TYPE + "]")
+    print("-m targetMode           target mode: silkrpc(1), rpcdaemon(2), both(3)                                         [default: " + str(DEFAULT_TEST_MODE) + "]")
+    print("-d rpcDaemonAddress     Erigon: address of RPCDaemon (e.g. 10.1.1.20)                                          [default: " + DEFAULT_RPCDAEMON_ADDRESS +"]")
     print("-p vegetaPatternTarFile path to the request file for Vegeta attack                                             [default: " + DEFAULT_VEGETA_PATTERN_TAR_FILE +"]")
     print("-c daemonVegetaOnCore   cpu list in taskset format for daemon & vegeta (e.g. 0-1:2-3 or 0-2:3-4 or 0,2:3,4...) [default: " + DEFAULT_DAEMON_VEGETA_ON_CORE +"]")
-    print("-a erigonAddress        address of ERIGON Core component as <address>:<port> (e.g. localhost:9090)             [default: " + DEFAULT_ERIGON_ADDRESS + "]")
-    print("-g erigonBuildDir       path to ERIGON build folder (e.g. ../../../erigon/build)                               [default: " + DEFAULT_ERIGON_BUILD_DIR + "]")
-    print("-s silkrpcBuildDir      path to Silkrpc build folder (e.g. ../../build_gcc_release/)                           [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
+    print("-a erigonAddress        Erigon: address of Core component as <address>:<port> (e.g. localhost:9090)            [default: " + DEFAULT_ERIGON_ADDRESS + "]")
+    print("-g erigonBuildDir       Erigon: path to build folder (e.g. ../../../erigon/build)                              [default: " + DEFAULT_ERIGON_BUILD_DIR + "]")
+    print("-s silkrpcBuildDir      Silkrpc: path to build folder (e.g. ../../build_gcc_release/)                          [default: " + DEFAULT_SILKRPC_BUILD_DIR + "]")
     print("-r testRepetitions      number of repetitions for each element in test sequence (e.g. 10)                      [default: " + str(DEFAULT_REPETITIONS) + "]")
     print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10)       [default: " + DEFAULT_TEST_SEQUENCE + "]")
-    print("-i                      wait mode                                                                              [default: " + DEFAULT_WAIT_MODE + "]")
-    print("-n numContexts          number of Silkrpc execution contexts (i.e. 1+1 asio+grpc threads)                      [default: " + DEFAULT_SILKRPC_NUM_CONTEXTS + "]")
-    print("-m mode                 tests type silkrpc(1), rpcdaemon(2) and both (3) (i.e. 3)                              [default: " + str(DEFAULT_TEST_MODE) + "]")
-    print("-w                      waiting time                                                                           [default: " + DEFAULT_WAITING_TIME + "]")
-    print("-o                      workers                                                                                [default: " + DEFAULT_WORKERS + "]")
+    print("-i idleStrategy         Silkrpc: idle strategy for execution contexts                                          [default: " + DEFAULT_WAIT_MODE + "]")
+    print("-n numContexts          Silkrpc: number of execution contexts (threading based on idle strategy)               [default: " + DEFAULT_SILKRPC_NUM_CONTEXTS + "]")
+    print("-w testWaitInterval     time interval between successive test iterations in sec                                [default: " + DEFAULT_WAITING_TIME + "]")
+    print("-o workerThreads        Silkrpc: number of worker threads                                                      [default: " + DEFAULT_WORKERS + "]")
     sys.exit(-1)
 
 
@@ -81,6 +83,7 @@ class Config:
         self.workers = DEFAULT_WORKERS
         self.start_server = "1"
         self.wait_mode = DEFAULT_WAIT_MODE
+        self.versioned_test_report = False
 
         self.__parse_args(argv)
 
@@ -132,6 +135,8 @@ class Config:
                     self.test_sequence = optarg
                 elif option == "-z":
                     self.start_server = "0"
+                elif option == "-u":
+                    self.versioned_test_report = True
                 elif option == "-w":
                     self.waiting_time = optarg
                 elif option == "-y":
@@ -193,11 +198,6 @@ class PerfTest:
             print("Copy failed. Test Aborted!")
             sys.exit(-1)
 
-        #file_path = self.config.vegeta_pattern_tar_file
-        #tokenize_path = file_path.split('/')
-        #n_subdir = len(tokenize_path)
-        #file_name = tokenize_path[n_subdir-1]
-        #cmd = "cd /tmp; tar xvf " + file_name + " > /dev/null"
         cmd = "cd /tmp; tar xvf " + VEGETA_TAR_FILE_NAME + " > /dev/null"
         print("Extracting vegeta pattern: ", cmd)
         status = os.system(cmd)
@@ -378,8 +378,33 @@ class PerfTest:
         os.system("/bin/rm " + test_report_filename)
 
 
+class Hardware:
+    """ Extract hardware information from the underlying platform. """
+
+    @classmethod
+    def vendor(cls):
+        """ """
+        command = "cat /sys/devices/virtual/dmi/id/sys_vendor"
+        return os.popen(command).readline().replace('\n', '')
+
+    @classmethod
+    def normalized_vendor(cls):
+        """ """
+        return cls.vendor().split(' ')[0].lower()
+
+    @classmethod
+    def product(cls):
+        """ """
+        command = "cat /sys/devices/virtual/dmi/id/product_name"
+        return os.popen(command).readline().replace('\n', '')
+
+    @classmethod
+    def normalized_product(cls):
+        """ """
+        return cls.product().replace(' ', '').lower()
+
 class TestReport:
-    """ This class write the test report
+    """ The Comma-Separated Values (CSV) test report
     """
 
     def __init__(self, config):
@@ -390,13 +415,22 @@ class TestReport:
         self.config = config
 
     def open(self):
-        """ Writes on CVS file the header
-        """
-        csv_filename = "/tmp/" + datetime.today().strftime('%Y-%m-%d-%H:%M:%S')+"_perf.csv"
-        self.csv_file = open(csv_filename, 'w', newline='', encoding='utf8')
+        """ Writes on CSV file the header
+        """""
+        # Build report folder w/ name recalling hw platform and create it if not exists
+        csv_folder = Hardware.normalized_vendor() + '_' + Hardware.normalized_product()
+        if self.config.versioned_test_report:
+            csv_folder_path = self.config.silkrpc_build_dir + '../tests/perf/reports/goerli/' + csv_folder
+        else:
+            csv_folder_path = '/tmp/goerli/' + csv_folder
+        pathlib.Path(csv_folder_path).mkdir(parents=True, exist_ok=True)
+        # Generate unique CSV file name w/ date-time and open it
+        csv_filename = datetime.today().strftime('%Y-%m-%d-%H:%M:%S') + "_perf.csv"
+        csv_filepath = csv_folder_path + '/' + csv_filename
+        self.csv_file = open(csv_filepath, 'w', newline='', encoding='utf8')
         self.writer = csv.writer(self.csv_file)
 
-        print("Creating report file: "+csv_filename+"\n")
+        print("Creating report file: " + csv_filepath + "\n")
 
         command = "sum "+ self.config.vegeta_pattern_tar_file
         checksum = os.popen(command).read().split('\n')
@@ -416,24 +450,38 @@ class TestReport:
         tmp = os.popen(command).readline().replace('\n', '').split(':')[1]
         bogomips = tmp.replace(' ', '')
 
-        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "PC", model[1]])
+        command = "cd " + self.config.silkrpc_build_dir + " && git branch --show-current"
+        silkrpc_branch = os.popen(command).read().replace('\n', '')
+
+        command = "cd " + self.config.erigon_builddir + " && git branch --show-current"
+        erigon_branch = os.popen(command).read().replace('\n', '')
+
+        command = "cd " + self.config.silkrpc_build_dir + " && git rev-parse HEAD"
+        silkrpc_commit = os.popen(command).read().replace('\n', '')
+
+        command = "cd " + self.config.erigon_builddir + " && git rev-parse HEAD"
+        erigon_commit = os.popen(command).read().replace('\n', '')
+
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Vendor", Hardware.vendor()])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Product", Hardware.product()])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "CPU", model[1]])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Bogomips", bogomips])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Kernel", kern_vers])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "DaemonVegetaRunOnCore", self.config.daemon_vegeta_on_core])
-        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "TG address", self.config.erigon_addr])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Erigon address", self.config.erigon_addr])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "VegetaFile", self.config.vegeta_pattern_tar_file])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "VegetaChecksum", checksum[0]])
-        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "GccVers", gcc_vers[0]])
-        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "GoVers", go_vers])
-        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "SilkVersion", "master"])
-        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "RpcDaemon/TG", "master"])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "GCC version", gcc_vers[0]])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Go version", go_vers])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Silkrpc version", silkrpc_branch + " " + silkrpc_commit])
+        self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Erigon version", erigon_branch + " " + erigon_commit])
         self.writer.writerow([])
         self.writer.writerow([])
         self.writer.writerow(["Daemon", "TestNo", "TG-Threads", "Qps", "Time", "Min", "Mean", "50", "90", "95", "99", "Max", "Ratio", "Error"])
         self.csv_file.flush()
 
     def write_test_report(self, daemon, test_number, threads, qps_value, time_value, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency, ratio, error):
-        """ Writes on CVS the latency data for one completed test
+        """ Writes on CSV the latency data for one completed test
         """
         self.writer.writerow([daemon, str(test_number), threads, qps_value, time_value, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency, ratio, error])
         self.csv_file.flush()
@@ -462,7 +510,6 @@ def main(argv):
     test_report.open()
 
     current_sequence = str(config.test_sequence).split(',')
-
 
     if config.test_mode in ("1", "3"):
         perf_test.start_silk_daemon(1)
