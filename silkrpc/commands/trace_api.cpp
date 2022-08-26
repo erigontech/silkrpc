@@ -37,13 +37,14 @@ namespace silkrpc::commands {
 
 // https://eth.wiki/json-rpc/API#trace_call
 boost::asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
+    const auto params = request["params"];
     if (params.size() < 3) {
         auto error_msg = "invalid trace_call params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
+
     const auto call = params[0].get<Call>();
     const auto config = params[1].get<trace::TraceConfig>();
     const auto block_number_or_hash = params[2].get<BlockNumberOrHash>();
@@ -79,12 +80,33 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json
 
 // https://eth.wiki/json-rpc/API#trace_callmany
 boost::asio::awaitable<void> TraceRpcApi::handle_trace_call_many(const nlohmann::json& request, nlohmann::json& reply) {
+    const auto params = request["params"];
+    if (params.size() < 2) {
+        auto error_msg = "invalid trace_callMany params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto trace_calls = params[0].get<std::vector<trace::TraceCall>>();
+    const auto block_number_or_hash = params[1].get<BlockNumberOrHash>();
+
+    SILKRPC_INFO << "#trace_calls: " << trace_calls.size() << " block_number_or_hash: " << block_number_or_hash << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::CachedDatabase tx_database{BlockNumberOrHash{0}, *tx, *context_.state_cache()};
+        ethdb::kv::CachedDatabase tx_database{block_number_or_hash, *tx, *context_.state_cache()};
 
-        reply = make_json_error(request["id"], 500, "not yet implemented");
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
+
+        trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+        const auto result = co_await executor.trace_calls(block_with_hash.block, trace_calls);
+
+        if (result.pre_check_error) {
+            reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
+        } else {
+            reply = make_json_content(request["id"], result.traces);
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -119,7 +141,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlo
 
 // https://eth.wiki/json-rpc/API#trace_replayblocktransactions
 boost::asio::awaitable<void> TraceRpcApi::handle_trace_replay_block_transactions(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
+    const auto params = request["params"];
     if (params.size() < 2) {
         auto error_msg = "invalid trace_replayBlockTransactions params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
@@ -155,7 +177,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_replay_block_transactions
 
 // https://eth.wiki/json-rpc/API#trace_replaytransaction
 boost::asio::awaitable<void> TraceRpcApi::handle_trace_replay_transaction(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
+    const auto params = request["params"];
     if (params.size() < 2) {
         auto error_msg = "invalid trace_replayTransaction params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
@@ -200,7 +222,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_replay_transaction(const 
 
 // https://eth.wiki/json-rpc/API#trace_block
 boost::asio::awaitable<void> TraceRpcApi::handle_trace_block(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
+    const auto params = request["params"];
     if (params.size() < 1) {
         auto error_msg = "invalid trace_block params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
@@ -255,7 +277,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_filter(const nlohmann::js
 
 // https://eth.wiki/json-rpc/API#trace_get
 boost::asio::awaitable<void> TraceRpcApi::handle_trace_get(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
+    const auto params = request["params"];
     if (params.size() < 2) {
         auto error_msg = "invalid trace_get params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
@@ -310,7 +332,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_get(const nlohmann::json&
 
 // https://eth.wiki/json-rpc/API#trace_transaction
 boost::asio::awaitable<void> TraceRpcApi::handle_trace_transaction(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
+    const auto params = request["params"];
     if (params.size() < 1) {
         auto error_msg = "invalid trace_transaction params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
