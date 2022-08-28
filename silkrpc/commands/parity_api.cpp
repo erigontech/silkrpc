@@ -39,7 +39,7 @@
 namespace silkrpc::commands {
 
 // https://eth.wiki/json-rpc/API#parity_getblockreceipts
-asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid parity_getBlockReceipts params: " + params.dump();
@@ -82,7 +82,7 @@ asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohm
 }
 
 // TODO(canepat) will raise error until Silkrpc implements Erigon2u1 https://github.com/ledgerwatch/erigon-lib/pull/559
-asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohmann::json& request, nlohmann::json& reply) {
     const auto params = request["params"];
     if (params.size() < 2) {
         auto error_msg = "invalid parity_listStorageKeys params: " + params.dump();

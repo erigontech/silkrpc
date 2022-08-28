@@ -26,11 +26,11 @@ namespace silkrpc::ethdb::kv {
 CachedDatabase::CachedDatabase(const BlockNumberOrHash& block_id, Transaction& txn, kv::StateCache& state_cache)
     : block_id_(block_id), txn_(txn), state_cache_{state_cache}, txn_database_{txn_} {}
 
-asio::awaitable<KeyValue> CachedDatabase::get(const std::string& table, const silkworm::ByteView& key) const {
+boost::asio::awaitable<KeyValue> CachedDatabase::get(const std::string& table, const silkworm::ByteView& key) const {
     co_return co_await txn_database_.get(table, key);
 }
 
-asio::awaitable<silkworm::Bytes> CachedDatabase::get_one(const std::string& table, const silkworm::ByteView& key) const {
+boost::asio::awaitable<silkworm::Bytes> CachedDatabase::get_one(const std::string& table, const silkworm::ByteView& key) const {
     // Check if target block is latest one: use local state cache (if any) for target transaction
     const bool is_latest_block = co_await core::is_latest_block_number(block_id_, txn_database_);
     if (is_latest_block) {
@@ -56,19 +56,19 @@ asio::awaitable<silkworm::Bytes> CachedDatabase::get_one(const std::string& tabl
     co_return co_await txn_database_.get_one(table, key);
 }
 
-asio::awaitable<std::optional<silkworm::Bytes>> CachedDatabase::get_both_range(const std::string& table,
-                                                                               const silkworm::ByteView& key,
-                                                                               const silkworm::ByteView& subkey) const {
+boost::asio::awaitable<std::optional<silkworm::Bytes>> CachedDatabase::get_both_range(const std::string& table,
+                                                                                      const silkworm::ByteView& key,
+                                                                                      const silkworm::ByteView& subkey) const {
     co_return co_await txn_database_.get_both_range(table, key, subkey);
 }
 
-asio::awaitable<void> CachedDatabase::walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits,
-                                           core::rawdb::Walker w) const {
+boost::asio::awaitable<void> CachedDatabase::walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits,
+                                                  core::rawdb::Walker w) const {
     co_await txn_database_.walk(table, start_key, fixed_bits, w);
 }
 
-asio::awaitable<void> CachedDatabase::for_prefix(const std::string& table, const silkworm::ByteView& prefix,
-                                                 core::rawdb::Walker w) const {
+boost::asio::awaitable<void> CachedDatabase::for_prefix(const std::string& table, const silkworm::ByteView& prefix,
+                                                        core::rawdb::Walker w) const {
     co_await txn_database_.for_prefix(table, prefix, w);
 }
 

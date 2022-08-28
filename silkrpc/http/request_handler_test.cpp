@@ -20,9 +20,9 @@
 #include <thread>
 #include <vector>
 
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <silkworm/common/util.hpp>
 
@@ -51,10 +51,10 @@ TEST_CASE("check handle_request  empty content ", "[silkrpc][handle_request]") {
 /*
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
     try {
         silkrpc::http::RequestHandler h{cp.next_context(), workers};
-        auto result{asio::co_spawn(cp.next_io_context(), h.handle_request(req, reply), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), h.handle_request(req, reply), boost::asio::use_future)};
         result.get();
     } catch (...) {
        CHECK(false);
@@ -87,11 +87,11 @@ TEST_CASE("check handle_request no method", "[silkrpc][handle_request]") {
 /*
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
 
     try {
         silkrpc::http::RequestHandler h{cp.next_context(), workers};
-        auto result{asio::co_spawn(cp.next_io_context(), h.handle_request(req, reply), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), h.handle_request(req, reply), boost::asio::use_future)};
         result.get();
     } catch (...) {
        CHECK(false);
@@ -123,11 +123,11 @@ TEST_CASE("check handle_request invalid method", "[silkrpc][handle_request]") {
 /*
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
 
     try {
         silkrpc::http::RequestHandler h{cp.next_context(), workers};
-        auto result{asio::co_spawn(cp.next_io_context(), h.handle_request(req, reply), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), h.handle_request(req, reply), boost::asio::use_future)};
         result.get();
     } catch (...) {
        CHECK(false);
@@ -159,12 +159,12 @@ TEST_CASE("check handle_request method return failed", "[silkrpc][handle_request
 /*
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     auto context_pool_thread = std::thread([&]() { cp.run(); });
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
 
     silkrpc::http::RequestHandler h{cp.next_context(), workers};
     try {
         silkrpc::http::RequestHandler h{cp.next_context(), workers};
-        auto result{asio::co_spawn(cp.next_io_context(), h.handle_request(req, reply), asio::use_future)};
+        auto result{boost::asio::co_spawn(cp.next_io_context(), h.handle_request(req, reply), boost::asio::use_future)};
         result.get();
     } catch (...) {
        CHECK(false);

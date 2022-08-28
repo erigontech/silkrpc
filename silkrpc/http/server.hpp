@@ -29,9 +29,9 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/awaitable.hpp>
-#include <asio/ip/tcp.hpp>
-#include <asio/thread_pool.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/thread_pool.hpp>
 
 #include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/http/request_handler.hpp>
@@ -47,7 +47,7 @@ public:
     Server& operator=(const Server&) = delete;
 
     // Construct the server to listen on the specified local TCP end-point
-    explicit Server(const std::string& end_point, const std::string& api_spec, Context& context, asio::thread_pool& workers);
+    explicit Server(const std::string& end_point, const std::string& api_spec, Context& context, boost::asio::thread_pool& workers);
 
     void start();
 
@@ -56,7 +56,7 @@ public:
 private:
     static std::tuple<std::string, std::string> parse_endpoint(const std::string& tcp_end_point);
 
-    asio::awaitable<void> run();
+    boost::asio::awaitable<void> run();
 
     // The repository of API request handlers
     commands::RpcApiTable handler_table_;
@@ -65,9 +65,9 @@ private:
     Context& context_;
 
     // The acceptor used to listen for incoming TCP connections
-    asio::ip::tcp::acceptor acceptor_;
+    boost::asio::ip::tcp::acceptor acceptor_;
 
-    asio::thread_pool& workers_;
+    boost::asio::thread_pool& workers_;
 };
 
 } // namespace silkrpc::http

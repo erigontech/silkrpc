@@ -23,7 +23,7 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/commands/rpc_api.hpp>
@@ -32,7 +32,7 @@ namespace silkrpc::commands {
 
 class RpcApiTable {
 public:
-    typedef asio::awaitable<void> (RpcApi::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
+    typedef boost::asio::awaitable<void> (RpcApi::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
 
     explicit RpcApiTable(const std::string& api_spec);
 

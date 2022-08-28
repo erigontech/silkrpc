@@ -16,7 +16,7 @@
 
 #include "connection.hpp"
 
-#include <asio/thread_pool.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <catch2/catch.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -34,7 +34,7 @@ TEST_CASE("connection creation", "[silkrpc][http][connection]") {
     SECTION("field initialization") {
         ContextPool context_pool{1, create_channel};
         context_pool.start();
-        asio::thread_pool workers;
+        boost::asio::thread_pool workers;
         // Uncommenting the following lines you got stuck into llvm-cov problem:
         // error: cmd/unit_test: Failed to load coverage: Malformed coverage data
         /*

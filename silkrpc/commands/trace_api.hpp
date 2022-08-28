@@ -21,9 +21,9 @@
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
-#include <asio/awaitable.hpp>
-#include <asio/io_context.hpp>
-#include <asio/thread_pool.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/concurrency/context_pool.hpp>
@@ -38,7 +38,7 @@ namespace silkrpc::commands {
 
 class TraceRpcApi {
 public:
-    explicit TraceRpcApi(Context& context, asio::thread_pool& workers)
+    explicit TraceRpcApi(Context& context, boost::asio::thread_pool& workers)
         : context_(context), database_(context.database()), workers_{workers}, tx_pool_{context.tx_pool()} {}
     virtual ~TraceRpcApi() {}
 
@@ -46,21 +46,21 @@ public:
     TraceRpcApi& operator=(const TraceRpcApi&) = delete;
 
 protected:
-    asio::awaitable<void> handle_trace_call(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_trace_call_many(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_trace_raw_transaction(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_trace_replay_block_transactions(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_trace_replay_transaction(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_trace_block(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_trace_filter(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_trace_get(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_trace_transaction(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_trace_call(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_trace_call_many(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_trace_raw_transaction(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_trace_replay_block_transactions(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_trace_replay_transaction(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_trace_block(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_trace_filter(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_trace_get(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_trace_transaction(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
     Context& context_;
     std::unique_ptr<ethdb::Database>& database_;
     std::unique_ptr<txpool::TransactionPool>& tx_pool_;
-    asio::thread_pool& workers_;
+    boost::asio::thread_pool& workers_;
 
     friend class silkrpc::http::RequestHandler;
 };

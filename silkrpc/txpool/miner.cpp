@@ -21,10 +21,10 @@
 
 namespace silkrpc::txpool {
 
-Miner::Miner(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context)
+Miner::Miner(boost::asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context)
     : Miner(context.get_executor(), ::txpool::Mining::NewStub(channel), grpc_context) {}
 
-Miner::Miner(asio::io_context::executor_type executor, std::unique_ptr<::txpool::Mining::StubInterface> stub, agrpc::GrpcContext& grpc_context)
+Miner::Miner(boost::asio::io_context::executor_type executor, std::unique_ptr<::txpool::Mining::StubInterface> stub, agrpc::GrpcContext& grpc_context)
     : executor_(executor), stub_(std::move(stub)), grpc_context_(grpc_context) {
     SILKRPC_TRACE << "Miner::ctor " << this << "\n";
 }
@@ -33,7 +33,7 @@ Miner::~Miner() {
     SILKRPC_TRACE << "Miner::dtor " << this << "\n";
 }
 
-asio::awaitable<WorkResult> Miner::get_work() {
+boost::asio::awaitable<WorkResult> Miner::get_work() {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "Miner::get_work\n";
     UnaryRpc<&::txpool::Mining::StubInterface::AsyncGetWork> get_work_rpc{*stub_, grpc_context_};
@@ -51,7 +51,7 @@ asio::awaitable<WorkResult> Miner::get_work() {
     co_return result;
 }
 
-asio::awaitable<bool> Miner::submit_work(const silkworm::Bytes& block_nonce, const evmc::bytes32& pow_hash, const evmc::bytes32& digest) {
+boost::asio::awaitable<bool> Miner::submit_work(const silkworm::Bytes& block_nonce, const evmc::bytes32& pow_hash, const evmc::bytes32& digest) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "Miner::submit_work block_nonce=" << block_nonce << " pow_hash=" << pow_hash << " digest=" << digest << "\n";
     ::txpool::SubmitWorkRequest submit_work_request;
@@ -65,7 +65,7 @@ asio::awaitable<bool> Miner::submit_work(const silkworm::Bytes& block_nonce, con
     co_return ok;
 }
 
-asio::awaitable<bool> Miner::submit_hash_rate(const intx::uint256& rate, const evmc::bytes32& id) {
+boost::asio::awaitable<bool> Miner::submit_hash_rate(const intx::uint256& rate, const evmc::bytes32& id) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "Miner::submit_hash_rate rate=" << rate << " id=" << id << "\n";
     ::txpool::SubmitHashRateRequest submit_hashrate_request;
@@ -78,7 +78,7 @@ asio::awaitable<bool> Miner::submit_hash_rate(const intx::uint256& rate, const e
     co_return ok;
 }
 
-asio::awaitable<uint64_t> Miner::get_hash_rate() {
+boost::asio::awaitable<uint64_t> Miner::get_hash_rate() {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "Miner::hash_rate\n";
     UnaryRpc<&::txpool::Mining::StubInterface::AsyncHashRate> get_hash_rate_rpc{*stub_, grpc_context_};
@@ -88,7 +88,7 @@ asio::awaitable<uint64_t> Miner::get_hash_rate() {
     co_return hashrate;
 }
 
-asio::awaitable<MiningResult> Miner::get_mining() {
+boost::asio::awaitable<MiningResult> Miner::get_mining() {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "Miner::get_mining\n";
     UnaryRpc<&::txpool::Mining::StubInterface::AsyncMining> get_mining_rpc{*stub_, grpc_context_};

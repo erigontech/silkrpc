@@ -50,8 +50,8 @@ std::vector<BinaryTestData> kTestData = {
     {{1, 2, 6, 6, 7}, 9, 5},
 };
 
-asio::awaitable<std::size_t> binary_search_in_vector(std::vector<std::size_t> sequence, int value) {
-    co_return co_await binary_search(sequence.size(), [&, value](uint64_t i) -> asio::awaitable<bool> {
+boost::asio::awaitable<std::size_t> binary_search_in_vector(std::vector<std::size_t> sequence, int value) {
+    co_return co_await binary_search(sequence.size(), [&, value](uint64_t i) -> boost::asio::awaitable<bool> {
         co_return i < sequence.size() && sequence[i] >= value;
     });
 }

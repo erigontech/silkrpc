@@ -27,8 +27,8 @@
 #include <variant>
 #include <vector>
 
-#include <asio/awaitable.hpp>
-#include <asio/thread_pool.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <nlohmann/json.hpp>
 
 #pragma GCC diagnostic push
@@ -339,29 +339,29 @@ private:
 template<typename WorldState = silkworm::IntraBlockState, typename VM = silkworm::EVM>
 class TraceCallExecutor {
 public:
-    explicit TraceCallExecutor(asio::io_context& io_context, const core::rawdb::DatabaseReader& database_reader, asio::thread_pool& workers)
+    explicit TraceCallExecutor(boost::asio::io_context& io_context, const core::rawdb::DatabaseReader& database_reader, boost::asio::thread_pool& workers)
     : io_context_(io_context), database_reader_(database_reader), workers_{workers} {}
     virtual ~TraceCallExecutor() {}
 
     TraceCallExecutor(const TraceCallExecutor&) = delete;
     TraceCallExecutor& operator=(const TraceCallExecutor&) = delete;
 
-    asio::awaitable<std::vector<Trace>> trace_block(const silkworm::BlockWithHash& block_with_hash);
-    asio::awaitable<std::vector<TraceCallResult>> trace_block_transactions(const silkworm::Block& block, const TraceConfig& config);
-    asio::awaitable<TraceCallResult> trace_call(const silkworm::Block& block, const silkrpc::Call& call, const TraceConfig& config);
-    asio::awaitable<TraceManyCallResult> trace_calls(const silkworm::Block& block, const std::vector<TraceCall>& calls);
-    asio::awaitable<TraceCallResult> trace_transaction(const silkworm::Block& block, const silkrpc::Transaction& transaction, const TraceConfig& config) {
+    boost::asio::awaitable<std::vector<Trace>> trace_block(const silkworm::BlockWithHash& block_with_hash);
+    boost::asio::awaitable<std::vector<TraceCallResult>> trace_block_transactions(const silkworm::Block& block, const TraceConfig& config);
+    boost::asio::awaitable<TraceCallResult> trace_call(const silkworm::Block& block, const silkrpc::Call& call, const TraceConfig& config);
+    boost::asio::awaitable<TraceManyCallResult> trace_calls(const silkworm::Block& block, const std::vector<TraceCall>& calls);
+    boost::asio::awaitable<TraceCallResult> trace_transaction(const silkworm::Block& block, const silkrpc::Transaction& transaction, const TraceConfig& config) {
         return execute(block.header.number-1, block, transaction, transaction.transaction_index, config);
     }
-    asio::awaitable<std::vector<Trace>> trace_transaction(const silkworm::BlockWithHash& block, const silkrpc::Transaction& transaction);
+    boost::asio::awaitable<std::vector<Trace>> trace_transaction(const silkworm::BlockWithHash& block, const silkrpc::Transaction& transaction);
 
 private:
-    asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block,
+    boost::asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block,
         const silkrpc::Transaction& transaction, std::int32_t index, const TraceConfig& config);
 
-    asio::io_context& io_context_;
+    boost::asio::io_context& io_context_;
     const core::rawdb::DatabaseReader& database_reader_;
-    asio::thread_pool& workers_;
+    boost::asio::thread_pool& workers_;
 };
 } // namespace silkrpc::trace
 

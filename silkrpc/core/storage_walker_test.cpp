@@ -21,9 +21,9 @@
 #include <memory>
 #include <string>
 
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 
 #include <silkworm/common/util.hpp>
@@ -50,7 +50,7 @@ public:
         return 0;
     }
 
-    asio::awaitable<void> open_cursor(const std::string& table_name) override {
+    boost::asio::awaitable<void> open_cursor(const std::string& table_name) override {
         table_name_ = table_name;
         table_ = json_.value(table_name_, empty);
         itr_ = table_.end();
@@ -58,12 +58,12 @@ public:
         co_return;
     }
 
-    asio::awaitable<void> close_cursor() override {
+    boost::asio::awaitable<void> close_cursor() override {
         table_name_ = "";
         co_return;
     }
 
-    asio::awaitable<KeyValue> seek(silkworm::ByteView key) override {
+    boost::asio::awaitable<KeyValue> seek(silkworm::ByteView key) override {
         const auto key_ = silkworm::to_hex(key);
 
         KeyValue out;
@@ -84,7 +84,7 @@ public:
         co_return out;
     }
 
-    asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override {
+    boost::asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override {
         const nlohmann::json table = json_.value(table_name_, empty);
         const auto& entry = table.value(silkworm::to_hex(key), "");
         auto value{*silkworm::from_hex(entry)};
@@ -94,7 +94,7 @@ public:
         co_return kv;
     }
 
-    asio::awaitable<KeyValue> next() override {
+    boost::asio::awaitable<KeyValue> next() override {
         KeyValue out;
 
         if (++itr_ != table_.end()) {
@@ -106,7 +106,7 @@ public:
         co_return out;
     }
 
-    asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) override {
+    boost::asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) override {
         silkworm::Bytes key_{key};
         key_ += value;
 
@@ -117,7 +117,7 @@ public:
         co_return out;
     }
 
-    asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) override {
+    boost::asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) override {
         silkworm::Bytes key_{key};
         key_ += value;
 
@@ -142,25 +142,25 @@ public:
 
     uint64_t tx_id() const override { return 0; }
 
-    asio::awaitable<void> open() override {
+    boost::asio::awaitable<void> open() override {
         co_return;
     }
 
-    asio::awaitable<std::shared_ptr<silkrpc::ethdb::Cursor>> cursor(const std::string& table) override {
+    boost::asio::awaitable<std::shared_ptr<silkrpc::ethdb::Cursor>> cursor(const std::string& table) override {
         auto cursor = std::make_unique<DummyCursor>(json_);
         co_await cursor->open_cursor(table);
 
         co_return cursor;
     }
 
-    asio::awaitable<std::shared_ptr<silkrpc::ethdb::CursorDupSort>> cursor_dup_sort(const std::string& table) override {
+    boost::asio::awaitable<std::shared_ptr<silkrpc::ethdb::CursorDupSort>> cursor_dup_sort(const std::string& table) override {
         auto cursor = std::make_unique<DummyCursor>(json_);
         co_await cursor->open_cursor(table);
 
         co_return cursor;
     }
 
-    asio::awaitable<void> close() override {
+    boost::asio::awaitable<void> close() override {
         co_return;
     }
 
@@ -172,7 +172,7 @@ class DummyDatabase: public silkrpc::ethdb::Database {
 public:
     explicit DummyDatabase(const nlohmann::json& json) : json_{json} {}
 
-    asio::awaitable<std::unique_ptr<silkrpc::ethdb::Transaction>> begin() override {
+    boost::asio::awaitable<std::unique_ptr<silkrpc::ethdb::Transaction>> begin() override {
         auto txn = std::make_unique<DummyTransaction>(json_);
         co_return txn;
     }
@@ -182,7 +182,7 @@ private:
 };
 
 TEST_CASE("StorageWalker::walk_of_storages") {
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
     nlohmann::json json;
 
     json["PlainState"] = {
@@ -210,7 +210,7 @@ TEST_CASE("StorageWalker::walk_of_storages") {
     };
 
     auto database = DummyDatabase{json};
-    auto result = asio::co_spawn(pool, database.begin(), asio::use_future);
+    auto result = boost::asio::co_spawn(pool, database.begin(), boost::asio::use_future);
     auto tx = result.get();
     StorageWalker walker{*tx};
 
@@ -229,7 +229,7 @@ TEST_CASE("StorageWalker::walk_of_storages") {
         const evmc::address start_address{0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address};
         const uint64_t incarnation{0};
 
-        auto result = asio::co_spawn(pool, walker.walk_of_storages(block_number, start_address, start_location, incarnation, collector), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, walker.walk_of_storages(block_number, start_address, start_location, incarnation, collector), boost::asio::use_future);
         result.get();
 
         CHECK(storage.size() == 0);
@@ -239,7 +239,7 @@ TEST_CASE("StorageWalker::walk_of_storages") {
         const evmc::address start_address{0x79a4d492a05cfd836ea0967edb5943161dd041f7_address};
         const uint64_t incarnation{1};
 
-        auto result = asio::co_spawn(pool, walker.walk_of_storages(block_number, start_address, start_location, incarnation, collector), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, walker.walk_of_storages(block_number, start_address, start_location, incarnation, collector), boost::asio::use_future);
         result.get();
 
         CHECK(storage.size() == 1);
@@ -261,7 +261,7 @@ TEST_CASE("StorageWalker::walk_of_storages") {
         const evmc::address start_address{0x79a4d706e4bc7fd8ff9d0593a1311386a7a981ea_address};
         const uint64_t incarnation{1};
 
-        auto result = asio::co_spawn(pool, walker.walk_of_storages(block_number, start_address, start_location, incarnation, collector), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, walker.walk_of_storages(block_number, start_address, start_location, incarnation, collector), boost::asio::use_future);
         result.get();
 
         CHECK(storage.size() == 1);
@@ -293,7 +293,7 @@ TEST_CASE("StorageWalker::walk_of_storages") {
 }
 
 TEST_CASE("StorageWalker::storage_range_at") {
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
     nlohmann::json json;
 
     json["PlainState"] = {
@@ -321,7 +321,7 @@ TEST_CASE("StorageWalker::storage_range_at") {
     };
 
     auto database = DummyDatabase{json};
-    auto result = asio::co_spawn(pool, database.begin(), asio::use_future);
+    auto result = boost::asio::co_spawn(pool, database.begin(), boost::asio::use_future);
     auto tx = result.get();
     StorageWalker walker{*tx};
 
@@ -340,7 +340,7 @@ TEST_CASE("StorageWalker::storage_range_at") {
     SECTION("storage range 1") {
         const evmc::address start_address{0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address};
 
-        auto result = asio::co_spawn(pool, walker.storage_range_at(block_number, start_address, start_location, 1, collector), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, walker.storage_range_at(block_number, start_address, start_location, 1, collector), boost::asio::use_future);
         result.get();
 
         CHECK(storage.size() == 0);
@@ -349,7 +349,7 @@ TEST_CASE("StorageWalker::storage_range_at") {
     SECTION("storage range 2") {
         const evmc::address start_address{0x79a4d492a05cfd836ea0967edb5943161dd041f7_address};
 
-        auto result = asio::co_spawn(pool, walker.storage_range_at(block_number, start_address, start_location, 2, collector), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, walker.storage_range_at(block_number, start_address, start_location, 2, collector), boost::asio::use_future);
         result.get();
 
         CHECK(storage.size() == 2);
@@ -368,7 +368,7 @@ TEST_CASE("StorageWalker::storage_range_at") {
     SECTION("collect storage 3") {
         const evmc::address start_address{0x79a4d706e4bc7fd8ff9d0593a1311386a7a981ea_address};
 
-        auto result = asio::co_spawn(pool, walker.storage_range_at(block_number, start_address, start_location, 5, collector), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, walker.storage_range_at(block_number, start_address, start_location, 5, collector), boost::asio::use_future);
         result.get();
 
         CHECK(storage.size() == 5);
