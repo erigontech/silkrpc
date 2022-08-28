@@ -34,7 +34,7 @@
 
 namespace silkrpc {
 
-asio::awaitable<void> AccountWalker::walk_of_accounts(uint64_t block_number, const evmc::address& start_address, Collector& collector) {
+boost::asio::awaitable<void> AccountWalker::walk_of_accounts(uint64_t block_number, const evmc::address& start_address, Collector& collector) {
     auto ps_cursor = co_await transaction_.cursor(db::table::kPlainState);
 
     auto start_key = full_view(start_address);
@@ -92,7 +92,7 @@ asio::awaitable<void> AccountWalker::walk_of_accounts(uint64_t block_number, con
     }
 }
 
-asio::awaitable<KeyValue> AccountWalker::next(silkrpc::ethdb::Cursor& cursor, uint64_t len) {
+boost::asio::awaitable<KeyValue> AccountWalker::next(silkrpc::ethdb::Cursor& cursor, uint64_t len) {
     auto kv = co_await cursor.next();
     while (!kv.key.empty() && kv.key.size() > len) {
         kv = co_await cursor.next();
@@ -100,7 +100,7 @@ asio::awaitable<KeyValue> AccountWalker::next(silkrpc::ethdb::Cursor& cursor, ui
     co_return kv;
 }
 
-asio::awaitable<KeyValue> AccountWalker::seek(silkrpc::ethdb::Cursor& cursor, silkworm::ByteView key, uint64_t len) {
+boost::asio::awaitable<KeyValue> AccountWalker::seek(silkrpc::ethdb::Cursor& cursor, silkworm::ByteView key, uint64_t len) {
     auto kv = co_await cursor.seek(key);
     if (kv.key.size() > len) {
         co_return co_await next(cursor, len);
@@ -108,7 +108,7 @@ asio::awaitable<KeyValue> AccountWalker::seek(silkrpc::ethdb::Cursor& cursor, si
     co_return kv;
 }
 
-asio::awaitable<silkrpc::ethdb::SplittedKeyValue> AccountWalker::next(silkrpc::ethdb::SplitCursor& cursor, uint64_t number, uint64_t block, silkworm::Bytes addr) {
+boost::asio::awaitable<silkrpc::ethdb::SplittedKeyValue> AccountWalker::next(silkrpc::ethdb::SplitCursor& cursor, uint64_t number, uint64_t block, silkworm::Bytes addr) {
     silkrpc::ethdb::SplittedKeyValue skv;
     auto tmp_addr = addr;
     while (!addr.empty() && (tmp_addr == addr || block < number)) {
@@ -123,7 +123,7 @@ asio::awaitable<silkrpc::ethdb::SplittedKeyValue> AccountWalker::next(silkrpc::e
     co_return skv;
 }
 
-asio::awaitable<silkrpc::ethdb::SplittedKeyValue> AccountWalker::seek(silkrpc::ethdb::SplitCursor& cursor, uint64_t number) {
+boost::asio::awaitable<silkrpc::ethdb::SplittedKeyValue> AccountWalker::seek(silkrpc::ethdb::SplitCursor& cursor, uint64_t number) {
     auto kv = co_await cursor.seek();
     if (kv.key1.empty()) {
         co_return kv;

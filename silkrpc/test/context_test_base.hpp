@@ -21,9 +21,9 @@
 #include <memory>
 #include <utility>
 
-#include <asio/co_spawn.hpp>
-#include <asio/io_context.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/use_future.hpp>
 
 #include <silkrpc/config.hpp>
 #include <silkrpc/concurrency/context_pool.hpp>
@@ -36,13 +36,12 @@ class ContextTestBase {
 
     template <typename AwaitableOrFunction>
     auto spawn(AwaitableOrFunction&& awaitable) {
-        return asio::co_spawn(io_context_, std::forward<AwaitableOrFunction>(awaitable), asio::use_future);
+        return boost::asio::co_spawn(io_context_, std::forward<AwaitableOrFunction>(awaitable), boost::asio::use_future);
     }
 
     template <typename AwaitableOrFunction>
     auto spawn_and_wait(AwaitableOrFunction&& awaitable) {
-        return asio::co_spawn(io_context_, std::forward<AwaitableOrFunction>(awaitable), asio::use_future)
-            .get();
+        return spawn(std::forward<AwaitableOrFunction>(awaitable)).get();
     }
 
     void sleep_for(std::chrono::milliseconds sleep_time_ms) {
@@ -56,7 +55,7 @@ class ContextTestBase {
 
   public:
     Context context_;
-    asio::io_context& io_context_;
+    boost::asio::io_context& io_context_;
     agrpc::GrpcContext& grpc_context_;
     std::thread context_thread_;
 };

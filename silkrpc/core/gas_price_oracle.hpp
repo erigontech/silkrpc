@@ -23,7 +23,7 @@
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/block.hpp>
@@ -46,7 +46,7 @@ const std::uint8_t kSamples = 3;
 const std::uint8_t kMaxSamples = kCheckBlocks * kSamples;
 const std::uint8_t kPercentile = 60;
 
-typedef std::function<asio::awaitable<silkworm::BlockWithHash>(uint64_t)> BlockProvider;
+typedef std::function<boost::asio::awaitable<silkworm::BlockWithHash>(uint64_t)> BlockProvider;
 
 class GasPriceOracle {
 public:
@@ -56,10 +56,10 @@ public:
     GasPriceOracle(const GasPriceOracle&) = delete;
     GasPriceOracle& operator=(const GasPriceOracle&) = delete;
 
-    asio::awaitable<intx::uint256> suggested_price(uint64_t block_number);
+    boost::asio::awaitable<intx::uint256> suggested_price(uint64_t block_number);
 
 private:
-    asio::awaitable<void> load_block_prices(uint64_t block_number, uint64_t limit, std::vector<intx::uint256>& tx_prices);
+    boost::asio::awaitable<void> load_block_prices(uint64_t block_number, uint64_t limit, std::vector<intx::uint256>& tx_prices);
 
     const BlockProvider& block_provider_;
 };

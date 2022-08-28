@@ -23,7 +23,7 @@
 #include <nlohmann/json.hpp>
 #include <silkrpc/config.hpp>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/account.hpp>
@@ -45,13 +45,13 @@ public:
     AccountWalker(const AccountWalker&) = delete;
     AccountWalker& operator=(const AccountWalker&) = delete;
 
-    asio::awaitable<void> walk_of_accounts(uint64_t block_number, const evmc::address& start_address, Collector& collector);
+    boost::asio::awaitable<void> walk_of_accounts(uint64_t block_number, const evmc::address& start_address, Collector& collector);
 
 private:
-    asio::awaitable<KeyValue> next(silkrpc::ethdb::Cursor& cursor, uint64_t len);
-    asio::awaitable<KeyValue> seek(silkrpc::ethdb::Cursor& cursor, const silkworm::ByteView key, uint64_t len);
-    asio::awaitable<silkrpc::ethdb::SplittedKeyValue> next(silkrpc::ethdb::SplitCursor& cursor, uint64_t number, uint64_t block, silkworm::Bytes addr);
-    asio::awaitable<silkrpc::ethdb::SplittedKeyValue> seek(silkrpc::ethdb::SplitCursor& cursor, uint64_t number);
+    boost::asio::awaitable<KeyValue> next(silkrpc::ethdb::Cursor& cursor, uint64_t len);
+    boost::asio::awaitable<KeyValue> seek(silkrpc::ethdb::Cursor& cursor, const silkworm::ByteView key, uint64_t len);
+    boost::asio::awaitable<silkrpc::ethdb::SplittedKeyValue> next(silkrpc::ethdb::SplitCursor& cursor, uint64_t number, uint64_t block, silkworm::Bytes addr);
+    boost::asio::awaitable<silkrpc::ethdb::SplittedKeyValue> seek(silkrpc::ethdb::SplitCursor& cursor, uint64_t number);
 
     silkrpc::ethdb::Transaction& transaction_;
 };

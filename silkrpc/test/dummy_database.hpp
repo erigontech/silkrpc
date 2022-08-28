@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
@@ -35,7 +35,7 @@ class DummyDatabase : public ethdb::Database {
 public:
     explicit DummyDatabase(std::shared_ptr<ethdb::Cursor> cursor) : cursor_(cursor) {}
 
-    asio::awaitable<std::unique_ptr<ethdb::Transaction>> begin() override {
+    boost::asio::awaitable<std::unique_ptr<ethdb::Transaction>> begin() override {
         co_return std::make_unique<DummyTransaction>(cursor_);
     }
 private:

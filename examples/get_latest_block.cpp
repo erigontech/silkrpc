@@ -25,12 +25,12 @@
 #include <absl/flags/flag.h>
 #include <absl/flags/parse.h>
 #include <absl/flags/usage.h>
-#include <asio/co_spawn.hpp>
-#include <asio/io_context.hpp>
-#include <asio/detached.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_awaitable.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/detached.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_awaitable.hpp>
+#include <boost/asio/use_future.hpp>
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
@@ -47,7 +47,7 @@ ABSL_FLAG(silkrpc::LogLevel, log_verbosity, silkrpc::LogLevel::Critical, "loggin
 
 using silkrpc::LogLevel;
 
-asio::awaitable<std::optional<uint64_t>> latest_block(silkrpc::ethdb::Database& db) {
+boost::asio::awaitable<std::optional<uint64_t>> latest_block(silkrpc::ethdb::Database& db) {
     std::optional<uint64_t> block_height;
 
     const auto db_transaction = co_await db.begin();
@@ -64,8 +64,8 @@ asio::awaitable<std::optional<uint64_t>> latest_block(silkrpc::ethdb::Database& 
     co_return block_height;
 }
 
-std::optional<uint64_t> get_latest_block(asio::io_context& io_context, silkrpc::ethdb::Database& db) {
-    auto result = asio::co_spawn(io_context, latest_block(db), asio::use_future);
+std::optional<uint64_t> get_latest_block(boost::asio::io_context& io_context, silkrpc::ethdb::Database& db) {
+    auto result = boost::asio::co_spawn(io_context, latest_block(db), boost::asio::use_future);
     return result.get();
 }
 

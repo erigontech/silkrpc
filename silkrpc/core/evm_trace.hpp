@@ -27,8 +27,8 @@
 #include <variant>
 #include <vector>
 
-#include <asio/awaitable.hpp>
-#include <asio/thread_pool.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <nlohmann/json.hpp>
 
 #pragma GCC diagnostic push
@@ -52,6 +52,13 @@ struct TraceConfig {
 };
 
 void from_json(const nlohmann::json& json, TraceConfig& tc);
+
+struct TraceCall {
+    silkrpc::Call call;
+    TraceConfig trace_config;
+};
+
+void from_json(const nlohmann::json& json, TraceCall& tc);
 
 std::string get_op_name(const char* const* names, std::uint8_t opcode);
 std::string to_string(intx::uint256 value);
@@ -283,7 +290,6 @@ public:
 private:
     StateDiff& state_diff_;
     StateAddresses& state_addresses_;
-    // silkworm::IntraBlockState& initial_ibs_;
     std::map<evmc::address, std::set<std::string>> diff_storage_;
     std::map<evmc::address, silkworm::ByteView> code_;
     const char* const* opcode_names_ = nullptr;
@@ -302,8 +308,14 @@ struct TraceCallResult {
     std::optional<std::string> pre_check_error{std::nullopt};
 };
 
+struct TraceManyCallResult {
+    std::vector<TraceCallTraces> traces;
+    std::optional<std::string> pre_check_error{std::nullopt};
+};
+
 void to_json(nlohmann::json& json, const TraceCallTraces& result);
 void to_json(nlohmann::json& json, const TraceCallResult& result);
+void to_json(nlohmann::json& json, const TraceManyCallResult& result);
 
 class IntraBlockStateTracer : public silkworm::EvmTracer {
 public:
@@ -327,28 +339,29 @@ private:
 template<typename WorldState = silkworm::IntraBlockState, typename VM = silkworm::EVM>
 class TraceCallExecutor {
 public:
-    explicit TraceCallExecutor(asio::io_context& io_context, const core::rawdb::DatabaseReader& database_reader, asio::thread_pool& workers)
+    explicit TraceCallExecutor(boost::asio::io_context& io_context, const core::rawdb::DatabaseReader& database_reader, boost::asio::thread_pool& workers)
     : io_context_(io_context), database_reader_(database_reader), workers_{workers} {}
     virtual ~TraceCallExecutor() {}
 
     TraceCallExecutor(const TraceCallExecutor&) = delete;
     TraceCallExecutor& operator=(const TraceCallExecutor&) = delete;
 
-    asio::awaitable<std::vector<Trace>> trace_block(const silkworm::BlockWithHash& block_with_hash);
-    asio::awaitable<std::vector<TraceCallResult>> trace_block_transactions(const silkworm::Block& block, const TraceConfig& config);
-    asio::awaitable<TraceCallResult> trace_call(const silkworm::Block& block, const silkrpc::Call& call, const TraceConfig& config);
-    asio::awaitable<TraceCallResult> trace_transaction(const silkworm::Block& block, const silkrpc::Transaction& transaction, const TraceConfig& config) {
+    boost::asio::awaitable<std::vector<Trace>> trace_block(const silkworm::BlockWithHash& block_with_hash);
+    boost::asio::awaitable<std::vector<TraceCallResult>> trace_block_transactions(const silkworm::Block& block, const TraceConfig& config);
+    boost::asio::awaitable<TraceCallResult> trace_call(const silkworm::Block& block, const silkrpc::Call& call, const TraceConfig& config);
+    boost::asio::awaitable<TraceManyCallResult> trace_calls(const silkworm::Block& block, const std::vector<TraceCall>& calls);
+    boost::asio::awaitable<TraceCallResult> trace_transaction(const silkworm::Block& block, const silkrpc::Transaction& transaction, const TraceConfig& config) {
         return execute(block.header.number-1, block, transaction, transaction.transaction_index, config);
     }
-    asio::awaitable<std::vector<Trace>> trace_transaction(const silkworm::BlockWithHash& block, const silkrpc::Transaction& transaction);
+    boost::asio::awaitable<std::vector<Trace>> trace_transaction(const silkworm::BlockWithHash& block, const silkrpc::Transaction& transaction);
 
 private:
-    asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block,
+    boost::asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block,
         const silkrpc::Transaction& transaction, std::int32_t index, const TraceConfig& config);
 
-    asio::io_context& io_context_;
+    boost::asio::io_context& io_context_;
     const core::rawdb::DatabaseReader& database_reader_;
-    asio::thread_pool& workers_;
+    boost::asio::thread_pool& workers_;
 };
 } // namespace silkrpc::trace
 

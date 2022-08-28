@@ -18,10 +18,10 @@
 
 #include <memory>
 
-#include <asio/awaitable.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 
@@ -56,7 +56,7 @@ TEST_CASE("CachedDatabase::CachedDatabase", "[silkrpc][ethdb][kv][cached_databas
 }
 
 TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
     std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
     test::MockStateCache mock_cache;
 
@@ -65,14 +65,14 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
         test::DummyTransaction fake_txn{0, mock_cursor};
         CachedDatabase cached_db{block_id, fake_txn, mock_cache};
         // Mock cursor shall be used to read latest block from Execution state in table SyncStageProgress
-        EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+        EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{kZeroBytes, kTestBlockNumberBytes};
         }));
         // Mock cursor shall be used to read from table PlainState
-        EXPECT_CALL(*mock_cursor, seek_exact(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+        EXPECT_CALL(*mock_cursor, seek_exact(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{kZeroBytes, kTestData};
         }));
-        auto result = asio::co_spawn(pool, cached_db.get_one(db::table::kPlainState, kZeroBytes), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, cached_db.get_one(db::table::kPlainState, kZeroBytes), boost::asio::use_future);
         const auto value = result.get();
         CHECK(value == kTestData);
     }
@@ -83,7 +83,7 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
         test::MockStateView* mock_view = new test::MockStateView;
         CachedDatabase cached_db{block_id, fake_txn, mock_cache};
         // Mock cursor shall be used to read latest block from Execution stage in table SyncStageProgress
-        EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+        EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{kZeroBytes, kTestBlockNumberBytes};
         }));
         // Mock cache shall return the mock view instance
@@ -91,10 +91,10 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
             return std::unique_ptr<test::MockStateView>{mock_view};
         }));
         // Mock view shall be used to read value from data cache
-        EXPECT_CALL(*mock_view, get(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+        EXPECT_CALL(*mock_view, get(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
             co_return kTestData;
         }));
-        auto result = asio::co_spawn(pool, cached_db.get_one(db::table::kPlainState, kZeroBytes), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, cached_db.get_one(db::table::kPlainState, kZeroBytes), boost::asio::use_future);
         const auto value = result.get();
         CHECK(value == kTestData);
     }
@@ -105,7 +105,7 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
         test::MockStateView* mock_view = new test::MockStateView;
         CachedDatabase cached_db{block_id, fake_txn, mock_cache};
         // Mock cursor shall be used to read latest block from Execution stage in table SyncStageProgress
-        EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+        EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{kZeroBytes, kTestBlockNumberBytes};
         }));
         // Mock cache shall return the mock view instance
@@ -113,43 +113,43 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
             return std::unique_ptr<test::MockStateView>{mock_view};
         }));
         // Mock view shall be used to read value from code cache
-        EXPECT_CALL(*mock_view, get_code(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<std::optional<silkworm::Bytes>> {
+        EXPECT_CALL(*mock_view, get_code(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
             co_return kTestData;
         }));
-        auto result = asio::co_spawn(pool, cached_db.get_one(db::table::kCode, kZeroBytes), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, cached_db.get_one(db::table::kCode, kZeroBytes), boost::asio::use_future);
         const auto value = result.get();
         CHECK(value == kTestData);
     }
 }
 
 TEST_CASE("CachedDatabase::get", "[silkrpc][ethdb][kv][cached_database]") {
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
     std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
     test::DummyTransaction fake_txn{0, mock_cursor};
     test::MockStateCache mock_cache;
     BlockNumberOrHash block_id{kTestBlockNumber};
     CachedDatabase cached_db{block_id, fake_txn, mock_cache};
     // Mock cursor shall provide the value returned by get
-    EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+    EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
         co_return KeyValue{kZeroBytes, kZeroBytes};
     }));
-    auto result = asio::co_spawn(pool, cached_db.get(db::table::kPlainState, kZeroBytes), asio::use_future);
+    auto result = boost::asio::co_spawn(pool, cached_db.get(db::table::kPlainState, kZeroBytes), boost::asio::use_future);
     const auto kv = result.get();
     CHECK(kv.value.empty());
 }
 
 TEST_CASE("CachedDatabase::get_both_range", "[silkrpc][ethdb][kv][cached_database]") {
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
     std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
     test::DummyTransaction fake_txn{0, mock_cursor};
     test::MockStateCache mock_cache;
     BlockNumberOrHash block_id{kTestBlockNumber};
     CachedDatabase cached_db{block_id, fake_txn, mock_cache};
     // Mock cursor shall provide the value returned by get_both_range
-    EXPECT_CALL(*mock_cursor, seek_both(_, _)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<silkworm::Bytes> {
+    EXPECT_CALL(*mock_cursor, seek_both(_, _)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
         co_return kZeroBytes;
     }));
-    auto result = asio::co_spawn(pool, cached_db.get_both_range(db::table::kCode, kZeroBytes, kZeroBytes), asio::use_future);
+    auto result = boost::asio::co_spawn(pool, cached_db.get_both_range(db::table::kCode, kZeroBytes, kZeroBytes), boost::asio::use_future);
     const auto value = result.get();
     CHECK(value);
     if (value) {
@@ -158,38 +158,38 @@ TEST_CASE("CachedDatabase::get_both_range", "[silkrpc][ethdb][kv][cached_databas
 }
 
 TEST_CASE("CachedDatabase::walk", "[silkrpc][ethdb][kv][cached_database]") {
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
     std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
     test::DummyTransaction fake_txn{0, mock_cursor};
     test::MockStateCache mock_cache;
     BlockNumberOrHash block_id{kTestBlockNumber};
     CachedDatabase cached_db{block_id, fake_txn, mock_cache};
     // Mock cursor shall provide the starting key-value pair for the walk
-    EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+    EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
         co_return KeyValue{*silkworm::from_hex("00"), kZeroBytes};
     }));
     core::rawdb::Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) -> bool {
         return false;
     };
-    auto result = asio::co_spawn(pool, cached_db.walk(db::table::kCode, kZeroBytes, 0, walker), asio::use_future);
+    auto result = boost::asio::co_spawn(pool, cached_db.walk(db::table::kCode, kZeroBytes, 0, walker), boost::asio::use_future);
     CHECK_NOTHROW(result.get());
 }
 
 TEST_CASE("CachedDatabase::for_prefix", "[silkrpc][ethdb][kv][cached_database]") {
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
     std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
     test::DummyTransaction fake_txn{0, mock_cursor};
     test::MockStateCache mock_cache;
     BlockNumberOrHash block_id{kTestBlockNumber};
     CachedDatabase cached_db{block_id, fake_txn, mock_cache};
     // Mock cursor shall provide the starting key-value pair for the iteration
-    EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> asio::awaitable<KeyValue> {
+    EXPECT_CALL(*mock_cursor, seek(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
         co_return KeyValue{*silkworm::from_hex("00"), kZeroBytes};
     }));
     core::rawdb::Walker walker = [&](const silkworm::Bytes& k, const silkworm::Bytes& v) -> bool {
         return false;
     };
-    auto result = asio::co_spawn(pool, cached_db.for_prefix(db::table::kCode, kZeroBytes, walker), asio::use_future);
+    auto result = boost::asio::co_spawn(pool, cached_db.for_prefix(db::table::kCode, kZeroBytes, walker), boost::asio::use_future);
     CHECK_NOTHROW(result.get());
 }
 

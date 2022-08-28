@@ -26,7 +26,7 @@
 
 namespace silkrpc::stages {
 
-asio::awaitable<uint64_t> get_sync_stage_progress(const core::rawdb::DatabaseReader& db_reader, const silkworm::Bytes& stage_key) {
+boost::asio::awaitable<uint64_t> get_sync_stage_progress(const core::rawdb::DatabaseReader& db_reader, const silkworm::Bytes& stage_key) {
     const auto kv_pair = co_await db_reader.get(db::table::kSyncStageProgress, stage_key);
     const auto value = kv_pair.value;
     if (value.length() == 0) {

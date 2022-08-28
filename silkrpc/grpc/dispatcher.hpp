@@ -21,10 +21,10 @@
 
 #include <utility>
 
-#include <asio/bind_executor.hpp>
-#include <asio/compose.hpp>
-#include <asio/dispatch.hpp>
-#include <asio/experimental/append.hpp>
+#include <boost/asio/bind_executor.hpp>
+#include <boost/asio/compose.hpp>
+#include <boost/asio/dispatch.hpp>
+#include <boost/asio/experimental/append.hpp>
 
 namespace silkrpc {
 
@@ -36,7 +36,9 @@ struct ExecutorDispatcher {
 
     template<typename CompletionToken, typename... Args>
     void dispatch(CompletionToken&& token, Args&&... args) {
-        asio::dispatch(asio::bind_executor(executor_, asio::experimental::append(std::forward<CompletionToken>(token), std::forward<Args>(args)...)));
+        boost::asio::dispatch(
+            boost::asio::bind_executor(executor_,
+                boost::asio::experimental::append(std::forward<CompletionToken>(token), std::forward<Args>(args)...)));
     }
 };
 

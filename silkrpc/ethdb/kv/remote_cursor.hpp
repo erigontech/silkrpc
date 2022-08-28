@@ -23,9 +23,9 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/awaitable.hpp>
-#include <asio/io_context.hpp>
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/use_awaitable.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
@@ -41,19 +41,19 @@ public:
 
     uint32_t cursor_id() const override { return cursor_id_; };
 
-    asio::awaitable<void> open_cursor(const std::string& table_name) override;
+    boost::asio::awaitable<void> open_cursor(const std::string& table_name) override;
 
-    asio::awaitable<KeyValue> seek(silkworm::ByteView key) override;
+    boost::asio::awaitable<KeyValue> seek(silkworm::ByteView key) override;
 
-    asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override;
+    boost::asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override;
 
-    asio::awaitable<KeyValue> next() override;
+    boost::asio::awaitable<KeyValue> next() override;
 
-    asio::awaitable<void> close_cursor() override;
+    boost::asio::awaitable<void> close_cursor() override;
 
-    asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) override;
+    boost::asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) override;
 
-    asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) override;
+    boost::asio::awaitable<KeyValue> seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) override;
 
 private:
     TxRpc& tx_rpc_;

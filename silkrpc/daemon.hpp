@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include <asio/thread_pool.hpp>
+#include <boost/asio/thread_pool.hpp>
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
@@ -86,7 +86,7 @@ class Daemon {
     ContextPool context_pool_;
 
     //! The pool of workers for long-running tasks.
-    asio::thread_pool worker_pool_;
+    boost::asio::thread_pool worker_pool_;
 
     std::vector<std::unique_ptr<http::Server>> rpc_services_;
 

@@ -39,7 +39,7 @@ public:
     RemoteDatabase(const RemoteDatabase&) = delete;
     RemoteDatabase& operator=(const RemoteDatabase&) = delete;
 
-    asio::awaitable<std::unique_ptr<Transaction>> begin() override;
+    boost::asio::awaitable<std::unique_ptr<Transaction>> begin() override;
 
 private:
     agrpc::GrpcContext& grpc_context_;

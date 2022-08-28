@@ -19,9 +19,9 @@
 #include <algorithm>
 #include <utility>
 
-#include <asio/compose.hpp>
-#include <asio/post.hpp>
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/compose.hpp>
+#include <boost/asio/post.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <silkrpc/core/blocks.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 
@@ -35,7 +35,7 @@ struct PriceComparator {
     }
 };
 
-asio::awaitable<intx::uint256> GasPriceOracle::suggested_price(uint64_t block_number) {
+boost::asio::awaitable<intx::uint256> GasPriceOracle::suggested_price(uint64_t block_number) {
     SILKRPC_INFO << "GasPriceOracle::suggested_price starting block: " << block_number << "\n";
     std::vector<intx::uint256> tx_prices;
     tx_prices.reserve(kMaxSamples);
@@ -66,7 +66,7 @@ asio::awaitable<intx::uint256> GasPriceOracle::suggested_price(uint64_t block_nu
     co_return price;
 }
 
-asio::awaitable<void> GasPriceOracle::load_block_prices(uint64_t block_number, uint64_t limit, std::vector<intx::uint256>& tx_prices) {
+boost::asio::awaitable<void> GasPriceOracle::load_block_prices(uint64_t block_number, uint64_t limit, std::vector<intx::uint256>& tx_prices) {
     SILKRPC_TRACE << "GasPriceOracle::load_block_prices processing block: " << block_number << "\n";
 
     const auto block_with_hash = co_await block_provider_(block_number);
