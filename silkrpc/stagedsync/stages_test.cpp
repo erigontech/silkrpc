@@ -18,9 +18,9 @@
 
 #include <string>
 
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 
@@ -33,30 +33,30 @@ using testing::InvokeWithoutArgs;
 using testing::_;
 
 TEST_CASE("get_sync_stage_progress", "[silkrpc][stagedsync]") {
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
     test::MockDatabaseReader db_reader;
 
     SECTION("empty stage key") {
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+            []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
         ));
-        auto result = asio::co_spawn(pool, get_sync_stage_progress(db_reader, kFinish), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_sync_stage_progress(db_reader, kFinish), boost::asio::use_future);
         CHECK(result.get() == 0);
     }
 
     SECTION("invalid stage progress value") {
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("FF")}; }
+            []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("FF")}; }
         ));
-        auto result = asio::co_spawn(pool, get_sync_stage_progress(db_reader, kFinish), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_sync_stage_progress(db_reader, kFinish), boost::asio::use_future);
         CHECK_THROWS_AS(result.get(), std::runtime_error);
     }
 
     SECTION("valid stage progress value") {
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, _)).WillOnce(InvokeWithoutArgs(
-            []() -> asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("00000000000000FF")}; }
+            []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("00000000000000FF")}; }
         ));
-        auto result = asio::co_spawn(pool, get_sync_stage_progress(db_reader, kFinish), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_sync_stage_progress(db_reader, kFinish), boost::asio::use_future);
         CHECK(result.get() == 255);
     }
 }

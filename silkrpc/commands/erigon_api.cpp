@@ -16,12 +16,13 @@
 
 #include "erigon_api.hpp"
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
 #include <intx/intx.hpp>
-#include <silkworm/common/util.hpp>
 
+#include <silkrpc/common/binary_search.hpp>
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
@@ -30,13 +31,91 @@
 #include <silkrpc/core/cached_chain.hpp>
 #include <silkrpc/core/receipts.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
+#include <silkrpc/ethdb/kv/cached_database.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/json/types.hpp>
+#include <silkworm/common/binary_search.hpp>
+#include <silkworm/common/util.hpp>
 
 namespace silkrpc::commands {
 
+ErigonRpcApi::ErigonRpcApi(Context& context)
+    : database_(context.database()),
+      context_(context),
+      block_cache_(context.block_cache()),
+      state_cache_(context.state_cache()) {}
+
+// https://eth.wiki/json-rpc/API#erigon_getBlockByTimestamp
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_block_by_timestamp(const nlohmann::json& request, nlohmann::json& reply) {
+    // Decode request parameters
+    const auto params = request["params"];
+    if (params.size() != 2) {
+        auto error_msg = "invalid erigon_getBlockByTimestamp params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto block_timestamp = params[0].get<std::string>();
+    const auto full_tx = params[1].get<bool>();
+    SILKRPC_DEBUG << "block_timestamp: " << block_timestamp << " full_tx: " << full_tx << "\n";
+
+    const std::string::size_type begin = block_timestamp.find_first_not_of(" \"");
+    const std::string::size_type end = block_timestamp.find_last_not_of(" \"");
+    const uint64_t timestamp = std::stol(block_timestamp.substr(begin, end - begin + 1), 0, 0);
+
+    // Open a new remote database transaction (no need to close if code throws before the end)
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+
+        // Lookup the first and last block headers
+        const auto first_header = co_await core::rawdb::read_header_by_number(tx_database, core::kEarliestBlockNumber);
+        const auto current_header = co_await core::rawdb::read_current_header(tx_database);
+        const uint64_t current_block_number = current_header.number;
+
+        // Find the lowest block header w/ timestamp greater or equal to provided timestamp
+        uint64_t block_number;
+        if (current_header.timestamp <= timestamp) {
+            block_number = current_block_number;
+        } else if (first_header.timestamp >= timestamp) {
+            block_number = core::kEarliestBlockNumber;
+        } else {
+            // Good-ol' binary search to find the lowest block header matching timestamp
+            const auto matching_block_number = co_await binary_search(current_block_number, [&](uint64_t i) -> boost::asio::awaitable<bool> {
+                const auto header = co_await core::rawdb::read_header_by_number(tx_database, i);
+                co_return header.timestamp >= timestamp;
+            });
+            // TODO(canepat) we should try to avoid this block header lookup (just done in search)
+            const auto matching_header = co_await core::rawdb::read_header_by_number(tx_database, matching_block_number);
+            if (matching_header.timestamp > timestamp) {
+                block_number = matching_block_number - 1;
+            } else {
+                block_number = matching_block_number;
+            }
+        }
+
+        // Lookup and return the matching block
+        const auto block_with_hash = co_await core::read_block_by_number(*block_cache_, tx_database, block_number);
+        const auto total_difficulty = co_await core::rawdb::read_total_difficulty(tx_database, block_with_hash.hash, block_number);
+        const Block extended_block{block_with_hash, total_difficulty, full_tx};
+
+        reply = make_json_content(request["id"], extended_block);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    // Close remote database transaction, RAII not available with coroutines
+    co_await tx->close();
+    co_return;
+}
+
 // https://eth.wiki/json-rpc/API#erigon_getHeaderByHash
-asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid erigon_getHeaderByHash params: " + params.dump();
@@ -68,7 +147,7 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_hash(const nlohm
 }
 
 // https://eth.wiki/json-rpc/API#erigon_getHeaderByNumber
-asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid erigon_getHeaderByNumber params: " + params.dump();
@@ -109,7 +188,7 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_number(const nlo
 }
 
 // https://eth.wiki/json-rpc/API#erigon_getlogsbyhash
-asio::awaitable<void> ErigonRpcApi::handle_erigon_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid erigon_getHeaderByHash params: " + params.dump();
@@ -125,7 +204,7 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_logs_by_hash(const nlohman
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache(), tx_database, block_hash);
+        const auto block_with_hash = co_await core::read_block_by_hash(*block_cache_, tx_database, block_hash);
         const auto receipts{co_await core::get_receipts(tx_database, block_with_hash)};
 
         SILKRPC_DEBUG << "receipts.size(): " << receipts.size() << "\n";
@@ -151,7 +230,7 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_logs_by_hash(const nlohman
 }
 
 // https://eth.wiki/json-rpc/API#erigon_forks
-asio::awaitable<void> ErigonRpcApi::handle_erigon_forks(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_forks(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -176,7 +255,7 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_forks(const nlohmann::json& re
 }
 
 // https://eth.wiki/json-rpc/API#erigon_issuance
-asio::awaitable<void> ErigonRpcApi::handle_erigon_issuance(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_issuance(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid erigon_issuance params: " + params.dump();

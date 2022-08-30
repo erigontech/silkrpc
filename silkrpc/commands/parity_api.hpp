@@ -21,7 +21,7 @@
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/concurrency/context_pool.hpp>
@@ -42,8 +42,8 @@ public:
     ParityRpcApi& operator=(const ParityRpcApi&) = delete;
 
 protected:
-    asio::awaitable<void> handle_parity_get_block_receipts(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_parity_list_storage_keys(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_parity_get_block_receipts(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_parity_list_storage_keys(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
     std::unique_ptr<ethdb::Database>& database_;

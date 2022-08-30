@@ -21,18 +21,16 @@
 #include <thread>
 #include <utility>
 
-#include <asio/io_context.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/use_future.hpp>
+#include <agrpc/test.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
-#include <boost/endian/conversion.hpp>
 
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
+#include <silkrpc/interfaces/remote/ethbackend_mock.grpc.pb.h>
+#include <silkrpc/test/api_test_base.hpp>
+#include <silkrpc/test/grpc_actions.hpp>
+#include <silkrpc/test/grpc_responder.hpp>
 
 namespace silkrpc {
 
@@ -63,402 +61,158 @@ using evmc::literals::operator""_bytes32;
     return h256_ptr;
 }
 
-bool h160_equal_address(const ::types::H160& h160, const evmc::address& address) {
-    return h160.hi().hi() == boost::endian::load_big_u64(address.bytes) &&
-        h160.hi().lo() == boost::endian::load_big_u64(address.bytes + 8) &&
-        h160.lo() == boost::endian::load_big_u32(address.bytes + 16);
-}
+using StrictMockEthBackendStub = testing::StrictMock<::remote::MockETHBACKENDStub>;
 
-bool h256_equal_bytes32(const ::types::H256& h256, const evmc::bytes32& hash) {
-    return h256.hi().hi() == boost::endian::load_big_u64(hash.bytes) &&
-        h256.hi().lo() == boost::endian::load_big_u64(hash.bytes + 8) &&
-        h256.lo().hi() == boost::endian::load_big_u64(hash.bytes + 16) &&
-        h256.lo().lo() == boost::endian::load_big_u64(hash.bytes + 24);
-}
+using EthBackendTest = test::GrpcApiTestBase<ethbackend::RemoteBackEnd, StrictMockEthBackendStub>;
 
-bool h2048_equal_bloom(const ::types::H2048& h2048, const silkworm::Bloom& bloom) {
-    // Fragment the H2048 in 8 H256 and verify each of them
-    ::types::H256 fragments[] = {h2048.hi().hi().hi(), h2048.hi().hi().lo(),
-                                h2048.hi().lo().hi(), h2048.hi().lo().lo(),
-                                h2048.lo().hi().hi(), h2048.lo().hi().lo(),
-                                h2048.lo().lo().hi(), h2048.lo().lo().lo()};
-    uint64_t pos{0};
-    for (const auto& h256 : fragments) {
-        // Take bloom segment and convert it to evmc::bytes32
-        evmc::bytes32 bloom_segment_bytes32;
-        std::memcpy(bloom_segment_bytes32.bytes, &bloom[pos], 32);
-        pos += 32;
-        if (!h256_equal_bytes32(h256, bloom_segment_bytes32)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-class EmptyBackEndService : public ::remote::ETHBACKEND::Service {
-public:
-    ::grpc::Status Etherbase(::grpc::ServerContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response) override {
-        return ::grpc::Status::OK;
-    }
-    ::grpc::Status ProtocolVersion(::grpc::ServerContext* context, const ::remote::ProtocolVersionRequest* request, ::remote::ProtocolVersionReply* response) override {
-        return ::grpc::Status::OK;
-    }
-    ::grpc::Status NetVersion(::grpc::ServerContext* context, const ::remote::NetVersionRequest* request, ::remote::NetVersionReply* response) override {
-        return ::grpc::Status::OK;
-    }
-    ::grpc::Status ClientVersion(::grpc::ServerContext *context, const ::remote::ClientVersionRequest *request, ::remote::ClientVersionReply *response) override {
-        return ::grpc::Status::OK;
-    }
-    ::grpc::Status NetPeerCount(::grpc::ServerContext* context, const ::remote::NetPeerCountRequest* request, ::remote::NetPeerCountReply* response) override {
-        return ::grpc::Status::OK;
-    }
-
-    ::grpc::Status EngineGetPayloadV1(::grpc::ServerContext* context, const ::remote::EngineGetPayloadRequest* request, ::types::ExecutionPayload* response) override {
-        return ::grpc::Status::OK;
-    }
-    ::grpc::Status EngineNewPayloadV1(::grpc::ServerContext* context, const ::types::ExecutionPayload* request, ::remote::EnginePayloadStatus* response) override {
-        return ::grpc::Status::OK;
-    }
-    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context,
-        const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
-        return ::grpc::Status::OK;
-    }
-};
-
-class FailureBackEndService : public ::remote::ETHBACKEND::Service {
-public:
-    ::grpc::Status Etherbase(::grpc::ServerContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response) override {
-        return ::grpc::Status::CANCELLED;
-    }
-    ::grpc::Status ProtocolVersion(::grpc::ServerContext* context, const ::remote::ProtocolVersionRequest* request, ::remote::ProtocolVersionReply* response) override {
-        return ::grpc::Status::CANCELLED;
-    }
-    ::grpc::Status NetVersion(::grpc::ServerContext* context, const ::remote::NetVersionRequest* request, ::remote::NetVersionReply* response) override {
-        return ::grpc::Status::CANCELLED;
-    }
-    ::grpc::Status ClientVersion(::grpc::ServerContext *context, const ::remote::ClientVersionRequest *request, ::remote::ClientVersionReply *response) override {
-        return ::grpc::Status::CANCELLED;
-    }
-    ::grpc::Status NetPeerCount(::grpc::ServerContext* context, const ::remote::NetPeerCountRequest* request, ::remote::NetPeerCountReply* response) override {
-        return ::grpc::Status::CANCELLED;
-    }
-    ::grpc::Status EngineGetPayloadV1(::grpc::ServerContext* context, const ::remote::EngineGetPayloadRequest* request, ::types::ExecutionPayload* response) override {
-        return ::grpc::Status::CANCELLED;
-    }
-    ::grpc::Status EngineNewPayloadV1(::grpc::ServerContext* context, const ::types::ExecutionPayload* request, ::remote::EnginePayloadStatus* response) override {
-        return ::grpc::Status::CANCELLED;
-    }
-    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context,
-        const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
-        return ::grpc::Status::CANCELLED;
-    }
-};
-
-class TestBackEndService : public ::remote::ETHBACKEND::Service {
-public:
-    ::grpc::Status Etherbase(::grpc::ServerContext* context, const ::remote::EtherbaseRequest* request, ::remote::EtherbaseReply* response) override {
-        auto address{make_h160(0xAAAAEEFFFFEEAAAA, 0x11DDBBAAAABBDD11, 0xCCDDDDCC)};
-        response->set_allocated_address(address);
-        return ::grpc::Status::OK;
-    }
-    ::grpc::Status ProtocolVersion(::grpc::ServerContext* context, const ::remote::ProtocolVersionRequest* request, ::remote::ProtocolVersionReply* response) override {
-        response->set_id(15);
-        return ::grpc::Status::OK;
-    }
-    ::grpc::Status NetVersion(::grpc::ServerContext* context, const ::remote::NetVersionRequest* request, ::remote::NetVersionReply* response) override {
-        response->set_id(66);
-        return ::grpc::Status::OK;
-    }
-    ::grpc::Status ClientVersion(::grpc::ServerContext *context, const ::remote::ClientVersionRequest *request, ::remote::ClientVersionReply *response) override {
-        response->set_nodename("erigon");
-        return ::grpc::Status::OK;
-    }
-    ::grpc::Status NetPeerCount(::grpc::ServerContext* context, const ::remote::NetPeerCountRequest* request, ::remote::NetPeerCountReply* response) override {
-        response->set_count(20);
-        return ::grpc::Status::OK;
-    }
-    ::grpc::Status EngineGetPayloadV1(::grpc::ServerContext* context, const ::remote::EngineGetPayloadRequest* request, ::types::ExecutionPayload* response) override {
-        response->set_allocated_coinbase(make_h160(0xa94f5374fce5edbc, 0x8e2a8697c1533167, 0x7e6ebf0b));
-        response->set_allocated_blockhash(make_h256(0x3559e851470f6e7b, 0xbed1db474980683e, 0x8c315bfce99b2a6e, 0xf47c057c04de7858));
-        response->set_allocated_basefeepergas(make_h256(0x0, 0x0, 0x0, 0x7));
-        response->set_allocated_stateroot(make_h256(0xca3149fa9e37db08, 0xd1cd49c9061db100, 0x2ef1cd58db2210f2, 0x115c8c989b2bdf45));
-        response->set_allocated_receiptroot(make_h256(0x56e81f171bcc55a6, 0xff8345e692c0f86e, 0x5b48e01b996cadc0, 0x01622fb5e363b421));
-        response->set_allocated_parenthash(make_h256(0x3b8fb240d288781d, 0x4aac94d3fd16809e, 0xe413bc99294a0857, 0x98a589dae51ddd4a));
-        response->set_allocated_prevrandao(make_h256(0x0, 0x0, 0x0, 0x1));
-        response->set_blocknumber(0x1);
-        response->set_gaslimit(0x1c9c380);
-        response->set_timestamp(0x5);
-        auto tx_bytes{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
-        response->add_transactions(tx_bytes.data(), tx_bytes.size());
-        // Assembling for logs_bloom
-        auto hi_hi_hi_logsbloom{make_h256(0x1000000000000000, 0x0, 0x0, 0x0)};
-        auto hi_hi_logsbloom{new ::types::H512()};
-        hi_hi_logsbloom->set_allocated_hi(hi_hi_hi_logsbloom);
-        auto hi_logsbloom{new ::types::H1024()};
-        hi_logsbloom->set_allocated_hi(hi_hi_logsbloom);
-        auto logsbloom{new ::types::H2048()};
-        logsbloom->set_allocated_hi(hi_logsbloom);
-        response->set_allocated_logsbloom(logsbloom);
-
-        return ::grpc::Status::OK;
-    }
-
-    ::grpc::Status EngineNewPayloadV1(::grpc::ServerContext* context, const ::types::ExecutionPayload* request, ::remote::EnginePayloadStatus* response) override {
-        silkworm::Bloom bloom;
-        bloom.fill(0);
-        bloom[0] = 0x12;
-        auto transaction{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
-        // Check that payload was converted to protobuf correctly
-        CHECK(request->timestamp() == 0x5);
-        CHECK(request->gaslimit() == 0x1c9c380);
-        CHECK(request->gasused() == 0x9);
-        CHECK(h160_equal_address(request->coinbase(), 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address));
-        CHECK(h256_equal_bytes32(request->stateroot(), 0xca3149fa9e37db08d1cd49c9061db1002ef1cd58db2210f2115c8c989b2bdf43_bytes32));
-        CHECK(h256_equal_bytes32(request->receiptroot(), 0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421_bytes32));
-        CHECK(h256_equal_bytes32(request->parenthash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
-        CHECK(h256_equal_bytes32(request->prevrandao(), 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32));
-        CHECK(h256_equal_bytes32(request->basefeepergas(), 0x0000000000000000000000000000000000000000000000000000000000000007_bytes32));
-        CHECK(h2048_equal_bloom(request->logsbloom(), bloom));
-        CHECK(request->transactions(0) == std::string(reinterpret_cast<char*>(&transaction[0]), 16));
-        // Assemble response
-        response->set_allocated_latestvalidhash(make_h256(0, 0, 0, 0x40));
-        response->set_validationerror("some error");
-        // Clean way to test each decoding of messages without writing a switch
-        response->set_status(static_cast<::remote::EngineStatus>(request->blocknumber()));
-        return ::grpc::Status::OK;
-    }
-
-    ::grpc::Status EngineForkChoiceUpdatedV1(::grpc::ServerContext* context,
-        const ::remote::EngineForkChoiceUpdatedRequest* request, ::remote::EngineForkChoiceUpdatedReply* response) override {
-        // check if we have payloadattributes
-        CHECK(request->has_payloadattributes());
-        ::remote::EnginePayloadAttributes payload_attributes_grpc = request->payloadattributes();
-        ::remote::EngineForkChoiceState fork_choice_state_grpc = request->forkchoicestate();
-        // check forkchoice state was converted into protobuf correctly
-        CHECK(h256_equal_bytes32(fork_choice_state_grpc.headblockhash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
-        CHECK(h256_equal_bytes32(fork_choice_state_grpc.safeblockhash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
-        CHECK(h256_equal_bytes32(fork_choice_state_grpc.finalizedblockhash(), 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32));
-        // check if payload attributes was converted into protobuf correctly
-        CHECK(payload_attributes_grpc.timestamp() == 0x1);
-        CHECK(h256_equal_bytes32(payload_attributes_grpc.prevrandao(), 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32));
-        CHECK(h160_equal_address(payload_attributes_grpc.suggestedfeerecipient(), 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address));
-        // assemble payload status
-        ::remote::EnginePayloadStatus *payload_status_grpc = new ::remote::EnginePayloadStatus();
-        payload_status_grpc->set_allocated_latestvalidhash(make_h256(0, 0, 0, 0x40));
-        payload_status_grpc->set_validationerror("some error");
-        payload_status_grpc->set_status(static_cast<::remote::EngineStatus>(0));
-        response->set_allocated_payloadstatus(payload_status_grpc);
-        // assemble payload id
-        response->set_payloadid(1);
-        return ::grpc::Status::OK;
-    }
-};
-
-static auto create_channel = []() {
-    return grpc::CreateChannel("localhost:12345", grpc::InsecureChannelCredentials());
-};
-
-class ClientServerTestBox {
-public:
-    explicit ClientServerTestBox(grpc::Service* service) : context_{create_channel, std::make_shared<BlockCache>(), std::make_shared<ethdb::kv::CoherentStateCache>()} {
-        server_address_ << "localhost:" << 12345; // TODO(canepat): grpc_pick_unused_port_or_die
-        grpc::ServerBuilder builder;
-        builder.AddListeningPort(server_address_.str(), grpc::InsecureServerCredentials());
-        builder.RegisterService(service);
-        server_ = builder.BuildAndStart();
-        context_thread_ = std::thread([&]() { context_.execute_loop(); });
-    }
-
-    template<auto method, typename T>
-    auto make_method_proxy() {
-        const auto channel = grpc::CreateChannel(server_address_.str(), grpc::InsecureChannelCredentials());
-        std::unique_ptr<T> target{std::make_unique<T>(*context_.io_context(), channel, context_.grpc_queue())};
-        return [target = std::move(target)](auto&&... args) {
-            return (target.get()->*method)(std::forward<decltype(args)>(args)...);
-        };
-    }
-
-    ~ClientServerTestBox() {
-        server_->Shutdown();
-        context_.stop();
-        if (context_thread_.joinable()) {
-            context_thread_.join();
-        }
-    }
-
-private:
-    Context context_;
-    std::ostringstream server_address_;
-    std::unique_ptr<grpc::Server> server_;
-    std::thread context_thread_;
-};
-
-template<typename T, auto method, typename R, typename ...Args>
-asio::awaitable<R> test_comethod(::remote::ETHBACKEND::Service* service, Args... args) {
-    ClientServerTestBox test_box{service};
-    auto method_proxy{test_box.make_method_proxy<method, T>()};
-    co_return co_await method_proxy(args...);
-}
-
-auto test_etherbase = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::etherbase, evmc::address>;
-auto test_protocol_version = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::protocol_version, uint64_t>;
-auto test_net_version = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::net_version, uint64_t>;
-auto test_client_version = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::client_version, std::string>;
-auto test_net_peer_count = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::net_peer_count, uint64_t>;
-auto test_engine_get_payload_v1 = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::engine_get_payload_v1, ExecutionPayload, uint64_t>;
-auto test_engine_new_payload_v1 = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::engine_new_payload_v1, PayloadStatus, ExecutionPayload>;
-auto test_engine_forkchoice_updated_v1 = test_comethod<ethbackend::RemoteBackEnd, &ethbackend::RemoteBackEnd::engine_forkchoice_updated_v1, ForkchoiceUpdatedReply, ForkchoiceUpdatedRequest>;
-
-TEST_CASE("BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+TEST_CASE_METHOD(EthBackendTest, "BackEnd::etherbase", "[silkrpc][ethbackend][backend]") {
+    test::StrictMockAsyncResponseReader<::remote::EtherbaseReply> reader;
+    EXPECT_CALL(*stub_, AsyncEtherbaseRaw).WillOnce(testing::Return(&reader));
 
     SECTION("call etherbase and get address") {
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto etherbase{asio::co_spawn(io_context, test_etherbase(&service), asio::use_future)};
-        io_context.run();
-        CHECK(etherbase.get() == 0xaaaaeeffffeeaaaa11ddbbaaaabbdd11ccddddcc_address);
+        ::remote::EtherbaseReply response;
+        response.set_allocated_address(make_h160(0xAAAAEEFFFFEEAAAA, 0x11DDBBAAAABBDD11, 0xCCDDDDCC));
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto etherbase = run<&ethbackend::RemoteBackEnd::etherbase>();
+        CHECK(etherbase == 0xaaaaeeffffeeaaaa11ddbbaaaabbdd11ccddddcc_address);
     }
 
     SECTION("call etherbase and get empty address") {
-        EmptyBackEndService service;
-        asio::io_context io_context;
-        auto etherbase{asio::co_spawn(io_context, test_etherbase(&service), asio::use_future)};
-        io_context.run();
-        CHECK(etherbase.get() == evmc::address{});
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto etherbase = run<&ethbackend::RemoteBackEnd::etherbase>();
+        CHECK(etherbase == evmc::address{});
     }
 
     SECTION("call etherbase and get error") {
-        FailureBackEndService service;
-        asio::io_context io_context;
-        auto etherbase{asio::co_spawn(io_context, test_etherbase(&service), asio::use_future)};
-        io_context.run();
-        CHECK_THROWS_AS(etherbase.get(), std::system_error);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::etherbase>()), boost::system::system_error);
     }
 }
 
-TEST_CASE("BackEnd::protocol_version", "[silkrpc][ethbackend][backend]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+TEST_CASE_METHOD(EthBackendTest, "BackEnd::protocol_version", "[silkrpc][ethbackend][backend]") {
+    test::StrictMockAsyncResponseReader<::remote::ProtocolVersionReply> reader;
+    EXPECT_CALL(*stub_, AsyncProtocolVersionRaw).WillOnce(testing::Return(&reader));
 
     SECTION("call protocol_version and get version") {
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_protocol_version(&service), asio::use_future)};
-        io_context.run();
-        CHECK(version.get() == 15);
+        ::remote::ProtocolVersionReply response;
+        response.set_id(15);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto protocol_version = run<&ethbackend::RemoteBackEnd::protocol_version>();
+        CHECK(protocol_version == 15);
     }
 
     SECTION("call protocol_version and get empty version") {
-        EmptyBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_protocol_version(&service), asio::use_future)};
-        io_context.run();
-        CHECK(version.get() == 0);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto protocol_version = run<&ethbackend::RemoteBackEnd::protocol_version>();
+        CHECK(protocol_version == 0);
     }
 
     SECTION("call protocol_version and get error") {
-        FailureBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_protocol_version(&service), asio::use_future)};
-        io_context.run();
-        CHECK_THROWS_AS(version.get(), std::system_error);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::protocol_version>()), boost::system::system_error);
     }
 }
 
-TEST_CASE("BackEnd::net_version", "[silkrpc][ethbackend][backend]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+TEST_CASE_METHOD(EthBackendTest, "BackEnd::net_version", "[silkrpc][ethbackend][backend]") {
+    test::StrictMockAsyncResponseReader<::remote::NetVersionReply> reader;
+    EXPECT_CALL(*stub_, AsyncNetVersionRaw).WillOnce(testing::Return(&reader));
 
     SECTION("call net_version and get version") {
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_net_version(&service), asio::use_future)};
-        io_context.run();
-        CHECK(version.get() == 66);
+        ::remote::NetVersionReply response;
+        response.set_id(66);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto net_version = run<&ethbackend::RemoteBackEnd::net_version>();
+        CHECK(net_version == 66);
     }
 
     SECTION("call net_version and get empty version") {
-        EmptyBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_net_version(&service), asio::use_future)};
-        io_context.run();
-        CHECK(version.get() == 0);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto net_version = run<&ethbackend::RemoteBackEnd::net_version>();
+        CHECK(net_version == 0);
     }
 
     SECTION("call net_version and get error") {
-        FailureBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_net_version(&service), asio::use_future)};
-        io_context.run();
-        CHECK_THROWS_AS(version.get(), std::system_error);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::net_version>()), boost::system::system_error);
     }
 }
 
-TEST_CASE("BackEnd::client_version", "[silkrpc][ethbackend][backend]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+TEST_CASE_METHOD(EthBackendTest, "BackEnd::client_version", "[silkrpc][ethbackend][backend]") {
+    test::StrictMockAsyncResponseReader<::remote::ClientVersionReply> reader;
+    EXPECT_CALL(*stub_, AsyncClientVersionRaw).WillOnce(testing::Return(&reader));
 
     SECTION("call client_version and get version") {
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_client_version(&service), asio::use_future)};
-        io_context.run();
-        CHECK(version.get() == "erigon");
+        ::remote::ClientVersionReply response;
+        response.set_nodename("erigon");
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto client_version = run<&ethbackend::RemoteBackEnd::client_version>();
+        CHECK(client_version == "erigon");
     }
 
     SECTION("call client_version and get empty version") {
-        EmptyBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_client_version(&service), asio::use_future)};
-        io_context.run();
-        CHECK(version.get() == "");
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto client_version = run<&ethbackend::RemoteBackEnd::client_version>();
+        CHECK(client_version == "");
     }
 
     SECTION("call client_version and get error") {
-        FailureBackEndService service;
-        asio::io_context io_context;
-        auto version{asio::co_spawn(io_context, test_client_version(&service), asio::use_future)};
-        io_context.run();
-        CHECK_THROWS_AS(version.get(), std::system_error);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::client_version>()), boost::system::system_error);
     }
 }
 
-TEST_CASE("BackEnd::net_peer_count", "[silkrpc][ethbackend][backend]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+TEST_CASE_METHOD(EthBackendTest, "BackEnd::net_peer_count", "[silkrpc][ethbackend][backend]") {
+    test::StrictMockAsyncResponseReader<::remote::NetPeerCountReply> reader;
+    EXPECT_CALL(*stub_, AsyncNetPeerCountRaw).WillOnce(testing::Return(&reader));
 
-    SECTION("call net_peer_count and get peer count") {
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto peer_count{asio::co_spawn(io_context, test_net_peer_count(&service), asio::use_future)};
-        io_context.run();
-        CHECK(peer_count.get() == 20);
+    SECTION("call net_peer_count and get count") {
+        ::remote::NetPeerCountReply response;
+        response.set_count(20);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto net_peer_count = run<&ethbackend::RemoteBackEnd::net_peer_count>();
+        CHECK(net_peer_count == 20);
     }
 
-    SECTION("call net_peer_count and get empty peer count") {
-        EmptyBackEndService service;
-        asio::io_context io_context;
-        auto peer_count{asio::co_spawn(io_context, test_net_peer_count(&service), asio::use_future)};
-        io_context.run();
-        CHECK(peer_count.get() == 0);
+    SECTION("call net_peer_count and get zero count") {
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto net_peer_count = run<&ethbackend::RemoteBackEnd::net_peer_count>();
+        CHECK(net_peer_count == 0);
     }
 
     SECTION("call net_peer_count and get error") {
-        FailureBackEndService service;
-        asio::io_context io_context;
-        auto peer_count{asio::co_spawn(io_context, test_net_peer_count(&service), asio::use_future)};
-        io_context.run();
-        CHECK_THROWS_AS(peer_count.get(), std::system_error);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::net_peer_count>()), boost::system::system_error);
     }
 }
 
-TEST_CASE("BackEnd::engine_get_payload_v1", "[silkrpc][ethbackend][backend]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+TEST_CASE_METHOD(EthBackendTest, "BackEnd::engine_get_payload_v1", "[silkrpc][ethbackend][backend]") {
+    test::StrictMockAsyncResponseReader<::types::ExecutionPayload> reader;
+    EXPECT_CALL(*stub_, AsyncEngineGetPayloadV1Raw).WillOnce(testing::Return(&reader));
 
     SECTION("call engine_get_payload_v1 and get payload") {
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_get_payload_v1(&service, 0), asio::use_future)};
-        io_context.run();
-        auto payload{reply.get()};
+        ::types::ExecutionPayload response;
+        response.set_allocated_coinbase(make_h160(0xa94f5374fce5edbc, 0x8e2a8697c1533167, 0x7e6ebf0b));
+        response.set_allocated_blockhash(make_h256(0x3559e851470f6e7b, 0xbed1db474980683e, 0x8c315bfce99b2a6e, 0xf47c057c04de7858));
+        response.set_allocated_basefeepergas(make_h256(0x0, 0x0, 0x0, 0x7));
+        response.set_allocated_stateroot(make_h256(0xca3149fa9e37db08, 0xd1cd49c9061db100, 0x2ef1cd58db2210f2, 0x115c8c989b2bdf45));
+        response.set_allocated_receiptroot(make_h256(0x56e81f171bcc55a6, 0xff8345e692c0f86e, 0x5b48e01b996cadc0, 0x01622fb5e363b421));
+        response.set_allocated_parenthash(make_h256(0x3b8fb240d288781d, 0x4aac94d3fd16809e, 0xe413bc99294a0857, 0x98a589dae51ddd4a));
+        response.set_allocated_prevrandao(make_h256(0x0, 0x0, 0x0, 0x1));
+        response.set_blocknumber(0x1);
+        response.set_gaslimit(0x1c9c380);
+        response.set_timestamp(0x5);
+        const auto tx_bytes{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
+        response.add_transactions(tx_bytes.data(), tx_bytes.size());
+        const auto hi_hi_hi_logsbloom{make_h256(0x1000000000000000, 0x0, 0x0, 0x0)};
+        const auto hi_hi_logsbloom{new ::types::H512()};
+        hi_hi_logsbloom->set_allocated_hi(hi_hi_hi_logsbloom);
+        const auto hi_logsbloom{new ::types::H1024()};
+        hi_logsbloom->set_allocated_hi(hi_hi_logsbloom);
+        const auto logsbloom{new ::types::H2048()};
+        logsbloom->set_allocated_hi(hi_logsbloom);
+        response.set_allocated_logsbloom(logsbloom);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto payload = run<&ethbackend::RemoteBackEnd::engine_get_payload_v1>(0);
         CHECK(payload.number == 0x1);
         CHECK(payload.gas_limit == 0x1c9c380);
         CHECK(payload.suggested_fee_recipient == 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address);
@@ -475,31 +229,27 @@ TEST_CASE("BackEnd::engine_get_payload_v1", "[silkrpc][ethbackend][backend]") {
         CHECK(payload.logs_bloom == expected_bloom);
     }
 
-    SECTION("call engine_get_payload_v1 and get empty peer count") {
-        EmptyBackEndService service;
-        asio::io_context io_context;
-        auto payload{asio::co_spawn(io_context, test_engine_get_payload_v1(&service, 0), asio::use_future)};
-        io_context.run();
-        CHECK(payload.get().number == 0);
+    SECTION("call engine_get_payload_v1 and get empty payload") {
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto payload = run<&ethbackend::RemoteBackEnd::engine_get_payload_v1>(0);
+        CHECK(payload.number == 0);
     }
 
     SECTION("call engine_get_payload_v1 and get error") {
-        FailureBackEndService service;
-        asio::io_context io_context;
-        auto payload{asio::co_spawn(io_context, test_engine_get_payload_v1(&service, 0), asio::use_future)};
-        io_context.run();
-        CHECK_THROWS_AS(payload.get(), std::system_error);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::engine_get_payload_v1>(0)), boost::system::system_error);
     }
 }
 
-TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+TEST_CASE_METHOD(EthBackendTest, "BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
+    test::StrictMockAsyncResponseReader<::remote::EnginePayloadStatus> reader;
+    EXPECT_CALL(*stub_, AsyncEngineNewPayloadV1Raw).WillOnce(testing::Return(&reader));
 
     silkworm::Bloom bloom;
     bloom.fill(0);
     bloom[0] = 0x12;
-    auto transaction{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
-    silkrpc::ExecutionPayload execution_payload{
+    const auto transaction{*silkworm::from_hex("0xf92ebdeab45d368f6354e8c5a8ac586c")};
+    const ExecutionPayload execution_payload{
         .timestamp = 0x5,
         .gas_limit = 0x1c9c380,
         .gas_used = 0x9,
@@ -515,126 +265,96 @@ TEST_CASE("BackEnd::engine_new_payload_v1", "[silkrpc][ethbackend][backend]") {
     };
 
     SECTION("call engine_new_payload_v1 and get VALID status") {
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
-        io_context.run();
-        auto payload_status{reply.get()};
+        ::remote::EnginePayloadStatus response;
+        response.set_allocated_latestvalidhash(make_h256(0, 0, 0, 0x40));
+        response.set_status(::remote::EngineStatus::VALID);
+        response.set_validationerror("some error");
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto payload_status = run<&ethbackend::RemoteBackEnd::engine_new_payload_v1>(execution_payload);
         CHECK(payload_status.status == "VALID");
         CHECK(payload_status.latest_valid_hash == 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32);
         CHECK(payload_status.validation_error == "some error");
     }
 
-    SECTION("call engine_new_payload_v1 and get INVALID status") {
-        execution_payload.number = 1;
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
-        io_context.run();
-        CHECK(reply.get().status == "INVALID");
+    const ::remote::EngineStatus all_engine_statuses[] = {
+        ::remote::EngineStatus::VALID,
+        ::remote::EngineStatus::INVALID,
+        ::remote::EngineStatus::SYNCING,
+        ::remote::EngineStatus::ACCEPTED,
+        ::remote::EngineStatus::INVALID_BLOCK_HASH,
+        ::remote::EngineStatus::INVALID_TERMINAL_BLOCK
+    };
+    for (const auto engine_status : all_engine_statuses) {
+        const auto engine_status_name{::remote::EngineStatus_Name(engine_status)};
+        SECTION(std::string("call engine_new_payload_v1 and get ") + engine_status_name + std::string(" status")) {
+            ::remote::EnginePayloadStatus response;
+            response.set_status(engine_status);
+            EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+            const auto payload_status = run<&ethbackend::RemoteBackEnd::engine_new_payload_v1>(execution_payload);
+            CHECK(payload_status.status == engine_status_name);
+        }
     }
 
-    SECTION("call engine_new_payload_v1 and get SYNCYNG status") {
-        execution_payload.number = 2;
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
-        io_context.run();
-        CHECK(reply.get().status == "SYNCING");
-    }
-
-    SECTION("call engine_new_payload_v1 and get ACCEPTED status") {
-        execution_payload.number = 3;
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
-        io_context.run();
-        CHECK(reply.get().status == "ACCEPTED");
-    }
-
-    SECTION("call engine_new_payload_v1 and get INVALID_BLOCK_HASH status") {
-        execution_payload.number = 4;
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
-        io_context.run();
-        CHECK(reply.get().status == "INVALID_BLOCK_HASH");
-    }
-
-    SECTION("call engine_new_payload_v1 and get INVALID_TERMINAL_BLOCK status") {
-        execution_payload.number = 5;
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
-        io_context.run();
-        CHECK(reply.get().status == "INVALID_TERMINAL_BLOCK");
-    }
-
-    SECTION("call engine_new_payload_v1 and get empty peer count") {
-        EmptyBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
-        io_context.run();
-        auto payload_status{reply.get()};
+    SECTION("call engine_new_payload_v1 and get empty payload") {
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto payload_status = run<&ethbackend::RemoteBackEnd::engine_new_payload_v1>(execution_payload);
         CHECK(payload_status.status == "VALID"); // Default value in interfaces is Valid
         CHECK(payload_status.latest_valid_hash == std::nullopt);
         CHECK(payload_status.validation_error == std::nullopt);
     }
 
     SECTION("call engine_new_payload_v1 and get error") {
-        FailureBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_new_payload_v1(&service, execution_payload), asio::use_future)};
-        io_context.run();
-        CHECK_THROWS_AS(reply.get(), std::system_error);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::engine_new_payload_v1>(execution_payload)), boost::system::system_error);
     }
 }
 
-TEST_CASE("Backend::engine_forkchoice_updated_v1", "[silkrpc][ethbackend][backend]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
-    silkrpc::PayloadAttributes payload_attributes{
-        .timestamp = 0x1,
-        .prev_randao = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
-        .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address
-    };
-    silkrpc::ForkchoiceUpdatedRequest forkchoice_request{
-        .forkchoice_state = silkrpc::ForkchoiceState{
+TEST_CASE_METHOD(EthBackendTest, "BackEnd::engine_forkchoice_updated_v1", "[silkrpc][ethbackend][backend]") {
+    test::StrictMockAsyncResponseReader<::remote::EngineForkChoiceUpdatedReply> reader;
+    EXPECT_CALL(*stub_, AsyncEngineForkChoiceUpdatedV1Raw).WillOnce(testing::Return(&reader));
+
+    const ForkchoiceUpdatedRequest forkchoice_request{
+        .forkchoice_state = ForkchoiceState{
             .head_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
             .safe_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
             .finalized_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32
         },
-        .payload_attributes = std::optional<silkrpc::PayloadAttributes>{payload_attributes}
+        .payload_attributes = std::make_optional<PayloadAttributes>({
+            .timestamp = 0x1,
+            .prev_randao = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
+            .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address
+        })
     };
+
     SECTION("call engine_forkchoice_updated_v1 and get VALID status") {
-        TestBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), asio::use_future)};
-        io_context.run();
-        auto forkchoice_reply{reply.get()};
-        silkrpc::PayloadStatus payload_status = forkchoice_reply.payload_status;
+        ::remote::EngineForkChoiceUpdatedReply response;
+        ::remote::EnginePayloadStatus* engine_payload_status = new ::remote::EnginePayloadStatus();
+        engine_payload_status->set_allocated_latestvalidhash(make_h256(0, 0, 0, 0x40));
+        engine_payload_status->set_validationerror("some error");
+        engine_payload_status->set_status(::remote::EngineStatus::VALID);
+        response.set_allocated_payloadstatus(engine_payload_status);
+        response.set_payloadid(1);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto forkchoice_reply = run<&ethbackend::RemoteBackEnd::engine_forkchoice_updated_v1>(forkchoice_request);
+        const PayloadStatus payload_status = forkchoice_reply.payload_status;
         CHECK(payload_status.status == "VALID");
         CHECK(payload_status.latest_valid_hash == 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32);
         CHECK(payload_status.validation_error == "some error");
     }
 
-    SECTION("call engine_forkchoice_updated_v1 and get error") {
-        EmptyBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), asio::use_future)};
-        io_context.run();
-        auto forkchoice_reply{reply.get()};
-        silkrpc::PayloadStatus payload_status = forkchoice_reply.payload_status;
-        CHECK(payload_status.status == "VALID"); // defaults to valid status
+    SECTION("call engine_forkchoice_updated_v1 and get zero count") {
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto forkchoice_reply = run<&ethbackend::RemoteBackEnd::engine_forkchoice_updated_v1>(forkchoice_request);
+        const PayloadStatus payload_status = forkchoice_reply.payload_status;
+        CHECK(payload_status.status == "VALID"); // Default value in interfaces is Valid
         CHECK(payload_status.latest_valid_hash == std::nullopt);
         CHECK(payload_status.validation_error == std::nullopt);
     }
 
-    SECTION("call engine_forkchoice_updated_v1 and get VALID status with empty service") {
-        FailureBackEndService service;
-        asio::io_context io_context;
-        auto reply{asio::co_spawn(io_context, test_engine_forkchoice_updated_v1(&service, forkchoice_request), asio::use_future)};
-        io_context.run();
-        CHECK_THROWS_AS(reply.get(), std::system_error);
+    SECTION("call engine_forkchoice_updated_v1 and get error") {
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::engine_forkchoice_updated_v1>(forkchoice_request)), boost::system::system_error);
     }
 }
+
 } // namespace silkrpc

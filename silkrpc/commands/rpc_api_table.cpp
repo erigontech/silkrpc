@@ -140,9 +140,11 @@ void RpcApiTable::add_net_handlers() {
 
 void RpcApiTable::add_parity_handlers() {
     handlers_[http::method::k_parity_getBlockReceipts] = &commands::RpcApi::handle_parity_get_block_receipts;
+    handlers_[http::method::k_parity_listStorageKeys] = &commands::RpcApi::handle_parity_list_storage_keys;
 }
 
 void RpcApiTable::add_erigon_handlers() {
+    handlers_[http::method::k_erigon_getBlockByTimestamp] = &commands::RpcApi::handle_erigon_get_block_by_timestamp;
     handlers_[http::method::k_erigon_getHeaderByHash] = &commands::RpcApi::handle_erigon_get_header_by_hash;
     handlers_[http::method::k_erigon_getHeaderByNumber] = &commands::RpcApi::handle_erigon_get_header_by_number;
     handlers_[http::method::k_erigon_getLogsByHash] = &commands::RpcApi::handle_erigon_get_logs_by_hash;

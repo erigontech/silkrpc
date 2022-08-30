@@ -23,7 +23,7 @@
 
 namespace silkrpc::core {
 
-asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader) {
+boost::asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader) {
     uint64_t block_number;
     if (block_id == kEarliestBlockId) {
         block_number = kEarliestBlockNumber;
@@ -36,22 +36,22 @@ asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const co
     co_return block_number;
 }
 
-asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::DatabaseReader& reader) {
+boost::asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::DatabaseReader& reader) {
     const auto current_block_number = co_await stages::get_sync_stage_progress(reader, stages::kFinish);
     co_return current_block_number;
 }
 
-asio::awaitable<uint64_t> get_highest_block_number(const core::rawdb::DatabaseReader& reader) {
-    const auto current_block_number = co_await stages::get_sync_stage_progress(reader, stages::kHeaders);
-    co_return current_block_number;
+boost::asio::awaitable<uint64_t> get_highest_block_number(const core::rawdb::DatabaseReader& reader) {
+    const auto highest_block_number = co_await stages::get_sync_stage_progress(reader, stages::kHeaders);
+    co_return highest_block_number;
 }
 
-asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader) {
+boost::asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader) {
     const auto latest_block_number = co_await stages::get_sync_stage_progress(reader, stages::kExecution);
     co_return latest_block_number;
 }
 
-asio::awaitable<bool> is_latest_block_number(const BlockNumberOrHash& bnoh, const core::rawdb::DatabaseReader& reader) {
+boost::asio::awaitable<bool> is_latest_block_number(const BlockNumberOrHash& bnoh, const core::rawdb::DatabaseReader& reader) {
     if (bnoh.is_tag()) {
         co_return bnoh.tag() == core::kLatestBlockId || bnoh.tag() == core::kPendingBlockId;
     } else {

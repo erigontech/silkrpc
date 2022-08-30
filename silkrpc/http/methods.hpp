@@ -103,6 +103,7 @@ constexpr const char* k_trace_filter{"trace_filter"};
 constexpr const char* k_trace_get{"trace_get"};
 constexpr const char* k_trace_transaction{"trace_transaction"};
 
+constexpr const char* k_erigon_getBlockByTimestamp{"erigon_getBlockByTimestamp"};
 constexpr const char* k_erigon_getHeaderByHash{"erigon_getHeaderByHash"};
 constexpr const char* k_erigon_getHeaderByNumber{"erigon_getHeaderByNumber"};
 constexpr const char* k_erigon_getLogsByHash{"erigon_getLogsByHash"};
@@ -110,6 +111,7 @@ constexpr const char* k_erigon_forks{"erigon_forks"};
 constexpr const char* k_erigon_issuance{"erigon_issuance"};
 
 constexpr const char* k_parity_getBlockReceipts{"parity_getBlockReceipts"};
+constexpr const char* k_parity_listStorageKeys{"parity_listStorageKeys"};
 
 constexpr const char* k_engine_getPayloadV1{"engine_getPayloadV1"};
 constexpr const char* k_engine_newPayloadV1{"engine_newPayloadV1"};

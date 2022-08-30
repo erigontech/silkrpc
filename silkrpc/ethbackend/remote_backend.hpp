@@ -21,12 +21,11 @@
 #include <string>
 #include <memory>
 
-#include <asio/io_context.hpp>
-#include <asio/use_awaitable.hpp>
+#include <agrpc/grpc_context.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
 
-#include <silkrpc/grpc/awaitables.hpp>
-#include <silkrpc/grpc/async_unary_client.hpp>
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
 #include <silkrpc/types/execution_payload.hpp>
@@ -34,148 +33,23 @@
 
 namespace silkrpc::ethbackend {
 
-using EtherbaseClient = AsyncUnaryClient<
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::EtherbaseRequest,
-    ::remote::EtherbaseReply,
-    &::remote::ETHBACKEND::StubInterface::PrepareAsyncEtherbase
->;
-
-using ProtocolVersionClient = AsyncUnaryClient<
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::ProtocolVersionRequest,
-    ::remote::ProtocolVersionReply,
-    &::remote::ETHBACKEND::StubInterface::PrepareAsyncProtocolVersion
->;
-
-using NetVersionClient = AsyncUnaryClient<
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::NetVersionRequest,
-    ::remote::NetVersionReply,
-    &::remote::ETHBACKEND::StubInterface::PrepareAsyncNetVersion
->;
-
-using ClientVersionClient = AsyncUnaryClient<
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::ClientVersionRequest,
-    ::remote::ClientVersionReply,
-    &::remote::ETHBACKEND::StubInterface::PrepareAsyncClientVersion
->;
-
-using NetPeerCountClient = AsyncUnaryClient<
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::NetPeerCountRequest,
-    ::remote::NetPeerCountReply,
-    &::remote::ETHBACKEND::StubInterface::PrepareAsyncNetPeerCount
->;
-
-using EngineGetPayloadV1Client = AsyncUnaryClient<
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::EngineGetPayloadRequest,
-    ::types::ExecutionPayload,
-    &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineGetPayloadV1
->;
-
-using EngineNewPayloadV1Client = AsyncUnaryClient<
-    ::remote::ETHBACKEND::StubInterface,
-    ::types::ExecutionPayload,
-    ::remote::EnginePayloadStatus,
-    &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineNewPayloadV1
->;
-
-using EngineForkChoiceUpdatedV1Client = AsyncUnaryClient<
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::EngineForkChoiceUpdatedRequest,
-    ::remote::EngineForkChoiceUpdatedReply,
-    &::remote::ETHBACKEND::StubInterface::PrepareAsyncEngineForkChoiceUpdatedV1
->;
-
-using EtherbaseAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
-    EtherbaseClient,
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::EtherbaseRequest,
-    ::remote::EtherbaseReply
->;
-
-using ProtocolVersionAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
-    ProtocolVersionClient,
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::ProtocolVersionRequest,
-    ::remote::ProtocolVersionReply
->;
-
-using NetVersionAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
-    NetVersionClient,
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::NetVersionRequest,
-    ::remote::NetVersionReply
->;
-
-using ClientVersionAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
-    ClientVersionClient,
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::ClientVersionRequest,
-    ::remote::ClientVersionReply
->;
-
-using NetPeerCountAwaitable = unary_awaitable<
-    asio::io_context::executor_type,
-    NetPeerCountClient,
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::NetPeerCountRequest,
-    ::remote::NetPeerCountReply
->;
-
-using EngineGetPayloadV1Awaitable = unary_awaitable<
-    asio::io_context::executor_type,
-    EngineGetPayloadV1Client,
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::EngineGetPayloadRequest,
-    ::types::ExecutionPayload
->;
-
-using EngineNewPayloadV1Awaitable = unary_awaitable<
-    asio::io_context::executor_type,
-    EngineNewPayloadV1Client,
-    ::remote::ETHBACKEND::StubInterface,
-    ::types::ExecutionPayload,
-    ::remote::EnginePayloadStatus
->;
-
-using EngineForkChoiceUpdatedV1Awaitable = unary_awaitable<
-    asio::io_context::executor_type,
-    EngineForkChoiceUpdatedV1Client,
-    ::remote::ETHBACKEND::StubInterface,
-    ::remote::EngineForkChoiceUpdatedRequest,
-    ::remote::EngineForkChoiceUpdatedReply
->;
-
 class RemoteBackEnd final: public BackEnd {
 public:
-    explicit RemoteBackEnd(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, grpc::CompletionQueue* queue)
-    : RemoteBackEnd(context.get_executor(), ::remote::ETHBACKEND::NewStub(channel), queue) {}
+    explicit RemoteBackEnd(boost::asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context);
 
-    explicit RemoteBackEnd(asio::io_context::executor_type executor, std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub, grpc::CompletionQueue* queue)
-    : executor_(executor), stub_(std::move(stub)), queue_(queue) {
-        SILKRPC_TRACE << "BackEnd::ctor " << this << "\n";
-    }
+    explicit RemoteBackEnd(boost::asio::io_context::executor_type executor, std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub,
+        agrpc::GrpcContext& grpc_context);
 
-    ~RemoteBackEnd() {
-        SILKRPC_TRACE << "BackEnd::dtor " << this << "\n";
-    }
+    ~RemoteBackEnd();
 
-    asio::awaitable<evmc::address> etherbase();
-    asio::awaitable<uint64_t> protocol_version();
-    asio::awaitable<uint64_t> net_version();
-    asio::awaitable<std::string> client_version();
-    asio::awaitable<uint64_t> net_peer_count();
-    asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id);
-    asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload);
-    asio::awaitable<ForkchoiceUpdatedReply> engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request);
+    boost::asio::awaitable<evmc::address> etherbase();
+    boost::asio::awaitable<uint64_t> protocol_version();
+    boost::asio::awaitable<uint64_t> net_version();
+    boost::asio::awaitable<std::string> client_version();
+    boost::asio::awaitable<uint64_t> net_peer_count();
+    boost::asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id);
+    boost::asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload);
+    boost::asio::awaitable<ForkchoiceUpdatedReply> engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request);
 
 private:
     evmc::address address_from_H160(const types::H160& h160);
@@ -202,9 +76,9 @@ private:
     PayloadStatus decode_payload_status(const remote::EnginePayloadStatus& payload_status_grpc);
     std::string decode_status_message(const remote::EngineStatus& status);
 
-    asio::io_context::executor_type executor_;
+    boost::asio::io_context::executor_type executor_;
     std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub_;
-    grpc::CompletionQueue* queue_;
+    agrpc::GrpcContext& grpc_context_;
 };
 
 } // namespace silkrpc::ethbackend

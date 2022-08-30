@@ -16,6 +16,8 @@
 
 #include "net_api.hpp"
 
+#include <agrpc/grpc_context.hpp>
+#include <agrpc/test.hpp>
 #include <catch2/catch.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -26,11 +28,11 @@ namespace silkrpc::commands {
 using Catch::Matchers::Message;
 
 TEST_CASE("NetRpcApi::NetRpcApi", "[silkrpc][erigon_api]") {
-    asio::io_context io_context;
+    boost::asio::io_context io_context;
     auto channel{grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials())};
-    grpc::CompletionQueue queue;
+    agrpc::GrpcContext grpc_context{std::make_unique<grpc::CompletionQueue>()};
     std::unique_ptr<ethbackend::BackEnd> backend{
-        std::make_unique<ethbackend::RemoteBackEnd>(io_context, channel, &queue)
+        std::make_unique<ethbackend::RemoteBackEnd>(io_context, channel, grpc_context)
     };
     CHECK_NOTHROW(NetRpcApi{backend});
 }

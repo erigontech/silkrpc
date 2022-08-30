@@ -20,9 +20,9 @@
 #include <string>
 #include <vector>
 
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 
 namespace silkrpc::ethdb {
@@ -52,9 +52,9 @@ public:
 
     uint32_t cursor_id() const override { return 0; }
 
-    asio::awaitable<void> open_cursor(const std::string& table_name) override { co_return; }
+    boost::asio::awaitable<void> open_cursor(const std::string& table_name) override { co_return; }
 
-    asio::awaitable<KeyValue> seek(silkworm::ByteView seek_key) override {
+    boost::asio::awaitable<KeyValue> seek(silkworm::ByteView seek_key) override {
         index_ = 0;
         for (; index_ < vector_.size(); index_++) {
             if (vector_[index_].part1 == seek_key) {
@@ -65,9 +65,9 @@ public:
         co_return KeyValue{};
     }
 
-    asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override { co_return KeyValue{silkworm::Bytes{key}, value}; }
+    boost::asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override { co_return KeyValue{silkworm::Bytes{key}, value}; }
 
-    asio::awaitable<KeyValue> next() override {
+    boost::asio::awaitable<KeyValue> next() override {
         if (++index_ >= vector_.size()) {
             co_return KeyValue{};
         }
@@ -75,7 +75,7 @@ public:
         co_return KeyValue{full_key, value};
     }
 
-    asio::awaitable<void> close_cursor() override { co_return; }
+    boost::asio::awaitable<void> close_cursor() override { co_return; }
 
     uint32_t index() const { return index_; }
 
@@ -98,7 +98,7 @@ static TriBytes to_tri_bytes(const TriString& ts) {
 }
 
 TEST_CASE("split cursor") {
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
 
     std::vector<TriString> hex {
         {"79a4d35bd00b1843ec5292217e71dace5e5a7439", "ffffffffffffffff", "deadbeaf"}, // 0
@@ -128,7 +128,7 @@ TEST_CASE("split cursor") {
 
         SplitCursor sc(ac, key, 0, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
 
-        auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
         CHECK(skv.key1 == key);
@@ -142,7 +142,7 @@ TEST_CASE("split cursor") {
 
         SplitCursor sc(ac, key, 0, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
 
-        auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
         CHECK(skv.key1 == key);
@@ -151,7 +151,7 @@ TEST_CASE("split cursor") {
 
         auto count  = 0;
         while (true) {
-            auto result = asio::co_spawn(pool, sc.next(), asio::use_future);
+            auto result = boost::asio::co_spawn(pool, sc.next(), boost::asio::use_future);
             const SplittedKeyValue &skv = result.get();
             if (skv.key1.length() == 0) {
                 break;
@@ -171,7 +171,7 @@ TEST_CASE("split cursor") {
 
         SplitCursor sc(ac, key, 0, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
 
-        auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
         CHECK(skv.key1 == key);
@@ -180,7 +180,7 @@ TEST_CASE("split cursor") {
 
         auto count  = 0;
         while (true) {
-            auto result = asio::co_spawn(pool, sc.next(), asio::use_future);
+            auto result = boost::asio::co_spawn(pool, sc.next(), boost::asio::use_future);
             const SplittedKeyValue &skv = result.get();
             if (skv.key1.length() == 0) {
                 break;
@@ -199,7 +199,7 @@ TEST_CASE("split cursor") {
 
         SplitCursor sc(ac, key, 0, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
 
-        auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
         CHECK(skv.key1.length() == 0);
@@ -213,7 +213,7 @@ TEST_CASE("split cursor") {
 
         SplitCursor sc(ac, key, 28, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
 
-        auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
         CHECK(skv.key1 == key);
@@ -227,7 +227,7 @@ TEST_CASE("split cursor") {
 
         SplitCursor sc(ac, key, 28, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
 
-        auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
         CHECK(skv.key1 == key);
@@ -236,7 +236,7 @@ TEST_CASE("split cursor") {
 
         auto count  = 0;
         while (true) {
-            auto result = asio::co_spawn(pool, sc.next(), asio::use_future);
+            auto result = boost::asio::co_spawn(pool, sc.next(), boost::asio::use_future);
             const SplittedKeyValue &skv = result.get();
             if (skv.key1.length() == 0) {
                 break;
@@ -256,7 +256,7 @@ TEST_CASE("split cursor") {
 
         SplitCursor sc(ac, key, 28, silkworm::kAddressLength, silkworm::kAddressLength + 8, silkworm::kAddressLength + 12);
 
-        auto result = asio::co_spawn(pool, sc.seek(), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
         CHECK(skv.key1 == key);

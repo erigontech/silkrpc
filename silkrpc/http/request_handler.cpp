@@ -33,7 +33,7 @@
 
 namespace silkrpc::http {
 
-asio::awaitable<void> RequestHandler::handle_request(const http::Request& request, http::Reply& reply) {
+boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request& request, http::Reply& reply) {
     SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
     auto start = clock_time::now();
 

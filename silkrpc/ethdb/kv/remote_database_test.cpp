@@ -16,122 +16,69 @@
 
 #include "remote_database.hpp"
 
-#include <future>
-#include <system_error>
+#include <memory>
 
-#include <asio/co_spawn.hpp>
-#include <asio/use_future.hpp>
-#include <asio/io_context.hpp>
+#include <boost/system/system_error.hpp>
 #include <catch2/catch.hpp>
 
-#include <silkrpc/ethdb/kv/tx_streaming_client.hpp>
+#include <silkrpc/test/kv_test_base.hpp>
+#include <silkrpc/test/grpc_responder.hpp>
+#include <silkrpc/test/grpc_actions.hpp>
+#include <silkrpc/test/grpc_matcher.hpp>
 
 namespace silkrpc::ethdb::kv {
 
-using Catch::Matchers::Message;
+struct RemoteDatabaseTest : test::KVTestBase {
+    // RemoteDatabase holds the KV stub by std::unique_ptr so we cannot rely on mock stub from base class
+    StrictMockKVStub* kv_stub_ = new StrictMockKVStub;
+    RemoteDatabase remote_db_{grpc_context_, std::unique_ptr<StrictMockKVStub>{kv_stub_}};
+};
 
-TEST_CASE("RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
+TEST_CASE_METHOD(RemoteDatabaseTest, "RemoteDatabase::begin", "[silkrpc][ethdb][kv][remote_database]") {
+    using namespace testing;  // NOLINT(build/namespaces)
+
     SECTION("success") {
-        class MockStreamingClient : public AsyncTxStreamingClient {
-        public:
-            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
-            void start_call(std::function<void(const grpc::Status&)> start_completed) override {
-                auto result = std::async([&]() {
-                    start_completed(::grpc::Status::OK);
-                });
-            }
-            void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                auto result = std::async([&]() {
-                    remote::Pair pair;
-                    pair.set_txid(4);
-                    read_completed(::grpc::Status::OK, pair);
-                });
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        CoherentStateCache state_cache;
-        RemoteDatabase<MockStreamingClient> remote_db(io_context, channel, &queue, &state_cache);
-        try {
-            auto future_remote_tx{asio::co_spawn(io_context, remote_db.begin(), asio::use_future)};
-            io_context.run();
-            auto remote_tx = future_remote_tx.get();
-            CHECK(remote_tx->tx_id() == 4);
-            CHECK(true);
-        } catch (...) {
-            CHECK(false);
-        }
+        // Set the call expectations:
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
+        expect_request_async_tx(*kv_stub_, true);
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call succeeds setting the specified transaction ID
+        remote::Pair pair;
+        pair.set_txid(4);
+        EXPECT_CALL(reader_writer_, Read).WillOnce(test::read_success_with(grpc_context_, pair));
+
+        // Execute the test: RemoteDatabase::begin should return transaction w/ expected transaction ID
+        const auto txn = spawn_and_wait(remote_db_.begin());
+        CHECK(txn->tx_id() == 4);
     }
 
-    SECTION("start_call failure") {
-        class MockStreamingClient : public AsyncTxStreamingClient {
-        public:
-            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
-            void start_call(std::function<void(const grpc::Status&)> start_completed) override {
-                auto result = std::async([&]() {
-                    start_completed(::grpc::Status::CANCELLED);
-                });
-            }
-            void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                auto result = std::async([&]() {
-                    remote::Pair pair;
-                    pair.set_txid(4);
-                    read_completed(::grpc::Status::OK, pair);
-                });
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        CoherentStateCache state_cache;
-        RemoteDatabase<MockStreamingClient> remote_db(io_context, channel, &queue, &state_cache);
-        try {
-            auto future_remote_tx{asio::co_spawn(io_context, remote_db.begin(), asio::use_future)};
-            io_context.run();
-            auto remote_tx = future_remote_tx.get();
-            CHECK(remote_tx->tx_id() == 4);
-            CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
-        }
+    SECTION("open failure") {
+        // Set the call expectations:
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call fails
+        expect_request_async_tx(*kv_stub_, false);
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test: RemoteDatabase::begin should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_db_.begin()),
+            boost::system::system_error,
+            test::exception_has_cancelled_grpc_status_code());
     }
 
-    SECTION("read_start failure") {
-        class MockStreamingClient : public AsyncTxStreamingClient {
-        public:
-            MockStreamingClient(std::unique_ptr<remote::KV::StubInterface>& /*stub*/, grpc::CompletionQueue* /*queue*/) {}
-            void start_call(std::function<void(const grpc::Status&)> start_completed) override {
-                auto result = std::async([&]() {
-                    start_completed(::grpc::Status::OK);
-                });
-            }
-            void end_call(std::function<void(const grpc::Status&)> end_completed) override {}
-            void read_start(std::function<void(const grpc::Status&, const remote::Pair&)> read_completed) override {
-                auto result = std::async([&]() {
-                    read_completed(::grpc::Status::CANCELLED, {});
-                });
-            }
-            void write_start(const remote::Cursor& cursor, std::function<void(const grpc::Status&)> write_completed) override {}
-        };
-        asio::io_context io_context;
-        auto channel = grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
-        grpc::CompletionQueue queue;
-        CoherentStateCache state_cache;
-        RemoteDatabase<MockStreamingClient> remote_db(io_context, channel, &queue, &state_cache);
-        try {
-            auto future_remote_tx{asio::co_spawn(io_context, remote_db.begin(), asio::use_future)};
-            io_context.run();
-            auto remote_tx = future_remote_tx.get();
-            CHECK(remote_tx->tx_id() == 4);
-            CHECK(false);
-        } catch (const std::system_error& e) {
-            CHECK(e.code().value() == grpc::StatusCode::CANCELLED);
-        }
+    SECTION("read failure") {
+        // Set the call expectations:
+        // 1. remote::KV::StubInterface::PrepareAsyncTxRaw call succeeds
+        expect_request_async_tx(*kv_stub_, true);
+        // 2. AsyncReaderWriter<remote::Cursor, remote::Pair>::Read call fails
+        EXPECT_CALL(reader_writer_, Read).WillOnce([&](auto* , void* tag) {
+            agrpc::process_grpc_tag(grpc_context_, tag, /*ok=*/false);
+        });
+        // 3. AsyncReaderWriter<remote::Cursor, remote::Pair>::Finish call succeeds w/ status cancelled
+        EXPECT_CALL(reader_writer_, Finish).WillOnce(test::finish_streaming_cancelled(grpc_context_));
+
+        // Execute the test: RemoteDatabase::begin should raise an exception w/ expected gRPC status code
+        CHECK_THROWS_MATCHES(spawn_and_wait(remote_db_.begin()),
+            boost::system::system_error,
+            test::exception_has_cancelled_grpc_status_code());
     }
 }
 

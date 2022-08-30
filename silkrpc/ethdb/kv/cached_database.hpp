@@ -36,18 +36,18 @@ public:
     CachedDatabase(const CachedDatabase&) = delete;
     CachedDatabase& operator=(const CachedDatabase&) = delete;
 
-    asio::awaitable<KeyValue> get(const std::string& table, const silkworm::ByteView& key) const override;
+    boost::asio::awaitable<KeyValue> get(const std::string& table, const silkworm::ByteView& key) const override;
 
-    asio::awaitable<silkworm::Bytes> get_one(const std::string& table, const silkworm::ByteView& key) const override;
+    boost::asio::awaitable<silkworm::Bytes> get_one(const std::string& table, const silkworm::ByteView& key) const override;
 
-    asio::awaitable<std::optional<silkworm::Bytes>> get_both_range(const std::string& table, const silkworm::ByteView& key,
-                                                                   const silkworm::ByteView& subkey) const override;
+    boost::asio::awaitable<std::optional<silkworm::Bytes>> get_both_range(const std::string& table, const silkworm::ByteView& key,
+                                                                          const silkworm::ByteView& subkey) const override;
 
-    asio::awaitable<void> walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits,
-                               core::rawdb::Walker w) const override;
+    boost::asio::awaitable<void> walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits,
+                                      core::rawdb::Walker w) const override;
 
-    asio::awaitable<void> for_prefix(const std::string& table, const silkworm::ByteView& prefix,
-                                     core::rawdb::Walker w) const override;
+    boost::asio::awaitable<void> for_prefix(const std::string& table, const silkworm::ByteView& prefix,
+                                            core::rawdb::Walker w) const override;
 
 private:
     BlockNumberOrHash block_id_;

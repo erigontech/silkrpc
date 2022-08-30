@@ -90,7 +90,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | debug_traceCall                            | Yes          |                                            |
 |                                            |              |                                            |
 | trace_call                                 | Yes          |                                            |
-| trace_callMany                             | -            | not yet implemented                        |
+| trace_callMany                             | Yes          |                                            |
 | trace_rawTransaction                       | -            | not yet implemented                        |
 | trace_replayBlockTransactions              | Yes          |                                            |
 | trace_replayTransaction                    | Yes          |                                            |
@@ -123,9 +123,11 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | shh_getFilterChanges                       | No           | deprecated                                 |
 | shh_getMessages                            | No           | deprecated                                 |
 |                                            |              |                                            |
+| erigon_cumulativeChainTraffic              | -            | not yet implemented                        |
 | erigon_getHeaderByHash                     | Yes          |                                            |
 | erigon_getHeaderByNumber                   | Yes          |                                            |
-| erigon_getBlockByTimestamp                 | -            | not yet implemented                        |
+| erigon_getBlockByTimestamp                 | Yes          |                                            |
+| erigon_getBalanceChangesInBlock            | -            | not yet implemented                        |
 | erigon_getLogsByHash                       | Yes          |                                            |
 | erigon_forks                               | Yes          |                                            |
 | erigon_issuance                            | Yes          |                                            |

@@ -20,13 +20,14 @@
 #include <string>
 #include <vector>
 
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 
+#include <silkrpc/common/util.hpp>
 #include <silkrpc/types/transaction.hpp>
 
 namespace silkrpc {
@@ -38,19 +39,19 @@ TEST_CASE("EVMexecutor") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
 
     class StubDatabase : public core::rawdb::DatabaseReader {
-        asio::awaitable<KeyValue> get(const std::string& table, const silkworm::ByteView& key) const override {
+        boost::asio::awaitable<KeyValue> get(const std::string& table, const silkworm::ByteView& key) const override {
             co_return KeyValue{};
         }
-        asio::awaitable<silkworm::Bytes> get_one(const std::string& table, const silkworm::ByteView& key) const override {
+        boost::asio::awaitable<silkworm::Bytes> get_one(const std::string& table, const silkworm::ByteView& key) const override {
             co_return silkworm::Bytes{};
         }
-        asio::awaitable<std::optional<silkworm::Bytes>> get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const override {
+        boost::asio::awaitable<std::optional<silkworm::Bytes>> get_both_range(const std::string& table, const silkworm::ByteView& key, const silkworm::ByteView& subkey) const override {
             co_return silkworm::Bytes{};
         }
-        asio::awaitable<void> walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, core::rawdb::Walker w) const override {
+        boost::asio::awaitable<void> walk(const std::string& table, const silkworm::ByteView& start_key, uint32_t fixed_bits, core::rawdb::Walker w) const override {
             co_return;
         }
-        asio::awaitable<void> for_prefix(const std::string& table, const silkworm::ByteView& prefix, core::rawdb::Walker w) const override {
+        boost::asio::awaitable<void> for_prefix(const std::string& table, const silkworm::ByteView& prefix, core::rawdb::Walker w) const override {
             co_return;
         }
     };
@@ -58,11 +59,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("failed if gas_limit < intrisicgas") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 10000;
@@ -72,7 +73,7 @@ TEST_CASE("EVMexecutor") {
         block.header.number = block_number;
 
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         my_pool.join();
@@ -83,11 +84,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("failed if base_fee_per_gas > max_fee_per_gas ") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -99,7 +100,7 @@ TEST_CASE("EVMexecutor") {
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         my_pool.join();
@@ -110,11 +111,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("failed if  max_priority_fee_per_gas > max_fee_per_gas ") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -127,7 +128,7 @@ TEST_CASE("EVMexecutor") {
         txn.max_priority_fee_per_gas = 0x18;
 
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         my_pool.join();
@@ -138,11 +139,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("failed if transaction cost greater user amount") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -155,7 +156,7 @@ TEST_CASE("EVMexecutor") {
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         my_pool.join();
@@ -166,11 +167,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("doesn t fail if transaction cost greater user amount && gasBailout == true") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -183,7 +184,7 @@ TEST_CASE("EVMexecutor") {
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, false, /* gasBailout */true, {}), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, false, /* gasBailout */true, {}), boost::asio::use_future);
         auto result = execution_result.get();
         executor.reset();
         my_pool.stop();
@@ -205,11 +206,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("call returns SUCCESS") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -221,7 +222,7 @@ TEST_CASE("EVMexecutor") {
         txn.access_list = access_list;
 
         EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, true, true, {}), asio::use_future);
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, true, true, {}), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         my_pool.join();
@@ -254,11 +255,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_FAILURE) with short error_data_1") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -278,11 +279,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_FAILURE) with short error_data_2") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -302,11 +303,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_FAILURE) with short error_data_3") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -326,11 +327,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_FAILURE) with short error_data_4") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -350,11 +351,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_FAILURE) with full error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -374,11 +375,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_FAILURE) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -398,11 +399,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_REVERT) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -422,11 +423,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_OUT_OF_GAS) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -446,11 +447,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_INVALID_INSTRUCTION) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -470,11 +471,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_UNDEFINED_INSTRUCTION) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -494,11 +495,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_STACK_OVERFLOW) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -518,11 +519,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_STACK_UNDERFLOW) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -542,11 +543,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_BAD_JUMP_DESTINATION) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -566,11 +567,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_INVALID_MEMORY_ACCESS) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -590,11 +591,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_CALL_DEPTH_EXCEEDED) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -614,11 +615,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_STATIC_MODE_VIOLATION) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -638,11 +639,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_PRECOMPILE_FAILURE) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -662,11 +663,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(wrong status_code) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;

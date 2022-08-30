@@ -16,15 +16,10 @@
 
 #include "transaction_pool.hpp"
 
-#include <functional>
-#include <memory>
-#include <thread>
-#include <type_traits>
+#include <string>
 #include <utility>
 
-#include <asio/io_context.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/use_future.hpp>
+#include <agrpc/test.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
@@ -35,34 +30,11 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/interfaces/txpool/txpool.grpc.pb.h>
 #include <silkrpc/interfaces/txpool/txpool_mock_fix24351.grpc.pb.h>
+#include <silkrpc/test/api_test_base.hpp>
+#include <silkrpc/test/grpc_actions.hpp>
+#include <silkrpc/test/grpc_responder.hpp>
 
-namespace grpc {
-
-inline bool operator==(const Status& lhs, const Status& rhs) {
-    return lhs.error_code() == rhs.error_code() &&
-        lhs.error_message() == rhs.error_message() &&
-        lhs.error_details() == rhs.error_details();
-}
-
-} // namespace grpc
-
-namespace txpool {
-
-inline bool operator==(const AddReply& lhs, const AddReply& rhs) {
-    if (lhs.imported_size() != rhs.imported_size()) return false;
-    for (auto i{0}; i < lhs.imported_size(); i++) {
-        if (lhs.imported(i) != rhs.imported(i)) return false;
-    }
-    if (lhs.errors_size() != rhs.errors_size()) return false;
-    for (auto i{0}; i < lhs.errors_size(); i++) {
-        if (lhs.errors(i) != rhs.errors(i)) return false;
-    }
-    return true;
-}
-
-} // namespace txpool
-
-namespace silkrpc {
+namespace silkrpc::txpool {
 
 using Catch::Matchers::Message;
 using testing::AtLeast;
@@ -71,341 +43,216 @@ using testing::Return;
 using testing::_;
 
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
+using StrictMockTxpoolStub = testing::StrictMock<::txpool::MockTxpoolStub>;
 
-TEST_CASE("create AddClient", "[silkrpc][txpool][transaction_pool]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+using TransactionPoolTest = test::GrpcApiTestBase<TransactionPool, StrictMockTxpoolStub>;
 
-    class MockClientAsyncAddReader final : public grpc::ClientAsyncResponseReaderInterface<::txpool::AddReply> {
-    public:
-        MockClientAsyncAddReader(::txpool::AddReply msg, ::grpc::Status status) : msg_(std::move(msg)), status_(std::move(status)) {}
-        ~MockClientAsyncAddReader() final = default;
-        void StartCall() override {};
-        void ReadInitialMetadata(void* tag) override {};
-        void Finish(::txpool::AddReply* msg, ::grpc::Status* status, void* tag) override {
-            *msg = msg_;
-            *status = status_;
-        };
-    private:
-        ::txpool::AddReply msg_;
-        grpc::Status status_;
-    };
-
-    SECTION("start async Add call, get status OK and import success") {
-        std::unique_ptr<::txpool::Txpool::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockTxpoolStub>()};
-        grpc::CompletionQueue queue;
-        txpool::AddClient client{stub, &queue};
-
-        ::txpool::AddReply reply;
-        reply.add_imported(::txpool::ImportResult::SUCCESS);
-        MockClientAsyncAddReader mock_reader{reply, ::grpc::Status::OK};
-        EXPECT_CALL(*dynamic_cast<::txpool::FixIssue24351_MockTxpoolStub*>(stub.get()), PrepareAsyncAddRaw(_, _, _)).WillOnce(Return(&mock_reader));
-
-        MockFunction<void(::grpc::Status, ::txpool::AddReply)> mock_callback;
-        EXPECT_CALL(mock_callback, Call(grpc::Status::OK, reply));
-
-        client.async_call(::txpool::AddRequest{}, mock_callback.AsStdFunction());
-        client.completed(true);
-    }
-
-    SECTION("start async Add call, get status OK and import failure") {
-        std::unique_ptr<::txpool::Txpool::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockTxpoolStub>()};
-        grpc::CompletionQueue queue;
-        txpool::AddClient client{stub, &queue};
-
-        ::txpool::AddReply reply;
-        reply.add_imported(::txpool::ImportResult::INVALID);
-        reply.add_errors("empty txn is invalid");
-        MockClientAsyncAddReader mock_reader{reply, ::grpc::Status::OK};
-        EXPECT_CALL(*dynamic_cast<::txpool::FixIssue24351_MockTxpoolStub*>(stub.get()), PrepareAsyncAddRaw(_, _, _)).WillOnce(Return(&mock_reader));
-
-        MockFunction<void(::grpc::Status, ::txpool::AddReply)> mock_callback;
-        EXPECT_CALL(mock_callback, Call(grpc::Status::OK, reply));
-
-        client.async_call(::txpool::AddRequest{}, mock_callback.AsStdFunction());
-        client.completed(true);
-    }
-
-    SECTION("start async Add call and get status KO") {
-        std::unique_ptr<::txpool::Txpool::StubInterface> stub{std::make_unique<::txpool::FixIssue24351_MockTxpoolStub>()};
-        grpc::CompletionQueue queue;
-        txpool::AddClient client{stub, &queue};
-
-        MockClientAsyncAddReader mock_reader{::txpool::AddReply{}, ::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"}};
-        EXPECT_CALL(*dynamic_cast<::txpool::FixIssue24351_MockTxpoolStub*>(stub.get()), PrepareAsyncAddRaw(_, _, _)).WillOnce(Return(&mock_reader));
-
-        MockFunction<void(::grpc::Status, ::txpool::AddReply)> mock_callback;
-        EXPECT_CALL(mock_callback, Call(::grpc::Status{::grpc::StatusCode::INTERNAL, "internal error"}, ::txpool::AddReply{}));
-
-        client.async_call(::txpool::AddRequest{}, mock_callback.AsStdFunction());
-        client.completed(false);
-    }
-}
-
-class EmptyTxpoolService : public ::txpool::Txpool::Service {
-public:
-    ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
-        return ::grpc::Status::OK;
-    }
-    ::grpc::Status Transactions(::grpc::ServerContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response) override {
-        return ::grpc::Status::OK;
-    }
-};
-
-template<auto mf, typename T>
-auto make_method_proxy(T&& obj) {
-    return [&obj](auto&&... args) {
-        return (std::forward<T>(obj).*mf)(std::forward<decltype(args)>(args)...);
-    };
-}
-
-constexpr const char* kTestAddressUri{"localhost:12345"}; // TODO(canepat): grpc_pick_unused_port_or_die
-
-template<auto mf, typename R, typename ...Args>
-asio::awaitable<R> test_comethod(::txpool::Txpool::Service* service, Args... args) {
-    grpc::ServerBuilder builder;
-    builder.AddListeningPort(kTestAddressUri, grpc::InsecureServerCredentials());
-    builder.RegisterService(service);
-    const auto server_ptr = builder.BuildAndStart();
-    auto create_channel = []() {
-        return grpc::CreateChannel(kTestAddressUri, grpc::InsecureChannelCredentials());
-    };
-    Context context{create_channel, std::make_shared<BlockCache>(), std::make_shared<ethdb::kv::CoherentStateCache>()};
-    auto context_thread = std::thread([&]() { context.execute_loop(); });
-    txpool::TransactionPool transaction_pool{*context.io_context(), create_channel(), context.grpc_queue()};
-    auto method_proxy{make_method_proxy<mf, txpool::TransactionPool>(std::move(transaction_pool))};
-    const auto result = co_await method_proxy(args...);
-    server_ptr->Shutdown();
-    context.stop();
-    if (context_thread.joinable()) {
-        context_thread.join();
-    }
-    co_return result;
-}
-
-auto test_add_transaction = test_comethod<&txpool::TransactionPool::add_transaction, txpool::TransactionPool::OperationResult, silkworm::ByteView>;
-auto test_get_transaction = test_comethod<&txpool::TransactionPool::get_transaction, std::optional<silkworm::Bytes>, evmc::bytes32>;
-auto test_nonce = test_comethod<&txpool::TransactionPool::nonce, std::optional<uint64_t>, evmc::address>;
-auto test_status = test_comethod<&txpool::TransactionPool::get_status, txpool::StatusInfo>;
-auto test_all = test_comethod<&txpool::TransactionPool::get_transactions, txpool::TransactionsInPool>;
-
-TEST_CASE("create TransactionPool", "[silkrpc][txpool][transaction_pool]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::add_transaction", "[silkrpc][txpool][transaction_pool]") {
+    test::StrictMockAsyncResponseReader<::txpool::AddReply> reader;
+    EXPECT_CALL(*stub_, AsyncAddRaw).WillOnce(testing::Return(&reader));
+    const silkworm::Bytes tx_rlp{0x00, 0x01};
 
     SECTION("call add_transaction and check import success") {
-        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
-        public:
-            ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
-                response->add_imported(::txpool::ImportResult::SUCCESS);
-                return ::grpc::Status::OK;
-            }
-        };
-        TestSuccessTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
-        io_context.run();
-        CHECK(result.get().success == true);
+        ::txpool::AddReply response;
+        response.add_imported(::txpool::ImportResult::SUCCESS);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto result = run<&TransactionPool::add_transaction>(tx_rlp);
+        CHECK(result.success);
     }
 
     SECTION("call add_transaction and check import failure [unexpected import size]") {
-        EmptyTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
-        io_context.run();
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto result = run<&TransactionPool::add_transaction>(tx_rlp);
+        CHECK(!result.success);
     }
 
-    SECTION("call add_transaction and check import failure [unexpected import size]") {
-        EmptyTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
-        io_context.run();
-        CHECK(result.get().success == false);
+    SECTION("call add_transaction and check import failure [invalid error]") {
+        ::txpool::AddReply response;
+        response.add_imported(::txpool::ImportResult::INVALID);
+        response.add_errors("invalid transaction");
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto result = run<&TransactionPool::add_transaction>(tx_rlp);
+        CHECK(!result.success);
     }
 
-    SECTION("call add_transaction and check import failure [import error]") {
-        class TestFailureErrorTxpoolService : public ::txpool::Txpool::Service {
-        public:
-            ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
-                response->add_imported(::txpool::ImportResult::INVALID);
-                response->add_errors("invalid transaction");
-                return ::grpc::Status::OK;
-            }
-        };
-        TestFailureErrorTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
-        io_context.run();
-        CHECK(result.get().success == false);
+    SECTION("call add_transaction and check import failure [internal error]") {
+        ::txpool::AddReply response;
+        response.add_imported(::txpool::ImportResult::INTERNAL_ERROR);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto result = run<&TransactionPool::add_transaction>(tx_rlp);
+        CHECK(!result.success);
     }
 
-    SECTION("call add_transaction and check import failure [import no error]") {
-        class TestFailureNoErrorTxpoolService : public ::txpool::Txpool::Service {
-        public:
-            ::grpc::Status Add(::grpc::ServerContext* context, const ::txpool::AddRequest* request, ::txpool::AddReply* response) override {
-                response->add_imported(::txpool::ImportResult::INTERNAL_ERROR);
-                return ::grpc::Status::OK;
-            }
-        };
-        TestFailureNoErrorTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_add_transaction(&service, silkworm::Bytes{0x00, 0x01}), asio::use_future)};
-        io_context.run();
-        CHECK(result.get().success == false);
+    SECTION("call add_transaction and get error") {
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&TransactionPool::add_transaction>(tx_rlp)), boost::system::system_error);
     }
+}
 
-    SECTION("call get_transaction and check result") {
-        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
-        public:
-            ::grpc::Status Transactions(::grpc::ServerContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response) override {
-                response->add_rlptxs("0804");
-                return ::grpc::Status::OK;
-            }
-        };
-        TestSuccessTxpoolService service;
-        asio::io_context io_context;
-        const auto tx_hash{0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32};
-        auto tx_rlp{asio::co_spawn(io_context, test_get_transaction(&service, tx_hash), asio::use_future)};
-        io_context.run();
-        CHECK(tx_rlp.get() == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
+TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::get_transaction", "[silkrpc][txpool][transaction_pool]") {
+    test::StrictMockAsyncResponseReader<::txpool::TransactionsReply> reader;
+    EXPECT_CALL(*stub_, AsyncTransactionsRaw).WillOnce(testing::Return(&reader));
+    const auto tx_hash{0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32};
+
+    SECTION("call get_transaction and check success") {
+        ::txpool::TransactionsReply response;
+        response.add_rlptxs("0804");
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto tx_rlp = run<&TransactionPool::get_transaction>(tx_hash);
+        CHECK(tx_rlp);
+        if (tx_rlp) {
+            CHECK(tx_rlp.value() == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
+        }
     }
 
     SECTION("call get_transaction and check result is null [rlptxs size is 0]") {
-        EmptyTxpoolService service;
-        asio::io_context io_context;
-        auto tx_rlp{asio::co_spawn(io_context, test_get_transaction(&service, evmc::bytes32{}), asio::use_future)};
-        io_context.run();
-        CHECK(tx_rlp.get() == std::nullopt);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto tx_rlp = run<&TransactionPool::get_transaction>(tx_hash);
+        CHECK(!tx_rlp);
     }
 
     SECTION("call get_transaction and check result is null [rlptxs size is greater than 1]") {
-        class TestTooManyRlpTxsTxpoolService : public ::txpool::Txpool::Service {
-        public:
-            ::grpc::Status Transactions(::grpc::ServerContext* context, const ::txpool::TransactionsRequest* request, ::txpool::TransactionsReply* response) override {
-                response->add_rlptxs("0804");
-                response->add_rlptxs("0905");
-                return ::grpc::Status::OK;
-            }
-        };
-        TestTooManyRlpTxsTxpoolService service;
-        asio::io_context io_context;
-        const auto tx_hash{0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32};
-        auto tx_rlp{asio::co_spawn(io_context, test_get_transaction(&service, tx_hash), asio::use_future)};
-        io_context.run();
-        CHECK(tx_rlp.get() == std::nullopt);
+        ::txpool::TransactionsReply response;
+        response.add_rlptxs("0804");
+        response.add_rlptxs("0905");
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto tx_rlp = run<&TransactionPool::get_transaction>(tx_hash);
+        CHECK(!tx_rlp);
     }
 
-    SECTION("call nonce and check result is 21") {
-        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
-        public:
-            ::grpc::Status Nonce(::grpc::ServerContext* context, const ::txpool::NonceRequest* request, ::txpool::NonceReply* response) override {
-                response->set_found(1);
-                response->set_nonce(21);
-                return ::grpc::Status::OK;
-            }
-        };
-        TestSuccessTxpoolService service;
-        asio::io_context io_context;
-        const auto recipient{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
-        auto result{asio::co_spawn(io_context, test_nonce(&service, recipient), asio::use_future)};
-        io_context.run();
-        CHECK(result.get() == 21);
+    SECTION("call get_transaction and get error") {
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&TransactionPool::get_transaction>(tx_hash)), boost::system::system_error);
+    }
+}
+
+TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::nonce", "[silkrpc][txpool][transaction_pool]") {
+    test::StrictMockAsyncResponseReader<::txpool::NonceReply> reader;
+    EXPECT_CALL(*stub_, AsyncNonceRaw).WillOnce(testing::Return(&reader));
+    const auto account{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
+
+    SECTION("call nonce and check success") {
+        ::txpool::NonceReply response;
+        response.set_found(1);
+        response.set_nonce(21);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto nonce = run<&TransactionPool::nonce>(account);
+        CHECK(nonce);
+        if (nonce) {
+            CHECK(nonce.value() == 21);
+        }
     }
 
     SECTION("call nonce and check result is null") {
-        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
-        public:
-            ::grpc::Status Nonce(::grpc::ServerContext* context, const ::txpool::NonceRequest* request, ::txpool::NonceReply* response) override {
-                response->set_found(0);
-                return ::grpc::Status::OK;
-            }
-        };
-        TestSuccessTxpoolService service;
-        asio::io_context io_context;
-        const auto recipient{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
-        auto result{asio::co_spawn(io_context, test_nonce(&service, recipient), asio::use_future)};
-        io_context.run();
-        CHECK(result.get() == std::nullopt);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto nonce = run<&TransactionPool::nonce>(account);
+        CHECK(!nonce);
     }
 
-    SECTION("call Status") {
-        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
-        public:
-            ::grpc::Status Status(::grpc::ServerContext* context, const ::txpool::StatusRequest* request, ::txpool::StatusReply* response) override {
-                response->set_basefeecount(0x4);
-                response->set_pendingcount(0x5);
-                response->set_queuedcount(0x6);
-                return ::grpc::Status::OK;
-            }
-        };
-        TestSuccessTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_status(&service), asio::use_future)};
-        io_context.run();
-        auto status_info = result.get();
-        CHECK(status_info.base_fee_count == 0x4);
-        CHECK(status_info.pending_count == 0x5);
+    SECTION("call nonce and check result is null [not found]") {
+        ::txpool::NonceReply response;
+        response.set_found(0);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto nonce = run<&TransactionPool::nonce>(account);
+        CHECK(!nonce);
+    }
+
+    SECTION("call nonce and get error") {
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&TransactionPool::nonce>(account)), boost::system::system_error);
+    }
+}
+
+TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::get_status", "[silkrpc][txpool][transaction_pool]") {
+    test::StrictMockAsyncResponseReader<::txpool::StatusReply> reader;
+    EXPECT_CALL(*stub_, AsyncStatusRaw).WillOnce(testing::Return(&reader));
+
+    SECTION("call get_status and check success") {
+        ::txpool::StatusReply response;
+        response.set_queuedcount(0x6);
+        response.set_pendingcount(0x5);
+        response.set_basefeecount(0x4);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto status_info = run<&TransactionPool::get_status>();
         CHECK(status_info.queued_count == 0x6);
+        CHECK(status_info.pending_count == 0x5);
+        CHECK(status_info.base_fee_count == 0x4);
     }
 
-    SECTION("call get one_transaction") {
-        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
-        public:
-            ::grpc::Status All(::grpc::ServerContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response) override {
-                auto tx = response->add_txs();
-                tx->set_type(::txpool::AllReply_Type_QUEUED);
-                tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
-                tx->set_rlptx("0804");
-                return ::grpc::Status::OK;
-            }
-        };
-        TestSuccessTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_all(&service), asio::use_future)};
-        io_context.run();
-        auto get_transactions = result.get();
-        const auto sender{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
-        CHECK(get_transactions.size() == 1);
-        CHECK(get_transactions[0].transaction_type == silkrpc::txpool::TransactionType::QUEUED);
-        CHECK(get_transactions[0].sender == sender);
-        CHECK(get_transactions[0].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
+    SECTION("call get_status and check result is empty") {
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto status_info = run<&TransactionPool::get_status>();
+        CHECK(status_info.queued_count == 0);
+        CHECK(status_info.pending_count == 0);
+        CHECK(status_info.base_fee_count == 0);
     }
 
-    SECTION("call get more transactions") {
-        class TestSuccessTxpoolService : public ::txpool::Txpool::Service {
-        public:
-            ::grpc::Status All(::grpc::ServerContext* context, const ::txpool::AllRequest* request, ::txpool::AllReply* response) override {
-                auto tx = response->add_txs();
-                tx->set_type(::txpool::AllReply_Type_QUEUED);
-                tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
-                tx->set_rlptx("0804");
-                tx = response->add_txs();
-                tx->set_type(::txpool::AllReply_Type_PENDING);
-                tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de735");
-                tx->set_rlptx("0806");
-                tx = response->add_txs();
-                tx->set_type(::txpool::AllReply_Type_BASE_FEE);
-                tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de736");
-                tx->set_rlptx("0807");
-                return ::grpc::Status::OK;
-            }
-        };
-        TestSuccessTxpoolService service;
-        asio::io_context io_context;
-        auto result{asio::co_spawn(io_context, test_all(&service), asio::use_future)};
-        io_context.run();
-        auto get_transactions = result.get();
-        const auto sender{0x99f9b87991262f6ba471f09758cde1c0fc1de734_address};
-        const auto sender1{0x9988b87991262f6ba471f09758cde1c0fc1de735_address};
-        const auto sender2{0x9988b87991262f6ba471f09758cde1c0fc1de736_address};
-        CHECK(get_transactions.size() == 3);
-        CHECK(get_transactions[0].transaction_type == txpool::TransactionType::QUEUED);
-        CHECK(get_transactions[0].sender == sender);
-        CHECK(get_transactions[0].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
-        CHECK(get_transactions[1].transaction_type == txpool::TransactionType::PENDING);
-        CHECK(get_transactions[1].sender == sender1);
-        CHECK(get_transactions[1].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x36});
-        CHECK(get_transactions[2].transaction_type == txpool::TransactionType::BASE_FEE);
-        CHECK(get_transactions[2].sender == sender2);
-        CHECK(get_transactions[2].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x37});
-   }
- }
-} // namespace silkrpc
+    SECTION("call get_status and get error") {
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&TransactionPool::get_status>()), boost::system::system_error);
+    }
+}
+
+TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::get_transactions", "[silkrpc][txpool][transaction_pool]") {
+    test::StrictMockAsyncResponseReader<::txpool::AllReply> reader;
+    EXPECT_CALL(*stub_, AsyncAllRaw).WillOnce(testing::Return(&reader));
+
+    SECTION("call get_transactions and check success [one tx]") {
+        ::txpool::AllReply response;
+        auto tx = response.add_txs();
+        tx->set_type(::txpool::AllReply_Type_QUEUED);
+        tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
+        tx->set_rlptx("0804");
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto transactions = run<&TransactionPool::get_transactions>();
+        CHECK(transactions.size() == 1);
+        if (transactions.size() > 0) {
+            CHECK(transactions[0].transaction_type == silkrpc::txpool::TransactionType::QUEUED);
+            CHECK(transactions[0].sender == 0x99f9b87991262f6ba471f09758cde1c0fc1de734_address);
+            CHECK(transactions[0].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
+        }
+    }
+
+    SECTION("call get_transactions and check success [more than one tx]") {
+        ::txpool::AllReply response;
+        auto tx = response.add_txs();
+        tx->set_type(::txpool::AllReply_Type_QUEUED);
+        tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
+        tx->set_rlptx("0804");
+        tx = response.add_txs();
+        tx->set_type(::txpool::AllReply_Type_PENDING);
+        tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de735");
+        tx->set_rlptx("0806");
+        tx = response.add_txs();
+        tx->set_type(::txpool::AllReply_Type_BASE_FEE);
+        tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de736");
+        tx->set_rlptx("0807");
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto transactions = run<&TransactionPool::get_transactions>();
+        CHECK(transactions.size() == 3);
+        if (transactions.size() > 2) {
+            CHECK(transactions[0].transaction_type == txpool::TransactionType::QUEUED);
+            CHECK(transactions[0].sender == 0x99f9b87991262f6ba471f09758cde1c0fc1de734_address);
+            CHECK(transactions[0].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
+            CHECK(transactions[1].transaction_type == txpool::TransactionType::PENDING);
+            CHECK(transactions[1].sender == 0x9988b87991262f6ba471f09758cde1c0fc1de735_address);
+            CHECK(transactions[1].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x36});
+            CHECK(transactions[2].transaction_type == txpool::TransactionType::BASE_FEE);
+            CHECK(transactions[2].sender == 0x9988b87991262f6ba471f09758cde1c0fc1de736_address);
+            CHECK(transactions[2].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x37});
+        }
+    }
+
+    SECTION("call get_transactions and check result is empty") {
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_ok(grpc_context_));
+        const auto transactions = run<&TransactionPool::get_transactions>();
+        CHECK(transactions.size() == 0);
+    }
+
+    SECTION("call get_transactions and get error") {
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
+        CHECK_THROWS_AS((run<&TransactionPool::get_transactions>()), boost::system::system_error);
+    }
+}
+
+} // namespace silkrpc::txpool

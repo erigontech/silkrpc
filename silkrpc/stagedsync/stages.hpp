@@ -19,7 +19,7 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <silkworm/common/base.hpp>
 #include <silkworm/db/stages.hpp>
 
@@ -31,7 +31,7 @@ const silkworm::Bytes kHeaders = silkworm::bytes_of_string(silkworm::db::stages:
 const silkworm::Bytes kExecution = silkworm::bytes_of_string(silkworm::db::stages::kExecutionKey);
 const silkworm::Bytes kFinish = silkworm::bytes_of_string(silkworm::db::stages::kFinishKey);
 
-asio::awaitable<uint64_t> get_sync_stage_progress(const core::rawdb::DatabaseReader& database, const silkworm::Bytes& stake_key);
+boost::asio::awaitable<uint64_t> get_sync_stage_progress(const core::rawdb::DatabaseReader& database, const silkworm::Bytes& stake_key);
 
 } // namespace silkrpc::stages
 

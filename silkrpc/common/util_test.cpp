@@ -79,14 +79,14 @@ TEST_CASE("print bytes32", "[silkrpc][common][util]") {
 }
 
 TEST_CASE("print empty const_buffer", "[silkrpc][common][util]") {
-    asio::const_buffer cb{};
+    boost::asio::const_buffer cb{};
     CHECK_NOTHROW(null_stream() << cb);
 }
 
 TEST_CASE("print empty vector of const_buffer", "[silkrpc][common][util]") {
-    std::vector<asio::const_buffer> v;
-    asio::const_buffer cb1{};
-    asio::const_buffer cb2{};
+    std::vector<boost::asio::const_buffer> v;
+    boost::asio::const_buffer cb1{};
+    boost::asio::const_buffer cb2{};
     v.push_back(cb1);
     v.push_back(cb2);
     CHECK_NOTHROW(null_stream() << v);
@@ -234,8 +234,37 @@ TEST_CASE("decoding_result_to_string(kUnsupportedTransactionType)", "[silkrpc][c
     CHECK(decoding_result_to_string(silkworm::DecodingResult::kUnsupportedTransactionType) == "rlp: unknown tx type prefix");
 }
 
-TEST_CASE("decoding_result_to_string(kOk)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kOk) == "unknownError");
+TEST_CASE("decoding_result_to_string(kInvalidFieldset)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidFieldset) == "rlp: invalid field set");
 }
+
+TEST_CASE("decoding_result_to_string(kUnexpectedEip2718Serialization)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kUnexpectedEip2718Serialization) == "rlp: unexpected EIP-2178 serialization");
+}
+
+TEST_CASE("decoding_result_to_string(kInvalidHashesLength)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidHashesLength) == "rlp: invalid hashes length");
+}
+
+TEST_CASE("decoding_result_to_string(kInvalidMasksSubsets)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidMasksSubsets) == "rlp: invalid masks subsets");
+}
+
+TEST_CASE("decoding_result_to_string(kOk)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kOk) == "rlp: unknown error [0]");
+}
+
+TEST_CASE("lookup_chain_config", "[silkrpc][common][util]") {
+    SECTION("lookup known chain") {
+        const auto known_chains{silkworm::get_known_chains_map()};
+        for (const auto& [_, known_chain_id] : known_chains) {
+            CHECK_NOTHROW(lookup_chain_config(known_chain_id) != nullptr);
+        }
+    }
+    SECTION("lookup unknown chain") {
+        CHECK_THROWS_AS(lookup_chain_config(0), std::runtime_error);
+    }
+}
+
 } // namespace silkrpc
 

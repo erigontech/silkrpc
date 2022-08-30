@@ -17,57 +17,33 @@
 #ifndef SILKRPC_ETHDB_KV_REMOTE_DATABASE_HPP_
 #define SILKRPC_ETHDB_KV_REMOTE_DATABASE_HPP_
 
-#include <cstddef>
 #include <memory>
-#include <vector>
 #include <utility>
 
-#include <asio/io_context.hpp>
+#include <agrpc/grpc_context.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/common/log.hpp>
 #include <silkrpc/ethdb/database.hpp>
-#include <silkrpc/ethdb/kv/remote_transaction.hpp>
-#include <silkrpc/ethdb/kv/state_cache.hpp>
-#include <silkrpc/ethdb/kv/tx_streaming_client.hpp>
+#include <silkrpc/ethdb/transaction.hpp>
+#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 namespace silkrpc::ethdb::kv {
 
-template<typename Client = TxStreamingClient>
 class RemoteDatabase: public Database {
 public:
-    RemoteDatabase(
-        asio::io_context& io_context,
-        std::shared_ptr<grpc::Channel> channel,
-        grpc::CompletionQueue* queue,
-        StateCache* state_cache)
-    : io_context_(io_context),
-      stub_{remote::KV::NewStub(channel)},
-      queue_(queue),
-      state_cache_(state_cache) {
-        SILKRPC_TRACE << "RemoteDatabase::ctor " << this << "\n";
-    }
+    RemoteDatabase(agrpc::GrpcContext& grpc_context, std::shared_ptr<grpc::Channel> channel);
+    RemoteDatabase(agrpc::GrpcContext& grpc_context, std::unique_ptr<remote::KV::StubInterface>&& stub);
 
-    ~RemoteDatabase() {
-        SILKRPC_TRACE << "RemoteDatabase::dtor " << this << "\n";
-    }
+    ~RemoteDatabase();
 
     RemoteDatabase(const RemoteDatabase&) = delete;
     RemoteDatabase& operator=(const RemoteDatabase&) = delete;
 
-    asio::awaitable<std::unique_ptr<Transaction>> begin() override {
-        SILKRPC_TRACE << "RemoteDatabase::begin " << this << " start\n";
-        auto txn = std::make_unique<RemoteTransaction<Client>>(io_context_, stub_, queue_);
-        co_await txn->open();
-        SILKRPC_TRACE << "RemoteDatabase::begin " << this << " txn: " << txn.get() << " end\n";
-        co_return txn;
-    }
+    boost::asio::awaitable<std::unique_ptr<Transaction>> begin() override;
 
 private:
-    asio::io_context& io_context_;
+    agrpc::GrpcContext& grpc_context_;
     std::unique_ptr<remote::KV::StubInterface> stub_;
-    grpc::CompletionQueue* queue_;
-    StateCache* state_cache_;
 };
 
 } // namespace silkrpc::ethdb::kv

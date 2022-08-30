@@ -17,10 +17,11 @@
 #include "daemon.hpp"
 
 #include <cxxabi.h>
+
 #include <filesystem>
 #include <stdexcept>
 
-#include <asio/signal_set.hpp>
+#include <boost/asio/signal_set.hpp>
 #include <boost/process/environment.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -94,16 +95,16 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
         checklist.success_or_throw();
 
         // Start execution context dedicated to handling termination signals
-        asio::io_context signal_context;
-        asio::signal_set signals{signal_context, SIGINT, SIGTERM};
+        boost::asio::io_context signal_context;
+        boost::asio::signal_set signals{signal_context, SIGINT, SIGTERM};
         SILKRPC_DEBUG << "Signals registered on signal_context " << &signal_context << "\n" << std::flush;
-        signals.async_wait([&](const asio::system_error& error, int signal_number) {
+        signals.async_wait([&](const boost::system::error_code& error, int signal_number) {
             if (signal_number == SIGINT) std::cout << "\n";
-            SILKRPC_INFO << "Signal number: " << signal_number << " caught, error code: " << error.code() << "\n" << std::flush;
+            SILKRPC_INFO << "Signal number: " << signal_number << " caught, error: " << error.message() << "\n" << std::flush;
             rpc_daemon.stop();
         });
 
-        SILKRPC_LOG << "Silkrpc starting ETH RPC API at " << settings.http_port << " ENGINE RPC API at " << settings.engine_port << "\n";
+        SILKRPC_LOG << "Starting ETH RPC API at " << settings.http_port << " ENGINE RPC API at " << settings.engine_port << "\n";
 
         rpc_daemon.start();
 
@@ -185,7 +186,10 @@ bool Daemon::validate_settings(const DaemonSettings& settings) {
 ChannelFactory Daemon::make_channel_factory(const DaemonSettings& settings) {
     return [&settings]() {
         grpc::ChannelArguments channel_args;
+        // Allow receive messages up to specified max size
         channel_args.SetMaxReceiveMessageSize(kRpcMaxReceiveMessageSize);
+        // Allow each client to open its own TCP connection to server (sharing one single connection becomes a bottleneck under high load)
+        channel_args.SetInt(GRPC_ARG_USE_LOCAL_SUBCHANNEL_POOL, 1);
         return grpc::CreateCustomChannel(settings.target, grpc::InsecureChannelCredentials(), channel_args);
     };
 }
@@ -198,8 +202,7 @@ Daemon::Daemon(const DaemonSettings& settings)
       kv_stub_{remote::KV::NewStub(create_channel_())} {
     // Create the unique KV state-changes stream feeding the state cache
     auto& context = context_pool_.next_context();
-    state_changes_stream_ = std::make_unique<ethdb::kv::StateChangesStream>(
-        *context.io_context(), context.grpc_queue(), kv_stub_.get(), context.state_cache().get());
+    state_changes_stream_ = std::make_unique<ethdb::kv::StateChangesStream>(context, kv_stub_.get());
 }
 
 DaemonChecklist Daemon::run_checklist() {
@@ -210,12 +213,7 @@ DaemonChecklist Daemon::run_checklist() {
     const auto mining_protocol_check{silkrpc::wait_for_mining_protocol_check(core_service_channel)};
     const auto txpool_protocol_check{silkrpc::wait_for_txpool_protocol_check(core_service_channel)};
 
-    DaemonChecklist checklist{{
-        kv_protocol_check,
-        ethbackend_protocol_check,
-        mining_protocol_check,
-        txpool_protocol_check
-    }};
+    DaemonChecklist checklist{{kv_protocol_check, ethbackend_protocol_check, mining_protocol_check, txpool_protocol_check}};
     return checklist;
 }
 

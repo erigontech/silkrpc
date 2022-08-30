@@ -17,85 +17,86 @@
 #ifndef SILKRPC_ETHDB_KV_STATE_CHANGES_STREAM_HPP_
 #define SILKRPC_ETHDB_KV_STATE_CHANGES_STREAM_HPP_
 
+#include <chrono>
 #include <functional>
+#include <future>
 #include <memory>
 
-#ifndef ASIO_HAS_BOOST_DATE_TIME
-#define ASIO_HAS_BOOST_DATE_TIME
-#endif
-#include <asio/deadline_timer.hpp>
-#include <asio/io_context.hpp>
-#include <grpcpp/grpcpp.h>
+#include <silkrpc/config.hpp>
 
+#include <boost/asio/awaitable.hpp>
+#ifndef BOOST_ASIO_HAS_BOOST_DATE_TIME
+#define BOOST_ASIO_HAS_BOOST_DATE_TIME
+#endif
+#include <boost/asio/cancellation_signal.hpp>
+#include <boost/asio/deadline_timer.hpp>
+#include <boost/asio/io_context.hpp>
+
+#include <silkrpc/concurrency/context_pool.hpp>
+#include <silkrpc/ethdb/kv/rpc.hpp>
 #include <silkrpc/ethdb/kv/state_cache.hpp>
-#include <silkworm/common/assert.hpp>
-#include <silkworm/rpc/completion_tag.hpp>
-#include <silkworm/rpc/client/call.hpp>
-#include <remote/kv.grpc.pb.h>
+#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
+
+//! Unfortunately gRPC does not define operator<< for generated data types
+namespace remote {
+
+inline std::ostream& operator<<(std::ostream& out, const remote::StateChangeBatch& batch) {
+    out << "changebatch_size=" << batch.changebatch_size() << " databaseviewid=" << batch.databaseviewid()
+        << " pendingblockbasefee=" << batch.pendingblockbasefee() << " blockgaslimit=" << batch.blockgaslimit();
+    return out;
+}
+
+} // namespace remote
 
 namespace silkrpc::ethdb::kv {
 
-using silkworm::rpc::AsyncServerStreamingCall;
-
-class AsyncStateChangesCall
-    : public AsyncServerStreamingCall<remote::StateChangeRequest, remote::StateChangeBatch, remote::KV::StubInterface,
-                                      &remote::KV::StubInterface::PrepareAsyncStateChanges> {
-  public:
-    using TerminationHook = std::function<void(bool)>;
-
-    explicit AsyncStateChangesCall(
-        grpc::CompletionQueue* queue,
-        remote::KV::StubInterface* stub,
-        StateCache* cache,
-        TerminationHook termination_hook);
-
-    void handle_read() override;
-
-    void handle_finish() override;
-
-  private:
-    StateCache* cache_;
-    TerminationHook termination_hook_;
-};
-
-//! The registration interval.
+//! The default registration interval
 constexpr boost::posix_time::milliseconds kDefaultRegistrationInterval{10'000};
 
+//! End-point of the stream of state changes coming from the node Core component
 class StateChangesStream {
-  public:
+public:
+    //! Return the retry interval between successive registration attempts
+    static boost::posix_time::milliseconds registration_interval() { return registration_interval_; }
+
+    //! Set the retry interval between successive registration attempts
     static void set_registration_interval(boost::posix_time::milliseconds registration_interval);
 
-    explicit StateChangesStream(
-        asio::io_context& scheduler,
-        grpc::CompletionQueue* queue,
-        remote::KV::StubInterface* stub,
-        StateCache* cache);
+    explicit StateChangesStream(Context& context, remote::KV::StubInterface* stub);
 
-    void open();
+    //! Open up the stream, starting the register-and-receive loop
+    std::future<void> open();
 
+    //! Close down the stream, stopping the register-and-receive loop
     void close();
 
-  private:
-    void schedule_open();
+    // The register-and-receive asynchronous loop
+    boost::asio::awaitable<void> run();
 
+private:
+    //! The retry interval between successive registration attempts
     static boost::posix_time::milliseconds registration_interval_;
 
-    grpc::CompletionQueue* queue_;
+    //! Asio execution scheduler running the register-and-receive asynchronous loop
+    boost::asio::io_context& scheduler_;
 
+    //! gRPC execution scheduler running the register-and-receive asynchronous loop
+    agrpc::GrpcContext& grpc_context_;
+
+    //! The gRPC stub for remote KV interface of the Core component
     remote::KV::StubInterface* stub_;
 
+    //! The local state cache where the received state changes will be applied
     StateCache* cache_;
 
-    std::unique_ptr<AsyncStateChangesCall> state_changes_call_;
+    //! The signal used to cancel the register-and-receive stream loop
+    boost::asio::cancellation_signal cancellation_signal_;
 
-    //! The state changes options.
+    //! The state changes request options
     remote::StateChangeRequest request_;
 
-    //! The timer to reschedule registration for state changes.
-    asio::deadline_timer registration_timer_;
-
-    //! Flag indicating if the stream has been cancelled or not.
-    bool cancelled_{false};
+    //! The timer to schedule retries for stream opening
+    boost::asio::deadline_timer retry_timer_;
 };
 
 } // namespace silkrpc::ethdb::kv

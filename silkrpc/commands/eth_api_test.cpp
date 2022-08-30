@@ -19,9 +19,9 @@
 #include <memory>
 #include <thread>
 
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <grpcpp/grpcpp.h>
 #include <nlohmann/json.hpp>
@@ -38,24 +38,24 @@ using Catch::Matchers::Message;
 
 class EthereumRpcApiTest : public EthereumRpcApi {
 public:
-    explicit EthereumRpcApiTest(Context& context, asio::thread_pool& workers) : EthereumRpcApi{context, workers} {}
+    explicit EthereumRpcApiTest(Context& context, boost::asio::thread_pool& workers) : EthereumRpcApi{context, workers} {}
 
     using EthereumRpcApi::handle_eth_block_number;
     using EthereumRpcApi::handle_eth_send_raw_transaction;
 };
 
-typedef asio::awaitable<void> (EthereumRpcApiTest::*HandleTestMethod)(const nlohmann::json&, nlohmann::json&);
+typedef boost::asio::awaitable<void> (EthereumRpcApiTest::*HandleTestMethod)(const nlohmann::json&, nlohmann::json&);
 
 void test_eth_api(HandleTestMethod test_handle_method, const nlohmann::json& request, nlohmann::json& reply) {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
     cp.start();
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
     try {
         EthereumRpcApiTest eth_api{cp.next_context(), workers};
-        auto result{asio::co_spawn(cp.next_io_context(), [&]() {
+        auto result{boost::asio::co_spawn(cp.next_io_context(), [&]() {
             return (&eth_api->*test_handle_method)(request, reply);
-        }, asio::use_future)};
+        }, boost::asio::use_future)};
         result.get();
     } catch (...) {
         CHECK(false);
@@ -68,7 +68,7 @@ TEST_CASE("EthereumRpcApi::EthereumRpcApi", "[silkrpc][erigon_api]") {
     ContextPool context_pool{1, []() {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
     }};
-    asio::thread_pool workers{1};
+    boost::asio::thread_pool workers{1};
     CHECK_NOTHROW(EthereumRpcApi{context_pool.next_context(), workers});
 }
 
