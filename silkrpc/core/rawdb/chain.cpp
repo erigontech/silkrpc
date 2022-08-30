@@ -359,7 +359,7 @@ boost::asio::awaitable<Transactions> read_canonical_transactions(const DatabaseR
     co_return txns;
 }
 
-asio::awaitable<Transactions> read_noncanonical_transactions(const DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count) {
+boost::asio::awaitable<Transactions> read_noncanonical_transactions(const DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count) {
     Transactions txns{};
     if (txn_count == 0) {
         SILKRPC_DEBUG << "txn_count: 0 #txns: 0\n";
