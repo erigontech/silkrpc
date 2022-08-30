@@ -28,7 +28,6 @@
 #include <agrpc/grpc_context.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/use_awaitable.hpp>
-#include <boost/endian/conversion.hpp>
 #include <evmc/evmc.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -86,16 +85,7 @@ public:
     boost::asio::awaitable<TransactionsInPool> get_transactions();
 
 private:
-    evmc::address address_from_H160(const types::H160& h160) {
-        uint64_t hi_hi = h160.hi().hi();
-        uint64_t hi_lo = h160.hi().lo();
-        uint32_t lo = h160.lo();
-        evmc::address address{};
-        boost::endian::store_big_u64(address.bytes +  0, hi_hi);
-        boost::endian::store_big_u64(address.bytes +  8, hi_lo);
-        boost::endian::store_big_u32(address.bytes + 16, lo);
-        return address;
-    }
+    evmc::address address_from_H160(const types::H160& h160);
     types::H160* H160_from_address(const evmc::address& address);
     types::H128* H128_from_bytes(const uint8_t* bytes);
 
