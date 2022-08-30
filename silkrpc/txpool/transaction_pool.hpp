@@ -28,6 +28,7 @@
 #include <agrpc/grpc_context.hpp>
 #include <asio/io_context.hpp>
 #include <asio/use_awaitable.hpp>
+#include <boost/endian/conversion.hpp>
 #include <evmc/evmc.hpp>
 #include <grpcpp/grpcpp.h>
 
