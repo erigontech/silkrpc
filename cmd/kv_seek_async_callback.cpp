@@ -19,8 +19,8 @@
 #include <iomanip>
 #include <iostream>
 
-#include <asio/io_context.hpp>
-#include <asio/signal_set.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/signal_set.hpp>
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
@@ -63,15 +63,15 @@ private:
 };
 
 int kv_seek_async_callback(const std::string& target, const std::string& table_name, const silkworm::Bytes& key, uint32_t timeout) {
-    asio::io_context context;
-    asio::io_context::work work{context};
+    boost::asio::io_context context;
+    boost::asio::io_context::work work{context};
 
     const auto channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
     auto stub = remote::KV::NewStub(channel);
 
-    asio::signal_set signals(context, SIGINT, SIGTERM);
-    signals.async_wait([&](const asio::system_error& error, int signal_number) {
-        std::cout << "Signal caught, error: " << error.what() << " number: " << signal_number << std::endl << std::flush;
+    boost::asio::signal_set signals(context, SIGINT, SIGTERM);
+    signals.async_wait([&](const boost::system::error_code& error, int signal_number) {
+        std::cout << "Signal caught, error: " << error.message() << " number: " << signal_number << std::endl << std::flush;
         context.stop();
     });
 

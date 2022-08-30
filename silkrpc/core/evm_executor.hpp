@@ -23,9 +23,9 @@
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
-#include <asio/awaitable.hpp>
-#include <asio/io_context.hpp>
-#include <asio/thread_pool.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/thread_pool.hpp>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wattributes"
 #include <silkworm/execution/evm.hpp>
@@ -55,23 +55,28 @@ class EVMExecutor {
 public:
     static std::string get_error_message(int64_t error_code, const silkworm::Bytes& error_data, const bool full_error = true);
 
-    explicit EVMExecutor(asio::io_context& io_context, const core::rawdb::DatabaseReader& db_reader, const silkworm::ChainConfig& config, asio::thread_pool& workers, uint64_t block_number)
-    : io_context_(io_context), db_reader_(db_reader), config_(config), workers_{workers}, remote_state_{io_context_, db_reader, block_number}, state_{remote_state_} {}
+    explicit EVMExecutor(
+        boost::asio::io_context& io_context,
+        const core::rawdb::DatabaseReader& db_reader,
+        const silkworm::ChainConfig& config,
+        boost::asio::thread_pool& workers, uint64_t block_number)
+        : io_context_(io_context), db_reader_(db_reader), config_(config), workers_{workers}, remote_state_{io_context_, db_reader, block_number}, state_{remote_state_} {}
     virtual ~EVMExecutor() {}
 
     EVMExecutor(const EVMExecutor&) = delete;
     EVMExecutor& operator=(const EVMExecutor&) = delete;
 
-    asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, bool refund = true, bool gas_bailout = false, const Tracers& tracers = {});
+    boost::asio::awaitable<ExecutionResult> call(const silkworm::Block& block, const silkworm::Transaction& txn, bool refund = true, bool gas_bailout = false, const Tracers& tracers = {});
     void reset();
+
 private:
     std::optional<std::string> pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0);
     uint64_t refund_gas(const VM& evm, const silkworm::Transaction& txn, uint64_t gas_left);
 
-    asio::io_context& io_context_;
+    boost::asio::io_context& io_context_;
     const core::rawdb::DatabaseReader& db_reader_;
     const silkworm::ChainConfig& config_;
-    asio::thread_pool& workers_;
+    boost::asio::thread_pool& workers_;
     state::RemoteState remote_state_;
     WorldState state_;
 };

@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <gmock/gmock.h>
 #include <silkworm/common/base.hpp>
 
@@ -33,10 +33,10 @@ namespace silkrpc::test {
 class MockTransaction : public ethdb::Transaction {
   public:
     MOCK_METHOD(uint64_t, tx_id, (), (const));
-    MOCK_METHOD((asio::awaitable<void>), open, ());
-    MOCK_METHOD((asio::awaitable<std::shared_ptr<ethdb::Cursor>>), cursor, (const std::string&));
-    MOCK_METHOD((asio::awaitable<std::shared_ptr<ethdb::CursorDupSort>>), cursor_dup_sort, (const std::string&));
-    MOCK_METHOD((asio::awaitable<void>), close, ());
+    MOCK_METHOD((boost::asio::awaitable<void>), open, ());
+    MOCK_METHOD((boost::asio::awaitable<std::shared_ptr<ethdb::Cursor>>), cursor, (const std::string&));
+    MOCK_METHOD((boost::asio::awaitable<std::shared_ptr<ethdb::CursorDupSort>>), cursor_dup_sort, (const std::string&));
+    MOCK_METHOD((boost::asio::awaitable<void>), close, ());
 };
 
 }  // namespace silkrpc::test

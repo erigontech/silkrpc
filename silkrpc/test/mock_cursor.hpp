@@ -19,7 +19,7 @@
 
 #include <string>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <gmock/gmock.h>
 #include <silkworm/common/base.hpp>
 
@@ -31,13 +31,13 @@ namespace silkrpc::test {
 class MockCursor : public ethdb::CursorDupSort {
 public:
     MOCK_METHOD((uint32_t), cursor_id, (), (const));
-    MOCK_METHOD((asio::awaitable<void>), open_cursor, (const std::string& table_name));
-    MOCK_METHOD((asio::awaitable<KeyValue>), seek, (silkworm::ByteView key));
-    MOCK_METHOD((asio::awaitable<KeyValue>), seek_exact, (silkworm::ByteView key));
-    MOCK_METHOD((asio::awaitable<KeyValue>), next, ());
-    MOCK_METHOD((asio::awaitable<void>), close_cursor, ());
-    MOCK_METHOD((asio::awaitable<silkworm::Bytes>), seek_both, (silkworm::ByteView, silkworm::ByteView));
-    MOCK_METHOD((asio::awaitable<KeyValue>), seek_both_exact, (silkworm::ByteView, silkworm::ByteView));
+    MOCK_METHOD((boost::asio::awaitable<void>), open_cursor, (const std::string& table_name));
+    MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek, (silkworm::ByteView key));
+    MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek_exact, (silkworm::ByteView key));
+    MOCK_METHOD((boost::asio::awaitable<KeyValue>), next, ());
+    MOCK_METHOD((boost::asio::awaitable<void>), close_cursor, ());
+    MOCK_METHOD((boost::asio::awaitable<silkworm::Bytes>), seek_both, (silkworm::ByteView, silkworm::ByteView));
+    MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek_both_exact, (silkworm::ByteView, silkworm::ByteView));
 };
 
 }  // namespace silkrpc::test

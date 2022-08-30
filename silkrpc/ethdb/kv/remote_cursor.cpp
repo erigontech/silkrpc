@@ -20,7 +20,7 @@
 
 namespace silkrpc::ethdb::kv {
 
-asio::awaitable<void> RemoteCursor::open_cursor(const std::string& table_name) {
+boost::asio::awaitable<void> RemoteCursor::open_cursor(const std::string& table_name) {
     const auto start_time = clock_time::now();
     if (cursor_id_ == 0) {
         SILKRPC_DEBUG << "RemoteCursor::open_cursor opening new cursor for table: " << table_name << "\n";
@@ -34,7 +34,7 @@ asio::awaitable<void> RemoteCursor::open_cursor(const std::string& table_name) {
     co_return;
 }
 
-asio::awaitable<KeyValue> RemoteCursor::seek(silkworm::ByteView key) {
+boost::asio::awaitable<KeyValue> RemoteCursor::seek(silkworm::ByteView key) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "RemoteCursor::seek cursor: " << cursor_id_ << " key: " << key << "\n";
     auto seek_message = remote::Cursor{};
@@ -48,7 +48,7 @@ asio::awaitable<KeyValue> RemoteCursor::seek(silkworm::ByteView key) {
     co_return KeyValue{k, v};
 }
 
-asio::awaitable<KeyValue> RemoteCursor::seek_exact(silkworm::ByteView key) {
+boost::asio::awaitable<KeyValue> RemoteCursor::seek_exact(silkworm::ByteView key) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "RemoteCursor::seek_exact cursor: " << cursor_id_ << " key: " << key << "\n";
     auto seek_message = remote::Cursor{};
@@ -62,7 +62,7 @@ asio::awaitable<KeyValue> RemoteCursor::seek_exact(silkworm::ByteView key) {
     co_return KeyValue{k, v};
 }
 
-asio::awaitable<KeyValue> RemoteCursor::next() {
+boost::asio::awaitable<KeyValue> RemoteCursor::next() {
     const auto start_time = clock_time::now();
     auto next_message = remote::Cursor{};
     next_message.set_op(remote::Op::NEXT);
@@ -74,7 +74,7 @@ asio::awaitable<KeyValue> RemoteCursor::next() {
     co_return KeyValue{k, v};
 }
 
-asio::awaitable<silkworm::Bytes> RemoteCursor::seek_both(silkworm::ByteView key, silkworm::ByteView value) {
+boost::asio::awaitable<silkworm::Bytes> RemoteCursor::seek_both(silkworm::ByteView key, silkworm::ByteView value) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "RemoteCursor::seek_both cursor: " << cursor_id_ << " key: " << key << " subkey: " << value << "\n";
     auto seek_message = remote::Cursor{};
@@ -89,7 +89,7 @@ asio::awaitable<silkworm::Bytes> RemoteCursor::seek_both(silkworm::ByteView key,
     co_return v;
 }
 
-asio::awaitable<KeyValue> RemoteCursor::seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) {
+boost::asio::awaitable<KeyValue> RemoteCursor::seek_both_exact(silkworm::ByteView key, silkworm::ByteView value) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "RemoteCursor::seek_both_exact cursor: " << cursor_id_ << " key: " << key << " subkey: " << value << "\n";
     auto seek_message = remote::Cursor{};
@@ -104,7 +104,7 @@ asio::awaitable<KeyValue> RemoteCursor::seek_both_exact(silkworm::ByteView key, 
     co_return KeyValue{k, v};
 }
 
-asio::awaitable<void> RemoteCursor::close_cursor() {
+boost::asio::awaitable<void> RemoteCursor::close_cursor() {
     const auto start_time = clock_time::now();
     const auto cursor_id = cursor_id_;
     if (cursor_id_ != 0) {

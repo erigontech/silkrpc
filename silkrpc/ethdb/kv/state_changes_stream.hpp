@@ -24,13 +24,13 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/awaitable.hpp>
-#ifndef ASIO_HAS_BOOST_DATE_TIME
-#define ASIO_HAS_BOOST_DATE_TIME
+#include <boost/asio/awaitable.hpp>
+#ifndef BOOST_ASIO_HAS_BOOST_DATE_TIME
+#define BOOST_ASIO_HAS_BOOST_DATE_TIME
 #endif
-#include <asio/cancellation_signal.hpp>
-#include <asio/deadline_timer.hpp>
-#include <asio/io_context.hpp>
+#include <boost/asio/cancellation_signal.hpp>
+#include <boost/asio/deadline_timer.hpp>
+#include <boost/asio/io_context.hpp>
 
 #include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/ethdb/kv/rpc.hpp>
@@ -71,14 +71,14 @@ public:
     void close();
 
     // The register-and-receive asynchronous loop
-    asio::awaitable<void> run();
+    boost::asio::awaitable<void> run();
 
 private:
     //! The retry interval between successive registration attempts
     static boost::posix_time::milliseconds registration_interval_;
 
     //! Asio execution scheduler running the register-and-receive asynchronous loop
-    asio::io_context& scheduler_;
+    boost::asio::io_context& scheduler_;
 
     //! gRPC execution scheduler running the register-and-receive asynchronous loop
     agrpc::GrpcContext& grpc_context_;
@@ -90,13 +90,13 @@ private:
     StateCache* cache_;
 
     //! The signal used to cancel the register-and-receive stream loop
-    asio::cancellation_signal cancellation_signal_;
+    boost::asio::cancellation_signal cancellation_signal_;
 
     //! The state changes request options
     remote::StateChangeRequest request_;
 
     //! The timer to schedule retries for stream opening
-    asio::deadline_timer retry_timer_;
+    boost::asio::deadline_timer retry_timer_;
 };
 
 } // namespace silkrpc::ethdb::kv

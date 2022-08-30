@@ -24,9 +24,9 @@
 #include <utility>
 
 #include <agrpc/rpc.hpp>
-#include <asio/compose.hpp>
-#include <asio/dispatch.hpp>
-#include <asio/experimental/append.hpp>
+#include <boost/asio/compose.hpp>
+#include <boost/asio/dispatch.hpp>
+#include <boost/asio/experimental/append.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/log.hpp>
@@ -66,7 +66,7 @@ private:
         void operator()(Op& op) {
             SILKRPC_TRACE << "ServerStreamingRpc::StartRequest::initiate r=" << self_.reader_.get() << " START\n";
             agrpc::request(PrepareAsync, self_.stub_, self_.context_, request, self_.reader_,
-                asio::bind_executor(self_.grpc_context_, std::move(op)));
+                boost::asio::bind_executor(self_.grpc_context_, std::move(op)));
             SILKRPC_TRACE << "ServerStreamingRpc::StartRequest::initiate r=" << self_.reader_.get() << " END\n";
         }
 
@@ -87,7 +87,7 @@ private:
         }
 
         template<typename Op>
-        void operator()(Op& op, const asio::error_code& ec) {
+        void operator()(Op& op, const boost::system::error_code& ec) {
             SILKRPC_TRACE << "ServerStreamingRpc::StartRequest(op, ec): self_.reader_=" << self_.reader_.get() << " ec=" << ec << "\n";
             op.complete(ec);
         }
@@ -101,7 +101,7 @@ private:
         template<typename Op>
         void operator()(Op& op) {
             SILKRPC_TRACE << "ServerStreamingRpc::Read::initiate r=" << self_.reader_.get() << " START\n";
-            agrpc::read(self_.reader_, self_.reply_, asio::bind_executor(self_.grpc_context_, std::move(op)));
+            agrpc::read(self_.reader_, self_.reply_, boost::asio::bind_executor(self_.grpc_context_, std::move(op)));
             SILKRPC_TRACE << "ServerStreamingRpc::Read::initiate r=" << self_.reader_.get() << " END\n";
         }
 
@@ -123,7 +123,7 @@ private:
         }
 
         template<typename Op>
-        void operator()(Op& op, const asio::error_code& ec) {
+        void operator()(Op& op, const boost::system::error_code& ec) {
             SILKRPC_TRACE << "ServerStreamingRpc::Read::error r=" << self_.reader_.get() << " ec=" << ec << "\n";
             op.complete(ec, {});
         }
@@ -135,7 +135,7 @@ private:
         template<typename Op>
         void operator()(Op& op) {
             SILKRPC_TRACE << "ServerStreamingRpc::Finish::initiate " << this << " START\n";
-            agrpc::finish(self_.reader_, self_.status_, asio::bind_executor(self_.grpc_context_, std::move(op)));
+            agrpc::finish(self_.reader_, self_.status_, boost::asio::bind_executor(self_.grpc_context_, std::move(op)));
             SILKRPC_TRACE << "ServerStreamingRpc::Finish::initiate " << this << " END\n";
         }
 
@@ -168,25 +168,25 @@ public:
 
     template<typename CompletionToken = agrpc::DefaultCompletionToken>
     auto request(const Request& request, CompletionToken&& token = {}) {
-        return asio::async_compose<CompletionToken, void(asio::error_code)>(
+        return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
             StartRequest<detail::InlineDispatcher>{*this, request}, token);
     }
 
     template<typename Executor, typename CompletionToken = agrpc::DefaultCompletionToken>
     auto request_on(const Executor& executor, const Request& request, CompletionToken&& token = {}) {
-        return asio::async_compose<CompletionToken, void(asio::error_code)>(
+        return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(
             StartRequest<detail::ExecutorDispatcher<Executor>>{*this, request, executor}, token);
     }
 
     template<typename CompletionToken = agrpc::DefaultCompletionToken>
     auto read(CompletionToken&& token = {}) {
-        return asio::async_compose<CompletionToken, void(asio::error_code, Reply)>(
+        return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, Reply)>(
             Read<detail::InlineDispatcher>{*this}, token);
     }
 
     template<typename Executor, typename CompletionToken = agrpc::DefaultCompletionToken>
     auto read_on(const Executor& executor, CompletionToken&& token = {}) {
-        return asio::async_compose<CompletionToken, void(asio::error_code, Reply)>(
+        return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, Reply)>(
             Read<detail::ExecutorDispatcher<Executor>>{*this, executor}, token);
     }
 
@@ -199,7 +199,7 @@ public:
 private:
     template<typename CompletionToken = agrpc::DefaultCompletionToken>
     auto finish(CompletionToken&& token = {}) {
-        return asio::async_compose<CompletionToken, void(asio::error_code)>(Finish{*this}, token);
+        return boost::asio::async_compose<CompletionToken, void(boost::system::error_code)>(Finish{*this}, token);
     }
 
     Stub& stub_;
