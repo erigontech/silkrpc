@@ -45,9 +45,9 @@ Building SilkRPC daemon requires
     sudo make install
     ```
 * [Python 3.x](https://www.python.org/downloads/) interpreter >= 3.8.2
-    * `sudo apt-get install python3`
+    * `sudo apt-get install python3` or `brew install python3`
 * some additional Python modules
-    * `pip install -r requirements.txt` from project folder
+    * `pip3 install -r requirements.txt` from project folder
 
 Please make your [GCC](https://www.gnu.org/software/gcc/) or [Clang](https://clang.llvm.org/) compiler available as `gcc` and `g++` or `clang` and `clang++` at the command line prompt.
 
