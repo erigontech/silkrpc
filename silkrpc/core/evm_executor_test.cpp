@@ -663,11 +663,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_CONTRACT_VALIDATION_FAILURE) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;
@@ -687,11 +687,11 @@ TEST_CASE("EVMexecutor") {
     SECTION("get_error_message(EVMC_ARGUMENT_OUT_OF_RANGE) with short error") {
         StubDatabase tx_database;
         const uint64_t chain_id = 5;
-        const auto chain_config_ptr = silkworm::lookup_chain_config(chain_id);
+        const auto chain_config_ptr = lookup_chain_config(chain_id);
 
         ChannelFactory my_channel = []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); };
         ContextPool my_pool{1, my_channel};
-        asio::thread_pool workers{1};
+        boost::asio::thread_pool workers{1};
         my_pool.start();
 
         const auto block_number = 6000000;

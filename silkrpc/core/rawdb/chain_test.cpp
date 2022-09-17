@@ -1379,7 +1379,7 @@ TEST_CASE("read_canonical_transactions") {
         Transactions empty_txs{};
         const uint64_t txn_count{1};
         EXPECT_CALL(db_reader, walk(db::table::kEthTx, _, _, _)).WillOnce(Invoke(
-            [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+            [](Unused, Unused, Unused, Walker w) -> boost::asio::awaitable<void> {
                 silkworm::Bytes key{};
                 silkworm::Bytes value{*silkworm::from_hex(
                     "00000000000000000000000000830f4240943dd81545f3149538edcb6691a4ffee1898bd2ef080b90124cf10"
@@ -1396,7 +1396,7 @@ TEST_CASE("read_canonical_transactions") {
                 co_return;
             }
         ));
-        auto result = asio::co_spawn(pool, read_canonical_transactions(db_reader, base_txn_id, txn_count), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, read_canonical_transactions(db_reader, base_txn_id, txn_count), boost::asio::use_future);
         CHECK(result.get() == empty_txs);
     }
 
@@ -1474,7 +1474,7 @@ TEST_CASE("read_noncanonical_transactions") {
         uint64_t base_txn_id{0};
         const uint64_t txn_count{1};
         EXPECT_CALL(db_reader, walk(db::table::kNonCanonicalTx, _, _, _)).WillOnce(Invoke(
-            [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+            [](Unused, Unused, Unused, Walker w) -> boost::asio::awaitable<void> {
                 silkworm::Bytes key{};
                 silkworm::Bytes value{*silkworm::from_hex(
                     "f9018e83065a0c85012a05f200830f4240943dd81545f3149538edcb6691a4ffee1898bd2ef080b90124cf10"
@@ -1518,7 +1518,7 @@ TEST_CASE("read_noncanonical_transactions") {
         Transactions empty_txs{};
         const uint64_t txn_count{1};
         EXPECT_CALL(db_reader, walk(db::table::kNonCanonicalTx, _, _, _)).WillOnce(Invoke(
-            [](Unused, Unused, Unused, Walker w) -> asio::awaitable<void> {
+            [](Unused, Unused, Unused, Walker w) -> boost::asio::awaitable<void> {
                 silkworm::Bytes key{};
                 silkworm::Bytes value{*silkworm::from_hex(
                     "00000000065a0c85012a05f200830f4240943dd81545f3149538edcb6691a4ffee1898bd2ef080b90124cf10"
