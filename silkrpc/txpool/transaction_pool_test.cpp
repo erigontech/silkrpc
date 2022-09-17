@@ -51,8 +51,6 @@ inline bool operator==(const Status& lhs, const Status& rhs) {
     h160_ptr->set_lo(lo);
     return h160_ptr;
 }
-
-
 } // namespace grpc
 
 namespace txpool {
@@ -68,7 +66,6 @@ inline bool operator==(const AddReply& lhs, const AddReply& rhs) {
     }
     return true;
 }
-
 } // namespace txpool
 
 namespace silkrpc::txpool {
