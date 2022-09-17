@@ -240,7 +240,7 @@ TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::get_transactions", "[sil
     SECTION("call get_transactions and check success [one tx]") {
         ::txpool::AllReply response;
         auto tx = response.add_txs();
-        tx->set_type(::txpool::AllReply_Type_QUEUED);
+        tx->set_txntype(::txpool::AllReply_TxnType_QUEUED);
         tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
         tx->set_rlptx("0804");
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
@@ -256,15 +256,15 @@ TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::get_transactions", "[sil
     SECTION("call get_transactions and check success [more than one tx]") {
         ::txpool::AllReply response;
         auto tx = response.add_txs();
-        tx->set_type(::txpool::AllReply_Type_QUEUED);
+        tx->set_txntype(::txpool::AllReply_TxnType_QUEUED);
         tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
         tx->set_rlptx("0804");
         tx = response.add_txs();
-        tx->set_type(::txpool::AllReply_Type_PENDING);
+        tx->set_txntype(::txpool::AllReply_TxnType_PENDING);
         tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de735");
         tx->set_rlptx("0806");
         tx = response.add_txs();
-        tx->set_type(::txpool::AllReply_Type_BASE_FEE);
+        tx->set_txntype(::txpool::AllReply_TxnType_BASE_FEE);
         tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de736");
         tx->set_rlptx("0807");
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
