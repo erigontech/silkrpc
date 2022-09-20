@@ -19,6 +19,7 @@
 
 #include <deque>
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
 #include <set>
@@ -37,6 +38,7 @@
 #pragma GCC diagnostic pop
 #include <silkworm/state/intra_block_state.hpp>
 
+#include <silkrpc/common/block_cache.hpp>
 #include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
 #include <silkrpc/types/block.hpp>
@@ -60,9 +62,22 @@ struct TraceCall {
 
 void from_json(const nlohmann::json& json, TraceCall& tc);
 
+struct TraceFilter {
+    BlockNumberOrHash from_block{0};
+    BlockNumberOrHash to_block{"latest"};
+    std::vector<evmc::address> from_addresses;
+    std::vector<evmc::address> to_addresses;
+    std::optional<std::string> mode;
+    std::uint32_t after{0};
+    std::uint32_t count{std::numeric_limits<uint32_t>::max()};
+};
+
+void from_json(const nlohmann::json& json, TraceFilter& tc);
+
 std::string get_op_name(const char* const* names, std::uint8_t opcode);
 std::string to_string(intx::uint256 value);
 std::ostream& operator<<(std::ostream& out, const TraceConfig& tc);
+std::ostream& operator<<(std::ostream& out, const TraceFilter& tf);
 
 struct TraceStorage {
     std::string key;
@@ -316,6 +331,11 @@ struct TraceManyCallResult {
     std::optional<std::string> pre_check_error{std::nullopt};
 };
 
+struct TraceFilterResult {
+    std::vector<Trace> traces;
+    std::optional<std::string> pre_check_error{std::nullopt};
+};
+
 void to_json(nlohmann::json& json, const TraceCallTraces& result);
 void to_json(nlohmann::json& json, const TraceCallResult& result);
 void to_json(nlohmann::json& json, const TraceManyCallResult& result);
@@ -343,8 +363,11 @@ private:
 template<typename WorldState = silkworm::IntraBlockState, typename VM = silkworm::EVM>
 class TraceCallExecutor {
 public:
-    explicit TraceCallExecutor(boost::asio::io_context& io_context, const core::rawdb::DatabaseReader& database_reader, boost::asio::thread_pool& workers)
-    : io_context_(io_context), database_reader_(database_reader), workers_{workers} {}
+    explicit TraceCallExecutor(boost::asio::io_context& io_context,
+        silkrpc::BlockCache& block_cache,
+        const core::rawdb::DatabaseReader& database_reader,
+        boost::asio::thread_pool& workers)
+    : io_context_(io_context), block_cache_(block_cache), database_reader_(database_reader), workers_{workers} {}
     virtual ~TraceCallExecutor() {}
 
     TraceCallExecutor(const TraceCallExecutor&) = delete;
@@ -358,12 +381,15 @@ public:
         return execute(block.header.number-1, block, transaction, transaction.transaction_index, config);
     }
     boost::asio::awaitable<std::vector<Trace>> trace_transaction(const silkworm::BlockWithHash& block, const silkrpc::Transaction& transaction);
+    boost::asio::awaitable<TraceFilterResult> trace_filter(const TraceFilter& trace_filter);
 
 private:
+    // boost::asio::awaitable<std::vector<Trace>> block_traces(const silkworm::BlockWithHash& block_with_hash);
     boost::asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block,
         const silkrpc::Transaction& transaction, std::int32_t index, const TraceConfig& config);
 
     boost::asio::io_context& io_context_;
+    silkrpc::BlockCache& block_cache_;
     const core::rawdb::DatabaseReader& database_reader_;
     boost::asio::thread_pool& workers_;
 };

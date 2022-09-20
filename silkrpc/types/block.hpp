@@ -48,7 +48,10 @@ public:
     BlockNumberOrHash(BlockNumberOrHash &&bnoh) = default;
     BlockNumberOrHash(BlockNumberOrHash const& bnoh) noexcept = default;
 
-    BlockNumberOrHash& operator=(BlockNumberOrHash const& bnoh) = delete;
+    BlockNumberOrHash& operator=(BlockNumberOrHash const& bnoh) {
+        value_ = bnoh.value_;
+        return *this;
+    }
 
     [[nodiscard]] bool is_number() const {
         return std::holds_alternative<uint64_t>(value_);
