@@ -9,7 +9,7 @@
         "response": {
             "error": {
                 "code": 100,
-                "message": "not a proof-of-stake chain"
+                "message": "Unknown payload"
             },
             "id": 1,
             "jsonrpc": "2.0"
