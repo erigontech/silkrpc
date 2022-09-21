@@ -164,6 +164,7 @@ def usage(argv):
     print("-v verbose")
     print("-o dump response")
     print("-x exclude api list (i.e txpool_content,txpool_status")
+    print("-X exclude test list (i.e 18,22")
 
 
 #
@@ -183,10 +184,11 @@ def main(argv):
     json_dir = "./goerly/"
     results_dir = "results"
     output_dir = json_dir + "/" + results_dir + "/"
-    exclude_list = ""
+    exclude_api_list = ""
+    exclude_test_list = ""
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:db:ox:")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:db:ox:X:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -210,7 +212,9 @@ def main(argv):
             elif option == "-b":
                 json_dir = "./" + optarg + "/"
             elif option == "-x":
-                exclude_list = optarg
+                exclude_api_list = optarg
+            elif option == "-X":
+                exclude_test_list = optarg
             else:
                 usage(argv)
                 sys.exit(-1)
@@ -242,23 +246,33 @@ def main(argv):
             for test_name in test_lists:
                 if requested_api in ("", api_file): # -a
                     # scans exclude list
-                    tokenize_list = exclude_list.split(",")
-                    jump_api = 0
-                    for exclude_api in tokenize_list:  # -x
+                    tokenize_exclude_api_list = exclude_api_list.split(",")
+                    jump_test = 0
+                    for exclude_api in tokenize_exclude_api_list:  # -x
                         if exclude_api == api_file:
-                            jump_api = 1
+                            jump_test = 1
+                            break
+                    tokenize_exclude_test_list = exclude_test_list.split(",")
+                    for exclude_test in tokenize_exclude_test_list:  # -X
+                        if exclude_test == str(global_test_number):
+                            jump_test = 1
                             break
                     test_file = api_file + "/" + test_name
-                    if jump_api == 0:
+                    if jump_test == 0:
                         # runs all tests req_test refers global test number or
                         # runs only tests on specific api req_test refers all test on specific api
                         if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
                             if verbose:
-                                print(f"{global_test_number:03d}. {test_file}", end = '')
+                                print(f"{global_test_number:03d}. {test_file} ", end = '', flush=True)
                             run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, verify_with_rpc, dump_output, global_test_number)
                             executed_tests = executed_tests + 1
                             if req_test != -1 or requested_api != "":
                                 match = 1
+                    else:
+                        if verbose:
+                            print(f"{global_test_number:03d}. {test_file} --> SKIPPED")
+                        else:
+                            print(f"{global_test_number:03d}. {test_file} Skipped")
                 global_test_number = global_test_number + 1
                 test_number = test_number + 1
 
