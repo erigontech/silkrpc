@@ -26,7 +26,7 @@
         "response": {
             "error": {
                 "code": 100,
-                "message": "not a proof-of-stake chain"
+                "message": "runtime error: invalid memory address or nil pointer dereference"
             },
             "id": 1,
             "jsonrpc": "2.0"

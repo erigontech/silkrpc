@@ -13,7 +13,7 @@
             "jsonrpc":"2.0",
             "error":{
                 "code":-32000,
-                "message":"rlp: unexpected EIP-2178 serialization"
+                "message":"rlp: value size exceeds available input length"
             }
         }
     }

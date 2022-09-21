@@ -16,7 +16,7 @@
             "id":1,
             "error":{
                 "code":100,
-                "message":"interface conversion: *mdbx.MdbxCursor is not kv.CursorDupSort: missing method CountDuplicates"
+                "message": "interface conversion: *mdbx.MdbxCursor is not kv.CursorDupSort: missing method CountDuplicates [std:grpc:13]"
             }
         }
     }

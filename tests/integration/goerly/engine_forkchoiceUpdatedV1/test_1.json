@@ -18,10 +18,7 @@
             "id": 1
         },
         "response": {
-            "error": {
-                "code": 100,
-                "message": "not a proof-of-stake chain"
-            },
+            "result":null,
             "id": 1,
             "jsonrpc": "2.0"
         }
