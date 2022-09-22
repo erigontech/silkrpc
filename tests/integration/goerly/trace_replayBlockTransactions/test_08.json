@@ -5,7 +5,7 @@
       "jsonrpc": "2.0",
       "method": "trace_replayBlockTransactions",
       "params": [
-        "1000004",
+        "0xf4244",
         [
           "vmTrace",
           "trace",
