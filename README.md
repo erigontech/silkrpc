@@ -33,8 +33,10 @@ Building SilkRPC daemon requires
 * C++20 compiler: [GCC](https://www.gnu.org/software/gcc/) >= 10.2.0 or [Clang](https://clang.llvm.org/) >= 10.0.0
 * Build system: [CMake](http://cmake.org) >= 3.18.4
 * GNU Multiple Precision arithmetic library: [GMP](http://gmplib.org) >= 6.2.0
-    * `sudo apt-get install libgmp3-dev` or `brew install gmp`
-* Microsoft mimalloc library: [mimalloc](https://github.com/microsoft/mimalloc) >= 1.7.0
+    * Linux: `sudo apt-get install libgmp3-dev`
+    * MacOS: `brew install gmp`
+* Microsoft mimalloc library: [mimalloc](https://github.com/microsoft/mimalloc) >= 2.0.0
+   * Linux:
     ```
     git clone https://github.com/microsoft/mimalloc
     cd mimalloc
@@ -44,10 +46,11 @@ Building SilkRPC daemon requires
     make
     sudo make install
     ```
+   * MacOS: `brew install mimalloc`
 * [Python 3.x](https://www.python.org/downloads/) interpreter >= 3.8.2
-    * `sudo apt-get install python3`
+    * `sudo apt-get install python3` or `brew install python3`
 * some additional Python modules
-    * `pip install -r requirements.txt` from project folder
+    * `pip3 install -r requirements.txt` from project folder
 
 Please make your [GCC](https://www.gnu.org/software/gcc/) or [Clang](https://clang.llvm.org/) compiler available as `gcc` and `g++` or `clang` and `clang++` at the command line prompt.
 
