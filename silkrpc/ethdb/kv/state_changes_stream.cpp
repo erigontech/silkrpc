@@ -62,18 +62,18 @@ boost::asio::awaitable<void> StateChangesStream::run() {
 
     bool cancelled{false};
     while (!cancelled) {
-        StateChangesRpc state_changes_rpc{*stub_, grpc_context_};
+        auto state_changes_rpc{std::make_shared<StateChangesRpc>(*stub_, grpc_context_)};
 
-        cancellation_slot.assign([&](boost::asio::cancellation_type /*type*/) {
+        cancellation_slot.assign([&, state_changes_rpc](boost::asio::cancellation_type /*type*/) {
             retry_timer_.cancel();
             SILKRPC_DEBUG << "Retry timer cancelled\n";
 
-            state_changes_rpc.cancel();
+            state_changes_rpc->cancel();
             SILKRPC_WARN << "State changes stream cancelled\n";
         });
 
         SILKRPC_INFO << "Registration for state changes started\n";
-        const auto [req_ec] = co_await state_changes_rpc.request_on(scheduler_.get_executor(), request_, use_nothrow_awaitable);
+        const auto [req_ec] = co_await state_changes_rpc->request_on(scheduler_.get_executor(), request_, use_nothrow_awaitable);
         if (req_ec) {
             if (std::error_code(req_ec).value() == grpc::StatusCode::CANCELLED) {
                 cancelled = true;
@@ -94,7 +94,7 @@ boost::asio::awaitable<void> StateChangesStream::run() {
         std::error_code read_ec;
         remote::StateChangeBatch reply;
         while (!read_ec) {
-            std::tie(read_ec, reply) = co_await state_changes_rpc.read_on(scheduler_.get_executor(), use_nothrow_awaitable);
+            std::tie(read_ec, reply) = co_await state_changes_rpc->read_on(scheduler_.get_executor(), use_nothrow_awaitable);
             if (!read_ec) {
                 SILKRPC_INFO << "State changes batch received: " << reply << "\n";
                 cache_->on_new_block(reply);

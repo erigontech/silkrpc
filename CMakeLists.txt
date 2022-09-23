@@ -15,6 +15,8 @@
 ]]
 
 cmake_minimum_required(VERSION 3.16)
+
+# Add support for MacOS architectures
 set(CMAKE_OSX_ARCHITECTURES ${ARCHS_STANDARD} CACHE INTERNAL "" FORCE)
 
 # Check that submodules initialization has been done
@@ -26,6 +28,9 @@ endif()
 if(NOT CMAKE_TOOLCHAIN_FILE)
   set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/silkworm/cmake/toolchain/cxx20.cmake CACHE FILEPATH "" FORCE)
 endif()
+
+# Enable language *before* indirectly including GNUInstallDirs (see CableBuildInfo)
+enable_language(CXX)
 
 include(silkworm/third_party/evmone/cmake/cable/bootstrap.cmake)
 include(CableBuildInfo)
@@ -46,6 +51,7 @@ set(PROJECT_VERSION_PATCH ${CMAKE_MATCH_3})
 
 cable_add_buildinfo_library(PROJECT_NAME ${PROJECT_NAME})
 
+# Enforce minimum compiler versions
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   if(CMAKE_C_COMPILER_VERSION VERSION_LESS 10.3.0)
     message(FATAL_ERROR "required gcc version >= 10.3.0")
@@ -63,6 +69,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL 
 endif()
 
 include(cmake/Hunter/packages.cmake)
+
+# Silence CMake policy warnings in submodules
+set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
+set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
 
 # Silkworm
 find_package(ethash CONFIG REQUIRED)
