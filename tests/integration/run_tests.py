@@ -46,12 +46,12 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         if "result" in response and "result" in expected_response and expected_response["result"] is None:
             # response and expected_response are different but don't care
             if verbose:
-                print("--> OK")
+                print("OK")
             return
         if "error" in response and "error" in expected_response and expected_response["error"] is None:
             # response and expected_response are different but don't care
             if verbose:
-                print("--> OK")
+                print("OK")
             return
         if (silk_file != "" and os.path.exists(output_dir) == 0):
             os.mkdir (output_dir)
@@ -66,15 +66,16 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
             with open(diff_file, 'w', encoding='utf8') as json_file_ptr:
                 json_file_ptr.write(json.dumps(response_diff, indent = 6))
         if verbose:
-            print("--> FAILED")
+            print("Failed")
         else:
-            print(str(test_number) + ". " + json_file + " Test Failed")
+            file = json_file.ljust(60)
+            print(f"{test_number:03d}. {file} Failed")
         if exit_on_fail:
             print("TEST ABORTED!")
             sys.exit(1)
     else:
         if verbose:
-            print("--> OK")
+            print("OK")
         if dump_output:
             if (silk_file != "" and os.path.exists(output_dir) == 0):
                 os.mkdir (output_dir)
@@ -263,23 +264,22 @@ def main(argv):
                         # runs only tests on specific api req_test refers all test on specific api
                         if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
                             if verbose:
-                                print(f"{global_test_number:03d}. {test_file} ", end = '', flush=True)
+                                file = test_file.ljust(60)
+                                print(f"{global_test_number:03d}. {file} ", end = '', flush=True)
                             run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, verify_with_rpc, dump_output, global_test_number)
                             executed_tests = executed_tests + 1
                             if req_test != -1 or requested_api != "":
                                 match = 1
                     else:
-                        if verbose:
-                            print(f"{global_test_number:03d}. {test_file} --> SKIPPED")
-                        else:
-                            print(f"{global_test_number:03d}. {test_file} Skipped")
+                        file = test_file.ljust(60)
+                        print(f"{global_test_number:03d}. {file} Skipped")
                 global_test_number = global_test_number + 1
                 test_number = test_number + 1
 
     if (req_test != -1 or requested_api != "") and match == 0:
         print("ERROR: api or testNumber not found")
     else:
-        print(f"Number of executed tests: {executed_tests}")
+        print(f"Number of executed tests: {executed_tests}/{global_test_number}")
 #
 # module as main
 #
