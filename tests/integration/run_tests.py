@@ -112,14 +112,14 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
         if verify_with_rpc == 0:
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = ""
-            output_api_filename = output_dir + json_file[:-5]
+            output_api_filename = output_dir + json_file[:-4]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = json_rpc["response"]
             silk_file = output_api_filename + "-response.json"
             rpc_file = output_api_filename + "-expResponse.json"
             diff_file = output_api_filename + "-diff.json"
         else:
-            output_api_filename = output_dir + json_file[:-5]
+            output_api_filename = output_dir + json_file[:-4]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = ""
             target = get_target(1, request["method"])
