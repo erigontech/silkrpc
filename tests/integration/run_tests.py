@@ -263,9 +263,11 @@ def main(argv):
                         # runs all tests req_test refers global test number or
                         # runs only tests on specific api req_test refers all test on specific api
                         if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
+                            file = test_file.ljust(60)
                             if verbose:
-                                file = test_file.ljust(60)
                                 print(f"{global_test_number:03d}. {file} ", end = '', flush=True)
+                            else:
+                                print(f"{global_test_number:03d}. {file}\r", end = '', flush=True)
                             run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, verify_with_rpc, dump_output, global_test_number)
                             executed_tests = executed_tests + 1
                             if req_test != -1 or requested_api != "":
