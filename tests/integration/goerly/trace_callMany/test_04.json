@@ -150,7 +150,7 @@
                 "cost": 2,
                 "ex": {
                   "mem": null,
-                  "push": [],
+                  "push": ["0x0"],
                   "store": null,
                   "used": 1204656
                 },
