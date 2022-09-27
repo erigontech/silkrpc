@@ -307,6 +307,8 @@ int get_stack_count(std::uint8_t op_code) {
         case evmc_opcode::OP_CALLCODE:
         case evmc_opcode::OP_CREATE:
         case evmc_opcode::OP_CREATE2:
+        case evmc_opcode::OP_COINBASE:
+        case evmc_opcode::OP_CHAINID:
             count = 1;
             break;
         default:
@@ -464,6 +466,7 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
         << ", input_size: " << msg.input_size
         << ", index_prefix: " << index_prefix
         << "\n";
+
 }
 
 void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
@@ -695,6 +698,7 @@ void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::In
             break;
         case evmc_status_code::EVMC_REVERT:
             trace.error = "Reverted";
+            trace.trace_result->gas_used = start_gas - result.gas_left;
             break;
         case evmc_status_code::EVMC_OUT_OF_GAS:
         case evmc_status_code::EVMC_STACK_OVERFLOW:
@@ -1103,6 +1107,7 @@ boost::asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldStat
         } else {
             traces.output = "0x" + silkworm::to_hex(execution_result.data);
         }
+        executor.reset();
     }
     co_return trace_call_result;
 }
@@ -1227,8 +1232,8 @@ boost::asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execu
            txn.recover_sender();
         }
         const auto execution_result = co_await executor.call(block, txn, /*refund=*/true, /*gas_bailout=*/true, tracers);
+        executor.reset();
     }
-    executor.reset();
 
     tracers.clear();
     TraceCallResult result;
