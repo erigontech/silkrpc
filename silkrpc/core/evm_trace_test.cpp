@@ -1540,7 +1540,7 @@ TEST_CASE("TraceCallExecutor::trace_call with error") {
                 "cost": 2,
                 "ex": {
                 "mem": null,
-                "push": [],
+                "push": ["0x0"],
                 "store": null,
                 "used": 156080
                 },
@@ -4343,6 +4343,8 @@ TEST_CASE("copy_stack") {
                 case evmc_opcode::OP_CALLCODE:
                 case evmc_opcode::OP_CREATE:
                 case evmc_opcode::OP_CREATE2:
+                case evmc_opcode::OP_COINBASE:
+                case evmc_opcode::OP_CHAINID:
                     copy_stack(op_code, top_stack, trace_stack);
 
                     CHECK(trace_stack.size() == 1);
