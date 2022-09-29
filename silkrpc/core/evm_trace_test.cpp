@@ -4345,6 +4345,7 @@ TEST_CASE("copy_stack") {
                 case evmc_opcode::OP_CREATE2:
                 case evmc_opcode::OP_COINBASE:
                 case evmc_opcode::OP_CHAINID:
+                case evmc_opcode::OP_SMOD:
                     copy_stack(op_code, top_stack, trace_stack);
 
                     CHECK(trace_stack.size() == 1);
