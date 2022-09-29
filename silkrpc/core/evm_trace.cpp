@@ -309,6 +309,7 @@ int get_stack_count(std::uint8_t op_code) {
         case evmc_opcode::OP_CREATE2:
         case evmc_opcode::OP_COINBASE:
         case evmc_opcode::OP_CHAINID:
+        case evmc_opcode::OP_SMOD:
             count = 1;
             break;
         default:
