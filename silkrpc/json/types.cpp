@@ -121,6 +121,7 @@ void from_json(const nlohmann::json& json, AccessListEntry& entry) {
 void to_json(nlohmann::json& json, const BlockHeader& header) {
     const auto block_number = silkrpc::to_quantity(header.number);
     json["number"] = block_number;
+    json["hash"] = silkrpc::to_quantity(header.hash());
     json["parentHash"] = header.parent_hash;
     json["nonce"] = "0x" + silkworm::to_hex({header.nonce.data(), header.nonce.size()});
     json["sha3Uncles"] = header.ommers_hash;
@@ -137,6 +138,8 @@ void to_json(nlohmann::json& json, const BlockHeader& header) {
     json["timestamp"] = silkrpc::to_quantity(header.timestamp);
     if (header.base_fee_per_gas.has_value()) {
        json["baseFeePerGas"] = silkrpc::to_quantity(header.base_fee_per_gas.value_or(0));
+    } else {
+       json["baseFeePerGas"] = nullptr;
     }
 }
 
