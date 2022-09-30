@@ -133,11 +133,6 @@ class SpinWaitWaitStrategy {
 
   private:
     inline void spin_wait() {
-        asm volatile
-        (
-            "rep\n"
-            "nop"
-        );
     }
 
     inline static const int32_t kYieldThreshold{10};
