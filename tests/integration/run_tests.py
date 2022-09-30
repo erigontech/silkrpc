@@ -13,6 +13,21 @@ import getopt
 import gzip
 import jsondiff
 
+tests_with_big_json = [
+   "trace_replayBlockTransactions/test_01.json.tar",
+   "trace_replayBlockTransactions/test_02.json.tar",
+   "trace_replayTransaction/test_16.json.tar",
+   "trace_replayTransaction/test_23.json.tar"
+]
+
+api_not_compared = [
+   "parity_getBlockReceipts",
+   "erigon_getBlockByTimestamp",
+   "eth_getBlockByHash",
+   "eth_getBlockByNumber"
+]
+
+
 def get_target(silk: bool, method: str):
     "Determine where silkrpc is supposed to be serving at."
     if "engine_" in method:
@@ -21,6 +36,17 @@ def get_target(silk: bool, method: str):
         return "localhost:51515"
 
     return "localhost:8545"
+
+def is_skipped(api_name: str):
+    for curr_test_name in api_not_compared:
+       if curr_test_name == api_name:
+           return 1
+    return 0
+
+def is_big_json(test_name: str):
+    for curr_test_name in tests_with_big_json:
+       if curr_test_name == test_name:
+           return 1
 
 def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool, output_dir: str, silk_file: str,
                       rpc_file: str, diff_file: str, dump_output, json_file: str, test_number):
@@ -33,7 +59,6 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
     process.stdout = process.stdout.strip('\n')
     #print (process.stdout)
     response = json.loads(process.stdout)
-    #response = json.loads(process.stdout)
     if command1 != "":
         command_and_args = shlex.split(command1)
         process = subprocess.run(command_and_args, stdout=subprocess.PIPE, universal_newlines=True, check=True)
@@ -74,8 +99,10 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
             with open(rpc_file, 'w', encoding='utf8') as json_file_ptr:
                 json_file_ptr.write(json.dumps(expected_response,  indent=5))
         #response_diff = jsondiff.diff(expected_response, response, marshal=True)
-        #cmd = "json-diff -s " + rpc_file  + " " + silk_file + " > " + diff_file
-        cmd = "json-patch-jsondiff --indent 4 " + rpc_file  + " " + silk_file + " > " + diff_file
+        if is_big_json(json_file):
+            cmd = "json-patch-jsondiff --indent 4 " + rpc_file  + " " + silk_file + " > " + diff_file
+        else:
+            cmd = "json-diff -s " + rpc_file  + " " + silk_file + " > " + diff_file
         os.system(cmd)
         diff_file_size = os.stat(diff_file).st_size 
  
@@ -276,6 +303,8 @@ def main(argv):
                         if exclude_api == api_file:
                             jump_test = 1
                             break
+                    if (requested_api == "" and req_test == -1) and is_skipped(api_file) and verify_with_rpc == 1:
+                       jump_test = 1
                     tokenize_exclude_test_list = exclude_test_list.split(",")
                     for exclude_test in tokenize_exclude_test_list:  # -X
                         if exclude_test == str(global_test_number):
@@ -309,6 +338,7 @@ def main(argv):
     if (req_test != -1 or requested_api != "") and match == 0:
         print("ERROR: api or testNumber not found")
     else:
+        print(f"                                                                                    \r")
         print(f"Number of executed tests:     {executed_tests}/{global_test_number-1}")
         print(f"Number of NOT executed tests: {tests_not_executed}")
         print(f"Number of success tests:      {success_tests}")
