@@ -11,7 +11,7 @@ import tarfile
 
 import getopt
 import gzip
-import jsondiff
+#import jsondiff
 
 tests_with_big_json = [
    "trace_replayBlockTransactions/test_01.json.tar",
@@ -29,7 +29,8 @@ api_not_compared = [
 
 
 def get_target(silk: bool, method: str):
-    "Determine where silkrpc is supposed to be serving at."
+    """ determine target
+    """
     if "engine_" in method:
         return "localhost:8550"
     if silk:
@@ -38,28 +39,31 @@ def get_target(silk: bool, method: str):
     return "localhost:8545"
 
 def is_skipped(api_name, requested_api, exclude_api_list, exclude_test_list, api_file: str, req_test, verify_with_rpc, global_test_number):
+    """ determine if test must be skipped
+    """
     if requested_api == "" and req_test == -1 and verify_with_rpc == 1:
         for curr_test_name in api_not_compared:
             if curr_test_name == api_name:
                 return 1
-   
     # scans exclude api list (-X)
     tokenize_exclude_api_list = exclude_api_list.split(",")
     for exclude_api in tokenize_exclude_api_list:  # -x
-       if exclude_api == api_file:
-           return 1
-
+        if exclude_api == api_file:
+            return 1
     # scans exclude test list (-x)
     tokenize_exclude_test_list = exclude_test_list.split(",")
     for exclude_test in tokenize_exclude_test_list:  # -X
         if exclude_test == str(global_test_number):
-           return 1
+            return 1
     return 0
 
 def is_big_json(test_name: str):
+    """ determine if json is in the big list
+    """
     for curr_test_name in tests_with_big_json:
-       if curr_test_name == test_name:
-           return 1
+        if curr_test_name == test_name:
+            return 1
+    return 0
 
 def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool, output_dir: str, silk_file: str,
                       rpc_file: str, diff_file: str, dump_output, json_file: str, test_number):
@@ -117,21 +121,19 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         else:
             cmd = "json-diff -s " + rpc_file  + " " + silk_file + " > " + diff_file
         os.system(cmd)
-        diff_file_size = os.stat(diff_file).st_size 
- 
+        diff_file_size = os.stat(diff_file).st_size
         if diff_file_size != 0:
             if verbose:
-               print("Failed")
+                print("Failed")
             else:
-               file = json_file.ljust(60)
-               print(f"{test_number:03d}. {file} Failed")
+                file = json_file.ljust(60)
+                print(f"{test_number:03d}. {file} Failed")
             if exit_on_fail:
-               print("TEST ABORTED!")
-               sys.exit(1)
+                print("TEST ABORTED!")
+                sys.exit(1)
             return 1
-        else:
-            if verbose:
-               print("OK")
+        if verbose:
+            print("OK")
     else:
         if verbose:
             print("OK")
@@ -325,9 +327,9 @@ def main(argv):
                                 print(f"{global_test_number:03d}. {file}\r", end = '', flush=True)
                             ret=run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, verify_with_rpc, dump_output, global_test_number)
                             if ret == 0:
-                               success_tests = success_tests + 1
+                                success_tests = success_tests + 1
                             else:
-                               failed_tests = failed_tests + 1
+                                failed_tests = failed_tests + 1
                             executed_tests = executed_tests + 1
                             if req_test != -1 or requested_api != "":
                                 match = 1
@@ -338,7 +340,7 @@ def main(argv):
     if (req_test != -1 or requested_api != "") and match == 0:
         print("ERROR: api or testNumber not found")
     else:
-        print(f"                                                                                    \r")
+        print("                                                                                    \r")
         print(f"Number of executed tests:     {executed_tests}/{global_test_number-1}")
         print(f"Number of NOT executed tests: {tests_not_executed}")
         print(f"Number of success tests:      {success_tests}")
