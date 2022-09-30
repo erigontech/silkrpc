@@ -37,9 +37,22 @@ def get_target(silk: bool, method: str):
 
     return "localhost:8545"
 
-def is_skipped(api_name: str):
-    for curr_test_name in api_not_compared:
-       if curr_test_name == api_name:
+def is_skipped(api_name, requested_api, exclude_api_list, exclude_test_list, api_file: str, req_test, verify_with_rpc, global_test_number):
+    if requested_api == "" and req_test == -1 and verify_with_rpc == 1:
+        for curr_test_name in api_not_compared:
+            if curr_test_name == api_name:
+                return 1
+   
+    # scans exclude api list (-X)
+    tokenize_exclude_api_list = exclude_api_list.split(",")
+    for exclude_api in tokenize_exclude_api_list:  # -x
+       if exclude_api == api_file:
+           return 1
+
+    # scans exclude test list (-x)
+    tokenize_exclude_test_list = exclude_test_list.split(",")
+    for exclude_test in tokenize_exclude_test_list:  # -X
+        if exclude_test == str(global_test_number):
            return 1
     return 0
 
@@ -296,22 +309,12 @@ def main(argv):
             test_number = 1
             for test_name in test_lists:
                 if requested_api in ("", api_file): # -a
-                    # scans exclude list
-                    tokenize_exclude_api_list = exclude_api_list.split(",")
-                    jump_test = 0
-                    for exclude_api in tokenize_exclude_api_list:  # -x
-                        if exclude_api == api_file:
-                            jump_test = 1
-                            break
-                    if (requested_api == "" and req_test == -1) and is_skipped(api_file) and verify_with_rpc == 1:
-                       jump_test = 1
-                    tokenize_exclude_test_list = exclude_test_list.split(",")
-                    for exclude_test in tokenize_exclude_test_list:  # -X
-                        if exclude_test == str(global_test_number):
-                            jump_test = 1
-                            break
                     test_file = api_file + "/" + test_name
-                    if jump_test == 0:
+                    if is_skipped(api_file, requested_api, exclude_api_list, exclude_test_list, api_file, req_test, verify_with_rpc, global_test_number) == 1:
+                        file = test_file.ljust(60)
+                        print(f"{global_test_number:03d}. {file} Skipped")
+                        tests_not_executed = tests_not_executed + 1
+                    else:
                         # runs all tests req_test refers global test number or
                         # runs only tests on specific api req_test refers all test on specific api
                         if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
@@ -328,10 +331,7 @@ def main(argv):
                             executed_tests = executed_tests + 1
                             if req_test != -1 or requested_api != "":
                                 match = 1
-                    else:
-                        file = test_file.ljust(60)
-                        print(f"{global_test_number:03d}. {file} Skipped")
-                        tests_not_executed = tests_not_executed + 1
+
                 global_test_number = global_test_number + 1
                 test_number = test_number + 1
 
