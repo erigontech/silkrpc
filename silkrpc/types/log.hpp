@@ -43,6 +43,8 @@ struct Log {
 
 typedef std::vector<Log> Logs;
 
+typedef std::vector<Logs> LogsList;
+
 std::ostream& operator<<(std::ostream& out, const Log& log);
 
 } // namespace silkrpc
