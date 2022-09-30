@@ -208,11 +208,11 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_logs_by_hash(const 
         const auto receipts{co_await core::get_receipts(tx_database, block_with_hash)};
 
         SILKRPC_DEBUG << "receipts.size(): " << receipts.size() << "\n";
-        std::vector<Log> logs{};
+        std::vector<Logs> logs{};
         logs.reserve(receipts.size());
         for (const auto receipt : receipts) {
             SILKRPC_DEBUG << "receipt.logs.size(): " << receipt.logs.size() << "\n";
-            logs.insert(logs.end(), receipt.logs.begin(), receipt.logs.end());
+            logs.push_back(receipt.logs);
         }
         SILKRPC_DEBUG << "logs.size(): " << logs.size() << "\n";
 
