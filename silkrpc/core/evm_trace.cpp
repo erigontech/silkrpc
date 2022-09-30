@@ -467,7 +467,6 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
         << ", input_size: " << msg.input_size
         << ", index_prefix: " << index_prefix
         << "\n";
-
 }
 
 void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
