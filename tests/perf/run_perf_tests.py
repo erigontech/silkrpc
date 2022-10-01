@@ -7,11 +7,12 @@
 import os
 import csv
 import pathlib
-import psutil
 import sys
 import time
 import getopt
 from datetime import datetime
+
+import psutil
 
 DEFAULT_TEST_SEQUENCE = "50:30,200:30,500:30,700:30,1000:30,1500:30,1700:30,2000:30"
 DEFAULT_REPETITIONS = 10
@@ -63,10 +64,11 @@ def usage(argv):
     sys.exit(-1)
 
 def get_process(process_name: str):
-    """ Return the PID of the running process having specified name or None if not exists """
+    """ Return the running process having specified name or None if not exists """
     for proc in psutil.process_iter():
         if proc.name() == process_name:
             return proc
+    return None
 
 class Config:
     # pylint: disable=too-many-instance-attributes
