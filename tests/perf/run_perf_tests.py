@@ -7,6 +7,7 @@
 import os
 import csv
 import pathlib
+import psutil
 import sys
 import time
 import getopt
@@ -22,7 +23,7 @@ DEFAULT_SILKRPC_BUILD_DIR = "../../build_gcc_release/"
 DEFAULT_SILKRPC_NUM_CONTEXTS = ""
 DEFAULT_RPCDAEMON_ADDRESS = "localhost"
 DEFAULT_TEST_MODE = "3"
-DEFAULT_WAITING_TIME = "5"
+DEFAULT_WAITING_TIME = 5
 DEFAULT_TEST_TYPE = "eth_getLogs"
 DEFAULT_WAIT_MODE = "blocking"
 DEFAULT_WORKERS = "16"
@@ -61,6 +62,11 @@ def usage(argv):
     print("-o workerThreads        Silkrpc: number of worker threads                                                      [default: " + DEFAULT_WORKERS + "]")
     sys.exit(-1)
 
+def get_process(process_name: str):
+    """ Return the PID of the running process having specified name or None if not exists """
+    for proc in psutil.process_iter():
+        if proc.name() == process_name:
+            return proc
 
 class Config:
     # pylint: disable=too-many-instance-attributes
@@ -146,7 +152,7 @@ class Config:
                     self.verbose = True
                     self.tracing = True
                 elif option == "-w":
-                    self.waiting_time = optarg
+                    self.waiting_time = int(optarg)
                 elif option == "-y":
                     self.test_type = optarg
                 elif option == "-i":
@@ -254,8 +260,8 @@ class PerfTest:
             print("Start Erigon RpcDaemon failed: Test Aborted!")
             sys.exit(-1)
         time.sleep(2)
-        pid = os.popen("ps aux | grep 'rpcdaemon' | grep -v 'grep' | awk '{print $2}'").read() # TODO: use pid file to avoid spurious empty echo on stdout
-        if pid == "":
+        rpcdaemon_process = get_process('rpcdaemon')
+        if not rpcdaemon_process:
             print("Start Erigon RpcDaemon failed: Test Aborted!")
             sys.exit(-1)
 
@@ -269,6 +275,9 @@ class PerfTest:
             return
         self.rpc_daemon = 0
         os.system("kill -9 $(ps aux | grep 'rpcdaemon' | grep -v 'grep' | awk '{print $2}') 2> /dev/null")
+        rpcdaemon_process = get_process('rpcdaemon')
+        if rpcdaemon_process:
+            rpcdaemon_process.kill()
         if self.config.tracing:
             print("Erigon RpcDaemon stopped")
         time.sleep(5)
@@ -307,8 +316,8 @@ class PerfTest:
             print("Start Silkrpc failed: Test Aborted!")
             sys.exit(-1)
         time.sleep(2)
-        pid = os.popen("ps aux | grep 'silkrpc' | grep -v 'grep' | awk '{print $2}'").read() # TODO: use pid file to avoid spurious empty echo on stdout
-        if pid == "":
+        silkrpc_process = get_process('silkrpcdaemon')
+        if not silkrpc_process:
             print("Start Silkrpc failed: Test Aborted!")
             sys.exit(-1)
 
@@ -321,13 +330,15 @@ class PerfTest:
         if self.config.test_mode == "2":
             return
         self.silk_daemon = 0
-        os.system("kill -2 $(ps aux | grep 'silk' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
+        silkrpc_process = get_process('silkrpcdaemon')
+        if silkrpc_process:
+            silkrpc_process.kill()
         if self.config.tracing:
             print("Silkrpc stopped")
         time.sleep(3)
 
-    def execute(self, test_number, name, qps_value, time_value):
-        """ Executes the tests using qps and time variable """
+    def execute(self, test_number, name, qps_value, duration):
+        """ Execute the tests using specified queries-per-second (QPS) and duration """
         if name == "silkrpc":
             pattern = VEGETA_PATTERN_SILKRPC_BASE + self.config.test_type + ".txt"
         else:
@@ -335,13 +346,13 @@ class PerfTest:
         on_core = self.config.daemon_vegeta_on_core.split(':')
         if on_core[1] == "-":
             cmd = "cat " + pattern + " | " \
-                  "vegeta attack -keepalive -rate="+qps_value+" -format=json -duration="+time_value+"s -timeout=300s | " \
+                  "vegeta attack -keepalive -rate=" + qps_value + " -format=json -duration=" + duration + "s -timeout=300s | " \
                   "vegeta report -type=text > " + VEGETA_REPORT + " &"
         else:
             cmd = "taskset -c " + on_core[1] + " cat " + pattern + " | " \
-                  "taskset -c " + on_core[1] + " vegeta attack -keepalive -rate="+qps_value+" -format=json -duration="+time_value+"s -timeout=300s | " \
+                  "taskset -c " + on_core[1] + " vegeta attack -keepalive -rate=" + qps_value + " -format=json -duration=" + duration + "s -timeout=300s | " \
                   "taskset -c " + on_core[1] + " vegeta report -type=text > " + VEGETA_REPORT + " &"
-        print(test_number+" "+name+": executes test qps:", str(qps_value) + " time:"+str(time_value)+" -> ", end="")
+        print(f"{test_number} {name}: executes test qps: {qps_value} time: {duration} -> ", end="")
         sys.stdout.flush()
         status = os.system(cmd)
         if int(status) != 0:
@@ -349,7 +360,7 @@ class PerfTest:
             return 0
 
         while 1:
-            os.system("sleep 3")
+            time.sleep(3)
             if name == "silkrpc":
                 pid = os.popen("ps aux | grep 'silkrpc' | grep -v 'grep' | awk '{print $2}'").read()
             else:
@@ -361,11 +372,29 @@ class PerfTest:
 
             pid = os.popen("ps aux | grep 'vegeta report' | grep -v 'grep' | awk '{print $2}'").read()
             if pid == "":
-                # the vegeta has terminate its works, generate report, returns OK
-                self.get_result(test_number, name, qps_value, time_value)
+                # Vegeta has completed its works, generate report and return OK
+                self.get_result(test_number, name, qps_value, duration)
                 return 1
 
-    def get_result(self, test_number, daemon_name, qps_value, time_value):
+    def execute_sequence(self, sequence, tag):
+        """ Execute the sequence of tests """
+        test_number = 1
+        for test in sequence:
+            for test_rep in range(0, self.config.repetitions):
+                qps = test.split(':')[0]
+                duration = test.split(':')[1]
+                test_name = "[{:d}.{:2d}] "
+                test_name_formatted = test_name.format(test_number, test_rep+1)
+                result = self.execute(test_name_formatted, tag, qps, duration)
+                if result == 0:
+                    print("Server dead test Aborted!")
+                    return 0
+                time.sleep(self.config.waiting_time)
+            test_number = test_number + 1
+            print("")
+        return 1
+
+    def get_result(self, test_number, daemon_name, qps_value, duration):
         """ Processes the report file generated by vegeta and reads latency data """
         test_report_filename = VEGETA_REPORT
         file = open(test_report_filename, encoding='utf8')
@@ -387,7 +416,7 @@ class PerfTest:
         finally:
             file.close()
 
-        self.test_report.write_test_report(daemon_name, test_number, threads, qps_value, time_value, min_latency, latency_values[7], latency_values[8], \
+        self.test_report.write_test_report(daemon_name, test_number, threads, qps_value, duration, min_latency, latency_values[7], latency_values[8], \
                                            latency_values[9], latency_values[10], latency_values[11], max_latency, ratio, error)
         os.system("/bin/rm " + test_report_filename)
 
@@ -492,9 +521,9 @@ class TestReport:
         self.writer.writerow(["Daemon", "TestNo", "TG-Threads", "Qps", "Time", "Min", "Mean", "50", "90", "95", "99", "Max", "Ratio", "Error"])
         self.csv_file.flush()
 
-    def write_test_report(self, daemon, test_number, threads, qps_value, time_value, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency, ratio, error):
+    def write_test_report(self, daemon, test_number, threads, qps_value, duration, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency, ratio, error):
         """ Writes on CSV the latency data for one completed test """
-        self.writer.writerow([daemon, str(test_number), threads, qps_value, time_value, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency, ratio, error])
+        self.writer.writerow([daemon, str(test_number), threads, qps_value, duration, min_latency, mean, fifty, ninty, nintyfive, nintynine, max_latency, ratio, error])
         self.csv_file.flush()
 
     def close(self):
@@ -507,7 +536,7 @@ class TestReport:
 # main
 #
 def main(argv):
-    """ Executes tests on selected user configuration """
+    """ Execute performance tests on selected user configuration """
     print("Performance Test started")
     config = Config(argv)
     test_report = TestReport(config)
@@ -520,47 +549,22 @@ def main(argv):
 
     if config.test_mode in ("1", "3"):
         perf_test.start_silk_daemon(1)
-        test_number = 1
-        for test in current_sequence:
-            for test_rep in range(0, config.repetitions):
-                qps = test.split(':')[0]
-                time = test.split(':')[1]
-                test_name = "[{:d}.{:2d}] "
-                test_name_formatted = test_name.format(test_number, test_rep+1)
-                result = perf_test.execute(test_name_formatted, "silkrpc", qps, time)
-                if result == 0:
-                    print("Server dead test Aborted!")
-                    test_report.close()
-                    sys.exit(-1)
-                cmd = "sleep " + config.waiting_time
-                os.system(cmd)
-            test_number = test_number + 1
-            print("")
-
+        result = perf_test.execute_sequence(current_sequence, 'silkrpc')
+        if result == 0:
+            print("Server dead test Aborted!")
+            test_report.close()
+            sys.exit(-1)
         perf_test.stop_silk_daemon()
         if config.test_mode == "3":
             print("--------------------------------------------------------------------------------------------\n")
 
     if config.test_mode in ("2", "3"):
         perf_test.start_rpc_daemon(1)
-
-        test_number = 1
-        for test in current_sequence:
-            for test_rep in range(0, config.repetitions):
-                qps = test.split(':')[0]
-                time = test.split(':')[1]
-                test_name = "[{:d}.{:2d}] "
-                test_name_formatted = test_name.format(test_number, test_rep+1)
-                result = perf_test.execute(test_name_formatted, "rpcdaemon", qps, time)
-                if result == 0:
-                    print("Server dead test Aborted!")
-                    test_report.close()
-                    sys.exit(-1)
-                cmd = "sleep " + config.waiting_time
-                os.system(cmd)
-            test_number = test_number + 1
-            print("")
-
+        result = perf_test.execute_sequence(current_sequence, 'rpcdaemon')
+        if result == 0:
+            print("Server dead test Aborted!")
+            test_report.close()
+            sys.exit(-1)
         perf_test.stop_rpc_daemon()
 
     test_report.close()
