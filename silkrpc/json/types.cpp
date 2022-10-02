@@ -613,12 +613,20 @@ void to_json(nlohmann::json& json, const Forks& forks) {
 void to_json(nlohmann::json& json, const Issuance& issuance) {
     if (issuance.block_reward) {
         json["blockReward"] = issuance.block_reward.value();
+    } else {
+        json["blockReward"] = nullptr;
     }
+    
     if (issuance.ommer_reward) {
         json["uncleReward"] = issuance.ommer_reward.value();
+    } else {
+        json["uncleReward"] = nullptr;
     }
+
     if (issuance.issuance) {
         json["issuance"] = issuance.issuance.value();
+    } else {
+        json["issuance"] = nullptr;
     }
 }
 
