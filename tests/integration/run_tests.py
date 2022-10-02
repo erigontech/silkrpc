@@ -24,7 +24,8 @@ api_not_compared = [
    "parity_getBlockReceipts",
    "erigon_getBlockByTimestamp",
    "eth_getBlockByHash",
-   "eth_getBlockByNumber"
+   "eth_getBlockByNumber",
+   "txpool_content"
 ]
 
 
