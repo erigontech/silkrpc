@@ -17,7 +17,7 @@ Number of failed tests:       0
 016. debug_traceCall/test_10.json                                 Failed
 020. debug_traceCall/test_14.json                                 Failed
 045. erigon_getBlockByTimestamp/test_1.json                       Skipped
-049. erigon_issuance/test_1.json                                  Failed
+049. erigon_issuance/test_1.json                                  Skipped
 060. eth_callBundle/test_1.json                                   Failed
 061. eth_callBundle/test_2.json                                   Failed
 062. eth_callBundle/test_3.json                                   Failed
@@ -35,9 +35,10 @@ Number of failed tests:       0
 231. trace_replayTransaction/test_23.json.tar                     Failed
 256. txpool_content/test_1.json                                   Skipped
                                                                                     
-Number of executed tests:     253/260
-Number of NOT executed tests: 7
+Number of executed tests:     252/260
+Number of NOT executed tests: 8
 Number of success tests:      239
-Number of failed tests:       14
+Number of failed tests:       13
+
 ```
 
