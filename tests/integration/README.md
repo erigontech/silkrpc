@@ -1,17 +1,18 @@
 
-30/09
+# Integration test (30/09)
 
-to run integration tests verifying with saved json file:
-./run_tests.py -c
+### To run integration tests comparing results with json file: ./run_tests.py -c
+
+```
 Number of executed tests:     260/260
 Number of NOT executed tests: 0
 Number of success tests:      260
 Number of failed tests:       0
+```
 
 
-
-to run integration tests verifying with RPCdaemon:
-./run_tests.py -d -c
+### To run integration tests comparing results with RPCdaemon response: ./run_tests.py -d -c
+```
 014. debug_traceCall/test_08.json                                 Failed(bad json format on expected rsp)
 016. debug_traceCall/test_10.json                                 Failed
 020. debug_traceCall/test_14.json                                 Failed
@@ -38,5 +39,5 @@ Number of executed tests:     253/260
 Number of NOT executed tests: 7
 Number of success tests:      239
 Number of failed tests:       14
-
+```
 
