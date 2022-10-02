@@ -3,16 +3,10 @@
 
 to run integration tests verifying with saved json file:
 ./run_tests.py -c
-194. trace_replayBlockTransactions/test_01.json.tar               Failed
-195. trace_replayBlockTransactions/test_02.json.tar               Failed
-224. trace_replayTransaction/test_16.json.tar                     Failed
-231. trace_replayTransaction/test_23.json.tar                     Failed
-256. txpool_content/test_1.json                                   Failed
-                                                                                    
 Number of executed tests:     260/260
 Number of NOT executed tests: 0
-Number of success tests:      255
-Number of failed tests:       5
+Number of success tests:      260
+Number of failed tests:       0
 
 
 
@@ -38,10 +32,11 @@ to run integration tests verifying with RPCdaemon:
 207. trace_replayBlockTransactions/test_14.json                   Failed
 224. trace_replayTransaction/test_16.json.tar                     Failed
 231. trace_replayTransaction/test_23.json.tar                     Failed
-256. txpool_content/test_1.json                                   Failed
+256. txpool_content/test_1.json                                   Skipped
                                                                                     
-Number of executed tests:     254/260
-Number of NOT executed tests: 6
+Number of executed tests:     253/260
+Number of NOT executed tests: 7
 Number of success tests:      239
-Number of failed tests:       15
+Number of failed tests:       14
+
 
