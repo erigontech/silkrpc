@@ -25,6 +25,7 @@ api_not_compared = [
    "erigon_getBlockByTimestamp",
    "eth_getBlockByHash",
    "eth_getBlockByNumber",
+   "erigon_issuance",
    "txpool_content"
 ]
 
