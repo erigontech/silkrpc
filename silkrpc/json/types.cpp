@@ -616,17 +616,35 @@ void to_json(nlohmann::json& json, const Issuance& issuance) {
     } else {
         json["blockReward"] = nullptr;
     }
-    
     if (issuance.ommer_reward) {
         json["uncleReward"] = issuance.ommer_reward.value();
     } else {
         json["uncleReward"] = nullptr;
     }
-
     if (issuance.issuance) {
         json["issuance"] = issuance.issuance.value();
     } else {
         json["issuance"] = nullptr;
+    }
+    if (issuance.burnt) {
+        json["burnt"] = issuance.burnt.value();
+    } else {
+        json["burnt"] = nullptr;
+    }
+    if (issuance.totalIssued) {
+        json["totalIssued"] = issuance.totalIssued.value();
+    } else {
+        json["totalIssued"] = nullptr;
+    }
+    if (issuance.totalBurnt) {
+        json["totalBurnt"] = issuance.totalBurnt.value();
+    } else {
+        json["totalBurnt"] = nullptr;
+    }
+    if (issuance.tips) {
+        json["tips"] = issuance.tips.value();
+    } else {
+        json["tips"] = nullptr;
     }
 }
 
