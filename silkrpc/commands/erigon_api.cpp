@@ -254,11 +254,11 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_forks(const nlohmann::j
     co_return;
 }
 
-// https://eth.wiki/json-rpc/API#erigon_issuance
-boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_issuance(const nlohmann::json& request, nlohmann::json& reply) {
+// https://eth.wiki/json-rpc/API#erigon_WatchTheBurn
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
-        auto error_msg = "invalid erigon_issuance params: " + params.dump();
+        auto error_msg = "invalid erigon_watchTheBurn params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
