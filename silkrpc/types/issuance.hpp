@@ -27,6 +27,10 @@ struct Issuance {
     std::optional<std::string> block_reward;
     std::optional<std::string> ommer_reward;
     std::optional<std::string> issuance;
+    std::optional<std::string> burnt;
+    std::optional<std::string> totalIssued;
+    std::optional<std::string> totalBurnt;
+    std::optional<std::string> tips;
 };
 
 std::ostream& operator<<(std::ostream& out, const Issuance& issuance);

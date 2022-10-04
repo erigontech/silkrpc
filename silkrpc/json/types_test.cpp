@@ -1424,11 +1424,23 @@ TEST_CASE("serialize forks", "[silkrpc::json][to_json]") {
 TEST_CASE("serialize empty issuance", "[silkrpc::json][to_json]") {
     silkrpc::Issuance issuance{};
     nlohmann::json j = issuance;
-    CHECK(j.is_null());
+    CHECK(j == R"({
+        "blockReward":null,
+        "uncleReward":null,
+        "issuance":null,
+        "burnt":null,
+        "tips":null,
+        "totalBurnt":null,
+        "totalIssued":null
+    })"_json);
 }
 
 TEST_CASE("serialize issuance", "[silkrpc::json][to_json]") {
     silkrpc::Issuance issuance{
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
         "0x0",
         "0x0",
         "0x0"
@@ -1437,7 +1449,11 @@ TEST_CASE("serialize issuance", "[silkrpc::json][to_json]") {
     CHECK(j == R"({
         "blockReward":"0x0",
         "uncleReward":"0x0",
-        "issuance":"0x0"
+        "issuance":"0x0",
+        "burnt":"0x0",
+        "tips":"0x0",
+        "totalBurnt":"0x0",
+        "totalIssued":"0x0"
     })"_json);
 }
 
