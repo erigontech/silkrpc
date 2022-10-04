@@ -583,7 +583,7 @@ void TraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
     current_depth_ = msg.depth;
 
     auto create = (!initial_ibs_.exists(recipient) && created_address_.find(recipient) == created_address_.end() && recipient != code_address);
-    // auto create = msg.kind == evmc_call_kind::EVMC_CREATE || msg.kind == evmc_call_kind::EVMC_CREATE2;
+    //auto create = msg.kind == evmc_call_kind::EVMC_CREATE || msg.kind == evmc_call_kind::EVMC_CREATE2;
 
     start_gas_.push(msg.gas);
 
@@ -674,12 +674,13 @@ void TraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
 
 void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
     auto index = index_stack_.top();
-    index_stack_.pop();
-
     auto start_gas = start_gas_.top();
-    start_gas_.pop();
 
     Trace& trace = traces_[index];
+    if (!trace.trace_result->code) {
+       start_gas_.pop();
+       index_stack_.pop();
+    }
 
     if (current_depth_ > 0) {
         if (trace.trace_result->code) {
@@ -729,6 +730,17 @@ void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::In
         << " start_gas: " << std::dec << start_gas
         << " gas_left: " << std::dec << result.gas_left
         << "\n";
+}
+
+void TraceTracer::on_creation_completed(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
+    if (index_stack_.empty())
+       return;
+    auto index = index_stack_.top();
+    auto start_gas = start_gas_.top();
+    index_stack_.pop();
+    start_gas_.pop();
+    Trace& trace = traces_[index];
+    trace.trace_result->gas_used = start_gas - result.gas_left;
 }
 
 void TraceTracer::on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
