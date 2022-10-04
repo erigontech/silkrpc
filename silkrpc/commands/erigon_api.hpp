@@ -48,7 +48,7 @@ protected:
     boost::asio::awaitable<void> handle_erigon_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_erigon_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_erigon_forks(const nlohmann::json& request, nlohmann::json& reply);
-    boost::asio::awaitable<void> handle_erigon_issuance(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_erigon_watch_the_burn(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
     Context& context_;
