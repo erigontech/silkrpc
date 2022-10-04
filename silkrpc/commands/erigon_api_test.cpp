@@ -35,7 +35,7 @@ public:
     using ErigonRpcApi::handle_erigon_get_header_by_number;
     using ErigonRpcApi::handle_erigon_get_logs_by_hash;
     using ErigonRpcApi::handle_erigon_forks;
-    using ErigonRpcApi::handle_erigon_issuance;
+    using ErigonRpcApi::handle_erigon_watch_the_burn;
 };
 
 using ErigonRpcApiTest = test::JsonApiTestBase<ErigonRpcApi_ForTest>;
