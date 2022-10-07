@@ -105,7 +105,7 @@ boost::asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(c
     #ifndef BUILD_COVERAGE
     try {
     #endif
-        constexpr auto zero_hash = 0_bytes32;
+        constexpr auto zero_hash = 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32;
         const ForkchoiceState forkchoice_state = params[0].get<ForkchoiceState>();
 
         if (forkchoice_state.safe_block_hash == zero_hash) {
