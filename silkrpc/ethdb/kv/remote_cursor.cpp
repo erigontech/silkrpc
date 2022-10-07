@@ -34,6 +34,20 @@ boost::asio::awaitable<void> RemoteCursor::open_cursor(const std::string& table_
     co_return;
 }
 
+boost::asio::awaitable<void> RemoteCursor::dup_cursor(const std::string& table_name) {
+    const auto start_time = clock_time::now();
+    if (cursor_id_ == 0) {
+        SILKRPC_DEBUG << "RemoteCursor::dup_cursor opening new cursor for table: " << table_name << "\n";
+        auto open_message = remote::Cursor{};
+        open_message.set_op(remote::Op::OPEN_DUP_SORT);
+        open_message.set_bucketname(table_name);
+        cursor_id_ = (co_await tx_rpc_.write_and_read(open_message)).cursorid();
+        SILKRPC_DEBUG << "RemoteCursor::dup_cursor cursor: " << cursor_id_ << " for table: " << table_name << "\n";
+    }
+    SILKRPC_DEBUG << "RemoteCursor::dup_cursor [" << table_name << "] c=" << cursor_id_ << " t=" << clock_time::since(start_time) << "\n";
+    co_return;
+}
+
 boost::asio::awaitable<KeyValue> RemoteCursor::seek(silkworm::ByteView key) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "RemoteCursor::seek cursor: " << cursor_id_ << " key: " << key << "\n";
@@ -66,6 +80,18 @@ boost::asio::awaitable<KeyValue> RemoteCursor::next() {
     const auto start_time = clock_time::now();
     auto next_message = remote::Cursor{};
     next_message.set_op(remote::Op::NEXT);
+    next_message.set_cursor(cursor_id_);
+    auto next_pair = co_await tx_rpc_.write_and_read(next_message);
+    const auto k = silkworm::bytes_of_string(next_pair.k());
+    const auto v = silkworm::bytes_of_string(next_pair.v());
+    SILKRPC_DEBUG << "RemoteCursor::next k: " << k << " v: " << v << " c=" << cursor_id_ << " t=" << clock_time::since(start_time) << "\n";
+    co_return KeyValue{k, v};
+}
+
+boost::asio::awaitable<KeyValue> RemoteCursor::next_dup() {
+    const auto start_time = clock_time::now();
+    auto next_message = remote::Cursor{};
+    next_message.set_op(remote::Op::NEXT_DUP);
     next_message.set_cursor(cursor_id_);
     auto next_pair = co_await tx_rpc_.write_and_read(next_message);
     const auto k = silkworm::bytes_of_string(next_pair.k());
