@@ -41,11 +41,15 @@ public:
 
     virtual boost::asio::awaitable<void> open_cursor(const std::string& table_name) = 0;
 
+    virtual boost::asio::awaitable<void> dup_cursor(const std::string& table_name) = 0;
+
     virtual boost::asio::awaitable<KeyValue> seek(silkworm::ByteView key) = 0;
 
     virtual boost::asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) = 0;
 
     virtual boost::asio::awaitable<KeyValue> next() = 0;
+
+    virtual boost::asio::awaitable<KeyValue> next_dup() = 0;
 
     virtual boost::asio::awaitable<void> close_cursor() = 0;
 };
