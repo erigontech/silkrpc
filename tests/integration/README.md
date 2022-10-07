@@ -4,9 +4,9 @@
 ### To run integration tests comparing results with json file: ./run_tests.py -c
 
 ```
-Number of executed tests:     260/260
+Number of executed tests:     262/262
 Number of NOT executed tests: 0
-Number of success tests:      260
+Number of success tests:      262
 Number of failed tests:       0
 ```
 
@@ -26,18 +26,17 @@ Number of failed tests:       0
 072. eth_getBlockByNumber/test_1.json                             Skipped
 073. eth_getBlockByNumber/test_2.json                             Skipped
 107. parity_getBlockReceipts/test_1.json                          Skipped
-108. parity_listStorageKeys/test_1.json                           Failed
-194. trace_replayBlockTransactions/test_01.json.tar               Failed
-195. trace_replayBlockTransactions/test_02.json.tar               Failed
-207. trace_replayBlockTransactions/test_14.json                   Failed
-224. trace_replayTransaction/test_16.json.tar                     Failed
-231. trace_replayTransaction/test_23.json.tar                     Failed
-256. txpool_content/test_1.json                                   Skipped
+196. trace_replayBlockTransactions/test_01.json.tar               Failed
+197. trace_replayBlockTransactions/test_02.json.tar               Failed
+209. trace_replayBlockTransactions/test_14.json                   Failed
+226. trace_replayTransaction/test_16.json.tar                     Failed
+233. trace_replayTransaction/test_23.json.tar                     Failed
+258. txpool_content/test_1.json                                   Skipped
                                                                                     
-Number of executed tests:     253/260
+Number of executed tests:     255/262
 Number of NOT executed tests: 7
-Number of success tests:      240
-Number of failed tests:       13
+Number of success tests:      243
+Number of failed tests:       12
 
 ```
 
