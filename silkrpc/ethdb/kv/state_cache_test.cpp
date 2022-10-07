@@ -156,7 +156,7 @@ remote::StateChangeBatch new_batch_with_delete(uint64_t view_id, silkworm::Block
 
     remote::AccountChange* account_change = latest_change->add_changes();
     account_change->set_allocated_address(silkworm::rpc::H160_from_address(kTestAddress1).release());
-    account_change->set_action(remote::Action::DELETE);
+    account_change->set_action(remote::Action::REMOVE);
 
     return state_changes;
 }
