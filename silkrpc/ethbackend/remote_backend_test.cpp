@@ -281,8 +281,7 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::engine_new_payload_v1", "[silkrpc][et
         ::remote::EngineStatus::INVALID,
         ::remote::EngineStatus::SYNCING,
         ::remote::EngineStatus::ACCEPTED,
-        ::remote::EngineStatus::INVALID_BLOCK_HASH,
-        ::remote::EngineStatus::INVALID_TERMINAL_BLOCK
+        ::remote::EngineStatus::INVALID_BLOCK_HASH
     };
     for (const auto engine_status : all_engine_statuses) {
         const auto engine_status_name{::remote::EngineStatus_Name(engine_status)};
