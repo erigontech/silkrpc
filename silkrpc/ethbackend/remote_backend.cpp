@@ -386,8 +386,6 @@ std::string RemoteBackEnd::decode_status_message(const remote::EngineStatus& sta
             return "ACCEPTED";
         case remote::EngineStatus::INVALID_BLOCK_HASH:
             return "INVALID_BLOCK_HASH";
-        case remote::EngineStatus::INVALID_TERMINAL_BLOCK:
-            return "INVALID_TERMINAL_BLOCK";
         default:
             return "INVALID";
     }
