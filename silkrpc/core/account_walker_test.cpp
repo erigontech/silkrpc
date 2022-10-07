@@ -60,6 +60,14 @@ public:
         co_return;
     }
 
+    boost::asio::awaitable<void> dup_cursor(const std::string& table_name) override {
+        table_name_ = table_name;
+        table_ = json_.value(table_name_, empty);
+        itr_ = table_.end();
+
+        co_return;
+    }
+
     boost::asio::awaitable<void> close_cursor() override {
         table_name_ = "";
         co_return;
@@ -97,6 +105,18 @@ public:
     }
 
     boost::asio::awaitable<KeyValue> next() override {
+        KeyValue out;
+
+        if (++itr_ != table_.end()) {
+            auto key{*silkworm::from_hex(itr_.key())};
+            auto value{*silkworm::from_hex(itr_.value().get<std::string>())};
+            out = KeyValue{key, value};
+        }
+
+        co_return out;
+    }
+
+    boost::asio::awaitable<KeyValue> next_dup() override {
         KeyValue out;
 
         if (++itr_ != table_.end()) {
