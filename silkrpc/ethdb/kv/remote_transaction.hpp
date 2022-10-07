@@ -57,6 +57,7 @@ private:
 
     TxRpc tx_rpc_;
     std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
+    std::map<std::string, std::shared_ptr<CursorDupSort>> dup_cursors_;
     uint64_t tx_id_;
 };
 
