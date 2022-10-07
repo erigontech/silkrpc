@@ -155,16 +155,12 @@ std::string EVMExecutor<WorldState, VM>::get_error_message(int64_t error_code, c
 }
 
 template<typename WorldState, typename VM>
-uint64_t EVMExecutor<WorldState, VM>::refund_gas(const VM& evm, const silkworm::Transaction& txn, uint64_t gas_left) {
+uint64_t EVMExecutor<WorldState, VM>::refund_gas(const VM& evm, const silkworm::Transaction& txn, uint64_t gas_left, uint64_t gas_refund) {
     const evmc_revision rev{evm.revision()};
-    uint64_t refund{state_.get_refund()};
-    if (rev < EVMC_LONDON) {
-        refund += silkworm::fee::kRSelfDestruct * state_.number_of_self_destructs();
-    }
     const uint64_t max_refund_quotient{rev >= EVMC_LONDON ? silkworm::param::kMaxRefundQuotientLondon
                                                           : silkworm::param::kMaxRefundQuotientFrontier};
     const uint64_t max_refund{(txn.gas_limit - gas_left) / max_refund_quotient};
-    refund = refund < max_refund ? refund : max_refund; // min
+    uint64_t refund = gas_refund < max_refund ? gas_refund : max_refund; // min
     gas_left += refund;
 
     const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
@@ -287,7 +283,7 @@ boost::asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(
                 SILKRPC_DEBUG << "EVMExecutor::call execute on EVM txn: " << &txn << " gas_left: " << result.gas_left << " end\n";
 
                 uint64_t gas_left = result.gas_left;
-                const uint64_t gas_used{txn.gas_limit - refund_gas(evm, txn, result.gas_left)};
+                const uint64_t gas_used{txn.gas_limit - refund_gas(evm, txn, result.gas_left, result.gas_refund)};
                 if (refund) {
                     gas_left = txn.gas_limit - gas_used;
                 }
