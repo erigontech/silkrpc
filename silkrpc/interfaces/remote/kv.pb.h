@@ -49,7 +49,7 @@ struct TableStruct_remote_2fkv_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxiliaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[7]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[9]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -66,6 +66,12 @@ extern CursorDefaultTypeInternal _Cursor_default_instance_;
 class Pair;
 class PairDefaultTypeInternal;
 extern PairDefaultTypeInternal _Pair_default_instance_;
+class SnapshotsReply;
+class SnapshotsReplyDefaultTypeInternal;
+extern SnapshotsReplyDefaultTypeInternal _SnapshotsReply_default_instance_;
+class SnapshotsRequest;
+class SnapshotsRequestDefaultTypeInternal;
+extern SnapshotsRequestDefaultTypeInternal _SnapshotsRequest_default_instance_;
 class StateChange;
 class StateChangeDefaultTypeInternal;
 extern StateChangeDefaultTypeInternal _StateChange_default_instance_;
@@ -83,6 +89,8 @@ PROTOBUF_NAMESPACE_OPEN
 template<> ::remote::AccountChange* Arena::CreateMaybeMessage<::remote::AccountChange>(Arena*);
 template<> ::remote::Cursor* Arena::CreateMaybeMessage<::remote::Cursor>(Arena*);
 template<> ::remote::Pair* Arena::CreateMaybeMessage<::remote::Pair>(Arena*);
+template<> ::remote::SnapshotsReply* Arena::CreateMaybeMessage<::remote::SnapshotsReply>(Arena*);
+template<> ::remote::SnapshotsRequest* Arena::CreateMaybeMessage<::remote::SnapshotsRequest>(Arena*);
 template<> ::remote::StateChange* Arena::CreateMaybeMessage<::remote::StateChange>(Arena*);
 template<> ::remote::StateChangeBatch* Arena::CreateMaybeMessage<::remote::StateChangeBatch>(Arena*);
 template<> ::remote::StateChangeRequest* Arena::CreateMaybeMessage<::remote::StateChangeRequest>(Arena*);
@@ -108,12 +116,13 @@ enum Op : int {
   SEEK_BOTH_EXACT = 16,
   OPEN = 30,
   CLOSE = 31,
+  OPEN_DUP_SORT = 32,
   Op_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
   Op_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
 };
 bool Op_IsValid(int value);
 constexpr Op Op_MIN = FIRST;
-constexpr Op Op_MAX = CLOSE;
+constexpr Op Op_MAX = OPEN_DUP_SORT;
 constexpr int Op_ARRAYSIZE = Op_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* Op_descriptor();
@@ -135,13 +144,13 @@ enum Action : int {
   UPSERT = 1,
   CODE = 2,
   UPSERT_CODE = 3,
-  DELETE = 4,
+  REMOVE = 4,
   Action_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
   Action_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
 };
 bool Action_IsValid(int value);
 constexpr Action Action_MIN = STORAGE;
-constexpr Action Action_MAX = DELETE;
+constexpr Action Action_MAX = REMOVE;
 constexpr int Action_ARRAYSIZE = Action_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* Action_descriptor();
@@ -1491,6 +1500,280 @@ class StateChangeRequest PROTOBUF_FINAL :
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_remote_2fkv_2eproto;
 };
+// -------------------------------------------------------------------
+
+class SnapshotsRequest PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:remote.SnapshotsRequest) */ {
+ public:
+  inline SnapshotsRequest() : SnapshotsRequest(nullptr) {}
+  virtual ~SnapshotsRequest();
+
+  SnapshotsRequest(const SnapshotsRequest& from);
+  SnapshotsRequest(SnapshotsRequest&& from) noexcept
+    : SnapshotsRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline SnapshotsRequest& operator=(const SnapshotsRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SnapshotsRequest& operator=(SnapshotsRequest&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const SnapshotsRequest& default_instance();
+
+  static inline const SnapshotsRequest* internal_default_instance() {
+    return reinterpret_cast<const SnapshotsRequest*>(
+               &_SnapshotsRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    7;
+
+  friend void swap(SnapshotsRequest& a, SnapshotsRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SnapshotsRequest* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SnapshotsRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline SnapshotsRequest* New() const final {
+    return CreateMaybeMessage<SnapshotsRequest>(nullptr);
+  }
+
+  SnapshotsRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<SnapshotsRequest>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const SnapshotsRequest& from);
+  void MergeFrom(const SnapshotsRequest& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(SnapshotsRequest* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "remote.SnapshotsRequest";
+  }
+  protected:
+  explicit SnapshotsRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_remote_2fkv_2eproto);
+    return ::descriptor_table_remote_2fkv_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // @@protoc_insertion_point(class_scope:remote.SnapshotsRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_remote_2fkv_2eproto;
+};
+// -------------------------------------------------------------------
+
+class SnapshotsReply PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:remote.SnapshotsReply) */ {
+ public:
+  inline SnapshotsReply() : SnapshotsReply(nullptr) {}
+  virtual ~SnapshotsReply();
+
+  SnapshotsReply(const SnapshotsReply& from);
+  SnapshotsReply(SnapshotsReply&& from) noexcept
+    : SnapshotsReply() {
+    *this = ::std::move(from);
+  }
+
+  inline SnapshotsReply& operator=(const SnapshotsReply& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SnapshotsReply& operator=(SnapshotsReply&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const SnapshotsReply& default_instance();
+
+  static inline const SnapshotsReply* internal_default_instance() {
+    return reinterpret_cast<const SnapshotsReply*>(
+               &_SnapshotsReply_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    8;
+
+  friend void swap(SnapshotsReply& a, SnapshotsReply& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SnapshotsReply* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SnapshotsReply* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline SnapshotsReply* New() const final {
+    return CreateMaybeMessage<SnapshotsReply>(nullptr);
+  }
+
+  SnapshotsReply* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<SnapshotsReply>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const SnapshotsReply& from);
+  void MergeFrom(const SnapshotsReply& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(SnapshotsReply* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "remote.SnapshotsReply";
+  }
+  protected:
+  explicit SnapshotsReply(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_remote_2fkv_2eproto);
+    return ::descriptor_table_remote_2fkv_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kFilesFieldNumber = 1,
+  };
+  // repeated string files = 1;
+  int files_size() const;
+  private:
+  int _internal_files_size() const;
+  public:
+  void clear_files();
+  const std::string& files(int index) const;
+  std::string* mutable_files(int index);
+  void set_files(int index, const std::string& value);
+  void set_files(int index, std::string&& value);
+  void set_files(int index, const char* value);
+  void set_files(int index, const char* value, size_t size);
+  std::string* add_files();
+  void add_files(const std::string& value);
+  void add_files(std::string&& value);
+  void add_files(const char* value);
+  void add_files(const char* value, size_t size);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>& files() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>* mutable_files();
+  private:
+  const std::string& _internal_files(int index) const;
+  std::string* _internal_add_files();
+  public:
+
+  // @@protoc_insertion_point(class_scope:remote.SnapshotsReply)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> files_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_remote_2fkv_2eproto;
+};
 // ===================================================================
 
 
@@ -2696,9 +2979,95 @@ inline void StateChangeRequest::set_withtransactions(bool value) {
   // @@protoc_insertion_point(field_set:remote.StateChangeRequest.withTransactions)
 }
 
+// -------------------------------------------------------------------
+
+// SnapshotsRequest
+
+// -------------------------------------------------------------------
+
+// SnapshotsReply
+
+// repeated string files = 1;
+inline int SnapshotsReply::_internal_files_size() const {
+  return files_.size();
+}
+inline int SnapshotsReply::files_size() const {
+  return _internal_files_size();
+}
+inline void SnapshotsReply::clear_files() {
+  files_.Clear();
+}
+inline std::string* SnapshotsReply::add_files() {
+  // @@protoc_insertion_point(field_add_mutable:remote.SnapshotsReply.files)
+  return _internal_add_files();
+}
+inline const std::string& SnapshotsReply::_internal_files(int index) const {
+  return files_.Get(index);
+}
+inline const std::string& SnapshotsReply::files(int index) const {
+  // @@protoc_insertion_point(field_get:remote.SnapshotsReply.files)
+  return _internal_files(index);
+}
+inline std::string* SnapshotsReply::mutable_files(int index) {
+  // @@protoc_insertion_point(field_mutable:remote.SnapshotsReply.files)
+  return files_.Mutable(index);
+}
+inline void SnapshotsReply::set_files(int index, const std::string& value) {
+  // @@protoc_insertion_point(field_set:remote.SnapshotsReply.files)
+  files_.Mutable(index)->assign(value);
+}
+inline void SnapshotsReply::set_files(int index, std::string&& value) {
+  // @@protoc_insertion_point(field_set:remote.SnapshotsReply.files)
+  files_.Mutable(index)->assign(std::move(value));
+}
+inline void SnapshotsReply::set_files(int index, const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  files_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:remote.SnapshotsReply.files)
+}
+inline void SnapshotsReply::set_files(int index, const char* value, size_t size) {
+  files_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:remote.SnapshotsReply.files)
+}
+inline std::string* SnapshotsReply::_internal_add_files() {
+  return files_.Add();
+}
+inline void SnapshotsReply::add_files(const std::string& value) {
+  files_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:remote.SnapshotsReply.files)
+}
+inline void SnapshotsReply::add_files(std::string&& value) {
+  files_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:remote.SnapshotsReply.files)
+}
+inline void SnapshotsReply::add_files(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  files_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:remote.SnapshotsReply.files)
+}
+inline void SnapshotsReply::add_files(const char* value, size_t size) {
+  files_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:remote.SnapshotsReply.files)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>&
+SnapshotsReply::files() const {
+  // @@protoc_insertion_point(field_list:remote.SnapshotsReply.files)
+  return files_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
+SnapshotsReply::mutable_files() {
+  // @@protoc_insertion_point(field_mutable_list:remote.SnapshotsReply.files)
+  return &files_;
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------
