@@ -91,7 +91,7 @@ void CoherentStateCache::on_new_block(const remote::StateChangeBatch& state_chan
                     process_code_change(root, view_id, account_change);
                     break;
                 }
-                case remote::Action::DELETE: {
+                case remote::Action::REMOVE: {
                     process_delete_change(root, view_id, account_change);
                     break;
                 }
