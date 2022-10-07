@@ -296,7 +296,7 @@ int get_stack_count(std::uint8_t op_code) {
         case evmc_opcode::OP_MOD:
         case evmc_opcode::OP_SIGNEXTEND:
         case evmc_opcode::OP_GASLIMIT:
-        case evmc_opcode::OP_DIFFICULTY:
+        case evmc_opcode::OP_PREVRANDAO:
         case evmc_opcode::OP_SGT:
         case evmc_opcode::OP_GASPRICE:
         case evmc_opcode::OP_MSIZE:
