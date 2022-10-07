@@ -43,11 +43,15 @@ public:
 
     boost::asio::awaitable<void> open_cursor(const std::string& table_name) override;
 
+    boost::asio::awaitable<void> dup_cursor(const std::string& table_name) override;
+
     boost::asio::awaitable<KeyValue> seek(silkworm::ByteView key) override;
 
     boost::asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override;
 
     boost::asio::awaitable<KeyValue> next() override;
+
+    boost::asio::awaitable<KeyValue> next_dup() override;
 
     boost::asio::awaitable<void> close_cursor() override;
 
