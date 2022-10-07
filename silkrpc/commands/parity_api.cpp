@@ -121,19 +121,23 @@ boost::asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const
         SILKRPC_TRACE << "ParityRpcApi::handle_parity_list_storage_keys cursor id: " << cursor->cursor_id() << "\n";
         silkworm::Bytes seek_val = offset ? offset.value() : silkworm::Bytes{};
 
-        std::vector<silkworm::Bytes> keys;
+        std::vector<evmc::bytes32> keys;
         auto v = co_await cursor->seek_both(seek_bytes, seek_val);
         // We look for keys until we have the quantity we want or the key is invalid/empty
+        
         while (v.size() >= silkworm::kHashLength && keys.size() != quantity) {
-            keys.push_back(v.substr(0, silkworm::kHashLength));
-            const auto kv_pair = co_await cursor->next();
+            auto value = silkworm::bytes32_from_hex(silkworm::to_hex(v));
+            keys.push_back(value);
+            const auto kv_pair = co_await cursor->next_dup();
+
             if (kv_pair.key != seek_bytes) {
                 break;
             }
             v = kv_pair.value;
         }
 
-        reply = make_json_content(reply["id"], keys);
+        reply = make_json_content(request["id"], keys);
+
     } catch (const std::invalid_argument& iv) {
         SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_content(request["id"], {});
