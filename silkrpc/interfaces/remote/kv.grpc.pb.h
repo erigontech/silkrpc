@@ -67,6 +67,14 @@ class KV final {
     std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>> PrepareAsyncStateChanges(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>>(PrepareAsyncStateChangesRaw(context, request, cq));
     }
+    // Snapshots returns list of current snapshot files. Then client can just open all of them.
+    virtual ::grpc::Status Snapshots(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::remote::SnapshotsReply* response) = 0;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::remote::SnapshotsReply>> AsyncSnapshots(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::remote::SnapshotsReply>>(AsyncSnapshotsRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::remote::SnapshotsReply>> PrepareAsyncSnapshots(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReaderInterface< ::remote::SnapshotsReply>>(PrepareAsyncSnapshotsRaw(context, request, cq));
+    }
     class async_interface {
      public:
       virtual ~async_interface() {}
@@ -80,6 +88,9 @@ class KV final {
       // Then only client can initiate messages from server
       virtual void Tx(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::remote::Cursor,::remote::Pair>* reactor) = 0;
       virtual void StateChanges(::grpc::ClientContext* context, const ::remote::StateChangeRequest* request, ::grpc::ClientReadReactor< ::remote::StateChangeBatch>* reactor) = 0;
+      // Snapshots returns list of current snapshot files. Then client can just open all of them.
+      virtual void Snapshots(::grpc::ClientContext* context, const ::remote::SnapshotsRequest* request, ::remote::SnapshotsReply* response, std::function<void(::grpc::Status)>) = 0;
+      virtual void Snapshots(::grpc::ClientContext* context, const ::remote::SnapshotsRequest* request, ::remote::SnapshotsReply* response, ::grpc::ClientUnaryReactor* reactor) = 0;
     };
     typedef class async_interface experimental_async_interface;
     virtual class async_interface* async() { return nullptr; }
@@ -93,6 +104,8 @@ class KV final {
     virtual ::grpc::ClientReaderInterface< ::remote::StateChangeBatch>* StateChangesRaw(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request) = 0;
     virtual ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>* AsyncStateChangesRaw(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq, void* tag) = 0;
     virtual ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>* PrepareAsyncStateChangesRaw(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::remote::SnapshotsReply>* AsyncSnapshotsRaw(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::grpc::CompletionQueue* cq) = 0;
+    virtual ::grpc::ClientAsyncResponseReaderInterface< ::remote::SnapshotsReply>* PrepareAsyncSnapshotsRaw(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::grpc::CompletionQueue* cq) = 0;
   };
   class Stub final : public StubInterface {
    public:
@@ -122,6 +135,13 @@ class KV final {
     std::unique_ptr< ::grpc::ClientAsyncReader< ::remote::StateChangeBatch>> PrepareAsyncStateChanges(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReader< ::remote::StateChangeBatch>>(PrepareAsyncStateChangesRaw(context, request, cq));
     }
+    ::grpc::Status Snapshots(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::remote::SnapshotsReply* response) override;
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::remote::SnapshotsReply>> AsyncSnapshots(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::remote::SnapshotsReply>>(AsyncSnapshotsRaw(context, request, cq));
+    }
+    std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::remote::SnapshotsReply>> PrepareAsyncSnapshots(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::grpc::CompletionQueue* cq) {
+      return std::unique_ptr< ::grpc::ClientAsyncResponseReader< ::remote::SnapshotsReply>>(PrepareAsyncSnapshotsRaw(context, request, cq));
+    }
     class async final :
       public StubInterface::async_interface {
      public:
@@ -129,6 +149,8 @@ class KV final {
       void Version(::grpc::ClientContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response, ::grpc::ClientUnaryReactor* reactor) override;
       void Tx(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::remote::Cursor,::remote::Pair>* reactor) override;
       void StateChanges(::grpc::ClientContext* context, const ::remote::StateChangeRequest* request, ::grpc::ClientReadReactor< ::remote::StateChangeBatch>* reactor) override;
+      void Snapshots(::grpc::ClientContext* context, const ::remote::SnapshotsRequest* request, ::remote::SnapshotsReply* response, std::function<void(::grpc::Status)>) override;
+      void Snapshots(::grpc::ClientContext* context, const ::remote::SnapshotsRequest* request, ::remote::SnapshotsReply* response, ::grpc::ClientUnaryReactor* reactor) override;
      private:
       friend class Stub;
       explicit async(Stub* stub): stub_(stub) { }
@@ -148,9 +170,12 @@ class KV final {
     ::grpc::ClientReader< ::remote::StateChangeBatch>* StateChangesRaw(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request) override;
     ::grpc::ClientAsyncReader< ::remote::StateChangeBatch>* AsyncStateChangesRaw(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq, void* tag) override;
     ::grpc::ClientAsyncReader< ::remote::StateChangeBatch>* PrepareAsyncStateChangesRaw(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::remote::SnapshotsReply>* AsyncSnapshotsRaw(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::grpc::CompletionQueue* cq) override;
+    ::grpc::ClientAsyncResponseReader< ::remote::SnapshotsReply>* PrepareAsyncSnapshotsRaw(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::grpc::CompletionQueue* cq) override;
     const ::grpc::internal::RpcMethod rpcmethod_Version_;
     const ::grpc::internal::RpcMethod rpcmethod_Tx_;
     const ::grpc::internal::RpcMethod rpcmethod_StateChanges_;
+    const ::grpc::internal::RpcMethod rpcmethod_Snapshots_;
   };
   static std::unique_ptr<Stub> NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
 
@@ -167,6 +192,8 @@ class KV final {
     // Then only client can initiate messages from server
     virtual ::grpc::Status Tx(::grpc::ServerContext* context, ::grpc::ServerReaderWriter< ::remote::Pair, ::remote::Cursor>* stream);
     virtual ::grpc::Status StateChanges(::grpc::ServerContext* context, const ::remote::StateChangeRequest* request, ::grpc::ServerWriter< ::remote::StateChangeBatch>* writer);
+    // Snapshots returns list of current snapshot files. Then client can just open all of them.
+    virtual ::grpc::Status Snapshots(::grpc::ServerContext* context, const ::remote::SnapshotsRequest* request, ::remote::SnapshotsReply* response);
   };
   template <class BaseClass>
   class WithAsyncMethod_Version : public BaseClass {
@@ -228,7 +255,27 @@ class KV final {
       ::grpc::Service::RequestAsyncServerStreaming(2, context, request, writer, new_call_cq, notification_cq, tag);
     }
   };
-  typedef WithAsyncMethod_Version<WithAsyncMethod_Tx<WithAsyncMethod_StateChanges<Service > > > AsyncService;
+  template <class BaseClass>
+  class WithAsyncMethod_Snapshots : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithAsyncMethod_Snapshots() {
+      ::grpc::Service::MarkMethodAsync(3);
+    }
+    ~WithAsyncMethod_Snapshots() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Snapshots(::grpc::ServerContext* /*context*/, const ::remote::SnapshotsRequest* /*request*/, ::remote::SnapshotsReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestSnapshots(::grpc::ServerContext* context, ::remote::SnapshotsRequest* request, ::grpc::ServerAsyncResponseWriter< ::remote::SnapshotsReply>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
+    }
+  };
+  typedef WithAsyncMethod_Version<WithAsyncMethod_Tx<WithAsyncMethod_StateChanges<WithAsyncMethod_Snapshots<Service > > > > AsyncService;
   template <class BaseClass>
   class WithCallbackMethod_Version : public BaseClass {
    private:
@@ -301,7 +348,34 @@ class KV final {
     virtual ::grpc::ServerWriteReactor< ::remote::StateChangeBatch>* StateChanges(
       ::grpc::CallbackServerContext* /*context*/, const ::remote::StateChangeRequest* /*request*/)  { return nullptr; }
   };
-  typedef WithCallbackMethod_Version<WithCallbackMethod_Tx<WithCallbackMethod_StateChanges<Service > > > CallbackService;
+  template <class BaseClass>
+  class WithCallbackMethod_Snapshots : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithCallbackMethod_Snapshots() {
+      ::grpc::Service::MarkMethodCallback(3,
+          new ::grpc::internal::CallbackUnaryHandler< ::remote::SnapshotsRequest, ::remote::SnapshotsReply>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::remote::SnapshotsRequest* request, ::remote::SnapshotsReply* response) { return this->Snapshots(context, request, response); }));}
+    void SetMessageAllocatorFor_Snapshots(
+        ::grpc::MessageAllocator< ::remote::SnapshotsRequest, ::remote::SnapshotsReply>* allocator) {
+      ::grpc::internal::MethodHandler* const handler = ::grpc::Service::GetHandler(3);
+      static_cast<::grpc::internal::CallbackUnaryHandler< ::remote::SnapshotsRequest, ::remote::SnapshotsReply>*>(handler)
+              ->SetMessageAllocator(allocator);
+    }
+    ~WithCallbackMethod_Snapshots() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Snapshots(::grpc::ServerContext* /*context*/, const ::remote::SnapshotsRequest* /*request*/, ::remote::SnapshotsReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* Snapshots(
+      ::grpc::CallbackServerContext* /*context*/, const ::remote::SnapshotsRequest* /*request*/, ::remote::SnapshotsReply* /*response*/)  { return nullptr; }
+  };
+  typedef WithCallbackMethod_Version<WithCallbackMethod_Tx<WithCallbackMethod_StateChanges<WithCallbackMethod_Snapshots<Service > > > > CallbackService;
   typedef CallbackService ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Version : public BaseClass {
@@ -350,6 +424,23 @@ class KV final {
     }
     // disable synchronous version of this method
     ::grpc::Status StateChanges(::grpc::ServerContext* /*context*/, const ::remote::StateChangeRequest* /*request*/, ::grpc::ServerWriter< ::remote::StateChangeBatch>* /*writer*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+  };
+  template <class BaseClass>
+  class WithGenericMethod_Snapshots : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithGenericMethod_Snapshots() {
+      ::grpc::Service::MarkMethodGeneric(3);
+    }
+    ~WithGenericMethod_Snapshots() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Snapshots(::grpc::ServerContext* /*context*/, const ::remote::SnapshotsRequest* /*request*/, ::remote::SnapshotsReply* /*response*/) override {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
@@ -412,6 +503,26 @@ class KV final {
     }
     void RequestStateChanges(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncWriter< ::grpc::ByteBuffer>* writer, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
       ::grpc::Service::RequestAsyncServerStreaming(2, context, request, writer, new_call_cq, notification_cq, tag);
+    }
+  };
+  template <class BaseClass>
+  class WithRawMethod_Snapshots : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawMethod_Snapshots() {
+      ::grpc::Service::MarkMethodRaw(3);
+    }
+    ~WithRawMethod_Snapshots() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Snapshots(::grpc::ServerContext* /*context*/, const ::remote::SnapshotsRequest* /*request*/, ::remote::SnapshotsReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    void RequestSnapshots(::grpc::ServerContext* context, ::grpc::ByteBuffer* request, ::grpc::ServerAsyncResponseWriter< ::grpc::ByteBuffer>* response, ::grpc::CompletionQueue* new_call_cq, ::grpc::ServerCompletionQueue* notification_cq, void *tag) {
+      ::grpc::Service::RequestAsyncUnary(3, context, request, response, new_call_cq, notification_cq, tag);
     }
   };
   template <class BaseClass>
@@ -482,6 +593,28 @@ class KV final {
       ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/)  { return nullptr; }
   };
   template <class BaseClass>
+  class WithRawCallbackMethod_Snapshots : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithRawCallbackMethod_Snapshots() {
+      ::grpc::Service::MarkMethodRawCallback(3,
+          new ::grpc::internal::CallbackUnaryHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+            [this](
+                   ::grpc::CallbackServerContext* context, const ::grpc::ByteBuffer* request, ::grpc::ByteBuffer* response) { return this->Snapshots(context, request, response); }));
+    }
+    ~WithRawCallbackMethod_Snapshots() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable synchronous version of this method
+    ::grpc::Status Snapshots(::grpc::ServerContext* /*context*/, const ::remote::SnapshotsRequest* /*request*/, ::remote::SnapshotsReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    virtual ::grpc::ServerUnaryReactor* Snapshots(
+      ::grpc::CallbackServerContext* /*context*/, const ::grpc::ByteBuffer* /*request*/, ::grpc::ByteBuffer* /*response*/)  { return nullptr; }
+  };
+  template <class BaseClass>
   class WithStreamedUnaryMethod_Version : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
@@ -508,7 +641,34 @@ class KV final {
     // replace default version of method with streamed unary
     virtual ::grpc::Status StreamedVersion(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::google::protobuf::Empty,::types::VersionReply>* server_unary_streamer) = 0;
   };
-  typedef WithStreamedUnaryMethod_Version<Service > StreamedUnaryService;
+  template <class BaseClass>
+  class WithStreamedUnaryMethod_Snapshots : public BaseClass {
+   private:
+    void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
+   public:
+    WithStreamedUnaryMethod_Snapshots() {
+      ::grpc::Service::MarkMethodStreamed(3,
+        new ::grpc::internal::StreamedUnaryHandler<
+          ::remote::SnapshotsRequest, ::remote::SnapshotsReply>(
+            [this](::grpc::ServerContext* context,
+                   ::grpc::ServerUnaryStreamer<
+                     ::remote::SnapshotsRequest, ::remote::SnapshotsReply>* streamer) {
+                       return this->StreamedSnapshots(context,
+                         streamer);
+                  }));
+    }
+    ~WithStreamedUnaryMethod_Snapshots() override {
+      BaseClassMustBeDerivedFromService(this);
+    }
+    // disable regular version of this method
+    ::grpc::Status Snapshots(::grpc::ServerContext* /*context*/, const ::remote::SnapshotsRequest* /*request*/, ::remote::SnapshotsReply* /*response*/) override {
+      abort();
+      return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
+    }
+    // replace default version of method with streamed unary
+    virtual ::grpc::Status StreamedSnapshots(::grpc::ServerContext* context, ::grpc::ServerUnaryStreamer< ::remote::SnapshotsRequest,::remote::SnapshotsReply>* server_unary_streamer) = 0;
+  };
+  typedef WithStreamedUnaryMethod_Version<WithStreamedUnaryMethod_Snapshots<Service > > StreamedUnaryService;
   template <class BaseClass>
   class WithSplitStreamingMethod_StateChanges : public BaseClass {
    private:
@@ -537,7 +697,7 @@ class KV final {
     virtual ::grpc::Status StreamedStateChanges(::grpc::ServerContext* context, ::grpc::ServerSplitStreamer< ::remote::StateChangeRequest,::remote::StateChangeBatch>* server_split_streamer) = 0;
   };
   typedef WithSplitStreamingMethod_StateChanges<Service > SplitStreamedService;
-  typedef WithStreamedUnaryMethod_Version<WithSplitStreamingMethod_StateChanges<Service > > StreamedService;
+  typedef WithStreamedUnaryMethod_Version<WithSplitStreamingMethod_StateChanges<WithStreamedUnaryMethod_Snapshots<Service > > > StreamedService;
 };
 
 }  // namespace remote
