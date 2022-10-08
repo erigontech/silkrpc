@@ -33,7 +33,7 @@ Building SilkRPC daemon requires
 * C++20 compiler: [GCC](https://www.gnu.org/software/gcc/) >= 10.2.0 or [Clang](https://clang.llvm.org/) >= 10.0.0
 * Build system: [CMake](http://cmake.org) >= 3.18.4
 * GNU Multiple Precision arithmetic library: [GMP](http://gmplib.org) >= 6.2.0
-    * Linux: `sudo apt-get install libgmp3-dev`
+    * Linux: `sudo apt-get install libgmp3-dev`; `sudo apt-get install -y m4 texinfo bison`  
     * MacOS: `brew install gmp`
 * Microsoft mimalloc library: [mimalloc](https://github.com/microsoft/mimalloc) >= 2.0.0
    * Linux:
