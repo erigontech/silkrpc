@@ -8,7 +8,6 @@ import sys
 import os
 import shutil
 import tarfile
-from datetime import datetime
 import time
 
 import getopt
