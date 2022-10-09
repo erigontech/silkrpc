@@ -92,7 +92,7 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
                 print(process.stdout)
             else:
                 file = json_file.ljust(60)
-                print(f"{test_number:03d}. {file} Failed(bad json format on expected rsp)")
+                print(f"{test_number:03d}. {file} Failed (bad json format on expected rsp)")
                 if exit_on_fail:
                     print("TEST ABORTED!")
                     sys.exit(1)
@@ -346,7 +346,7 @@ def main(argv):
         end_time = time.time()
         elapsed = end_time - start_time
         print("                                                                                    \r")
-        print(f"Test time-elapsed (secs): {int(elapsed)}")
+        print(f"Test time-elapsed (secs):     {int(elapsed)}")
         print(f"Number of executed tests:     {executed_tests}/{global_test_number-1}")
         print(f"Number of NOT executed tests: {tests_not_executed}")
         print(f"Number of success tests:      {success_tests}")
