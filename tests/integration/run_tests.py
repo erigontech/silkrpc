@@ -8,6 +8,8 @@ import sys
 import os
 import shutil
 import tarfile
+from datetime import datetime
+import time
 
 import getopt
 import gzip
@@ -292,6 +294,7 @@ def main(argv):
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
 
+    start_time = time.time()
     os.mkdir (output_dir)
     match = 0
     failed_tests = 0
@@ -341,7 +344,10 @@ def main(argv):
     if (req_test != -1 or requested_api != "") and match == 0:
         print("ERROR: api or testNumber not found")
     else:
+        end_time = time.time()
+        elapsed = end_time - start_time
         print("                                                                                    \r")
+        print(f"Test Elapsed secs: {int(elapsed)}")
         print(f"Number of executed tests:     {executed_tests}/{global_test_number-1}")
         print(f"Number of NOT executed tests: {tests_not_executed}")
         print(f"Number of success tests:      {success_tests}")
