@@ -3,18 +3,20 @@
         "request": {
             "jsonrpc": "2.0",
             "method": "eth_callBundle",
-            "params": [["0x18dcb90e76b61fe6f37c9a9cd269a66188c05af5f7a62c50ff3246c6e207dc6d"], "0x3d0900", 1000],
+            "params": [["0x388d619ccf298cb943ab684f6b80a9e2b7a253cb84291ef082d5a3192c70af9d"], "0x5D75C8", 1000],
             "id": 1
         },
         "response": {
-            "result":{"bundleHash":"0x4af986c68f016f56fe7d630841c29f1da11931a9644d7b32a968920c51180f3e",
-                      "results":[
-                                 {"error":"execution reverted",
-                                  "gasUsed":985329,
-                                  "txHash":"0x18dcb90e76b61fe6f37c9a9cd269a66188c05af5f7a62c50ff3246c6e207dc6d"
-                                 }
-                                ]
-                     },
+            "result": {
+               "bundleHash": "0x576040bb6f28f79a245578409dd81c6937f6b065af347b3dfc58b40cf1b464b5",
+               "results": [
+                  {
+                        "gasUsed": 34874,
+                        "txHash": "0x388d619ccf298cb943ab684f6b80a9e2b7a253cb84291ef082d5a3192c70af9d",
+                        "value": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                  }
+               ]
+            },
             "id": 1,
             "jsonrpc": "2.0"
         }
