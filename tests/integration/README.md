@@ -1,5 +1,5 @@
-install:
----------
+json-diff install:
+------------------
 - sudo apt update
 - sudo apt install npm
 - npm install -g json-diff
@@ -51,9 +51,11 @@ Number of failed tests:       13
 
 ### Skipped tests reasons
 ```
-erigon_getBlockByTimestamp: RPCdaemon contains always chainId even if not valid and doesn't contain accessList if empty. Both seems errors
-eth_getBlockByHash: RPCdaemon contains always chainId even if not valid. Seems wrong
-eth_getBlockByNumber: RPCdaemon contains always chainId even if not valid. Seems wrong
-txpool_content: All RPCDaemon transactions contains always chainId even if not valid and doesn't contain accessList if empty. Both seems errors
+erigon_getBlockByTimestamp: RPCdaemon contains always chainId even if not valid and doesn't contain accessList 
+                            if empty. Both seems errors
+eth_getBlockByHash:         RPCdaemon contains always chainId even if not valid. Seems wrong
+eth_getBlockByNumber:       RPCdaemon contains always chainId even if not valid. Seems wrong
+txpool_content:             All RPCDaemon transactions contains always chainId even if not valid and doesn't contain 
+                            accessList if empty. Both seems errors
 
 ```
