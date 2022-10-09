@@ -10,11 +10,12 @@ json-diff install:
 ### To run integration tests comparing results with json file: ./run_tests.py -c
 
 ```
-Test Elapsed secs: 49
-Number of executed tests:     266/266
+Test time-elapsed (secs): 45
+Number of executed tests:     268/268
 Number of NOT executed tests: 0
-Number of success tests:      266
+Number of success tests:      268
 Number of failed tests:       0
+
 ```
 
 
@@ -33,18 +34,18 @@ Number of failed tests:       0
 071. eth_getBlockByHash/test_2.json                               Skipped
 072. eth_getBlockByNumber/test_1.json                             Skipped
 073. eth_getBlockByNumber/test_2.json                             Skipped
-111. parity_getBlockReceipts/test_1.json                          Skipped
-200. trace_replayBlockTransactions/test_01.json.tar               Failed
-201. trace_replayBlockTransactions/test_02.json.tar               Failed
-213. trace_replayBlockTransactions/test_14.json                   Failed
-230. trace_replayTransaction/test_16.json.tar                     Failed
-237. trace_replayTransaction/test_23.json.tar                     Failed
-262. txpool_content/test_1.json                                   Skipped
+113. parity_getBlockReceipts/test_1.json                          Skipped
+202. trace_replayBlockTransactions/test_01.json.tar               Failed
+203. trace_replayBlockTransactions/test_02.json.tar               Failed
+215. trace_replayBlockTransactions/test_14.json                   Failed
+232. trace_replayTransaction/test_16.json.tar                     Failed
+239. trace_replayTransaction/test_23.json.tar                     Failed
+264. txpool_content/test_1.json                                   Skipped
                                                                                     
-Test Elapsed secs: 72
-Number of executed tests:     259/266
+Test time-elapsed (secs): 70
+Number of executed tests:     261/268
 Number of NOT executed tests: 7
-Number of success tests:      246
+Number of success tests:      248
 Number of failed tests:       13
 
 ```
