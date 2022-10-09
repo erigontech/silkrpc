@@ -346,7 +346,7 @@ def main(argv):
         end_time = time.time()
         elapsed = end_time - start_time
         print("                                                                                    \r")
-        print(f"Test Elapsed secs: {int(elapsed)}")
+        print(f"Test time-elapsed (secs): {int(elapsed)}")
         print(f"Number of executed tests:     {executed_tests}/{global_test_number-1}")
         print(f"Number of NOT executed tests: {tests_not_executed}")
         print(f"Number of success tests:      {success_tests}")
