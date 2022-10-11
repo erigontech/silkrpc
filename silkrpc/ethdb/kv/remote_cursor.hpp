@@ -41,9 +41,7 @@ public:
 
     uint32_t cursor_id() const override { return cursor_id_; };
 
-    boost::asio::awaitable<void> open_cursor(const std::string& table_name) override;
-
-    boost::asio::awaitable<void> dup_cursor(const std::string& table_name) override;
+    boost::asio::awaitable<void> open_cursor(const std::string& table_name, bool is_dup_sorted) override;
 
     boost::asio::awaitable<KeyValue> seek(silkworm::ByteView key) override;
 
