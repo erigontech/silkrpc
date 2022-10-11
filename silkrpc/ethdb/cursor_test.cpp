@@ -52,9 +52,7 @@ public:
 
     uint32_t cursor_id() const override { return 0; }
 
-    boost::asio::awaitable<void> open_cursor(const std::string& table_name) override { co_return; }
-
-    boost::asio::awaitable<void> dup_cursor(const std::string& table_name) override { co_return; }
+    boost::asio::awaitable<void> open_cursor(const std::string& table_name, bool is_dup_sorted) override { co_return; }
 
     boost::asio::awaitable<KeyValue> seek(silkworm::ByteView seek_key) override {
         index_ = 0;
@@ -70,14 +68,6 @@ public:
     boost::asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override { co_return KeyValue{silkworm::Bytes{key}, value}; }
 
     boost::asio::awaitable<KeyValue> next() override {
-        if (++index_ >= vector_.size()) {
-            co_return KeyValue{};
-        }
-        silkworm::Bytes full_key = vector_[index_].part1 + vector_[index_].part2 + vector_[index_].part3;
-        co_return KeyValue{full_key, value};
-    }
-
-    boost::asio::awaitable<KeyValue> next_dup() override {
         if (++index_ >= vector_.size()) {
             co_return KeyValue{};
         }
