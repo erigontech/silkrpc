@@ -20,31 +20,21 @@
 
 namespace silkrpc::ethdb::kv {
 
-boost::asio::awaitable<void> RemoteCursor::open_cursor(const std::string& table_name) {
+boost::asio::awaitable<void> RemoteCursor::open_cursor(const std::string& table_name, bool is_dup_sorted) {
     const auto start_time = clock_time::now();
     if (cursor_id_ == 0) {
         SILKRPC_DEBUG << "RemoteCursor::open_cursor opening new cursor for table: " << table_name << "\n";
         auto open_message = remote::Cursor{};
-        open_message.set_op(remote::Op::OPEN);
+        if (is_dup_sorted) {
+           open_message.set_op(remote::Op::OPEN_DUP_SORT);
+        } else {
+           open_message.set_op(remote::Op::OPEN);
+        }
         open_message.set_bucketname(table_name);
         cursor_id_ = (co_await tx_rpc_.write_and_read(open_message)).cursorid();
         SILKRPC_DEBUG << "RemoteCursor::open_cursor cursor: " << cursor_id_ << " for table: " << table_name << "\n";
     }
     SILKRPC_DEBUG << "RemoteCursor::open_cursor [" << table_name << "] c=" << cursor_id_ << " t=" << clock_time::since(start_time) << "\n";
-    co_return;
-}
-
-boost::asio::awaitable<void> RemoteCursor::dup_cursor(const std::string& table_name) {
-    const auto start_time = clock_time::now();
-    if (cursor_id_ == 0) {
-        SILKRPC_DEBUG << "RemoteCursor::dup_cursor opening new cursor for table: " << table_name << "\n";
-        auto open_message = remote::Cursor{};
-        open_message.set_op(remote::Op::OPEN_DUP_SORT);
-        open_message.set_bucketname(table_name);
-        cursor_id_ = (co_await tx_rpc_.write_and_read(open_message)).cursorid();
-        SILKRPC_DEBUG << "RemoteCursor::dup_cursor cursor: " << cursor_id_ << " for table: " << table_name << "\n";
-    }
-    SILKRPC_DEBUG << "RemoteCursor::dup_cursor [" << table_name << "] c=" << cursor_id_ << " t=" << clock_time::since(start_time) << "\n";
     co_return;
 }
 
