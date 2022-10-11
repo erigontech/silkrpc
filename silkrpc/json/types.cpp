@@ -631,13 +631,13 @@ void to_json(nlohmann::json& json, const Issuance& issuance) {
     } else {
         json["burnt"] = nullptr;
     }
-    if (issuance.totalIssued) {
-        json["totalIssued"] = issuance.totalIssued.value();
+    if (issuance.total_issued) {
+        json["totalIssued"] = issuance.total_issued.value();
     } else {
         json["totalIssued"] = nullptr;
     }
-    if (issuance.totalBurnt) {
-        json["totalBurnt"] = issuance.totalBurnt.value();
+    if (issuance.total_burnt) {
+        json["totalBurnt"] = issuance.total_burnt.value();
     } else {
         json["totalBurnt"] = nullptr;
     }
