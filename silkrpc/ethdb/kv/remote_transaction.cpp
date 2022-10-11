@@ -38,20 +38,12 @@ boost::asio::awaitable<void> RemoteTransaction::open() {
 }
 
 boost::asio::awaitable<std::shared_ptr<Cursor>> RemoteTransaction::cursor(const std::string& table) {
-    co_return co_await get_cursor(table);
+    co_return co_await get_cursor(table, false);
 }
 
 boost::asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction::cursor_dup_sort(const std::string& table) {
-    auto cursor_it = dup_cursors_.find(table);
-    if (cursor_it != dup_cursors_.end()) {
-        co_return cursor_it->second;
-    }
-
-    auto cursor = std::make_shared<RemoteCursor>(tx_rpc_);
-    co_await cursor->dup_cursor(table);
-    dup_cursors_[table] = cursor;
-    co_return cursor;
-}
+    co_return co_await get_cursor(table, true);
+} 
 
 boost::asio::awaitable<void> RemoteTransaction::close() {
     co_await tx_rpc_.writes_done_and_finish();
@@ -59,14 +51,17 @@ boost::asio::awaitable<void> RemoteTransaction::close() {
     tx_id_ = 0;
 }
 
-boost::asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction::get_cursor(const std::string& table) {
-    auto cursor_it = cursors_.find(table);
+boost::asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction::get_cursor(const std::string& table, bool is_cursor_sorted) {
+    const std::string cursor_dup = is_cursor_sorted ? "true" : "false";
+    const std::string key = table + cursor_dup;
+    auto cursor_it = cursors_.find(key);
     if (cursor_it != cursors_.end()) {
         co_return cursor_it->second;
     }
+   
     auto cursor = std::make_shared<RemoteCursor>(tx_rpc_);
-    co_await cursor->open_cursor(table);
-    cursors_[table] = cursor;
+    co_await cursor->open_cursor(table, is_cursor_sorted);
+    cursors_[key] = cursor;
     co_return cursor;
 }
 
