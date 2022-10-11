@@ -145,6 +145,9 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
             if silk_file != "":
                 with open(silk_file, 'w', encoding='utf8') as json_file_ptr:
                     json_file_ptr.write(json.dumps(response, indent = 6))
+            if rpc_file != "":
+                with open(rpc_file, 'w', encoding='utf8') as json_file_ptr:
+                    json_file_ptr.write(json.dumps(expected_response,  indent=5))
     return 0
 
 def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, verify_with_rpc: bool, dump_output: bool, test_number):
