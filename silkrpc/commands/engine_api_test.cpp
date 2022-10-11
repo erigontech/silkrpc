@@ -55,12 +55,10 @@ class MockCursor : public ethdb::Cursor {
 public:
     uint32_t cursor_id() const override { return 0; }
 
-    MOCK_METHOD((boost::asio::awaitable<void>), open_cursor, (const std::string& table_name));
-    MOCK_METHOD((boost::asio::awaitable<void>), dup_cursor, (const std::string& table_name));
+    MOCK_METHOD((boost::asio::awaitable<void>), open_cursor, (const std::string& table_name, bool is_dup_cursor));
     MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek, (silkworm::ByteView key));
     MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek_exact, (silkworm::ByteView key));
     MOCK_METHOD((boost::asio::awaitable<KeyValue>), next, ());
-    MOCK_METHOD((boost::asio::awaitable<KeyValue>), next_dup, ());
     MOCK_METHOD((boost::asio::awaitable<void>), close_cursor, ());
 };
 

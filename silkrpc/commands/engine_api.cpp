@@ -128,14 +128,14 @@ boost::asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(c
                 .forkchoice_state = forkchoice_state,
                 .payload_attributes = std::make_optional(payload_attributes)
             };
-            auto fork_updated = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
+            const auto fork_updated = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
             reply = make_json_content(request["id"], fork_updated);
         } else {
             const ForkchoiceUpdatedRequest forkchoice_update_request{
                 .forkchoice_state = forkchoice_state,
                 .payload_attributes = std::nullopt
             };
-            auto fork_updated = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
+            const auto fork_updated = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
             reply = make_json_content(request["id"], fork_updated);
         }
     #ifndef BUILD_COVERAGE
@@ -200,7 +200,7 @@ boost::asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_con
             reply = make_json_error(request.at("id"), 100, "incorrect terminal block hash");
             co_return;
         }
-        auto transition_configuration = TransitionConfiguration{
+        const auto transition_configuration = TransitionConfiguration{
             .terminal_total_difficulty = config.terminal_total_difficulty.value(),
             .terminal_block_hash = config.terminal_block_hash.value(),
             .terminal_block_number = config.terminal_block_number.value_or(0) // we default to returning zero if we dont have terminal_block_number
