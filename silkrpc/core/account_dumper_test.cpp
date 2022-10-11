@@ -50,15 +50,7 @@ public:
         return 0;
     }
 
-    boost::asio::awaitable<void> open_cursor(const std::string& table_name) override {
-        table_name_ = table_name;
-        table_ = json_.value(table_name_, empty);
-        itr_ = table_.end();
-
-        co_return;
-    }
-
-    boost::asio::awaitable<void> dup_cursor(const std::string& table_name) override {
+    boost::asio::awaitable<void> open_cursor(const std::string& table_name, bool is_dup_sorted) override {
         table_name_ = table_name;
         table_ = json_.value(table_name_, empty);
         itr_ = table_.end();
@@ -168,14 +160,14 @@ public:
 
     boost::asio::awaitable<std::shared_ptr<silkrpc::ethdb::Cursor>> cursor(const std::string& table) override {
         auto cursor = std::make_unique<DummyCursor>(json_);
-        co_await cursor->open_cursor(table);
+        co_await cursor->open_cursor(table, false);
 
         co_return cursor;
     }
 
     boost::asio::awaitable<std::shared_ptr<silkrpc::ethdb::CursorDupSort>> cursor_dup_sort(const std::string& table) override {
         auto cursor = std::make_unique<DummyCursor>(json_);
-        co_await cursor->open_cursor(table);
+        co_await cursor->open_cursor(table, true);
 
         co_return cursor;
     }
