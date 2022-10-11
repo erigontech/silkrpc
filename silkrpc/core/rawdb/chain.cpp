@@ -335,7 +335,7 @@ boost::asio::awaitable<Transactions> read_canonical_transactions(const DatabaseR
     txns.reserve(txn_count);
 
     silkworm::Bytes txn_id_key(8, '\0');
-    boost::endian::store_big_u64(txn_id_key.data(), base_txn_id); 
+    boost::endian::store_big_u64(txn_id_key.data(), base_txn_id);
     SILKRPC_DEBUG << "txn_count: " << txn_count << " txn_id_key: " << silkworm::to_hex(txn_id_key) << "\n";
     size_t i{0};
     Walker walker = [&](const silkworm::Bytes&, const silkworm::Bytes& v) {
@@ -367,7 +367,7 @@ boost::asio::awaitable<Transactions> read_noncanonical_transactions(const Databa
     }
     txns.reserve(txn_count);
     silkworm::Bytes txn_id_key(8, '\0');
-    boost::endian::store_big_u64(txn_id_key.data(), base_txn_id); 
+    boost::endian::store_big_u64(txn_id_key.data(), base_txn_id);
     SILKRPC_DEBUG << "txn_count: " << txn_count << " txn_id_key: " << silkworm::to_hex(txn_id_key) << "\n";
     size_t i{0};
     Walker walker = [&](const silkworm::Bytes&, const silkworm::Bytes& v) {

@@ -43,7 +43,7 @@ boost::asio::awaitable<std::shared_ptr<Cursor>> RemoteTransaction::cursor(const 
 
 boost::asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction::cursor_dup_sort(const std::string& table) {
     co_return co_await get_cursor(table, true);
-} 
+}
 
 boost::asio::awaitable<void> RemoteTransaction::close() {
     co_await tx_rpc_.writes_done_and_finish();
@@ -58,7 +58,6 @@ boost::asio::awaitable<std::shared_ptr<CursorDupSort>> RemoteTransaction::get_cu
     if (cursor_it != cursors_.end()) {
         co_return cursor_it->second;
     }
-   
     auto cursor = std::make_shared<RemoteCursor>(tx_rpc_);
     co_await cursor->open_cursor(table, is_cursor_sorted);
     cursors_[key] = cursor;

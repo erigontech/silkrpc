@@ -28,8 +28,8 @@ boost::asio::awaitable<silkworm::BlockWithHash> read_block_by_number(BlockCache&
         co_return cached_block.value();
     }
     auto block_with_hash = co_await rawdb::read_block(reader, block_hash, block_number);
-    if (block_with_hash.block.transactions.size() != 0) { 
-       // don't save empty (without txs) blocks to cache, if block become non-canonical (not in main chain), we remove it's transactions, 
+    if (block_with_hash.block.transactions.size() != 0) {
+       // don't save empty (without txs) blocks to cache, if block become non-canonical (not in main chain), we remove it's transactions,
        // but block can in the future become canonical(inserted in main chain) with its transactions
        cache.insert(block_hash, block_with_hash);
     }
@@ -42,8 +42,8 @@ boost::asio::awaitable<silkworm::BlockWithHash> read_block_by_hash(BlockCache& c
         co_return cached_block.value();
     }
     auto block_with_hash = co_await rawdb::read_block_by_hash(reader, block_hash);
-    if (block_with_hash.block.transactions.size() != 0) { 
-       // don't save empty (without txs) blocks to cache, if block become non-canonical (not in main chain), we remove it's transactions, 
+    if (block_with_hash.block.transactions.size() != 0) {
+       // don't save empty (without txs) blocks to cache, if block become non-canonical (not in main chain), we remove it's transactions,
        // but block can in the future become canonical(inserted in main chain) with its transactions
        cache.insert(block_hash, block_with_hash);
     }
