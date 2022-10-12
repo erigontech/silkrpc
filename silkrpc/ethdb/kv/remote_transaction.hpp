@@ -55,8 +55,9 @@ public:
 private:
     boost::asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table, bool is_cursor_dup_sort);
 
-    TxRpc tx_rpc_;
     std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
+    std::map<std::string, std::shared_ptr<CursorDupSort>> dup_cursors_;
+    TxRpc tx_rpc_;
     uint64_t tx_id_;
 };
 
