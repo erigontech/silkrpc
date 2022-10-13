@@ -5,7 +5,7 @@
             "method":"parity_listStorageKeys",
             "params":[
                 "0x0000000000000000000000000000000000000000",
-                5,
+                6,
                 null,
                 "latest"
             ],
@@ -14,10 +14,7 @@
         "response": {
             "jsonrpc":"2.0",
             "id":1,
-            "error":{
-                "code":100,
-                "message":"interface conversion: *mdbx.MdbxCursor is not kv.CursorDupSort: missing method CountDuplicates"
-            }
+            "result": []
         }
     }
 ]

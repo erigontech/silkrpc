@@ -296,7 +296,7 @@ int get_stack_count(std::uint8_t op_code) {
         case evmc_opcode::OP_MOD:
         case evmc_opcode::OP_SIGNEXTEND:
         case evmc_opcode::OP_GASLIMIT:
-        case evmc_opcode::OP_DIFFICULTY:
+        case evmc_opcode::OP_PREVRANDAO:
         case evmc_opcode::OP_SGT:
         case evmc_opcode::OP_GASPRICE:
         case evmc_opcode::OP_MSIZE:
@@ -307,6 +307,9 @@ int get_stack_count(std::uint8_t op_code) {
         case evmc_opcode::OP_CALLCODE:
         case evmc_opcode::OP_CREATE:
         case evmc_opcode::OP_CREATE2:
+        case evmc_opcode::OP_COINBASE:
+        case evmc_opcode::OP_CHAINID:
+        case evmc_opcode::OP_SMOD:
             count = 1;
             break;
         default:
@@ -580,7 +583,7 @@ void TraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
     current_depth_ = msg.depth;
 
     auto create = (!initial_ibs_.exists(recipient) && created_address_.find(recipient) == created_address_.end() && recipient != code_address);
-    // auto create = msg.kind == evmc_call_kind::EVMC_CREATE || msg.kind == evmc_call_kind::EVMC_CREATE2;
+    //auto create = msg.kind == evmc_call_kind::EVMC_CREATE || msg.kind == evmc_call_kind::EVMC_CREATE2;
 
     start_gas_.push(msg.gas);
 
@@ -671,12 +674,13 @@ void TraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
 
 void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
     auto index = index_stack_.top();
-    index_stack_.pop();
-
     auto start_gas = start_gas_.top();
-    start_gas_.pop();
 
     Trace& trace = traces_[index];
+    if (!trace.trace_result->code) {
+       start_gas_.pop();
+       index_stack_.pop();
+    }
 
     if (current_depth_ > 0) {
         if (trace.trace_result->code) {
@@ -695,7 +699,7 @@ void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::In
             break;
         case evmc_status_code::EVMC_REVERT:
             trace.error = "Reverted";
-            trace.trace_result.reset();
+            trace.trace_result->gas_used = start_gas - result.gas_left;
             break;
         case evmc_status_code::EVMC_OUT_OF_GAS:
         case evmc_status_code::EVMC_STACK_OVERFLOW:
@@ -728,6 +732,17 @@ void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::In
         << "\n";
 }
 
+void TraceTracer::on_creation_completed(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
+    if (index_stack_.empty())
+       return;
+    auto index = index_stack_.top();
+    auto start_gas = start_gas_.top();
+    index_stack_.pop();
+    start_gas_.pop();
+    Trace& trace = traces_[index];
+    trace.trace_result->gas_used = start_gas - result.gas_left;
+}
+
 void TraceTracer::on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
     SILKRPC_DEBUG << "TraceTracer::on_reward_granted:"
         << " result.status_code: " << result.status
@@ -755,7 +770,14 @@ void TraceTracer::on_reward_granted(const silkworm::CallResult& result, const si
             break;
         case evmc_status_code::EVMC_REVERT:
             trace.error = "Reverted";
-            trace.trace_result.reset();
+            trace.trace_result->gas_used = initial_gas_ - result.gas_left;
+            if (result.data.size() > 0) {
+                if (trace.trace_result->code) {
+                    trace.trace_result->code = result.data;
+                } else if (trace.trace_result->output) {
+                    trace.trace_result->output = result.data;
+                }
+            }
             break;
         case evmc_status_code::EVMC_OUT_OF_GAS:
         case evmc_status_code::EVMC_STACK_OVERFLOW:
@@ -1097,6 +1119,7 @@ boost::asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldStat
         } else {
             traces.output = "0x" + silkworm::to_hex(execution_result.data);
         }
+        executor.reset();
     }
     co_return trace_call_result;
 }
@@ -1221,8 +1244,8 @@ boost::asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execu
            txn.recover_sender();
         }
         const auto execution_result = co_await executor.call(block, txn, /*refund=*/true, /*gas_bailout=*/true, tracers);
+        executor.reset();
     }
-    executor.reset();
 
     tracers.clear();
     TraceCallResult result;

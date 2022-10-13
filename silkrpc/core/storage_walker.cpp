@@ -144,7 +144,7 @@ boost::asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_numb
             auto address = silkworm::to_evmc_address(ps_skv.key1);
             go_on = collector(address, ps_skv.key2, ps_skv.value);
         } else {
-            const auto bitmap = silkworm::db::bitmap::read(sh_skv.value);
+            const auto bitmap = silkworm::db::bitmap::parse(sh_skv.value);
             const auto found = silkworm::db::bitmap::seek(bitmap, block_number);
             if (found) {
                 auto dup_key{silkworm::db::storage_change_key(found.value(), address, incarnation)};

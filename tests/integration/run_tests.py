@@ -8,20 +8,64 @@ import sys
 import os
 import shutil
 import tarfile
+import time
 
 import getopt
 import gzip
-import jsondiff
+#import jsondiff
+
+tests_with_big_json = [
+   "trace_replayBlockTransactions/test_01.json.tar",
+   "trace_replayBlockTransactions/test_02.json.tar",
+   "trace_replayTransaction/test_16.json.tar",
+   "trace_replayTransaction/test_23.json.tar"
+]
+
+api_not_compared = [
+   "parity_getBlockReceipts",
+   "erigon_getBlockByTimestamp",
+   "eth_getBlockByHash",
+   "eth_getBlockByNumber",
+   "txpool_content"
+]
 
 
 def get_target(silk: bool, method: str):
-    "Determine where silkrpc is supposed to be serving at."
+    """ determine target
+    """
     if "engine_" in method:
         return "localhost:8550"
     if silk:
         return "localhost:51515"
 
     return "localhost:8545"
+
+def is_skipped(api_name, requested_api, exclude_api_list, exclude_test_list, api_file: str, req_test, verify_with_rpc, global_test_number):
+    """ determine if test must be skipped
+    """
+    if requested_api == "" and req_test == -1 and verify_with_rpc == 1:
+        for curr_test_name in api_not_compared:
+            if curr_test_name == api_name:
+                return 1
+    # scans exclude api list (-X)
+    tokenize_exclude_api_list = exclude_api_list.split(",")
+    for exclude_api in tokenize_exclude_api_list:  # -x
+        if exclude_api == api_file:
+            return 1
+    # scans exclude test list (-x)
+    tokenize_exclude_test_list = exclude_test_list.split(",")
+    for exclude_test in tokenize_exclude_test_list:  # -X
+        if exclude_test == str(global_test_number):
+            return 1
+    return 0
+
+def is_big_json(test_name: str):
+    """ determine if json is in the big list
+    """
+    for curr_test_name in tests_with_big_json:
+        if curr_test_name == test_name:
+            return 1
+    return 0
 
 def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool, output_dir: str, silk_file: str,
                       rpc_file: str, diff_file: str, dump_output, json_file: str, test_number):
@@ -40,47 +84,71 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         if process.returncode != 0:
             sys.exit(process.returncode)
         process.stdout = process.stdout.strip('\n')
-        expected_response = json.loads(process.stdout)
+        try:
+            expected_response = json.loads(process.stdout)
+        except json.decoder.JSONDecodeError:
+            if verbose:
+                print("Failed (bad json format on expected rsp)")
+                print(process.stdout)
+            else:
+                file = json_file.ljust(60)
+                print(f"{test_number:03d}. {file} Failed (bad json format on expected rsp)")
+                if exit_on_fail:
+                    print("TEST ABORTED!")
+                    sys.exit(1)
+            return 1
 
     if response != expected_response:
         if "result" in response and "result" in expected_response and expected_response["result"] is None:
             # response and expected_response are different but don't care
             if verbose:
-                print("--> OK")
-            return
+                print("OK")
+            return 0
         if "error" in response and "error" in expected_response and expected_response["error"] is None:
             # response and expected_response are different but don't care
             if verbose:
-                print("--> OK")
-            return
+                print("OK")
+            return 0
         if (silk_file != "" and os.path.exists(output_dir) == 0):
             os.mkdir (output_dir)
         if silk_file != "":
             with open(silk_file, 'w', encoding='utf8') as json_file_ptr:
-                json_file_ptr.write(json.dumps(response, indent = 6))
+                json_file_ptr.write(json.dumps(response,  indent=5))
         if rpc_file != "":
             with open(rpc_file, 'w', encoding='utf8') as json_file_ptr:
-                json_file_ptr.write(json.dumps(expected_response, indent = 6))
-        response_diff = jsondiff.diff(expected_response, response, marshal=True)
-        if diff_file != "":
-            with open(diff_file, 'w', encoding='utf8') as json_file_ptr:
-                json_file_ptr.write(json.dumps(response_diff, indent = 6))
-        if verbose:
-            print("--> FAILED")
+                json_file_ptr.write(json.dumps(expected_response,  indent=5))
+        #response_diff = jsondiff.diff(expected_response, response, marshal=True)
+        if is_big_json(json_file):
+            cmd = "json-patch-jsondiff --indent 4 " + rpc_file  + " " + silk_file + " > " + diff_file
         else:
-            print(str(test_number) + ". " + json_file + " Test Failed")
-        if exit_on_fail:
-            print("TEST ABORTED!")
-            sys.exit(1)
+            cmd = "json-diff -s " + rpc_file  + " " + silk_file + " > " + diff_file
+        os.system(cmd)
+        diff_file_size = os.stat(diff_file).st_size
+        if diff_file_size != 0:
+            if verbose:
+                print("Failed")
+            else:
+                file = json_file.ljust(60)
+                print(f"{test_number:03d}. {file} Failed")
+            if exit_on_fail:
+                print("TEST ABORTED!")
+                sys.exit(1)
+            return 1
+        if verbose:
+            print("OK")
     else:
         if verbose:
-            print("--> OK")
+            print("OK")
         if dump_output:
             if (silk_file != "" and os.path.exists(output_dir) == 0):
                 os.mkdir (output_dir)
             if silk_file != "":
                 with open(silk_file, 'w', encoding='utf8') as json_file_ptr:
                     json_file_ptr.write(json.dumps(response, indent = 6))
+            if rpc_file != "":
+                with open(rpc_file, 'w', encoding='utf8') as json_file_ptr:
+                    json_file_ptr.write(json.dumps(expected_response,  indent=5))
+    return 0
 
 def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, verify_with_rpc: bool, dump_output: bool, test_number):
     """ Run integration tests. """
@@ -111,14 +179,14 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
         if verify_with_rpc == 0:
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = ""
-            output_api_filename = output_dir + json_file[:-5]
+            output_api_filename = output_dir + json_file[:-4]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = json_rpc["response"]
             silk_file = output_api_filename + "-response.json"
             rpc_file = output_api_filename + "-expResponse.json"
             diff_file = output_api_filename + "-diff.json"
         else:
-            output_api_filename = output_dir + json_file[:-5]
+            output_api_filename = output_dir + json_file[:-4]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = ""
             target = get_target(1, request["method"])
@@ -129,7 +197,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
             rpc_file = output_api_filename + "-rpcdaemon.json"
             diff_file = output_api_filename + "-diff.json"
 
-        run_shell_command(
+        return run_shell_command(
                 cmd,
                 cmd1,
                 response,
@@ -164,6 +232,7 @@ def usage(argv):
     print("-v verbose")
     print("-o dump response")
     print("-x exclude api list (i.e txpool_content,txpool_status")
+    print("-X exclude test list (i.e 18,22")
 
 
 #
@@ -182,11 +251,12 @@ def main(argv):
     verify_with_rpc = 0
     json_dir = "./goerly/"
     results_dir = "results"
-    output_dir = json_dir + "/" + results_dir + "/"
-    exclude_list = ""
+    output_dir = json_dir + results_dir + "/"
+    exclude_api_list = ""
+    exclude_test_list = ""
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:db:ox:")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:db:ox:X:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -210,7 +280,9 @@ def main(argv):
             elif option == "-b":
                 json_dir = "./" + optarg + "/"
             elif option == "-x":
-                exclude_list = optarg
+                exclude_api_list = optarg
+            elif option == "-X":
+                exclude_test_list = optarg
             else:
                 usage(argv)
                 sys.exit(-1)
@@ -224,8 +296,12 @@ def main(argv):
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
 
+    start_time = time.time()
     os.mkdir (output_dir)
     match = 0
+    failed_tests = 0
+    success_tests = 0
+    tests_not_executed = 0
     for test_rep in range(0, loop_number):
         if verbose:
             print("Test iteration: ", test_rep + 1)
@@ -241,31 +317,43 @@ def main(argv):
             test_number = 1
             for test_name in test_lists:
                 if requested_api in ("", api_file): # -a
-                    # scans exclude list
-                    tokenize_list = exclude_list.split(",")
-                    jump_api = 0
-                    for exclude_api in tokenize_list:  # -x
-                        if exclude_api == api_file:
-                            jump_api = 1
-                            break
                     test_file = api_file + "/" + test_name
-                    if jump_api == 0:
+                    if is_skipped(api_file, requested_api, exclude_api_list, exclude_test_list, api_file, req_test, verify_with_rpc, global_test_number) == 1:
+                        file = test_file.ljust(60)
+                        print(f"{global_test_number:03d}. {file} Skipped")
+                        tests_not_executed = tests_not_executed + 1
+                    else:
                         # runs all tests req_test refers global test number or
                         # runs only tests on specific api req_test refers all test on specific api
                         if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
+                            file = test_file.ljust(60)
                             if verbose:
-                                print(f"{global_test_number:03d}. {test_file}", end = '')
-                            run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, verify_with_rpc, dump_output, global_test_number)
+                                print(f"{global_test_number:03d}. {file} ", end = '', flush=True)
+                            else:
+                                print(f"{global_test_number:03d}. {file}\r", end = '', flush=True)
+                            ret=run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, verify_with_rpc, dump_output, global_test_number)
+                            if ret == 0:
+                                success_tests = success_tests + 1
+                            else:
+                                failed_tests = failed_tests + 1
                             executed_tests = executed_tests + 1
                             if req_test != -1 or requested_api != "":
                                 match = 1
+
                 global_test_number = global_test_number + 1
                 test_number = test_number + 1
 
     if (req_test != -1 or requested_api != "") and match == 0:
         print("ERROR: api or testNumber not found")
     else:
-        print(f"Number of executed tests: {executed_tests}")
+        end_time = time.time()
+        elapsed = end_time - start_time
+        print("                                                                                    \r")
+        print(f"Test time-elapsed (secs):     {int(elapsed)}")
+        print(f"Number of executed tests:     {executed_tests}/{global_test_number-1}")
+        print(f"Number of NOT executed tests: {tests_not_executed}")
+        print(f"Number of success tests:      {success_tests}")
+        print(f"Number of failed tests:       {failed_tests}")
 #
 # module as main
 #

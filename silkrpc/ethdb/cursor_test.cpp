@@ -52,7 +52,7 @@ public:
 
     uint32_t cursor_id() const override { return 0; }
 
-    boost::asio::awaitable<void> open_cursor(const std::string& table_name) override { co_return; }
+    boost::asio::awaitable<void> open_cursor(const std::string& table_name, bool is_dup_sorted) override { co_return; }
 
     boost::asio::awaitable<KeyValue> seek(silkworm::ByteView seek_key) override {
         index_ = 0;

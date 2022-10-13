@@ -7,7 +7,7 @@
             "id": 1
         },
         "response": {
-            "result":{"baseFee":"0x0","pending":"0x0","queued":"0x0"},
+            "result":null,
             "id": 1,
             "jsonrpc": "2.0"
         }

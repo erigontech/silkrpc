@@ -85,6 +85,7 @@ public:
     boost::asio::awaitable<TransactionsInPool> get_transactions();
 
 private:
+    evmc::address address_from_H160(const types::H160& h160);
     types::H160* H160_from_address(const evmc::address& address);
     types::H128* H128_from_bytes(const uint8_t* bytes);
 

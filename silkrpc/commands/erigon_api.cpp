@@ -208,11 +208,11 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_logs_by_hash(const 
         const auto receipts{co_await core::get_receipts(tx_database, block_with_hash)};
 
         SILKRPC_DEBUG << "receipts.size(): " << receipts.size() << "\n";
-        std::vector<Log> logs{};
+        std::vector<Logs> logs{};
         logs.reserve(receipts.size());
         for (const auto receipt : receipts) {
             SILKRPC_DEBUG << "receipt.logs.size(): " << receipt.logs.size() << "\n";
-            logs.insert(logs.end(), receipt.logs.begin(), receipt.logs.end());
+            logs.push_back(receipt.logs);
         }
         SILKRPC_DEBUG << "logs.size(): " << logs.size() << "\n";
 
@@ -254,11 +254,11 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_forks(const nlohmann::j
     co_return;
 }
 
-// https://eth.wiki/json-rpc/API#erigon_issuance
-boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_issuance(const nlohmann::json& request, nlohmann::json& reply) {
+// https://eth.wiki/json-rpc/API#erigon_WatchTheBurn
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
-        auto error_msg = "invalid erigon_issuance params: " + params.dump();
+        auto error_msg = "invalid erigon_watchTheBurn params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;

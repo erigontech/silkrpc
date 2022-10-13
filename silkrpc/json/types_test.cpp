@@ -135,6 +135,8 @@ TEST_CASE("serialize empty block header", "[silkrpc][to_json]") {
     silkworm::BlockHeader header{};
     nlohmann::json j = header;
     CHECK(j == R"({
+        "baseFeePerGas":null,
+        "hash": "0xc3bd2d00745c03048a5616146a96f5ff78e54efb9e5b04af208cdaff6f3830ee",
         "parentHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
         "sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000000",
         "miner":"0x0000000000000000000000000000000000000000",
@@ -179,6 +181,8 @@ TEST_CASE("serialize block header", "[silkrpc][to_json]") {
     };
     nlohmann::json j = header;
     CHECK(j == R"({
+        "baseFeePerGas":null,
+        "hash": "0x5e053b099d472a3fc02394243961937ffa008bad0daa81a984a0830ba0beee01",
         "parentHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
         "sha3Uncles":"0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d",
         "miner":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
@@ -224,6 +228,8 @@ TEST_CASE("serialize block header with baseFeePerGas", "[silkrpc][to_json]") {
     };
     nlohmann::json j = header;
     CHECK(j == R"({
+        "baseFeePerGas":"0x3e8",
+        "hash": "0x5e3a9484b3ee70cc9ae7673051efd0369cfa4126430075921c70255cbdefbe6",
         "parentHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
         "sha3Uncles":"0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d",
         "miner":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
@@ -1418,11 +1424,23 @@ TEST_CASE("serialize forks", "[silkrpc::json][to_json]") {
 TEST_CASE("serialize empty issuance", "[silkrpc::json][to_json]") {
     silkrpc::Issuance issuance{};
     nlohmann::json j = issuance;
-    CHECK(j.is_null());
+    CHECK(j == R"({
+        "blockReward":null,
+        "uncleReward":null,
+        "issuance":null,
+        "burnt":null,
+        "tips":null,
+        "totalBurnt":null,
+        "totalIssued":null
+    })"_json);
 }
 
 TEST_CASE("serialize issuance", "[silkrpc::json][to_json]") {
     silkrpc::Issuance issuance{
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
         "0x0",
         "0x0",
         "0x0"
@@ -1431,7 +1449,11 @@ TEST_CASE("serialize issuance", "[silkrpc::json][to_json]") {
     CHECK(j == R"({
         "blockReward":"0x0",
         "uncleReward":"0x0",
-        "issuance":"0x0"
+        "issuance":"0x0",
+        "burnt":"0x0",
+        "tips":"0x0",
+        "totalBurnt":"0x0",
+        "totalIssued":"0x0"
     })"_json);
 }
 

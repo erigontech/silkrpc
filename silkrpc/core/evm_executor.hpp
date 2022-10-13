@@ -71,7 +71,7 @@ public:
 
 private:
     std::optional<std::string> pre_check(const VM& evm, const silkworm::Transaction& txn, const intx::uint256 base_fee_per_gas, const intx::uint128 g0);
-    uint64_t refund_gas(const VM& evm, const silkworm::Transaction& txn, uint64_t gas_left);
+    uint64_t refund_gas(const VM& evm, const silkworm::Transaction& txn, uint64_t gas_left, uint64_t gas_refund);
 
     boost::asio::io_context& io_context_;
     const core::rawdb::DatabaseReader& db_reader_;

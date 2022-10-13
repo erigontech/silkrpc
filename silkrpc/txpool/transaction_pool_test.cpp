@@ -34,6 +34,40 @@
 #include <silkrpc/test/grpc_actions.hpp>
 #include <silkrpc/test/grpc_responder.hpp>
 
+namespace grpc {
+
+inline bool operator==(const Status& lhs, const Status& rhs) {
+    return lhs.error_code() == rhs.error_code() &&
+        lhs.error_message() == rhs.error_message() &&
+        lhs.error_details() == rhs.error_details();
+}
+
+::types::H160* make_h160(uint64_t hi_hi, uint64_t hi_lo, uint32_t lo) {
+    auto h128_ptr{new ::types::H128()};
+    h128_ptr->set_hi(hi_hi);
+    h128_ptr->set_lo(hi_lo);
+    auto h160_ptr{new ::types::H160()};
+    h160_ptr->set_allocated_hi(h128_ptr);
+    h160_ptr->set_lo(lo);
+    return h160_ptr;
+}
+} // namespace grpc
+
+namespace txpool {
+
+inline bool operator==(const AddReply& lhs, const AddReply& rhs) {
+    if (lhs.imported_size() != rhs.imported_size()) return false;
+    for (auto i{0}; i < lhs.imported_size(); i++) {
+        if (lhs.imported(i) != rhs.imported(i)) return false;
+    }
+    if (lhs.errors_size() != rhs.errors_size()) return false;
+    for (auto i{0}; i < lhs.errors_size(); i++) {
+        if (lhs.errors(i) != rhs.errors(i)) return false;
+    }
+    return true;
+}
+} // namespace txpool
+
 namespace silkrpc::txpool {
 
 using Catch::Matchers::Message;
@@ -200,15 +234,16 @@ TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::get_transactions", "[sil
     SECTION("call get_transactions and check success [one tx]") {
         ::txpool::AllReply response;
         auto tx = response.add_txs();
-        tx->set_type(::txpool::AllReply_Type_QUEUED);
-        tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
+        tx->set_txntype(::txpool::AllReply_TxnType_QUEUED);
+        auto address{grpc::make_h160(0xAAAAEEFFFFEEAAAA, 0x11DDBBAAAABBDD11, 0xCCDDDDCC)};
+        tx->set_allocated_sender(address);
         tx->set_rlptx("0804");
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
         const auto transactions = run<&TransactionPool::get_transactions>();
         CHECK(transactions.size() == 1);
         if (transactions.size() > 0) {
             CHECK(transactions[0].transaction_type == silkrpc::txpool::TransactionType::QUEUED);
-            CHECK(transactions[0].sender == 0x99f9b87991262f6ba471f09758cde1c0fc1de734_address);
+            CHECK(transactions[0].sender == 0xaaaaeeffffeeaaaa11ddbbaaaabbdd11ccddddcc_address);
             CHECK(transactions[0].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
         }
     }
@@ -216,29 +251,32 @@ TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::get_transactions", "[sil
     SECTION("call get_transactions and check success [more than one tx]") {
         ::txpool::AllReply response;
         auto tx = response.add_txs();
-        tx->set_type(::txpool::AllReply_Type_QUEUED);
-        tx->set_sender("99f9b87991262f6ba471f09758cde1c0fc1de734");
+        tx->set_txntype(::txpool::AllReply_TxnType_QUEUED);
+        auto address{grpc::make_h160(0xAAAAEEFFFFEEAAAA, 0x11DDBBAAAABBDD11, 0xCCDDDDCC)};
+        tx->set_allocated_sender(address);
         tx->set_rlptx("0804");
         tx = response.add_txs();
-        tx->set_type(::txpool::AllReply_Type_PENDING);
-        tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de735");
+        tx->set_txntype(::txpool::AllReply_TxnType_PENDING);
+        auto address1{grpc::make_h160(0xAAAAEEFFFFEEAAAA, 0x11DDBBAAAABBDD11, 0xCCDDDDDD)};
+        tx->set_allocated_sender(address1);
         tx->set_rlptx("0806");
         tx = response.add_txs();
-        tx->set_type(::txpool::AllReply_Type_BASE_FEE);
-        tx->set_sender("9988b87991262f6ba471f09758cde1c0fc1de736");
+        tx->set_txntype(::txpool::AllReply_TxnType_BASE_FEE);
+        auto address2{grpc::make_h160(0xAAAAEEFFFFEEAAAA, 0x11DDBBAAAABBDD11, 0xCCDDDDEE)};
+        tx->set_allocated_sender(address2);
         tx->set_rlptx("0807");
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
         const auto transactions = run<&TransactionPool::get_transactions>();
         CHECK(transactions.size() == 3);
         if (transactions.size() > 2) {
             CHECK(transactions[0].transaction_type == txpool::TransactionType::QUEUED);
-            CHECK(transactions[0].sender == 0x99f9b87991262f6ba471f09758cde1c0fc1de734_address);
+            CHECK(transactions[0].sender == 0xaaaaeeffffeeaaaa11ddbbaaaabbdd11ccddddcc_address);
             CHECK(transactions[0].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x34});
             CHECK(transactions[1].transaction_type == txpool::TransactionType::PENDING);
-            CHECK(transactions[1].sender == 0x9988b87991262f6ba471f09758cde1c0fc1de735_address);
+            CHECK(transactions[1].sender == 0xaaaaeeffffeeaaaa11ddbbaaaabbdd11ccdddddd_address);
             CHECK(transactions[1].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x36});
             CHECK(transactions[2].transaction_type == txpool::TransactionType::BASE_FEE);
-            CHECK(transactions[2].sender == 0x9988b87991262f6ba471f09758cde1c0fc1de736_address);
+            CHECK(transactions[2].sender == 0xaaaaeeffffeeaaaa11ddbbaaaabbdd11ccddddee_address);
             CHECK(transactions[2].rlp == silkworm::Bytes{0x30, 0x38, 0x30, 0x37});
         }
     }
@@ -248,11 +286,5 @@ TEST_CASE_METHOD(TransactionPoolTest, "TransactionPool::get_transactions", "[sil
         const auto transactions = run<&TransactionPool::get_transactions>();
         CHECK(transactions.size() == 0);
     }
-
-    SECTION("call get_transactions and get error") {
-        EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&TransactionPool::get_transactions>()), boost::system::system_error);
-    }
-}
-
+ }
 } // namespace silkrpc::txpool

@@ -149,7 +149,7 @@ void RpcApiTable::add_erigon_handlers() {
     handlers_[http::method::k_erigon_getHeaderByNumber] = &commands::RpcApi::handle_erigon_get_header_by_number;
     handlers_[http::method::k_erigon_getLogsByHash] = &commands::RpcApi::handle_erigon_get_logs_by_hash;
     handlers_[http::method::k_erigon_forks] = &commands::RpcApi::handle_erigon_forks;
-    handlers_[http::method::k_erigon_issuance] = &commands::RpcApi::handle_erigon_issuance;
+    handlers_[http::method::k_erigon_watchTheBurn] = &commands::RpcApi::handle_erigon_watch_the_burn;
 }
 
 void RpcApiTable::add_trace_handlers() {

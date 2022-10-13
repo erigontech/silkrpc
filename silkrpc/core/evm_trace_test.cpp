@@ -274,7 +274,7 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
     };
     ContextPool context_pool{1, channel_factory};
-    context_pool.start();
+    auto pool_thread = std::thread([&]() { context_pool.run(); });
 
     SECTION("Call: failed with intrinsic gas too low") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
@@ -315,7 +315,8 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        context_pool.join();
+        io_context.stop();
+        pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == true);
         CHECK(result.pre_check_error.value() == "intrinsic gas too low: have 50000, want 53072");
@@ -372,7 +373,8 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        context_pool.join();
+        io_context.stop();
+        pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == false);
         CHECK(result.traces == R"({
@@ -558,7 +560,8 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        context_pool.join();
+        io_context.stop();
+        pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == false);
         CHECK(result.traces == R"({
@@ -681,7 +684,8 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        context_pool.join();
+        io_context.stop();
+        pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == false);
         CHECK(result.traces == R"({
@@ -850,7 +854,8 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        context_pool.join();
+        io_context.stop();
+        pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == false);
         CHECK(result.traces == R"({
@@ -992,7 +997,8 @@ TEST_CASE("TraceCallExecutor::trace_call 1") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        context_pool.join();
+        io_context.stop();
+        pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == false);
         CHECK(result.traces == R"({
@@ -1108,7 +1114,7 @@ TEST_CASE("TraceCallExecutor::trace_call 2") {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
     };
     ContextPool context_pool{1, channel_factory};
-    context_pool.start();
+    auto pool_thread = std::thread([&]() { context_pool.run(); });
 
     SECTION("Call: TO present") {
         EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
@@ -1206,7 +1212,8 @@ TEST_CASE("TraceCallExecutor::trace_call 2") {
         auto result = execution_result.get();
 
         context_pool.stop();
-        context_pool.join();
+        io_context.stop();
+        pool_thread.join();
 
         CHECK(result.pre_check_error.has_value() == false);
         CHECK(result.traces == R"({
@@ -1357,7 +1364,7 @@ TEST_CASE("TraceCallExecutor::trace_call with error") {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
     };
     ContextPool context_pool{1, channel_factory};
-    context_pool.start();
+    auto pool_thread = std::thread([&]() { context_pool.run(); });
 
     EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
         .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
@@ -1474,7 +1481,8 @@ TEST_CASE("TraceCallExecutor::trace_call with error") {
     auto result = execution_result.get();
 
     context_pool.stop();
-    context_pool.join();
+    io_context.stop();
+    pool_thread.join();
 
     CHECK(result.pre_check_error.has_value() == false);
     CHECK(result.traces == R"({
@@ -1532,7 +1540,7 @@ TEST_CASE("TraceCallExecutor::trace_call with error") {
                 "cost": 2,
                 "ex": {
                 "mem": null,
-                "push": [],
+                "push": ["0x0"],
                 "store": null,
                 "used": 156080
                 },
@@ -4324,7 +4332,7 @@ TEST_CASE("copy_stack") {
                 case evmc_opcode::OP_MOD:
                 case evmc_opcode::OP_SIGNEXTEND:
                 case evmc_opcode::OP_GASLIMIT:
-                case evmc_opcode::OP_DIFFICULTY:
+                case evmc_opcode::OP_PREVRANDAO:
                 case evmc_opcode::OP_SGT:
                 case evmc_opcode::OP_GASPRICE:
                 case evmc_opcode::OP_MSIZE:
@@ -4335,6 +4343,9 @@ TEST_CASE("copy_stack") {
                 case evmc_opcode::OP_CALLCODE:
                 case evmc_opcode::OP_CREATE:
                 case evmc_opcode::OP_CREATE2:
+                case evmc_opcode::OP_COINBASE:
+                case evmc_opcode::OP_CHAINID:
+                case evmc_opcode::OP_SMOD:
                     copy_stack(op_code, top_stack, trace_stack);
 
                     CHECK(trace_stack.size() == 1);

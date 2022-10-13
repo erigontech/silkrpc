@@ -108,7 +108,7 @@ constexpr const char* k_erigon_getHeaderByHash{"erigon_getHeaderByHash"};
 constexpr const char* k_erigon_getHeaderByNumber{"erigon_getHeaderByNumber"};
 constexpr const char* k_erigon_getLogsByHash{"erigon_getLogsByHash"};
 constexpr const char* k_erigon_forks{"erigon_forks"};
-constexpr const char* k_erigon_issuance{"erigon_issuance"};
+constexpr const char* k_erigon_watchTheBurn{"erigon_watchTheBurn"};
 
 constexpr const char* k_parity_getBlockReceipts{"parity_getBlockReceipts"};
 constexpr const char* k_parity_listStorageKeys{"parity_listStorageKeys"};

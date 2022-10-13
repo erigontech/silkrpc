@@ -42,6 +42,7 @@ commands:
           command: |
             sudo apt-get update
             sudo apt-get install -y libgmp3-dev
+            sudo apt-get install -y m4 texinfo bison
       - run:
           name: "Install mimalloc"
           command: |

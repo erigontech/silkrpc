@@ -3,18 +3,22 @@
         "request": {
             "jsonrpc": "2.0",
             "method": "eth_callBundle",
-            "params": [["0x1b9bdc90d60022e1f0f7d5fddc6b31bdcbe7e8014ba2a3601176beae2711d771"], "0x2DC6D7", 1000],
+            "params": [["0x6e6ad284e3af9f9f747b1b9cf1f345f02b1724b436ffae5f30b1e4a09875fde6"], "0x3D08FF", 1000],
             "id": 1
         },
         "response": {
-             "result":{"bundleHash":"0x0281812e9ed53b2096bfda7e2c041263b8bfd428b75c3a1eafa13740bdee6804",
-                        "results":[{"gasUsed":746070,
-                                    "txHash":"0x1b9bdc90d60022e1f0f7d5fddc6b31bdcbe7e8014ba2a3601176beae2711d771",
-                                    "value":"0x0000000000000000000000000000000000000000000000000000000000000000"
-                                  }]
-                      },
-            "id": 1,
-            "jsonrpc": "2.0"
+           "id": 1,
+           "jsonrpc": "2.0",
+           "result": {
+             "bundleHash": "0xe4b082e815fc17031d081e887fe7f9c58fbb89b2d50040eb64aa8faf55f234ef",
+             "results": [
+                 {
+                    "gasUsed": 33607,
+                    "txHash": "0x6e6ad284e3af9f9f747b1b9cf1f345f02b1724b436ffae5f30b1e4a09875fde6",
+                    "value": "0x0000000000000000000000000000000000000000000000000000000000000000"
+               }
+             ]
+          }
         }
    }
 ]
