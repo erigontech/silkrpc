@@ -101,8 +101,8 @@ TEST_CASE("ETHBACKEND protocol version minor mismatch", "[silkrpc][protocol][wai
 TEST_CASE("ETHBACKEND protocol version match", "[silkrpc][protocol][wait_for_ethbackend_protocol_check]") {
     std::unique_ptr<::remote::ETHBACKEND::StubInterface> stub{std::make_unique<::remote::FixIssue24351_MockETHBACKENDStub>()};
     types::VersionReply reply;
-    reply.set_major(2);
-    reply.set_minor(3);
+    reply.set_major(3);
+    reply.set_minor(1);
 
     EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockETHBACKENDStub*>(stub.get()), Version(_, _, _)).WillOnce(
         DoAll(SetArgPointee<2>(reply), Return(grpc::Status::OK)));
@@ -116,8 +116,8 @@ TEST_CASE("ETHBACKEND protocol version with server stub", "[silkrpc][protocol][w
     class TestService : public ::remote::ETHBACKEND::Service {
     public:
         ::grpc::Status Version(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response) override {
-            response->set_major(2);
-            response->set_minor(3);
+            response->set_major(3);
+            response->set_minor(1);
             response->set_patch(0);
             return ::grpc::Status::OK;
         }
@@ -182,8 +182,8 @@ TEST_CASE("KV protocol version minor mismatch", "[silkrpc][protocol][wait_for_kv
 TEST_CASE("KV protocol version match", "[silkrpc][protocol][wait_for_kv_protocol_check]") {
     std::unique_ptr<::remote::KV::StubInterface> stub{std::make_unique<::remote::FixIssue24351_MockKVStub>()};
     types::VersionReply reply;
-    reply.set_major(4);
-    reply.set_minor(1);
+    reply.set_major(6);
+    reply.set_minor(0);
 
     EXPECT_CALL(*dynamic_cast<::remote::FixIssue24351_MockKVStub*>(stub.get()), Version(_, _, _)).WillOnce(
         DoAll(SetArgPointee<2>(reply), Return(grpc::Status::OK)));
@@ -197,8 +197,8 @@ TEST_CASE("KV protocol version with server stub", "[silkrpc][protocol][wait_for_
     class TestService : public ::remote::KV::Service {
     public:
         ::grpc::Status Version(::grpc::ServerContext* context, const ::google::protobuf::Empty* request, ::types::VersionReply* response) override {
-            response->set_major(4);
-            response->set_minor(1);
+            response->set_major(6);
+            response->set_minor(0);
             response->set_patch(0);
             return ::grpc::Status::OK;
         }

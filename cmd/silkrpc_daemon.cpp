@@ -24,7 +24,7 @@
 #include <absl/flags/usage.h>
 #include <absl/flags/usage_config.h>
 #include <absl/strings/match.h>
-#include <asio/version.hpp>
+#include <boost/asio/version.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/buildinfo.h>
@@ -75,8 +75,8 @@ std::string get_name_from_build_info() {
 std::string get_library_versions() {
     std::string library_versions{"gRPC: "};
     library_versions.append(grpc::Version());
-    library_versions.append(" Asio: ");
-    library_versions.append(std::to_string(ASIO_VERSION));
+    library_versions.append(" Boost Asio: ");
+    library_versions.append(std::to_string(BOOST_ASIO_VERSION));
     return library_versions;
 }
 

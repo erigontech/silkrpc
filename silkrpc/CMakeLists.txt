@@ -41,9 +41,6 @@ set(BACKEND_MOCK_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/ethbackend_mock.
 set(KV_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/kv.pb.h")
 set(KV_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/kv.grpc.pb.h")
 set(KV_MOCK_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/remote/kv_mock.grpc.pb.h")
-set(P2PSENTRY_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/p2psentry/sentry.pb.h")
-set(P2PSENTRY_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/p2psentry/sentry.grpc.pb.h")
-set(P2PSENTRY_MOCK_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/p2psentry/sentry_mock.grpc.pb.h")
 set(MINING_PROTO_HEADER "${PROTO_GENERATED_SRC_DIR}/txpool/mining.pb.h")
 set(MINING_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/txpool/mining.grpc.pb.h")
 set(MINING_MOCK_GRPC_HEADER "${PROTO_GENERATED_SRC_DIR}/txpool/mining_mock.grpc.pb.h")
@@ -70,7 +67,6 @@ asio_grpc_protobuf_generate(
     PROTOS
     "${IF_PROTO_PATH}/remote/ethbackend.proto"
     "${IF_PROTO_PATH}/remote/kv.proto"
-    "${IF_PROTO_PATH}/p2psentry/sentry.proto"
     "${IF_PROTO_PATH}/txpool/mining.proto"
     "${IF_PROTO_PATH}/txpool/txpool.proto"
     "${IF_PROTO_PATH}/types/types.proto"
@@ -95,17 +91,6 @@ add_custom_command(
         ${KV_GRPC_HEADER}
         ${KV_MOCK_GRPC_HEADER}
         ${REMOTE_IF_GENERATED_HEADER_DIR}
-)
-
-set(P2PSENTRY_IF_GENERATED_HEADER_DIR ${IF_GENERATED_HEADER_DIR}/p2psentry)
-file(MAKE_DIRECTORY ${P2PSENTRY_IF_GENERATED_HEADER_DIR})
-add_custom_command(
-    TARGET silkinterfaces POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        ${P2PSENTRY_PROTO_HEADER}
-        ${P2PSENTRY_GRPC_HEADER}
-        ${P2PSENTRY_MOCK_GRPC_HEADER}
-        ${P2PSENTRY_IF_GENERATED_HEADER_DIR}
 )
 
 set(TXPOOL_IF_GENERATED_HEADER_DIR ${IF_GENERATED_HEADER_DIR}/txpool)
@@ -144,7 +129,7 @@ set(SILKRPC_LIBRARIES
     absl::flat_hash_map
     absl::flat_hash_set
     absl::btree
-    asio-grpc::asio-grpc-standalone-asio
+    asio-grpc::asio-grpc
     intx::intx
     gRPC::grpc++
     protobuf::libprotobuf

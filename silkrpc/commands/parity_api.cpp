@@ -39,7 +39,7 @@
 namespace silkrpc::commands {
 
 // https://eth.wiki/json-rpc/API#parity_getblockreceipts
-asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid parity_getBlockReceipts params: " + params.dump();
@@ -82,7 +82,7 @@ asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(const nlohm
 }
 
 // TODO(canepat) will raise error until Silkrpc implements Erigon2u1 https://github.com/ledgerwatch/erigon-lib/pull/559
-asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohmann::json& request, nlohmann::json& reply) {
     const auto params = request["params"];
     if (params.size() < 2) {
         auto error_msg = "invalid parity_listStorageKeys params: " + params.dump();
@@ -121,19 +121,20 @@ asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const nlohma
         SILKRPC_TRACE << "ParityRpcApi::handle_parity_list_storage_keys cursor id: " << cursor->cursor_id() << "\n";
         silkworm::Bytes seek_val = offset ? offset.value() : silkworm::Bytes{};
 
-        std::vector<silkworm::Bytes> keys;
+        std::vector<evmc::bytes32> keys;
         auto v = co_await cursor->seek_both(seek_bytes, seek_val);
         // We look for keys until we have the quantity we want or the key is invalid/empty
         while (v.size() >= silkworm::kHashLength && keys.size() != quantity) {
-            keys.push_back(v.substr(0, silkworm::kHashLength));
-            const auto kv_pair = co_await cursor->next();
+            auto value = silkworm::bytes32_from_hex(silkworm::to_hex(v));
+            keys.push_back(value);
+            const auto kv_pair = co_await cursor->next_dup();
+
             if (kv_pair.key != seek_bytes) {
                 break;
             }
             v = kv_pair.value;
         }
-
-        reply = make_json_content(reply["id"], keys);
+        reply = make_json_content(request["id"], keys);
     } catch (const std::invalid_argument& iv) {
         SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_content(request["id"], {});

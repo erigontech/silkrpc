@@ -22,9 +22,9 @@
 #include <string>
 #include <vector>
 
-#include <asio/awaitable.hpp>
-#include <asio/io_context.hpp>
-#include <asio/thread_pool.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/thread_pool.hpp>
 #include <nlohmann/json.hpp>
 
 #pragma GCC diagnostic push
@@ -81,6 +81,9 @@ public:
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_precompiled_run(const evmc_result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
+    void on_creation_completed(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
+
+
 
 private:
     std::vector<DebugLog>& logs_;
@@ -104,6 +107,7 @@ public:
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
     void on_precompiled_run(const evmc_result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
     void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
+    void on_creation_completed(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
 
     std::int64_t get_end_gas() const {return 0;}
 };
@@ -127,25 +131,29 @@ struct DebugExecutorResult {
 template<typename WorldState = silkworm::IntraBlockState, typename VM = silkworm::EVM>
 class DebugExecutor {
 public:
-    explicit DebugExecutor(asio::io_context& io_context, const core::rawdb::DatabaseReader& database_reader, asio::thread_pool& workers, const DebugConfig& config = DEFAULT_DEBUG_CONFIG)
-    : io_context_(io_context), database_reader_(database_reader), workers_{workers}, config_{config} {}
+    explicit DebugExecutor(
+        boost::asio::io_context& io_context,
+        const core::rawdb::DatabaseReader& database_reader,
+        boost::asio::thread_pool& workers,
+        const DebugConfig& config = DEFAULT_DEBUG_CONFIG)
+        : io_context_(io_context), database_reader_(database_reader), workers_{workers}, config_{config} {}
     virtual ~DebugExecutor() {}
 
     DebugExecutor(const DebugExecutor&) = delete;
     DebugExecutor& operator=(const DebugExecutor&) = delete;
 
-    asio::awaitable<std::vector<DebugTrace>> execute(const silkworm::Block& block);
-    asio::awaitable<DebugExecutorResult> execute(const silkworm::Block& block, const silkrpc::Call& call);
-    asio::awaitable<DebugExecutorResult> execute(const silkworm::Block& block, const silkrpc::Transaction& transaction) {
+    boost::asio::awaitable<std::vector<DebugTrace>> execute(const silkworm::Block& block);
+    boost::asio::awaitable<DebugExecutorResult> execute(const silkworm::Block& block, const silkrpc::Call& call);
+    boost::asio::awaitable<DebugExecutorResult> execute(const silkworm::Block& block, const silkrpc::Transaction& transaction) {
         return execute(block.header.number-1, block, transaction, transaction.transaction_index);
     }
 
 private:
-    asio::awaitable<DebugExecutorResult> execute(std::uint64_t block_number, const silkworm::Block& block, const silkrpc::Transaction& transaction, std::int32_t = -1);
+    boost::asio::awaitable<DebugExecutorResult> execute(std::uint64_t block_number, const silkworm::Block& block, const silkrpc::Transaction& transaction, std::int32_t = -1);
 
-    asio::io_context& io_context_;
+    boost::asio::io_context& io_context_;
     const core::rawdb::DatabaseReader& database_reader_;
-    asio::thread_pool& workers_;
+    boost::asio::thread_pool& workers_;
     const DebugConfig& config_;
 };
 } // namespace silkrpc::debug

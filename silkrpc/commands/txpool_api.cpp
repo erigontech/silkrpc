@@ -22,10 +22,10 @@
 namespace silkrpc::commands {
 
 // https://eth.wiki/json-rpc/API#txpool_status
-asio::awaitable<void> TxPoolRpcApi::handle_txpool_status(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> TxPoolRpcApi::handle_txpool_status(const nlohmann::json& request, nlohmann::json& reply) {
     try {
         const auto status = co_await tx_pool_->get_status();
-        TxPoolStatusInfo txpool_status{status.pending_count, status.queued_count, status.base_fee_count};
+        TxPoolStatusInfo txpool_status{status.base_fee_count, status.pending_count, status.queued_count};
         reply = make_json_content(request["id"], txpool_status);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -39,7 +39,7 @@ asio::awaitable<void> TxPoolRpcApi::handle_txpool_status(const nlohmann::json& r
 }
 
 // https://geth.ethereum.org/docs/rpc/ns-txpool
-asio::awaitable<void> TxPoolRpcApi::handle_txpool_content(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> TxPoolRpcApi::handle_txpool_content(const nlohmann::json& request, nlohmann::json& reply) {
     try {
         const auto txpool_transactions = co_await tx_pool_->get_transactions();
 
@@ -51,14 +51,15 @@ asio::awaitable<void> TxPoolRpcApi::handle_txpool_content(const nlohmann::json& 
         bool error = false;
         for (int i = 0; i < txpool_transactions.size(); i++) {
             silkworm::ByteView from{txpool_transactions[i].rlp};
+            std::string sender = silkworm::to_hex(txpool_transactions[i].sender, true);
             Transaction txn{};
-            const auto result = silkworm::rlp::decode(from, dynamic_cast<silkworm::Transaction&>(txn));
+            const auto result = silkworm::rlp::decode_transaction(from, dynamic_cast<silkworm::Transaction&>(txn), silkworm::rlp::Eip2718Wrapping::kBoth);
             if (result != silkworm::DecodingResult::kOk) {
+                SILKRPC_ERROR << "handle_txpool_content  rlp::decode failed sender: " << sender << "\n";
                 error = true;
                 break;
             }
             txn.queued_in_pool = true;
-            std::string sender = silkworm::to_hex(txpool_transactions[i].sender, true);
             if (txpool_transactions[i].transaction_type == silkrpc::txpool::TransactionType::QUEUED) {
                 transactions_content["queued"][sender].insert(std::make_pair(std::to_string(txn.nonce), txn));
             } else if (txpool_transactions[i].transaction_type == silkrpc::txpool::TransactionType::PENDING) {

@@ -25,7 +25,7 @@
 #include <silkrpc/config.hpp>
 
 #include <agrpc/grpc_context.hpp>
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/common/log.hpp>
@@ -44,19 +44,20 @@ public:
 
     uint64_t tx_id() const override { return tx_id_; }
 
-    asio::awaitable<void> open() override;
+    boost::asio::awaitable<void> open() override;
 
-    asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) override;
+    boost::asio::awaitable<std::shared_ptr<Cursor>> cursor(const std::string& table) override;
 
-    asio::awaitable<std::shared_ptr<CursorDupSort>> cursor_dup_sort(const std::string& table) override;
+    boost::asio::awaitable<std::shared_ptr<CursorDupSort>> cursor_dup_sort(const std::string& table) override;
 
-    asio::awaitable<void> close() override;
+    boost::asio::awaitable<void> close() override;
 
 private:
-    asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table);
+    boost::asio::awaitable<std::shared_ptr<CursorDupSort>> get_cursor(const std::string& table, bool is_cursor_dup_sort);
 
-    TxRpc tx_rpc_;
     std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
+    std::map<std::string, std::shared_ptr<CursorDupSort>> dup_cursors_;
+    TxRpc tx_rpc_;
     uint64_t tx_id_;
 };
 

@@ -21,7 +21,7 @@
 #include <memory>
 #include <optional>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <gmock/gmock.h>
 
 #include <silkrpc/common/util.hpp>
@@ -33,8 +33,8 @@ namespace silkrpc::test {
 
 class MockStateView : public ethdb::kv::StateView {
   public:
-    MOCK_METHOD((asio::awaitable<std::optional<silkworm::Bytes>>), get, (const silkworm::Bytes&));
-    MOCK_METHOD((asio::awaitable<std::optional<silkworm::Bytes>>), get_code, (const silkworm::Bytes&));
+    MOCK_METHOD((boost::asio::awaitable<std::optional<silkworm::Bytes>>), get, (const silkworm::Bytes&));
+    MOCK_METHOD((boost::asio::awaitable<std::optional<silkworm::Bytes>>), get_code, (const silkworm::Bytes&));
 };
 
 class MockStateCache : public ethdb::kv::StateCache {

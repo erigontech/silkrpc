@@ -85,7 +85,7 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::etherbase", "[silkrpc][ethbackend][ba
 
     SECTION("call etherbase and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::etherbase>()), asio::system_error);
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::etherbase>()), boost::system::system_error);
     }
 }
 
@@ -109,7 +109,7 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::protocol_version", "[silkrpc][ethback
 
     SECTION("call protocol_version and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::protocol_version>()), asio::system_error);
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::protocol_version>()), boost::system::system_error);
     }
 }
 
@@ -133,7 +133,7 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::net_version", "[silkrpc][ethbackend][
 
     SECTION("call net_version and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::net_version>()), asio::system_error);
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::net_version>()), boost::system::system_error);
     }
 }
 
@@ -157,7 +157,7 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::client_version", "[silkrpc][ethbacken
 
     SECTION("call client_version and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::client_version>()), asio::system_error);
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::client_version>()), boost::system::system_error);
     }
 }
 
@@ -181,7 +181,7 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::net_peer_count", "[silkrpc][ethbacken
 
     SECTION("call net_peer_count and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::net_peer_count>()), asio::system_error);
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::net_peer_count>()), boost::system::system_error);
     }
 }
 
@@ -237,7 +237,7 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::engine_get_payload_v1", "[silkrpc][et
 
     SECTION("call engine_get_payload_v1 and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::engine_get_payload_v1>(0)), asio::system_error);
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::engine_get_payload_v1>(0)), boost::system::system_error);
     }
 }
 
@@ -281,8 +281,7 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::engine_new_payload_v1", "[silkrpc][et
         ::remote::EngineStatus::INVALID,
         ::remote::EngineStatus::SYNCING,
         ::remote::EngineStatus::ACCEPTED,
-        ::remote::EngineStatus::INVALID_BLOCK_HASH,
-        ::remote::EngineStatus::INVALID_TERMINAL_BLOCK
+        ::remote::EngineStatus::INVALID_BLOCK_HASH
     };
     for (const auto engine_status : all_engine_statuses) {
         const auto engine_status_name{::remote::EngineStatus_Name(engine_status)};
@@ -305,7 +304,7 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::engine_new_payload_v1", "[silkrpc][et
 
     SECTION("call engine_new_payload_v1 and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::engine_new_payload_v1>(execution_payload)), asio::system_error);
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::engine_new_payload_v1>(execution_payload)), boost::system::system_error);
     }
 }
 
@@ -353,7 +352,7 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::engine_forkchoice_updated_v1", "[silk
 
     SECTION("call engine_forkchoice_updated_v1 and get error") {
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_cancelled(grpc_context_));
-        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::engine_forkchoice_updated_v1>(forkchoice_request)), asio::system_error);
+        CHECK_THROWS_AS((run<&ethbackend::RemoteBackEnd::engine_forkchoice_updated_v1>(forkchoice_request)), boost::system::system_error);
     }
 }
 

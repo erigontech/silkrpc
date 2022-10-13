@@ -16,8 +16,6 @@
 
 #include "error.hpp"
 
-#include <cstring>
-
 #include <catch2/catch.hpp>
 
 namespace silkrpc {
@@ -28,14 +26,14 @@ TEST_CASE("make error code with empty message", "[silkrpc][grpc][error]") {
     std::error_code error_code{make_error_code(123, "")};
     CHECK(error_code.value() == 123);
     CHECK(error_code.message() == "");
-    CHECK(std::strcmp(error_code.category().name(), "grpc") == 0);
+    CHECK(error_code.category().name() == std::string("grpc"));
 }
 
 TEST_CASE("make error code with non-empty message", "[silkrpc][grpc][error]") {
     std::error_code error_code{make_error_code(-123, "undefined error")};
     CHECK(error_code.value() == -123);
     CHECK(error_code.message() == "undefined error");
-    CHECK(std::strcmp(error_code.category().name(), "grpc") == 0);
+    CHECK(error_code.category().name() == std::string("grpc"));
 }
 
 } // namespace silkrpc

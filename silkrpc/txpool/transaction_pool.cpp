@@ -23,10 +23,10 @@
 
 namespace silkrpc::txpool {
 
-TransactionPool::TransactionPool(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context)
+TransactionPool::TransactionPool(boost::asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context)
     : TransactionPool(context.get_executor(), ::txpool::Txpool::NewStub(channel, grpc::StubOptions()), grpc_context) {}
 
-TransactionPool::TransactionPool(asio::io_context::executor_type executor, std::unique_ptr<::txpool::Txpool::StubInterface> stub, agrpc::GrpcContext& grpc_context)
+TransactionPool::TransactionPool(boost::asio::io_context::executor_type executor, std::unique_ptr<::txpool::Txpool::StubInterface> stub, agrpc::GrpcContext& grpc_context)
     : executor_(executor), stub_(std::move(stub)), grpc_context_(grpc_context) {
     SILKRPC_TRACE << "TransactionPool::ctor " << this << "\n";
 }
@@ -35,7 +35,7 @@ TransactionPool::~TransactionPool() {
     SILKRPC_TRACE << "TransactionPool::dtor " << this << "\n";
 }
 
-asio::awaitable<OperationResult> TransactionPool::add_transaction(const silkworm::ByteView& rlp_tx) {
+boost::asio::awaitable<OperationResult> TransactionPool::add_transaction(const silkworm::ByteView& rlp_tx) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "TransactionPool::add_transaction rlp_tx=" << silkworm::to_hex(rlp_tx) << "\n";
     ::txpool::AddRequest request;
@@ -71,7 +71,7 @@ asio::awaitable<OperationResult> TransactionPool::add_transaction(const silkworm
     co_return result;
 }
 
-asio::awaitable<std::optional<silkworm::Bytes>> TransactionPool::get_transaction(const evmc::bytes32& tx_hash) {
+boost::asio::awaitable<std::optional<silkworm::Bytes>> TransactionPool::get_transaction(const evmc::bytes32& tx_hash) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "TransactionPool::get_transaction tx_hash=" << tx_hash << "\n";
     auto hi = new ::types::H128{};
@@ -99,7 +99,7 @@ asio::awaitable<std::optional<silkworm::Bytes>> TransactionPool::get_transaction
     }
 }
 
-asio::awaitable<std::optional<uint64_t>> TransactionPool::nonce(const evmc::address& address) {
+boost::asio::awaitable<std::optional<uint64_t>> TransactionPool::nonce(const evmc::address& address) {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "TransactionPool::nonce address=" << address << "\n";
     ::txpool::NonceRequest request;
@@ -111,7 +111,7 @@ asio::awaitable<std::optional<uint64_t>> TransactionPool::nonce(const evmc::addr
     co_return reply.found() ? std::optional<uint64_t>{reply.nonce()} : std::nullopt;
 }
 
-asio::awaitable<StatusInfo> TransactionPool::get_status() {
+boost::asio::awaitable<StatusInfo> TransactionPool::get_status() {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "TransactionPool::get_status\n";
     ::txpool::StatusRequest request;
@@ -126,7 +126,7 @@ asio::awaitable<StatusInfo> TransactionPool::get_status() {
     co_return status_info;
 }
 
-asio::awaitable<TransactionsInPool> TransactionPool::get_transactions() {
+boost::asio::awaitable<TransactionsInPool> TransactionPool::get_transactions() {
     const auto start_time = clock_time::now();
     SILKRPC_DEBUG << "TransactionPool::get_transactions\n";
     ::txpool::AllRequest request;
@@ -136,16 +136,13 @@ asio::awaitable<TransactionsInPool> TransactionPool::get_transactions() {
     const auto txs_size = reply.txs_size();
     for (int i = 0; i < txs_size; i++) {
         const auto tx = reply.txs(i);
-        const auto sender_bytes = silkworm::from_hex(tx.sender());
         TransactionInfo element{};
-        if (sender_bytes.has_value()) {
-            element.sender = silkworm::to_evmc_address(sender_bytes.value());
-        }
+        element.sender = address_from_H160(tx.sender());
         const auto rlp = tx.rlptx();
         element.rlp = silkworm::Bytes{rlp.begin(), rlp.end()};
-        if (tx.type() == ::txpool::AllReply_Type_PENDING) {
+        if (tx.txntype() == ::txpool::AllReply_TxnType_PENDING) {
             element.transaction_type = PENDING;
-        } else if (tx.type() == ::txpool::AllReply_Type_QUEUED) {
+        } else if (tx.txntype() == ::txpool::AllReply_TxnType_QUEUED) {
             element.transaction_type = QUEUED;
         } else {
             element.transaction_type = BASE_FEE;
@@ -156,6 +153,17 @@ asio::awaitable<TransactionsInPool> TransactionPool::get_transactions() {
     co_return transactions_in_pool;
 }
 
+evmc::address TransactionPool::address_from_H160(const types::H160& h160) {
+    uint64_t hi_hi = h160.hi().hi();
+    uint64_t hi_lo = h160.hi().lo();
+    uint32_t lo = h160.lo();
+    evmc::address address{};
+    boost::endian::store_big_u64(address.bytes +  0, hi_hi);
+    boost::endian::store_big_u64(address.bytes +  8, hi_lo);
+    boost::endian::store_big_u32(address.bytes + 16, lo);
+    return address;
+}
+
 types::H160* TransactionPool::H160_from_address(const evmc::address& address) {
     auto h160{new types::H160()};
     auto hi{H128_from_bytes(address.bytes)};
@@ -163,6 +171,7 @@ types::H160* TransactionPool::H160_from_address(const evmc::address& address) {
     h160->set_lo(boost::endian::load_big_u32(address.bytes + 16));
     return h160;
 }
+
 types::H128* TransactionPool::H128_from_bytes(const uint8_t* bytes) {
     auto h128{new types::H128()};
     h128->set_hi(boost::endian::load_big_u64(bytes));

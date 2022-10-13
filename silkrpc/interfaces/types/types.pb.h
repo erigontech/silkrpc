@@ -47,7 +47,7 @@ struct TableStruct_types_2ftypes_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxiliaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[10]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[11]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -82,6 +82,9 @@ extern NodeInfoPortsDefaultTypeInternal _NodeInfoPorts_default_instance_;
 class NodeInfoReply;
 class NodeInfoReplyDefaultTypeInternal;
 extern NodeInfoReplyDefaultTypeInternal _NodeInfoReply_default_instance_;
+class PeerInfo;
+class PeerInfoDefaultTypeInternal;
+extern PeerInfoDefaultTypeInternal _PeerInfo_default_instance_;
 class VersionReply;
 class VersionReplyDefaultTypeInternal;
 extern VersionReplyDefaultTypeInternal _VersionReply_default_instance_;
@@ -96,6 +99,7 @@ template<> ::types::H256* Arena::CreateMaybeMessage<::types::H256>(Arena*);
 template<> ::types::H512* Arena::CreateMaybeMessage<::types::H512>(Arena*);
 template<> ::types::NodeInfoPorts* Arena::CreateMaybeMessage<::types::NodeInfoPorts>(Arena*);
 template<> ::types::NodeInfoReply* Arena::CreateMaybeMessage<::types::NodeInfoReply>(Arena*);
+template<> ::types::PeerInfo* Arena::CreateMaybeMessage<::types::PeerInfo>(Arena*);
 template<> ::types::VersionReply* Arena::CreateMaybeMessage<::types::VersionReply>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace types {
@@ -1991,6 +1995,298 @@ class NodeInfoReply PROTOBUF_FINAL :
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr listeneraddr_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr protocols_;
   ::types::NodeInfoPorts* ports_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_types_2ftypes_2eproto;
+};
+// -------------------------------------------------------------------
+
+class PeerInfo PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:types.PeerInfo) */ {
+ public:
+  inline PeerInfo() : PeerInfo(nullptr) {}
+  virtual ~PeerInfo();
+
+  PeerInfo(const PeerInfo& from);
+  PeerInfo(PeerInfo&& from) noexcept
+    : PeerInfo() {
+    *this = ::std::move(from);
+  }
+
+  inline PeerInfo& operator=(const PeerInfo& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline PeerInfo& operator=(PeerInfo&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const PeerInfo& default_instance();
+
+  static inline const PeerInfo* internal_default_instance() {
+    return reinterpret_cast<const PeerInfo*>(
+               &_PeerInfo_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    10;
+
+  friend void swap(PeerInfo& a, PeerInfo& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PeerInfo* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(PeerInfo* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline PeerInfo* New() const final {
+    return CreateMaybeMessage<PeerInfo>(nullptr);
+  }
+
+  PeerInfo* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<PeerInfo>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const PeerInfo& from);
+  void MergeFrom(const PeerInfo& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(PeerInfo* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "types.PeerInfo";
+  }
+  protected:
+  explicit PeerInfo(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_types_2ftypes_2eproto);
+    return ::descriptor_table_types_2ftypes_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kCapsFieldNumber = 5,
+    kIdFieldNumber = 1,
+    kNameFieldNumber = 2,
+    kEnodeFieldNumber = 3,
+    kEnrFieldNumber = 4,
+    kConnLocalAddrFieldNumber = 6,
+    kConnRemoteAddrFieldNumber = 7,
+    kConnIsInboundFieldNumber = 8,
+    kConnIsTrustedFieldNumber = 9,
+    kConnIsStaticFieldNumber = 10,
+  };
+  // repeated string caps = 5;
+  int caps_size() const;
+  private:
+  int _internal_caps_size() const;
+  public:
+  void clear_caps();
+  const std::string& caps(int index) const;
+  std::string* mutable_caps(int index);
+  void set_caps(int index, const std::string& value);
+  void set_caps(int index, std::string&& value);
+  void set_caps(int index, const char* value);
+  void set_caps(int index, const char* value, size_t size);
+  std::string* add_caps();
+  void add_caps(const std::string& value);
+  void add_caps(std::string&& value);
+  void add_caps(const char* value);
+  void add_caps(const char* value, size_t size);
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>& caps() const;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>* mutable_caps();
+  private:
+  const std::string& _internal_caps(int index) const;
+  std::string* _internal_add_caps();
+  public:
+
+  // string id = 1;
+  void clear_id();
+  const std::string& id() const;
+  void set_id(const std::string& value);
+  void set_id(std::string&& value);
+  void set_id(const char* value);
+  void set_id(const char* value, size_t size);
+  std::string* mutable_id();
+  std::string* release_id();
+  void set_allocated_id(std::string* id);
+  private:
+  const std::string& _internal_id() const;
+  void _internal_set_id(const std::string& value);
+  std::string* _internal_mutable_id();
+  public:
+
+  // string name = 2;
+  void clear_name();
+  const std::string& name() const;
+  void set_name(const std::string& value);
+  void set_name(std::string&& value);
+  void set_name(const char* value);
+  void set_name(const char* value, size_t size);
+  std::string* mutable_name();
+  std::string* release_name();
+  void set_allocated_name(std::string* name);
+  private:
+  const std::string& _internal_name() const;
+  void _internal_set_name(const std::string& value);
+  std::string* _internal_mutable_name();
+  public:
+
+  // string enode = 3;
+  void clear_enode();
+  const std::string& enode() const;
+  void set_enode(const std::string& value);
+  void set_enode(std::string&& value);
+  void set_enode(const char* value);
+  void set_enode(const char* value, size_t size);
+  std::string* mutable_enode();
+  std::string* release_enode();
+  void set_allocated_enode(std::string* enode);
+  private:
+  const std::string& _internal_enode() const;
+  void _internal_set_enode(const std::string& value);
+  std::string* _internal_mutable_enode();
+  public:
+
+  // string enr = 4;
+  void clear_enr();
+  const std::string& enr() const;
+  void set_enr(const std::string& value);
+  void set_enr(std::string&& value);
+  void set_enr(const char* value);
+  void set_enr(const char* value, size_t size);
+  std::string* mutable_enr();
+  std::string* release_enr();
+  void set_allocated_enr(std::string* enr);
+  private:
+  const std::string& _internal_enr() const;
+  void _internal_set_enr(const std::string& value);
+  std::string* _internal_mutable_enr();
+  public:
+
+  // string connLocalAddr = 6;
+  void clear_connlocaladdr();
+  const std::string& connlocaladdr() const;
+  void set_connlocaladdr(const std::string& value);
+  void set_connlocaladdr(std::string&& value);
+  void set_connlocaladdr(const char* value);
+  void set_connlocaladdr(const char* value, size_t size);
+  std::string* mutable_connlocaladdr();
+  std::string* release_connlocaladdr();
+  void set_allocated_connlocaladdr(std::string* connlocaladdr);
+  private:
+  const std::string& _internal_connlocaladdr() const;
+  void _internal_set_connlocaladdr(const std::string& value);
+  std::string* _internal_mutable_connlocaladdr();
+  public:
+
+  // string connRemoteAddr = 7;
+  void clear_connremoteaddr();
+  const std::string& connremoteaddr() const;
+  void set_connremoteaddr(const std::string& value);
+  void set_connremoteaddr(std::string&& value);
+  void set_connremoteaddr(const char* value);
+  void set_connremoteaddr(const char* value, size_t size);
+  std::string* mutable_connremoteaddr();
+  std::string* release_connremoteaddr();
+  void set_allocated_connremoteaddr(std::string* connremoteaddr);
+  private:
+  const std::string& _internal_connremoteaddr() const;
+  void _internal_set_connremoteaddr(const std::string& value);
+  std::string* _internal_mutable_connremoteaddr();
+  public:
+
+  // bool connIsInbound = 8;
+  void clear_connisinbound();
+  bool connisinbound() const;
+  void set_connisinbound(bool value);
+  private:
+  bool _internal_connisinbound() const;
+  void _internal_set_connisinbound(bool value);
+  public:
+
+  // bool connIsTrusted = 9;
+  void clear_connistrusted();
+  bool connistrusted() const;
+  void set_connistrusted(bool value);
+  private:
+  bool _internal_connistrusted() const;
+  void _internal_set_connistrusted(bool value);
+  public:
+
+  // bool connIsStatic = 10;
+  void clear_connisstatic();
+  bool connisstatic() const;
+  void set_connisstatic(bool value);
+  private:
+  bool _internal_connisstatic() const;
+  void _internal_set_connisstatic(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:types.PeerInfo)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string> caps_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr id_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr name_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr enode_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr enr_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr connlocaladdr_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr connremoteaddr_;
+  bool connisinbound_;
+  bool connistrusted_;
+  bool connisstatic_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_types_2ftypes_2eproto;
 };
@@ -4288,9 +4584,515 @@ inline void NodeInfoReply::set_allocated_protocols(std::string* protocols) {
   // @@protoc_insertion_point(field_set_allocated:types.NodeInfoReply.protocols)
 }
 
+// -------------------------------------------------------------------
+
+// PeerInfo
+
+// string id = 1;
+inline void PeerInfo::clear_id() {
+  id_.ClearToEmpty();
+}
+inline const std::string& PeerInfo::id() const {
+  // @@protoc_insertion_point(field_get:types.PeerInfo.id)
+  return _internal_id();
+}
+inline void PeerInfo::set_id(const std::string& value) {
+  _internal_set_id(value);
+  // @@protoc_insertion_point(field_set:types.PeerInfo.id)
+}
+inline std::string* PeerInfo::mutable_id() {
+  // @@protoc_insertion_point(field_mutable:types.PeerInfo.id)
+  return _internal_mutable_id();
+}
+inline const std::string& PeerInfo::_internal_id() const {
+  return id_.Get();
+}
+inline void PeerInfo::_internal_set_id(const std::string& value) {
+  
+  id_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
+}
+inline void PeerInfo::set_id(std::string&& value) {
+  
+  id_.Set(
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:types.PeerInfo.id)
+}
+inline void PeerInfo::set_id(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  id_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
+  // @@protoc_insertion_point(field_set_char:types.PeerInfo.id)
+}
+inline void PeerInfo::set_id(const char* value,
+    size_t size) {
+  
+  id_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:types.PeerInfo.id)
+}
+inline std::string* PeerInfo::_internal_mutable_id() {
+  
+  return id_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
+}
+inline std::string* PeerInfo::release_id() {
+  // @@protoc_insertion_point(field_release:types.PeerInfo.id)
+  return id_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void PeerInfo::set_allocated_id(std::string* id) {
+  if (id != nullptr) {
+    
+  } else {
+    
+  }
+  id_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), id,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:types.PeerInfo.id)
+}
+
+// string name = 2;
+inline void PeerInfo::clear_name() {
+  name_.ClearToEmpty();
+}
+inline const std::string& PeerInfo::name() const {
+  // @@protoc_insertion_point(field_get:types.PeerInfo.name)
+  return _internal_name();
+}
+inline void PeerInfo::set_name(const std::string& value) {
+  _internal_set_name(value);
+  // @@protoc_insertion_point(field_set:types.PeerInfo.name)
+}
+inline std::string* PeerInfo::mutable_name() {
+  // @@protoc_insertion_point(field_mutable:types.PeerInfo.name)
+  return _internal_mutable_name();
+}
+inline const std::string& PeerInfo::_internal_name() const {
+  return name_.Get();
+}
+inline void PeerInfo::_internal_set_name(const std::string& value) {
+  
+  name_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
+}
+inline void PeerInfo::set_name(std::string&& value) {
+  
+  name_.Set(
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:types.PeerInfo.name)
+}
+inline void PeerInfo::set_name(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  name_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
+  // @@protoc_insertion_point(field_set_char:types.PeerInfo.name)
+}
+inline void PeerInfo::set_name(const char* value,
+    size_t size) {
+  
+  name_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:types.PeerInfo.name)
+}
+inline std::string* PeerInfo::_internal_mutable_name() {
+  
+  return name_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
+}
+inline std::string* PeerInfo::release_name() {
+  // @@protoc_insertion_point(field_release:types.PeerInfo.name)
+  return name_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void PeerInfo::set_allocated_name(std::string* name) {
+  if (name != nullptr) {
+    
+  } else {
+    
+  }
+  name_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), name,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:types.PeerInfo.name)
+}
+
+// string enode = 3;
+inline void PeerInfo::clear_enode() {
+  enode_.ClearToEmpty();
+}
+inline const std::string& PeerInfo::enode() const {
+  // @@protoc_insertion_point(field_get:types.PeerInfo.enode)
+  return _internal_enode();
+}
+inline void PeerInfo::set_enode(const std::string& value) {
+  _internal_set_enode(value);
+  // @@protoc_insertion_point(field_set:types.PeerInfo.enode)
+}
+inline std::string* PeerInfo::mutable_enode() {
+  // @@protoc_insertion_point(field_mutable:types.PeerInfo.enode)
+  return _internal_mutable_enode();
+}
+inline const std::string& PeerInfo::_internal_enode() const {
+  return enode_.Get();
+}
+inline void PeerInfo::_internal_set_enode(const std::string& value) {
+  
+  enode_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
+}
+inline void PeerInfo::set_enode(std::string&& value) {
+  
+  enode_.Set(
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:types.PeerInfo.enode)
+}
+inline void PeerInfo::set_enode(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  enode_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
+  // @@protoc_insertion_point(field_set_char:types.PeerInfo.enode)
+}
+inline void PeerInfo::set_enode(const char* value,
+    size_t size) {
+  
+  enode_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:types.PeerInfo.enode)
+}
+inline std::string* PeerInfo::_internal_mutable_enode() {
+  
+  return enode_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
+}
+inline std::string* PeerInfo::release_enode() {
+  // @@protoc_insertion_point(field_release:types.PeerInfo.enode)
+  return enode_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void PeerInfo::set_allocated_enode(std::string* enode) {
+  if (enode != nullptr) {
+    
+  } else {
+    
+  }
+  enode_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), enode,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:types.PeerInfo.enode)
+}
+
+// string enr = 4;
+inline void PeerInfo::clear_enr() {
+  enr_.ClearToEmpty();
+}
+inline const std::string& PeerInfo::enr() const {
+  // @@protoc_insertion_point(field_get:types.PeerInfo.enr)
+  return _internal_enr();
+}
+inline void PeerInfo::set_enr(const std::string& value) {
+  _internal_set_enr(value);
+  // @@protoc_insertion_point(field_set:types.PeerInfo.enr)
+}
+inline std::string* PeerInfo::mutable_enr() {
+  // @@protoc_insertion_point(field_mutable:types.PeerInfo.enr)
+  return _internal_mutable_enr();
+}
+inline const std::string& PeerInfo::_internal_enr() const {
+  return enr_.Get();
+}
+inline void PeerInfo::_internal_set_enr(const std::string& value) {
+  
+  enr_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
+}
+inline void PeerInfo::set_enr(std::string&& value) {
+  
+  enr_.Set(
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:types.PeerInfo.enr)
+}
+inline void PeerInfo::set_enr(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  enr_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
+  // @@protoc_insertion_point(field_set_char:types.PeerInfo.enr)
+}
+inline void PeerInfo::set_enr(const char* value,
+    size_t size) {
+  
+  enr_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:types.PeerInfo.enr)
+}
+inline std::string* PeerInfo::_internal_mutable_enr() {
+  
+  return enr_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
+}
+inline std::string* PeerInfo::release_enr() {
+  // @@protoc_insertion_point(field_release:types.PeerInfo.enr)
+  return enr_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void PeerInfo::set_allocated_enr(std::string* enr) {
+  if (enr != nullptr) {
+    
+  } else {
+    
+  }
+  enr_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), enr,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:types.PeerInfo.enr)
+}
+
+// repeated string caps = 5;
+inline int PeerInfo::_internal_caps_size() const {
+  return caps_.size();
+}
+inline int PeerInfo::caps_size() const {
+  return _internal_caps_size();
+}
+inline void PeerInfo::clear_caps() {
+  caps_.Clear();
+}
+inline std::string* PeerInfo::add_caps() {
+  // @@protoc_insertion_point(field_add_mutable:types.PeerInfo.caps)
+  return _internal_add_caps();
+}
+inline const std::string& PeerInfo::_internal_caps(int index) const {
+  return caps_.Get(index);
+}
+inline const std::string& PeerInfo::caps(int index) const {
+  // @@protoc_insertion_point(field_get:types.PeerInfo.caps)
+  return _internal_caps(index);
+}
+inline std::string* PeerInfo::mutable_caps(int index) {
+  // @@protoc_insertion_point(field_mutable:types.PeerInfo.caps)
+  return caps_.Mutable(index);
+}
+inline void PeerInfo::set_caps(int index, const std::string& value) {
+  // @@protoc_insertion_point(field_set:types.PeerInfo.caps)
+  caps_.Mutable(index)->assign(value);
+}
+inline void PeerInfo::set_caps(int index, std::string&& value) {
+  // @@protoc_insertion_point(field_set:types.PeerInfo.caps)
+  caps_.Mutable(index)->assign(std::move(value));
+}
+inline void PeerInfo::set_caps(int index, const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  caps_.Mutable(index)->assign(value);
+  // @@protoc_insertion_point(field_set_char:types.PeerInfo.caps)
+}
+inline void PeerInfo::set_caps(int index, const char* value, size_t size) {
+  caps_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_set_pointer:types.PeerInfo.caps)
+}
+inline std::string* PeerInfo::_internal_add_caps() {
+  return caps_.Add();
+}
+inline void PeerInfo::add_caps(const std::string& value) {
+  caps_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add:types.PeerInfo.caps)
+}
+inline void PeerInfo::add_caps(std::string&& value) {
+  caps_.Add(std::move(value));
+  // @@protoc_insertion_point(field_add:types.PeerInfo.caps)
+}
+inline void PeerInfo::add_caps(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  caps_.Add()->assign(value);
+  // @@protoc_insertion_point(field_add_char:types.PeerInfo.caps)
+}
+inline void PeerInfo::add_caps(const char* value, size_t size) {
+  caps_.Add()->assign(reinterpret_cast<const char*>(value), size);
+  // @@protoc_insertion_point(field_add_pointer:types.PeerInfo.caps)
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>&
+PeerInfo::caps() const {
+  // @@protoc_insertion_point(field_list:types.PeerInfo.caps)
+  return caps_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField<std::string>*
+PeerInfo::mutable_caps() {
+  // @@protoc_insertion_point(field_mutable_list:types.PeerInfo.caps)
+  return &caps_;
+}
+
+// string connLocalAddr = 6;
+inline void PeerInfo::clear_connlocaladdr() {
+  connlocaladdr_.ClearToEmpty();
+}
+inline const std::string& PeerInfo::connlocaladdr() const {
+  // @@protoc_insertion_point(field_get:types.PeerInfo.connLocalAddr)
+  return _internal_connlocaladdr();
+}
+inline void PeerInfo::set_connlocaladdr(const std::string& value) {
+  _internal_set_connlocaladdr(value);
+  // @@protoc_insertion_point(field_set:types.PeerInfo.connLocalAddr)
+}
+inline std::string* PeerInfo::mutable_connlocaladdr() {
+  // @@protoc_insertion_point(field_mutable:types.PeerInfo.connLocalAddr)
+  return _internal_mutable_connlocaladdr();
+}
+inline const std::string& PeerInfo::_internal_connlocaladdr() const {
+  return connlocaladdr_.Get();
+}
+inline void PeerInfo::_internal_set_connlocaladdr(const std::string& value) {
+  
+  connlocaladdr_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
+}
+inline void PeerInfo::set_connlocaladdr(std::string&& value) {
+  
+  connlocaladdr_.Set(
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:types.PeerInfo.connLocalAddr)
+}
+inline void PeerInfo::set_connlocaladdr(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  connlocaladdr_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
+  // @@protoc_insertion_point(field_set_char:types.PeerInfo.connLocalAddr)
+}
+inline void PeerInfo::set_connlocaladdr(const char* value,
+    size_t size) {
+  
+  connlocaladdr_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:types.PeerInfo.connLocalAddr)
+}
+inline std::string* PeerInfo::_internal_mutable_connlocaladdr() {
+  
+  return connlocaladdr_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
+}
+inline std::string* PeerInfo::release_connlocaladdr() {
+  // @@protoc_insertion_point(field_release:types.PeerInfo.connLocalAddr)
+  return connlocaladdr_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void PeerInfo::set_allocated_connlocaladdr(std::string* connlocaladdr) {
+  if (connlocaladdr != nullptr) {
+    
+  } else {
+    
+  }
+  connlocaladdr_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), connlocaladdr,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:types.PeerInfo.connLocalAddr)
+}
+
+// string connRemoteAddr = 7;
+inline void PeerInfo::clear_connremoteaddr() {
+  connremoteaddr_.ClearToEmpty();
+}
+inline const std::string& PeerInfo::connremoteaddr() const {
+  // @@protoc_insertion_point(field_get:types.PeerInfo.connRemoteAddr)
+  return _internal_connremoteaddr();
+}
+inline void PeerInfo::set_connremoteaddr(const std::string& value) {
+  _internal_set_connremoteaddr(value);
+  // @@protoc_insertion_point(field_set:types.PeerInfo.connRemoteAddr)
+}
+inline std::string* PeerInfo::mutable_connremoteaddr() {
+  // @@protoc_insertion_point(field_mutable:types.PeerInfo.connRemoteAddr)
+  return _internal_mutable_connremoteaddr();
+}
+inline const std::string& PeerInfo::_internal_connremoteaddr() const {
+  return connremoteaddr_.Get();
+}
+inline void PeerInfo::_internal_set_connremoteaddr(const std::string& value) {
+  
+  connremoteaddr_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
+}
+inline void PeerInfo::set_connremoteaddr(std::string&& value) {
+  
+  connremoteaddr_.Set(
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:types.PeerInfo.connRemoteAddr)
+}
+inline void PeerInfo::set_connremoteaddr(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  connremoteaddr_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
+  // @@protoc_insertion_point(field_set_char:types.PeerInfo.connRemoteAddr)
+}
+inline void PeerInfo::set_connremoteaddr(const char* value,
+    size_t size) {
+  
+  connremoteaddr_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:types.PeerInfo.connRemoteAddr)
+}
+inline std::string* PeerInfo::_internal_mutable_connremoteaddr() {
+  
+  return connremoteaddr_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
+}
+inline std::string* PeerInfo::release_connremoteaddr() {
+  // @@protoc_insertion_point(field_release:types.PeerInfo.connRemoteAddr)
+  return connremoteaddr_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void PeerInfo::set_allocated_connremoteaddr(std::string* connremoteaddr) {
+  if (connremoteaddr != nullptr) {
+    
+  } else {
+    
+  }
+  connremoteaddr_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), connremoteaddr,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:types.PeerInfo.connRemoteAddr)
+}
+
+// bool connIsInbound = 8;
+inline void PeerInfo::clear_connisinbound() {
+  connisinbound_ = false;
+}
+inline bool PeerInfo::_internal_connisinbound() const {
+  return connisinbound_;
+}
+inline bool PeerInfo::connisinbound() const {
+  // @@protoc_insertion_point(field_get:types.PeerInfo.connIsInbound)
+  return _internal_connisinbound();
+}
+inline void PeerInfo::_internal_set_connisinbound(bool value) {
+  
+  connisinbound_ = value;
+}
+inline void PeerInfo::set_connisinbound(bool value) {
+  _internal_set_connisinbound(value);
+  // @@protoc_insertion_point(field_set:types.PeerInfo.connIsInbound)
+}
+
+// bool connIsTrusted = 9;
+inline void PeerInfo::clear_connistrusted() {
+  connistrusted_ = false;
+}
+inline bool PeerInfo::_internal_connistrusted() const {
+  return connistrusted_;
+}
+inline bool PeerInfo::connistrusted() const {
+  // @@protoc_insertion_point(field_get:types.PeerInfo.connIsTrusted)
+  return _internal_connistrusted();
+}
+inline void PeerInfo::_internal_set_connistrusted(bool value) {
+  
+  connistrusted_ = value;
+}
+inline void PeerInfo::set_connistrusted(bool value) {
+  _internal_set_connistrusted(value);
+  // @@protoc_insertion_point(field_set:types.PeerInfo.connIsTrusted)
+}
+
+// bool connIsStatic = 10;
+inline void PeerInfo::clear_connisstatic() {
+  connisstatic_ = false;
+}
+inline bool PeerInfo::_internal_connisstatic() const {
+  return connisstatic_;
+}
+inline bool PeerInfo::connisstatic() const {
+  // @@protoc_insertion_point(field_get:types.PeerInfo.connIsStatic)
+  return _internal_connisstatic();
+}
+inline void PeerInfo::_internal_set_connisstatic(bool value) {
+  
+  connisstatic_ = value;
+}
+inline void PeerInfo::set_connisstatic(bool value) {
+  _internal_set_connisstatic(value);
+  // @@protoc_insertion_point(field_set:types.PeerInfo.connIsStatic)
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

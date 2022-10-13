@@ -21,7 +21,7 @@
 
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/concurrency/context_pool.hpp>
@@ -43,12 +43,12 @@ public:
     ErigonRpcApi& operator=(const ErigonRpcApi&) = delete;
 
 protected:
-    asio::awaitable<void> handle_erigon_get_block_by_timestamp(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_erigon_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_erigon_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_erigon_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_erigon_forks(const nlohmann::json& request, nlohmann::json& reply);
-    asio::awaitable<void> handle_erigon_issuance(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_erigon_get_block_by_timestamp(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_erigon_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_erigon_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_erigon_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_erigon_forks(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_erigon_watch_the_burn(const nlohmann::json& request, nlohmann::json& reply);
 
 private:
     Context& context_;

@@ -23,8 +23,8 @@
 #include <silkrpc/config.hpp>
 
 #include <agrpc/grpc_context.hpp>
-#include <asio/io_context.hpp>
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 #include <grpcpp/grpcpp.h>
@@ -51,24 +51,24 @@ struct MiningResult {
 
 class Miner final {
 public:
-    explicit Miner(asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context);
-    explicit Miner(asio::io_context::executor_type executor, std::unique_ptr<::txpool::Mining::StubInterface> stub,
+    explicit Miner(boost::asio::io_context& context, std::shared_ptr<grpc::Channel> channel, agrpc::GrpcContext& grpc_context);
+    explicit Miner(boost::asio::io_context::executor_type executor, std::unique_ptr<::txpool::Mining::StubInterface> stub,
         agrpc::GrpcContext& grpc_context);
 
     ~Miner();
 
-    asio::awaitable<WorkResult> get_work();
+    boost::asio::awaitable<WorkResult> get_work();
 
-    asio::awaitable<bool> submit_work(const silkworm::Bytes& block_nonce, const evmc::bytes32& pow_hash, const evmc::bytes32& digest);
+    boost::asio::awaitable<bool> submit_work(const silkworm::Bytes& block_nonce, const evmc::bytes32& pow_hash, const evmc::bytes32& digest);
 
-    asio::awaitable<bool> submit_hash_rate(const intx::uint256& rate, const evmc::bytes32& id);
+    boost::asio::awaitable<bool> submit_hash_rate(const intx::uint256& rate, const evmc::bytes32& id);
 
-    asio::awaitable<uint64_t> get_hash_rate();
+    boost::asio::awaitable<uint64_t> get_hash_rate();
 
-    asio::awaitable<MiningResult> get_mining();
+    boost::asio::awaitable<MiningResult> get_mining();
 
 private:
-    asio::io_context::executor_type executor_;
+    boost::asio::io_context::executor_type executor_;
     std::unique_ptr<::txpool::Mining::StubInterface> stub_;
     agrpc::GrpcContext& grpc_context_;
 };

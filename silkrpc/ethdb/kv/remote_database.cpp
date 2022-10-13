@@ -35,7 +35,7 @@ RemoteDatabase::~RemoteDatabase() {
     SILKRPC_TRACE << "RemoteDatabase::dtor " << this << "\n";
 }
 
-asio::awaitable<std::unique_ptr<Transaction>> RemoteDatabase::begin() {
+boost::asio::awaitable<std::unique_ptr<Transaction>> RemoteDatabase::begin() {
     SILKRPC_TRACE << "RemoteDatabase::begin " << this << " start\n";
     auto txn = std::make_unique<RemoteTransaction>(*stub_, grpc_context_);
     co_await txn->open();

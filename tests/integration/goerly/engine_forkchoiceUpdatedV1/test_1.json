@@ -18,10 +18,7 @@
             "id": 1
         },
         "response": {
-            "error": {
-                "code": 100,
-                "message": "unknown method EngineForkChoiceUpdatedV1 for service remote.ETHBACKEND"
-            },
+            "result":null,
             "id": 1,
             "jsonrpc": "2.0"
         }

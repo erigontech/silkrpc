@@ -37,8 +37,8 @@ struct ProtocolVersion {
     uint32_t patch;
 };
 
-constexpr auto KV_SERVICE_API_VERSION = ProtocolVersion{4, 1, 0};
-constexpr auto ETHBACKEND_SERVICE_API_VERSION = ProtocolVersion{2, 3, 0};
+constexpr auto KV_SERVICE_API_VERSION = ProtocolVersion{6, 0, 0};
+constexpr auto ETHBACKEND_SERVICE_API_VERSION = ProtocolVersion{3, 1, 0};
 constexpr auto MINING_SERVICE_API_VERSION = ProtocolVersion{1, 0, 0};
 constexpr auto TXPOOL_SERVICE_API_VERSION = ProtocolVersion{1, 0, 0};
 

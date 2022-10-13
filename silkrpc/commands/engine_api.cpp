@@ -30,7 +30,7 @@ using evmc::literals::operator""_bytes32;
 
 // Format for params is a list which includes a payloadId ie. [payloadId]
 // https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_getpayloadv1
-asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
     if (params.size() != 1) {
@@ -43,21 +43,25 @@ asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nlohmann:
     try {
     #endif
         const auto payload_id = params[0].get<std::string>();
-        reply = co_await backend_->engine_get_payload_v1(std::stoul(payload_id, 0, 16));
+        auto payload = co_await backend_->engine_get_payload_v1(std::stoul(payload_id, 0, 16));
+        reply = make_json_content(request["id"], payload);
     #ifndef BUILD_COVERAGE
+    } catch (const boost::system::system_error& se) {
+        SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request.at("id"), 100, e.what());
+        reply = make_json_error(request["id"], 100, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        reply = make_json_error(request.at("id"), 100, "unexpected exception");
+        reply = make_json_error(request["id"], 100, "unexpected exception");
     }
     #endif
 }
 
 // Format for params is a JSON object ie [ExecutionPayload]
 // https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_newpayloadv1
-asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
     if (params.size() != 1) {
@@ -70,14 +74,18 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
     try {
     #endif
         const auto payload = params[0].get<ExecutionPayload>();
-        reply = co_await backend_->engine_new_payload_v1(payload);
+        auto new_payload = co_await backend_->engine_new_payload_v1(payload);
+        reply = make_json_content(request["id"], new_payload);
     #ifndef BUILD_COVERAGE
+    } catch (const boost::system::system_error& se) {
+        SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request.at("id"), 100, e.what());
+        reply = make_json_error(request["id"], 100, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        reply = make_json_error(request.at("id"), 100, "unexpected exception");
+        reply = make_json_error(request["id"], 100, "unexpected exception");
     }
     #endif
 }
@@ -85,7 +93,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nlohmann:
 // Format for params is a JSON list containing two objects
 // one ForkchoiceState and one PayloadAttributes, i.e. [ForkchoiceState, PayloadAttributes]
 // https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_forkchoiceupdatedv1
-asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
 
     if (params.size() != 1 && params.size() != 2) {
@@ -97,7 +105,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nl
     #ifndef BUILD_COVERAGE
     try {
     #endif
-        constexpr auto zero_hash = 0_bytes32;
+        constexpr auto zero_hash = 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32;
         const ForkchoiceState forkchoice_state = params[0].get<ForkchoiceState>();
 
         if (forkchoice_state.safe_block_hash == zero_hash) {
@@ -120,15 +128,20 @@ asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nl
                 .forkchoice_state = forkchoice_state,
                 .payload_attributes = std::make_optional(payload_attributes)
             };
-            reply = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
+            const auto fork_updated = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
+            reply = make_json_content(request["id"], fork_updated);
         } else {
             const ForkchoiceUpdatedRequest forkchoice_update_request{
                 .forkchoice_state = forkchoice_state,
                 .payload_attributes = std::nullopt
             };
-            reply = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
+            const auto fork_updated = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
+            reply = make_json_content(request["id"], fork_updated);
         }
     #ifndef BUILD_COVERAGE
+    } catch (const boost::system::system_error& se) {
+        SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request.at("id"), 100, e.what());
@@ -141,7 +154,7 @@ asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nl
 
 // Checks if the transition configurations of the Execution Layer is equal to the ones in the Consensus Layer
 // Format for params is a JSON list of TransitionConfiguration, i.e. [TransitionConfiguration]
-asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configuration_v1(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configuration_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
     if (params.size() != 1) {
         auto error_msg = "invalid engine_exchangeTransitionConfigurationV1 params: " + params.dump();
@@ -187,11 +200,12 @@ asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_configurat
             reply = make_json_error(request.at("id"), 100, "incorrect terminal block hash");
             co_return;
         }
-        reply = TransitionConfiguration{
+        const auto transition_configuration = TransitionConfiguration{
             .terminal_total_difficulty = config.terminal_total_difficulty.value(),
             .terminal_block_hash = config.terminal_block_hash.value(),
             .terminal_block_number = config.terminal_block_number.value_or(0) // we default to returning zero if we dont have terminal_block_number
         };
+        reply = make_json_content(request["id"], transition_configuration);
     #ifndef BUILD_COVERAGE
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";

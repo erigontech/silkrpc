@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
@@ -35,17 +35,17 @@ public:
 
     uint64_t tx_id() const override { return tx_id_; }
 
-    asio::awaitable<void> open() override { co_return; }
+    boost::asio::awaitable<void> open() override { co_return; }
 
-    asio::awaitable<std::shared_ptr<ethdb::Cursor>> cursor(const std::string& /*table*/) override {
+    boost::asio::awaitable<std::shared_ptr<ethdb::Cursor>> cursor(const std::string& /*table*/) override {
         co_return cursor_;
     }
 
-    asio::awaitable<std::shared_ptr<ethdb::CursorDupSort>> cursor_dup_sort(const std::string& /*table*/) override {
+    boost::asio::awaitable<std::shared_ptr<ethdb::CursorDupSort>> cursor_dup_sort(const std::string& /*table*/) override {
         co_return cursor_;
     }
 
-    asio::awaitable<void> close() override { co_return; }
+    boost::asio::awaitable<void> close() override { co_return; }
 
 private:
     uint64_t tx_id_;

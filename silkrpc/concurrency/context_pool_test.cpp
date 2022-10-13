@@ -21,6 +21,7 @@
 #include <string>
 #include <thread>
 
+#include <boost/asio/post.hpp>
 #include <catch2/catch.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -144,14 +145,14 @@ TEST_CASE("run context pool", "[silkrpc][context_pool]") {
     SECTION("running 1 thread") {
         ContextPool cp{1, create_channel};
         auto context_pool_thread = std::thread([&]() { cp.run(); });
-        asio::post(cp.next_io_context(), [&]() { cp.stop(); });
+        boost::asio::post(cp.next_io_context(), [&]() { cp.stop(); });
         CHECK_NOTHROW(context_pool_thread.join());
     }
 
     SECTION("running 3 thread") {
         ContextPool cp{3, create_channel};
         auto context_pool_thread = std::thread([&]() { cp.run(); });
-        asio::post(cp.next_io_context(), [&]() { cp.stop(); });
+        boost::asio::post(cp.next_io_context(), [&]() { cp.stop(); });
         CHECK_NOTHROW(context_pool_thread.join());
     }
 
@@ -160,8 +161,8 @@ TEST_CASE("run context pool", "[silkrpc][context_pool]") {
         ContextPool cp2{3, create_channel};
         auto context_pool_thread1 = std::thread([&]() { cp1.run(); });
         auto context_pool_thread2 = std::thread([&]() { cp2.run(); });
-        asio::post(cp1.next_io_context(), [&]() { cp1.stop(); });
-        asio::post(cp2.next_io_context(), [&]() { cp2.stop(); });
+        boost::asio::post(cp1.next_io_context(), [&]() { cp1.stop(); });
+        boost::asio::post(cp2.next_io_context(), [&]() { cp2.stop(); });
         CHECK_NOTHROW(context_pool_thread1.join());
         CHECK_NOTHROW(context_pool_thread2.join());
     }
@@ -186,10 +187,10 @@ TEST_CASE("stop context pool", "[silkrpc][context_pool]") {
     SECTION("already stopped after run in dedicated thread") {
         ContextPool cp{3, create_channel};
         auto context_pool_thread = std::thread([&]() { cp.run(); });
-        asio::post(cp.next_io_context(), [&]() { cp.stop(); });
-        asio::post(cp.next_io_context(), [&]() { cp.stop(); });
+        boost::asio::post(cp.next_io_context(), [&]() { cp.stop(); });
+        boost::asio::post(cp.next_io_context(), [&]() { cp.stop(); });
         context_pool_thread.join();
-        asio::post(cp.next_io_context(), [&]() { cp.stop(); });
+        boost::asio::post(cp.next_io_context(), [&]() { cp.stop(); });
     }
 }
 
@@ -207,7 +208,7 @@ TEST_CASE("cannot restart context pool", "[silkrpc][context_pool]") {
     SECTION("running 3 thread") {
         ContextPool cp{3, create_channel};
         auto context_pool_thread = std::thread([&]() { cp.run(); });
-        asio::post(cp.next_io_context(), [&]() { cp.stop(); });
+        boost::asio::post(cp.next_io_context(), [&]() { cp.stop(); });
         CHECK_NOTHROW(context_pool_thread.join());
         CHECK_THROWS_AS(cp.start(), std::logic_error);
     }

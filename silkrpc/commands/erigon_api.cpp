@@ -46,7 +46,7 @@ ErigonRpcApi::ErigonRpcApi(Context& context)
       state_cache_(context.state_cache()) {}
 
 // https://eth.wiki/json-rpc/API#erigon_getBlockByTimestamp
-asio::awaitable<void> ErigonRpcApi::handle_erigon_get_block_by_timestamp(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_block_by_timestamp(const nlohmann::json& request, nlohmann::json& reply) {
     // Decode request parameters
     const auto params = request["params"];
     if (params.size() != 2) {
@@ -82,7 +82,7 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_block_by_timestamp(const n
             block_number = core::kEarliestBlockNumber;
         } else {
             // Good-ol' binary search to find the lowest block header matching timestamp
-            const auto matching_block_number = co_await binary_search(current_block_number, [&](uint64_t i) -> asio::awaitable<bool> {
+            const auto matching_block_number = co_await binary_search(current_block_number, [&](uint64_t i) -> boost::asio::awaitable<bool> {
                 const auto header = co_await core::rawdb::read_header_by_number(tx_database, i);
                 co_return header.timestamp >= timestamp;
             });
@@ -115,7 +115,7 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_block_by_timestamp(const n
 }
 
 // https://eth.wiki/json-rpc/API#erigon_getHeaderByHash
-asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid erigon_getHeaderByHash params: " + params.dump();
@@ -147,7 +147,7 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_hash(const nlohm
 }
 
 // https://eth.wiki/json-rpc/API#erigon_getHeaderByNumber
-asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid erigon_getHeaderByNumber params: " + params.dump();
@@ -188,7 +188,7 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_number(const nlo
 }
 
 // https://eth.wiki/json-rpc/API#erigon_getlogsbyhash
-asio::awaitable<void> ErigonRpcApi::handle_erigon_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_logs_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid erigon_getHeaderByHash params: " + params.dump();
@@ -208,11 +208,11 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_logs_by_hash(const nlohman
         const auto receipts{co_await core::get_receipts(tx_database, block_with_hash)};
 
         SILKRPC_DEBUG << "receipts.size(): " << receipts.size() << "\n";
-        std::vector<Log> logs{};
+        std::vector<Logs> logs{};
         logs.reserve(receipts.size());
         for (const auto receipt : receipts) {
             SILKRPC_DEBUG << "receipt.logs.size(): " << receipt.logs.size() << "\n";
-            logs.insert(logs.end(), receipt.logs.begin(), receipt.logs.end());
+            logs.push_back(receipt.logs);
         }
         SILKRPC_DEBUG << "logs.size(): " << logs.size() << "\n";
 
@@ -230,7 +230,7 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_get_logs_by_hash(const nlohman
 }
 
 // https://eth.wiki/json-rpc/API#erigon_forks
-asio::awaitable<void> ErigonRpcApi::handle_erigon_forks(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_forks(const nlohmann::json& request, nlohmann::json& reply) {
     auto tx = co_await database_->begin();
 
     try {
@@ -254,11 +254,11 @@ asio::awaitable<void> ErigonRpcApi::handle_erigon_forks(const nlohmann::json& re
     co_return;
 }
 
-// https://eth.wiki/json-rpc/API#erigon_issuance
-asio::awaitable<void> ErigonRpcApi::handle_erigon_issuance(const nlohmann::json& request, nlohmann::json& reply) {
+// https://eth.wiki/json-rpc/API#erigon_WatchTheBurn
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];
     if (params.size() != 1) {
-        auto error_msg = "invalid erigon_issuance params: " + params.dump();
+        auto error_msg = "invalid erigon_watchTheBurn params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;

@@ -61,6 +61,11 @@ std::ostream& operator<<(std::ostream& out, const TraceConfig& tc) {
     return out;
 }
 
+void from_json(const nlohmann::json& json, TraceCall& cm) {
+    cm.call = json.at(0);
+    cm.trace_config = json.at(1);
+}
+
 void to_json(nlohmann::json& json, const VmTrace& vm_trace) {
     json["code"] = vm_trace.code;
     json["ops"] = vm_trace.ops;
@@ -227,6 +232,14 @@ void to_json(nlohmann::json& json, const TraceCallResult& result) {
     to_json(json, result.traces);
 }
 
+void to_json(nlohmann::json& json, const TraceManyCallResult& result) {
+    json = nlohmann::json::array();
+    for (const auto& trace : result.traces) {
+        json.push_back(nlohmann::json::value_t::null);
+        to_json(json.at(json.size() - 1), trace);
+    }
+}
+
 int get_stack_count(std::uint8_t op_code) {
     int count = 0;
     switch (op_code) {
@@ -283,7 +296,7 @@ int get_stack_count(std::uint8_t op_code) {
         case evmc_opcode::OP_MOD:
         case evmc_opcode::OP_SIGNEXTEND:
         case evmc_opcode::OP_GASLIMIT:
-        case evmc_opcode::OP_DIFFICULTY:
+        case evmc_opcode::OP_PREVRANDAO:
         case evmc_opcode::OP_SGT:
         case evmc_opcode::OP_GASPRICE:
         case evmc_opcode::OP_MSIZE:
@@ -294,6 +307,9 @@ int get_stack_count(std::uint8_t op_code) {
         case evmc_opcode::OP_CALLCODE:
         case evmc_opcode::OP_CREATE:
         case evmc_opcode::OP_CREATE2:
+        case evmc_opcode::OP_COINBASE:
+        case evmc_opcode::OP_CHAINID:
+        case evmc_opcode::OP_SMOD:
             count = 1;
             break;
         default:
@@ -308,6 +324,7 @@ void copy_stack(std::uint8_t op_code, const evmone::uint256* stack, std::vector<
     int top = get_stack_count(op_code);
     trace_stack.reserve(top);
     for (int i = top - 1; i >= 0; i--) {
+        const auto str = intx::to_string(stack[-i], 16);
         trace_stack.push_back("0x" + intx::to_string(stack[-i], 16));
     }
 }
@@ -566,7 +583,7 @@ void TraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
     current_depth_ = msg.depth;
 
     auto create = (!initial_ibs_.exists(recipient) && created_address_.find(recipient) == created_address_.end() && recipient != code_address);
-    // auto create = msg.kind == evmc_call_kind::EVMC_CREATE || msg.kind == evmc_call_kind::EVMC_CREATE2;
+    //auto create = msg.kind == evmc_call_kind::EVMC_CREATE || msg.kind == evmc_call_kind::EVMC_CREATE2;
 
     start_gas_.push(msg.gas);
 
@@ -657,12 +674,13 @@ void TraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
 
 void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
     auto index = index_stack_.top();
-    index_stack_.pop();
-
     auto start_gas = start_gas_.top();
-    start_gas_.pop();
 
     Trace& trace = traces_[index];
+    if (!trace.trace_result->code) {
+       start_gas_.pop();
+       index_stack_.pop();
+    }
 
     if (current_depth_ > 0) {
         if (trace.trace_result->code) {
@@ -681,7 +699,7 @@ void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::In
             break;
         case evmc_status_code::EVMC_REVERT:
             trace.error = "Reverted";
-            trace.trace_result.reset();
+            trace.trace_result->gas_used = start_gas - result.gas_left;
             break;
         case evmc_status_code::EVMC_OUT_OF_GAS:
         case evmc_status_code::EVMC_STACK_OVERFLOW:
@@ -714,6 +732,17 @@ void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::In
         << "\n";
 }
 
+void TraceTracer::on_creation_completed(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
+    if (index_stack_.empty())
+       return;
+    auto index = index_stack_.top();
+    auto start_gas = start_gas_.top();
+    index_stack_.pop();
+    start_gas_.pop();
+    Trace& trace = traces_[index];
+    trace.trace_result->gas_used = start_gas - result.gas_left;
+}
+
 void TraceTracer::on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
     SILKRPC_DEBUG << "TraceTracer::on_reward_granted:"
         << " result.status_code: " << result.status
@@ -741,7 +770,14 @@ void TraceTracer::on_reward_granted(const silkworm::CallResult& result, const si
             break;
         case evmc_status_code::EVMC_REVERT:
             trace.error = "Reverted";
-            trace.trace_result.reset();
+            trace.trace_result->gas_used = initial_gas_ - result.gas_left;
+            if (result.data.size() > 0) {
+                if (trace.trace_result->code) {
+                    trace.trace_result->code = result.data;
+                } else if (trace.trace_result->output) {
+                    trace.trace_result->output = result.data;
+                }
+            }
             break;
         case evmc_status_code::EVMC_OUT_OF_GAS:
         case evmc_status_code::EVMC_STACK_OVERFLOW:
@@ -924,27 +960,34 @@ void StateDiffTracer::on_reward_granted(const silkworm::CallResult& result, cons
                 }
             }
         } else if (exists) {
+            const auto balance = intra_block_state.get_balance(address);
             entry.balance = DiffValue {
                 {},
-                "0x" + intx::to_string(intra_block_state.get_balance(address), 16)
+                "0x" + intx::to_string(balance, 16)
             };
-
-            auto code = intra_block_state.get_code(address);
-
+            const auto code = intra_block_state.get_code(address);
             entry.code = DiffValue {
                 {},
                 "0x" + silkworm::to_hex(code)
             };
+            const auto nonce = intra_block_state.get_nonce(address);
             entry.nonce = DiffValue {
                 {},
-                to_quantity(intra_block_state.get_nonce(address))
+                to_quantity(nonce)
             };
+
+            bool to_be_removed = (balance == 0) && (code == silkworm::Bytes{}) && (nonce == 0);
             for (auto& key : diff_storage) {
                 auto key_b32 = silkworm::bytes32_from_hex(key);
                 entry.storage[key] = DiffValue {
                     {},
                     "0x" + silkworm::to_hex(intra_block_state.get_current_storage(address, key_b32))
                 };
+                to_be_removed = false;
+            }
+
+            if (to_be_removed) {
+                state_diff_.erase(address_key);
             }
         }
     }
@@ -976,7 +1019,7 @@ void IntraBlockStateTracer::on_reward_granted(const silkworm::CallResult& result
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_block(const silkworm::BlockWithHash& block_with_hash) {
+boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_block(const silkworm::BlockWithHash& block_with_hash) {
     std::vector<Trace> traces;
 
     const auto trace_call_results = co_await trace_block_transactions(block_with_hash.block, {false, true, false});
@@ -1022,7 +1065,7 @@ asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_blo
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldState, VM>::trace_block_transactions(const silkworm::Block& block, const TraceConfig& config) {
+boost::asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldState, VM>::trace_block_transactions(const silkworm::Block& block, const TraceConfig& config) {
     auto block_number = block.header.number;
     const auto& transactions = block.transactions;
 
@@ -1076,19 +1119,80 @@ asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldState, VM>:
         } else {
             traces.output = "0x" + silkworm::to_hex(execution_result.data);
         }
+        executor.reset();
     }
     co_return trace_call_result;
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::trace_call(const silkworm::Block& block, const silkrpc::Call& call, const TraceConfig& config) {
+boost::asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::trace_call(const silkworm::Block& block, const silkrpc::Call& call, const TraceConfig& config) {
     silkrpc::Transaction transaction{call.to_transaction()};
     auto result = co_await execute(block.header.number, block, transaction, -1, config);
     co_return result;
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_transaction(const silkworm::BlockWithHash& block_with_hash, const silkrpc::Transaction& transaction) {
+boost::asio::awaitable<TraceManyCallResult> TraceCallExecutor<WorldState, VM>::trace_calls(const silkworm::Block& block, const std::vector<TraceCall>& calls) {
+    const auto block_number = block.header.number;
+    SILKRPC_DEBUG << "trace_call_many: "
+        << " block_number: " << block_number
+        << " #trace_calls: " << calls.size()
+        << "\n";
+
+    const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
+    const auto chain_config_ptr = lookup_chain_config(chain_id);
+
+    state::RemoteState remote_state{io_context_, database_reader_, block_number};
+    silkworm::IntraBlockState initial_ibs{remote_state};
+    StateAddresses state_addresses(initial_ibs);
+
+    EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number};
+
+    std::shared_ptr<silkworm::EvmTracer> ibsTracer = std::make_shared<trace::IntraBlockStateTracer>(state_addresses);
+
+    TraceManyCallResult result;
+    for (auto index{0}; index < calls.size(); index++) {
+        const auto& config = calls[index].trace_config;
+
+        silkrpc::Transaction transaction{calls[index].call.to_transaction()};
+
+        Tracers tracers;
+        TraceCallTraces traces;
+        if (config.vm_trace) {
+            traces.vm_trace.emplace();
+            std::shared_ptr<silkworm::EvmTracer> tracer = std::make_shared<trace::VmTraceTracer>(traces.vm_trace.value(), index);
+            tracers.push_back(tracer);
+        }
+        if (config.trace) {
+            std::shared_ptr<silkworm::EvmTracer> tracer = std::make_shared<trace::TraceTracer>(traces.trace, initial_ibs);
+            tracers.push_back(tracer);
+        }
+        if (config.state_diff) {
+            traces.state_diff.emplace();
+
+            std::shared_ptr<silkworm::EvmTracer> tracer = std::make_shared<trace::StateDiffTracer>(traces.state_diff.value(), state_addresses);
+            tracers.push_back(tracer);
+        }
+        tracers.push_back(ibsTracer);
+
+        auto execution_result = co_await executor.call(block, transaction, /*refund=*/true, /*gas_bailout=*/true, tracers);
+
+        if (execution_result.pre_check_error) {
+            result.pre_check_error = "first run for txIndex " + std::to_string(index) + " error: " + execution_result.pre_check_error.value();
+            result.traces.clear();
+            break;
+        }
+        traces.output = "0x" + silkworm::to_hex(execution_result.data);
+        result.traces.push_back(traces);
+
+        executor.reset();
+    }
+
+    co_return result;
+}
+
+template<typename WorldState, typename VM>
+boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_transaction(const silkworm::BlockWithHash& block_with_hash, const silkrpc::Transaction& transaction) {
     std::vector<Trace> traces;
 
     const auto result = co_await execute(block_with_hash.block.header.number-1, block_with_hash.block, transaction, transaction.transaction_index, {false, true, false});
@@ -1112,9 +1216,9 @@ asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_tra
 }
 
 template<typename WorldState, typename VM>
-asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
+boost::asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
     const silkrpc::Transaction& transaction, std::int32_t index, const TraceConfig& config) {
-    SILKRPC_INFO << "execute: "
+    SILKRPC_DEBUG << "execute: "
         << " block_number: " << block_number
         << " transaction: {" << transaction << "}"
         << " index: " << std::dec << index
@@ -1133,15 +1237,15 @@ asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std:
     tracers.push_back(tracer);
 
     EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number};
-    for (auto idx = 0; idx < index; idx++) {
+    for (auto idx = 0; idx < transaction.transaction_index; idx++) {
         silkrpc::Transaction txn{block.transactions[idx]};
 
         if (!txn.from) {
            txn.recover_sender();
         }
         const auto execution_result = co_await executor.call(block, txn, /*refund=*/true, /*gas_bailout=*/true, tracers);
+        executor.reset();
     }
-    executor.reset();
 
     tracers.clear();
     TraceCallResult result;

@@ -24,8 +24,9 @@
 #include <silkrpc/config.hpp>
 
 #include <agrpc/rpc.hpp>
-#include <asio/compose.hpp>
-#include <asio/experimental/append.hpp>
+#include <boost/asio/bind_executor.hpp>
+#include <boost/asio/compose.hpp>
+#include <boost/asio/experimental/append.hpp>
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/grpc/dispatcher.hpp>
@@ -62,7 +63,7 @@ private:
         void operator()(Op& op) {
             SILKRPC_TRACE << "UnaryRpc::initiate " << this << "\n";
             self_.reader_ = agrpc::request(Async, self_.stub_, self_.context_, request_, self_.grpc_context_);
-            agrpc::finish(self_.reader_, self_.reply_, self_.status_, asio::bind_executor(self_.grpc_context_, std::move(op)));
+            agrpc::finish(self_.reader_, self_.reply_, self_.status_, boost::asio::bind_executor(self_.grpc_context_, std::move(op)));
         }
 
         template<typename Op>
@@ -87,13 +88,13 @@ public:
 
     template<typename CompletionToken = agrpc::DefaultCompletionToken>
     auto finish(const Request& request, CompletionToken&& token = {}) {
-        return asio::async_compose<CompletionToken, void(asio::error_code, Reply)>(
+        return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, Reply)>(
             Call<detail::InlineDispatcher>{*this, request}, token);
     }
 
     template<typename Executor, typename CompletionToken = agrpc::DefaultCompletionToken>
     auto finish_on(const Executor& executor, const Request& request, CompletionToken&& token = {}) {
-        return asio::async_compose<CompletionToken, void(asio::error_code, Reply)>(
+        return boost::asio::async_compose<CompletionToken, void(boost::system::error_code, Reply)>(
             Call<detail::ExecutorDispatcher<Executor>>{*this, request, executor}, token, executor);
     }
 

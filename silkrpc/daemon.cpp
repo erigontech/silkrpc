@@ -21,7 +21,7 @@
 #include <filesystem>
 #include <stdexcept>
 
-#include <asio/signal_set.hpp>
+#include <boost/asio/signal_set.hpp>
 #include <boost/process/environment.hpp>
 #include <grpcpp/grpcpp.h>
 
@@ -95,12 +95,12 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
         checklist.success_or_throw();
 
         // Start execution context dedicated to handling termination signals
-        asio::io_context signal_context;
-        asio::signal_set signals{signal_context, SIGINT, SIGTERM};
+        boost::asio::io_context signal_context;
+        boost::asio::signal_set signals{signal_context, SIGINT, SIGTERM};
         SILKRPC_DEBUG << "Signals registered on signal_context " << &signal_context << "\n" << std::flush;
-        signals.async_wait([&](const asio::system_error& error, int signal_number) {
+        signals.async_wait([&](const boost::system::error_code& error, int signal_number) {
             if (signal_number == SIGINT) std::cout << "\n";
-            SILKRPC_INFO << "Signal number: " << signal_number << " caught, error code: " << error.code() << "\n" << std::flush;
+            SILKRPC_INFO << "Signal number: " << signal_number << " caught, error: " << error.message() << "\n" << std::flush;
             rpc_daemon.stop();
         });
 
