@@ -10,7 +10,7 @@ json-diff install:
 ### To run integration tests comparing results with json file: ./run_tests.py -c
 
 ```
-Test time-elapsed (secs): 45
+Test time-elapsed (secs):     47
 Number of executed tests:     268/268
 Number of NOT executed tests: 0
 Number of success tests:      268
@@ -25,7 +25,6 @@ Number of failed tests:       0
 016. debug_traceCall/test_10.json                                 Failed
 020. debug_traceCall/test_14.json                                 Failed
 045. erigon_getBlockByTimestamp/test_1.json                       Skipped
-069. eth_gasPrice/test_1.json                                     Failed
 070. eth_getBlockByHash/test_1.json                               Skipped
 071. eth_getBlockByHash/test_2.json                               Skipped
 072. eth_getBlockByNumber/test_1.json                             Skipped
@@ -38,11 +37,11 @@ Number of failed tests:       0
 239. trace_replayTransaction/test_23.json.tar                     Failed
 264. txpool_content/test_1.json                                   Skipped
                                                                                     
-Test time-elapsed (secs):     70
+Test time-elapsed (secs):     76
 Number of executed tests:     261/268
 Number of NOT executed tests: 7
-Number of success tests:      252
-Number of failed tests:       9
+Number of success tests:      253
+Number of failed tests:       8
 
 ```
 
