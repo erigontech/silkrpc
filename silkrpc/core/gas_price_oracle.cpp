@@ -102,10 +102,10 @@ boost::asio::awaitable<void> GasPriceOracle::load_block_prices(uint64_t block_nu
 
     std::sort(block_prices.begin(), block_prices.end(), PriceComparator());
 
-    for (const auto& effective_gas_price : block_prices) {
+    for (int count = 0; const auto& effective_gas_price : block_prices) {
         SILKRPC_TRACE << " effective_gas_price: 0x" <<  intx::hex(effective_gas_price) << "\n";
         tx_prices.push_back(effective_gas_price);
-        if (tx_prices.size() >= limit) {
+        if (++count >= limit) {
             break;
         }
     }
