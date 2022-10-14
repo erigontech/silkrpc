@@ -135,6 +135,10 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
             return 1
         if verbose:
             print("OK")
+        os.remove(silk_file)
+        os.remove(rpc_file)
+        os.remove(diff_file)
+        os.rmdir(output_dir)
     else:
         if verbose:
             print("OK")
