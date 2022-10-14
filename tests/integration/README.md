@@ -21,7 +21,6 @@ Number of failed tests:       0
 
 ### To run integration tests comparing results with RPCdaemon response: ./run_tests.py -d -c
 ```
-014. debug_traceCall/test_08.json                                 Failed (bad json format on expected rsp)
 016. debug_traceCall/test_10.json                                 Failed
 020. debug_traceCall/test_14.json                                 Failed
 045. erigon_getBlockByTimestamp/test_1.json                       Skipped
@@ -37,11 +36,11 @@ Number of failed tests:       0
 239. trace_replayTransaction/test_23.json.tar                     Failed
 264. txpool_content/test_1.json                                   Skipped
                                                                                     
-Test time-elapsed (secs):     76
+Test time-elapsed (secs):     85
 Number of executed tests:     261/268
 Number of NOT executed tests: 7
-Number of success tests:      253
-Number of failed tests:       8
+Number of success tests:      254
+Number of failed tests:       7
 
 ```
 
