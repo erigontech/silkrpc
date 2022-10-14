@@ -46,18 +46,18 @@ public:
     MOCK_METHOD((boost::asio::awaitable<uint64_t>), net_version, ());
     MOCK_METHOD((boost::asio::awaitable<std::string>), client_version, ());
     MOCK_METHOD((boost::asio::awaitable<uint64_t>), net_peer_count, ());
-    MOCK_METHOD((boost::asio::awaitable<ExecutionPayload>), engine_get_payload_v1, (uint64_t payload_id));
-    MOCK_METHOD((boost::asio::awaitable<PayloadStatus>), engine_new_payload_v1, (ExecutionPayload payload));
-    MOCK_METHOD((boost::asio::awaitable<ForkchoiceUpdatedReply>), engine_forkchoice_updated_v1, (ForkchoiceUpdatedRequest forkchoice_updated_request));
+    MOCK_METHOD((boost::asio::awaitable<ExecutionPayload>), engine_get_payload_v1, (uint64_t));
+    MOCK_METHOD((boost::asio::awaitable<PayloadStatus>), engine_new_payload_v1, (ExecutionPayload));
+    MOCK_METHOD((boost::asio::awaitable<ForkChoiceUpdatedReply>), engine_forkchoice_updated_v1, (ForkChoiceUpdatedRequest));
 };
 
 class MockCursor : public ethdb::Cursor {
 public:
     uint32_t cursor_id() const override { return 0; }
 
-    MOCK_METHOD((boost::asio::awaitable<void>), open_cursor, (const std::string& table_name, bool is_dup_cursor));
-    MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek, (silkworm::ByteView key));
-    MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek_exact, (silkworm::ByteView key));
+    MOCK_METHOD((boost::asio::awaitable<void>), open_cursor, (const std::string&, bool));
+    MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek, (silkworm::ByteView));
+    MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek_exact, (silkworm::ByteView));
     MOCK_METHOD((boost::asio::awaitable<KeyValue>), next, ());
     MOCK_METHOD((boost::asio::awaitable<void>), close_cursor, ());
 };
@@ -409,8 +409,8 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds only with forkchoiceStat
 
     BackEndMock *backend = new BackEndMock;
     EXPECT_CALL(*backend, engine_forkchoice_updated_v1(testing::_)).WillOnce(InvokeWithoutArgs(
-        []() -> boost::asio::awaitable<ForkchoiceUpdatedReply> {
-            co_return ForkchoiceUpdatedReply{
+        []() -> boost::asio::awaitable<ForkChoiceUpdatedReply> {
+            co_return ForkChoiceUpdatedReply{
                 .payload_status = PayloadStatus{
                     .status = "INVALID",
                     .latest_valid_hash = 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32,
@@ -470,8 +470,8 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[sil
 
     BackEndMock *backend = new BackEndMock;
     EXPECT_CALL(*backend, engine_forkchoice_updated_v1(testing::_)).WillOnce(InvokeWithoutArgs(
-        []() -> boost::asio::awaitable<ForkchoiceUpdatedReply> {
-            co_return ForkchoiceUpdatedReply{
+        []() -> boost::asio::awaitable<ForkChoiceUpdatedReply> {
+            co_return ForkChoiceUpdatedReply{
                 .payload_status = PayloadStatus{
                     .status = "INVALID",
                     .latest_valid_hash = 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32,
