@@ -109,7 +109,7 @@ TEST_CASE("block_number_or_hash") {
     }
     SECTION("copy ctor") {
         BlockNumberOrHash bnoh{"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c"};
-        BlockNumberOrHash copy{bnoh}; // NOLINT(performance-unnecessary-copy-initialization)
+        BlockNumberOrHash copy{bnoh};
 
         CHECK(bnoh.is_hash() == copy.is_hash());
         CHECK(bnoh.is_number() == copy.is_number());
