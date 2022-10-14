@@ -177,10 +177,9 @@ silkrpcdaemon version: 0.0.7-109+commit.bfe634dd
 
 ## Running Silkrpc with Erigon
 
-Currently Silkrpc is _compatible only with Erigon1 [`stable`](https://github.com/ledgerwatch/erigon/tree/stable)_ version: last integration and performance test sessions has been performed using Erigon1 at [363d9fc](https://github.com/ledgerwatch/erigon/commit/363d9fc9cab7eb4df610091765ccf363f18003f2). In order to run Silkrpc with Erigon1, you must install and build Erigon1 following the usage instructions [here](https://github.com/ledgerwatch/erigon/tree/stable#usage).
+Currently Silkrpc is _compatible only with Erigon2 [`2022.09.01-alpha`](https://github.com/ledgerwatch/erigon/releases/tag/v2022.09.01)_ version: last integration and performance test sessions has been performed using Erigon1 at [4067b7c](https://github.com/ledgerwatch/erigon/commit/4067b7c4da6c5d741d3027d95ae2afdf6b7a943a). In order to run Silkrpc with Erigon2, you must install and build Erigon2 following the usage instructions [here](https://github.com/ledgerwatch/erigon/tree/stable#usage).
 
 Please note the following caveats:
-- Erigon1 `stable` is _not Merge ready_
-- Erigon1 `stable` does _not_ start an internal RPCDaemon so you don't need to worry about conflicts on JSON RPC HTTP port
-- if you launch Silkrpc and Erigon1 using the default settings on the same machine, you won't need to customize gRPC client/server addresses/ports; otherwise, you need to make sure that Silkrpc `target` setting matches Erigon1 `private.api.addr` setting
+- Erigon2 by default starts an internal RPCDaemon so you need to activate Erigon2 using `--http=false` option to avoid conflicts on JSON RPC HTTP port
+- if you launch Silkrpc and Erigon2 using the default settings on the same machine, you won't need to customize gRPC client/server addresses/ports; otherwise, you need to make sure that Silkrpc `target` setting matches Erigon2 `private.api.addr` setting
 - just the flags described above in the [Command-line parameters](#command-line-parameters) section are actually supported by Silkrpc (other flags may be present in the help description but should be ignored)
