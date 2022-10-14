@@ -16,8 +16,8 @@
 
 #include "filter.cpp" // NOLINT(build/include)
 
-#include <evmc/evmc.h>
 #include <sstream>
+
 #include <catch2/catch.hpp>
 
 #include <silkrpc/common/util.hpp>
@@ -26,7 +26,7 @@ namespace silkrpc {
 
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
-TEST_CASE("write nullopt filter addresses to ostream", "[silkrpc][types][filter]") {
+TEST_CASE("write null filter addresses to ostream", "[silkrpc][types][filter]") {
     std::optional<FilterAddresses> addresses{std::nullopt};
     std::ostringstream oss;
     oss << addresses;
@@ -81,7 +81,7 @@ TEST_CASE("write 2-sized filter subtopics to ostream", "[silkrpc][types][filter]
     CHECK(oss.str() == R"([0x0000000000000000000000000000000000000000000000000000000000000000 0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c])");
 }
 
-TEST_CASE("write nullopt filter topics to ostream", "[silkrpc][types][filter]") {
+TEST_CASE("write null filter topics to ostream", "[silkrpc][types][filter]") {
     std::optional<FilterTopics> topics{std::nullopt};
     std::ostringstream oss;
     oss << topics;

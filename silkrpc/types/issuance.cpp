@@ -16,8 +16,6 @@
 
 #include "issuance.hpp"
 
-#include <silkrpc/common/util.hpp>
-
 namespace silkrpc {
 
 std::ostream& operator<<(std::ostream& out, const Issuance& issuance) {

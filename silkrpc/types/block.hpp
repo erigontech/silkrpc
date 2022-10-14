@@ -33,7 +33,7 @@ struct Block : public silkworm::BlockWithHash {
     intx::uint256 total_difficulty{0};
     bool full_tx{false};
 
-    uint64_t get_block_size() const;
+    [[nodiscard]] uint64_t get_block_size() const;
 };
 
 std::ostream& operator<<(std::ostream& out, const Block& b);
@@ -43,34 +43,34 @@ public:
     explicit BlockNumberOrHash(std::string const& bnoh) { build(bnoh); }
     explicit BlockNumberOrHash(uint64_t number) noexcept : value_{number} {}
 
-    virtual ~BlockNumberOrHash() noexcept {}
+    virtual ~BlockNumberOrHash() noexcept = default;
 
     BlockNumberOrHash(BlockNumberOrHash &&bnoh) = default;
-    BlockNumberOrHash(BlockNumberOrHash const& bnoh) noexcept : value_{bnoh.value_} {}
+    BlockNumberOrHash(BlockNumberOrHash const& bnoh) noexcept = default;
 
     BlockNumberOrHash& operator=(BlockNumberOrHash const& bnoh) = delete;
 
-    bool is_number() const {
+    [[nodiscard]] bool is_number() const {
         return std::holds_alternative<uint64_t>(value_);
     }
 
-    uint64_t number() const {
+    [[nodiscard]] uint64_t number() const {
         return is_number() ? *std::get_if<uint64_t>(&value_) : 0;
     }
 
-    bool is_hash() const {
+    [[nodiscard]] bool is_hash() const {
         return std::holds_alternative<evmc::bytes32>(value_);
     }
 
-    evmc::bytes32 hash() const {
+    [[nodiscard]] evmc::bytes32 hash() const {
         return is_hash() ? *std::get_if<evmc::bytes32>(&value_) : evmc::bytes32{0};
     }
 
-    bool is_tag() const {
+    [[nodiscard]] bool is_tag() const {
         return std::holds_alternative<std::string>(value_);
     }
 
-    std::string tag() const {
+    [[nodiscard]] std::string tag() const {
         return is_tag() ? *std::get_if<std::string>(&value_) : "";
     }
 
