@@ -96,7 +96,6 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
                 if exit_on_fail:
                     print("TEST ABORTED!")
                     sys.exit(1)
-            return 1
 
     if response != expected_response:
         if "result" in response and "result" in expected_response and expected_response["result"] is None:
