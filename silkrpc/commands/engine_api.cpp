@@ -91,7 +91,7 @@ boost::asio::awaitable<void> EngineRpcApi::handle_engine_new_payload_v1(const nl
 }
 
 // Format for params is a JSON list containing two objects
-// one ForkchoiceState and one PayloadAttributes, i.e. [ForkchoiceState, PayloadAttributes]
+// one ForkChoiceState and one PayloadAttributes, i.e. [ForkChoiceState, PayloadAttributes]
 // https://github.com/ethereum/execution-apis/blob/main/src/engine/specification.md#engine_forkchoiceupdatedv1
 boost::asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request.at("params");
@@ -106,7 +106,7 @@ boost::asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(c
     try {
     #endif
         constexpr auto zero_hash = 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32;
-        const ForkchoiceState forkchoice_state = params[0].get<ForkchoiceState>();
+        const ForkChoiceState forkchoice_state = params[0].get<ForkChoiceState>();
 
         if (forkchoice_state.safe_block_hash == zero_hash) {
             const auto error_msg = "safe block hash is empty";
@@ -124,15 +124,15 @@ boost::asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(c
 
         if (params.size() == 2) {
             const PayloadAttributes payload_attributes = params[1].get<PayloadAttributes>();
-            const ForkchoiceUpdatedRequest forkchoice_update_request{
-                .forkchoice_state = forkchoice_state,
+            const ForkChoiceUpdatedRequest forkchoice_update_request{
+                .fork_choice_state = forkchoice_state,
                 .payload_attributes = std::make_optional(payload_attributes)
             };
             const auto fork_updated = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);
             reply = make_json_content(request["id"], fork_updated);
         } else {
-            const ForkchoiceUpdatedRequest forkchoice_update_request{
-                .forkchoice_state = forkchoice_state,
+            const ForkChoiceUpdatedRequest forkchoice_update_request{
+                .fork_choice_state = forkchoice_state,
                 .payload_attributes = std::nullopt
             };
             const auto fork_updated = co_await backend_->engine_forkchoice_updated_v1(forkchoice_update_request);

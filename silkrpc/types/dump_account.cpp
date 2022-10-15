@@ -34,8 +34,7 @@ std::ostream& operator<<(std::ostream& out, const DumpAccounts& dump) {
 void to_json(nlohmann::json& json, const DumpAccounts& dump) {
     nlohmann::json accounts({});
 
-    uint64_t index{0};
-    for (auto entry : dump.accounts) {
+    for (const auto& entry : dump.accounts) {
         nlohmann::json item;
         to_json(item, entry.second);
         accounts.push_back(nlohmann::json::object_t::value_type("0x" + silkworm::to_hex(entry.first), item));
@@ -58,7 +57,7 @@ void to_json(nlohmann::json& json, const DumpAccount& dump_account) {
     }
     if (dump_account.storage) {
         nlohmann::json storage({});
-        for (auto entry : dump_account.storage.value()) {
+        for (const auto& entry : dump_account.storage.value()) {
             storage["0x" + silkworm::to_hex(entry.first)] = silkworm::to_hex(entry.second);
         }
         json["storage"] = storage;

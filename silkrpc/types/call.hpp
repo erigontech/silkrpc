@@ -50,14 +50,14 @@ struct Call {
         access_list = new_access_list;
     }
 
-    silkworm::Transaction to_transaction() const {
+    [[nodiscard]] silkworm::Transaction to_transaction() const {
         silkworm::Transaction txn{};
         txn.from = from;
         txn.to = to;
         if (nonce) {
             txn.nonce = *nonce;
         }
-        if (access_list.size()) {
+        if (!access_list.empty()) {
             txn.access_list = access_list;
         }
         txn.gas_limit = gas.value_or(kDefaultGasLimit);

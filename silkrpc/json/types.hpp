@@ -95,13 +95,13 @@ void from_json(const nlohmann::json& json, Filter& filter);
 void to_json(nlohmann::json& json, const ExecutionPayload& execution_payload);
 void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload);
 
-void to_json(nlohmann::json& json, const ForkchoiceState& forkchoice_state);
-void from_json(const nlohmann::json& json, ForkchoiceState& forkchoice_state);
+void to_json(nlohmann::json& json, const ForkChoiceState& forkchoice_state);
+void from_json(const nlohmann::json& json, ForkChoiceState& forkchoice_state);
 
 void to_json(nlohmann::json& json, const PayloadAttributes& payload_attributes);
 void from_json(const nlohmann::json& json, PayloadAttributes& payload_attributes);
 
-void to_json(nlohmann::json& json, const ForkchoiceUpdatedReply& forkchoice_updated_reply);
+void to_json(nlohmann::json& json, const ForkChoiceUpdatedReply& forkchoice_updated_reply);
 
 void to_json(nlohmann::json& json, const PayloadStatus& payload_status);
 

@@ -1539,7 +1539,7 @@ TEST_CASE("deserialize execution_payload", "[silkrpc::json][to_json]") {
 }
 
 TEST_CASE("serialize forkchoice state", "[silkrpc::json][to_json]") {
-    silkrpc::ForkchoiceState forkchoice_state{
+    silkrpc::ForkChoiceState forkchoice_state{
         .head_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
         .safe_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
         .finalized_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32
@@ -1560,7 +1560,7 @@ TEST_CASE("deserialize forkchoice state", "[silkrpc::json][from_json]") {
         "finalizedBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858"
     })"_json;
 
-    silkrpc::ForkchoiceState forkchoice_state = j;
+    silkrpc::ForkChoiceState forkchoice_state = j;
     CHECK(forkchoice_state.head_block_hash == 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32);
     CHECK(forkchoice_state.safe_block_hash == 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32);
     CHECK(forkchoice_state.finalized_block_hash == 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32);
@@ -1601,7 +1601,7 @@ TEST_CASE("serialize forkchoice updated reply", "[silkrpc::json][to_json]") {
         .latest_valid_hash = 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32,
         .validation_error = "some error"
     };
-    silkrpc::ForkchoiceUpdatedReply forkchoice_update_reply{
+    silkrpc::ForkChoiceUpdatedReply forkchoice_update_reply{
         .payload_status = payload_status,
         .payload_id = 0x1
     };
