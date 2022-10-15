@@ -31,7 +31,7 @@ namespace silkrpc {
 constexpr auto kRpcMaxReceiveMessageSize{64 * 1024 * 1024}; // 64 MiB
 
 void DaemonChecklist::success_or_throw() const {
-    for (const auto protocol_check : protocol_checklist) {
+    for (const auto& protocol_check : protocol_checklist) {
         if (!protocol_check.compatible) {
             throw std::runtime_error{protocol_check.result};
         }
@@ -40,7 +40,7 @@ void DaemonChecklist::success_or_throw() const {
 
 const char* current_exception_name() {
     int status;
-    return abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, 0, &status);
+    return abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), nullptr, nullptr, &status);
 }
 
 int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
@@ -88,7 +88,7 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
 
         const auto checklist = rpc_daemon.run_checklist();
 
-        for (const auto protocol_check : checklist.protocol_checklist) {
+        for (const auto& protocol_check : checklist.protocol_checklist) {
             SILKRPC_LOG << protocol_check.result << "\n";
         }
 
@@ -147,7 +147,7 @@ bool Daemon::validate_settings(const DaemonSettings& settings) {
     }
 
     const auto target = settings.target;
-    if (!target.empty() && target.find(":") == std::string::npos) {
+    if (!target.empty() && target.find(':') == std::string::npos) {
         SILKRPC_ERROR << "Parameter target is invalid: [" << target << "]\n";
         SILKRPC_ERROR << "Use --target flag to specify the location of Erigon running instance\n";
         return false;
@@ -166,27 +166,13 @@ bool Daemon::validate_settings(const DaemonSettings& settings) {
         return false;
     }
 
-    const auto num_contexts = settings.num_contexts;
-    if (num_contexts < 0) {
-        SILKRPC_ERROR << "Parameter num_contexts is invalid: [" << num_contexts << "]\n";
-        SILKRPC_ERROR << "Use --num_contexts flag to specify the number of threads running I/O contexts\n";
-        return false;
-    }
-
-    const auto num_workers = settings.num_workers;
-    if (num_workers < 0) {
-        SILKRPC_ERROR << "Parameter num_workers is invalid: [" << num_workers << "]\n";
-        SILKRPC_ERROR << "Use --num_workers flag to specify the number of worker threads executing long-run operations\n";
-        return false;
-    }
-
     return true;
 }
 
 ChannelFactory Daemon::make_channel_factory(const DaemonSettings& settings) {
     return [&settings]() {
         grpc::ChannelArguments channel_args;
-        // Allow receive messages up to specified max size
+        // Allow to receive messages up to specified max size
         channel_args.SetMaxReceiveMessageSize(kRpcMaxReceiveMessageSize);
         // Allow each client to open its own TCP connection to server (sharing one single connection becomes a bottleneck under high load)
         channel_args.SetInt(GRPC_ARG_USE_LOCAL_SUBCHANNEL_POOL, 1);
