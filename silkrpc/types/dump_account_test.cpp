@@ -39,7 +39,7 @@ TEST_CASE("Empty DumpAccounts", "[silkrpc][types][dump_account]") {
 
     SECTION("check fields") {
         CHECK(da.root == empty_hash);
-        CHECK(da.accounts.size() == 0);
+        CHECK(da.accounts.empty());
         CHECK(da.next == zero_address);
     }
 
@@ -110,7 +110,7 @@ TEST_CASE("Filled zero-account DumpAccounts", "[silkrpc][types][dump_account]") 
 
     SECTION("check fields") {
         CHECK(da.root == 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32);
-        CHECK(da.accounts.size() == 0);
+        CHECK(da.accounts.empty());
         CHECK(da.next == 0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address);
     }
 

@@ -30,8 +30,8 @@ std::ostream& operator<<(std::ostream& out, const Block& b) {
     out << "parent_hash: " << b.block.header.parent_hash;
     out << " ommers_hash: " << b.block.header.ommers_hash;
     out << " beneficiary: ";
-    for (const auto& b : b.block.header.beneficiary.bytes) {
-        out << std::hex << std::setw(2) << std::setfill('0') << int(b);
+    for (const auto& byte : b.block.header.beneficiary.bytes) {
+        out << std::hex << std::setw(2) << std::setfill('0') << int(byte);
     }
     out << std::dec;
     out << " state_root: " << b.block.header.state_root;

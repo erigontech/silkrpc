@@ -112,13 +112,14 @@ boost::asio::awaitable<PayloadStatus> RemoteBackEnd::engine_new_payload_v1(Execu
     co_return payload_status;
 }
 
-boost::asio::awaitable<ForkchoiceUpdatedReply> RemoteBackEnd::engine_forkchoice_updated_v1(ForkchoiceUpdatedRequest forkchoice_updated_request) {
+boost::asio::awaitable<ForkChoiceUpdatedReply> RemoteBackEnd::engine_forkchoice_updated_v1(
+    ForkChoiceUpdatedRequest forkchoice_updated_request) {
     const auto start_time = clock_time::now();
     UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncEngineForkChoiceUpdatedV1> fcu_rpc{*stub_, grpc_context_};
     const auto req{encode_forkchoice_updated_request(forkchoice_updated_request)};
     const auto reply = co_await fcu_rpc.finish_on(executor_, req);
     PayloadStatus payload_status = decode_payload_status(reply.payloadstatus());
-    ForkchoiceUpdatedReply forkchoice_updated_reply{
+    ForkChoiceUpdatedReply forkchoice_updated_reply{
         .payload_status = payload_status,
         .payload_id = std::nullopt
     };
@@ -327,7 +328,7 @@ types::ExecutionPayload RemoteBackEnd::encode_execution_payload(const ExecutionP
     return execution_payload_grpc;
 }
 
-remote::EngineForkChoiceState* RemoteBackEnd::encode_forkchoice_state(const ForkchoiceState& forkchoice_state) {
+remote::EngineForkChoiceState* RemoteBackEnd::encode_forkchoice_state(const ForkChoiceState& forkchoice_state) {
     remote::EngineForkChoiceState *forkchoice_state_grpc = new remote::EngineForkChoiceState();
     // 32-bytes parameters
     forkchoice_state_grpc->set_allocated_headblockhash(H256_from_bytes(forkchoice_state.head_block_hash.bytes));
@@ -348,9 +349,9 @@ remote::EnginePayloadAttributes* RemoteBackEnd::encode_payload_attributes(const 
     return payload_attributes_grpc;
 }
 
-remote::EngineForkChoiceUpdatedRequest RemoteBackEnd::encode_forkchoice_updated_request(const ForkchoiceUpdatedRequest& forkchoice_updated_request) {
+remote::EngineForkChoiceUpdatedRequest RemoteBackEnd::encode_forkchoice_updated_request(const ForkChoiceUpdatedRequest& forkchoice_updated_request) {
     remote::EngineForkChoiceUpdatedRequest forkchoice_updated_request_grpc;
-    remote::EngineForkChoiceState *forkchoice_state_grpc = RemoteBackEnd::encode_forkchoice_state(forkchoice_updated_request.forkchoice_state);
+    remote::EngineForkChoiceState *forkchoice_state_grpc = RemoteBackEnd::encode_forkchoice_state(forkchoice_updated_request.fork_choice_state);
 
     forkchoice_updated_request_grpc.set_allocated_forkchoicestate(forkchoice_state_grpc);
     if (forkchoice_updated_request.payload_attributes != std::nullopt) {

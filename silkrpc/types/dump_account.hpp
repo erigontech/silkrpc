@@ -17,10 +17,10 @@
 #ifndef SILKRPC_TYPES_DUMP_ACCOUNT_HPP_
 #define SILKRPC_TYPES_DUMP_ACCOUNT_HPP_
 
+#include <cstdint>
 #include <iostream>
 #include <map>
 #include <optional>
-#include <stdint.h>
 #include <string>
 
 #include <evmc/evmc.hpp>

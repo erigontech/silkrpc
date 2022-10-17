@@ -19,7 +19,6 @@
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
-#include <silkworm/chain/config.hpp>
 
 #include <silkrpc/common/log.hpp>
 

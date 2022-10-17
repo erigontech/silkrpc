@@ -16,9 +16,6 @@
 
 #include "receipt.hpp"
 
-#include <iomanip>
-#include <iostream>
-
 #include <catch2/catch.hpp>
 #include <silkworm/common/util.hpp>
 
@@ -111,7 +108,7 @@ TEST_CASE("receipt with empty bloom", "[silkrpc][types][receipt]") {
     CHECK(r.success == true);
     CHECK(r.cumulative_gas_used == 210000);
     CHECK(r.bloom == silkworm::Bloom{});
-    CHECK(r.logs.size() == 0);
+    CHECK(r.logs.empty());
 }
 
 } // namespace silkrpc
