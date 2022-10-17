@@ -28,3 +28,8 @@ max-line-length=200
 max-branches=50
 max-statements=100
 max-locals=40
+
+[MISCELLANEOUS]
+
+# List of note tags to take in consideration, separated by a comma.
+notes=FIXME
