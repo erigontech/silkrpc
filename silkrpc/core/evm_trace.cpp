@@ -856,7 +856,6 @@ void StateDiffTracer::on_instruction_start(uint32_t pc , const intx::uint256 *st
         auto value = to_string(stack_top[-1]);
         auto address = evmc::address{execution_state.msg->recipient};
         auto original_value = intra_block_state.get_original_storage(address, silkworm::bytes32_from_hex(key));
-
         auto& keys = diff_storage_[address];
         keys.insert(key);
     }
@@ -979,10 +978,12 @@ void StateDiffTracer::on_reward_granted(const silkworm::CallResult& result, cons
             bool to_be_removed = (balance == 0) && (code == silkworm::Bytes{}) && (nonce == 0);
             for (auto& key : diff_storage) {
                 auto key_b32 = silkworm::bytes32_from_hex(key);
-                entry.storage[key] = DiffValue {
-                    {},
-                    "0x" + silkworm::to_hex(intra_block_state.get_current_storage(address, key_b32))
-                };
+                if (intra_block_state.get_current_storage(address, key_b32) != evmc::bytes32{}) {
+                   entry.storage[key] = DiffValue {
+                       {},
+                       "0x" + silkworm::to_hex(intra_block_state.get_current_storage(address, key_b32))
+                   };
+                }
                 to_be_removed = false;
             }
 
