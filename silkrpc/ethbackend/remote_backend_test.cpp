@@ -312,8 +312,9 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::engine_forkchoice_updated_v1", "[silk
     test::StrictMockAsyncResponseReader<::remote::EngineForkChoiceUpdatedReply> reader;
     EXPECT_CALL(*stub_, AsyncEngineForkChoiceUpdatedV1Raw).WillOnce(testing::Return(&reader));
 
-    const ForkchoiceUpdatedRequest forkchoice_request{
-        .forkchoice_state = ForkchoiceState{
+    const ForkChoiceUpdatedRequest forkchoice_request{
+        .fork_choice_state =
+            ForkChoiceState{
             .head_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
             .safe_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
             .finalized_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32

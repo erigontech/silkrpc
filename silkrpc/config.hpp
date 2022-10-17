@@ -19,10 +19,8 @@
 
 #if __has_include(<coroutine>)
 # include <boost/asio/detail/config.hpp>
-# define SILKRPC_HAS_COROUTINES
 # include <coroutine>
 #elif __has_include(<experimental/coroutine>)
-# define SILKRPC_HAS_EXPERIMENTAL_COROUTINES
 # include <experimental/coroutine>
 namespace std {
     template <typename T>
