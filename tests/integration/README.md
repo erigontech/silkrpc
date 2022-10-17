@@ -29,18 +29,13 @@ Number of failed tests:       0
 072. eth_getBlockByNumber/test_1.json                             Skipped
 073. eth_getBlockByNumber/test_2.json                             Skipped
 113. parity_getBlockReceipts/test_1.json                          Skipped
-202. trace_replayBlockTransactions/test_01.json.tar               Failed
-203. trace_replayBlockTransactions/test_02.json.tar               Failed
-215. trace_replayBlockTransactions/test_14.json                   Failed
-232. trace_replayTransaction/test_16.json.tar                     Failed
-239. trace_replayTransaction/test_23.json.tar                     Failed
 264. txpool_content/test_1.json                                   Skipped
                                                                                     
-Test time-elapsed (secs):     85
+Test time-elapsed (secs):     64
 Number of executed tests:     261/268
 Number of NOT executed tests: 7
-Number of success tests:      254
-Number of failed tests:       7
+Number of success tests:      259
+Number of failed tests:       2
 
 ```
 
