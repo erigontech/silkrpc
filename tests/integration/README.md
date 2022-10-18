@@ -11,9 +11,9 @@ json-diff install:
 
 ```
 Test time-elapsed (secs):     46
-Number of executed tests:     268/268
+Number of executed tests:     272/272
 Number of NOT executed tests: 0
-Number of success tests:      268
+Number of success tests:      272
 Number of failed tests:       0
 
 ```
@@ -24,17 +24,17 @@ Number of failed tests:       0
 016. debug_traceCall/test_10.json                                 Skipped
 020. debug_traceCall/test_14.json                                 Skipped
 045. erigon_getBlockByTimestamp/test_1.json                       Skipped
-070. eth_getBlockByHash/test_1.json                               Skipped
-071. eth_getBlockByHash/test_2.json                               Skipped
-072. eth_getBlockByNumber/test_1.json                             Skipped
-073. eth_getBlockByNumber/test_2.json                             Skipped
-113. parity_getBlockReceipts/test_1.json                          Skipped
-264. txpool_content/test_1.json                                   Skipped
+071. eth_getBlockByHash/test_1.json                               Skipped
+072. eth_getBlockByHash/test_2.json                               Skipped
+073. eth_getBlockByNumber/test_1.json                             Skipped
+074. eth_getBlockByNumber/test_2.json                             Skipped
+117. parity_getBlockReceipts/test_1.json                          Skipped
+268. txpool_content/test_1.json                                   Skipped
                                                                                     
 Test time-elapsed (secs):     64
-Number of executed tests:     259/268
+Number of executed tests:     263/272
 Number of NOT executed tests: 9
-Number of success tests:      259
+Number of success tests:      263
 Number of failed tests:       0
 
 ```
