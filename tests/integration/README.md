@@ -10,7 +10,7 @@ json-diff install:
 ### To run integration tests comparing results with json file: ./run_tests.py -c
 
 ```
-Test time-elapsed (secs):     47
+Test time-elapsed (secs):     46
 Number of executed tests:     268/268
 Number of NOT executed tests: 0
 Number of success tests:      268
@@ -21,8 +21,8 @@ Number of failed tests:       0
 
 ### To run integration tests comparing results with RPCdaemon response: ./run_tests.py -d -c
 ```
-016. debug_traceCall/test_10.json                                 Failed
-020. debug_traceCall/test_14.json                                 Failed
+016. debug_traceCall/test_10.json                                 Skipped
+020. debug_traceCall/test_14.json                                 Skipped
 045. erigon_getBlockByTimestamp/test_1.json                       Skipped
 070. eth_getBlockByHash/test_1.json                               Skipped
 071. eth_getBlockByHash/test_2.json                               Skipped
@@ -32,10 +32,10 @@ Number of failed tests:       0
 264. txpool_content/test_1.json                                   Skipped
                                                                                     
 Test time-elapsed (secs):     64
-Number of executed tests:     261/268
-Number of NOT executed tests: 7
+Number of executed tests:     259/268
+Number of NOT executed tests: 9
 Number of success tests:      259
-Number of failed tests:       2
+Number of failed tests:       0
 
 ```
 
