@@ -29,6 +29,11 @@ api_not_compared = [
    "txpool_content"
 ]
 
+tests_not_compared = [
+   "debug_traceCall/test_10.json",
+   "debug_traceCall/test_14.json"
+]
+
 
 def get_target(silk: bool, method: str):
     """ determine target
@@ -46,6 +51,10 @@ def is_skipped(api_name, requested_api, exclude_api_list, exclude_test_list, api
     if requested_api == "" and req_test == -1 and verify_with_rpc == 1:
         for curr_test_name in api_not_compared:
             if curr_test_name == api_name:
+                return 1
+    if requested_api == "" and req_test == -1 and verify_with_rpc == 1:
+        for curr_test in tests_not_compared:
+            if curr_test == api_file:
                 return 1
     # scans exclude api list (-X)
     tokenize_exclude_api_list = exclude_api_list.split(",")
@@ -321,7 +330,7 @@ def main(argv):
             for test_name in test_lists:
                 if requested_api in ("", api_file): # -a
                     test_file = api_file + "/" + test_name
-                    if is_skipped(api_file, requested_api, exclude_api_list, exclude_test_list, api_file, req_test, verify_with_rpc, global_test_number) == 1:
+                    if is_skipped(api_file, requested_api, exclude_api_list, exclude_test_list, test_file, req_test, verify_with_rpc, global_test_number) == 1:
                         file = test_file.ljust(60)
                         print(f"{global_test_number:03d}. {file} Skipped")
                         tests_not_executed = tests_not_executed + 1
