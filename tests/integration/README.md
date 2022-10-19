@@ -10,10 +10,10 @@ json-diff install:
 ### To run integration tests comparing results with json file: ./run_tests.py -c
 
 ```
-Test time-elapsed (secs): 45
-Number of executed tests:     268/268
+Test time-elapsed (secs):     46
+Number of executed tests:     272/272
 Number of NOT executed tests: 0
-Number of success tests:      268
+Number of success tests:      272
 Number of failed tests:       0
 
 ```
@@ -21,28 +21,21 @@ Number of failed tests:       0
 
 ### To run integration tests comparing results with RPCdaemon response: ./run_tests.py -d -c
 ```
-014. debug_traceCall/test_08.json                                 Failed (bad json format on expected rsp)
-016. debug_traceCall/test_10.json                                 Failed
-020. debug_traceCall/test_14.json                                 Failed
+016. debug_traceCall/test_10.json                                 Skipped
+020. debug_traceCall/test_14.json                                 Skipped
 045. erigon_getBlockByTimestamp/test_1.json                       Skipped
-069. eth_gasPrice/test_1.json                                     Failed
-070. eth_getBlockByHash/test_1.json                               Skipped
-071. eth_getBlockByHash/test_2.json                               Skipped
-072. eth_getBlockByNumber/test_1.json                             Skipped
-073. eth_getBlockByNumber/test_2.json                             Skipped
-113. parity_getBlockReceipts/test_1.json                          Skipped
-202. trace_replayBlockTransactions/test_01.json.tar               Failed
-203. trace_replayBlockTransactions/test_02.json.tar               Failed
-215. trace_replayBlockTransactions/test_14.json                   Failed
-232. trace_replayTransaction/test_16.json.tar                     Failed
-239. trace_replayTransaction/test_23.json.tar                     Failed
-264. txpool_content/test_1.json                                   Skipped
+071. eth_getBlockByHash/test_1.json                               Skipped
+072. eth_getBlockByHash/test_2.json                               Skipped
+073. eth_getBlockByNumber/test_1.json                             Skipped
+074. eth_getBlockByNumber/test_2.json                             Skipped
+117. parity_getBlockReceipts/test_1.json                          Skipped
+268. txpool_content/test_1.json                                   Skipped
                                                                                     
-Test time-elapsed (secs):     70
-Number of executed tests:     261/268
-Number of NOT executed tests: 7
-Number of success tests:      252
-Number of failed tests:       9
+Test time-elapsed (secs):     64
+Number of executed tests:     263/272
+Number of NOT executed tests: 9
+Number of success tests:      263
+Number of failed tests:       0
 
 ```
 
