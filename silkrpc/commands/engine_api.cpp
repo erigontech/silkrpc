@@ -189,20 +189,9 @@ boost::asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_con
             reply = make_json_error(request.at("id"), 100, "incorrect terminal total difficulty");
             co_return;
         }
-        if (config.terminal_block_hash == std::nullopt) {
-            SILKRPC_ERROR << "execution layer does not have terminal block hash\n";
-            reply = make_json_error(request.at("id"), 100, "execution layer does not have terminal block hash");
-            co_return;
-        }
-        if (config.terminal_block_hash.value() != cl_configuration.terminal_block_hash) {
-            SILKRPC_ERROR << "execution layer has the incorrect terminal block hash, expected: "
-                << cl_configuration.terminal_block_hash << " got: " << config.terminal_block_hash.value() << "\n";
-            reply = make_json_error(request.at("id"), 100, "incorrect terminal block hash");
-            co_return;
-        }
         const auto transition_configuration = TransitionConfiguration{
             .terminal_total_difficulty = config.terminal_total_difficulty.value(),
-            .terminal_block_hash = config.terminal_block_hash.value(),
+            .terminal_block_hash = 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32,
             .terminal_block_number = config.terminal_block_number.value_or(0) // we default to returning zero if we dont have terminal_block_number
         };
         reply = make_json_content(request["id"], transition_configuration);
