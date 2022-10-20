@@ -81,7 +81,7 @@ boost::asio::awaitable<void> GasPriceOracle::load_block_prices(uint64_t block_nu
     int idx = 0;
     block_prices.reserve(block_with_hash.block.transactions.size());
     for (const auto& transaction : block_with_hash.block.transactions) {
-        const auto effective_gas_price = transaction.effective_gas_price(base_fee);
+        const auto effective_gas_price = transaction.priority_fee_per_gas(base_fee);
         SILKRPC_TRACE << "idx: " << idx++
             << " hash: " <<  silkworm::to_hex({hash_of_transaction(transaction).bytes, silkworm::kHashLength})
             << " effective_gas_price: 0x" <<  intx::hex(effective_gas_price)
