@@ -5,7 +5,7 @@
       "jsonrpc": "2.0",
       "method": "eth_getBlockByNumber",
       "params": [
-        "7100000",
+        "0x6C5660",
         true
       ]
     },
