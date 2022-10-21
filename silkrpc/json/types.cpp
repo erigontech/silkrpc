@@ -175,7 +175,7 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
        json["chainId"] = silkrpc::to_quantity(*transaction.chain_id);
        json["v"] = silkrpc::to_quantity((uint64_t)transaction.odd_y_parity);
        json["accessList"] = transaction.access_list; // EIP2930
-    } else if (*transaction.chain_id) {
+    } else if (transaction.chain_id) {
        json["chainId"] = silkrpc::to_quantity(*transaction.chain_id);
        json["v"] = silkrpc::to_quantity(silkworm::endian::to_big_compact(transaction.v()));
     } else {
