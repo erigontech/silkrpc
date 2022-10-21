@@ -181,7 +181,6 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
     } else {
        json["v"] = silkrpc::to_quantity(silkworm::endian::to_big_compact(transaction.v()));
     }
-     
     json["value"] = silkrpc::to_quantity(transaction.value);
     json["r"] = silkrpc::to_quantity(silkworm::endian::to_big_compact(transaction.r));
     json["s"] = silkrpc::to_quantity(silkworm::endian::to_big_compact(transaction.s));
