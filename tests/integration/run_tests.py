@@ -14,6 +14,10 @@ import getopt
 import gzip
 #import jsondiff
 
+SILK="silk"
+RPCDAEMON="rpcdaemon"
+INFURA="infura"
+
 tests_with_big_json = [
    "trace_replayBlockTransactions/test_01.json.tar",
    "trace_replayBlockTransactions/test_02.json.tar",
@@ -32,24 +36,36 @@ tests_not_compared = [
 ]
 
 
-def get_target(silk: bool, method: str):
+def get_target(target_type: str, method: str):
     """ determine target
     """
     if "engine_" in method:
         return "localhost:8550"
-    if silk:
+    if target_type == SILK:
         return "localhost:51515"
+
+    if target_type == INFURA:
+        return "https://goerli.infura.io/v3/d1c30a8114fd443aad1ed5d4b403e33d"
 
     return "localhost:8545"
 
-def is_skipped(api_name, requested_api, exclude_api_list, exclude_test_list, api_file: str, req_test, verify_with_rpc, global_test_number):
+def get_json_filename_ext(target_type: str):
+    """ determine json file name
+    """
+    if target_type == SILK:
+        return "-silk.json"
+    elif target_type == INFURA:
+        return "-infura.json"
+    return "-rpcdaemon.json"
+
+def is_skipped(api_name, requested_api, exclude_api_list, exclude_test_list, api_file: str, req_test, verify_with_daemon, global_test_number):
     """ determine if test must be skipped
     """
-    if requested_api == "" and req_test == -1 and verify_with_rpc == 1:
+    if requested_api == "" and req_test == -1 and verify_with_daemon == 1:
         for curr_test_name in api_not_compared:
             if curr_test_name == api_name:
                 return 1
-    if requested_api == "" and req_test == -1 and verify_with_rpc == 1:
+    if requested_api == "" and req_test == -1 and verify_with_daemon == 1:
         for curr_test in tests_not_compared:
             if curr_test == api_file:
                 return 1
@@ -74,7 +90,7 @@ def is_big_json(test_name: str):
     return 0
 
 def run_shell_command(command: str, command1: str, expected_response: str, verbose: bool, exit_on_fail: bool, output_dir: str, silk_file: str,
-                      rpc_file: str, diff_file: str, dump_output, json_file: str, test_number):
+                      exp_rsp_file: str, diff_file: str, dump_output, json_file: str, test_number):
     """ Run the specified command as shell. If exact result or error don't care, they are null but present in expected_response. """
 
     command_and_args = shlex.split(command)
@@ -119,14 +135,14 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         if silk_file != "":
             with open(silk_file, 'w', encoding='utf8') as json_file_ptr:
                 json_file_ptr.write(json.dumps(response,  indent=5))
-        if rpc_file != "":
-            with open(rpc_file, 'w', encoding='utf8') as json_file_ptr:
+        if exp_rsp_file != "":
+            with open(exp_rsp_file, 'w', encoding='utf8') as json_file_ptr:
                 json_file_ptr.write(json.dumps(expected_response,  indent=5))
         #response_diff = jsondiff.diff(expected_response, response, marshal=True)
         if is_big_json(json_file):
-            cmd = "json-patch-jsondiff --indent 4 " + rpc_file  + " " + silk_file + " > " + diff_file
+            cmd = "json-patch-jsondiff --indent 4 " + exp_rsp_file  + " " + silk_file + " > " + diff_file
         else:
-            cmd = "json-diff -s " + rpc_file  + " " + silk_file + " > " + diff_file
+            cmd = "json-diff -s " + exp_rsp_file  + " " + silk_file + " > " + diff_file
         os.system(cmd)
         diff_file_size = os.stat(diff_file).st_size
         if diff_file_size != 0:
@@ -142,7 +158,7 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
         if verbose:
             print("OK")
         os.remove(silk_file)
-        os.remove(rpc_file)
+        os.remove(exp_rsp_file)
         os.remove(diff_file)
         os.rmdir(output_dir)
     else:
@@ -154,12 +170,12 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
             if silk_file != "":
                 with open(silk_file, 'w', encoding='utf8') as json_file_ptr:
                     json_file_ptr.write(json.dumps(response, indent = 6))
-            if rpc_file != "":
-                with open(rpc_file, 'w', encoding='utf8') as json_file_ptr:
+            if exp_rsp_file != "":
+                with open(exp_rsp_file, 'w', encoding='utf8') as json_file_ptr:
                     json_file_ptr.write(json.dumps(expected_response,  indent=5))
     return 0
 
-def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, silk: bool, exit_on_fail: bool, verify_with_rpc: bool, dump_output: bool, test_number):
+def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, daemon_under_test: str, exit_on_fail: bool, verify_with_daemon: bool, daemon_as_reference: str, dump_output: bool, test_number):
     """ Run integration tests. """
     json_filename = test_dir + json_file
     ext = os.path.splitext(json_file)[1]
@@ -184,26 +200,26 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
     for json_rpc in jsonrpc_commands:
         request = json_rpc["request"]
         request_dumps = json.dumps(request)
-        target = get_target(silk, request["method"])
-        if verify_with_rpc == 0:
+        target = get_target(daemon_under_test, request["method"])
+        if verify_with_daemon == 0:
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = ""
             output_api_filename = output_dir + json_file[:-4]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = json_rpc["response"]
             silk_file = output_api_filename + "-response.json"
-            rpc_file = output_api_filename + "-expResponse.json"
+            exp_rsp_file = output_api_filename + "-expResponse.json"
             diff_file = output_api_filename + "-diff.json"
         else:
             output_api_filename = output_dir + json_file[:-4]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = ""
-            target = get_target(1, request["method"])
+            target = get_target(SILK, request["method"])
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
-            target1 = get_target(0, request["method"])
+            target1 = get_target(daemon_as_reference, request["method"])
             cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target1
-            silk_file = output_api_filename + "-silk.json"
-            rpc_file = output_api_filename + "-rpcdaemon.json"
+            silk_file = output_api_filename + get_json_filename_ext(SILK) 
+            exp_rsp_file = output_api_filename + get_json_filename_ext(daemon_as_reference)
             diff_file = output_api_filename + "-diff.json"
 
         return run_shell_command(
@@ -214,7 +230,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, sil
                 exit_on_fail,
                 output_dir_name,
                 silk_file,
-                rpc_file,
+                exp_rsp_file,
                 diff_file,
                 dump_output,
                 json_file,
@@ -234,9 +250,10 @@ def usage(argv):
     print("-c runs all tests even if one test fails [ default exit at first test fail ]")
     print("-r connect to rpcdaemon [ default connect to silk ] ")
     print("-l <number of loops>")
-    print("-a <test api >")
-    print("-t <test_number>")
-    print("-d verify real time with rpc")
+    print("-a <test api >: run all tests of the specified API")
+    print("-t <test_number>: run single test")
+    print("-d provides request also to the reference daemon (default RPCDAEMON)")
+    print("-i provides request also to the reference daemon (INFURA)")
     print("-b blockchain (default goerly)")
     print("-v verbose")
     print("-o dump response")
@@ -251,13 +268,14 @@ def main(argv):
     """ parse command line and execute tests
     """
     exit_on_fail = 1
-    silk = 1
+    daemon_under_test = SILK
+    daemon_as_reference = RPCDAEMON
     loop_number = 1
     verbose = 0
     req_test = -1
     dump_output = 0
     requested_api = ""
-    verify_with_rpc = 0
+    verify_with_daemon = 0
     json_dir = "./goerly/"
     results_dir = "results"
     output_dir = json_dir + results_dir + "/"
@@ -265,7 +283,7 @@ def main(argv):
     exclude_test_list = ""
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:db:ox:X:")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:dib:ox:X:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -273,7 +291,9 @@ def main(argv):
             elif option == "-c":
                 exit_on_fail = 0
             elif option == "-r":
-                silk = 0
+                daemon_under_test = RPCDAEMON
+            elif option == "-i":
+                daemon_as_reference = INFURA
             elif option == "-v":
                 verbose = 1
             elif option == "-t":
@@ -283,7 +303,7 @@ def main(argv):
             elif option == "-l":
                 loop_number = int(optarg)
             elif option == "-d":
-                verify_with_rpc = 1
+                verify_with_daemon = 1
             elif option == "-o":
                 dump_output = 1
             elif option == "-b":
@@ -327,7 +347,7 @@ def main(argv):
             for test_name in test_lists:
                 if requested_api in ("", api_file): # -a
                     test_file = api_file + "/" + test_name
-                    if is_skipped(api_file, requested_api, exclude_api_list, exclude_test_list, test_file, req_test, verify_with_rpc, global_test_number) == 1:
+                    if is_skipped(api_file, requested_api, exclude_api_list, exclude_test_list, test_file, req_test, verify_with_daemon, global_test_number) == 1:
                         file = test_file.ljust(60)
                         print(f"{global_test_number:03d}. {file} Skipped")
                         tests_not_executed = tests_not_executed + 1
@@ -340,7 +360,7 @@ def main(argv):
                                 print(f"{global_test_number:03d}. {file} ", end = '', flush=True)
                             else:
                                 print(f"{global_test_number:03d}. {file}\r", end = '', flush=True)
-                            ret=run_tests(json_dir, output_dir, test_file, verbose, silk, exit_on_fail, verify_with_rpc, dump_output, global_test_number)
+                            ret=run_tests(json_dir, output_dir, test_file, verbose, daemon_under_test, exit_on_fail, verify_with_daemon, daemon_as_reference, dump_output, global_test_number)
                             if ret == 0:
                                 success_tests = success_tests + 1
                             else:
