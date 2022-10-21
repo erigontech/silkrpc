@@ -21,11 +21,9 @@ tests_with_big_json = [
    "trace_replayTransaction/test_23.json.tar"
 ]
 
+#   "erigon_getBlockByTimestamp",
 api_not_compared = [
    "parity_getBlockReceipts",
-   "erigon_getBlockByTimestamp",
-   "eth_getBlockByHash",
-   "eth_getBlockByNumber",
    "txpool_content"
 ]
 
