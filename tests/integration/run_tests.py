@@ -54,7 +54,7 @@ def get_json_filename_ext(target_type: str):
     """
     if target_type == SILK:
         return "-silk.json"
-    elif target_type == INFURA:
+    if target_type == INFURA:
         return "-infura.json"
     return "-rpcdaemon.json"
 
@@ -218,7 +218,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
             target1 = get_target(daemon_as_reference, request["method"])
             cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target1
-            silk_file = output_api_filename + get_json_filename_ext(SILK) 
+            silk_file = output_api_filename + get_json_filename_ext(SILK)
             exp_rsp_file = output_api_filename + get_json_filename_ext(daemon_as_reference)
             diff_file = output_api_filename + "-diff.json"
 
