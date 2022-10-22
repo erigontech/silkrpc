@@ -343,7 +343,7 @@ TEST_CASE("suggested price") {
     }
 
     SECTION("when there are 60 blocks with with 0x07 base fee with fee == kDefaultMaxPrice") {
-        FixedBlockData data = {0x07, kDefaultMaxPrice+0x07, kDefaultMaxPrice+0x07, kDefaultMaxPrice+0x07, kDefaultMaxPrice+0x07};
+        FixedBlockData data = {0x07, kDefaultMaxPrice + 0x07, kDefaultMaxPrice + 0x07, kDefaultMaxPrice + 0x07, kDefaultMaxPrice + 0x07};
         const intx::uint256 expected_price = kDefaultMaxPrice;
 
         blocks.reserve(60);
