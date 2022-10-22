@@ -36,7 +36,7 @@ tests_not_compared = [
 ]
 
 
-def get_target(target_type: str, method: str):
+def get_target(target_type: str, method: str, infura_url: str):
     """ determine target
     """
     if "engine_" in method:
@@ -45,7 +45,7 @@ def get_target(target_type: str, method: str):
         return "localhost:51515"
 
     if target_type == INFURA:
-        return "https://goerli.infura.io/v3/d1c30a8114fd443aad1ed5d4b403e33d"
+        return infura_url
 
     return "localhost:8545"
 
@@ -175,7 +175,8 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
                     json_file_ptr.write(json.dumps(expected_response,  indent=5))
     return 0
 
-def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, daemon_under_test: str, exit_on_fail: bool, verify_with_daemon: bool, daemon_as_reference: str, dump_output: bool, test_number):
+def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, daemon_under_test: str, exit_on_fail: bool, verify_with_daemon: bool, daemon_as_reference: str,
+              dump_output: bool, test_number, infura_url: str):
     """ Run integration tests. """
     json_filename = test_dir + json_file
     ext = os.path.splitext(json_file)[1]
@@ -200,7 +201,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
     for json_rpc in jsonrpc_commands:
         request = json_rpc["request"]
         request_dumps = json.dumps(request)
-        target = get_target(daemon_under_test, request["method"])
+        target = get_target(daemon_under_test, request["method"], infura_url)
         if verify_with_daemon == 0:
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = ""
@@ -214,9 +215,9 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
             output_api_filename = output_dir + json_file[:-4]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = ""
-            target = get_target(SILK, request["method"])
+            target = get_target(SILK, request["method"], infura_url)
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
-            target1 = get_target(daemon_as_reference, request["method"])
+            target1 = get_target(daemon_as_reference, request["method"], infura_url)
             cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target1
             silk_file = output_api_filename + get_json_filename_ext(SILK)
             exp_rsp_file = output_api_filename + get_json_filename_ext(daemon_as_reference)
@@ -274,6 +275,7 @@ def main(argv):
     verbose = 0
     req_test = -1
     dump_output = 0
+    infura_url = ""
     requested_api = ""
     verify_with_daemon = 0
     json_dir = "./goerly/"
@@ -283,7 +285,7 @@ def main(argv):
     exclude_test_list = ""
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:dib:ox:X:")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:di:b:ox:X:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -294,6 +296,7 @@ def main(argv):
                 daemon_under_test = RPCDAEMON
             elif option == "-i":
                 daemon_as_reference = INFURA
+                infura_url = optarg
             elif option == "-v":
                 verbose = 1
             elif option == "-t":
@@ -360,7 +363,8 @@ def main(argv):
                                 print(f"{global_test_number:03d}. {file} ", end = '', flush=True)
                             else:
                                 print(f"{global_test_number:03d}. {file}\r", end = '', flush=True)
-                            ret=run_tests(json_dir, output_dir, test_file, verbose, daemon_under_test, exit_on_fail, verify_with_daemon, daemon_as_reference, dump_output, global_test_number)
+                            ret=run_tests(json_dir, output_dir, test_file, verbose, daemon_under_test, exit_on_fail, verify_with_daemon, daemon_as_reference,
+                                          dump_output, global_test_number, infura_url)
                             if ret == 0:
                                 success_tests = success_tests + 1
                             else:
