@@ -81,15 +81,14 @@ boost::asio::awaitable<void> GasPriceOracle::load_block_prices(uint64_t block_nu
     int idx = 0;
     block_prices.reserve(block_with_hash.block.transactions.size());
     for (const auto& transaction : block_with_hash.block.transactions) {
-        const auto effective_gas_price = transaction.priority_fee_per_gas(base_fee);
+        const auto priority_fee_per_gas  = transaction.priority_fee_per_gas(base_fee);
         SILKRPC_TRACE << "idx: " << idx++
             << " hash: " <<  silkworm::to_hex({hash_of_transaction(transaction).bytes, silkworm::kHashLength})
-            << " effective_gas_price: 0x" <<  intx::hex(effective_gas_price)
             << " priority_fee_per_gas: 0x" <<  intx::hex(transaction.priority_fee_per_gas(base_fee))
             << " max_fee_per_gas: 0x" <<  intx::hex(transaction.max_fee_per_gas)
             << " max_priority_fee_per_gas: 0x" <<  intx::hex(transaction.max_priority_fee_per_gas)
             << "\n";
-        if (effective_gas_price < kDefaultMinPrice) {
+        if (priority_fee_per_gas  < kDefaultMinPrice) {
             continue;
         }
 
@@ -97,14 +96,14 @@ boost::asio::awaitable<void> GasPriceOracle::load_block_prices(uint64_t block_nu
         if (sender == coinbase) {
             continue;
         }
-        block_prices.push_back(effective_gas_price);
+        block_prices.push_back(priority_fee_per_gas );
     }
 
     std::sort(block_prices.begin(), block_prices.end(), PriceComparator());
 
-    for (int count = 0; const auto& effective_gas_price : block_prices) {
-        SILKRPC_TRACE << " effective_gas_price: 0x" <<  intx::hex(effective_gas_price) << "\n";
-        tx_prices.push_back(effective_gas_price);
+    for (int count = 0; const auto& priority_fee_per_gas  : block_prices) {
+        SILKRPC_TRACE << " priority_fee_per_gas : 0x" <<  intx::hex(priority_fee_per_gas ) << "\n";
+        tx_prices.push_back(priority_fee_per_gas );
         if (++count >= limit) {
             break;
         }
