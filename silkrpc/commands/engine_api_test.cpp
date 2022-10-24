@@ -833,61 +833,6 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
     context_pool.join();
 }
 
-TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal block hash", "[silkrpc][engine_api]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
-
-    silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    context_pool.start();
-
-    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
-
-    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
-        }
-    ));
-
-    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, kChainConfig};
-        }
-    ));
-
-    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
-    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
-    EngineRpcApiTest rpc(database_ptr, backend_ptr);
-
-    nlohmann::json reply;
-    nlohmann::json request = R"({
-        "jsonrpc":"2.0",
-        "id":1,
-        "method":"engine_transitionConfigurationV1",
-        "params":[{
-            "terminalTotalDifficulty":"0xa4a470",
-            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de0000",
-            "terminalBlockNumber":"0x0"
-        }]
-    })"_json;
-
-    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_engine_exchange_transition_configuration_v1(
-            request,
-            reply
-        );
-    }, boost::asio::use_future)};
-    result.get();
-
-    CHECK(reply == R"({
-        "error":{
-            "code":100,
-            "message":"incorrect terminal block hash"
-            },
-            "id":1,
-            "jsonrpc":"2.0"
-        })"_json);
-    context_pool.stop();
-    context_pool.join();
-}
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer does not have terminal total difficulty", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
@@ -937,62 +882,6 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
         "error":{
             "code":100,
             "message":"execution layer does not have terminal total difficulty"
-            },
-            "id":1,
-            "jsonrpc":"2.0"
-        })"_json);
-    context_pool.stop();
-    context_pool.join();
-}
-
-TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn't have terminal block hash", "[silkrpc][engine_api]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
-
-    silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    context_pool.start();
-
-    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
-
-    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
-        }
-    ));
-
-    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, kChainConfigNoTerminalBlockHash};
-        }
-    ));
-
-    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
-    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
-    EngineRpcApiTest rpc(database_ptr, backend_ptr);
-
-    nlohmann::json reply;
-    nlohmann::json request = R"({
-        "jsonrpc":"2.0",
-        "id":1,
-        "method":"engine_transitionConfigurationV1",
-        "params":[{
-            "terminalTotalDifficulty":"0xa4a470",
-            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
-            "terminalBlockNumber":"0x0"
-        }]
-    })"_json;
-
-    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_engine_exchange_transition_configuration_v1(
-            request,
-            reply
-        );
-    }, boost::asio::use_future)};
-    result.get();
-
-    CHECK(reply == R"({
-        "error":{
-            "code":100,
-            "message":"execution layer does not have terminal block hash"
             },
             "id":1,
             "jsonrpc":"2.0"
