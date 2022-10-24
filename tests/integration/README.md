@@ -41,6 +41,7 @@ Number of failed tests:       0
 
 ### Skipped tests reasons
 ```
+debug_traceCall:            gasCost is not alligned between Silk and RPCDaemon for CALL/DELEGATE call temporary patch to RPCdaemon not cover all cases
 erigon_getBlockByTimestamp: RPCdaemon contains always chainId even if not valid and doesn't contain accessList 
                             if empty. Both seems errors
 eth_getBlockByHash:         RPCdaemon contains always chainId even if not valid. Seems wrong
