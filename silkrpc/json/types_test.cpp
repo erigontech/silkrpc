@@ -550,6 +550,7 @@ TEST_CASE("serialize block with hydrated transactions", "[silkrpc][to_json]") {
                 "transactionIndex":"0x0",
                 "type":"0x0",
                 "v":"0x2e",
+                "chainId":"0x5",
                 "value":"0x15c2a7b13fd0000"
             },
             {

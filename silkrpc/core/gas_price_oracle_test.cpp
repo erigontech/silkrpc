@@ -149,7 +149,7 @@ TEST_CASE("suggested price") {
 
     SECTION("when there is just 1 block in chain with 0x7 base fee") {
         FixedBlockData data = {0x7, 0x32, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x32;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(2);
         fill_blocks_vector(blocks, kBeneficiary, data);
@@ -162,7 +162,7 @@ TEST_CASE("suggested price") {
 
     SECTION("when there is just 1 block in chain with 0x7 base fee and different max_priority and max_fee in tnxs") {
         FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x07;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(2);
         fill_blocks_vector(blocks, kBeneficiary, data);
@@ -188,7 +188,7 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 20 blocks with 0x7 base fee and different max_priority and max_fee in tnxs") {
         FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x7;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(20);
         fill_blocks_vector(blocks, kBeneficiary, data);
@@ -214,7 +214,7 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 30 blocks with 0x7 base fee and different max_priority and max_fee in tnxs") {
         FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x7;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(30);
         fill_blocks_vector(blocks, kBeneficiary, data);
@@ -240,7 +240,7 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and different max_priority and max_fee in tnxs") {
         FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x7;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
@@ -253,7 +253,7 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and max_priority > max_fee") {
         FixedBlockData data = {0x7, 0x40, 0x32, 0x40, 0x32};
-        const intx::uint256 expected_price = 0x32;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
@@ -266,7 +266,7 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and max_priority < max_fee") {
         FixedBlockData data = {0x7, 0x32, 0x40, 0x32, 0x40};
-        const intx::uint256 expected_price = 0x39;
+        const intx::uint256 expected_price = 0x32;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
@@ -279,7 +279,7 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and different max_priority and max_fee in tnxs, beneficiary == tx1 from") {
         FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x32;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kFromTnx1, data);
@@ -292,7 +292,7 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base_fee and different max_priority and max_fee in tnxs, beneficiary == tx2 from") {
         FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x7;
+        const intx::uint256 expected_price = 0x0;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kFromTnx2, data);
@@ -343,7 +343,7 @@ TEST_CASE("suggested price") {
     }
 
     SECTION("when there are 60 blocks with with 0x07 base fee with fee == kDefaultMaxPrice") {
-        FixedBlockData data = {0x07, kDefaultMaxPrice, kDefaultMaxPrice, kDefaultMaxPrice, kDefaultMaxPrice};
+        FixedBlockData data = {0x07, kDefaultMaxPrice + 0x07, kDefaultMaxPrice + 0x07, kDefaultMaxPrice + 0x07, kDefaultMaxPrice + 0x07};
         const intx::uint256 expected_price = kDefaultMaxPrice;
 
         blocks.reserve(60);
@@ -396,7 +396,7 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and 1 tnx with fee > kDefaultMaxPrice") {
         FixedBlockData data = {0x7, kDefaultMaxPrice + 0x10, kDefaultMaxPrice + 0x10, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x32;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
@@ -422,7 +422,7 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and tnxs with increasing max_priority_fee_per_gas and max_fee_per_gas") {
         VariableBlockData data = {0x7, 0x10, 0x9, 0x10, 0x9};
-        const intx::uint256 expected_price = 0x019;
+        const intx::uint256 expected_price = 0x012;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
@@ -448,7 +448,7 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and tnxs with decreasing max_priority_fee_per_gas and max_fee_per_gas") {
         VariableBlockData data = {0x7, 0x200, -0x9, 0x200, -0x9};
-        const intx::uint256 expected_price = 0x1f7;
+        const intx::uint256 expected_price = 0x1f0;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);

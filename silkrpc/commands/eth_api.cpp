@@ -157,7 +157,11 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_gas_price(const nlohmann
         };
 
         GasPriceOracle gas_price_oracle{ block_provider};
-        const auto gas_price = co_await gas_price_oracle.suggested_price(block_number);
+        auto gas_price = co_await gas_price_oracle.suggested_price(block_number);
+
+        const auto block_with_hash = co_await block_provider(block_number);
+        const auto base_fee = block_with_hash.block.header.base_fee_per_gas.value_or(0);
+        gas_price += base_fee;
         reply = make_json_content(request["id"], to_quantity(gas_price));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";

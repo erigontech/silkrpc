@@ -23,10 +23,10 @@ max-nested-blocks=10
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=200
+max-line-length=250
 
 max-branches=50
-max-statements=100
+max-statements=200
 max-locals=40
 
 [MISCELLANEOUS]
