@@ -10,12 +10,11 @@ json-diff install:
 ### To run integration tests comparing results with json file: ./run_tests.py -c
 
 ```
-Test time-elapsed (secs):     89
-Number of executed tests:     282/282
+Test time-elapsed (secs):     53
+Number of executed tests:     285/285
 Number of NOT executed tests: 0
-Number of success tests:      282
+Number of success tests:      285
 Number of failed tests:       0
-
 ```
 
 
@@ -23,14 +22,15 @@ Number of failed tests:       0
 ```
 016. debug_traceCall/test_10.json                                 Skipped
 020. debug_traceCall/test_14.json                                 Skipped
-127. parity_getBlockReceipts/test_1.json                          Skipped
-278. txpool_content/test_1.json                                   Skipped
+130. parity_getBlockReceipts/test_1.json                          Skipped
+281. txpool_content/test_1.json                                   Skipped
                                                                                     
-Test time-elapsed (secs):     68
-Number of executed tests:     278/282
+Test time-elapsed (secs):     95
+Number of executed tests:     281/285
 Number of NOT executed tests: 4
-Number of success tests:      278
+Number of success tests:      281
 Number of failed tests:       0
+
 ```
 
 ### Skipped tests reasons

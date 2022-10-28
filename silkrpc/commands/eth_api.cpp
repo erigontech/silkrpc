@@ -1199,8 +1199,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohma
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         const auto chain_config_ptr = lookup_chain_config(chain_id);
 
-        StateReader state_reader{tx_database};
-        auto block_number = block_with_hash.block.header.number + 1;
+        auto block_number = block_with_hash.block.header.number;
 
         const auto start_time = clock_time::now();
 
