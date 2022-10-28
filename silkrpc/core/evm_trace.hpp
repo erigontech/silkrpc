@@ -384,7 +384,6 @@ public:
     boost::asio::awaitable<TraceFilterResult> trace_filter(const TraceFilter& trace_filter);
 
 private:
-    // boost::asio::awaitable<std::vector<Trace>> block_traces(const silkworm::BlockWithHash& block_with_hash);
     boost::asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block,
         const silkrpc::Transaction& transaction, std::int32_t index, const TraceConfig& config);
 

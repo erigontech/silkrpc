@@ -3960,14 +3960,6 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
             co_return kCanonicalHeaderValue2;
         }));
 
-    // TransactionDatabase::get_one: TABLE CanonicalHeader
-    static silkworm::Bytes kCanonicalHeaderKey3{*silkworm::from_hex("00000000006ddd04")};
-    static silkworm::Bytes kCanonicalHeaderValue3{*silkworm::from_hex("1b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
-    EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kCanonicalHeaderKey3}))
-        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
-            co_return kCanonicalHeaderValue3;
-        }));
-
     //  TransactionDatabase::get_one: TABLE CanonicalHeader
     static silkworm::Bytes kCanonicalHeaderKey4{*silkworm::from_hex("00000000006ddd03")};
     static silkworm::Bytes kCanonicalHeaderValue4{*silkworm::from_hex("a316f156582fb5fba2166910becdb6342965a801fa473e18cd6a0c06143cac1a")};
@@ -3997,26 +3989,6 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
         }));
 
     // TransactionDatabase::get: TABLE Header
-    static silkworm::Bytes kHeaderKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
-    static silkworm::Bytes kHeaderValue2{*silkworm::from_hex(
-        "f9025ba0a316f156582fb5fba2166910becdb6342965a801fa473e18cd6a0c06143cac1aa01dcc4de8dec75d7aab85b567b6ccd41ad312"
-        "451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a000636fe848d9d0dd8d3fe77deef0286329b01f"
-        "4e971501d1dc481365deea77bfa056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6"
-        "ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000"
-        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        "000000000000000001836ddd048401c9c380808462ca3c74b8614e65746865726d696e6420312e31332e332d302d306533323839663535"
-        "2d3230a499270541450663356185c61f970959545219dee7616763658a87d3c80730c32cca058d57ccc16cc0b0ca4269c4dee474ee3612"
-        "f83cbf54f9fbffddba6d154401a00000000000000000000000000000000000000000000000000000000000000000880000000000000000"
-        "07")};
-    EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
-        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{kHeaderKey2, kHeaderValue2};
-        }));
-
-    // TransactionDatabase::get: TABLE Header
     static silkworm::Bytes kHeaderKey3{*silkworm::from_hex("00000000006ddd03a316f156582fb5fba2166910becdb6342965a801fa473e18cd6a0c06143cac1a")};
     static silkworm::Bytes kHeaderValue3{*silkworm::from_hex(
         "f9025ea0a87009e08f9af73efe86d702561afcf98f277a8acec60b97869969e367c12d66a01dcc4de8dec75d7aab85b567b6ccd41ad312"
@@ -4042,14 +4014,6 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
     EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey1}))
         .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{kBlockBodyKey1, kBlockBodyValue1};
-        }));
-
-    // TransactionDatabase::get: TABLE BlockBody
-    static silkworm::Bytes kBlockBodyKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
-    static silkworm::Bytes kBlockBodyValue2{*silkworm::from_hex("c78405c62e6f02c0")};
-    EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
-        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{kBlockBodyKey2, kBlockBodyValue2};
         }));
 
     // TransactionDatabase::get: TABLE BlockBody
@@ -5478,11 +5442,67 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
             co_return kPlainStateValue7;
         }));
 
+    SECTION("from block number < to block number") {
+        TraceFilter trace_filter = R"({
+          "fromBlock": "0x6DDD03",
+          "toBlock": "0x6DDD02"
+        })"_json;
+
+        BlockCache block_cache;
+        TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
+        auto result = execution_result.get();
+
+        context_pool.stop();
+        io_context.stop();
+        pool_thread.join();
+
+        CHECK(result.pre_check_error.has_value() == true);
+        CHECK(result.pre_check_error.value() == "invalid parameters: fromBlock cannot be greater than toBlock");
+    }
+
     SECTION("from block to block") {
         TraceFilter trace_filter = R"({
           "fromBlock": "0x6DDD02",
           "toBlock": "0x6DDD03"
         })"_json;
+
+        // TransactionDatabase::get_one: TABLE CanonicalHeader
+        static silkworm::Bytes kCanonicalHeaderKey3{*silkworm::from_hex("00000000006ddd04")};
+        static silkworm::Bytes kCanonicalHeaderValue3{*silkworm::from_hex("1b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kCanonicalHeaderKey3}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kCanonicalHeaderValue3;
+            }));
+
+        // TransactionDatabase::get: TABLE Header
+        static silkworm::Bytes kHeaderKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        static silkworm::Bytes kHeaderValue2{*silkworm::from_hex(
+            "f9025ba0a316f156582fb5fba2166910becdb6342965a801fa473e18cd6a0c06143cac1aa01dcc4de8dec75d7aab85b567b6ccd41ad312"
+            "451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a000636fe848d9d0dd8d3fe77deef0286329b01f"
+            "4e971501d1dc481365deea77bfa056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6"
+            "ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000001836ddd048401c9c380808462ca3c74b8614e65746865726d696e6420312e31332e332d302d306533323839663535"
+            "2d3230a499270541450663356185c61f970959545219dee7616763658a87d3c80730c32cca058d57ccc16cc0b0ca4269c4dee474ee3612"
+            "f83cbf54f9fbffddba6d154401a00000000000000000000000000000000000000000000000000000000000000000880000000000000000"
+            "07")};
+        EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kHeaderKey2, kHeaderValue2};
+            }));
+
+        // TransactionDatabase::get: TABLE BlockBody
+        static silkworm::Bytes kBlockBodyKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        static silkworm::Bytes kBlockBodyValue2{*silkworm::from_hex("c78405c62e6f02c0")};
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kBlockBodyKey2, kBlockBodyValue2};
+            }));
 
         BlockCache block_cache;
         TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
@@ -5509,6 +5529,334 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
                 "traceAddress": [],
                 "type": "reward"
             },
+            {
+                "action": {
+                    "author": "0x0000000000000000000000000000000000000000",
+                    "rewardType": "block",
+                    "value": "0x1bc16d674ec80000"
+                },
+                "blockHash": "0xa316f156582fb5fba2166910becdb6342965a801fa473e18cd6a0c06143cac1a",
+                "blockNumber": 7200003,
+                "result": null,
+                "subtraces": 0,
+                "traceAddress": [],
+                "type": "reward"
+            }
+        ])"_json);
+    }
+
+    SECTION("from block to block with fromAddress") {
+        TraceFilter trace_filter = R"({
+          "fromBlock": "0x6DDD02",
+          "toBlock": "0x6DDD03",
+          "fromAddress": ["0x2031832e54a2200bf678286f560f49a950db2ad5"]
+        })"_json;
+
+        // TransactionDatabase::get_one: TABLE CanonicalHeader
+        static silkworm::Bytes kCanonicalHeaderKey3{*silkworm::from_hex("00000000006ddd04")};
+        static silkworm::Bytes kCanonicalHeaderValue3{*silkworm::from_hex("1b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kCanonicalHeaderKey3}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kCanonicalHeaderValue3;
+            }));
+
+        // TransactionDatabase::get: TABLE Header
+        static silkworm::Bytes kHeaderKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        static silkworm::Bytes kHeaderValue2{*silkworm::from_hex(
+            "f9025ba0a316f156582fb5fba2166910becdb6342965a801fa473e18cd6a0c06143cac1aa01dcc4de8dec75d7aab85b567b6ccd41ad312"
+            "451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a000636fe848d9d0dd8d3fe77deef0286329b01f"
+            "4e971501d1dc481365deea77bfa056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6"
+            "ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000001836ddd048401c9c380808462ca3c74b8614e65746865726d696e6420312e31332e332d302d306533323839663535"
+            "2d3230a499270541450663356185c61f970959545219dee7616763658a87d3c80730c32cca058d57ccc16cc0b0ca4269c4dee474ee3612"
+            "f83cbf54f9fbffddba6d154401a00000000000000000000000000000000000000000000000000000000000000000880000000000000000"
+            "07")};
+        EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kHeaderKey2, kHeaderValue2};
+            }));
+
+        // TransactionDatabase::get: TABLE BlockBody
+        static silkworm::Bytes kBlockBodyKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        static silkworm::Bytes kBlockBodyValue2{*silkworm::from_hex("c78405c62e6f02c0")};
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kBlockBodyKey2, kBlockBodyValue2};
+            }));
+
+        BlockCache block_cache;
+        TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
+        auto result = execution_result.get();
+
+        context_pool.stop();
+        io_context.stop();
+        pool_thread.join();
+
+        CHECK(result.pre_check_error.has_value() == false);
+        CHECK(result.traces == R"([
+        ])"_json);
+    }
+
+    SECTION("from block to block with toAddress") {
+        TraceFilter trace_filter = R"({
+          "fromBlock": "0x6DDD02",
+          "toBlock": "0x6DDD03",
+          "fromAddress": ["0x2031832e54a2200bf678286f560f49a950db2ad5"]
+        })"_json;
+
+        // TransactionDatabase::get_one: TABLE CanonicalHeader
+        static silkworm::Bytes kCanonicalHeaderKey3{*silkworm::from_hex("00000000006ddd04")};
+        static silkworm::Bytes kCanonicalHeaderValue3{*silkworm::from_hex("1b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kCanonicalHeaderKey3}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kCanonicalHeaderValue3;
+            }));
+
+        // TransactionDatabase::get: TABLE Header
+        static silkworm::Bytes kHeaderKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        static silkworm::Bytes kHeaderValue2{*silkworm::from_hex(
+            "f9025ba0a316f156582fb5fba2166910becdb6342965a801fa473e18cd6a0c06143cac1aa01dcc4de8dec75d7aab85b567b6ccd41ad312"
+            "451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a000636fe848d9d0dd8d3fe77deef0286329b01f"
+            "4e971501d1dc481365deea77bfa056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6"
+            "ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000001836ddd048401c9c380808462ca3c74b8614e65746865726d696e6420312e31332e332d302d306533323839663535"
+            "2d3230a499270541450663356185c61f970959545219dee7616763658a87d3c80730c32cca058d57ccc16cc0b0ca4269c4dee474ee3612"
+            "f83cbf54f9fbffddba6d154401a00000000000000000000000000000000000000000000000000000000000000000880000000000000000"
+            "07")};
+        EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kHeaderKey2, kHeaderValue2};
+            }));
+
+        // TransactionDatabase::get: TABLE BlockBody
+        static silkworm::Bytes kBlockBodyKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        static silkworm::Bytes kBlockBodyValue2{*silkworm::from_hex("c78405c62e6f02c0")};
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kBlockBodyKey2, kBlockBodyValue2};
+            }));
+
+        BlockCache block_cache;
+        TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
+        auto result = execution_result.get();
+
+        context_pool.stop();
+        io_context.stop();
+        pool_thread.join();
+
+        CHECK(result.pre_check_error.has_value() == false);
+        CHECK(result.traces == R"([
+        ])"_json);
+    }
+
+    SECTION("from block to block with count=0") {
+        TraceFilter trace_filter = R"({
+          "fromBlock": "0x6DDD02",
+          "toBlock": "0x6DDD03",
+          "count": 0
+        })"_json;
+
+        BlockCache block_cache;
+        TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
+        auto result = execution_result.get();
+
+        context_pool.stop();
+        io_context.stop();
+        pool_thread.join();
+
+        CHECK(result.pre_check_error.has_value() == false);
+        CHECK(result.traces == R"([
+        ])"_json);
+    }
+
+    SECTION("from block to block with count=1") {
+        TraceFilter trace_filter = R"({
+          "fromBlock": "0x6DDD02",
+          "toBlock": "0x6DDD03",
+          "count": 1
+        })"_json;
+
+        BlockCache block_cache;
+        TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
+        auto result = execution_result.get();
+
+        context_pool.stop();
+        io_context.stop();
+        pool_thread.join();
+
+        CHECK(result.pre_check_error.has_value() == false);
+        CHECK(result.traces == R"([
+            {
+                "action": {
+                    "author": "0x0000000000000000000000000000000000000000",
+                    "rewardType": "block",
+                    "value": "0x1bc16d674ec80000"
+                },
+                "blockHash": "0xa87009e08f9af73efe86d702561afcf98f277a8acec60b97869969e367c12d66",
+                "blockNumber": 7200002,
+                "result": null,
+                "subtraces": 0,
+                "traceAddress": [],
+                "type": "reward"
+            }
+        ])"_json);
+    }
+
+    SECTION("from block to block with after=0") {
+        TraceFilter trace_filter = R"({
+          "fromBlock": "0x6DDD02",
+          "toBlock": "0x6DDD03",
+          "after": 0
+        })"_json;
+
+        // TransactionDatabase::get_one: TABLE CanonicalHeader
+        static silkworm::Bytes kCanonicalHeaderKey3{*silkworm::from_hex("00000000006ddd04")};
+        static silkworm::Bytes kCanonicalHeaderValue3{*silkworm::from_hex("1b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kCanonicalHeaderKey3}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kCanonicalHeaderValue3;
+            }));
+
+        // TransactionDatabase::get: TABLE Header
+        static silkworm::Bytes kHeaderKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        static silkworm::Bytes kHeaderValue2{*silkworm::from_hex(
+            "f9025ba0a316f156582fb5fba2166910becdb6342965a801fa473e18cd6a0c06143cac1aa01dcc4de8dec75d7aab85b567b6ccd41ad312"
+            "451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a000636fe848d9d0dd8d3fe77deef0286329b01f"
+            "4e971501d1dc481365deea77bfa056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6"
+            "ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000001836ddd048401c9c380808462ca3c74b8614e65746865726d696e6420312e31332e332d302d306533323839663535"
+            "2d3230a499270541450663356185c61f970959545219dee7616763658a87d3c80730c32cca058d57ccc16cc0b0ca4269c4dee474ee3612"
+            "f83cbf54f9fbffddba6d154401a00000000000000000000000000000000000000000000000000000000000000000880000000000000000"
+            "07")};
+        EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kHeaderKey2, kHeaderValue2};
+            }));
+
+        // TransactionDatabase::get: TABLE BlockBody
+        static silkworm::Bytes kBlockBodyKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        static silkworm::Bytes kBlockBodyValue2{*silkworm::from_hex("c78405c62e6f02c0")};
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kBlockBodyKey2, kBlockBodyValue2};
+            }));
+
+        BlockCache block_cache;
+        TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
+        auto result = execution_result.get();
+
+        context_pool.stop();
+        io_context.stop();
+        pool_thread.join();
+
+        CHECK(result.pre_check_error.has_value() == false);
+        CHECK(result.traces == R"([
+            {
+                "action": {
+                    "author": "0x0000000000000000000000000000000000000000",
+                    "rewardType": "block",
+                    "value": "0x1bc16d674ec80000"
+                },
+                "blockHash": "0xa87009e08f9af73efe86d702561afcf98f277a8acec60b97869969e367c12d66",
+                "blockNumber": 7200002,
+                "result": null,
+                "subtraces": 0,
+                "traceAddress": [],
+                "type": "reward"
+            },
+            {
+                "action": {
+                    "author": "0x0000000000000000000000000000000000000000",
+                    "rewardType": "block",
+                    "value": "0x1bc16d674ec80000"
+                },
+                "blockHash": "0xa316f156582fb5fba2166910becdb6342965a801fa473e18cd6a0c06143cac1a",
+                "blockNumber": 7200003,
+                "result": null,
+                "subtraces": 0,
+                "traceAddress": [],
+                "type": "reward"
+            }
+        ])"_json);
+    }
+
+    SECTION("from block to block with after=1") {
+        TraceFilter trace_filter = R"({
+          "fromBlock": "0x6DDD02",
+          "toBlock": "0x6DDD03",
+          "after": 1
+        })"_json;
+
+        // TransactionDatabase::get_one: TABLE CanonicalHeader
+        static silkworm::Bytes kCanonicalHeaderKey3{*silkworm::from_hex("00000000006ddd04")};
+        static silkworm::Bytes kCanonicalHeaderValue3{*silkworm::from_hex("1b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kCanonicalHeaderKey3}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kCanonicalHeaderValue3;
+            }));
+
+        // TransactionDatabase::get: TABLE Header
+        static silkworm::Bytes kHeaderKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        static silkworm::Bytes kHeaderValue2{*silkworm::from_hex(
+            "f9025ba0a316f156582fb5fba2166910becdb6342965a801fa473e18cd6a0c06143cac1aa01dcc4de8dec75d7aab85b567b6ccd41ad312"
+            "451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a000636fe848d9d0dd8d3fe77deef0286329b01f"
+            "4e971501d1dc481365deea77bfa056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6"
+            "ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            "000000000000000001836ddd048401c9c380808462ca3c74b8614e65746865726d696e6420312e31332e332d302d306533323839663535"
+            "2d3230a499270541450663356185c61f970959545219dee7616763658a87d3c80730c32cca058d57ccc16cc0b0ca4269c4dee474ee3612"
+            "f83cbf54f9fbffddba6d154401a00000000000000000000000000000000000000000000000000000000000000000880000000000000000"
+            "07")};
+        EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kHeaderKey2, kHeaderValue2};
+            }));
+
+        // TransactionDatabase::get: TABLE BlockBody
+        static silkworm::Bytes kBlockBodyKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
+        static silkworm::Bytes kBlockBodyValue2{*silkworm::from_hex("c78405c62e6f02c0")};
+        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kBlockBodyKey2, kBlockBodyValue2};
+            }));
+
+        BlockCache block_cache;
+        TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
+        auto result = execution_result.get();
+
+        context_pool.stop();
+        io_context.stop();
+        pool_thread.join();
+
+        CHECK(result.pre_check_error.has_value() == false);
+        CHECK(result.traces == R"([
             {
                 "action": {
                     "author": "0x0000000000000000000000000000000000000000",
@@ -6253,13 +6601,13 @@ TEST_CASE("TraceFilter") {
         TraceFilter config;
         config.from_addresses.push_back(0x0a6bb546b9208cfab9e8fa2b9b2c042b18df7030_address);
         config.to_addresses.push_back(0x0a6bb546b9208cfab9e8fa2b9b2c042b18df7031_address);
-
+        config.mode = "union";
         std::ostringstream os;
         os << config;
 
         CHECK(os.str() ==
               "from_block: 0x0, to_block: latest, from_addresses: [0a6bb546b9208cfab9e8fa2b9b2c042b18df7030, ], "
-              "to_addresses: [0a6bb546b9208cfab9e8fa2b9b2c042b18df7031, ], after: 0, count: 4294967295");
+              "to_addresses: [0a6bb546b9208cfab9e8fa2b9b2c042b18df7031, ], mode: union, after: 0, count: 4294967295");
     }
     SECTION("json deserialization: simple") {
         nlohmann::json json = R"({
@@ -6279,6 +6627,7 @@ TEST_CASE("TraceFilter") {
         CHECK(config.to_block.tag() == "latest");
         CHECK(config.from_addresses.size() == 0);
         CHECK(config.to_addresses.size() == 0);
+        CHECK(!config.mode);
     }
     SECTION("json deserialization: full") {
         nlohmann::json json = R"({
@@ -6291,7 +6640,8 @@ TEST_CASE("TraceFilter") {
           "toAddress": [
             "0x11fe4b6ae13d2a6055c8d9cf65c55bac32b5d844"
           ],
-          "toBlock": "latest"
+          "toBlock": "latest",
+          "mode": "union"
         })"_json;
 
         TraceFilter config;
@@ -6306,6 +6656,8 @@ TEST_CASE("TraceFilter") {
         CHECK(config.from_addresses[0] == 0xd05526a73bf45dadf7f9a99dcceac23c2d43c6c7_address);
         CHECK(config.to_addresses.size() == 1);
         CHECK(config.to_addresses[0] == 0x11fe4b6ae13d2a6055c8d9cf65c55bac32b5d844_address);
+        CHECK(config.mode);
+        CHECK(config.mode.value() == "union");
     }
 }
 

@@ -289,18 +289,6 @@ void to_json(nlohmann::json& json, const TraceManyCallResult& result) {
     }
 }
 
-// void to_json(nlohmann::json& json, const TraceFilterTrace& trace) {
-//     json["action"] = nlohmann::json::value_t::null;
-//     json["blockHash"] = nlohmann::json::value_t::null;
-//     json["blockNumber"] = nlohmann::json::value_t::null;
-//     json["result"] = nlohmann::json::value_t::null;
-//     json["subtraces"] = nlohmann::json::value_t::null;
-//     json["traceAddress"] = nlohmann::json::value_t::null;
-//     json["transactionHash"] = nlohmann::json::value_t::null;
-//     json["transactionPosition"] = nlohmann::json::value_t::null;
-//     json["type"] = nlohmann::json::value_t::null;
-// }
-
 int get_stack_count(std::uint8_t op_code) {
     int count = 0;
     switch (op_code) {
@@ -644,7 +632,6 @@ void TraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
     current_depth_ = msg.depth;
 
     auto create = (!initial_ibs_.exists(recipient) && created_address_.find(recipient) == created_address_.end() && recipient != code_address);
-    //auto create = msg.kind == evmc_call_kind::EVMC_CREATE || msg.kind == evmc_call_kind::EVMC_CREATE2;
 
     start_gas_.push(msg.gas);
 
@@ -749,7 +736,6 @@ void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::In
         } else if (trace.trace_result->output) {
             trace.trace_result->output = silkworm::ByteView{result.output_data, result.output_size};
         }
-        // trace.trace_result->output = silkworm::ByteView{result.output_data, result.output_size};
     }
 
     current_depth_--;
