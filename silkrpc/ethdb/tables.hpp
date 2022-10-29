@@ -21,6 +21,7 @@ namespace silkrpc::db::table {
 
 constexpr const char* kAccountHistory{"AccountHistory"};
 constexpr const char* kBlockBodies{"BlockBody"};
+constexpr const char* kLastForkchoice{"LastForkchoice"};
 
 constexpr const char* kCanonicalHashes{"CanonicalHeader"};
 constexpr const char* kHeaders{"Header"};
