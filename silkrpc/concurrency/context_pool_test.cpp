@@ -21,149 +21,12 @@
 #include <string>
 #include <thread>
 
+#include <boost/asio/post.hpp>
 #include <catch2/catch.hpp>
 #include <grpcpp/grpcpp.h>
-#include <silkworm/common/log.hpp>
 
 #include <silkrpc/common/log.hpp>
-
-// TODO(canepat) Temporary modified copy of CompletionEndPoint tests just for prototyping
-#include <chrono>
-#include <grpcpp/alarm.h>
-
-using namespace std::chrono_literals; // NOLINT(build/namespaces)
-
-namespace silkworm::rpc {
-
-TEST_CASE("CompletionEndPoint::poll_one", "[silkworm][rpc][completion_end_point]") {
-    silkworm::log::set_verbosity(silkworm::log::Level::kNone);
-    grpc::CompletionQueue queue;
-    CompletionEndPoint completion_end_point{queue};
-
-    SECTION("waiting on empty completion queue") {
-        auto completion_end_point_thread = std::thread([&]() {
-            while (completion_end_point.poll_one() >= 0) {
-                std::this_thread::sleep_for(100us);
-            }
-        });
-        completion_end_point.shutdown();
-        CHECK_NOTHROW(completion_end_point_thread.join());
-    }
-
-// Exclude gRPC test from sanitizer builds due to data race warnings
-#ifndef SILKWORM_SANITIZE
-    SECTION("executing completion handler") {
-        bool executed{false};
-        TagProcessor tag_processor = [&completion_end_point, &executed](bool) {
-            executed = true;
-            completion_end_point.shutdown();
-        };
-        auto alarm_deadline = gpr_time_add(gpr_now(GPR_CLOCK_MONOTONIC), gpr_time_from_millis(50, GPR_TIMESPAN));
-        grpc::Alarm alarm;
-        alarm.Set(&queue, alarm_deadline, &tag_processor);
-        while (completion_end_point.poll_one() >= 0) {
-            std::this_thread::sleep_for(100us);
-        }
-        CHECK(executed);
-    }
-#endif // SILKWORM_SANITIZE
-
-    SECTION("exiting on completion queue already shutdown") {
-        completion_end_point.shutdown();
-        auto completion_end_point_thread = std::thread([&]() {
-            while (completion_end_point.poll_one() >= 0) {
-                std::this_thread::sleep_for(100us);
-            }
-        });
-        CHECK_NOTHROW(completion_end_point_thread.join());
-    }
-
-    SECTION("stopping again after already stopped") {
-        auto completion_end_point_thread = std::thread([&]() {
-            while (completion_end_point.poll_one() >= 0) {
-                std::this_thread::sleep_for(100us);
-            }
-        });
-        completion_end_point.shutdown();
-        CHECK_NOTHROW(completion_end_point_thread.join());
-        CHECK_NOTHROW(completion_end_point.shutdown());
-    }
-}
-
-TEST_CASE("CompletionEndPoint::post_one", "[silkworm][rpc][completion_end_point]") {
-    silkworm::log::set_verbosity(silkworm::log::Level::kNone);
-    grpc::CompletionQueue queue;
-    CompletionEndPoint completion_end_point{queue};
-    asio::io_context io_context;
-    asio::io_context::work work{io_context};
-
-    SECTION("waiting on empty completion queue") {
-        auto completion_runner_thread = std::thread([&]() {
-            bool stopped{false};
-            while (!stopped) {
-                stopped = completion_end_point.post_one(io_context);
-            }
-        });
-        completion_end_point.shutdown();
-        CHECK_NOTHROW(completion_runner_thread.join());
-    }
-
-// Exclude gRPC test from sanitizer builds due to data race warnings
-#ifndef SILKWORM_SANITIZE
-    SECTION("executing completion handler") {
-        bool executed{false};
-
-        // Setup the alarm notification delivered through gRPC queue
-        TagProcessor tag_processor = [&](bool) {
-            executed = true;
-            completion_end_point.shutdown();
-            io_context.stop();
-        };
-        auto alarm_deadline = gpr_time_add(gpr_now(GPR_CLOCK_MONOTONIC), gpr_time_from_millis(50, GPR_TIMESPAN));
-        grpc::Alarm alarm;
-        alarm.Set(&queue, alarm_deadline, &tag_processor);
-
-        // Start the thread blocking on the gRPC queue
-        auto completion_runner_thread = std::thread([&]() {
-            bool stopped{false};
-            while (!stopped) {
-                stopped = completion_end_point.post_one(io_context);
-            }
-        });
-
-        // Run the Asio scheduler executing the completion handler
-        io_context.run();
-
-        CHECK_NOTHROW(completion_runner_thread.join());
-        CHECK(executed);
-    }
-#endif // SILKWORM_SANITIZE
-
-    SECTION("exiting on completion queue already shutdown") {
-        completion_end_point.shutdown();
-        auto completion_runner_thread = std::thread([&]() {
-            bool stopped{false};
-            while (!stopped) {
-                stopped = completion_end_point.post_one(io_context);
-            }
-        });
-        CHECK_NOTHROW(completion_runner_thread.join());
-    }
-
-    SECTION("stopping again after already stopped") {
-        auto completion_runner_thread = std::thread([&]() {
-            bool stopped{false};
-            while (!stopped) {
-                stopped = completion_end_point.post_one(io_context);
-            }
-        });
-        completion_end_point.shutdown();
-        CHECK_NOTHROW(completion_runner_thread.join());
-        CHECK_NOTHROW(completion_end_point.shutdown());
-    }
-}
-
-} // namespace silkworm::rpc
+#include <silkworm/common/log.hpp>
 
 namespace silkrpc {
 
@@ -174,26 +37,29 @@ ChannelFactory create_channel = []() { return grpc::CreateChannel("localhost", g
 TEST_CASE("Context", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
+    auto block_cache = std::make_shared<BlockCache>();
+    auto state_cache = std::make_shared<ethdb::kv::CoherentStateCache>();
+
     WaitMode all_wait_modes[] = {
-        WaitMode::blocking, WaitMode::sleeping, WaitMode::yielding, WaitMode::spin_wait, WaitMode::busy_spin
+        WaitMode::backoff, WaitMode::blocking, WaitMode::sleeping, WaitMode::yielding, WaitMode::spin_wait, WaitMode::busy_spin
     };
     for (auto wait_mode : all_wait_modes) {
         SECTION(std::string("Context::Context wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
-            Context context{create_channel, std::make_shared<BlockCache>(), wait_mode};
+            Context context{create_channel, block_cache, state_cache, wait_mode};
             CHECK_NOTHROW(context.io_context() != nullptr);
-            CHECK_NOTHROW(context.rpc_end_point() != nullptr);
+            CHECK_NOTHROW(context.grpc_context() != nullptr);
             CHECK_NOTHROW(context.backend() != nullptr);
             CHECK_NOTHROW(context.miner() != nullptr);
             CHECK_NOTHROW(context.block_cache() != nullptr);
         }
 
         SECTION(std::string("Context::execute_loop wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
-            Context context{create_channel, std::make_shared<BlockCache>(), wait_mode};
+            Context context{create_channel, block_cache, state_cache, wait_mode};
             std::atomic_bool processed{false};
-            auto io_context = context.io_context();
+            auto* io_context = context.io_context();
             io_context->post([&]() {
                 processed = true;
-                io_context->stop();
+                context.stop();
             });
             auto context_thread = std::thread([&]() { context.execute_loop(); });
             CHECK_NOTHROW(context_thread.join());
@@ -201,7 +67,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
         }
 
         SECTION(std::string("Context::stop wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
-            Context context{create_channel, std::make_shared<BlockCache>(), wait_mode};
+            Context context{create_channel, block_cache, state_cache, wait_mode};
             std::atomic_bool processed{false};
             context.io_context()->post([&]() {
                 processed = true;
@@ -260,15 +126,33 @@ TEST_CASE("start context pool", "[silkrpc][context_pool]") {
 
     SECTION("running 1 thread") {
         ContextPool cp{1, create_channel};
-        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        cp.start();
         cp.stop();
+        cp.join();
+    }
+
+    SECTION("running 3 thread") {
+        ContextPool cp{3, create_channel};
+        cp.start();
+        cp.stop();
+        cp.join();
+    }
+}
+
+TEST_CASE("run context pool", "[silkrpc][context_pool]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    SECTION("running 1 thread") {
+        ContextPool cp{1, create_channel};
+        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        boost::asio::post(cp.next_io_context(), [&]() { cp.stop(); });
         CHECK_NOTHROW(context_pool_thread.join());
     }
 
     SECTION("running 3 thread") {
         ContextPool cp{3, create_channel};
         auto context_pool_thread = std::thread([&]() { cp.run(); });
-        cp.stop();
+        boost::asio::post(cp.next_io_context(), [&]() { cp.stop(); });
         CHECK_NOTHROW(context_pool_thread.join());
     }
 
@@ -277,8 +161,8 @@ TEST_CASE("start context pool", "[silkrpc][context_pool]") {
         ContextPool cp2{3, create_channel};
         auto context_pool_thread1 = std::thread([&]() { cp1.run(); });
         auto context_pool_thread2 = std::thread([&]() { cp2.run(); });
-        cp1.stop();
-        cp2.stop();
+        boost::asio::post(cp1.next_io_context(), [&]() { cp1.stop(); });
+        boost::asio::post(cp2.next_io_context(), [&]() { cp2.stop(); });
         CHECK_NOTHROW(context_pool_thread1.join());
         CHECK_NOTHROW(context_pool_thread2.join());
     }
@@ -294,35 +178,39 @@ TEST_CASE("stop context pool", "[silkrpc][context_pool]") {
 
     SECTION("already stopped") {
         ContextPool cp{3, create_channel};
-        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        cp.start();
         cp.stop();
         CHECK_NOTHROW(cp.stop());
+        cp.join();
+    }
+
+    SECTION("already stopped after run in dedicated thread") {
+        ContextPool cp{3, create_channel};
+        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        boost::asio::post(cp.next_io_context(), [&]() { cp.stop(); });
+        boost::asio::post(cp.next_io_context(), [&]() { cp.stop(); });
         context_pool_thread.join();
-        CHECK_NOTHROW(cp.stop());
+        boost::asio::post(cp.next_io_context(), [&]() { cp.stop(); });
     }
 }
 
-TEST_CASE("restart context pool", "[silkrpc][context_pool]") {
+TEST_CASE("cannot restart context pool", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     SECTION("running 1 thread") {
         ContextPool cp{1, create_channel};
-        auto context_pool_thread = std::thread([&]() { cp.run(); });
+        cp.start();
         cp.stop();
-        CHECK_NOTHROW(context_pool_thread.join());
-        context_pool_thread = std::thread([&]() { cp.run(); });
-        cp.stop();
-        CHECK_NOTHROW(context_pool_thread.join());
+        cp.join();
+        CHECK_THROWS_AS(cp.start(), std::logic_error);
     }
 
     SECTION("running 3 thread") {
         ContextPool cp{3, create_channel};
         auto context_pool_thread = std::thread([&]() { cp.run(); });
-        cp.stop();
+        boost::asio::post(cp.next_io_context(), [&]() { cp.stop(); });
         CHECK_NOTHROW(context_pool_thread.join());
-        context_pool_thread = std::thread([&]() { cp.run(); });
-        cp.stop();
-        CHECK_NOTHROW(context_pool_thread.join());
+        CHECK_THROWS_AS(cp.start(), std::logic_error);
     }
 }
 

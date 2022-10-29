@@ -19,9 +19,9 @@
 #include <string>
 #include <utility>
 
-#include <asio/awaitable.hpp>
-#include <asio/co_spawn.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 #include <nlohmann/json.hpp>
@@ -41,25 +41,25 @@ using evmc::literals::operator""_bytes32;
 namespace {
 class BackEndMock : public ethbackend::BackEnd {
 public:
-    MOCK_METHOD((asio::awaitable<evmc::address>), etherbase, ());
-    MOCK_METHOD((asio::awaitable<uint64_t>), protocol_version, ());
-    MOCK_METHOD((asio::awaitable<uint64_t>), net_version, ());
-    MOCK_METHOD((asio::awaitable<std::string>), client_version, ());
-    MOCK_METHOD((asio::awaitable<uint64_t>), net_peer_count, ());
-    MOCK_METHOD((asio::awaitable<ExecutionPayload>), engine_get_payload_v1, (uint64_t payload_id));
-    MOCK_METHOD((asio::awaitable<PayloadStatus>), engine_new_payload_v1, (ExecutionPayload payload));
-    MOCK_METHOD((asio::awaitable<ForkchoiceUpdatedReply>), engine_forkchoice_updated_v1, (ForkchoiceUpdatedRequest forkchoice_updated_request));
+    MOCK_METHOD((boost::asio::awaitable<evmc::address>), etherbase, ());
+    MOCK_METHOD((boost::asio::awaitable<uint64_t>), protocol_version, ());
+    MOCK_METHOD((boost::asio::awaitable<uint64_t>), net_version, ());
+    MOCK_METHOD((boost::asio::awaitable<std::string>), client_version, ());
+    MOCK_METHOD((boost::asio::awaitable<uint64_t>), net_peer_count, ());
+    MOCK_METHOD((boost::asio::awaitable<ExecutionPayload>), engine_get_payload_v1, (uint64_t));
+    MOCK_METHOD((boost::asio::awaitable<PayloadStatus>), engine_new_payload_v1, (ExecutionPayload));
+    MOCK_METHOD((boost::asio::awaitable<ForkChoiceUpdatedReply>), engine_forkchoice_updated_v1, (ForkChoiceUpdatedRequest));
 };
 
 class MockCursor : public ethdb::Cursor {
 public:
     uint32_t cursor_id() const override { return 0; }
 
-    MOCK_METHOD((asio::awaitable<void>), open_cursor, (const std::string& table_name));
-    MOCK_METHOD((asio::awaitable<KeyValue>), seek, (silkworm::ByteView key));
-    MOCK_METHOD((asio::awaitable<KeyValue>), seek_exact, (silkworm::ByteView key));
-    MOCK_METHOD((asio::awaitable<KeyValue>), next, ());
-    MOCK_METHOD((asio::awaitable<void>), close_cursor, ());
+    MOCK_METHOD((boost::asio::awaitable<void>), open_cursor, (const std::string&, bool));
+    MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek, (silkworm::ByteView));
+    MOCK_METHOD((boost::asio::awaitable<KeyValue>), seek_exact, (silkworm::ByteView));
+    MOCK_METHOD((boost::asio::awaitable<KeyValue>), next, ());
+    MOCK_METHOD((boost::asio::awaitable<void>), close_cursor, ());
 };
 
 //! This dummy transaction just gives you the same cursor over and over again.
@@ -69,17 +69,17 @@ public:
 
     uint64_t tx_id() const override { return 0; }
 
-    asio::awaitable<void> open() override { co_return; }
+    boost::asio::awaitable<void> open() override { co_return; }
 
-    asio::awaitable<std::shared_ptr<ethdb::Cursor>> cursor(const std::string& /*table*/) override {
+    boost::asio::awaitable<std::shared_ptr<ethdb::Cursor>> cursor(const std::string& /*table*/) override {
         co_return cursor_;
     }
 
-    asio::awaitable<std::shared_ptr<ethdb::CursorDupSort>> cursor_dup_sort(const std::string& /*table*/) override {
+    boost::asio::awaitable<std::shared_ptr<ethdb::CursorDupSort>> cursor_dup_sort(const std::string& /*table*/) override {
         co_return nullptr;
     }
 
-    asio::awaitable<void> close() override { co_return; }
+    boost::asio::awaitable<void> close() override { co_return; }
 
 private:
     std::shared_ptr<ethdb::Cursor> cursor_;
@@ -90,7 +90,7 @@ class DummyDatabase : public ethdb::Database {
 public:
     explicit DummyDatabase(std::shared_ptr<ethdb::Cursor> cursor) : cursor_(cursor) {}
 
-    asio::awaitable<std::unique_ptr<ethdb::Transaction>> begin() override {
+    boost::asio::awaitable<std::unique_ptr<ethdb::Transaction>> begin() override {
         co_return std::make_unique<DummyTransaction>(cursor_);
     }
 private:
@@ -114,53 +114,89 @@ using testing::InvokeWithoutArgs;
 
 static silkworm::Bytes kBlockHash(32, '\0');
 static silkworm::Bytes kChainConfig{*silkworm::from_hex(
-        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f6"
-        "36b223a302c22656970313530426c6f636b223a302c22656970313535426c6f63"
-        "6b223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e7"
-        "4696e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b22"
-        "3a302c22697374616e62756c426c6f636b223a302c226265726c696e426c6f636"
-        "b223a302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c546f74"
-        "616c446966666963756c7479223a2231303030303030222c227465726d696e616"
-        "c426c6f636b4e756d626572223a302c227465726d696e616c426c6f636b486173"
-        "68223a22307833353539653835313437306636653762626564316462343734393"
-        "83036383365386333313562666365393962326136656634376330353763303464"
-        "6537383538227d")};
+        "7b22436861696e4e616d65223a22676f65726c69222c"
+        "22636861696e4964223a352c"
+        "22636f6e73656e737573223a22636c69717565222c"
+        "22686f6d657374656164426c6f636b223a302c"
+        "2264616f466f726b537570706f7274223a747275652c"
+        "22656970313530426c6f636b223a302c"
+        "2265697031353048617368223a22307830303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030222c"
+        "22656970313535426c6f636b223a302c"
+        "2262797a616e7469756d426c6f636b223a302c"
+        "22636f6e7374616e74696e6f706c65426c6f636b223a302c"
+        "2270657465727362757267426c6f636b223a302c"
+        "22697374616e62756c426c6f636b223a313536313635312c"
+        "226265726c696e426c6f636b223a343436303634342c"
+        "226c6f6e646f6e426c6f636b223a353036323630352c"
+        "227465726d696e616c546f74616c446966666963756c7479223a31303739303030302c"
+        "227465726d696e616c546f74616c446966666963756c7479506173736564223a747275652c"
+        "227465726d696e616c426c6f636b48617368223a22307830303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030222c"
+        "22636c69717565223a7b22706572696f64223a31352c"
+        "2265706f6368223a33303030307d7d")};
 static silkworm::Bytes kChainConfigNoTerminalTotalDifficulty{*silkworm::from_hex(
-        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f63"
-        "6b223a302c22656970313530426c6f636b223a302c22656970313535426c6f636b"
-        "223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e7469"
-        "6e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b223a30"
-        "2c22697374616e62756c426c6f636b223a302c226265726c696e426c6f636b223a"
-        "302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c426c6f636b4e"
-        "756d626572223a302c227465726d696e616c426c6f636b48617368223a22307833"
-        "353539653835313437306636653762626564316462343734393830363833653863"
-        "333135626663653939623261366566343763303537633034646537383538227d")};
+        "7b22436861696e4e616d65223a22676f65726c69222c"
+        "22636861696e4964223a352c"
+        "22636f6e73656e737573223a22636c69717565222c"
+        "22686f6d657374656164426c6f636b223a302c"
+        "2264616f466f726b537570706f7274223a747275652c"
+        "22656970313530426c6f636b223a302c"
+        "2265697031353048617368223a22307830303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030222c"
+        "22656970313535426c6f636b223a302c"
+        "2262797a616e7469756d426c6f636b223a302c"
+        "22636f6e7374616e74696e6f706c65426c6f636b223a302c"
+        "2270657465727362757267426c6f636b223a302c"
+        "22697374616e62756c426c6f636b223a313536313635312c"
+        "226265726c696e426c6f636b223a343436303634342c"
+        "226c6f6e646f6e426c6f636b223a353036323630352c"
+        "227465726d696e616c546f74616c446966666963756c7479506173736564223a747275652c"
+        "227465726d696e616c426c6f636b48617368223a22307830303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030222c"
+        "22636c69717565223a7b22706572696f64223a31352c"
+        "2265706f6368223a33303030307d7d")};
 static silkworm::Bytes kChainConfigNoTerminalBlockHash{*silkworm::from_hex(
-        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f63"
-        "6b223a302c22656970313530426c6f636b223a302c22656970313535426c6f636b"
-        "223a302c2262797a616e7469756d426c6f636b223a302c22636f6e7374616e7469"
-        "6e6f706c65426c6f636b223a302c2270657465727362757267426c6f636b223a30"
-        "2c22697374616e62756c426c6f636b223a302c226265726c696e426c6f636b223a"
-        "302c226c6f6e646f6e426c6f636b223a302c227465726d696e616c546f74616c44"
-        "6966666963756c7479223a2231303030303030222c227465726d696e616c426c6f"
-        "636b4e756d626572223a307d")};
+        "7b22436861696e4e616d65223a22676f65726c69222c"
+        "22636861696e4964223a352c"
+        "22636f6e73656e737573223a22636c69717565222c"
+        "22686f6d657374656164426c6f636b223a302c"
+        "2264616f466f726b537570706f7274223a747275652c"
+        "22656970313530426c6f636b223a302c"
+        "2265697031353048617368223a22307830303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030222c"
+        "22656970313535426c6f636b223a302c"
+        "2262797a616e7469756d426c6f636b223a302c"
+        "22636f6e7374616e74696e6f706c65426c6f636b223a302c"
+        "2270657465727362757267426c6f636b223a302c"
+        "22697374616e62756c426c6f636b223a313536313635312c"
+        "226265726c696e426c6f636b223a343436303634342c"
+        "226c6f6e646f6e426c6f636b223a353036323630352c"
+        "227465726d696e616c546f74616c446966666963756c7479223a31303739303030302c"
+        "227465726d696e616c546f74616c446966666963756c7479506173736564223a747275652c"
+        "22636c69717565223a7b22706572696f64223a31352c"
+        "2265706f6368223a33303030307d7d")};
 static silkworm::Bytes kChainConfigNoTerminalBlockNumber{*silkworm::from_hex(
-        "7b22636861696e4964223a313333373330322c22686f6d657374656164426c6f636b223"
-        "a302c22656970313530426c6f636b223a302c22656970313535426c6f636b223a302c22"
-        "62797a616e7469756d426c6f636b223a302c22636f6e7374616e74696e6f706c65426c6"
-        "f636b223a302c2270657465727362757267426c6f636b223a302c22697374616e62756c"
-        "426c6f636b223a302c226265726c696e426c6f636b223a302c226c6f6e646f6e426c6f6"
-        "36b223a302c227465726d696e616c546f74616c446966666963756c7479223a22313030"
-        "30303030222c227465726d696e616c426c6f636b48617368223a2230783335353965383"
-        "53134373066366537626265643164623437343938303638336538633331356266636539"
-        "39623261366566343763303537633034646537383538227d")};
+        "7b22436861696e4e616d65223a22676f65726c69222c"
+        "22636861696e4964223a352c"
+        "22636f6e73656e737573223a22636c69717565222c"
+        "22686f6d657374656164426c6f636b223a302c"
+        "2264616f466f726b537570706f7274223a747275652c"
+        "22656970313530426c6f636b223a302c"
+        "2265697031353048617368223a22307830303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030222c"
+        "22656970313535426c6f636b223a302c"
+        "2262797a616e7469756d426c6f636b223a302c"
+        "22636f6e7374616e74696e6f706c65426c6f636b223a302c"
+        "2270657465727362757267426c6f636b223a302c"
+        "22697374616e62756c426c6f636b223a313536313635312c"
+        "226265726c696e426c6f636b223a343436303634342c"
+        "226c6f6e646f6e426c6f636b223a353036323630352c"
+        "227465726d696e616c546f74616c446966666963756c7479223a31303739303030302c"
+        "227465726d696e616c546f74616c446966666963756c7479506173736564223a747275652c"
+        "227465726d696e616c426c6f636b48617368223a223078"
+        "30303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030303030227d")};
 
 TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     BackEndMock backend;
     EXPECT_CALL(backend, engine_get_payload_v1(1)).WillOnce(InvokeWithoutArgs(
-        []() -> asio::awaitable<ExecutionPayload> {
+        []() -> boost::asio::awaitable<ExecutionPayload> {
             co_return ExecutionPayload{1};
         }
     ));
@@ -176,24 +212,46 @@ TEST_CASE("handle_engine_get_payload_v1 succeeds if request is expected payload"
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     std::unique_ptr<ethdb::Database> database;
     // Initialise components
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_get_payload_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
-    CHECK(reply == ExecutionPayload{1});
+
+    CHECK(reply ==  R"({
+        "id":1,
+        "jsonrpc":"2.0",
+        "result":{
+            "baseFeePerGas":"0x0",
+            "blockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "blockNumber":"0x1",
+            "extraData":"0x",
+            "gasLimit":"0x0",
+            "gasUsed":"0x0",
+            "logsBloom":"0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "prevRandao": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptsRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "stateRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "suggestedFeeRecipient":"0x0000000000000000000000000000000000000000",
+            "timestamp":"0x0",
+            "transactions":null
+         }
+    })"_json);
 
     cp.stop();
-    context_pool_thread.join();
+
+    cp.stop();
+    cp.join();
     backend_ptr.release();
 }
 
@@ -209,19 +267,19 @@ TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(new BackEndMock);
     std::unique_ptr<ethdb::Database> database;
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_get_payload_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply ==  R"({
@@ -234,7 +292,7 @@ TEST_CASE("handle_engine_get_payload_v1 fails with invalid amount of params", "[
     })"_json);
 
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_new_payload_v1 succeeds if request is expected payload status", "[silkrpc][engine_api]") {
@@ -242,7 +300,7 @@ TEST_CASE("handle_engine_new_payload_v1 succeeds if request is expected payload 
 
     BackEndMock backend;
     EXPECT_CALL(backend, engine_new_payload_v1(testing::_)).WillOnce(InvokeWithoutArgs(
-        []() -> asio::awaitable<PayloadStatus> {
+        []() -> boost::asio::awaitable<PayloadStatus> {
             co_return PayloadStatus{
                 .status = "INVALID",
                 .latest_valid_hash = 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32,
@@ -277,28 +335,32 @@ TEST_CASE("handle_engine_new_payload_v1 succeeds if request is expected payload 
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     std::unique_ptr<ethdb::Database> database;
     // Initialise components
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_new_payload_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
-    CHECK(reply == PayloadStatus{
-            .status = "INVALID",
-            .latest_valid_hash = 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32,
-            .validation_error = "some error"
-        });
+    CHECK(reply ==  R"({
+        "id":1,
+        "jsonrpc":"2.0",
+        "result": {
+               "latestValidHash":"0x0000000000000000000000000000000000000000000000000000000000000040",
+               "status":"INVALID",
+               "validationError":"some error"
+        }
+    })"_json);
 
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
     backend_ptr.release();
 }
 
@@ -314,19 +376,19 @@ TEST_CASE("handle_engine_new_payload_v1 fails with invalid amount of params", "[
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(new BackEndMock);
     std::unique_ptr<ethdb::Database> database;
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_new_payload_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply ==  R"({
@@ -339,7 +401,7 @@ TEST_CASE("handle_engine_new_payload_v1 fails with invalid amount of params", "[
     })"_json);
 
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds only with forkchoiceState", "[silkrpc][engine_api]") {
@@ -347,8 +409,8 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds only with forkchoiceStat
 
     BackEndMock *backend = new BackEndMock;
     EXPECT_CALL(*backend, engine_forkchoice_updated_v1(testing::_)).WillOnce(InvokeWithoutArgs(
-        []() -> asio::awaitable<ForkchoiceUpdatedReply> {
-            co_return ForkchoiceUpdatedReply{
+        []() -> boost::asio::awaitable<ForkChoiceUpdatedReply> {
+            co_return ForkChoiceUpdatedReply{
                 .payload_status = PayloadStatus{
                     .status = "INVALID",
                     .latest_valid_hash = 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32,
@@ -374,29 +436,33 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds only with forkchoiceStat
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(backend);
     std::unique_ptr<ethdb::Database> database;
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
     CHECK(reply ==  R"({
-        "payloadStatus":{
-            "latestValidHash":"0x0000000000000000000000000000000000000000000000000000000000000040",
-            "status":"INVALID",
-            "validationError":"some error"
+        "jsonrpc":"2.0",
+        "id":1,
+        "result": {
+           "payloadStatus":{
+               "latestValidHash":"0x0000000000000000000000000000000000000000000000000000000000000040",
+               "status":"INVALID",
+               "validationError":"some error"
+           }
         }
     })"_json);
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[silkrpc][engine_api]") {
@@ -404,8 +470,8 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[sil
 
     BackEndMock *backend = new BackEndMock;
     EXPECT_CALL(*backend, engine_forkchoice_updated_v1(testing::_)).WillOnce(InvokeWithoutArgs(
-        []() -> asio::awaitable<ForkchoiceUpdatedReply> {
-            co_return ForkchoiceUpdatedReply{
+        []() -> boost::asio::awaitable<ForkChoiceUpdatedReply> {
+            co_return ForkChoiceUpdatedReply{
                 .payload_status = PayloadStatus{
                     .status = "INVALID",
                     .latest_valid_hash = 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32,
@@ -436,29 +502,33 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[sil
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(backend);
     std::unique_ptr<ethdb::Database> database;
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
     CHECK(reply ==  R"({
-        "payloadStatus":{
-            "latestValidHash":"0x0000000000000000000000000000000000000000000000000000000000000040",
-            "status":"INVALID",
-            "validationError":"some error"
+        "jsonrpc":"2.0",
+        "id":1,
+        "result": {
+           "payloadStatus":{
+               "latestValidHash":"0x0000000000000000000000000000000000000000000000000000000000000040",
+               "status":"INVALID",
+               "validationError":"some error"
+           }
         }
     })"_json);
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_forkchoice_updated_v1 fails with invalid amount of params", "[silkrpc][engine_api]") {
@@ -473,19 +543,19 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with invalid amount of para
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(new BackEndMock);
     std::unique_ptr<ethdb::Database> database;
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply ==  R"({
@@ -498,7 +568,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with invalid amount of para
     })"_json);
 
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty finalized block hash", "[silkrpc][engine_api]") {
@@ -520,19 +590,19 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty finalized block 
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(backend);
     std::unique_ptr<ethdb::Database> database;
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
     CHECK(reply ==  R"({
         "error":{
@@ -543,7 +613,7 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty finalized block 
         "jsonrpc":"2.0" 
     })"_json);
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty safe block hash", "[silkrpc][engine_api]") {
@@ -565,19 +635,19 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty safe block hash"
     })"_json;
     // Initialize contex pool
     ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { cp.run(); });
+    cp.start();
     // Initialise components
     std::unique_ptr<ethbackend::BackEnd> backend_ptr(backend);
     std::unique_ptr<ethdb::Database> database;
     EngineRpcApiTest rpc(database, backend_ptr);
 
     // spawn routine
-    auto result{asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_forkchoice_updated_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
     CHECK(reply ==  R"({
         "error":{
@@ -588,25 +658,25 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 fails with empty safe block hash"
         "jsonrpc":"2.0" 
     })"_json);
     cp.stop();
-    context_pool_thread.join();
+    cp.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configurations has the same request configuration", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
     ));
@@ -621,46 +691,50 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
         "id":1,
         "method":"engine_transitionConfigurationV1",
         "params":[{
-            "terminalTotalDifficulty":"0xf4240",
-            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+            "terminalTotalDifficulty":"0xa4a470",
+            "terminalBlockHash":"0x0000000000000000000000000000000000000000000000000000000000000000_bytes32",
             "terminalBlockNumber":"0x0"
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
-    CHECK((reply == TransitionConfiguration {
-        .terminal_total_difficulty = intx::from_string<intx::uint256>("1000000"),
-        .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
-        .terminal_block_number = 0
-    }));
+    CHECK(reply ==  R"({
+        "id":1,
+        "jsonrpc":"2.0",
+        "result":{
+            "terminalBlockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "terminalBlockNumber": "0x0",
+            "terminalTotalDifficulty": "0xa4a470"
+        }
+    })"_json);
 
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default terminal block number to zero if chain config doesn't specify it", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfigNoTerminalBlockNumber};
         }
     ));
@@ -675,46 +749,50 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
         "id":1,
         "method":"engine_transitionConfigurationV1",
         "params":[{
-            "terminalTotalDifficulty":"0xf4240",
-            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+            "terminalTotalDifficulty":"0xa4a470",
+            "terminalBlockHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
             "terminalBlockNumber":"0x0"
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
-    CHECK((reply == TransitionConfiguration {
-        .terminal_total_difficulty = intx::from_string<intx::uint256>("1000000"),
-        .terminal_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
-        .terminal_block_number = 0
-    }));
+    CHECK(reply ==  R"({
+        "id":1,
+        "jsonrpc":"2.0",
+        "result":{
+            "terminalBlockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "terminalBlockNumber": "0x0",
+            "terminalTotalDifficulty": "0xa4a470"
+        }
+    })"_json);
 
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal total difficulty", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
     ));
@@ -730,17 +808,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
         "method":"engine_transitionConfigurationV1",
         "params":[{
             "terminalTotalDifficulty":"0xf4242",
-            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
+            "terminalBlockHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
             "terminalBlockNumber":"0x0"
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply == R"({
@@ -752,81 +830,26 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
             "jsonrpc":"2.0"
         })"_json);
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 
-TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal block hash", "[silkrpc][engine_api]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
-
-    silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
-
-    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
-
-    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
-        }
-    ));
-
-    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, kChainConfig};
-        }
-    ));
-
-    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
-    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
-    EngineRpcApiTest rpc(database_ptr, backend_ptr);
-
-    nlohmann::json reply;
-    nlohmann::json request = R"({
-        "jsonrpc":"2.0",
-        "id":1,
-        "method":"engine_transitionConfigurationV1",
-        "params":[{
-            "terminalTotalDifficulty":"0xf4240",
-            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de0000",
-            "terminalBlockNumber":"0x0"
-        }]
-    })"_json;
-
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_engine_exchange_transition_configuration_v1(
-            request,
-            reply
-        );
-    }, asio::use_future)};
-    result.get();
-
-    CHECK(reply == R"({
-        "error":{
-            "code":100,
-            "message":"incorrect terminal block hash"
-            },
-            "id":1,
-            "jsonrpc":"2.0"
-        })"_json);
-    context_pool.stop();
-    context_pool_thread.join();
-}
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer does not have terminal total difficulty", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfigNoTerminalTotalDifficulty};
         }
     ));
@@ -847,12 +870,12 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply == R"({
@@ -864,81 +887,25 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
             "jsonrpc":"2.0"
         })"_json);
     context_pool.stop();
-    context_pool_thread.join();
-}
-
-TEST_CASE("handle_engine_transition_configuration_v1 fails if chain config doesn't have terminal block hash", "[silkrpc][engine_api]") {
-    SILKRPC_LOG_VERBOSITY(LogLevel::None);
-
-    silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
-
-    std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
-
-    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, kBlockHash};
-        }
-    ));
-
-    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, kChainConfigNoTerminalBlockHash};
-        }
-    ));
-
-    std::unique_ptr<ethdb::Database> database_ptr = std::make_unique<DummyDatabase>(mock_cursor);
-    std::unique_ptr<ethbackend::BackEnd> backend_ptr;
-    EngineRpcApiTest rpc(database_ptr, backend_ptr);
-
-    nlohmann::json reply;
-    nlohmann::json request = R"({
-        "jsonrpc":"2.0",
-        "id":1,
-        "method":"engine_transitionConfigurationV1",
-        "params":[{
-            "terminalTotalDifficulty":"0xf4240",
-            "terminalBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858",
-            "terminalBlockNumber":"0x0"
-        }]
-    })"_json;
-
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
-        return rpc.handle_engine_exchange_transition_configuration_v1(
-            request,
-            reply
-        );
-    }, asio::use_future)};
-    result.get();
-
-    CHECK(reply == R"({
-        "error":{
-            "code":100,
-            "message":"execution layer does not have terminal block hash"
-            },
-            "id":1,
-            "jsonrpc":"2.0"
-        })"_json);
-    context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if consensus layer sends block number different from zero", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
     EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
     EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
-        [&]() -> asio::awaitable<KeyValue> {
+        [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
     ));
@@ -959,12 +926,12 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if consensus layer se
         }]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply == R"({
@@ -976,14 +943,14 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if consensus layer se
             "jsonrpc":"2.0"
         })"_json);
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 
 TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
     silkrpc::ContextPool context_pool{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
-    auto context_pool_thread = std::thread([&]() { context_pool.run(); });
+    context_pool.start();
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
@@ -999,12 +966,12 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params",
         "params":[]
     })"_json;
 
-    auto result{asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
+    auto result{boost::asio::co_spawn(context_pool.next_io_context(), [&rpc, &reply, &request]() {
         return rpc.handle_engine_exchange_transition_configuration_v1(
             request,
             reply
         );
-    }, asio::use_future)};
+    }, boost::asio::use_future)};
     result.get();
 
     CHECK(reply == R"({
@@ -1016,6 +983,6 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect params",
             "jsonrpc":"2.0"
         })"_json);
     context_pool.stop();
-    context_pool_thread.join();
+    context_pool.join();
 }
 } // namespace silkrpc::commands

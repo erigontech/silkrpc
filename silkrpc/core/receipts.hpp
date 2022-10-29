@@ -19,7 +19,7 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 
 #include <silkrpc/core/rawdb/accessors.hpp>
@@ -29,7 +29,7 @@
 
 namespace silkrpc::core {
 
-asio::awaitable<Receipts> get_receipts(const rawdb::DatabaseReader& db_reader, const silkworm::BlockWithHash& block_with_hash);
+boost::asio::awaitable<Receipts> get_receipts(const rawdb::DatabaseReader& db_reader, const silkworm::BlockWithHash& block_with_hash);
 
 } // namespace silkrpc::core
 

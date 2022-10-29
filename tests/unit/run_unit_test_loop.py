@@ -44,11 +44,15 @@ class UnitTest:
 
         print("Unit test stress for " + self.build_config.name + " STARTED")
         for i in range(num_iterations):
+            print("Unit test stress for " + self.build_config.name + " RUN [i=" + str(i) + "]")
             status = os.system(cmd)
             if status != 0:
                 print("Unit test stress for " + self.build_config.name + " FAILED [i=" + str(i) + "]")
                 sys.exit(-1)
         print("Unit test stress for " + self.build_config.name + " COMPLETED [" + str(num_iterations) + "]")
+
+        if self.build_config.name == Build.CLANG_COVERAGE:
+            os.remove('default.profraw')
 
 UNIT_TESTS_BY_BUILD : Dict[Build, UnitTest] = {
     Build.CLANG_COVERAGE : UnitTest(Build.CLANG_COVERAGE, SILKRPC_CLANG_COVERAGE_BUILDDIR),

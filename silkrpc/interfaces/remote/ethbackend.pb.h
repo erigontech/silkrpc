@@ -49,7 +49,7 @@ struct TableStruct_remote_2fethbackend_2eproto {
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::AuxiliaryParseTableField aux[]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
-  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[24]
+  static const ::PROTOBUF_NAMESPACE_ID::internal::ParseTable schema[27]
     PROTOBUF_SECTION_VARIABLE(protodesc_cold);
   static const ::PROTOBUF_NAMESPACE_ID::internal::FieldMetadata field_metadata[];
   static const ::PROTOBUF_NAMESPACE_ID::internal::SerializationTable serialization_table[];
@@ -93,6 +93,9 @@ extern EtherbaseReplyDefaultTypeInternal _EtherbaseReply_default_instance_;
 class EtherbaseRequest;
 class EtherbaseRequestDefaultTypeInternal;
 extern EtherbaseRequestDefaultTypeInternal _EtherbaseRequest_default_instance_;
+class LogsFilterRequest;
+class LogsFilterRequestDefaultTypeInternal;
+extern LogsFilterRequestDefaultTypeInternal _LogsFilterRequest_default_instance_;
 class NetPeerCountReply;
 class NetPeerCountReplyDefaultTypeInternal;
 extern NetPeerCountReplyDefaultTypeInternal _NetPeerCountReply_default_instance_;
@@ -111,12 +114,18 @@ extern NodesInfoReplyDefaultTypeInternal _NodesInfoReply_default_instance_;
 class NodesInfoRequest;
 class NodesInfoRequestDefaultTypeInternal;
 extern NodesInfoRequestDefaultTypeInternal _NodesInfoRequest_default_instance_;
+class PeersReply;
+class PeersReplyDefaultTypeInternal;
+extern PeersReplyDefaultTypeInternal _PeersReply_default_instance_;
 class ProtocolVersionReply;
 class ProtocolVersionReplyDefaultTypeInternal;
 extern ProtocolVersionReplyDefaultTypeInternal _ProtocolVersionReply_default_instance_;
 class ProtocolVersionRequest;
 class ProtocolVersionRequestDefaultTypeInternal;
 extern ProtocolVersionRequestDefaultTypeInternal _ProtocolVersionRequest_default_instance_;
+class SubscribeLogsReply;
+class SubscribeLogsReplyDefaultTypeInternal;
+extern SubscribeLogsReplyDefaultTypeInternal _SubscribeLogsReply_default_instance_;
 class SubscribeReply;
 class SubscribeReplyDefaultTypeInternal;
 extern SubscribeReplyDefaultTypeInternal _SubscribeReply_default_instance_;
@@ -143,14 +152,17 @@ template<> ::remote::EnginePayloadAttributes* Arena::CreateMaybeMessage<::remote
 template<> ::remote::EnginePayloadStatus* Arena::CreateMaybeMessage<::remote::EnginePayloadStatus>(Arena*);
 template<> ::remote::EtherbaseReply* Arena::CreateMaybeMessage<::remote::EtherbaseReply>(Arena*);
 template<> ::remote::EtherbaseRequest* Arena::CreateMaybeMessage<::remote::EtherbaseRequest>(Arena*);
+template<> ::remote::LogsFilterRequest* Arena::CreateMaybeMessage<::remote::LogsFilterRequest>(Arena*);
 template<> ::remote::NetPeerCountReply* Arena::CreateMaybeMessage<::remote::NetPeerCountReply>(Arena*);
 template<> ::remote::NetPeerCountRequest* Arena::CreateMaybeMessage<::remote::NetPeerCountRequest>(Arena*);
 template<> ::remote::NetVersionReply* Arena::CreateMaybeMessage<::remote::NetVersionReply>(Arena*);
 template<> ::remote::NetVersionRequest* Arena::CreateMaybeMessage<::remote::NetVersionRequest>(Arena*);
 template<> ::remote::NodesInfoReply* Arena::CreateMaybeMessage<::remote::NodesInfoReply>(Arena*);
 template<> ::remote::NodesInfoRequest* Arena::CreateMaybeMessage<::remote::NodesInfoRequest>(Arena*);
+template<> ::remote::PeersReply* Arena::CreateMaybeMessage<::remote::PeersReply>(Arena*);
 template<> ::remote::ProtocolVersionReply* Arena::CreateMaybeMessage<::remote::ProtocolVersionReply>(Arena*);
 template<> ::remote::ProtocolVersionRequest* Arena::CreateMaybeMessage<::remote::ProtocolVersionRequest>(Arena*);
+template<> ::remote::SubscribeLogsReply* Arena::CreateMaybeMessage<::remote::SubscribeLogsReply>(Arena*);
 template<> ::remote::SubscribeReply* Arena::CreateMaybeMessage<::remote::SubscribeReply>(Arena*);
 template<> ::remote::SubscribeRequest* Arena::CreateMaybeMessage<::remote::SubscribeRequest>(Arena*);
 template<> ::remote::TxnLookupReply* Arena::CreateMaybeMessage<::remote::TxnLookupReply>(Arena*);
@@ -162,12 +174,13 @@ enum Event : int {
   HEADER = 0,
   PENDING_LOGS = 1,
   PENDING_BLOCK = 2,
+  NEW_SNAPSHOT = 3,
   Event_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
   Event_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
 };
 bool Event_IsValid(int value);
 constexpr Event Event_MIN = HEADER;
-constexpr Event Event_MAX = PENDING_BLOCK;
+constexpr Event Event_MAX = NEW_SNAPSHOT;
 constexpr int Event_ARRAYSIZE = Event_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* Event_descriptor();
@@ -190,13 +203,12 @@ enum EngineStatus : int {
   SYNCING = 2,
   ACCEPTED = 3,
   INVALID_BLOCK_HASH = 4,
-  INVALID_TERMINAL_BLOCK = 5,
   EngineStatus_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
   EngineStatus_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
 };
 bool EngineStatus_IsValid(int value);
 constexpr EngineStatus EngineStatus_MIN = VALID;
-constexpr EngineStatus EngineStatus_MAX = INVALID_TERMINAL_BLOCK;
+constexpr EngineStatus EngineStatus_MAX = INVALID_BLOCK_HASH;
 constexpr int EngineStatus_ARRAYSIZE = EngineStatus_MAX + 1;
 
 const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* EngineStatus_descriptor();
@@ -2808,6 +2820,460 @@ class SubscribeReply PROTOBUF_FINAL :
 };
 // -------------------------------------------------------------------
 
+class LogsFilterRequest PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:remote.LogsFilterRequest) */ {
+ public:
+  inline LogsFilterRequest() : LogsFilterRequest(nullptr) {}
+  virtual ~LogsFilterRequest();
+
+  LogsFilterRequest(const LogsFilterRequest& from);
+  LogsFilterRequest(LogsFilterRequest&& from) noexcept
+    : LogsFilterRequest() {
+    *this = ::std::move(from);
+  }
+
+  inline LogsFilterRequest& operator=(const LogsFilterRequest& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline LogsFilterRequest& operator=(LogsFilterRequest&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const LogsFilterRequest& default_instance();
+
+  static inline const LogsFilterRequest* internal_default_instance() {
+    return reinterpret_cast<const LogsFilterRequest*>(
+               &_LogsFilterRequest_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    18;
+
+  friend void swap(LogsFilterRequest& a, LogsFilterRequest& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(LogsFilterRequest* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(LogsFilterRequest* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline LogsFilterRequest* New() const final {
+    return CreateMaybeMessage<LogsFilterRequest>(nullptr);
+  }
+
+  LogsFilterRequest* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<LogsFilterRequest>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const LogsFilterRequest& from);
+  void MergeFrom(const LogsFilterRequest& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(LogsFilterRequest* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "remote.LogsFilterRequest";
+  }
+  protected:
+  explicit LogsFilterRequest(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_remote_2fethbackend_2eproto);
+    return ::descriptor_table_remote_2fethbackend_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kAddressesFieldNumber = 2,
+    kTopicsFieldNumber = 4,
+    kAllAddressesFieldNumber = 1,
+    kAllTopicsFieldNumber = 3,
+  };
+  // repeated .types.H160 addresses = 2;
+  int addresses_size() const;
+  private:
+  int _internal_addresses_size() const;
+  public:
+  void clear_addresses();
+  ::types::H160* mutable_addresses(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H160 >*
+      mutable_addresses();
+  private:
+  const ::types::H160& _internal_addresses(int index) const;
+  ::types::H160* _internal_add_addresses();
+  public:
+  const ::types::H160& addresses(int index) const;
+  ::types::H160* add_addresses();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H160 >&
+      addresses() const;
+
+  // repeated .types.H256 topics = 4;
+  int topics_size() const;
+  private:
+  int _internal_topics_size() const;
+  public:
+  void clear_topics();
+  ::types::H256* mutable_topics(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H256 >*
+      mutable_topics();
+  private:
+  const ::types::H256& _internal_topics(int index) const;
+  ::types::H256* _internal_add_topics();
+  public:
+  const ::types::H256& topics(int index) const;
+  ::types::H256* add_topics();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H256 >&
+      topics() const;
+
+  // bool allAddresses = 1;
+  void clear_alladdresses();
+  bool alladdresses() const;
+  void set_alladdresses(bool value);
+  private:
+  bool _internal_alladdresses() const;
+  void _internal_set_alladdresses(bool value);
+  public:
+
+  // bool allTopics = 3;
+  void clear_alltopics();
+  bool alltopics() const;
+  void set_alltopics(bool value);
+  private:
+  bool _internal_alltopics() const;
+  void _internal_set_alltopics(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:remote.LogsFilterRequest)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H160 > addresses_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H256 > topics_;
+  bool alladdresses_;
+  bool alltopics_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_remote_2fethbackend_2eproto;
+};
+// -------------------------------------------------------------------
+
+class SubscribeLogsReply PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:remote.SubscribeLogsReply) */ {
+ public:
+  inline SubscribeLogsReply() : SubscribeLogsReply(nullptr) {}
+  virtual ~SubscribeLogsReply();
+
+  SubscribeLogsReply(const SubscribeLogsReply& from);
+  SubscribeLogsReply(SubscribeLogsReply&& from) noexcept
+    : SubscribeLogsReply() {
+    *this = ::std::move(from);
+  }
+
+  inline SubscribeLogsReply& operator=(const SubscribeLogsReply& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline SubscribeLogsReply& operator=(SubscribeLogsReply&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const SubscribeLogsReply& default_instance();
+
+  static inline const SubscribeLogsReply* internal_default_instance() {
+    return reinterpret_cast<const SubscribeLogsReply*>(
+               &_SubscribeLogsReply_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    19;
+
+  friend void swap(SubscribeLogsReply& a, SubscribeLogsReply& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(SubscribeLogsReply* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(SubscribeLogsReply* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline SubscribeLogsReply* New() const final {
+    return CreateMaybeMessage<SubscribeLogsReply>(nullptr);
+  }
+
+  SubscribeLogsReply* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<SubscribeLogsReply>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const SubscribeLogsReply& from);
+  void MergeFrom(const SubscribeLogsReply& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(SubscribeLogsReply* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "remote.SubscribeLogsReply";
+  }
+  protected:
+  explicit SubscribeLogsReply(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_remote_2fethbackend_2eproto);
+    return ::descriptor_table_remote_2fethbackend_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kTopicsFieldNumber = 6,
+    kDataFieldNumber = 4,
+    kAddressFieldNumber = 1,
+    kBlockHashFieldNumber = 2,
+    kTransactionHashFieldNumber = 7,
+    kBlockNumberFieldNumber = 3,
+    kLogIndexFieldNumber = 5,
+    kTransactionIndexFieldNumber = 8,
+    kRemovedFieldNumber = 9,
+  };
+  // repeated .types.H256 topics = 6;
+  int topics_size() const;
+  private:
+  int _internal_topics_size() const;
+  public:
+  void clear_topics();
+  ::types::H256* mutable_topics(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H256 >*
+      mutable_topics();
+  private:
+  const ::types::H256& _internal_topics(int index) const;
+  ::types::H256* _internal_add_topics();
+  public:
+  const ::types::H256& topics(int index) const;
+  ::types::H256* add_topics();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H256 >&
+      topics() const;
+
+  // bytes data = 4;
+  void clear_data();
+  const std::string& data() const;
+  void set_data(const std::string& value);
+  void set_data(std::string&& value);
+  void set_data(const char* value);
+  void set_data(const void* value, size_t size);
+  std::string* mutable_data();
+  std::string* release_data();
+  void set_allocated_data(std::string* data);
+  private:
+  const std::string& _internal_data() const;
+  void _internal_set_data(const std::string& value);
+  std::string* _internal_mutable_data();
+  public:
+
+  // .types.H160 address = 1;
+  bool has_address() const;
+  private:
+  bool _internal_has_address() const;
+  public:
+  void clear_address();
+  const ::types::H160& address() const;
+  ::types::H160* release_address();
+  ::types::H160* mutable_address();
+  void set_allocated_address(::types::H160* address);
+  private:
+  const ::types::H160& _internal_address() const;
+  ::types::H160* _internal_mutable_address();
+  public:
+  void unsafe_arena_set_allocated_address(
+      ::types::H160* address);
+  ::types::H160* unsafe_arena_release_address();
+
+  // .types.H256 blockHash = 2;
+  bool has_blockhash() const;
+  private:
+  bool _internal_has_blockhash() const;
+  public:
+  void clear_blockhash();
+  const ::types::H256& blockhash() const;
+  ::types::H256* release_blockhash();
+  ::types::H256* mutable_blockhash();
+  void set_allocated_blockhash(::types::H256* blockhash);
+  private:
+  const ::types::H256& _internal_blockhash() const;
+  ::types::H256* _internal_mutable_blockhash();
+  public:
+  void unsafe_arena_set_allocated_blockhash(
+      ::types::H256* blockhash);
+  ::types::H256* unsafe_arena_release_blockhash();
+
+  // .types.H256 transactionHash = 7;
+  bool has_transactionhash() const;
+  private:
+  bool _internal_has_transactionhash() const;
+  public:
+  void clear_transactionhash();
+  const ::types::H256& transactionhash() const;
+  ::types::H256* release_transactionhash();
+  ::types::H256* mutable_transactionhash();
+  void set_allocated_transactionhash(::types::H256* transactionhash);
+  private:
+  const ::types::H256& _internal_transactionhash() const;
+  ::types::H256* _internal_mutable_transactionhash();
+  public:
+  void unsafe_arena_set_allocated_transactionhash(
+      ::types::H256* transactionhash);
+  ::types::H256* unsafe_arena_release_transactionhash();
+
+  // uint64 blockNumber = 3;
+  void clear_blocknumber();
+  ::PROTOBUF_NAMESPACE_ID::uint64 blocknumber() const;
+  void set_blocknumber(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint64 _internal_blocknumber() const;
+  void _internal_set_blocknumber(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  public:
+
+  // uint64 logIndex = 5;
+  void clear_logindex();
+  ::PROTOBUF_NAMESPACE_ID::uint64 logindex() const;
+  void set_logindex(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint64 _internal_logindex() const;
+  void _internal_set_logindex(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  public:
+
+  // uint64 transactionIndex = 8;
+  void clear_transactionindex();
+  ::PROTOBUF_NAMESPACE_ID::uint64 transactionindex() const;
+  void set_transactionindex(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  private:
+  ::PROTOBUF_NAMESPACE_ID::uint64 _internal_transactionindex() const;
+  void _internal_set_transactionindex(::PROTOBUF_NAMESPACE_ID::uint64 value);
+  public:
+
+  // bool removed = 9;
+  void clear_removed();
+  bool removed() const;
+  void set_removed(bool value);
+  private:
+  bool _internal_removed() const;
+  void _internal_set_removed(bool value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:remote.SubscribeLogsReply)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H256 > topics_;
+  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr data_;
+  ::types::H160* address_;
+  ::types::H256* blockhash_;
+  ::types::H256* transactionhash_;
+  ::PROTOBUF_NAMESPACE_ID::uint64 blocknumber_;
+  ::PROTOBUF_NAMESPACE_ID::uint64 logindex_;
+  ::PROTOBUF_NAMESPACE_ID::uint64 transactionindex_;
+  bool removed_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_remote_2fethbackend_2eproto;
+};
+// -------------------------------------------------------------------
+
 class BlockRequest PROTOBUF_FINAL :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:remote.BlockRequest) */ {
  public:
@@ -2849,7 +3315,7 @@ class BlockRequest PROTOBUF_FINAL :
                &_BlockRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    18;
+    20;
 
   friend void swap(BlockRequest& a, BlockRequest& b) {
     a.Swap(&b);
@@ -3005,7 +3471,7 @@ class BlockReply PROTOBUF_FINAL :
                &_BlockReply_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    19;
+    21;
 
   friend void swap(BlockReply& a, BlockReply& b) {
     a.Swap(&b);
@@ -3166,7 +3632,7 @@ class TxnLookupRequest PROTOBUF_FINAL :
                &_TxnLookupRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    20;
+    22;
 
   friend void swap(TxnLookupRequest& a, TxnLookupRequest& b) {
     a.Swap(&b);
@@ -3311,7 +3777,7 @@ class TxnLookupReply PROTOBUF_FINAL :
                &_TxnLookupReply_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    21;
+    23;
 
   friend void swap(TxnLookupReply& a, TxnLookupReply& b) {
     a.Swap(&b);
@@ -3447,7 +3913,7 @@ class NodesInfoRequest PROTOBUF_FINAL :
                &_NodesInfoRequest_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    22;
+    24;
 
   friend void swap(NodesInfoRequest& a, NodesInfoRequest& b) {
     a.Swap(&b);
@@ -3583,7 +4049,7 @@ class NodesInfoReply PROTOBUF_FINAL :
                &_NodesInfoReply_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    23;
+    25;
 
   friend void swap(NodesInfoReply& a, NodesInfoReply& b) {
     a.Swap(&b);
@@ -3682,6 +4148,151 @@ class NodesInfoReply PROTOBUF_FINAL :
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
   ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::NodeInfoReply > nodesinfo_;
+  mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  friend struct ::TableStruct_remote_2fethbackend_2eproto;
+};
+// -------------------------------------------------------------------
+
+class PeersReply PROTOBUF_FINAL :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:remote.PeersReply) */ {
+ public:
+  inline PeersReply() : PeersReply(nullptr) {}
+  virtual ~PeersReply();
+
+  PeersReply(const PeersReply& from);
+  PeersReply(PeersReply&& from) noexcept
+    : PeersReply() {
+    *this = ::std::move(from);
+  }
+
+  inline PeersReply& operator=(const PeersReply& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline PeersReply& operator=(PeersReply&& from) noexcept {
+    if (GetArena() == from.GetArena()) {
+      if (this != &from) InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return GetMetadataStatic().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return GetMetadataStatic().reflection;
+  }
+  static const PeersReply& default_instance();
+
+  static inline const PeersReply* internal_default_instance() {
+    return reinterpret_cast<const PeersReply*>(
+               &_PeersReply_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    26;
+
+  friend void swap(PeersReply& a, PeersReply& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(PeersReply* other) {
+    if (other == this) return;
+    if (GetArena() == other->GetArena()) {
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(PeersReply* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetArena() == other->GetArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  inline PeersReply* New() const final {
+    return CreateMaybeMessage<PeersReply>(nullptr);
+  }
+
+  PeersReply* New(::PROTOBUF_NAMESPACE_ID::Arena* arena) const final {
+    return CreateMaybeMessage<PeersReply>(arena);
+  }
+  void CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void MergeFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) final;
+  void CopyFrom(const PeersReply& from);
+  void MergeFrom(const PeersReply& from);
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  ::PROTOBUF_NAMESPACE_ID::uint8* _InternalSerialize(
+      ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _cached_size_.Get(); }
+
+  private:
+  inline void SharedCtor();
+  inline void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(PeersReply* other);
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "remote.PeersReply";
+  }
+  protected:
+  explicit PeersReply(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  private:
+  static void ArenaDtor(void* object);
+  inline void RegisterArenaDtor(::PROTOBUF_NAMESPACE_ID::Arena* arena);
+  public:
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+  private:
+  static ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadataStatic() {
+    ::PROTOBUF_NAMESPACE_ID::internal::AssignDescriptors(&::descriptor_table_remote_2fethbackend_2eproto);
+    return ::descriptor_table_remote_2fethbackend_2eproto.file_level_metadata[kIndexInFileMessages];
+  }
+
+  public:
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPeersFieldNumber = 1,
+  };
+  // repeated .types.PeerInfo peers = 1;
+  int peers_size() const;
+  private:
+  int _internal_peers_size() const;
+  public:
+  void clear_peers();
+  ::types::PeerInfo* mutable_peers(int index);
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::PeerInfo >*
+      mutable_peers();
+  private:
+  const ::types::PeerInfo& _internal_peers(int index) const;
+  ::types::PeerInfo* _internal_add_peers();
+  public:
+  const ::types::PeerInfo& peers(int index) const;
+  ::types::PeerInfo* add_peers();
+  const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::PeerInfo >&
+      peers() const;
+
+  // @@protoc_insertion_point(class_scope:remote.PeersReply)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::PeerInfo > peers_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_remote_2fethbackend_2eproto;
 };
@@ -4917,6 +5528,534 @@ inline void SubscribeReply::set_allocated_data(std::string* data) {
 
 // -------------------------------------------------------------------
 
+// LogsFilterRequest
+
+// bool allAddresses = 1;
+inline void LogsFilterRequest::clear_alladdresses() {
+  alladdresses_ = false;
+}
+inline bool LogsFilterRequest::_internal_alladdresses() const {
+  return alladdresses_;
+}
+inline bool LogsFilterRequest::alladdresses() const {
+  // @@protoc_insertion_point(field_get:remote.LogsFilterRequest.allAddresses)
+  return _internal_alladdresses();
+}
+inline void LogsFilterRequest::_internal_set_alladdresses(bool value) {
+  
+  alladdresses_ = value;
+}
+inline void LogsFilterRequest::set_alladdresses(bool value) {
+  _internal_set_alladdresses(value);
+  // @@protoc_insertion_point(field_set:remote.LogsFilterRequest.allAddresses)
+}
+
+// repeated .types.H160 addresses = 2;
+inline int LogsFilterRequest::_internal_addresses_size() const {
+  return addresses_.size();
+}
+inline int LogsFilterRequest::addresses_size() const {
+  return _internal_addresses_size();
+}
+inline ::types::H160* LogsFilterRequest::mutable_addresses(int index) {
+  // @@protoc_insertion_point(field_mutable:remote.LogsFilterRequest.addresses)
+  return addresses_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H160 >*
+LogsFilterRequest::mutable_addresses() {
+  // @@protoc_insertion_point(field_mutable_list:remote.LogsFilterRequest.addresses)
+  return &addresses_;
+}
+inline const ::types::H160& LogsFilterRequest::_internal_addresses(int index) const {
+  return addresses_.Get(index);
+}
+inline const ::types::H160& LogsFilterRequest::addresses(int index) const {
+  // @@protoc_insertion_point(field_get:remote.LogsFilterRequest.addresses)
+  return _internal_addresses(index);
+}
+inline ::types::H160* LogsFilterRequest::_internal_add_addresses() {
+  return addresses_.Add();
+}
+inline ::types::H160* LogsFilterRequest::add_addresses() {
+  // @@protoc_insertion_point(field_add:remote.LogsFilterRequest.addresses)
+  return _internal_add_addresses();
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H160 >&
+LogsFilterRequest::addresses() const {
+  // @@protoc_insertion_point(field_list:remote.LogsFilterRequest.addresses)
+  return addresses_;
+}
+
+// bool allTopics = 3;
+inline void LogsFilterRequest::clear_alltopics() {
+  alltopics_ = false;
+}
+inline bool LogsFilterRequest::_internal_alltopics() const {
+  return alltopics_;
+}
+inline bool LogsFilterRequest::alltopics() const {
+  // @@protoc_insertion_point(field_get:remote.LogsFilterRequest.allTopics)
+  return _internal_alltopics();
+}
+inline void LogsFilterRequest::_internal_set_alltopics(bool value) {
+  
+  alltopics_ = value;
+}
+inline void LogsFilterRequest::set_alltopics(bool value) {
+  _internal_set_alltopics(value);
+  // @@protoc_insertion_point(field_set:remote.LogsFilterRequest.allTopics)
+}
+
+// repeated .types.H256 topics = 4;
+inline int LogsFilterRequest::_internal_topics_size() const {
+  return topics_.size();
+}
+inline int LogsFilterRequest::topics_size() const {
+  return _internal_topics_size();
+}
+inline ::types::H256* LogsFilterRequest::mutable_topics(int index) {
+  // @@protoc_insertion_point(field_mutable:remote.LogsFilterRequest.topics)
+  return topics_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H256 >*
+LogsFilterRequest::mutable_topics() {
+  // @@protoc_insertion_point(field_mutable_list:remote.LogsFilterRequest.topics)
+  return &topics_;
+}
+inline const ::types::H256& LogsFilterRequest::_internal_topics(int index) const {
+  return topics_.Get(index);
+}
+inline const ::types::H256& LogsFilterRequest::topics(int index) const {
+  // @@protoc_insertion_point(field_get:remote.LogsFilterRequest.topics)
+  return _internal_topics(index);
+}
+inline ::types::H256* LogsFilterRequest::_internal_add_topics() {
+  return topics_.Add();
+}
+inline ::types::H256* LogsFilterRequest::add_topics() {
+  // @@protoc_insertion_point(field_add:remote.LogsFilterRequest.topics)
+  return _internal_add_topics();
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H256 >&
+LogsFilterRequest::topics() const {
+  // @@protoc_insertion_point(field_list:remote.LogsFilterRequest.topics)
+  return topics_;
+}
+
+// -------------------------------------------------------------------
+
+// SubscribeLogsReply
+
+// .types.H160 address = 1;
+inline bool SubscribeLogsReply::_internal_has_address() const {
+  return this != internal_default_instance() && address_ != nullptr;
+}
+inline bool SubscribeLogsReply::has_address() const {
+  return _internal_has_address();
+}
+inline const ::types::H160& SubscribeLogsReply::_internal_address() const {
+  const ::types::H160* p = address_;
+  return p != nullptr ? *p : reinterpret_cast<const ::types::H160&>(
+      ::types::_H160_default_instance_);
+}
+inline const ::types::H160& SubscribeLogsReply::address() const {
+  // @@protoc_insertion_point(field_get:remote.SubscribeLogsReply.address)
+  return _internal_address();
+}
+inline void SubscribeLogsReply::unsafe_arena_set_allocated_address(
+    ::types::H160* address) {
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(address_);
+  }
+  address_ = address;
+  if (address) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:remote.SubscribeLogsReply.address)
+}
+inline ::types::H160* SubscribeLogsReply::release_address() {
+  
+  ::types::H160* temp = address_;
+  address_ = nullptr;
+  if (GetArena() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+  return temp;
+}
+inline ::types::H160* SubscribeLogsReply::unsafe_arena_release_address() {
+  // @@protoc_insertion_point(field_release:remote.SubscribeLogsReply.address)
+  
+  ::types::H160* temp = address_;
+  address_ = nullptr;
+  return temp;
+}
+inline ::types::H160* SubscribeLogsReply::_internal_mutable_address() {
+  
+  if (address_ == nullptr) {
+    auto* p = CreateMaybeMessage<::types::H160>(GetArena());
+    address_ = p;
+  }
+  return address_;
+}
+inline ::types::H160* SubscribeLogsReply::mutable_address() {
+  // @@protoc_insertion_point(field_mutable:remote.SubscribeLogsReply.address)
+  return _internal_mutable_address();
+}
+inline void SubscribeLogsReply::set_allocated_address(::types::H160* address) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
+  if (message_arena == nullptr) {
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(address_);
+  }
+  if (address) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(address)->GetArena();
+    if (message_arena != submessage_arena) {
+      address = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, address, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  address_ = address;
+  // @@protoc_insertion_point(field_set_allocated:remote.SubscribeLogsReply.address)
+}
+
+// .types.H256 blockHash = 2;
+inline bool SubscribeLogsReply::_internal_has_blockhash() const {
+  return this != internal_default_instance() && blockhash_ != nullptr;
+}
+inline bool SubscribeLogsReply::has_blockhash() const {
+  return _internal_has_blockhash();
+}
+inline const ::types::H256& SubscribeLogsReply::_internal_blockhash() const {
+  const ::types::H256* p = blockhash_;
+  return p != nullptr ? *p : reinterpret_cast<const ::types::H256&>(
+      ::types::_H256_default_instance_);
+}
+inline const ::types::H256& SubscribeLogsReply::blockhash() const {
+  // @@protoc_insertion_point(field_get:remote.SubscribeLogsReply.blockHash)
+  return _internal_blockhash();
+}
+inline void SubscribeLogsReply::unsafe_arena_set_allocated_blockhash(
+    ::types::H256* blockhash) {
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(blockhash_);
+  }
+  blockhash_ = blockhash;
+  if (blockhash) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:remote.SubscribeLogsReply.blockHash)
+}
+inline ::types::H256* SubscribeLogsReply::release_blockhash() {
+  
+  ::types::H256* temp = blockhash_;
+  blockhash_ = nullptr;
+  if (GetArena() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+  return temp;
+}
+inline ::types::H256* SubscribeLogsReply::unsafe_arena_release_blockhash() {
+  // @@protoc_insertion_point(field_release:remote.SubscribeLogsReply.blockHash)
+  
+  ::types::H256* temp = blockhash_;
+  blockhash_ = nullptr;
+  return temp;
+}
+inline ::types::H256* SubscribeLogsReply::_internal_mutable_blockhash() {
+  
+  if (blockhash_ == nullptr) {
+    auto* p = CreateMaybeMessage<::types::H256>(GetArena());
+    blockhash_ = p;
+  }
+  return blockhash_;
+}
+inline ::types::H256* SubscribeLogsReply::mutable_blockhash() {
+  // @@protoc_insertion_point(field_mutable:remote.SubscribeLogsReply.blockHash)
+  return _internal_mutable_blockhash();
+}
+inline void SubscribeLogsReply::set_allocated_blockhash(::types::H256* blockhash) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
+  if (message_arena == nullptr) {
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(blockhash_);
+  }
+  if (blockhash) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(blockhash)->GetArena();
+    if (message_arena != submessage_arena) {
+      blockhash = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, blockhash, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  blockhash_ = blockhash;
+  // @@protoc_insertion_point(field_set_allocated:remote.SubscribeLogsReply.blockHash)
+}
+
+// uint64 blockNumber = 3;
+inline void SubscribeLogsReply::clear_blocknumber() {
+  blocknumber_ = PROTOBUF_ULONGLONG(0);
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 SubscribeLogsReply::_internal_blocknumber() const {
+  return blocknumber_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 SubscribeLogsReply::blocknumber() const {
+  // @@protoc_insertion_point(field_get:remote.SubscribeLogsReply.blockNumber)
+  return _internal_blocknumber();
+}
+inline void SubscribeLogsReply::_internal_set_blocknumber(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  
+  blocknumber_ = value;
+}
+inline void SubscribeLogsReply::set_blocknumber(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  _internal_set_blocknumber(value);
+  // @@protoc_insertion_point(field_set:remote.SubscribeLogsReply.blockNumber)
+}
+
+// bytes data = 4;
+inline void SubscribeLogsReply::clear_data() {
+  data_.ClearToEmpty();
+}
+inline const std::string& SubscribeLogsReply::data() const {
+  // @@protoc_insertion_point(field_get:remote.SubscribeLogsReply.data)
+  return _internal_data();
+}
+inline void SubscribeLogsReply::set_data(const std::string& value) {
+  _internal_set_data(value);
+  // @@protoc_insertion_point(field_set:remote.SubscribeLogsReply.data)
+}
+inline std::string* SubscribeLogsReply::mutable_data() {
+  // @@protoc_insertion_point(field_mutable:remote.SubscribeLogsReply.data)
+  return _internal_mutable_data();
+}
+inline const std::string& SubscribeLogsReply::_internal_data() const {
+  return data_.Get();
+}
+inline void SubscribeLogsReply::_internal_set_data(const std::string& value) {
+  
+  data_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
+}
+inline void SubscribeLogsReply::set_data(std::string&& value) {
+  
+  data_.Set(
+    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
+  // @@protoc_insertion_point(field_set_rvalue:remote.SubscribeLogsReply.data)
+}
+inline void SubscribeLogsReply::set_data(const char* value) {
+  GOOGLE_DCHECK(value != nullptr);
+  
+  data_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
+  // @@protoc_insertion_point(field_set_char:remote.SubscribeLogsReply.data)
+}
+inline void SubscribeLogsReply::set_data(const void* value,
+    size_t size) {
+  
+  data_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
+      reinterpret_cast<const char*>(value), size), GetArena());
+  // @@protoc_insertion_point(field_set_pointer:remote.SubscribeLogsReply.data)
+}
+inline std::string* SubscribeLogsReply::_internal_mutable_data() {
+  
+  return data_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
+}
+inline std::string* SubscribeLogsReply::release_data() {
+  // @@protoc_insertion_point(field_release:remote.SubscribeLogsReply.data)
+  return data_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
+}
+inline void SubscribeLogsReply::set_allocated_data(std::string* data) {
+  if (data != nullptr) {
+    
+  } else {
+    
+  }
+  data_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), data,
+      GetArena());
+  // @@protoc_insertion_point(field_set_allocated:remote.SubscribeLogsReply.data)
+}
+
+// uint64 logIndex = 5;
+inline void SubscribeLogsReply::clear_logindex() {
+  logindex_ = PROTOBUF_ULONGLONG(0);
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 SubscribeLogsReply::_internal_logindex() const {
+  return logindex_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 SubscribeLogsReply::logindex() const {
+  // @@protoc_insertion_point(field_get:remote.SubscribeLogsReply.logIndex)
+  return _internal_logindex();
+}
+inline void SubscribeLogsReply::_internal_set_logindex(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  
+  logindex_ = value;
+}
+inline void SubscribeLogsReply::set_logindex(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  _internal_set_logindex(value);
+  // @@protoc_insertion_point(field_set:remote.SubscribeLogsReply.logIndex)
+}
+
+// repeated .types.H256 topics = 6;
+inline int SubscribeLogsReply::_internal_topics_size() const {
+  return topics_.size();
+}
+inline int SubscribeLogsReply::topics_size() const {
+  return _internal_topics_size();
+}
+inline ::types::H256* SubscribeLogsReply::mutable_topics(int index) {
+  // @@protoc_insertion_point(field_mutable:remote.SubscribeLogsReply.topics)
+  return topics_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H256 >*
+SubscribeLogsReply::mutable_topics() {
+  // @@protoc_insertion_point(field_mutable_list:remote.SubscribeLogsReply.topics)
+  return &topics_;
+}
+inline const ::types::H256& SubscribeLogsReply::_internal_topics(int index) const {
+  return topics_.Get(index);
+}
+inline const ::types::H256& SubscribeLogsReply::topics(int index) const {
+  // @@protoc_insertion_point(field_get:remote.SubscribeLogsReply.topics)
+  return _internal_topics(index);
+}
+inline ::types::H256* SubscribeLogsReply::_internal_add_topics() {
+  return topics_.Add();
+}
+inline ::types::H256* SubscribeLogsReply::add_topics() {
+  // @@protoc_insertion_point(field_add:remote.SubscribeLogsReply.topics)
+  return _internal_add_topics();
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::H256 >&
+SubscribeLogsReply::topics() const {
+  // @@protoc_insertion_point(field_list:remote.SubscribeLogsReply.topics)
+  return topics_;
+}
+
+// .types.H256 transactionHash = 7;
+inline bool SubscribeLogsReply::_internal_has_transactionhash() const {
+  return this != internal_default_instance() && transactionhash_ != nullptr;
+}
+inline bool SubscribeLogsReply::has_transactionhash() const {
+  return _internal_has_transactionhash();
+}
+inline const ::types::H256& SubscribeLogsReply::_internal_transactionhash() const {
+  const ::types::H256* p = transactionhash_;
+  return p != nullptr ? *p : reinterpret_cast<const ::types::H256&>(
+      ::types::_H256_default_instance_);
+}
+inline const ::types::H256& SubscribeLogsReply::transactionhash() const {
+  // @@protoc_insertion_point(field_get:remote.SubscribeLogsReply.transactionHash)
+  return _internal_transactionhash();
+}
+inline void SubscribeLogsReply::unsafe_arena_set_allocated_transactionhash(
+    ::types::H256* transactionhash) {
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(transactionhash_);
+  }
+  transactionhash_ = transactionhash;
+  if (transactionhash) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:remote.SubscribeLogsReply.transactionHash)
+}
+inline ::types::H256* SubscribeLogsReply::release_transactionhash() {
+  
+  ::types::H256* temp = transactionhash_;
+  transactionhash_ = nullptr;
+  if (GetArena() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+  return temp;
+}
+inline ::types::H256* SubscribeLogsReply::unsafe_arena_release_transactionhash() {
+  // @@protoc_insertion_point(field_release:remote.SubscribeLogsReply.transactionHash)
+  
+  ::types::H256* temp = transactionhash_;
+  transactionhash_ = nullptr;
+  return temp;
+}
+inline ::types::H256* SubscribeLogsReply::_internal_mutable_transactionhash() {
+  
+  if (transactionhash_ == nullptr) {
+    auto* p = CreateMaybeMessage<::types::H256>(GetArena());
+    transactionhash_ = p;
+  }
+  return transactionhash_;
+}
+inline ::types::H256* SubscribeLogsReply::mutable_transactionhash() {
+  // @@protoc_insertion_point(field_mutable:remote.SubscribeLogsReply.transactionHash)
+  return _internal_mutable_transactionhash();
+}
+inline void SubscribeLogsReply::set_allocated_transactionhash(::types::H256* transactionhash) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
+  if (message_arena == nullptr) {
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(transactionhash_);
+  }
+  if (transactionhash) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(transactionhash)->GetArena();
+    if (message_arena != submessage_arena) {
+      transactionhash = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, transactionhash, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  transactionhash_ = transactionhash;
+  // @@protoc_insertion_point(field_set_allocated:remote.SubscribeLogsReply.transactionHash)
+}
+
+// uint64 transactionIndex = 8;
+inline void SubscribeLogsReply::clear_transactionindex() {
+  transactionindex_ = PROTOBUF_ULONGLONG(0);
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 SubscribeLogsReply::_internal_transactionindex() const {
+  return transactionindex_;
+}
+inline ::PROTOBUF_NAMESPACE_ID::uint64 SubscribeLogsReply::transactionindex() const {
+  // @@protoc_insertion_point(field_get:remote.SubscribeLogsReply.transactionIndex)
+  return _internal_transactionindex();
+}
+inline void SubscribeLogsReply::_internal_set_transactionindex(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  
+  transactionindex_ = value;
+}
+inline void SubscribeLogsReply::set_transactionindex(::PROTOBUF_NAMESPACE_ID::uint64 value) {
+  _internal_set_transactionindex(value);
+  // @@protoc_insertion_point(field_set:remote.SubscribeLogsReply.transactionIndex)
+}
+
+// bool removed = 9;
+inline void SubscribeLogsReply::clear_removed() {
+  removed_ = false;
+}
+inline bool SubscribeLogsReply::_internal_removed() const {
+  return removed_;
+}
+inline bool SubscribeLogsReply::removed() const {
+  // @@protoc_insertion_point(field_get:remote.SubscribeLogsReply.removed)
+  return _internal_removed();
+}
+inline void SubscribeLogsReply::_internal_set_removed(bool value) {
+  
+  removed_ = value;
+}
+inline void SubscribeLogsReply::set_removed(bool value) {
+  _internal_set_removed(value);
+  // @@protoc_insertion_point(field_set:remote.SubscribeLogsReply.removed)
+}
+
+// -------------------------------------------------------------------
+
 // BlockRequest
 
 // uint64 blockHeight = 2;
@@ -5311,9 +6450,55 @@ NodesInfoReply::nodesinfo() const {
   return nodesinfo_;
 }
 
+// -------------------------------------------------------------------
+
+// PeersReply
+
+// repeated .types.PeerInfo peers = 1;
+inline int PeersReply::_internal_peers_size() const {
+  return peers_.size();
+}
+inline int PeersReply::peers_size() const {
+  return _internal_peers_size();
+}
+inline ::types::PeerInfo* PeersReply::mutable_peers(int index) {
+  // @@protoc_insertion_point(field_mutable:remote.PeersReply.peers)
+  return peers_.Mutable(index);
+}
+inline ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::PeerInfo >*
+PeersReply::mutable_peers() {
+  // @@protoc_insertion_point(field_mutable_list:remote.PeersReply.peers)
+  return &peers_;
+}
+inline const ::types::PeerInfo& PeersReply::_internal_peers(int index) const {
+  return peers_.Get(index);
+}
+inline const ::types::PeerInfo& PeersReply::peers(int index) const {
+  // @@protoc_insertion_point(field_get:remote.PeersReply.peers)
+  return _internal_peers(index);
+}
+inline ::types::PeerInfo* PeersReply::_internal_add_peers() {
+  return peers_.Add();
+}
+inline ::types::PeerInfo* PeersReply::add_peers() {
+  // @@protoc_insertion_point(field_add:remote.PeersReply.peers)
+  return _internal_add_peers();
+}
+inline const ::PROTOBUF_NAMESPACE_ID::RepeatedPtrField< ::types::PeerInfo >&
+PeersReply::peers() const {
+  // @@protoc_insertion_point(field_list:remote.PeersReply.peers)
+  return peers_;
+}
+
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

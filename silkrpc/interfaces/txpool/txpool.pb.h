@@ -126,31 +126,31 @@ template<> ::txpool::TxHashes* Arena::CreateMaybeMessage<::txpool::TxHashes>(Are
 PROTOBUF_NAMESPACE_CLOSE
 namespace txpool {
 
-enum AllReply_Type : int {
-  AllReply_Type_PENDING = 0,
-  AllReply_Type_QUEUED = 1,
-  AllReply_Type_BASE_FEE = 2,
-  AllReply_Type_AllReply_Type_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
-  AllReply_Type_AllReply_Type_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
+enum AllReply_TxnType : int {
+  AllReply_TxnType_PENDING = 0,
+  AllReply_TxnType_QUEUED = 1,
+  AllReply_TxnType_BASE_FEE = 2,
+  AllReply_TxnType_AllReply_TxnType_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
+  AllReply_TxnType_AllReply_TxnType_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
 };
-bool AllReply_Type_IsValid(int value);
-constexpr AllReply_Type AllReply_Type_Type_MIN = AllReply_Type_PENDING;
-constexpr AllReply_Type AllReply_Type_Type_MAX = AllReply_Type_BASE_FEE;
-constexpr int AllReply_Type_Type_ARRAYSIZE = AllReply_Type_Type_MAX + 1;
+bool AllReply_TxnType_IsValid(int value);
+constexpr AllReply_TxnType AllReply_TxnType_TxnType_MIN = AllReply_TxnType_PENDING;
+constexpr AllReply_TxnType AllReply_TxnType_TxnType_MAX = AllReply_TxnType_BASE_FEE;
+constexpr int AllReply_TxnType_TxnType_ARRAYSIZE = AllReply_TxnType_TxnType_MAX + 1;
 
-const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* AllReply_Type_descriptor();
+const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor* AllReply_TxnType_descriptor();
 template<typename T>
-inline const std::string& AllReply_Type_Name(T enum_t_value) {
-  static_assert(::std::is_same<T, AllReply_Type>::value ||
+inline const std::string& AllReply_TxnType_Name(T enum_t_value) {
+  static_assert(::std::is_same<T, AllReply_TxnType>::value ||
     ::std::is_integral<T>::value,
-    "Incorrect type passed to function AllReply_Type_Name.");
+    "Incorrect type passed to function AllReply_TxnType_Name.");
   return ::PROTOBUF_NAMESPACE_ID::internal::NameOfEnum(
-    AllReply_Type_descriptor(), enum_t_value);
+    AllReply_TxnType_descriptor(), enum_t_value);
 }
-inline bool AllReply_Type_Parse(
-    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, AllReply_Type* value) {
-  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<AllReply_Type>(
-    AllReply_Type_descriptor(), name, value);
+inline bool AllReply_TxnType_Parse(
+    ::PROTOBUF_NAMESPACE_ID::ConstStringParam name, AllReply_TxnType* value) {
+  return ::PROTOBUF_NAMESPACE_ID::internal::ParseNamedEnum<AllReply_TxnType>(
+    AllReply_TxnType_descriptor(), name, value);
 }
 enum ImportResult : int {
   SUCCESS = 0,
@@ -1455,26 +1455,10 @@ class AllReply_Tx PROTOBUF_FINAL :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kSenderFieldNumber = 2,
     kRlpTxFieldNumber = 3,
-    kTypeFieldNumber = 1,
+    kSenderFieldNumber = 2,
+    kTxnTypeFieldNumber = 1,
   };
-  // bytes sender = 2;
-  void clear_sender();
-  const std::string& sender() const;
-  void set_sender(const std::string& value);
-  void set_sender(std::string&& value);
-  void set_sender(const char* value);
-  void set_sender(const void* value, size_t size);
-  std::string* mutable_sender();
-  std::string* release_sender();
-  void set_allocated_sender(std::string* sender);
-  private:
-  const std::string& _internal_sender() const;
-  void _internal_set_sender(const std::string& value);
-  std::string* _internal_mutable_sender();
-  public:
-
   // bytes rlpTx = 3;
   void clear_rlptx();
   const std::string& rlptx() const;
@@ -1491,13 +1475,31 @@ class AllReply_Tx PROTOBUF_FINAL :
   std::string* _internal_mutable_rlptx();
   public:
 
-  // .txpool.AllReply.Type type = 1;
-  void clear_type();
-  ::txpool::AllReply_Type type() const;
-  void set_type(::txpool::AllReply_Type value);
+  // .types.H160 sender = 2;
+  bool has_sender() const;
   private:
-  ::txpool::AllReply_Type _internal_type() const;
-  void _internal_set_type(::txpool::AllReply_Type value);
+  bool _internal_has_sender() const;
+  public:
+  void clear_sender();
+  const ::types::H160& sender() const;
+  ::types::H160* release_sender();
+  ::types::H160* mutable_sender();
+  void set_allocated_sender(::types::H160* sender);
+  private:
+  const ::types::H160& _internal_sender() const;
+  ::types::H160* _internal_mutable_sender();
+  public:
+  void unsafe_arena_set_allocated_sender(
+      ::types::H160* sender);
+  ::types::H160* unsafe_arena_release_sender();
+
+  // .txpool.AllReply.TxnType txnType = 1;
+  void clear_txntype();
+  ::txpool::AllReply_TxnType txntype() const;
+  void set_txntype(::txpool::AllReply_TxnType value);
+  private:
+  ::txpool::AllReply_TxnType _internal_txntype() const;
+  void _internal_set_txntype(::txpool::AllReply_TxnType value);
   public:
 
   // @@protoc_insertion_point(class_scope:txpool.AllReply.Tx)
@@ -1507,9 +1509,9 @@ class AllReply_Tx PROTOBUF_FINAL :
   template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr sender_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr rlptx_;
-  int type_;
+  ::types::H160* sender_;
+  int txntype_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_txpool_2ftxpool_2eproto;
 };
@@ -1626,36 +1628,36 @@ class AllReply PROTOBUF_FINAL :
 
   typedef AllReply_Tx Tx;
 
-  typedef AllReply_Type Type;
-  static constexpr Type PENDING =
-    AllReply_Type_PENDING;
-  static constexpr Type QUEUED =
-    AllReply_Type_QUEUED;
-  static constexpr Type BASE_FEE =
-    AllReply_Type_BASE_FEE;
-  static inline bool Type_IsValid(int value) {
-    return AllReply_Type_IsValid(value);
+  typedef AllReply_TxnType TxnType;
+  static constexpr TxnType PENDING =
+    AllReply_TxnType_PENDING;
+  static constexpr TxnType QUEUED =
+    AllReply_TxnType_QUEUED;
+  static constexpr TxnType BASE_FEE =
+    AllReply_TxnType_BASE_FEE;
+  static inline bool TxnType_IsValid(int value) {
+    return AllReply_TxnType_IsValid(value);
   }
-  static constexpr Type Type_MIN =
-    AllReply_Type_Type_MIN;
-  static constexpr Type Type_MAX =
-    AllReply_Type_Type_MAX;
-  static constexpr int Type_ARRAYSIZE =
-    AllReply_Type_Type_ARRAYSIZE;
+  static constexpr TxnType TxnType_MIN =
+    AllReply_TxnType_TxnType_MIN;
+  static constexpr TxnType TxnType_MAX =
+    AllReply_TxnType_TxnType_MAX;
+  static constexpr int TxnType_ARRAYSIZE =
+    AllReply_TxnType_TxnType_ARRAYSIZE;
   static inline const ::PROTOBUF_NAMESPACE_ID::EnumDescriptor*
-  Type_descriptor() {
-    return AllReply_Type_descriptor();
+  TxnType_descriptor() {
+    return AllReply_TxnType_descriptor();
   }
   template<typename T>
-  static inline const std::string& Type_Name(T enum_t_value) {
-    static_assert(::std::is_same<T, Type>::value ||
+  static inline const std::string& TxnType_Name(T enum_t_value) {
+    static_assert(::std::is_same<T, TxnType>::value ||
       ::std::is_integral<T>::value,
-      "Incorrect type passed to function Type_Name.");
-    return AllReply_Type_Name(enum_t_value);
+      "Incorrect type passed to function TxnType_Name.");
+    return AllReply_TxnType_Name(enum_t_value);
   }
-  static inline bool Type_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
-      Type* value) {
-    return AllReply_Type_Parse(name, value);
+  static inline bool TxnType_Parse(::PROTOBUF_NAMESPACE_ID::ConstStringParam name,
+      TxnType* value) {
+    return AllReply_TxnType_Parse(name, value);
   }
 
   // accessors -------------------------------------------------------
@@ -1806,26 +1808,10 @@ class PendingReply_Tx PROTOBUF_FINAL :
   // accessors -------------------------------------------------------
 
   enum : int {
-    kSenderFieldNumber = 1,
     kRlpTxFieldNumber = 2,
+    kSenderFieldNumber = 1,
     kIsLocalFieldNumber = 3,
   };
-  // bytes sender = 1;
-  void clear_sender();
-  const std::string& sender() const;
-  void set_sender(const std::string& value);
-  void set_sender(std::string&& value);
-  void set_sender(const char* value);
-  void set_sender(const void* value, size_t size);
-  std::string* mutable_sender();
-  std::string* release_sender();
-  void set_allocated_sender(std::string* sender);
-  private:
-  const std::string& _internal_sender() const;
-  void _internal_set_sender(const std::string& value);
-  std::string* _internal_mutable_sender();
-  public:
-
   // bytes rlpTx = 2;
   void clear_rlptx();
   const std::string& rlptx() const;
@@ -1841,6 +1827,24 @@ class PendingReply_Tx PROTOBUF_FINAL :
   void _internal_set_rlptx(const std::string& value);
   std::string* _internal_mutable_rlptx();
   public:
+
+  // .types.H160 sender = 1;
+  bool has_sender() const;
+  private:
+  bool _internal_has_sender() const;
+  public:
+  void clear_sender();
+  const ::types::H160& sender() const;
+  ::types::H160* release_sender();
+  ::types::H160* mutable_sender();
+  void set_allocated_sender(::types::H160* sender);
+  private:
+  const ::types::H160& _internal_sender() const;
+  ::types::H160* _internal_mutable_sender();
+  public:
+  void unsafe_arena_set_allocated_sender(
+      ::types::H160* sender);
+  ::types::H160* unsafe_arena_release_sender();
 
   // bool isLocal = 3;
   void clear_islocal();
@@ -1858,8 +1862,8 @@ class PendingReply_Tx PROTOBUF_FINAL :
   template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
   typedef void InternalArenaConstructable_;
   typedef void DestructorSkippable_;
-  ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr sender_;
   ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr rlptx_;
+  ::types::H160* sender_;
   bool islocal_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_txpool_2ftxpool_2eproto;
@@ -3038,84 +3042,100 @@ OnAddReply::mutable_rpltxs() {
 
 // AllReply_Tx
 
-// .txpool.AllReply.Type type = 1;
-inline void AllReply_Tx::clear_type() {
-  type_ = 0;
+// .txpool.AllReply.TxnType txnType = 1;
+inline void AllReply_Tx::clear_txntype() {
+  txntype_ = 0;
 }
-inline ::txpool::AllReply_Type AllReply_Tx::_internal_type() const {
-  return static_cast< ::txpool::AllReply_Type >(type_);
+inline ::txpool::AllReply_TxnType AllReply_Tx::_internal_txntype() const {
+  return static_cast< ::txpool::AllReply_TxnType >(txntype_);
 }
-inline ::txpool::AllReply_Type AllReply_Tx::type() const {
-  // @@protoc_insertion_point(field_get:txpool.AllReply.Tx.type)
-  return _internal_type();
+inline ::txpool::AllReply_TxnType AllReply_Tx::txntype() const {
+  // @@protoc_insertion_point(field_get:txpool.AllReply.Tx.txnType)
+  return _internal_txntype();
 }
-inline void AllReply_Tx::_internal_set_type(::txpool::AllReply_Type value) {
+inline void AllReply_Tx::_internal_set_txntype(::txpool::AllReply_TxnType value) {
   
-  type_ = value;
+  txntype_ = value;
 }
-inline void AllReply_Tx::set_type(::txpool::AllReply_Type value) {
-  _internal_set_type(value);
-  // @@protoc_insertion_point(field_set:txpool.AllReply.Tx.type)
+inline void AllReply_Tx::set_txntype(::txpool::AllReply_TxnType value) {
+  _internal_set_txntype(value);
+  // @@protoc_insertion_point(field_set:txpool.AllReply.Tx.txnType)
 }
 
-// bytes sender = 2;
-inline void AllReply_Tx::clear_sender() {
-  sender_.ClearToEmpty();
+// .types.H160 sender = 2;
+inline bool AllReply_Tx::_internal_has_sender() const {
+  return this != internal_default_instance() && sender_ != nullptr;
 }
-inline const std::string& AllReply_Tx::sender() const {
+inline bool AllReply_Tx::has_sender() const {
+  return _internal_has_sender();
+}
+inline const ::types::H160& AllReply_Tx::_internal_sender() const {
+  const ::types::H160* p = sender_;
+  return p != nullptr ? *p : reinterpret_cast<const ::types::H160&>(
+      ::types::_H160_default_instance_);
+}
+inline const ::types::H160& AllReply_Tx::sender() const {
   // @@protoc_insertion_point(field_get:txpool.AllReply.Tx.sender)
   return _internal_sender();
 }
-inline void AllReply_Tx::set_sender(const std::string& value) {
-  _internal_set_sender(value);
-  // @@protoc_insertion_point(field_set:txpool.AllReply.Tx.sender)
-}
-inline std::string* AllReply_Tx::mutable_sender() {
-  // @@protoc_insertion_point(field_mutable:txpool.AllReply.Tx.sender)
-  return _internal_mutable_sender();
-}
-inline const std::string& AllReply_Tx::_internal_sender() const {
-  return sender_.Get();
-}
-inline void AllReply_Tx::_internal_set_sender(const std::string& value) {
-  
-  sender_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
-}
-inline void AllReply_Tx::set_sender(std::string&& value) {
-  
-  sender_.Set(
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
-  // @@protoc_insertion_point(field_set_rvalue:txpool.AllReply.Tx.sender)
-}
-inline void AllReply_Tx::set_sender(const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  
-  sender_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
-  // @@protoc_insertion_point(field_set_char:txpool.AllReply.Tx.sender)
-}
-inline void AllReply_Tx::set_sender(const void* value,
-    size_t size) {
-  
-  sender_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
-      reinterpret_cast<const char*>(value), size), GetArena());
-  // @@protoc_insertion_point(field_set_pointer:txpool.AllReply.Tx.sender)
-}
-inline std::string* AllReply_Tx::_internal_mutable_sender() {
-  
-  return sender_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
-}
-inline std::string* AllReply_Tx::release_sender() {
-  // @@protoc_insertion_point(field_release:txpool.AllReply.Tx.sender)
-  return sender_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
-}
-inline void AllReply_Tx::set_allocated_sender(std::string* sender) {
-  if (sender != nullptr) {
+inline void AllReply_Tx::unsafe_arena_set_allocated_sender(
+    ::types::H160* sender) {
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(sender_);
+  }
+  sender_ = sender;
+  if (sender) {
     
   } else {
     
   }
-  sender_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), sender,
-      GetArena());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:txpool.AllReply.Tx.sender)
+}
+inline ::types::H160* AllReply_Tx::release_sender() {
+  
+  ::types::H160* temp = sender_;
+  sender_ = nullptr;
+  if (GetArena() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+  return temp;
+}
+inline ::types::H160* AllReply_Tx::unsafe_arena_release_sender() {
+  // @@protoc_insertion_point(field_release:txpool.AllReply.Tx.sender)
+  
+  ::types::H160* temp = sender_;
+  sender_ = nullptr;
+  return temp;
+}
+inline ::types::H160* AllReply_Tx::_internal_mutable_sender() {
+  
+  if (sender_ == nullptr) {
+    auto* p = CreateMaybeMessage<::types::H160>(GetArena());
+    sender_ = p;
+  }
+  return sender_;
+}
+inline ::types::H160* AllReply_Tx::mutable_sender() {
+  // @@protoc_insertion_point(field_mutable:txpool.AllReply.Tx.sender)
+  return _internal_mutable_sender();
+}
+inline void AllReply_Tx::set_allocated_sender(::types::H160* sender) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
+  if (message_arena == nullptr) {
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(sender_);
+  }
+  if (sender) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(sender)->GetArena();
+    if (message_arena != submessage_arena) {
+      sender = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, sender, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  sender_ = sender;
   // @@protoc_insertion_point(field_set_allocated:txpool.AllReply.Tx.sender)
 }
 
@@ -3227,64 +3247,80 @@ AllReply::txs() const {
 
 // PendingReply_Tx
 
-// bytes sender = 1;
-inline void PendingReply_Tx::clear_sender() {
-  sender_.ClearToEmpty();
+// .types.H160 sender = 1;
+inline bool PendingReply_Tx::_internal_has_sender() const {
+  return this != internal_default_instance() && sender_ != nullptr;
 }
-inline const std::string& PendingReply_Tx::sender() const {
+inline bool PendingReply_Tx::has_sender() const {
+  return _internal_has_sender();
+}
+inline const ::types::H160& PendingReply_Tx::_internal_sender() const {
+  const ::types::H160* p = sender_;
+  return p != nullptr ? *p : reinterpret_cast<const ::types::H160&>(
+      ::types::_H160_default_instance_);
+}
+inline const ::types::H160& PendingReply_Tx::sender() const {
   // @@protoc_insertion_point(field_get:txpool.PendingReply.Tx.sender)
   return _internal_sender();
 }
-inline void PendingReply_Tx::set_sender(const std::string& value) {
-  _internal_set_sender(value);
-  // @@protoc_insertion_point(field_set:txpool.PendingReply.Tx.sender)
-}
-inline std::string* PendingReply_Tx::mutable_sender() {
-  // @@protoc_insertion_point(field_mutable:txpool.PendingReply.Tx.sender)
-  return _internal_mutable_sender();
-}
-inline const std::string& PendingReply_Tx::_internal_sender() const {
-  return sender_.Get();
-}
-inline void PendingReply_Tx::_internal_set_sender(const std::string& value) {
-  
-  sender_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, value, GetArena());
-}
-inline void PendingReply_Tx::set_sender(std::string&& value) {
-  
-  sender_.Set(
-    ::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::move(value), GetArena());
-  // @@protoc_insertion_point(field_set_rvalue:txpool.PendingReply.Tx.sender)
-}
-inline void PendingReply_Tx::set_sender(const char* value) {
-  GOOGLE_DCHECK(value != nullptr);
-  
-  sender_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(value), GetArena());
-  // @@protoc_insertion_point(field_set_char:txpool.PendingReply.Tx.sender)
-}
-inline void PendingReply_Tx::set_sender(const void* value,
-    size_t size) {
-  
-  sender_.Set(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, ::std::string(
-      reinterpret_cast<const char*>(value), size), GetArena());
-  // @@protoc_insertion_point(field_set_pointer:txpool.PendingReply.Tx.sender)
-}
-inline std::string* PendingReply_Tx::_internal_mutable_sender() {
-  
-  return sender_.Mutable(::PROTOBUF_NAMESPACE_ID::internal::ArenaStringPtr::EmptyDefault{}, GetArena());
-}
-inline std::string* PendingReply_Tx::release_sender() {
-  // @@protoc_insertion_point(field_release:txpool.PendingReply.Tx.sender)
-  return sender_.Release(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), GetArena());
-}
-inline void PendingReply_Tx::set_allocated_sender(std::string* sender) {
-  if (sender != nullptr) {
+inline void PendingReply_Tx::unsafe_arena_set_allocated_sender(
+    ::types::H160* sender) {
+  if (GetArena() == nullptr) {
+    delete reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(sender_);
+  }
+  sender_ = sender;
+  if (sender) {
     
   } else {
     
   }
-  sender_.SetAllocated(&::PROTOBUF_NAMESPACE_ID::internal::GetEmptyStringAlreadyInited(), sender,
-      GetArena());
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:txpool.PendingReply.Tx.sender)
+}
+inline ::types::H160* PendingReply_Tx::release_sender() {
+  
+  ::types::H160* temp = sender_;
+  sender_ = nullptr;
+  if (GetArena() != nullptr) {
+    temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+  }
+  return temp;
+}
+inline ::types::H160* PendingReply_Tx::unsafe_arena_release_sender() {
+  // @@protoc_insertion_point(field_release:txpool.PendingReply.Tx.sender)
+  
+  ::types::H160* temp = sender_;
+  sender_ = nullptr;
+  return temp;
+}
+inline ::types::H160* PendingReply_Tx::_internal_mutable_sender() {
+  
+  if (sender_ == nullptr) {
+    auto* p = CreateMaybeMessage<::types::H160>(GetArena());
+    sender_ = p;
+  }
+  return sender_;
+}
+inline ::types::H160* PendingReply_Tx::mutable_sender() {
+  // @@protoc_insertion_point(field_mutable:txpool.PendingReply.Tx.sender)
+  return _internal_mutable_sender();
+}
+inline void PendingReply_Tx::set_allocated_sender(::types::H160* sender) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArena();
+  if (message_arena == nullptr) {
+    delete reinterpret_cast< ::PROTOBUF_NAMESPACE_ID::MessageLite*>(sender_);
+  }
+  if (sender) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      reinterpret_cast<::PROTOBUF_NAMESPACE_ID::MessageLite*>(sender)->GetArena();
+    if (message_arena != submessage_arena) {
+      sender = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, sender, submessage_arena);
+    }
+    
+  } else {
+    
+  }
+  sender_ = sender;
   // @@protoc_insertion_point(field_set_allocated:txpool.PendingReply.Tx.sender)
 }
 
@@ -3645,10 +3681,10 @@ inline void NonceReply::set_nonce(::PROTOBUF_NAMESPACE_ID::uint64 value) {
 
 PROTOBUF_NAMESPACE_OPEN
 
-template <> struct is_proto_enum< ::txpool::AllReply_Type> : ::std::true_type {};
+template <> struct is_proto_enum< ::txpool::AllReply_TxnType> : ::std::true_type {};
 template <>
-inline const EnumDescriptor* GetEnumDescriptor< ::txpool::AllReply_Type>() {
-  return ::txpool::AllReply_Type_descriptor();
+inline const EnumDescriptor* GetEnumDescriptor< ::txpool::AllReply_TxnType>() {
+  return ::txpool::AllReply_TxnType_descriptor();
 }
 template <> struct is_proto_enum< ::txpool::ImportResult> : ::std::true_type {};
 template <>

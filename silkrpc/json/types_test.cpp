@@ -135,6 +135,8 @@ TEST_CASE("serialize empty block header", "[silkrpc][to_json]") {
     silkworm::BlockHeader header{};
     nlohmann::json j = header;
     CHECK(j == R"({
+        "baseFeePerGas":null,
+        "hash": "0xc3bd2d00745c03048a5616146a96f5ff78e54efb9e5b04af208cdaff6f3830ee",
         "parentHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
         "sha3Uncles":"0x0000000000000000000000000000000000000000000000000000000000000000",
         "miner":"0x0000000000000000000000000000000000000000",
@@ -179,6 +181,8 @@ TEST_CASE("serialize block header", "[silkrpc][to_json]") {
     };
     nlohmann::json j = header;
     CHECK(j == R"({
+        "baseFeePerGas":null,
+        "hash": "0x5e053b099d472a3fc02394243961937ffa008bad0daa81a984a0830ba0beee01",
         "parentHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
         "sha3Uncles":"0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d",
         "miner":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
@@ -224,6 +228,8 @@ TEST_CASE("serialize block header with baseFeePerGas", "[silkrpc][to_json]") {
     };
     nlohmann::json j = header;
     CHECK(j == R"({
+        "baseFeePerGas":"0x3e8",
+        "hash": "0x5e3a9484b3ee70cc9ae7673051efd0369cfa4126430075921c70255cbdefbe6",
         "parentHash":"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c",
         "sha3Uncles":"0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d",
         "miner":"0x0715a7794a1dc8e42615f059dd6e406a6594651a",
@@ -544,6 +550,7 @@ TEST_CASE("serialize block with hydrated transactions", "[silkrpc][to_json]") {
                 "transactionIndex":"0x0",
                 "type":"0x0",
                 "v":"0x2e",
+                "chainId":"0x5",
                 "value":"0x15c2a7b13fd0000"
             },
             {
@@ -1418,11 +1425,23 @@ TEST_CASE("serialize forks", "[silkrpc::json][to_json]") {
 TEST_CASE("serialize empty issuance", "[silkrpc::json][to_json]") {
     silkrpc::Issuance issuance{};
     nlohmann::json j = issuance;
-    CHECK(j.is_null());
+    CHECK(j == R"({
+        "blockReward":null,
+        "uncleReward":null,
+        "issuance":null,
+        "burnt":null,
+        "tips":null,
+        "totalBurnt":null,
+        "totalIssued":null
+    })"_json);
 }
 
 TEST_CASE("serialize issuance", "[silkrpc::json][to_json]") {
     silkrpc::Issuance issuance{
+        "0x0",
+        "0x0",
+        "0x0",
+        "0x0",
         "0x0",
         "0x0",
         "0x0"
@@ -1431,7 +1450,11 @@ TEST_CASE("serialize issuance", "[silkrpc::json][to_json]") {
     CHECK(j == R"({
         "blockReward":"0x0",
         "uncleReward":"0x0",
-        "issuance":"0x0"
+        "issuance":"0x0",
+        "burnt":"0x0",
+        "tips":"0x0",
+        "totalBurnt":"0x0",
+        "totalIssued":"0x0"
     })"_json);
 }
 
@@ -1517,7 +1540,7 @@ TEST_CASE("deserialize execution_payload", "[silkrpc::json][to_json]") {
 }
 
 TEST_CASE("serialize forkchoice state", "[silkrpc::json][to_json]") {
-    silkrpc::ForkchoiceState forkchoice_state{
+    silkrpc::ForkChoiceState forkchoice_state{
         .head_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
         .safe_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32,
         .finalized_block_hash = 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32
@@ -1538,7 +1561,7 @@ TEST_CASE("deserialize forkchoice state", "[silkrpc::json][from_json]") {
         "finalizedBlockHash":"0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858"
     })"_json;
 
-    silkrpc::ForkchoiceState forkchoice_state = j;
+    silkrpc::ForkChoiceState forkchoice_state = j;
     CHECK(forkchoice_state.head_block_hash == 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32);
     CHECK(forkchoice_state.safe_block_hash == 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32);
     CHECK(forkchoice_state.finalized_block_hash == 0x3559e851470f6e7bbed1db474980683e8c315bfce99b2a6ef47c057c04de7858_bytes32);
@@ -1579,7 +1602,7 @@ TEST_CASE("serialize forkchoice updated reply", "[silkrpc::json][to_json]") {
         .latest_valid_hash = 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32,
         .validation_error = "some error"
     };
-    silkrpc::ForkchoiceUpdatedReply forkchoice_update_reply{
+    silkrpc::ForkChoiceUpdatedReply forkchoice_update_reply{
         .payload_status = payload_status,
         .payload_id = 0x1
     };

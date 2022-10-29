@@ -19,9 +19,9 @@
 #include <algorithm>
 #include <iostream>
 
-#include <asio/co_spawn.hpp>
-#include <asio/thread_pool.hpp>
-#include <asio/use_future.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/use_future.hpp>
 #include <boost/endian/conversion.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
@@ -111,11 +111,11 @@ static void fill_blocks_vector(std::vector<silkworm::BlockWithHash>& blocks,
 using Catch::Matchers::Message;
 
 TEST_CASE("suggested price") {
-    asio::thread_pool pool{1};
+    boost::asio::thread_pool pool{1};
 
     std::vector<silkworm::BlockWithHash> blocks;
 
-    BlockProvider block_provider = [&](uint64_t block_number) -> asio::awaitable<silkworm::BlockWithHash> {
+    BlockProvider block_provider = [&](uint64_t block_number) -> boost::asio::awaitable<silkworm::BlockWithHash> {
         silkworm::BlockWithHash block_with_hash = blocks[block_number];
         co_return block_with_hash;
     };
@@ -128,7 +128,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(1);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(0), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(0), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -141,7 +141,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(2);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -149,12 +149,12 @@ TEST_CASE("suggested price") {
 
     SECTION("when there is just 1 block in chain with 0x7 base fee") {
         FixedBlockData data = {0x7, 0x32, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x32;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(2);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -162,12 +162,12 @@ TEST_CASE("suggested price") {
 
     SECTION("when there is just 1 block in chain with 0x7 base fee and different max_priority and max_fee in tnxs") {
         FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x07;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(2);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -180,7 +180,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(20);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -188,12 +188,12 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 20 blocks with 0x7 base fee and different max_priority and max_fee in tnxs") {
         FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x7;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(20);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -206,7 +206,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(30);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -214,12 +214,12 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 30 blocks with 0x7 base fee and different max_priority and max_fee in tnxs") {
         FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x7;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(30);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -232,7 +232,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -240,12 +240,12 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and different max_priority and max_fee in tnxs") {
         FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x7;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -253,12 +253,12 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and max_priority > max_fee") {
         FixedBlockData data = {0x7, 0x40, 0x32, 0x40, 0x32};
-        const intx::uint256 expected_price = 0x32;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -266,12 +266,12 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and max_priority < max_fee") {
         FixedBlockData data = {0x7, 0x32, 0x40, 0x32, 0x40};
-        const intx::uint256 expected_price = 0x39;
+        const intx::uint256 expected_price = 0x32;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -279,12 +279,12 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and different max_priority and max_fee in tnxs, beneficiary == tx1 from") {
         FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x32;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kFromTnx1, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -292,12 +292,12 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base_fee and different max_priority and max_fee in tnxs, beneficiary == tx2 from") {
         FixedBlockData data = {0x7, 0x0, 0x32, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x7;
+        const intx::uint256 expected_price = 0x0;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kFromTnx2, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -310,7 +310,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -323,7 +323,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -336,20 +336,20 @@ TEST_CASE("suggested price") {
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
     }
 
     SECTION("when there are 60 blocks with with 0x07 base fee with fee == kDefaultMaxPrice") {
-        FixedBlockData data = {0x07, kDefaultMaxPrice, kDefaultMaxPrice, kDefaultMaxPrice, kDefaultMaxPrice};
+        FixedBlockData data = {0x07, kDefaultMaxPrice + 0x07, kDefaultMaxPrice + 0x07, kDefaultMaxPrice + 0x07, kDefaultMaxPrice + 0x07};
         const intx::uint256 expected_price = kDefaultMaxPrice;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -362,7 +362,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -375,7 +375,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -388,7 +388,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -396,12 +396,12 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and 1 tnx with fee > kDefaultMaxPrice") {
         FixedBlockData data = {0x7, kDefaultMaxPrice + 0x10, kDefaultMaxPrice + 0x10, 0x32, 0x32};
-        const intx::uint256 expected_price = 0x32;
+        const intx::uint256 expected_price = 0x2b;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -414,7 +414,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -422,12 +422,12 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and tnxs with increasing max_priority_fee_per_gas and max_fee_per_gas") {
         VariableBlockData data = {0x7, 0x10, 0x9, 0x10, 0x9};
-        const intx::uint256 expected_price = 0x019;
+        const intx::uint256 expected_price = 0x012;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -440,7 +440,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -448,12 +448,12 @@ TEST_CASE("suggested price") {
 
     SECTION("when there are 60 blocks with 0x7 base fee and tnxs with decreasing max_priority_fee_per_gas and max_fee_per_gas") {
         VariableBlockData data = {0x7, 0x200, -0x9, 0x200, -0x9};
-        const intx::uint256 expected_price = 0x1f7;
+        const intx::uint256 expected_price = 0x1f0;
 
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);
@@ -466,7 +466,7 @@ TEST_CASE("suggested price") {
         blocks.reserve(60);
         fill_blocks_vector(blocks, kBeneficiary, data);
 
-        auto result = asio::co_spawn(pool, gas_price_oracle.suggested_price(1), asio::use_future);
+        auto result = boost::asio::co_spawn(pool, gas_price_oracle.suggested_price(1), boost::asio::use_future);
         const intx::uint256 &price = result.get();
 
         CHECK(price == expected_price);

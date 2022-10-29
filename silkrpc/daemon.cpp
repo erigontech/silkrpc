@@ -17,17 +17,21 @@
 #include "daemon.hpp"
 
 #include <cxxabi.h>
+
 #include <filesystem>
 #include <stdexcept>
 
-#include <asio/signal_set.hpp>
+#include <boost/asio/signal_set.hpp>
 #include <boost/process/environment.hpp>
 #include <grpcpp/grpcpp.h>
 
 namespace silkrpc {
 
+// The maximum receive message in bytes for gRPC channels.
+constexpr auto kRpcMaxReceiveMessageSize{64 * 1024 * 1024}; // 64 MiB
+
 void DaemonChecklist::success_or_throw() const {
-    for (const auto protocol_check : protocol_checklist) {
+    for (const auto& protocol_check : protocol_checklist) {
         if (!protocol_check.compatible) {
             throw std::runtime_error{protocol_check.result};
         }
@@ -36,7 +40,7 @@ void DaemonChecklist::success_or_throw() const {
 
 const char* current_exception_name() {
     int status;
-    return abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), 0, 0, &status);
+    return abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), nullptr, nullptr, &status);
 }
 
 int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
@@ -84,23 +88,23 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
 
         const auto checklist = rpc_daemon.run_checklist();
 
-        for (const auto protocol_check : checklist.protocol_checklist) {
+        for (const auto& protocol_check : checklist.protocol_checklist) {
             SILKRPC_LOG << protocol_check.result << "\n";
         }
 
         checklist.success_or_throw();
 
         // Start execution context dedicated to handling termination signals
-        asio::io_context signal_context;
-        asio::signal_set signals{signal_context, SIGINT, SIGTERM};
+        boost::asio::io_context signal_context;
+        boost::asio::signal_set signals{signal_context, SIGINT, SIGTERM};
         SILKRPC_DEBUG << "Signals registered on signal_context " << &signal_context << "\n" << std::flush;
-        signals.async_wait([&](const asio::system_error& error, int signal_number) {
+        signals.async_wait([&](const boost::system::error_code& error, int signal_number) {
             if (signal_number == SIGINT) std::cout << "\n";
-            SILKRPC_INFO << "Signal number: " << signal_number << " caught, error code: " << error.code() << "\n" << std::flush;
+            SILKRPC_INFO << "Signal number: " << signal_number << " caught, error: " << error.message() << "\n" << std::flush;
             rpc_daemon.stop();
         });
 
-        SILKRPC_LOG << "Silkrpc starting ETH RPC API at " << settings.http_port << " ENGINE RPC API at " << settings.engine_port << "\n";
+        SILKRPC_LOG << "Starting ETH RPC API at " << settings.http_port << " ENGINE RPC API at " << settings.engine_port << "\n";
 
         rpc_daemon.start();
 
@@ -143,7 +147,7 @@ bool Daemon::validate_settings(const DaemonSettings& settings) {
     }
 
     const auto target = settings.target;
-    if (!target.empty() && target.find(":") == std::string::npos) {
+    if (!target.empty() && target.find(':') == std::string::npos) {
         SILKRPC_ERROR << "Parameter target is invalid: [" << target << "]\n";
         SILKRPC_ERROR << "Use --target flag to specify the location of Erigon running instance\n";
         return false;
@@ -162,26 +166,17 @@ bool Daemon::validate_settings(const DaemonSettings& settings) {
         return false;
     }
 
-    const auto num_contexts = settings.num_contexts;
-    if (num_contexts < 0) {
-        SILKRPC_ERROR << "Parameter num_contexts is invalid: [" << num_contexts << "]\n";
-        SILKRPC_ERROR << "Use --num_contexts flag to specify the number of threads running I/O contexts\n";
-        return false;
-    }
-
-    const auto num_workers = settings.num_workers;
-    if (num_workers < 0) {
-        SILKRPC_ERROR << "Parameter num_workers is invalid: [" << num_workers << "]\n";
-        SILKRPC_ERROR << "Use --num_workers flag to specify the number of worker threads executing long-run operations\n";
-        return false;
-    }
-
     return true;
 }
 
 ChannelFactory Daemon::make_channel_factory(const DaemonSettings& settings) {
     return [&settings]() {
-        return grpc::CreateChannel(settings.target, grpc::InsecureChannelCredentials());
+        grpc::ChannelArguments channel_args;
+        // Allow to receive messages up to specified max size
+        channel_args.SetMaxReceiveMessageSize(kRpcMaxReceiveMessageSize);
+        // Allow each client to open its own TCP connection to server (sharing one single connection becomes a bottleneck under high load)
+        channel_args.SetInt(GRPC_ARG_USE_LOCAL_SUBCHANNEL_POOL, 1);
+        return grpc::CreateCustomChannel(settings.target, grpc::InsecureChannelCredentials(), channel_args);
     };
 }
 
@@ -189,7 +184,11 @@ Daemon::Daemon(const DaemonSettings& settings)
     : settings_(settings),
       create_channel_{make_channel_factory(settings_)},
       context_pool_{settings_.num_contexts, create_channel_, settings_.wait_mode},
-      worker_pool_{settings_.num_workers} {
+      worker_pool_{settings_.num_workers},
+      kv_stub_{remote::KV::NewStub(create_channel_())} {
+    // Create the unique KV state-changes stream feeding the state cache
+    auto& context = context_pool_.next_context();
+    state_changes_stream_ = std::make_unique<ethdb::kv::StateChangesStream>(context, kv_stub_.get());
 }
 
 DaemonChecklist Daemon::run_checklist() {
@@ -200,12 +199,7 @@ DaemonChecklist Daemon::run_checklist() {
     const auto mining_protocol_check{silkrpc::wait_for_mining_protocol_check(core_service_channel)};
     const auto txpool_protocol_check{silkrpc::wait_for_txpool_protocol_check(core_service_channel)};
 
-    DaemonChecklist checklist{{
-        kv_protocol_check,
-        ethbackend_protocol_check,
-        mining_protocol_check,
-        txpool_protocol_check
-    }};
+    DaemonChecklist checklist{{kv_protocol_check, ethbackend_protocol_check, mining_protocol_check, txpool_protocol_check}};
     return checklist;
 }
 
@@ -222,10 +216,16 @@ void Daemon::start() {
         service->start();
     }
 
+    // Open the KV state-changes stream feeding the state cache
+    state_changes_stream_->open();
+
     context_pool_.start();
 }
 
 void Daemon::stop() {
+    // Cancel registration for incoming KV state changes
+    state_changes_stream_->close();
+
     context_pool_.stop();
 
     for (auto& service : rpc_services_) {

@@ -133,11 +133,6 @@ class SpinWaitWaitStrategy {
 
   private:
     inline void spin_wait() {
-        asm volatile
-        (
-            "rep\n"
-            "nop"
-        );
     }
 
     inline static const int32_t kYieldThreshold{10};
@@ -154,8 +149,9 @@ class BusySpinWaitStrategy {
 };
 
 enum class WaitMode {
-    blocking,
-    sleeping,
+    backoff,    /* Wait strategy implemented in asio-grpc's agrpc::run */
+    blocking,   /* Custom multi-thread wait strategy implemented here */
+    sleeping,   /* Custom single-thread wait strategies implemented here */
     yielding,
     spin_wait,
     busy_spin

@@ -33,7 +33,7 @@ struct Block : public silkworm::BlockWithHash {
     intx::uint256 total_difficulty{0};
     bool full_tx{false};
 
-    uint64_t get_block_size() const;
+    [[nodiscard]] uint64_t get_block_size() const;
 };
 
 std::ostream& operator<<(std::ostream& out, const Block& b);
@@ -41,52 +41,43 @@ std::ostream& operator<<(std::ostream& out, const Block& b);
 class BlockNumberOrHash {
 public:
     explicit BlockNumberOrHash(std::string const& bnoh) { build(bnoh); }
-    explicit BlockNumberOrHash(std::uint64_t const& number) noexcept : value_{number} {}
+    explicit BlockNumberOrHash(uint64_t number) noexcept : value_{number} {}
 
-    virtual ~BlockNumberOrHash() noexcept {}
+    virtual ~BlockNumberOrHash() noexcept = default;
 
     BlockNumberOrHash(BlockNumberOrHash &&bnoh) = default;
-    BlockNumberOrHash(BlockNumberOrHash const& bnoh) noexcept : value_{bnoh.value_} {}
+    BlockNumberOrHash(BlockNumberOrHash const& bnoh) noexcept = default;
 
     BlockNumberOrHash& operator=(BlockNumberOrHash const& bnoh) = delete;
-    BlockNumberOrHash& operator=(std::string const& bnoh)  {
-        build(bnoh);
-        return *this;
-    }
-    BlockNumberOrHash& operator=(std::uint64_t const number) {
-        value_ = number;
-        return *this;
+
+    [[nodiscard]] bool is_number() const {
+        return std::holds_alternative<uint64_t>(value_);
     }
 
-    bool is_number() const {
-        return std::holds_alternative<std::uint64_t>(value_);
+    [[nodiscard]] uint64_t number() const {
+        return is_number() ? *std::get_if<uint64_t>(&value_) : 0;
     }
 
-    uint64_t number() const {
-        return is_number() ? *std::get_if<std::uint64_t>(&value_) : 0;
-    }
-
-    bool is_hash() const {
+    [[nodiscard]] bool is_hash() const {
         return std::holds_alternative<evmc::bytes32>(value_);
     }
 
-    evmc::bytes32 hash() const {
+    [[nodiscard]] evmc::bytes32 hash() const {
         return is_hash() ? *std::get_if<evmc::bytes32>(&value_) : evmc::bytes32{0};
     }
 
-    bool is_tag() const {
+    [[nodiscard]] bool is_tag() const {
         return std::holds_alternative<std::string>(value_);
     }
 
-    std::string tag() const {
+    [[nodiscard]] std::string tag() const {
         return is_tag() ? *std::get_if<std::string>(&value_) : "";
     }
 
 private:
     void build(std::string const& bnoh);
-    void set_number(std::string const& input, int base);
 
-    std::variant<std::uint64_t, evmc::bytes32, std::string> value_;
+    std::variant<uint64_t, evmc::bytes32, std::string> value_;
 };
 
 std::ostream& operator<<(std::ostream& out, const BlockNumberOrHash& b);

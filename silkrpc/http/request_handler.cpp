@@ -33,7 +33,7 @@
 
 namespace silkrpc::http {
 
-asio::awaitable<void> RequestHandler::handle_request(const http::Request& request, http::Reply& reply) {
+boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request& request, http::Reply& reply) {
     SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
     auto start = clock_time::now();
 
@@ -64,7 +64,7 @@ asio::awaitable<void> RequestHandler::handle_request(const http::Request& reques
         const auto method = request_json["method"].get<std::string>();
         const auto handle_method_opt = rpc_api_table_.find_handler(method);
         if (!handle_method_opt) {
-            reply.content = make_json_error(request_id, -32601, "method not existent or not implemented: " + method).dump() + "\n";
+            reply.content = make_json_error(request_id, -32601, "the method " + method + " does not exist/is not available").dump() + "\n";
             reply.status = http::Reply::not_implemented;
             reply.headers.reserve(2);
             reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});

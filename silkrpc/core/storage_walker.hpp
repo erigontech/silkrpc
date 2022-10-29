@@ -23,7 +23,7 @@
 #include <nlohmann/json.hpp>
 #include <silkrpc/config.hpp>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/account.hpp>
@@ -49,10 +49,10 @@ public:
     StorageWalker(const StorageWalker&) = delete;
     StorageWalker& operator=(const StorageWalker&) = delete;
 
-    asio::awaitable<void> walk_of_storages(uint64_t block_number,
+    boost::asio::awaitable<void> walk_of_storages(uint64_t block_number,
         const evmc::address& start_address, const evmc::bytes32& start_location, uint64_t incarnation, AccountCollector& collector);
 
-    asio::awaitable<void> storage_range_at(uint64_t block_number,
+    boost::asio::awaitable<void> storage_range_at(uint64_t block_number,
         const evmc::address& start_address, const evmc::bytes32& start_location, int16_t max_result, StorageCollector& collector);
 
 private:

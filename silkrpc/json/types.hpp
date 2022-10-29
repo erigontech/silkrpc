@@ -30,12 +30,12 @@
 #include <silkrpc/types/call.hpp>
 #include <silkrpc/types/chain_config.hpp>
 #include <silkrpc/types/error.hpp>
+#include <silkrpc/types/execution_payload.hpp>
 #include <silkrpc/types/filter.hpp>
 #include <silkrpc/types/issuance.hpp>
 #include <silkrpc/types/log.hpp>
-#include <silkrpc/types/transaction.hpp>
-#include <silkrpc/types/execution_payload.hpp>
 #include <silkrpc/types/receipt.hpp>
+#include <silkrpc/types/transaction.hpp>
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 
@@ -95,13 +95,13 @@ void from_json(const nlohmann::json& json, Filter& filter);
 void to_json(nlohmann::json& json, const ExecutionPayload& execution_payload);
 void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload);
 
-void to_json(nlohmann::json& json, const ForkchoiceState& forkchoice_state);
-void from_json(const nlohmann::json& json, ForkchoiceState& forkchoice_state);
+void to_json(nlohmann::json& json, const ForkChoiceState& forkchoice_state);
+void from_json(const nlohmann::json& json, ForkChoiceState& forkchoice_state);
 
 void to_json(nlohmann::json& json, const PayloadAttributes& payload_attributes);
 void from_json(const nlohmann::json& json, PayloadAttributes& payload_attributes);
 
-void to_json(nlohmann::json& json, const ForkchoiceUpdatedReply& forkchoice_updated_reply);
+void to_json(nlohmann::json& json, const ForkChoiceUpdatedReply& forkchoice_updated_reply);
 
 void to_json(nlohmann::json& json, const PayloadStatus& payload_status);
 
@@ -124,6 +124,7 @@ std::string to_quantity(uint64_t number);
 std::string to_quantity(intx::uint256 number);
 std::string to_quantity(silkworm::ByteView bytes);
 
+nlohmann::json make_json_content(uint32_t id);
 nlohmann::json make_json_content(uint32_t id, const nlohmann::json& result);
 nlohmann::json make_json_error(uint32_t id, int32_t code, const std::string& message);
 nlohmann::json make_json_error(uint32_t id, const RevertError& error);

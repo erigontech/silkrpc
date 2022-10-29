@@ -27,9 +27,9 @@
 #include <string>
 #include <utility>
 
-#include <asio/co_spawn.hpp>
-#include <asio/dispatch.hpp>
-#include <asio/use_awaitable.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/dispatch.hpp>
+#include <boost/asio/use_awaitable.hpp>
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
@@ -39,7 +39,7 @@
 
 namespace silkrpc::http {
 
-using reuse_port = asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT>;
+using reuse_port = boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT>;
 
 std::tuple<std::string, std::string> Server::parse_endpoint(const std::string& tcp_end_point) {
     const auto host = tcp_end_point.substr(0, tcp_end_point.find(kAddressPortSeparator));
@@ -47,59 +47,59 @@ std::tuple<std::string, std::string> Server::parse_endpoint(const std::string& t
     return {host, port};
 }
 
-Server::Server(const std::string& end_point, const std::string& api_spec, Context& context, asio::thread_pool& workers)
+Server::Server(const std::string& end_point, const std::string& api_spec, Context& context, boost::asio::thread_pool& workers)
 : context_(context), workers_(workers), acceptor_{*context.io_context()}, handler_table_{api_spec} {
     const auto [host, port] = parse_endpoint(end_point);
 
     // Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
-    asio::ip::tcp::resolver resolver{acceptor_.get_executor()};
-    asio::ip::tcp::endpoint endpoint = *resolver.resolve(host, port).begin();
+    boost::asio::ip::tcp::resolver resolver{acceptor_.get_executor()};
+    boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(host, port).begin();
     acceptor_.open(endpoint.protocol());
-    acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));
+    acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
     acceptor_.set_option(reuse_port(true));
     acceptor_.bind(endpoint);
 }
 
 void Server::start() {
-    asio::co_spawn(acceptor_.get_executor(), run(), [&](std::exception_ptr eptr) {
+    boost::asio::co_spawn(acceptor_.get_executor(), run(), [&](std::exception_ptr eptr) {
         if (eptr) std::rethrow_exception(eptr);
     });
 }
 
-asio::awaitable<void> Server::run() {
+boost::asio::awaitable<void> Server::run() {
     acceptor_.listen();
 
     try {
         while (acceptor_.is_open()) {
             auto io_context = context_.io_context();
 
-            SILKRPC_DEBUG << "Server::start accepting using io_context " << io_context << "...\n" << std::flush;
+            SILKRPC_DEBUG << "Server::run accepting using io_context " << io_context << "...\n" << std::flush;
 
             auto new_connection = std::make_shared<Connection>(context_, workers_, handler_table_);
-            co_await acceptor_.async_accept(new_connection->socket(), asio::use_awaitable);
+            co_await acceptor_.async_accept(new_connection->socket(), boost::asio::use_awaitable);
             if (!acceptor_.is_open()) {
-                SILKRPC_TRACE << "Server::start returning...\n";
+                SILKRPC_TRACE << "Server::run returning...\n";
                 co_return;
             }
 
-            new_connection->socket().set_option(asio::ip::tcp::socket::keep_alive(true));
+            new_connection->socket().set_option(boost::asio::ip::tcp::socket::keep_alive(true));
 
-            SILKRPC_TRACE << "Server::start starting connection for socket: " << &new_connection->socket() << "\n";
-            auto new_connection_starter = [=]() -> asio::awaitable<void> { co_await new_connection->start(); };
+            SILKRPC_TRACE << "Server::run starting connection for socket: " << &new_connection->socket() << "\n";
+            auto new_connection_starter = [=]() -> boost::asio::awaitable<void> { co_await new_connection->start(); };
 
-            asio::co_spawn(*io_context, new_connection_starter, [&](std::exception_ptr eptr) {
+            boost::asio::co_spawn(*io_context, new_connection_starter, [&](std::exception_ptr eptr) {
                 if (eptr) std::rethrow_exception(eptr);
             });
         }
-    } catch (const std::system_error& se) {
-        if (se.code() != asio::error::operation_aborted) {
-            SILKRPC_ERROR << "Server::start system_error: " << se.what() << "\n" << std::flush;
+    } catch (const boost::system::system_error& se) {
+        if (se.code() != boost::asio::error::operation_aborted) {
+            SILKRPC_ERROR << "Server::run system_error: " << se.what() << "\n" << std::flush;
             std::rethrow_exception(std::make_exception_ptr(se));
         } else {
-            SILKRPC_DEBUG << "Server::start operation_aborted: " << se.what() << "\n" << std::flush;
+            SILKRPC_DEBUG << "Server::run operation_aborted: " << se.what() << "\n" << std::flush;
         }
     }
-    SILKRPC_DEBUG << "Server::start exiting...\n" << std::flush;
+    SILKRPC_DEBUG << "Server::run exiting...\n" << std::flush;
 }
 
 void Server::stop() {

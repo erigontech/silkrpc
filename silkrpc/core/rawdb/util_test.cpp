@@ -25,8 +25,8 @@ namespace silkrpc {
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 
 TEST_CASE("all-zero composite key", "[silkrpc][core][rawdb][util]") {
-    constexpr auto zero_address = 0_address;
-    constexpr auto zero_hash = 0_bytes32;
+    constexpr auto zero_address = 0x0000000000000000000000000000000000000000_address;
+    constexpr auto zero_hash = 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32;
 
     const auto ckey{composite_storage_key(zero_address, 0, zero_hash.bytes)};
     CHECK(ckey == silkworm::Bytes(60, '\0'));
@@ -34,7 +34,7 @@ TEST_CASE("all-zero composite key", "[silkrpc][core][rawdb][util]") {
 
 TEST_CASE("non-zero address composite key", "[silkrpc][core][rawdb][util]") {
     constexpr auto address = 0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address;
-    constexpr auto zero_hash = 0_bytes32;
+    constexpr auto zero_hash = 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32;
 
     const auto ckey{composite_storage_key(address, 0, zero_hash.bytes)};
     CHECK(ckey == silkworm::from_hex(
@@ -45,8 +45,8 @@ TEST_CASE("non-zero address composite key", "[silkrpc][core][rawdb][util]") {
 }
 
 TEST_CASE("non-zero incarnation composite key", "[silkrpc][core][rawdb][util]") {
-    constexpr auto zero_address = 0_address;
-    constexpr auto zero_hash = 0_bytes32;
+    constexpr auto zero_address = 0x0000000000000000000000000000000000000000_address;
+    constexpr auto zero_hash = 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32;
 
     const auto ckey{composite_storage_key(zero_address, 37, zero_hash.bytes)};
     CHECK(ckey == silkworm::from_hex(
@@ -57,7 +57,7 @@ TEST_CASE("non-zero incarnation composite key", "[silkrpc][core][rawdb][util]") 
 }
 
 TEST_CASE("non-zero hash composite key", "[silkrpc][core][rawdb][util]") {
-    constexpr auto zero_address = 0_address;
+    constexpr auto zero_address = 0x0000000000000000000000000000000000000000_address;
     constexpr auto hash = 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6_bytes32;
 
     const auto ckey{composite_storage_key(zero_address, 0, hash.bytes)};
@@ -81,8 +81,8 @@ TEST_CASE("non-zero composite key", "[silkrpc][core][rawdb][util]") {
 }
 
 TEST_CASE("max incarnation composite key", "[silkrpc][core][rawdb][util]") {
-    constexpr auto zero_address = 0_address;
-    constexpr auto zero_hash = 0_bytes32;
+    constexpr auto zero_address = 0x0000000000000000000000000000000000000000_address;
+    constexpr auto zero_hash = 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32;
 
     const auto ckey{composite_storage_key(zero_address, std::numeric_limits<uint64_t>::max(), zero_hash.bytes)};
     CHECK(ckey == silkworm::from_hex(

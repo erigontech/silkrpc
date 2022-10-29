@@ -23,8 +23,8 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/awaitable.hpp>
-#include <asio/thread_pool.hpp>
+#include <boost/asio/awaitable.hpp>
+#include <boost/asio/thread_pool.hpp>
 
 #include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/commands/rpc_api.hpp>
@@ -36,13 +36,13 @@ namespace silkrpc::http {
 
 class RequestHandler {
 public:
-    RequestHandler(Context& context, asio::thread_pool& workers, const commands::RpcApiTable& rpc_api_table)
+    RequestHandler(Context& context, boost::asio::thread_pool& workers, const commands::RpcApiTable& rpc_api_table)
         : rpc_api_{context, workers}, rpc_api_table_(rpc_api_table) {}
 
     RequestHandler(const RequestHandler&) = delete;
     RequestHandler& operator=(const RequestHandler&) = delete;
 
-    asio::awaitable<void> handle_request(const http::Request& request, http::Reply& reply);
+    boost::asio::awaitable<void> handle_request(const http::Request& request, http::Reply& reply);
 
 private:
     commands::RpcApi rpc_api_;

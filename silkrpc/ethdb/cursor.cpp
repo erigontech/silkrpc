@@ -37,12 +37,12 @@ SplitCursor::SplitCursor(Cursor& inner_cursor, silkworm::ByteView key, uint64_t 
     last_bits_ = key[match_bytes_ - 1] & mask_;
 }
 
-asio::awaitable<SplittedKeyValue> SplitCursor::seek() {
+boost::asio::awaitable<SplittedKeyValue> SplitCursor::seek() {
     KeyValue kv = co_await inner_cursor_.seek(key_);
     co_return split_key_value(kv);
 }
 
-asio::awaitable<SplittedKeyValue> SplitCursor::next() {
+boost::asio::awaitable<SplittedKeyValue> SplitCursor::next() {
     KeyValue kv = co_await inner_cursor_.next();
     co_return split_key_value(kv);
 }

@@ -42,6 +42,9 @@ class MockETHBACKENDStub : public ETHBACKEND::StubInterface {
   MOCK_METHOD2(SubscribeRaw, ::grpc::ClientReaderInterface< ::remote::SubscribeReply>*(::grpc::ClientContext* context, const ::remote::SubscribeRequest& request));
   MOCK_METHOD4(AsyncSubscribeRaw, ::grpc::ClientAsyncReaderInterface< ::remote::SubscribeReply>*(::grpc::ClientContext* context, const ::remote::SubscribeRequest& request, ::grpc::CompletionQueue* cq, void* tag));
   MOCK_METHOD3(PrepareAsyncSubscribeRaw, ::grpc::ClientAsyncReaderInterface< ::remote::SubscribeReply>*(::grpc::ClientContext* context, const ::remote::SubscribeRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD1(SubscribeLogsRaw, ::grpc::ClientReaderWriterInterface< ::remote::LogsFilterRequest, ::remote::SubscribeLogsReply>*(::grpc::ClientContext* context));
+  MOCK_METHOD3(AsyncSubscribeLogsRaw, ::grpc::ClientAsyncReaderWriterInterface<::remote::LogsFilterRequest, ::remote::SubscribeLogsReply>*(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag));
+  MOCK_METHOD2(PrepareAsyncSubscribeLogsRaw, ::grpc::ClientAsyncReaderWriterInterface<::remote::LogsFilterRequest, ::remote::SubscribeLogsReply>*(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(Block, ::grpc::Status(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::remote::BlockReply* response));
   MOCK_METHOD3(AsyncBlockRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::BlockReply>*(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(PrepareAsyncBlockRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::BlockReply>*(::grpc::ClientContext* context, const ::remote::BlockRequest& request, ::grpc::CompletionQueue* cq));
@@ -51,6 +54,9 @@ class MockETHBACKENDStub : public ETHBACKEND::StubInterface {
   MOCK_METHOD3(NodeInfo, ::grpc::Status(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::remote::NodesInfoReply* response));
   MOCK_METHOD3(AsyncNodeInfoRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::NodesInfoReply>*(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(PrepareAsyncNodeInfoRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::NodesInfoReply>*(::grpc::ClientContext* context, const ::remote::NodesInfoRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(Peers, ::grpc::Status(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::remote::PeersReply* response));
+  MOCK_METHOD3(AsyncPeersRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::PeersReply>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PrepareAsyncPeersRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::PeersReply>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
 };
 
 } // namespace remote

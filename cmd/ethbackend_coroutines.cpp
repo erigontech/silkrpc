@@ -20,8 +20,8 @@
 #include <iomanip>
 #include <iostream>
 
-#include <asio/co_spawn.hpp>
-#include <asio/signal_set.hpp>
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/signal_set.hpp>
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
@@ -40,10 +40,11 @@ inline std::ostream& operator<<(std::ostream& out, const types::H160& address) {
         auto lo_half = address.lo();
         out << std::hex << lo_half;
     }
+    out << std::dec;
     return out;
 }
 
-asio::awaitable<void> ethbackend_etherbase(silkrpc::ethbackend::BackEnd& backend) {
+boost::asio::awaitable<void> ethbackend_etherbase(silkrpc::ethbackend::BackEnd& backend) {
     try {
         std::cout << "ETHBACKEND Etherbase ->\n";
         const auto address = co_await backend.etherbase();
@@ -63,19 +64,19 @@ int ethbackend_coroutines(const std::string& target) {
         silkrpc::ContextPool context_pool{1, create_channel};
         auto& context = context_pool.next_context();
         auto io_context = context.io_context();
-        auto grpc_queue = context.grpc_queue();
+        auto grpc_context = context.grpc_context();
 
-        asio::signal_set signals(*io_context, SIGINT, SIGTERM);
-        signals.async_wait([&](const asio::system_error& error, int signal_number) {
-            std::cout << "Signal caught, error: " << error.what() << " number: " << signal_number << std::endl << std::flush;
+        boost::asio::signal_set signals(*io_context, SIGINT, SIGTERM);
+        signals.async_wait([&](const boost::system::error_code& error, int signal_number) {
+            std::cout << "Signal caught, error: " << error.message() << " number: " << signal_number << std::endl << std::flush;
             context_pool.stop();
         });
 
         const auto channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
 
         // Etherbase
-        silkrpc::ethbackend::RemoteBackEnd eth_backend{*io_context, channel, grpc_queue};
-        asio::co_spawn(*io_context, ethbackend_etherbase(eth_backend), [&](std::exception_ptr exptr) {
+        silkrpc::ethbackend::RemoteBackEnd eth_backend{*io_context, channel, *grpc_context};
+        boost::asio::co_spawn(*io_context, ethbackend_etherbase(eth_backend), [&](std::exception_ptr exptr) {
             context_pool.stop();
         });
 

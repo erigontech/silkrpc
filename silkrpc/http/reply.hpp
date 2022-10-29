@@ -13,7 +13,7 @@
 
 #include <string>
 #include <vector>
-#include <asio/buffer.hpp>
+#include <boost/asio/buffer.hpp>
 
 #include "header.hpp"
 
@@ -51,7 +51,7 @@ struct Reply {
     /// Convert the reply into a vector of buffers. The buffers do not own the
     /// underlying memory blocks, therefore the reply object must remain valid and
     /// not be changed until the write operation has completed.
-    std::vector<asio::const_buffer> to_buffers();
+    std::vector<boost::asio::const_buffer> to_buffers();
 
     /// Get a stock reply.
     static Reply stock_reply(StatusType status);

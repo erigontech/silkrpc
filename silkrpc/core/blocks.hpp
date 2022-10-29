@@ -21,9 +21,10 @@
 
 #include <silkrpc/config.hpp>
 
-#include <asio/awaitable.hpp>
+#include <boost/asio/awaitable.hpp>
 
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/types/block.hpp>
 
 namespace silkrpc::core {
 
@@ -35,17 +36,19 @@ constexpr const char* kSafeBlockId{"safe"};
 
 constexpr uint64_t kEarliestBlockNumber{0ul};
 
-asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader);
+boost::asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader);
 
-asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::DatabaseReader& reader);
+boost::asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::DatabaseReader& reader);
 
-asio::awaitable<uint64_t> get_highest_block_number(const core::rawdb::DatabaseReader& reader);
+boost::asio::awaitable<uint64_t> get_highest_block_number(const core::rawdb::DatabaseReader& reader);
 
-asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader);
-
+boost::asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader);
 asio::awaitable<uint64_t> get_forkchoice_finalized_block_number(const core::rawdb::DatabaseReader& reader);
 
 asio::awaitable<uint64_t> get_forkchoice_safe_block_number(const core::rawdb::DatabaseReader& reader);
-} // namespace silkrpc::core
+
+boost::asio::awaitable<bool> is_latest_block_number(const BlockNumberOrHash& bnoh, const core::rawdb::DatabaseReader& reader);
+
+}  // namespace silkrpc::core
 
 #endif  // SILKRPC_CORE_BLOCKS_HPP_

@@ -36,6 +36,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getRawTransactionByBlockNumberAndIndex | Yes          | partially implemented                      |
 | eth_getTransactionReceipt                  | Yes          | partially implemented                      |
 | eth_getBlockReceipts                       | Yes          | same as parity_getBlockReceipts            |
+| eth_getTransactionReceiptsByBlockNumber    | -            | not yet implemented (eth_getBlockReceipts) |
+| eth_getTransactionReceiptsByBlockHash      | -            | not yet implemented (eth_getBlockReceipts) |
 |                                            |              |                                            |
 | eth_estimateGas                            | Yes          |                                            |
 | eth_getBalance                             | Yes          |                                            |
@@ -43,6 +45,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getTransactionCount                    | Yes          |                                            |
 | eth_getStorageAt                           | Yes          |                                            |
 | eth_call                                   | Yes          |                                            |
+| eth_callMany                               | -            | not yet implemented                        |
 | eth_callBundle                             | Yes          |                                            |
 | eth_createAccessList                       | Yes          |                                            |
 |                                            |              |                                            |
@@ -87,14 +90,14 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | debug_traceCall                            | Yes          |                                            |
 |                                            |              |                                            |
 | trace_call                                 | Yes          |                                            |
-| trace_callMany                             | -            | not yet implemented                        |
+| trace_callMany                             | Yes          |                                            |
 | trace_rawTransaction                       | -            | not yet implemented                        |
-| trace_replayBlockTransactions              | -            | not yet implemented                        |
-| trace_replayTransaction                    | -            | not yet implemented                        |
-| trace_block                                | -            | not yet implemented                        |
+| trace_replayBlockTransactions              | Yes          |                                            |
+| trace_replayTransaction                    | Yes          |                                            |
+| trace_block                                | Yes          |                                            |
 | trace_filter                               | -            | not yet implemented                        |
-| trace_get                                  | -            | not yet implemented                        |
-| trace_transaction                          | -            | not yet implemented                        |
+| trace_get                                  | Yes          |                                            |
+| trace_transaction                          | Yes          |                                            |
 |                                            |              |                                            |
 | txpool_content                             | Yes          |                                            |
 | txpool_status                              | Yes          |                                            |
@@ -120,9 +123,11 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | shh_getFilterChanges                       | No           | deprecated                                 |
 | shh_getMessages                            | No           | deprecated                                 |
 |                                            |              |                                            |
+| erigon_cumulativeChainTraffic              | -            | not yet implemented                        |
 | erigon_getHeaderByHash                     | Yes          |                                            |
 | erigon_getHeaderByNumber                   | Yes          |                                            |
-| erigon_getBlockByTimestamp                 | -            | not yet implemented                        |
+| erigon_getBlockByTimestamp                 | Yes          |                                            |
+| erigon_getBalanceChangesInBlock            | -            | not yet implemented                        |
 | erigon_getLogsByHash                       | Yes          |                                            |
 | erigon_forks                               | Yes          |                                            |
 | erigon_issuance                            | Yes          |                                            |
@@ -141,6 +146,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | bor_getRootHash                            | -            | not yet implemented                        |
 |                                            |              |                                            |
 | parity_getBlockReceipts                    | Yes          | same as eth_getBlockReceipts               |
+| parity_listStorageKeys                     | Yes          |                                            |
 |                                            |              |                                            |
 | ots_getApiLevel                            | -            | not yet implemented                        |
 | ots_getInternalOperations                  | -            | not yet implemented                        |

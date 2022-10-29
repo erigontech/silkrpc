@@ -21,11 +21,12 @@
 #include <string>
 #include <vector>
 
-#include <asio/thread_pool.hpp>
+#include <boost/asio/thread_pool.hpp>
 
 #include <silkrpc/common/constants.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/concurrency/context_pool.hpp>
+#include <silkrpc/ethdb/kv/state_changes_stream.hpp>
 #include <silkrpc/http/server.hpp>
 #include <silkrpc/protocol/version.hpp>
 
@@ -37,7 +38,6 @@ struct DaemonSettings {
     std::string engine_port; // engine_end_point
     std::string api_spec; // eth_api_spec
     std::string target; // backend_kv_address
-    //std::string txpool_address;
     uint32_t num_contexts;
     uint32_t num_workers;
     LogLevel log_verbosity;
@@ -75,11 +75,25 @@ class Daemon {
     static bool validate_settings(const DaemonSettings& settings);
     static ChannelFactory make_channel_factory(const DaemonSettings& settings);
 
+    //! The RPC daemon configuration settings.
     const DaemonSettings& settings_;
+
+    //! The factory of gRPC client-side channels.
     ChannelFactory create_channel_;
+
+    //! The execution contexts capturing the asynchronous scheduling model.
     ContextPool context_pool_;
-    asio::thread_pool worker_pool_;
+
+    //! The pool of workers for long-running tasks.
+    boost::asio::thread_pool worker_pool_;
+
     std::vector<std::unique_ptr<http::Server>> rpc_services_;
+
+    //! The gRPC KV interface client stub.
+    std::unique_ptr<remote::KV::StubInterface> kv_stub_;
+
+    //! The stream handling StateChanges server-streaming RPC.
+    std::unique_ptr<ethdb::kv::StateChangesStream> state_changes_stream_;
 };
 
 } // namespace silkrpc

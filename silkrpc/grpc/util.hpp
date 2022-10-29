@@ -21,6 +21,8 @@
 
 #include <grpcpp/grpcpp.h>
 
+namespace grpc {
+
 inline std::ostream& operator<<(std::ostream& out, const grpc::Status& status) {
     out << "status=" << (status.ok() ? "OK" : "KO");
     if (!status.ok()) {
@@ -30,5 +32,7 @@ inline std::ostream& operator<<(std::ostream& out, const grpc::Status& status) {
     }
     return out;
 }
+
+} // namespace grpc
 
 #endif // SILKRPC_GRPC_UTIL_HPP_

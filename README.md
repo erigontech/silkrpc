@@ -33,8 +33,10 @@ Building SilkRPC daemon requires
 * C++20 compiler: [GCC](https://www.gnu.org/software/gcc/) >= 10.2.0 or [Clang](https://clang.llvm.org/) >= 10.0.0
 * Build system: [CMake](http://cmake.org) >= 3.18.4
 * GNU Multiple Precision arithmetic library: [GMP](http://gmplib.org) >= 6.2.0
-    * `sudo apt-get install libgmp3-dev` or `brew install gmp`
-* Microsoft mimalloc library: [mimalloc](https://github.com/microsoft/mimalloc) >= 1.7.0
+    * Linux: `sudo apt-get install libgmp3-dev`; `sudo apt-get install -y m4 texinfo bison`  
+    * MacOS: `brew install gmp`
+* Microsoft mimalloc library: [mimalloc](https://github.com/microsoft/mimalloc) >= 2.0.0
+   * Linux:
     ```
     git clone https://github.com/microsoft/mimalloc
     cd mimalloc
@@ -44,10 +46,11 @@ Building SilkRPC daemon requires
     make
     sudo make install
     ```
+   * MacOS: `brew install mimalloc`
 * [Python 3.x](https://www.python.org/downloads/) interpreter >= 3.8.2
-    * `sudo apt-get install python3`
+    * `sudo apt-get install python3` or `brew install python3`
 * some additional Python modules
-    * `pip install -r requirements.txt` from project folder
+    * `pip3 install -r requirements.txt` from project folder
 
 Please make your [GCC](https://www.gnu.org/software/gcc/) or [Clang](https://clang.llvm.org/) compiler available as `gcc` and `g++` or `clang` and `clang++` at the command line prompt.
 
@@ -148,21 +151,20 @@ $ cmd/silkrpcdaemon --target <core_service_host_address>:9090
 
 where `<core_service_host_address>` is the hostname or IP address of the Core services to connect to.
 
+## Command-line parameters
+
 You can check all command-line parameters supported by Silkrpc using:
 
 ```
 $ cmd/silkrpcdaemon --help
 silkrpcdaemon: C++ implementation of ETH JSON Remote Procedure Call (RPC) daemon
 
-  Flags from main.cpp:
-    --chaindata (chain data path as string); default: "";
+  Flags from silkrpc_daemon.cpp:
     --http_port (Ethereum JSON RPC API local binding as string <address>:<port>); default: "localhost:8545";
-    --engine_port (Engine JSON RPC API local binding as string <address>:<port>); default: "localhost:8550";
     --log_verbosity (logging verbosity level); default: c;
     --num_contexts (number of running I/O contexts as integer); default: number of hardware thread contexts / 3;
     --num_workers (number of worker threads as integer); default: 16;
     --target (Core gRPC service location as string <address>:<port>); default: "localhost:9090";
-    --timeout (gRPC call timeout as integer); default: 10000;
     --wait_mode (I/O scheduler wait mode); default: blocking;
 ```
 
@@ -170,5 +172,14 @@ You can also check the Silkrpc executable version by:
 
 ```
 $ cmd/silkrpcdaemon --version
-silkrpcdaemon 0.0.7
+silkrpcdaemon version: 0.0.7-109+commit.bfe634dd
 ```
+
+## Running Silkrpc with Erigon
+
+Currently Silkrpc is _compatible only with Erigon2 [`2022.09.01-alpha`](https://github.com/ledgerwatch/erigon/releases/tag/v2022.09.01)_ version: last integration and performance test sessions has been performed using Erigon1 at [4067b7c](https://github.com/ledgerwatch/erigon/commit/4067b7c4da6c5d741d3027d95ae2afdf6b7a943a). In order to run Silkrpc with Erigon2, you must install and build Erigon2 following the usage instructions [here](https://github.com/ledgerwatch/erigon/tree/stable#usage).
+
+Please note the following caveats:
+- Erigon2 by default starts an internal RPCDaemon so you need to activate Erigon2 using `--http=false` option to avoid conflicts on JSON RPC HTTP port
+- if you launch Silkrpc and Erigon2 using the default settings on the same machine, you won't need to customize gRPC client/server addresses/ports; otherwise, you need to make sure that Silkrpc `target` setting matches Erigon2 `private.api.addr` setting
+- just the flags described above in the [Command-line parameters](#command-line-parameters) section are actually supported by Silkrpc (other flags may be present in the help description but should be ignored)

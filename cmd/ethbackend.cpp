@@ -36,6 +36,7 @@ inline std::ostream& operator<<(std::ostream& out, const types::H160& address) {
         auto lo_half = address.lo();
         out << std::hex << lo_half;
     }
+    out << std::dec;
     return out;
 }
 

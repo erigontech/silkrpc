@@ -22,6 +22,15 @@
 
 #include <silkrpc/common/log.hpp>
 
+namespace silkworm {
+
+TEST_CASE("print Bytes", "[silkrpc][common][util]") {
+    silkworm::Bytes b{};
+    CHECK_NOTHROW(silkrpc::null_stream() << b);
+}
+
+} // namespace silkworm
+
 namespace silkrpc {
 
 using Catch::Matchers::Message;
@@ -48,11 +57,6 @@ TEST_CASE("calculate hash of transaction", "[silkrpc][common][util]") {
     CHECK(silkworm::to_bytes32(silkworm::ByteView{eth_hash.bytes, silkworm::kHashLength}) == 0x3763e4f6e4198413383534c763f3f5dac5c5e939f0a81724e3beb96d6e2ad0d5_bytes32);
 }
 
-TEST_CASE("print Bytes", "[silkrpc][common][util]") {
-    const silkworm::Bytes bt1{};
-    CHECK_NOTHROW(null_stream() << bt1);
-}
-
 TEST_CASE("print ByteView", "[silkrpc][common][util]") {
     silkworm::ByteView bv1{};
     CHECK_NOTHROW(null_stream() << bv1);
@@ -75,14 +79,14 @@ TEST_CASE("print bytes32", "[silkrpc][common][util]") {
 }
 
 TEST_CASE("print empty const_buffer", "[silkrpc][common][util]") {
-    asio::const_buffer cb{};
+    boost::asio::const_buffer cb{};
     CHECK_NOTHROW(null_stream() << cb);
 }
 
 TEST_CASE("print empty vector of const_buffer", "[silkrpc][common][util]") {
-    std::vector<asio::const_buffer> v;
-    asio::const_buffer cb1{};
-    asio::const_buffer cb2{};
+    std::vector<boost::asio::const_buffer> v;
+    boost::asio::const_buffer cb1{};
+    boost::asio::const_buffer cb2{};
     v.push_back(cb1);
     v.push_back(cb2);
     CHECK_NOTHROW(null_stream() << v);
@@ -199,7 +203,7 @@ TEST_CASE("decoding_result_to_string(kLeadingZero)", "[silkrpc][common][util]") 
 }
 
 TEST_CASE("decoding_result_to_string(kInputTooShort)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInputTooShort) == "rlp: element is larger than containing list");
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInputTooShort) == "rlp: value size exceeds available input length");
 }
 
 TEST_CASE("decoding_result_to_string(kNonCanonicalSize)", "[silkrpc][common][util]") {
@@ -230,8 +234,37 @@ TEST_CASE("decoding_result_to_string(kUnsupportedTransactionType)", "[silkrpc][c
     CHECK(decoding_result_to_string(silkworm::DecodingResult::kUnsupportedTransactionType) == "rlp: unknown tx type prefix");
 }
 
-TEST_CASE("decoding_result_to_string(kOk)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kOk) == "unknownError");
+TEST_CASE("decoding_result_to_string(kInvalidFieldset)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidFieldset) == "rlp: invalid field set");
 }
+
+TEST_CASE("decoding_result_to_string(kUnexpectedEip2718Serialization)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kUnexpectedEip2718Serialization) == "rlp: unexpected EIP-2178 serialization");
+}
+
+TEST_CASE("decoding_result_to_string(kInvalidHashesLength)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidHashesLength) == "rlp: invalid hashes length");
+}
+
+TEST_CASE("decoding_result_to_string(kInvalidMasksSubsets)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidMasksSubsets) == "rlp: invalid masks subsets");
+}
+
+TEST_CASE("decoding_result_to_string(kOk)", "[silkrpc][common][util]") {
+    CHECK(decoding_result_to_string(silkworm::DecodingResult::kOk) == "rlp: unknown error [0]");
+}
+
+TEST_CASE("lookup_chain_config", "[silkrpc][common][util]") {
+    SECTION("lookup known chain") {
+        const auto known_chains{silkworm::get_known_chains_map()};
+        for (const auto& [_, known_chain_id] : known_chains) {
+            CHECK_NOTHROW(lookup_chain_config(known_chain_id) != nullptr);
+        }
+    }
+    SECTION("lookup unknown chain") {
+        CHECK_THROWS_AS(lookup_chain_config(0), std::runtime_error);
+    }
+}
+
 } // namespace silkrpc
 

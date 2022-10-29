@@ -21,6 +21,9 @@ class MockKVStub : public KV::StubInterface {
   MOCK_METHOD2(StateChangesRaw, ::grpc::ClientReaderInterface< ::remote::StateChangeBatch>*(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request));
   MOCK_METHOD4(AsyncStateChangesRaw, ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>*(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq, void* tag));
   MOCK_METHOD3(PrepareAsyncStateChangesRaw, ::grpc::ClientAsyncReaderInterface< ::remote::StateChangeBatch>*(::grpc::ClientContext* context, const ::remote::StateChangeRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(Snapshots, ::grpc::Status(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::remote::SnapshotsReply* response));
+  MOCK_METHOD3(AsyncSnapshotsRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::SnapshotsReply>*(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PrepareAsyncSnapshotsRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::SnapshotsReply>*(::grpc::ClientContext* context, const ::remote::SnapshotsRequest& request, ::grpc::CompletionQueue* cq));
 };
 
 } // namespace remote

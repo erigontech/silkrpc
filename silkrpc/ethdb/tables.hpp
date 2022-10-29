@@ -40,6 +40,7 @@ constexpr const char* kConfig{"Config"};
 constexpr const char* kContractCode{"HashedCodeHash"};
 constexpr const char* kDatabaseInfo{"DbInfo"};
 constexpr const char* kEthTx{"BlockTransaction"};
+constexpr const char* kNonCanonicalTx{"NonCanonicalTransaction"};
 constexpr const char* kHashedAccounts{"HashedAccount"};
 constexpr const char* kHashedStorage{"HashedStorage"};
 constexpr const char* kHeadBlock{"LastBlock"};
