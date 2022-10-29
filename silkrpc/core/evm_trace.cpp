@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <set>
 #include <stack>
 #include <string>
 
@@ -33,6 +34,7 @@
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/consensus/ethash.hpp>
+#include <silkrpc/core/cached_chain.hpp>
 #include <silkrpc/core/evm_executor.hpp>
 #include <silkrpc/core/rawdb/chain.hpp>
 #include <silkrpc/json/types.hpp>
@@ -61,9 +63,56 @@ std::ostream& operator<<(std::ostream& out, const TraceConfig& tc) {
     return out;
 }
 
+std::ostream& operator<<(std::ostream& out, const TraceFilter& tf) {
+    out << "from_block: " << std::dec << tf.from_block;
+    out << ", to_block: " << std::dec << tf.to_block;
+
+    if (tf.from_addresses.size() > 0) {
+        out << ", from_addresses: [";
+        std::copy(tf.from_addresses.begin(), tf.from_addresses.end(), std::ostream_iterator<evmc::address>(out, ", "));
+        out << "]";
+    }
+    if (tf.to_addresses.size() > 0) {
+        out << ", to_addresses: [";
+        std::copy(tf.to_addresses.begin(), tf.to_addresses.end(), std::ostream_iterator<evmc::address>(out, ", "));
+        out << "]";
+    }
+    if (tf.mode) {
+        out << ", mode: " << tf.mode.value();
+    }
+    out << ", after: " << std::dec << tf.after;
+    out << ", count: " << std::dec << tf.count;
+
+    return out;
+}
+
 void from_json(const nlohmann::json& json, TraceCall& cm) {
     cm.call = json.at(0);
     cm.trace_config = json.at(1);
+}
+
+void from_json(const nlohmann::json& json, TraceFilter& tf) {
+    if (json.contains("fromBlock")) {
+        tf.from_block = json["fromBlock"];
+    }
+    if (json.contains("toBlock")) {
+        tf.to_block = json["toBlock"];
+    }
+    if (json.contains("fromAddress")) {
+        tf.from_addresses = json["fromAddress"];
+    }
+    if (json.contains("toAddress")) {
+        tf.to_addresses = json["toAddress"];
+    }
+    if (json.contains("mode")) {
+        tf.mode = json["mode"];
+    }
+    if (json.contains("after")) {
+        tf.after = json["after"];
+    }
+    if (json.contains("count")) {
+        tf.count = json["count"];
+    }
 }
 
 void to_json(nlohmann::json& json, const VmTrace& vm_trace) {
@@ -583,7 +632,6 @@ void TraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
     current_depth_ = msg.depth;
 
     auto create = (!initial_ibs_.exists(recipient) && created_address_.find(recipient) == created_address_.end() && recipient != code_address);
-    //auto create = msg.kind == evmc_call_kind::EVMC_CREATE || msg.kind == evmc_call_kind::EVMC_CREATE2;
 
     start_gas_.push(msg.gas);
 
@@ -688,7 +736,6 @@ void TraceTracer::on_execution_end(const evmc_result& result, const silkworm::In
         } else if (trace.trace_result->output) {
             trace.trace_result->output = silkworm::ByteView{result.output_data, result.output_size};
         }
-        // trace.trace_result->output = silkworm::ByteView{result.output_data, result.output_size};
     }
 
     current_depth_--;
@@ -1070,7 +1117,7 @@ boost::asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldStat
     auto block_number = block.header.number;
     const auto& transactions = block.transactions;
 
-    SILKRPC_INFO << "execute: block_number: " << block_number << " #txns: " << transactions.size() << " config: " << config << "\n";
+    SILKRPC_INFO << "execute: block_number: " << std::dec << block_number << " #txns: " << transactions.size() << " config: " << config << "\n";
 
     const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
     const auto chain_config_ptr = lookup_chain_config(chain_id);
@@ -1217,10 +1264,105 @@ boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::tr
 }
 
 template<typename WorldState, typename VM>
+boost::asio::awaitable<TraceFilterResult> TraceCallExecutor<WorldState, VM>::trace_filter(const TraceFilter& trace_filter) {
+    SILKRPC_INFO << "TraceCallExecutor::trace_filter: filter " << trace_filter << "\n";
+
+    const auto from_block_with_hash = co_await core::read_block_by_number_or_hash(block_cache_, database_reader_, trace_filter.from_block);
+    const auto to_block_with_hash = co_await core::read_block_by_number_or_hash(block_cache_, database_reader_, trace_filter.to_block);
+
+    TraceFilterResult result;
+    if (from_block_with_hash.block.header.number > to_block_with_hash.block.header.number) {
+        result.pre_check_error = "invalid parameters: fromBlock cannot be greater than toBlock";
+        co_return result;
+    }
+
+    std::set<evmc::address> from_addresses;
+    from_addresses.insert(trace_filter.from_addresses.begin(), trace_filter.from_addresses.end());
+
+    std::set<evmc::address> to_addresses;
+    to_addresses.insert(trace_filter.to_addresses.begin(), trace_filter.to_addresses.end());
+
+    auto after = trace_filter.after;
+    auto count = trace_filter.count;
+
+    auto block_number = from_block_with_hash.block.header.number;
+    auto block_with_hash = from_block_with_hash;
+    while (block_number++ <= to_block_with_hash.block.header.number) {
+        const Block block{block_with_hash, {}, false};
+        SILKRPC_INFO << "TraceCallExecutor::trace_filter: processing "
+            << " block_number: " << block_number-1
+            << " block: " << block
+            << "\n";
+
+        std::vector<Trace> traces = co_await trace_block(block_with_hash);
+        if (!from_addresses.empty() || !to_addresses.empty()) {
+            std::vector<Trace>::iterator itr = traces.begin();
+            while (itr != traces.end()) {
+                const auto& trace = *itr;
+                bool to_be_deleted = true;
+                if (std::holds_alternative<TraceAction>(trace.action)) {
+                    const auto& action = std::get<TraceAction>(trace.action);
+                    if (!from_addresses.empty()) {
+                        if (from_addresses.find(action.from) != from_addresses.end()) {
+                            to_be_deleted = false;
+                        }
+                    }
+                    if (!to_addresses.empty() && action.to) {
+                        if (to_addresses.find(action.to.value()) != to_addresses.end()) {
+                            to_be_deleted = false;
+                        }
+                    }
+                }
+                if (to_be_deleted) {
+                    itr = traces.erase(itr);
+                } else {
+                    ++itr;
+                }
+            }
+
+            SILKRPC_DEBUG << "TraceCallExecutor::trace_filter: remaining " << traces.size() << " entries for "
+                << " block_number: " << block_number-1
+                << " after processing\n";
+        }
+
+        auto begin = traces.begin();
+        if (after < traces.size()) {
+            begin += after;
+            after = 0;
+        } else {
+            begin = traces.end();
+            after -= traces.size();
+        }
+        auto end   = traces.end();
+        if (end - begin > count) {
+            end = begin + count;
+            count = 0;
+        } else {
+            count -= end - begin;
+        }
+        result.traces.insert(result.traces.end(), begin, end);
+
+        if (count == 0) {
+            break;
+        }
+
+        if (block_number == to_block_with_hash.block.header.number) {
+            block_with_hash = to_block_with_hash;
+        } else {
+            block_with_hash = co_await core::read_block_by_number(block_cache_, database_reader_, block_number);
+        }
+    }
+
+    SILKRPC_INFO << "TraceCallExecutor::trace_filter: ends \n";
+
+    co_return result;
+}
+
+template<typename WorldState, typename VM>
 boost::asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
     const silkrpc::Transaction& transaction, std::int32_t index, const TraceConfig& config) {
     SILKRPC_DEBUG << "execute: "
-        << " block_number: " << block_number
+        << " block_number: " << std::dec << block_number
         << " transaction: {" << transaction << "}"
         << " index: " << std::dec << index
         << " config: " << config

@@ -119,6 +119,36 @@ TEST_CASE("block_number_or_hash") {
         CHECK(bnoh.number() == 0);
         CHECK(bnoh.tag().empty());
     }
+    SECTION("copy hash") {
+        BlockNumberOrHash bnoh{"0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c"};
+        BlockNumberOrHash copy = bnoh;
+
+        CHECK(bnoh.is_hash() == copy.is_hash());
+        CHECK(bnoh.is_number() == copy.is_number());
+        CHECK(bnoh.is_tag() == copy.is_tag());
+
+        CHECK(bnoh.hash() == copy.hash());
+    }
+    SECTION("copy number") {
+        BlockNumberOrHash bnoh{123456};
+        BlockNumberOrHash copy = bnoh;
+
+        CHECK(bnoh.is_hash() == copy.is_hash());
+        CHECK(bnoh.is_number() == copy.is_number());
+        CHECK(bnoh.is_tag() == copy.is_tag());
+
+        CHECK(bnoh.number() == copy.number());
+    }
+    SECTION("copy tag") {
+        BlockNumberOrHash bnoh{"latest"};
+        BlockNumberOrHash copy = bnoh;
+
+        CHECK(bnoh.is_hash() == copy.is_hash());
+        CHECK(bnoh.is_number() == copy.is_number());
+        CHECK(bnoh.is_tag() == copy.is_tag());
+
+        CHECK(bnoh.tag() == copy.tag());
+    }
     SECTION("number overflow") {
         CHECK_THROWS_AS(BlockNumberOrHash{"0x1ffffffffffffffff"}, std::out_of_range);
     }

@@ -58,7 +58,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json
 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
-        trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+        trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
         const auto result = co_await executor.trace_call(block_with_hash.block, call, config);
 
         if (result.pre_check_error) {
@@ -99,7 +99,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_call_many(const nlohmann:
 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
-        trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+        trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
         const auto result = co_await executor.trace_calls(block_with_hash.block, trace_calls);
 
         if (result.pre_check_error) {
@@ -160,7 +160,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_replay_block_transactions
 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
-        trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+        trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
         const auto result = co_await executor.trace_block_transactions(block_with_hash.block, config);
         reply = make_json_content(request["id"], result);
     } catch (const std::exception& e) {
@@ -199,7 +199,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_replay_transaction(const 
             oss << "transaction 0x" << transaction_hash << " not found";
             reply = make_json_error(request["id"], -32000, oss.str());
         } else {
-            trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+            trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
             const auto result = co_await executor.trace_transaction(tx_with_block->block_with_hash.block, tx_with_block->transaction, config);
 
             if (result.pre_check_error) {
@@ -231,7 +231,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_block(const nlohmann::jso
     }
     const auto block_number_or_hash = params[0].get<BlockNumberOrHash>();
 
-    SILKRPC_INFO << " block_number_or_hash: " << block_number_or_hash;
+    SILKRPC_INFO << " block_number_or_hash: " << block_number_or_hash << "\n";
 
     auto tx = co_await database_->begin();
 
@@ -240,7 +240,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_block(const nlohmann::jso
 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
-        trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+        trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
         const auto result = co_await executor.trace_block(block_with_hash);
         reply = make_json_content(request["id"], result);
     } catch (const std::exception& e) {
@@ -257,12 +257,30 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_block(const nlohmann::jso
 
 // https://eth.wiki/json-rpc/API#trace_filter
 boost::asio::awaitable<void> TraceRpcApi::handle_trace_filter(const nlohmann::json& request, nlohmann::json& reply) {
+    const auto params = request["params"];
+    if (params.size() < 1) {
+        auto error_msg = "invalid trace_filter params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+
+    const auto trace_filter = params[0].get<trace::TraceFilter>();
+
+    SILKRPC_INFO << "trace_filter: " << trace_filter << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_error(request["id"], 500, "not yet implemented");
+        trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
+        const auto result = co_await executor.trace_filter(trace_filter);
+        if (result.pre_check_error) {
+            reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
+        } else {
+            reply = make_json_content(request["id"], result.traces);
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -308,7 +326,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_get(const nlohmann::json&
         if (!tx_with_block) {
             reply = make_json_content(request["id"]);
         } else {
-            trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+            trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
             const auto result = co_await executor.trace_transaction(tx_with_block->block_with_hash, tx_with_block->transaction);
 
             // TODO(sixtysixter) for RPCDAEMON compatibility
@@ -351,7 +369,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_transaction(const nlohman
         if (!tx_with_block) {
             reply = make_json_content(request["id"]);
         } else {
-            trace::TraceCallExecutor executor{*context_.io_context(), tx_database, workers_};
+            trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
             auto result = co_await executor.trace_transaction(tx_with_block->block_with_hash, tx_with_block->transaction);
             reply = make_json_content(request["id"], result);
         }
