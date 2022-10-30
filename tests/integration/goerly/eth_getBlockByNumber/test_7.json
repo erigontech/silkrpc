@@ -1,0 +1,40 @@
+[
+  {
+    "request": {
+      "id": 1,
+      "jsonrpc": "2.0",
+      "method": "eth_getBlockByNumber",
+      "params": [
+        "safe",
+        true
+      ]
+    },
+    "response": {
+      "id": 1,
+      "jsonrpc": "2.0",
+      "result":  {
+          "baseFeePerGas": "0x70",
+          "difficulty": "0x",
+          "extraData": "0x",
+          "gasLimit": "0x1c9c380",
+          "gasUsed": "0x0",
+          "hash": "0xe58afae321f270bdde6dac2e2ba2beab5fc5a1dcaaa82569f6a0bf97f707a341",
+          "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "miner": "0x2a726c1d5dc4637d321a03fb06f2e0eff9ceb4aa",
+          "mixHash": "0x0570e490c1334545264ef4c87871039b2be9460207c33cc50650e680f37e66b7",
+          "nonce": "0x0000000000000000",
+          "number": "0x7704c0",
+          "parentHash": "0x83ca536baf010a7dbaff92722aeac25c4c862d0b48d010b8bc1600af69c1c10a",
+          "receiptsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+          "sha3Uncles": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+          "size": "0x201",
+          "stateRoot": "0x650a7eaae07e50a9e228c7abceedd8b97541599fca7276a23e646085e34505bb",
+          "timestamp": "0x6350aae0",
+          "totalDifficulty": "0xa4a470",
+          "transactions": [],
+          "transactionsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+          "uncles": []
+       }
+    }
+  }
+]
