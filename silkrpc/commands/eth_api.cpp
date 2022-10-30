@@ -65,7 +65,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohm
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        const auto block_height = co_await core::get_current_block_number(tx_database);
+        const auto block_height = co_await core::get_latest_block_number(tx_database);
         reply = make_json_content(request["id"], to_quantity(block_height));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
