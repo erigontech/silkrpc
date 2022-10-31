@@ -3,7 +3,7 @@
         "request": {
             "jsonrpc": "2.0",
             "method": "eth_callBundle",
-            "params": [["0xc3a01000501f96bca2cfad64575f3f39f13404f79a6430e455ffb7b7a1cd314a"], "0x5B8D7F", 1000],
+            "params": [["0xc3a01000501f96bca2cfad64575f3f39f13404f79a6430e455ffb7b7a1cd314a"], "0x5B8D7F", 50000],
             "id": 1
         },
         "response": {
