@@ -14,7 +14,7 @@
       "jsonrpc": "2.0",
       "result":  {
           "baseFeePerGas": "0x70",
-          "difficulty": "0x",
+          "difficulty": "0x0",
           "extraData": "0x",
           "gasLimit": "0x1c9c380",
           "gasUsed": "0x0",
