@@ -62,7 +62,6 @@ std::string to_hex_no_leading_zeros(silkworm::ByteView bytes) {
         }
     }
 
-
     return out;
 }
 
