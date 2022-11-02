@@ -287,6 +287,23 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nl
             issuance.block_reward = "0x" + intx::to_string(block_reward.miner_reward);
             issuance.ommer_reward = "0x" + intx::to_string(total_ommer_reward);
             issuance.issuance = "0x" + intx::to_string(block_issuance);
+   
+            intx::uint256 burnt;
+            if (block_with_hash.block.header.base_fee_per_gas) {
+               burnt = *block_with_hash.block.header.base_fee_per_gas * block_with_hash.block.header.gas_used;
+            } else {
+               burnt = 0;
+            }
+
+            intx::uint256 total_issued;
+            intx::uint256 total_burnt;
+            issuance.burnt = "0x" + intx::to_string(burnt);
+            issuance.total_burnt = "0x" + intx::to_string(burnt);
+            issuance.total_issued = "0x" + intx::to_string(total_issued);
+            issuance.total_burnt = "0x" + intx::to_string(total_burnt);
+
+            intx::uint256 tips;
+            issuance.tips = "0x" + intx::to_string(tips);
         }
         reply = make_json_content(request["id"], issuance);
     } catch (const std::exception& e) {
