@@ -1227,7 +1227,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohma
             }
 
             SILKRPC_LOG << "diff_time: " << clock_time::since(start_time)/1000000 << " timeout: " << timeout << "\n";
-            
+
             if ((clock_time::since(start_time) / 1000000) > timeout) {
                 const auto error_msg = "execution aborted (timeout)";
                 SILKRPC_ERROR << error_msg << "\n";
