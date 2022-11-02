@@ -34,6 +34,13 @@ std::string to_hex_no_leading_zeros(silkworm::ByteView bytes) {
     static const char* kHexDigits{"0123456789abcdef"};
 
     std::string out{};
+
+    if (bytes.length() == 0) {
+       out.reserve(1);
+       out.push_back('0');
+       return out;
+    }
+
     out.reserve(2 * bytes.length());
 
     bool found_nonzero{false};
