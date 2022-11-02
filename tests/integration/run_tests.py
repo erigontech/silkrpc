@@ -176,7 +176,7 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
     return 0
 
 def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, daemon_under_test: str, exit_on_fail: bool, verify_with_daemon: bool, daemon_as_reference: str,
-              dump_output: bool, test_number, infura_url: str, daemon_url: str):
+              dump_output: bool, test_number, infura_url: str, daemon_on_host: str):
     """ Run integration tests. """
     json_filename = test_dir + json_file
     ext = os.path.splitext(json_file)[1]
@@ -201,7 +201,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
     for json_rpc in jsonrpc_commands:
         request = json_rpc["request"]
         request_dumps = json.dumps(request)
-        target = get_target(daemon_under_test, request["method"], infura_url, daemon_url)
+        target = get_target(daemon_under_test, request["method"], infura_url, daemon_on_host)
         if verify_with_daemon == 0:
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = ""
@@ -215,9 +215,9 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
             output_api_filename = output_dir + json_file[:-4]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = ""
-            target = get_target(SILK, request["method"], infura_url, daemon_url)
+            target = get_target(SILK, request["method"], infura_url, daemon_on_host)
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
-            target1 = get_target(daemon_as_reference, request["method"], infura_url, daemon_url)
+            target1 = get_target(daemon_as_reference, request["method"], infura_url, daemon_on_host)
             cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target1
             silk_file = output_api_filename + get_json_filename_ext(SILK)
             exp_rsp_file = output_api_filename + get_json_filename_ext(daemon_as_reference)
@@ -260,7 +260,7 @@ def usage(argv):
     print("-o dump response")
     print("-x exclude api list (i.e txpool_content,txpool_status")
     print("-X exclude test list (i.e 18,22")
-    print("-H IP address where the daemnon are localted(i.e 10.10.2.3) ")
+    print("-H host where the daemon is located(i.e 10.10.2.3)")
 
 
 #
@@ -277,7 +277,7 @@ def main(argv):
     req_test = -1
     dump_output = 0
     infura_url = ""
-    daemon_url = "localhost"
+    daemon_on_host = "localhost"
     requested_api = ""
     verify_with_daemon = 0
     json_dir = "./goerly/"
@@ -300,7 +300,7 @@ def main(argv):
                 daemon_as_reference = INFURA
                 infura_url = optarg
             elif option == "-H":
-                daemon_url = optarg
+                daemon_on_host = optarg
             elif option == "-v":
                 verbose = 1
             elif option == "-t":
@@ -368,7 +368,7 @@ def main(argv):
                             else:
                                 print(f"{global_test_number:03d}. {file}\r", end = '', flush=True)
                             ret=run_tests(json_dir, output_dir, test_file, verbose, daemon_under_test, exit_on_fail, verify_with_daemon, daemon_as_reference,
-                                          dump_output, global_test_number, infura_url, daemon_url)
+                                          dump_output, global_test_number, infura_url, daemon_on_host)
                             if ret == 0:
                                 success_tests = success_tests + 1
                             else:
