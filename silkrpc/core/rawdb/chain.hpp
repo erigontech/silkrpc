@@ -82,6 +82,11 @@ boost::asio::awaitable<Transactions> read_canonical_transactions(const DatabaseR
 
 boost::asio::awaitable<Transactions> read_noncanonical_transactions(const DatabaseReader& reader, uint64_t base_txn_id, uint64_t txn_count);
 
+boost::asio::awaitable<intx::uint256> read_total_issued(const core::rawdb::DatabaseReader& reader, uint64_t block_number);
+
+boost::asio::awaitable<intx::uint256> read_total_burnt(const core::rawdb::DatabaseReader& reader, uint64_t block_number);
+
+
 } // namespace silkrpc::core::rawdb
 
 #endif  // SILKRPC_CORE_RAWDB_CHAIN_HPP_
