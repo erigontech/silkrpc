@@ -293,10 +293,11 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nl
             } else {
                burnt = 0;
             }
-            intx::uint256 total_issued;
-            intx::uint256 total_burnt;
             issuance.burnt = "0x" + intx::to_string(burnt);
-            issuance.total_burnt = "0x" + intx::to_string(burnt);
+
+            const auto total_issued = co_await core::rawdb::read_total_issued(tx_database, block_number);
+            const auto total_burnt = co_await core::rawdb::read_total_burnt(tx_database, block_number);
+
             issuance.total_issued = "0x" + intx::to_string(total_issued);
             issuance.total_burnt = "0x" + intx::to_string(total_burnt);
             intx::uint256 tips = 0;
