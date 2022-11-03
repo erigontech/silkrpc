@@ -287,22 +287,27 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nl
             issuance.block_reward = "0x" + intx::to_string(block_reward.miner_reward);
             issuance.ommer_reward = "0x" + intx::to_string(total_ommer_reward);
             issuance.issuance = "0x" + intx::to_string(block_issuance);
-   
             intx::uint256 burnt;
             if (block_with_hash.block.header.base_fee_per_gas) {
                burnt = *block_with_hash.block.header.base_fee_per_gas * block_with_hash.block.header.gas_used;
             } else {
                burnt = 0;
             }
-
             intx::uint256 total_issued;
             intx::uint256 total_burnt;
             issuance.burnt = "0x" + intx::to_string(burnt);
             issuance.total_burnt = "0x" + intx::to_string(burnt);
             issuance.total_issued = "0x" + intx::to_string(total_issued);
             issuance.total_burnt = "0x" + intx::to_string(total_burnt);
-
-            intx::uint256 tips;
+            intx::uint256 tips = 0;
+            if (block_with_hash.block.header.base_fee_per_gas) {
+               const auto receipts{co_await core::get_receipts(tx_database, block_with_hash)};
+               const auto block{block_with_hash.block};
+               for (size_t i{0}; i < block.transactions.size(); i++) {
+                  auto tip = block.transactions[i].effective_gas_price(block.header.base_fee_per_gas.value_or(0));
+                  tips += tip * receipts[i].gas_used;
+               }
+            }
             issuance.tips = "0x" + intx::to_string(tips);
         }
         reply = make_json_content(request["id"], issuance);
