@@ -1604,7 +1604,7 @@ TEST_CASE("read_total_issued") {
     boost::asio::thread_pool pool{1};
     MockDatabaseReader db_reader;
 
-    SECTION("read_total_issued ") { 
+    SECTION("read_total_issued ") {
         const auto block_hash{0x96908d141b3c2727342b48696f97b50845240e3ceda0c86ac3dc2e197eb9675b_bytes32};
         const uint64_t block_number{20'000};
         EXPECT_CALL(db_reader, get(_, _)).WillOnce(InvokeWithoutArgs(
@@ -1619,7 +1619,7 @@ TEST_CASE("read_total_burnt") {
     boost::asio::thread_pool pool{1};
     MockDatabaseReader db_reader;
 
-    SECTION("read_total_issued ") { 
+    SECTION("read_total_issued ") {
         const auto block_hash{0x96908d141b3c2727342b48696f97b50845240e3ceda0c86ac3dc2e197eb9675b_bytes32};
         const uint64_t block_number{20'000};
         EXPECT_CALL(db_reader, get(_, _)).WillOnce(InvokeWithoutArgs(
