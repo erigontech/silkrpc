@@ -65,6 +65,8 @@ constexpr const char* kSyncStageUnwind{"SyncStageUnwind"};
 constexpr const char* kTrieOfAccounts{"TrieAccount"};
 constexpr const char* kTrieOfStorage{"TrieStorage"};
 constexpr const char* kTxLookup{"BlockTransactionLookup"};
+constexpr const char* kIssuance{"Issuance"};
+
 
 }  // namespace silkrpc::db::table
 
