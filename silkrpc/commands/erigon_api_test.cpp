@@ -114,4 +114,22 @@ TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_get_header_by_ha
     }
 }
 
+TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_watch_the_burn", "[silkrpc][erigon_api]") {
+    nlohmann::json reply;
+
+    SECTION("request invalid params number") {
+        CHECK_NOTHROW(run<&ErigonRpcApi_ForTest::handle_erigon_watch_the_burn>(R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"erigon_watchTheBurn",
+            "params":["0x49BDEF", "0x2"]
+        })"_json, reply));
+        CHECK(reply == R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "error":{"code":100,"message":"invalid erigon_watchTheBurn params: [\"0x49BDEF\",\"0x2\"]"}
+        })"_json);
+    }
+}
+
 } // namespace silkrpc::commands
