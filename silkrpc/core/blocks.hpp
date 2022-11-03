@@ -31,6 +31,8 @@ namespace silkrpc::core {
 constexpr const char* kEarliestBlockId{"earliest"};
 constexpr const char* kLatestBlockId{"latest"};
 constexpr const char* kPendingBlockId{"pending"};
+constexpr const char* kFinalizedBlockId{"finalized"};
+constexpr const char* kSafeBlockId{"safe"};
 
 constexpr uint64_t kEarliestBlockNumber{0ul};
 
@@ -41,6 +43,10 @@ boost::asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::Dat
 boost::asio::awaitable<uint64_t> get_highest_block_number(const core::rawdb::DatabaseReader& reader);
 
 boost::asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader);
+
+boost::asio::awaitable<uint64_t> get_forkchoice_finalized_block_number(const core::rawdb::DatabaseReader& reader);
+
+boost::asio::awaitable<uint64_t> get_forkchoice_safe_block_number(const core::rawdb::DatabaseReader& reader);
 
 boost::asio::awaitable<bool> is_latest_block_number(const BlockNumberOrHash& bnoh, const core::rawdb::DatabaseReader& reader);
 
