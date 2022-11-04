@@ -393,7 +393,7 @@ boost::asio::awaitable<intx::uint256> read_total_issued(const core::rawdb::Datab
     const auto block_key = silkworm::db::block_key(block_number);
     const auto kv_pair = co_await reader.get(db::table::kIssuance, block_key);
     intx::uint256 total_issued = 0;
-    if (kv_pair.value != silkworm::ByteView{}) {
+    if (kv_pair.value.empty()) {
         total_issued = std::stoul(silkworm::to_hex(kv_pair.value), 0, 16);
     }
     SILKRPC_DEBUG << "rawdb::read_total_issued: " << total_issued << "\n";
@@ -402,13 +402,12 @@ boost::asio::awaitable<intx::uint256> read_total_issued(const core::rawdb::Datab
 
 boost::asio::awaitable<intx::uint256> read_total_burnt(const core::rawdb::DatabaseReader& reader, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number);
-    std::string str{"burnt"};
-    silkworm::Bytes key;
-    key.assign(str.begin(), str.end());
+    const std::string kBurnt{"burnt"};
+    silkworm::Bytes key{kBurnt.begin(), kBurnt.end()};
     key.append(block_key.begin(), block_key.end());
     const auto kv_pair = co_await reader.get(db::table::kIssuance, key);
     intx::uint256 total_burnt = 0;
-    if (kv_pair.value != silkworm::ByteView{}) {
+    if (kv_pair.value.empty()) {
         total_burnt = std::stoul(silkworm::to_hex(kv_pair.value), 0, 16);
     }
     SILKRPC_DEBUG << "rawdb::read_total_burnt: " << total_burnt << "\n";
