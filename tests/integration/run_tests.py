@@ -36,18 +36,18 @@ tests_not_compared = [
 ]
 
 
-def get_target(target_type: str, method: str, infura_url: str):
+def get_target(target_type: str, method: str, infura_url: str, host: str):
     """ determine target
     """
     if "engine_" in method:
-        return "localhost:8550"
+        return host + ":8550"
     if target_type == SILK:
-        return "localhost:51515"
+        return host + ":51515"
 
     if target_type == INFURA:
         return infura_url
 
-    return "localhost:8545"
+    return host + ":8545"
 
 def get_json_filename_ext(target_type: str):
     """ determine json file name
@@ -176,7 +176,7 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
     return 0
 
 def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, daemon_under_test: str, exit_on_fail: bool, verify_with_daemon: bool, daemon_as_reference: str,
-              dump_output: bool, test_number, infura_url: str):
+              dump_output: bool, test_number, infura_url: str, daemon_on_host: str):
     """ Run integration tests. """
     json_filename = test_dir + json_file
     ext = os.path.splitext(json_file)[1]
@@ -201,7 +201,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
     for json_rpc in jsonrpc_commands:
         request = json_rpc["request"]
         request_dumps = json.dumps(request)
-        target = get_target(daemon_under_test, request["method"], infura_url)
+        target = get_target(daemon_under_test, request["method"], infura_url, daemon_on_host)
         if verify_with_daemon == 0:
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = ""
@@ -215,9 +215,9 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
             output_api_filename = output_dir + json_file[:-4]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = ""
-            target = get_target(SILK, request["method"], infura_url)
+            target = get_target(SILK, request["method"], infura_url, daemon_on_host)
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
-            target1 = get_target(daemon_as_reference, request["method"], infura_url)
+            target1 = get_target(daemon_as_reference, request["method"], infura_url, daemon_on_host)
             cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target1
             silk_file = output_api_filename + get_json_filename_ext(SILK)
             exp_rsp_file = output_api_filename + get_json_filename_ext(daemon_as_reference)
@@ -243,7 +243,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
 def usage(argv):
     """ Print script usage
     """
-    print("Usage: " + argv[0] + " -h -c -r -v -a <requested_api> -t < test_number> -l < no of loops> -d -h <chain Name> -o -x <exclude list>")
+    print("Usage: " + argv[0] + ":")
     print("")
     print("Launch an automated test sequence on Silkrpc or RPCDaemon")
     print("")
@@ -253,13 +253,14 @@ def usage(argv):
     print("-l <number of loops>")
     print("-a <test api >: run all tests of the specified API")
     print("-t <test_number>: run single test")
-    print("-d provides request also to the reference daemon (default RPCDAEMON)")
+    print("-d provides same request also to the reference daemon (default RPCDAEMON)")
     print("-i provides request also to the reference daemon (INFURA)")
     print("-b blockchain (default goerly)")
     print("-v verbose")
     print("-o dump response")
     print("-x exclude api list (i.e txpool_content,txpool_status")
     print("-X exclude test list (i.e 18,22")
+    print("-H host where the daemon is located(i.e 10.10.2.3)")
 
 
 #
@@ -276,6 +277,7 @@ def main(argv):
     req_test = -1
     dump_output = 0
     infura_url = ""
+    daemon_on_host = "localhost"
     requested_api = ""
     verify_with_daemon = 0
     json_dir = "./goerly/"
@@ -285,7 +287,7 @@ def main(argv):
     exclude_test_list = ""
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:di:b:ox:X:")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:di:b:ox:X:H:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -297,6 +299,8 @@ def main(argv):
             elif option == "-i":
                 daemon_as_reference = INFURA
                 infura_url = optarg
+            elif option == "-H":
+                daemon_on_host = optarg
             elif option == "-v":
                 verbose = 1
             elif option == "-t":
@@ -364,7 +368,7 @@ def main(argv):
                             else:
                                 print(f"{global_test_number:03d}. {file}\r", end = '', flush=True)
                             ret=run_tests(json_dir, output_dir, test_file, verbose, daemon_under_test, exit_on_fail, verify_with_daemon, daemon_as_reference,
-                                          dump_output, global_test_number, infura_url)
+                                          dump_output, global_test_number, infura_url, daemon_on_host)
                             if ret == 0:
                                 success_tests = success_tests + 1
                             else:
