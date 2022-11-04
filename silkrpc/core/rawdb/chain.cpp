@@ -393,7 +393,7 @@ boost::asio::awaitable<intx::uint256> read_total_issued(const core::rawdb::Datab
     const auto block_key = silkworm::db::block_key(block_number);
     const auto kv_pair = co_await reader.get(db::table::kIssuance, block_key);
     intx::uint256 total_issued = 0;
-    if (kv_pair.value.empty()) {
+    if (!kv_pair.value.empty()) {
         total_issued = std::stoul(silkworm::to_hex(kv_pair.value), 0, 16);
     }
     SILKRPC_DEBUG << "rawdb::read_total_issued: " << total_issued << "\n";
@@ -407,7 +407,7 @@ boost::asio::awaitable<intx::uint256> read_total_burnt(const core::rawdb::Databa
     key.append(block_key.begin(), block_key.end());
     const auto kv_pair = co_await reader.get(db::table::kIssuance, key);
     intx::uint256 total_burnt = 0;
-    if (kv_pair.value.empty()) {
+    if (!kv_pair.value.empty()) {
         total_burnt = std::stoul(silkworm::to_hex(kv_pair.value), 0, 16);
     }
     SILKRPC_DEBUG << "rawdb::read_total_burnt: " << total_burnt << "\n";
