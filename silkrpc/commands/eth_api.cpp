@@ -567,8 +567,8 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_h
             reply = make_json_content(request["id"], rlp);
         }
     } catch (const std::invalid_argument& iv) {
-        SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_content(request["id"], {});
+        Rlp rlp{};
+        reply = make_json_content(request["id"], rlp);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
