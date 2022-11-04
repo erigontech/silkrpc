@@ -1,0 +1,15 @@
+[
+   {
+        "request":{
+            "method": "eth_getRawTransactionByHash",
+            "params": ["0xa00504c64d3b12f2f06ef142efc5ef9abe2a8c5814326ac99644d26f4cc65d3a"],
+            "id": 1
+        },
+        "response": {
+            "result": "0x",
+            "id": 1,
+            "jsonrpc": "2.0"
+        }
+    }
+]
+
