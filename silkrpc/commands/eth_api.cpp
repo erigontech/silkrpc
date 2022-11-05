@@ -563,7 +563,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_h
             }
         } else {
             Rlp rlp{};
-            silkworm::rlp::encode(rlp.buffer, tx_with_block->transaction);
+            silkworm::rlp::encode(rlp.buffer, tx_with_block->transaction, false, false);
             reply = make_json_content(request["id"], rlp);
         }
     } catch (const std::invalid_argument& iv) {
