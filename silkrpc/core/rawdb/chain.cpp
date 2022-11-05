@@ -389,4 +389,31 @@ boost::asio::awaitable<Transactions> read_noncanonical_transactions(const Databa
     co_return txns;
 }
 
+boost::asio::awaitable<intx::uint256> read_total_issued(const core::rawdb::DatabaseReader& reader, uint64_t block_number) {
+    const auto block_key = silkworm::db::block_key(block_number);
+    const auto kv_pair = co_await reader.get(db::table::kIssuance, block_key);
+    intx::uint256 total_issued = 0;
+    if (!kv_pair.value.empty()) {
+        total_issued = std::stoul(silkworm::to_hex(kv_pair.value), 0, 16);
+    }
+    SILKRPC_DEBUG << "rawdb::read_total_issued: " << total_issued << "\n";
+    co_return total_issued;
+}
+
+boost::asio::awaitable<intx::uint256> read_total_burnt(const core::rawdb::DatabaseReader& reader, uint64_t block_number) {
+    const auto block_key = silkworm::db::block_key(block_number);
+    const std::string kBurnt{"burnt"};
+    silkworm::Bytes key{kBurnt.begin(), kBurnt.end()};
+    key.append(block_key.begin(), block_key.end());
+    const auto kv_pair = co_await reader.get(db::table::kIssuance, key);
+    intx::uint256 total_burnt = 0;
+    if (!kv_pair.value.empty()) {
+        total_burnt = std::stoul(silkworm::to_hex(kv_pair.value), 0, 16);
+    }
+    SILKRPC_DEBUG << "rawdb::read_total_burnt: " << total_burnt << "\n";
+    co_return total_burnt;
+}
+
+
+
 } // namespace silkrpc::core::rawdb
