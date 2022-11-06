@@ -9,7 +9,15 @@
         "response": {
             "jsonrpc":"2.0",
             "id":1,
-            "result":null
+            "result": {
+               "blockReward": null,
+               "uncleReward": null,
+               "issuance": null,
+               "burnt": null,
+               "totalIssued": null,
+               "totalBurnt": null,
+               "tips": null
+           }
         }
     }
 ]
