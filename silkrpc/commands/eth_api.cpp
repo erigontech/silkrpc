@@ -1226,8 +1226,6 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohma
                 break;
             }
 
-            SILKRPC_LOG << "diff_time: " << clock_time::since(start_time)/1000000 << " timeout: " << timeout << "\n";
-
             if ((clock_time::since(start_time) / 1000000) > timeout) {
                 const auto error_msg = "execution aborted (timeout)";
                 SILKRPC_ERROR << error_msg << "\n";
@@ -1499,7 +1497,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann:
 
 // https://eth.wiki/json-rpc/API#eth_sendrawtransaction
 boost::asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
+    const auto params = request["params"];
     if (params.size() != 1) {
         auto error_msg = "invalid eth_sendRawTransaction params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
@@ -1509,7 +1507,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(con
     const auto encoded_tx_string = params[0].get<std::string>();
     const auto encoded_tx_bytes = silkworm::from_hex(encoded_tx_string);
     if (!encoded_tx_bytes.has_value()) {
-        auto error_msg = "invalid eth_sendRawTransaction encoded tx: " + encoded_tx_string;
+        const auto error_msg = "invalid eth_sendRawTransaction encoded tx: " + encoded_tx_string;
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32602, error_msg);
         co_return;
@@ -1519,7 +1517,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(con
     Transaction txn;
     const auto err{silkworm::rlp::decode<silkworm::Transaction>(encoded_tx_view, txn)};
     if (err != silkworm::DecodingResult::kOk) {
-        auto error_msg = decoding_result_to_string(err);
+        const auto error_msg = decoding_result_to_string(err);
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
@@ -1528,20 +1526,20 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(con
     const float kTxFeeCap = 1; // 1 ether
 
     if (!check_tx_fee_less_cap(kTxFeeCap, txn.max_fee_per_gas, txn.gas_limit)) {
-        auto error_msg = "tx fee exceeds the configured cap";
+        const auto error_msg = "tx fee exceeds the configured cap";
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
     }
 
     if (!is_replay_protected(txn)) {
-        auto error_msg = "only replay-protected (EIP-155) transactions allowed over RPC";
+        const auto error_msg = "only replay-protected (EIP-155) transactions allowed over RPC";
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
     }
 
-    silkworm::ByteView encoded_tx{*encoded_tx_bytes};
+    const silkworm::ByteView encoded_tx{*encoded_tx_bytes};
     const auto result = co_await tx_pool_->add_transaction(encoded_tx);
     if (!result.success) {
         SILKRPC_ERROR << "cannot add transaction: " << result.error_descr << "\n";
@@ -1551,16 +1549,16 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(con
 
     txn.recover_sender();
     if (!txn.from.has_value()) {
-        auto error_msg = "cannot recover sender";
+        const auto error_msg = "cannot recover sender";
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
     }
 
-    auto ethash_hash{hash_of_transaction(txn)};
-    auto hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
+    const auto ethash_hash{hash_of_transaction(txn)};
+    const auto hash = silkworm::to_bytes32({ethash_hash.bytes, silkworm::kHashLength});
     if (!txn.to.has_value()) {
-        auto contract_address = silkworm::create_address(*txn.from, txn.nonce);
+        const auto contract_address = silkworm::create_address(*txn.from, txn.nonce);
         SILKRPC_DEBUG << "submitted contract creation hash: " << hash << " from: " << *txn.from <<  " nonce: " << txn.nonce << " contract: " << contract_address <<
                          " value: " << txn.value << "\n";
     } else {

@@ -121,9 +121,9 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_call_many(const nlohmann:
 
 // https://eth.wiki/json-rpc/API#trace_rawtransaction
 boost::asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
+    const auto params = request["params"];
     if (params.size() < 2) {
-        auto error_msg = "invalid trace_rawTransaction params: " + params.dump();
+        const auto error_msg = "invalid trace_rawTransaction params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
@@ -131,7 +131,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlo
     const auto encoded_tx_string = params[0].get<std::string>();
     const auto encoded_tx_bytes = silkworm::from_hex(encoded_tx_string);
     if (!encoded_tx_bytes.has_value()) {
-        auto error_msg = "invalid trace_rawTransaction encoded tx: " + encoded_tx_string;
+        const auto error_msg = "invalid trace_rawTransaction encoded tx: " + encoded_tx_string;
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32602, error_msg);
         co_return;
@@ -141,7 +141,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlo
     Transaction transaction;
     const auto err{silkworm::rlp::decode<silkworm::Transaction>(encoded_tx_view, transaction)};
     if (err != silkworm::DecodingResult::kOk) {
-        auto error_msg = decoding_result_to_string(err);
+        const auto error_msg = decoding_result_to_string(err);
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
@@ -150,14 +150,14 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlo
     const float kTxFeeCap = 1; // 1 ether
 
     if (!check_tx_fee_less_cap(kTxFeeCap, transaction.max_fee_per_gas, transaction.gas_limit)) {
-        auto error_msg = "tx fee exceeds the configured cap";
+        const auto error_msg = "tx fee exceeds the configured cap";
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
     }
 
     if (!is_replay_protected(transaction)) {
-        auto error_msg = "only replay-protected (EIP-155) transactions allowed over RPC";
+        const auto error_msg = "only replay-protected (EIP-155) transactions allowed over RPC";
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
@@ -165,7 +165,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlo
 
     transaction.recover_sender();
     if (!transaction.from.has_value()) {
-        auto error_msg = "cannot recover sender";
+        const auto error_msg = "cannot recover sender";
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
@@ -180,7 +180,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlo
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        auto block_number = co_await core::get_latest_block_number(tx_database);
+        const auto block_number = co_await core::get_latest_block_number(tx_database);
         const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache(), tx_database, block_number);
 
         trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
@@ -191,7 +191,6 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlo
         } else {
             reply = make_json_content(request["id"], result.traces);
         }
-        // reply = make_json_error(request["id"], 500, "not yet implemented");
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
