@@ -651,9 +651,12 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_b
             reply = make_json_content(request["id"], rlp);
         } else {
             Rlp rlp{};
-            silkworm::rlp::encode(rlp.buffer, transactions[idx]);
+            silkworm::rlp::encode(rlp.buffer, transactions[idx], false, false);
             reply = make_json_content(request["id"], rlp);
         }
+    } catch (const std::invalid_argument& iv) {
+        Rlp rlp{};
+        reply = make_json_content(request["id"], rlp);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
