@@ -1,0 +1,16 @@
+[
+  {
+        "request": {
+            "jsonrpc": "2.0",
+            "method": "eth_getRawTransactionByBlockHashAndIndex",
+            "params": ["0x3487d62abf473dd6922fe122d778b52ff9c59cd0111a692ddfea0ebbe7951331", "0x0"],
+            "id": 1
+        },
+        "response": {
+            "result": "0x",
+            "id": 1,
+            "jsonrpc": "2.0"
+        }
+   }
+]
+

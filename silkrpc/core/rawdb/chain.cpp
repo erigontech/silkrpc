@@ -44,8 +44,7 @@ namespace silkrpc::core::rawdb {
 
 boost::asio::awaitable<uint64_t> read_header_number(const DatabaseReader& reader, const evmc::bytes32& block_hash) {
     const silkworm::ByteView block_hash_bytes{block_hash.bytes, silkworm::kHashLength};
-    const auto kv_pair{co_await reader.get(db::table::kHeaderNumbers, block_hash_bytes)};
-    const auto value = kv_pair.value;
+    const auto value{co_await reader.get_one(db::table::kHeaderNumbers, block_hash_bytes)};
     if (value.empty()) {
         throw std::invalid_argument{"empty block number value in read_header_number"};
     }
