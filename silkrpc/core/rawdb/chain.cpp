@@ -89,11 +89,11 @@ boost::asio::awaitable<evmc::bytes32> read_canonical_block_hash(const DatabaseRe
 boost::asio::awaitable<intx::uint256> read_total_difficulty(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
     SILKRPC_TRACE << "rawdb::read_total_difficulty block_key: " << silkworm::to_hex(block_key) << "\n";
-    const auto kv_pair{co_await reader.get(db::table::kDifficulty, block_key)};
-    silkworm::ByteView value{kv_pair.value};
-    if (value.empty()) {
+    const auto ret{co_await reader.get_one(db::table::kDifficulty, block_key)};
+    if (ret.empty()) {
         throw std::invalid_argument{"empty total difficulty value in read_total_difficulty"};
     }
+    silkworm::ByteView value{ret};
     intx::uint256 total_difficulty{0};
     auto decoding_result{silkworm::rlp::decode(value, total_difficulty)};
     if (decoding_result != silkworm::DecodingResult::kOk) {
