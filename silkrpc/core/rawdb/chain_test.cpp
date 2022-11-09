@@ -296,8 +296,8 @@ TEST_CASE("read_total_difficulty") {
     MockDatabaseReader db_reader;
 
     SECTION("empty RLP buffer") {
-        EXPECT_CALL(db_reader, get(db::table::kDifficulty, _)).WillOnce(InvokeWithoutArgs(
-            []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        EXPECT_CALL(db_reader, get_one(db::table::kDifficulty, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return silkworm::Bytes{}; }
         ));
         evmc::bytes32 block_hash{0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8_bytes32};
         uint64_t block_number{4'000'000};
@@ -306,8 +306,8 @@ TEST_CASE("read_total_difficulty") {
     }
 
     SECTION("invalid RLP buffer") {
-        EXPECT_CALL(db_reader, get(db::table::kDifficulty, _)).WillOnce(InvokeWithoutArgs(
-            []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("000102")}; }
+        EXPECT_CALL(db_reader, get_one(db::table::kDifficulty, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return *silkworm::from_hex("000102"); }
         ));
         evmc::bytes32 block_hash{0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8_bytes32};
         uint64_t block_number{4'000'000};
@@ -316,8 +316,8 @@ TEST_CASE("read_total_difficulty") {
     }
 
     SECTION("valid total difficulty") {
-        EXPECT_CALL(db_reader, get(db::table::kDifficulty, _)).WillOnce(InvokeWithoutArgs(
-            []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("8360c7cc")}; }
+        EXPECT_CALL(db_reader, get_one(db::table::kDifficulty, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return *silkworm::from_hex("8360c7cc"); }
         ));
         evmc::bytes32 block_hash{0xd268bdabee5eab4914d0de9b0e0071364582cfb3c952b19727f1ab429f4ba2a8_bytes32};
         uint64_t block_number{4'306'300};
