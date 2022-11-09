@@ -91,7 +91,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 |                                            |              |                                            |
 | trace_call                                 | Yes          |                                            |
 | trace_callMany                             | Yes          |                                            |
-| trace_rawTransaction                       | -            | not yet implemented                        |
+| trace_rawTransaction                       | Yes          |                                            |
 | trace_replayBlockTransactions              | Yes          |                                            |
 | trace_replayTransaction                    | Yes          |                                            |
 | trace_block                                | Yes          |                                            |
