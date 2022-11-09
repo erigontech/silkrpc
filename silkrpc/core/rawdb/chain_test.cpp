@@ -1606,8 +1606,8 @@ TEST_CASE("read_total_issued") {
 
     const auto block_hash{0x96908d141b3c2727342b48696f97b50845240e3ceda0c86ac3dc2e197eb9675b_bytes32};
     const uint64_t block_number{20'000};
-    EXPECT_CALL(db_reader, get(_, _)).WillOnce(InvokeWithoutArgs(
-        []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kTotalIssued}; }
+    EXPECT_CALL(db_reader, get_one(_, _)).WillOnce(InvokeWithoutArgs(
+        []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kTotalIssued; }
     ));
     auto result = boost::asio::co_spawn(pool, read_total_issued(db_reader, block_number), boost::asio::use_future);
     CHECK(result.get() == 7);
@@ -1619,8 +1619,8 @@ TEST_CASE("read_total_burnt") {
 
     const auto block_hash{0x96908d141b3c2727342b48696f97b50845240e3ceda0c86ac3dc2e197eb9675b_bytes32};
     const uint64_t block_number{20'000};
-    EXPECT_CALL(db_reader, get(_, _)).WillOnce(InvokeWithoutArgs(
-        []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kTotalBurnt}; }
+    EXPECT_CALL(db_reader, get_one(_, _)).WillOnce(InvokeWithoutArgs(
+        []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kTotalBurnt; }
     ));
     auto result = boost::asio::co_spawn(pool, read_total_burnt(db_reader, block_number), boost::asio::use_future);
     CHECK(result.get() == 5);
