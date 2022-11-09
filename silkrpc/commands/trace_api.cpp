@@ -121,12 +121,76 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_call_many(const nlohmann:
 
 // https://eth.wiki/json-rpc/API#trace_rawtransaction
 boost::asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlohmann::json& request, nlohmann::json& reply) {
+    const auto params = request["params"];
+    if (params.size() < 2) {
+        const auto error_msg = "invalid trace_rawTransaction params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto encoded_tx_string = params[0].get<std::string>();
+    const auto encoded_tx_bytes = silkworm::from_hex(encoded_tx_string);
+    if (!encoded_tx_bytes.has_value()) {
+        const auto error_msg = "invalid trace_rawTransaction encoded tx: " + encoded_tx_string;
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], -32602, error_msg);
+        co_return;
+    }
+
+    silkworm::ByteView encoded_tx_view{*encoded_tx_bytes};
+    Transaction transaction;
+    const auto err{silkworm::rlp::decode<silkworm::Transaction>(encoded_tx_view, transaction)};
+    if (err != silkworm::DecodingResult::kOk) {
+        const auto error_msg = decoding_result_to_string(err);
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], -32000, error_msg);
+        co_return;
+    }
+
+    const float kTxFeeCap = 1; // 1 ether
+
+    if (!check_tx_fee_less_cap(kTxFeeCap, transaction.max_fee_per_gas, transaction.gas_limit)) {
+        const auto error_msg = "tx fee exceeds the configured cap";
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], -32000, error_msg);
+        co_return;
+    }
+
+    if (!is_replay_protected(transaction)) {
+        const auto error_msg = "only replay-protected (EIP-155) transactions allowed over RPC";
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], -32000, error_msg);
+        co_return;
+    }
+
+    transaction.recover_sender();
+    if (!transaction.from.has_value()) {
+        const auto error_msg = "cannot recover sender";
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], -32000, error_msg);
+        co_return;
+    }
+
+    const auto config = params[1].get<trace::TraceConfig>();
+
+    SILKRPC_INFO << "transaction: " << transaction << " config: " << config << "\n";
+
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_error(request["id"], 500, "not yet implemented");
+        const auto block_number = co_await core::get_latest_block_number(tx_database);
+        const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache(), tx_database, block_number);
+
+        trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
+        const auto result = co_await executor.trace_transaction(block_with_hash.block, transaction, config);
+
+        if (result.pre_check_error) {
+            reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
+        } else {
+            reply = make_json_content(request["id"], result.traces);
+        }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
