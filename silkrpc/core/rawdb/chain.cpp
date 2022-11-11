@@ -55,8 +55,7 @@ boost::asio::awaitable<ChainConfig> read_chain_config(const DatabaseReader& read
     const auto genesis_block_hash{co_await read_canonical_block_hash(reader, kEarliestBlockNumber)};
     SILKRPC_DEBUG << "rawdb::read_chain_config genesis_block_hash: " << genesis_block_hash << "\n";
     const silkworm::ByteView genesis_block_hash_bytes{genesis_block_hash.bytes, silkworm::kHashLength};
-    const auto kv_pair{co_await reader.get(db::table::kConfig, genesis_block_hash_bytes)};
-    const auto data = kv_pair.value;
+    const auto data{co_await reader.get_one(db::table::kConfig, genesis_block_hash_bytes)};
     if (data.empty()) {
         throw std::invalid_argument{"empty chain config data in read_chain_config"};
     }
@@ -222,12 +221,7 @@ boost::asio::awaitable<silkworm::Bytes> read_body_rlp(const DatabaseReader& read
 
 boost::asio::awaitable<Addresses> read_senders(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
-    const auto kv_pair = co_await reader.get(db::table::kSenders, block_key);
-    if (kv_pair.key != block_key) {
-        SILKRPC_WARN << "senders not found for block: " << block_number << "\n";
-        co_return Addresses{};
-    }
-    const auto data = kv_pair.value;
+    const auto data = co_await reader.get_one(db::table::kSenders, block_key);
     SILKRPC_TRACE << "read_senders data: " << silkworm::to_hex(data) << "\n";
     Addresses senders{data.size() / silkworm::kAddressLength};
     for (size_t i{0}; i < senders.size(); i++) {
