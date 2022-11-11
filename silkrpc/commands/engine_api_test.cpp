@@ -669,13 +669,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds if EL configuratio
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
-    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
+    const silkworm::Bytes block_number{*silkworm::from_hex("0000000000000000")};
+    const silkworm::ByteView block_key {block_number};
+    EXPECT_CALL(*mock_cursor, seek_exact(block_key)).WillOnce(InvokeWithoutArgs(
         [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
-    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
+    const silkworm::Bytes genesis_block_hash{*silkworm::from_hex("0000000000000000000000000000000000000000000000000000000000000000")};
+    const silkworm::ByteView genesis_block_key {genesis_block_hash};
+    EXPECT_CALL(*mock_cursor, seek_exact(genesis_block_key)).WillOnce(InvokeWithoutArgs(
         [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
@@ -727,13 +731,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 succeeds and default termin
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
-    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
+    const silkworm::Bytes block_number{*silkworm::from_hex("0000000000000000")};
+    const silkworm::ByteView block_key {block_number};
+    EXPECT_CALL(*mock_cursor, seek_exact(block_key)).WillOnce(InvokeWithoutArgs(
         [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
-    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
+    const silkworm::Bytes genesis_block_hash{*silkworm::from_hex("0000000000000000000000000000000000000000000000000000000000000000")};
+    const silkworm::ByteView genesis_block_key {genesis_block_hash};
+    EXPECT_CALL(*mock_cursor, seek_exact(genesis_block_key)).WillOnce(InvokeWithoutArgs(
         [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfigNoTerminalBlockNumber};
         }
@@ -785,13 +793,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if incorrect terminal
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
-    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
+    const silkworm::Bytes block_number{*silkworm::from_hex("0000000000000000")};
+    const silkworm::ByteView block_key {block_number};
+    EXPECT_CALL(*mock_cursor, seek_exact(block_key)).WillOnce(InvokeWithoutArgs(
         [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
-    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
+    const silkworm::Bytes genesis_block_hash{*silkworm::from_hex("0000000000000000000000000000000000000000000000000000000000000000")};
+    const silkworm::ByteView genesis_block_key {genesis_block_hash};
+    EXPECT_CALL(*mock_cursor, seek_exact(genesis_block_key)).WillOnce(InvokeWithoutArgs(
         [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
@@ -842,13 +854,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if execution layer do
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
-    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
+    const silkworm::Bytes block_number{*silkworm::from_hex("0000000000000000")};
+    const silkworm::ByteView block_key {block_number};
+    EXPECT_CALL(*mock_cursor, seek_exact(block_key)).WillOnce(InvokeWithoutArgs(
         [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
-    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
+    const silkworm::Bytes genesis_block_hash{*silkworm::from_hex("0000000000000000000000000000000000000000000000000000000000000000")};
+    const silkworm::ByteView genesis_block_key {genesis_block_hash};
+    EXPECT_CALL(*mock_cursor, seek_exact(genesis_block_key)).WillOnce(InvokeWithoutArgs(
         [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfigNoTerminalTotalDifficulty};
         }
@@ -898,13 +914,17 @@ TEST_CASE("handle_engine_transition_configuration_v1 fails if consensus layer se
 
     std::shared_ptr<MockCursor> mock_cursor = std::make_shared<MockCursor>();
 
-    EXPECT_CALL(*mock_cursor, seek_exact(testing::_)).WillOnce(InvokeWithoutArgs(
+    const silkworm::Bytes block_number{*silkworm::from_hex("0000000000000000")};
+    const silkworm::ByteView block_key {block_number};
+    EXPECT_CALL(*mock_cursor, seek_exact(block_key)).WillOnce(InvokeWithoutArgs(
         [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kBlockHash};
         }
     ));
 
-    EXPECT_CALL(*mock_cursor, seek(testing::_)).WillOnce(InvokeWithoutArgs(
+    const silkworm::Bytes genesis_block_hash{*silkworm::from_hex("0000000000000000000000000000000000000000000000000000000000000000")};
+    const silkworm::ByteView genesis_block_key {genesis_block_hash};
+    EXPECT_CALL(*mock_cursor, seek_exact(genesis_block_key)).WillOnce(InvokeWithoutArgs(
         [&]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{silkworm::Bytes{}, kChainConfig};
         }
