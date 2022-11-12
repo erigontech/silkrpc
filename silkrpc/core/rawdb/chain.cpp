@@ -207,16 +207,12 @@ boost::asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& read
 
 boost::asio::awaitable<silkworm::Bytes> read_header_rlp(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
-    const auto kv_pair = co_await reader.get(db::table::kHeaders, block_key);
-    const auto data = kv_pair.value;
-    co_return data;
+    co_return co_await reader.get_one(db::table::kHeaders, block_key);
 }
 
 boost::asio::awaitable<silkworm::Bytes> read_body_rlp(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number, block_hash.bytes);
-    const auto kv_pair = co_await reader.get(db::table::kBlockBodies, block_key);
-    const auto data = kv_pair.value;
-    co_return data;
+    co_return co_await reader.get_one(db::table::kBlockBodies, block_key);
 }
 
 boost::asio::awaitable<Addresses> read_senders(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
@@ -232,8 +228,7 @@ boost::asio::awaitable<Addresses> read_senders(const DatabaseReader& reader, con
 
 boost::asio::awaitable<Receipts> read_raw_receipts(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     const auto block_key = silkworm::db::block_key(block_number);
-    const auto kv_pair = co_await reader.get(db::table::kBlockReceipts, block_key);
-    const auto data = kv_pair.value;
+    const auto data = co_await reader.get_one(db::table::kBlockReceipts, block_key);
     SILKRPC_TRACE << "read_raw_receipts data: " << silkworm::to_hex(data) << "\n";
     if (data.empty()) {
         co_return Receipts{}; // TODO(canepat): use std::null_opt with boost::asio::awaitable<std::optional<Receipts>>?
