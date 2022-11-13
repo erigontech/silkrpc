@@ -188,7 +188,6 @@ TEST_CASE("DebugExecutor::execute call 1") {
 
     static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("52728289eba496b6080d57d0250a90663a07e55600000000005279a8")};
     static silkworm::Bytes kAccountHistoryValue2{*silkworm::from_hex("0100000000000000000000003a300000010000004e00000010000000d63b")};
-
     static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000005279a8")};
     static silkworm::Bytes kAccountHistoryValue3{*silkworm::from_hex(
         "0100000000000000000000003b30270000000040202b003f002c001c002d0009002e000a002f000000300000003100000032000b003300"
@@ -276,10 +275,8 @@ TEST_CASE("DebugExecutor::execute call 1") {
         call.gas = 50'000;
         call.gas_price = 7;
         call.data = *silkworm::from_hex("602a60005500");
-
         silkworm::Block block{};
         block.header.number = block_number;
-
         boost::asio::io_context& io_context = context_pool.next_io_context();
         DebugExecutor executor{context_pool.next_io_context(), db_reader, workers};
         auto execution_result = boost::asio::co_spawn(io_context, executor.execute(block, call), boost::asio::use_future);
@@ -456,7 +453,6 @@ TEST_CASE("DebugExecutor::execute call 1") {
         context_pool.join();
 
         CHECK(result.pre_check_error.has_value() == false);
-
         CHECK(result.debug_trace == R"({
             "failed": false,
             "gas": 75178,
@@ -1859,7 +1855,6 @@ TEST_CASE("DebugTrace json serialization") {
         debug_trace.gas = 20;
         debug_trace.return_value = "deadbeaf";
         debug_trace.debug_logs.push_back(log);
-
         debug_trace.debug_config.disableStorage = false;
         debug_trace.debug_config.disableMemory = true;
         debug_trace.debug_config.disableStack = true;
