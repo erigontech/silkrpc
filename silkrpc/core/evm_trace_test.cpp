@@ -6760,7 +6760,6 @@ TEST_CASE("TraceCallTraces: json serialization") {
 TEST_CASE("TraceCallResult: json serialization") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
-
     TraceCallResult tcr;
 
     SECTION("with traces") {
@@ -6777,7 +6776,6 @@ TEST_CASE("TraceCallResult: json serialization") {
 TEST_CASE("TraceManyCallResult: json serialization") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
-
     TraceManyCallResult tmcr;
 
     SECTION("with traces") {
