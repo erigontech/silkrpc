@@ -3982,9 +3982,9 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
         "00000000004c236ff3870624cd2799e94f7b161ff5f621afad28f7e305e0a68373194b7646151ee25c25ef1bba87ab6f639c0f16d418b7"
         "11a46fe57e5f03f6b890ab311a5a01a0000000000000000000000000000000000000000000000000000000000000000088000000000000"
         "000007")};
-    EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey1}))
-        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{kHeaderKey1, kHeaderValue1};
+    EXPECT_CALL(db_reader, get_one(db::table::kHeaders, silkworm::ByteView{kHeaderKey1}))
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+            co_return kHeaderValue1;
         }));
 
     // TransactionDatabase::get: TABLE Header
@@ -4002,25 +4002,25 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
         "686f72697479a59ef12661bd272752d7a69ef2e2b47af6909b840d709fa222d059536ab7469d411764f1fe49f4b7a3f5782659f74d27f4"
         "dcce1506a9f0f26ccb48a806d92f2e01a00000000000000000000000000000000000000000000000000000000000000000880000000000"
         "00000007")};
-    EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey3}))
-        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{kHeaderKey3, kHeaderValue3};
+    EXPECT_CALL(db_reader, get_one(db::table::kHeaders, silkworm::ByteView{kHeaderKey3}))
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+            co_return kHeaderValue3;
         }));
 
     // TransactionDatabase::get: TABLE BlockBody
     static silkworm::Bytes kBlockBodyKey1{*silkworm::from_hex("00000000006ddd02a87009e08f9af73efe86d702561afcf98f277a8acec60b97869969e367c12d66")};
     static silkworm::Bytes kBlockBodyValue1{*silkworm::from_hex("c78405c62e6603c0")};
-    EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey1}))
-        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{kBlockBodyKey1, kBlockBodyValue1};
+    EXPECT_CALL(db_reader, get_one(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey1}))
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+            co_return kBlockBodyValue1;
         }));
 
     // TransactionDatabase::get: TABLE BlockBody
     static silkworm::Bytes kBlockBodyKey3{*silkworm::from_hex("00000000006ddd03a316f156582fb5fba2166910becdb6342965a801fa473e18cd6a0c06143cac1a")};
     static silkworm::Bytes kBlockBodyValue3{*silkworm::from_hex("c78405c62e6904c0")};
-    EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey3}))
-        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{kBlockBodyKey3, kBlockBodyValue3};
+    EXPECT_CALL(db_reader, get_one(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey3}))
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+            co_return kBlockBodyValue3;
         }));
 
     // TransactionDatabase::walk: TABLE BlockTransaction
@@ -5490,17 +5490,17 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
             "2d3230a499270541450663356185c61f970959545219dee7616763658a87d3c80730c32cca058d57ccc16cc0b0ca4269c4dee474ee3612"
             "f83cbf54f9fbffddba6d154401a00000000000000000000000000000000000000000000000000000000000000000880000000000000000"
             "07")};
-        EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
-            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-                co_return KeyValue{kHeaderKey2, kHeaderValue2};
+        EXPECT_CALL(db_reader, get_one(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kHeaderValue2;
             }));
 
         // TransactionDatabase::get: TABLE BlockBody
         static silkworm::Bytes kBlockBodyKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
         static silkworm::Bytes kBlockBodyValue2{*silkworm::from_hex("c78405c62e6f02c0")};
-        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
-            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-                co_return KeyValue{kBlockBodyKey2, kBlockBodyValue2};
+        EXPECT_CALL(db_reader, get_one(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kBlockBodyValue2;
             }));
 
         BlockCache block_cache;
@@ -5574,17 +5574,17 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
             "2d3230a499270541450663356185c61f970959545219dee7616763658a87d3c80730c32cca058d57ccc16cc0b0ca4269c4dee474ee3612"
             "f83cbf54f9fbffddba6d154401a00000000000000000000000000000000000000000000000000000000000000000880000000000000000"
             "07")};
-        EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
-            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-                co_return KeyValue{kHeaderKey2, kHeaderValue2};
+        EXPECT_CALL(db_reader, get_one(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kHeaderValue2;
             }));
 
         // TransactionDatabase::get: TABLE BlockBody
         static silkworm::Bytes kBlockBodyKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
         static silkworm::Bytes kBlockBodyValue2{*silkworm::from_hex("c78405c62e6f02c0")};
-        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
-            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-                co_return KeyValue{kBlockBodyKey2, kBlockBodyValue2};
+        EXPECT_CALL(db_reader, get_one(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kBlockBodyValue2;
             }));
 
         BlockCache block_cache;
@@ -5632,17 +5632,17 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
             "2d3230a499270541450663356185c61f970959545219dee7616763658a87d3c80730c32cca058d57ccc16cc0b0ca4269c4dee474ee3612"
             "f83cbf54f9fbffddba6d154401a00000000000000000000000000000000000000000000000000000000000000000880000000000000000"
             "07")};
-        EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
-            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-                co_return KeyValue{kHeaderKey2, kHeaderValue2};
+        EXPECT_CALL(db_reader, get_one(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kHeaderValue2;
             }));
 
         // TransactionDatabase::get: TABLE BlockBody
         static silkworm::Bytes kBlockBodyKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
         static silkworm::Bytes kBlockBodyValue2{*silkworm::from_hex("c78405c62e6f02c0")};
-        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
-            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-                co_return KeyValue{kBlockBodyKey2, kBlockBodyValue2};
+        EXPECT_CALL(db_reader, get_one(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kBlockBodyValue2;
             }));
 
         BlockCache block_cache;
@@ -5747,17 +5747,17 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
             "2d3230a499270541450663356185c61f970959545219dee7616763658a87d3c80730c32cca058d57ccc16cc0b0ca4269c4dee474ee3612"
             "f83cbf54f9fbffddba6d154401a00000000000000000000000000000000000000000000000000000000000000000880000000000000000"
             "07")};
-        EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
-            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-                co_return KeyValue{kHeaderKey2, kHeaderValue2};
+        EXPECT_CALL(db_reader, get_one(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kHeaderValue2;
             }));
 
         // TransactionDatabase::get: TABLE BlockBody
         static silkworm::Bytes kBlockBodyKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
         static silkworm::Bytes kBlockBodyValue2{*silkworm::from_hex("c78405c62e6f02c0")};
-        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
-            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-                co_return KeyValue{kBlockBodyKey2, kBlockBodyValue2};
+        EXPECT_CALL(db_reader, get_one(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kBlockBodyValue2;
             }));
 
         BlockCache block_cache;
@@ -5831,17 +5831,17 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
             "2d3230a499270541450663356185c61f970959545219dee7616763658a87d3c80730c32cca058d57ccc16cc0b0ca4269c4dee474ee3612"
             "f83cbf54f9fbffddba6d154401a00000000000000000000000000000000000000000000000000000000000000000880000000000000000"
             "07")};
-        EXPECT_CALL(db_reader, get(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
-            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-                co_return KeyValue{kHeaderKey2, kHeaderValue2};
+        EXPECT_CALL(db_reader, get_one(db::table::kHeaders, silkworm::ByteView{kHeaderKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kHeaderValue2;
             }));
 
         // TransactionDatabase::get: TABLE BlockBody
         static silkworm::Bytes kBlockBodyKey2{*silkworm::from_hex("00000000006ddd041b9ac5d63ba5c6a7e0c40a339499eef9b8b45fa247e701516f35a2357ccdaf1e")};
         static silkworm::Bytes kBlockBodyValue2{*silkworm::from_hex("c78405c62e6f02c0")};
-        EXPECT_CALL(db_reader, get(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
-            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-                co_return KeyValue{kBlockBodyKey2, kBlockBodyValue2};
+        EXPECT_CALL(db_reader, get_one(db::table::kBlockBodies, silkworm::ByteView{kBlockBodyKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kBlockBodyValue2;
             }));
 
         BlockCache block_cache;
@@ -6760,7 +6760,6 @@ TEST_CASE("TraceCallTraces: json serialization") {
 TEST_CASE("TraceCallResult: json serialization") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
-
     TraceCallResult tcr;
 
     SECTION("with traces") {
@@ -6777,7 +6776,6 @@ TEST_CASE("TraceCallResult: json serialization") {
 TEST_CASE("TraceManyCallResult: json serialization") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
-
     TraceManyCallResult tmcr;
 
     SECTION("with traces") {

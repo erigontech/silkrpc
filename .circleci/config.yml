@@ -117,7 +117,7 @@ jobs:
       TOOLCHAIN_FILE: cmake/clang-libcxx20-fpic.cmake
       CLANG_COVERAGE: ON
     docker:
-      - image: ethereum/cpp-build-env:17-clang-13
+      - image: ethereum/cpp-build-env:18-clang-13
     resource_class: xlarge
     steps:
       - install_libcpp
