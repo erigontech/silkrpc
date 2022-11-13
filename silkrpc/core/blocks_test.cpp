@@ -116,8 +116,8 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
             }
         ));
 
-        EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
-            []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
+        EXPECT_CALL(db_reader, get_one(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kHeader; }
         ));
 
         auto result = boost::asio::co_spawn(pool, get_block_number(FINALIZED_FORKCHOICE_BLOCK_ID, db_reader), boost::asio::use_future);
@@ -138,8 +138,8 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
             }
         ));
 
-        EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
-            []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
+        EXPECT_CALL(db_reader, get_one(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kHeader; }
         ));
 
         auto result = boost::asio::co_spawn(pool, get_block_number(SAFE_FORKCHOICE_BLOCK_ID, db_reader), boost::asio::use_future);
@@ -219,8 +219,8 @@ TEST_CASE("get_latest_block_number with head forkchoice number", "[silkrpc][core
             }
         ));
 
-    EXPECT_CALL(db_reader, get(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
-        []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, kHeader}; }
+    EXPECT_CALL(db_reader, get_one(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+        []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kHeader; }
     ));
 
     auto result = boost::asio::co_spawn(pool, get_latest_block_number(db_reader), boost::asio::use_future);
