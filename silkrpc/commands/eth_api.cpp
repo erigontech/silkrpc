@@ -240,7 +240,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_number(cons
         reply = make_json_content(request["id"], extended_block);
     } catch (const std::invalid_argument& iv) {
         SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_content(request["id"], {});
+        reply = make_json_error(request["id"], -32000, "rlp: end of list");
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -745,8 +745,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_b
             reply = make_json_content(request["id"], rlp);
         }
     } catch (const std::invalid_argument& iv) {
-        Rlp rlp{};
-        reply = make_json_content(request["id"], rlp);
+        reply = make_json_error(request["id"], -32000, "rlp: end of list");
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
