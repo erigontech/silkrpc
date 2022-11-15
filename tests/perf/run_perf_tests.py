@@ -59,7 +59,7 @@ def usage(argv):
     print("-t testSequence         list of query-per-sec and duration tests as <qps1>:<t1>,... (e.g. 200:30,400:10)       [default: " + DEFAULT_TEST_SEQUENCE + "]")
     print("-i idleStrategy         Silkrpc: idle strategy for execution contexts                                          [default: " + DEFAULT_WAIT_MODE + "]")
     print("-n numContexts          Silkrpc: number of execution contexts (threading based on idle strategy)               [default: " + DEFAULT_SILKRPC_NUM_CONTEXTS + "]")
-    print("-w testWaitInterval     time interval between successive test iterations in sec                                [default: " + DEFAULT_WAITING_TIME + "]")
+    print("-w testWaitInterval     time interval between successive test iterations in sec                                [default: " + str(DEFAULT_WAITING_TIME) + "]")
     print("-o workerThreads        Silkrpc: number of worker threads                                                      [default: " + DEFAULT_WORKERS + "]")
     sys.exit(-1)
 
