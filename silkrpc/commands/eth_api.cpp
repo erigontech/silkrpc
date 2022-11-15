@@ -902,7 +902,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohma
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
         std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
 
-        reply = make_json_content(request["id"], "0x" + (account ? intx::to_string(account->balance) : "0"));
+        reply = make_json_content(request["id"], "0x" + (account ? intx::hex(account->balance) : "0"));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
