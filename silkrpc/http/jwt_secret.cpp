@@ -32,23 +32,18 @@ void silkrpc::generate_jwt_token(const std::string& file_path, std::string& jwt_
     const char hex_characters[]={'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
     // if file doesn't exist we generate one
     if (!std::filesystem::exists(file_path)) {
-        SILKRPC_LOG << "Jwt file not found\n";
-        SILKRPC_LOG << "Creating Jwt file: " << file_path << "\n";
         std::ofstream{file_path};
     }
     // if no token has been found then we make one
     std::ofstream write_file;
     write_file.open(file_path);
 
-    SILKRPC_CRIT << "No jwt token found\n";
-    SILKRPC_CRIT << "Generating jwt token\n";
-
     srand(time(0));
     // Generates a random 32 bytes hex token ( not including prefix )
     for(int i = 0; i < 64; ++i) {
         jwt_token += hex_characters[rand()%16];
     }
-    SILKRPC_LOG << "Jwt token created: " << "0x" << jwt_token << "\n";
+    SILKRPC_LOG << "JWT token created: " << "0x" << jwt_token << "\n";
     write_file << "0x" << jwt_token << "\n";
     write_file.close();
 }
@@ -58,6 +53,7 @@ void silkrpc::generate_jwt_token(const std::string& file_path, std::string& jwt_
 bool silkrpc::obtain_jwt_token(const std::string& file_path, std::string& jwt_token) {
     std::ifstream read_file;
     read_file.open(file_path);
+    SILKRPC_LOG << "Reading JWT secret: " <<  file_path << "\n";
 
     std::getline(read_file, jwt_token);
     read_file.close();
@@ -67,7 +63,7 @@ bool silkrpc::obtain_jwt_token(const std::string& file_path, std::string& jwt_to
     }
 
     if (jwt_token.length() == 64) {
-        SILKRPC_LOG << "Found token: " <<  "0x" << jwt_token << "\n";
+        SILKRPC_LOG << "JWT secret: " <<  "0x" << jwt_token << "\n";
         return true;
     }
     // if token is of an incorrect size then we return an empty string
