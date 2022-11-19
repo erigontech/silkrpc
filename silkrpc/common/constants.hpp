@@ -34,6 +34,7 @@ constexpr const char* kWeb3ApiNamespace{"web3"};
 
 constexpr const char* kAddressPortSeparator{":"};
 constexpr const char* kApiSpecSeparator{","};
+constexpr const char* kDefaultJwtPath{"jwt.hex"};
 
 constexpr const char* kEmptyChainData{""};
 constexpr const char* kDefaultHttpPort{"localhost:8545"};

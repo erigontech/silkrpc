@@ -24,6 +24,7 @@
 #include <boost/asio/signal_set.hpp>
 #include <boost/process/environment.hpp>
 #include <grpcpp/grpcpp.h>
+#include <silkrpc/http/jwt_secret.hpp>
 
 namespace silkrpc {
 
@@ -80,6 +81,12 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
                         << " contexts, " << settings.num_workers << " workers\n";
         }
 
+        std::string jwt_secret;
+        if(!obtain_jwt_token(settings.jwt_secret_filename, jwt_secret)) {
+            SILKRPC_CRIT << "Jwt token is the wrong size with a size of: " << jwt_secret.length() << "\n";
+            return -1;
+        }
+
         // Create the one-and-only Silkrpc daemon
         silkrpc::Daemon rpc_daemon{settings};
 
@@ -106,7 +113,7 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
 
         SILKRPC_LOG << "Starting ETH RPC API at " << settings.http_port << " ENGINE RPC API at " << settings.engine_port << " AUTH ENGINE RPC API at " << settings.auth_engine_port << "\n";
 
-        rpc_daemon.start();
+        rpc_daemon.start(jwt_secret);
 
         SILKRPC_LOG << "Silkrpc is now running [pid=" << pid << ", main thread=" << tid << "]\n";
 
@@ -143,6 +150,13 @@ bool Daemon::validate_settings(const DaemonSettings& settings) {
     if (!engine_port.empty() && engine_port.find(silkrpc::kAddressPortSeparator) == std::string::npos) {
         SILKRPC_ERROR << "Parameter engine_port is invalid: [" << engine_port << "]\n";
         SILKRPC_ERROR << "Use --engine_port flag to specify the local binding for Engine JSON RPC service\n";
+        return false;
+    }
+
+    const auto auth_engine_port = settings.auth_engine_port;
+    if (!auth_engine_port.empty() && auth_engine_port.find(silkrpc::kAddressPortSeparator) == std::string::npos) {
+        SILKRPC_ERROR << "Parameter auth_engine_port is invalid: [" << auth_engine_port << "]\n";
+        SILKRPC_ERROR << "Use --auth_engine_port flag to specify the local binding for Engine JSON RPC service\n";
         return false;
     }
 
@@ -203,7 +217,7 @@ DaemonChecklist Daemon::run_checklist() {
     return checklist;
 }
 
-void Daemon::start() {
+void Daemon::start(std::string jwt_secret) {
     for (int i = 0; i < settings_.num_contexts; ++i) {
         auto& context = context_pool_.next_context();
         rpc_services_.emplace_back(
@@ -211,7 +225,7 @@ void Daemon::start() {
         rpc_services_.emplace_back(
             std::make_unique<http::Server>(settings_.engine_port, kDefaultEth2ApiSpec, context, worker_pool_));
         rpc_services_.emplace_back(
-            std::make_unique<http::Server>(settings_.auth_engine_port, kDefaultEth2ApiSpec, context, worker_pool_, settings_.jwt_secret));
+            std::make_unique<http::Server>(settings_.auth_engine_port, kDefaultEth2ApiSpec, context, worker_pool_, jwt_secret));
     }
 
     for (auto& service : rpc_services_) {
