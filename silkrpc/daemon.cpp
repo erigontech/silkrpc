@@ -104,7 +104,7 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
             rpc_daemon.stop();
         });
 
-        SILKRPC_LOG << "Starting ETH RPC API at " << settings.http_port << " ENGINE RPC API at " << settings.engine_port << "\n";
+        SILKRPC_LOG << "Starting ETH RPC API at " << settings.http_port << " ENGINE RPC API at " << settings.engine_port << " AUTH ENGINE RPC API at " << settings.auth_engine_port << "\n";
 
         rpc_daemon.start();
 
@@ -210,6 +210,8 @@ void Daemon::start() {
             std::make_unique<http::Server>(settings_.http_port, settings_.api_spec, context, worker_pool_));
         rpc_services_.emplace_back(
             std::make_unique<http::Server>(settings_.engine_port, kDefaultEth2ApiSpec, context, worker_pool_));
+        rpc_services_.emplace_back(
+            std::make_unique<http::Server>(settings_.auth_engine_port, kDefaultEth2ApiSpec, context, worker_pool_, settings_.jwt_secret));
     }
 
     for (auto& service : rpc_services_) {

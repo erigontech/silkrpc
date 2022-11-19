@@ -36,12 +36,14 @@ struct DaemonSettings {
     std::string chaindata;
     std::string http_port; // eth_end_point
     std::string engine_port; // engine_end_point
+    std::string auth_engine_port; // auth_engine_end_point
     std::string api_spec; // eth_api_spec
     std::string target; // backend_kv_address
     uint32_t num_contexts;
     uint32_t num_workers;
     LogLevel log_verbosity;
     WaitMode wait_mode;
+    std::string jwt_secret;
 };
 
 struct DaemonInfo {
