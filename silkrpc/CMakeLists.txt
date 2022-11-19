@@ -21,6 +21,9 @@ find_package(intx CONFIG REQUIRED)
 set(protobuf_MODULE_COMPATIBLE TRUE)
 find_package(Protobuf CONFIG REQUIRED)
 
+set(JWT_BUILD_EXAMPLES OFF CACHE BOOL "disable examples" FORCE)
+find_package(jwt-cpp CONFIG REQUIRED)
+
 # Find asio-gRPC installation
 find_package(asio-grpc CONFIG REQUIRED)
 
@@ -126,6 +129,7 @@ file(GLOB_RECURSE SILKRPC_SRC CONFIGURE_DEPENDS "*.cpp" "*.cc" "*.hpp" "*.c" "*.
 list(FILTER SILKRPC_SRC EXCLUDE REGEX "main\.cpp$|_test\.cpp$|\.pb\.cc|\.pb\.h")
 
 set(SILKRPC_LIBRARIES
+    jwt-cpp::jwt-cpp
     absl::flat_hash_map
     absl::flat_hash_set
     absl::btree
