@@ -68,7 +68,6 @@ private:
     boost::asio::ip::tcp::acceptor acceptor_;
 
     boost::asio::thread_pool& workers_;
-    
     std::string jwt_secret_;
 };
 
