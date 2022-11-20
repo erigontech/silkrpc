@@ -34,6 +34,33 @@
 
 namespace silkrpc::http {
 
+std::string convert_jwt_secret(std::string jwt_secret) 
+{
+   std::string secrets_bytes;
+   for (int i = 0; i < 64;) {
+       auto high = jwt_secret[i];
+       if (high >= '0' && high <= '9')
+          high = high -'0';
+       else if (high >= 'a' && high <= 'f')
+          high = high -'a'+ 10;
+       else if (high >= 'A' && high <= 'F')
+          high = high -'A'+ 10;
+
+       auto low  = jwt_secret[i+1];
+       if (low >= '0' && low <= '9')
+          low = low -'0';
+       else if (low >= 'a' && low <= 'f')
+          low = low -'a'+ 10;
+       else if (low >= 'A' && low <= 'F')
+          low = low -'A'+ 10;
+
+       auto byte = (high << 4 | low);
+       i+=2;
+       secrets_bytes += byte;
+   }
+   return secrets_bytes;
+}
+
 boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request& request, http::Reply& reply) {
     SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
     auto start = clock_time::now();
@@ -85,7 +112,7 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
 
                // Validate token
                auto verifier = jwt::verify()
-                   .allow_algorithm(jwt::algorithm::hs256{jwt_secret_});
+                   .allow_algorithm(jwt::algorithm::hs256{convert_jwt_secret(jwt_secret_)});
 
                SILKRPC_TRACE << "jwt client token: " << client_token << " jwt_secret: " << jwt_secret_ << "\n";
                verifier.verify(decoded_client_token);
@@ -130,12 +157,11 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
 
         nlohmann::json reply_json;
         co_await (rpc_api_.*handle_method)(request_json, reply_json);
-
         reply.content = reply_json.dump(
             /*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace) + "\n";
         reply.status = http::Reply::ok;
     } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+        SILKRPC_ERROR << "exception parse: " << e.what() << "\n";
         reply.content = make_json_error(request_id, 100, e.what()).dump() + "\n";
         reply.status = http::Reply::internal_server_error;
     } catch (...) {
