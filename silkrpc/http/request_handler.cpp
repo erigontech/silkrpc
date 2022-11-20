@@ -34,8 +34,7 @@
 
 namespace silkrpc::http {
 
-std::string convert_jwt_secret(std::string jwt_secret) 
-{
+std::string convert_jwt_secret(std::string jwt_secret) {
    std::string secrets_bytes;
    for (int i = 0; i < 64;) {
        auto high = jwt_secret[i];
