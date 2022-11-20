@@ -30,6 +30,8 @@
 
 namespace silkrpc {
 
+using evmc::literals::operator""_address;
+
 std::string to_hex_no_leading_zeros(silkworm::ByteView bytes) {
     static const char* kHexDigits{"0123456789abcdef"};
 
@@ -538,12 +540,19 @@ void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload) 
         );
     }
 
+    evmc::address suggested_fee_recipient;
+    if (json.count("suggestedFeeRecipient")) {
+        suggested_fee_recipient = json.at("suggestedFeeRecipient").get<evmc::address>();
+    } else {
+        suggested_fee_recipient =  0x0000000000000000000000000000000000000000_address;
+    }
+
     execution_payload = ExecutionPayload{
         .number = static_cast<uint64_t>(std::stol(json.at("blockNumber").get<std::string>(), 0, 16)),
         .timestamp = static_cast<uint64_t>(std::stol(json.at("timestamp").get<std::string>(), 0, 16)),
         .gas_limit = static_cast<uint64_t>(std::stol(json.at("gasLimit").get<std::string>(), 0, 16)),
         .gas_used = static_cast<uint64_t>(std::stol(json.at("gasUsed").get<std::string>(), 0, 16)),
-        .suggested_fee_recipient = json.at("suggestedFeeRecipient").get<evmc::address>(),
+        .suggested_fee_recipient =  suggested_fee_recipient,
         .state_root = json.at("stateRoot").get<evmc::bytes32>(),
         .receipts_root = json.at("receiptsRoot").get<evmc::bytes32>(),
         .parent_hash = json.at("parentHash").get<evmc::bytes32>(),
