@@ -63,6 +63,7 @@ std::string convert_jwt_secret(std::string jwt_secret) {
 boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request& request, http::Reply& reply) {
     SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
     auto start = clock_time::now();
+    std::string method;
 
     auto request_id{0};
     try {
@@ -141,7 +142,7 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
             co_return;
         }
 
-        const auto method = request_json["method"].get<std::string>();
+        method = request_json["method"].get<std::string>();
         const auto handle_method_opt = rpc_api_table_.find_handler(method);
         if (!handle_method_opt) {
             reply.content = make_json_error(request_id, -32601, "the method " + method + " does not exist/is not available").dump() + "\n";
@@ -160,11 +161,11 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
             /*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace) + "\n";
         reply.status = http::Reply::ok;
     } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception parse: " << e.what() << "\n";
+        SILKRPC_ERROR << "exception parse  " << method << ": " << e.what() << "\n";
         reply.content = make_json_error(request_id, 100, e.what()).dump() + "\n";
         reply.status = http::Reply::internal_server_error;
     } catch (...) {
-        SILKRPC_ERROR << "unexpected exception\n";
+	SILKRPC_ERROR << "unexpected exception " << method << "\n";
         reply.content = make_json_error(request_id, 100, "unexpected exception").dump() + "\n";
         reply.status = http::Reply::internal_server_error;
     }
