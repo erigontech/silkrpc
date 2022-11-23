@@ -82,8 +82,8 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
         }
 
         std::string jwt_secret;
-        if(!obtain_jwt_token(settings.jwt_secret_filename, jwt_secret)) {
-            SILKRPC_CRIT << "Jwt token is the wrong size with a size of: " << jwt_secret.length() << "\n";
+        if (!obtain_jwt_token(settings.jwt_secret_filename, jwt_secret)) {
+            SILKRPC_CRIT << "JWT token has wrong size: " << jwt_secret.length() << "\n";
             return -1;
         }
 
