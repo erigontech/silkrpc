@@ -165,7 +165,7 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
         reply.content = make_json_error(request_id, 100, e.what()).dump() + "\n";
         reply.status = http::Reply::internal_server_error;
     } catch (...) {
-	SILKRPC_ERROR << "unexpected exception " << method << "\n";
+        SILKRPC_ERROR << "unexpected exception " << method << "\n";
         reply.content = make_json_error(request_id, 100, "unexpected exception").dump() + "\n";
         reply.status = http::Reply::internal_server_error;
     }
