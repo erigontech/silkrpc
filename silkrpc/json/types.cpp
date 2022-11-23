@@ -488,16 +488,16 @@ void from_json(const nlohmann::json& json, Filter& filter) {
     if (json.count("topics") != 0) {
         auto topics = json.at("topics");
         if (topics != nlohmann::detail::value_t::null) {
-           for (auto& topic_item : topics) {
-               if (topic_item.is_null()) {
-                  topic_item = FilterSubTopics{evmc::bytes32{}};
-               }
-               if (topic_item.is_string()) {
-                  topic_item = FilterSubTopics{evmc::bytes32{topic_item}};
-               }
-           }
-           filter.topics = topics.get<FilterTopics>();
-       }
+            for (auto& topic_item : topics) {
+                if (topic_item.is_null()) {
+                    topic_item = FilterSubTopics{evmc::bytes32{}};
+                }
+                if (topic_item.is_string()) {
+                    topic_item = FilterSubTopics{evmc::bytes32{topic_item}};
+                }
+            }
+            filter.topics = topics.get<FilterTopics>();
+        }
     }
     if (json.count("blockHash") != 0) {
         filter.block_hash = json.at("blockHash").get<std::string>();
