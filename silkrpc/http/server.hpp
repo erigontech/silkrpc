@@ -47,7 +47,7 @@ public:
     Server& operator=(const Server&) = delete;
 
     // Construct the server to listen on the specified local TCP end-point
-    explicit Server(const std::string& end_point, const std::string& api_spec, Context& context, boost::asio::thread_pool& workers, std::string jwt_secret = "");
+    explicit Server(const std::string& end_point, const std::string& api_spec, Context& context, boost::asio::thread_pool& workers, std::string jwt_secret);
 
     void start();
 
