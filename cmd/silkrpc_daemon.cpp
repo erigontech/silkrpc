@@ -42,7 +42,7 @@ ABSL_FLAG(uint32_t, num_workers, 16, "number of worker threads as 32-bit integer
 ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeout as 32-bit integer");
 ABSL_FLAG(silkrpc::LogLevel, log_verbosity, silkrpc::LogLevel::Critical, "logging verbosity level");
 ABSL_FLAG(silkrpc::WaitMode, wait_mode, silkrpc::WaitMode::blocking, "scheduler wait mode");
-ABSL_FLAG(std::string, jwt_secret_file, silkrpc::kDefaultJwtSecret, "Token to ensure safe connection between CL and EL");
+ABSL_FLAG(std::string, jwt_secret_file, silkrpc::kDefaultJwtFilename, "Token file to ensure safe connection between CL and EL");
 
 //! Assemble the application version using the Cable build information
 std::string get_version_from_build_info() {
