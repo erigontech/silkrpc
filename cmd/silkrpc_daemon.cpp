@@ -34,7 +34,6 @@
 ABSL_FLAG(std::string, chaindata, silkrpc::kEmptyChainData, "chain data path as string");
 ABSL_FLAG(std::string, http_port, silkrpc::kDefaultHttpPort, "Ethereum JSON RPC API local end-point as string <address>:<port>");
 ABSL_FLAG(std::string, engine_port, silkrpc::kDefaultEnginePort, "Engine JSON RPC API local end-point as string <address>:<port>");
-ABSL_FLAG(std::string, auth_engine_port, silkrpc::kDefaultAuthEnginePort, "Engine JSON RPC API local end-point as string <address>:<port>");
 ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "Erigon Core gRPC service location as string <address>:<port>");
 ABSL_FLAG(std::string, api_spec, silkrpc::kDefaultEth1ApiSpec, "JSON RPC API namespaces as comma-separated list of strings");
 ABSL_FLAG(uint32_t, num_contexts, std::thread::hardware_concurrency() / 3, "number of running I/O contexts as 32-bit integer");
@@ -97,7 +96,6 @@ silkrpc::DaemonSettings parse_args(int argc, char* argv[]) {
         absl::GetFlag(FLAGS_chaindata),
         absl::GetFlag(FLAGS_http_port),
         absl::GetFlag(FLAGS_engine_port),
-        absl::GetFlag(FLAGS_auth_engine_port),
         absl::GetFlag(FLAGS_api_spec),
         absl::GetFlag(FLAGS_target),
         absl::GetFlag(FLAGS_num_contexts),

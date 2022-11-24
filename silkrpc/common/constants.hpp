@@ -38,8 +38,7 @@ constexpr const char* kDefaultJwtFilename{"jwt.hex"};
 
 constexpr const char* kEmptyChainData{""};
 constexpr const char* kDefaultHttpPort{"localhost:8545"};
-constexpr const char* kDefaultEnginePort{"localhost:8550"};
-constexpr const char* kDefaultAuthEnginePort{"localhost:8551"};
+constexpr const char* kDefaultEnginePort{"localhost:8551"};
 constexpr const char* kDefaultTarget{"localhost:9090"};
 constexpr const char* kDefaultEth1ApiSpec{"debug,eth,net,parity,erigon,trace,web3,txpool"};
 constexpr const char* kDefaultEth2ApiSpec{"engine,eth"};

@@ -36,7 +36,6 @@ struct DaemonSettings {
     std::string chaindata;
     std::string http_port; // eth_end_point
     std::string engine_port; // engine_end_point
-    std::string auth_engine_port; // auth_engine_end_point
     std::string api_spec; // eth_api_spec
     std::string target; // backend_kv_address
     uint32_t num_contexts;
@@ -61,14 +60,14 @@ class Daemon {
   public:
     static int run(const DaemonSettings& settings, const DaemonInfo& info = {});
 
-    explicit Daemon(const DaemonSettings& settings);
+    explicit Daemon(const DaemonSettings& settings, const std::string& jwt_secret);
 
     Daemon(const Daemon&) = delete;
     Daemon& operator=(const Daemon&) = delete;
 
     DaemonChecklist run_checklist();
 
-    void start(std::string jwt_secret);
+    void start();
     void stop();
 
     void join();
@@ -98,7 +97,7 @@ class Daemon {
     std::unique_ptr<ethdb::kv::StateChangesStream> state_changes_stream_;
 
     //! The secret key for communication from CL & EL
-    std::string jwt_secret;
+    const std::string& jwt_secret_;
 };
 
 } // namespace silkrpc
