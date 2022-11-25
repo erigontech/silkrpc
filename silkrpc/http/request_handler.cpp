@@ -49,53 +49,55 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
             co_return;
         }
 
-        const auto it = std::find_if(request.headers.begin(), request.headers.end(), [&](const Header& h){
-            return h.name == "Authorization";
-        });
-        if (it == request.headers.end()) {
-            SILKRPC_ERROR << "JWT request without Authorization in auth connection" << "\n";
-            reply.content = make_json_error(request_id, 403, "missing Authorization Header").dump() + "\n";
-            reply.status = http::Reply::unauthorized;
-            reply.headers.reserve(2);
-            reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
-            reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
-            SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
-            co_return;
-        }
+        if (jwt_secret_.length() != 0) {
+            const auto it = std::find_if(request.headers.begin(), request.headers.end(), [&](const Header& h){
+                return h.name == "Authorization";
+            });
+            if (it == request.headers.end()) {
+                SILKRPC_ERROR << "JWT request without Authorization in auth connection" << "\n";
+                reply.content = make_json_error(request_id, 403, "missing Authorization Header").dump() + "\n";
+                reply.status = http::Reply::unauthorized;
+                reply.headers.reserve(2);
+                reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
+                reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
+                SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
+                co_return;
+            }
 
-        std::string client_token;
-        if (it->value.substr(0, 7) == "Bearer ") {
-            client_token = it->value.substr(7);
-        } else {
-            SILKRPC_ERROR << "JWT client request without token: " << "\n";
-            reply.content = make_json_error(request_id, 403, "missing token").dump() + "\n";
-            reply.status = http::Reply::unauthorized;
-            reply.headers.reserve(2);
-            reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
-            reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
-            SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
-            co_return;
-        }
+            std::string client_token;
+            if (it->value.substr(0, 7) == "Bearer ") {
+                client_token = it->value.substr(7);
+            } else {
+                SILKRPC_ERROR << "JWT client request without token: " << "\n";
+                reply.content = make_json_error(request_id, 403, "missing token").dump() + "\n";
+                reply.status = http::Reply::unauthorized;
+                reply.headers.reserve(2);
+                reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
+                reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
+                SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
+                co_return;
+            }
 
-        try {
-            // Parse token
-            auto decoded_client_token = jwt::decode(client_token);
+            try {
+                // Parse token
+                auto decoded_client_token = jwt::decode(client_token);
 
-            // Validate token
-            auto verifier = jwt::verify()
-                .allow_algorithm(jwt::algorithm::hs256{jwt_secret_});
+                // Validate token
+                auto verifier = jwt::verify()
+                    .allow_algorithm(jwt::algorithm::hs256{jwt_secret_});
 
-            SILKRPC_TRACE << "jwt client token: " << client_token << " jwt_secret: " << jwt_secret_ << "\n";
-            verifier.verify(decoded_client_token);
-        } catch (const std::system_error& se) {
-            SILKRPC_ERROR << "JWT invalid token: " << se.what() << "\n";
-            reply.content = make_json_error(request_id, 403, "invalid token").dump() + "\n";
-            reply.status = http::Reply::unauthorized;
-            reply.headers.reserve(2);
-            reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
-            reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
-            SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
-            co_return;
+                SILKRPC_TRACE << "jwt client token: " << client_token << " jwt_secret: " << jwt_secret_ << "\n";
+                verifier.verify(decoded_client_token);
+            } catch (const std::system_error& se) {
+                SILKRPC_ERROR << "JWT invalid token: " << se.what() << "\n";
+                reply.content = make_json_error(request_id, 403, "invalid token").dump() + "\n";
+                reply.status = http::Reply::unauthorized;
+                reply.headers.reserve(2);
+                reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
+                reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
+                SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
+                co_return;
+            }
         }
 
         const auto request_json = nlohmann::json::parse(request.content);
