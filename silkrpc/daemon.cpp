@@ -221,7 +221,7 @@ void Daemon::start() {
     for (int i = 0; i < settings_.num_contexts; ++i) {
         auto& context = context_pool_.next_context();
         rpc_services_.emplace_back(
-            std::make_unique<http::Server>(settings_.http_port, settings_.api_spec, context, worker_pool_, "" /* no jwt_secret_file */));
+            std::make_unique<http::Server>(settings_.http_port, settings_.api_spec, context, worker_pool_, std::nullopt /* no jwt_secret_file */));
         rpc_services_.emplace_back(
             std::make_unique<http::Server>(settings_.engine_port, kDefaultEth2ApiSpec, context, worker_pool_, jwt_secret_));
     }
