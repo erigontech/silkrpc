@@ -58,8 +58,6 @@ public:
     /// Start the first asynchronous operation for the connection.
     boost::asio::awaitable<void> start();
 
-    void add_log_entry (std::string_view message);
-
 private:
     // reset connection data
     void clean();
