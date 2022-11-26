@@ -39,7 +39,7 @@
 
 namespace silkrpc::http {
 
-Connection::Connection(Context& context, boost::asio::thread_pool& workers, commands::RpcApiTable& handler_table, std::string jwt_secret)
+Connection::Connection(Context& context, boost::asio::thread_pool& workers, commands::RpcApiTable& handler_table, std::optional<std::string> jwt_secret)
 : socket_{*context.io_context()}, request_handler_{context, workers, handler_table, jwt_secret} {
     request_.content.reserve(kRequestContentInitialCapacity);
     request_.headers.reserve(kRequestHeadersInitialCapacity);
@@ -64,7 +64,6 @@ boost::asio::awaitable<void> Connection::do_read() {
         SILKRPC_DEBUG << "Connection::do_read bytes_read: " << bytes_read << "\n";
         SILKRPC_TRACE << "Connection::do_read buffer: " << std::string_view{static_cast<const char*>(buffer_.data()), bytes_read} << "\n";
 
-        add_log_entry(std::string_view{static_cast<const char*>(buffer_.data()), bytes_read} );
         RequestParser::ResultType result = request_parser_.parse(request_, buffer_.data(), buffer_.data() + bytes_read);
 
         if (result == RequestParser::good) {
@@ -103,7 +102,6 @@ boost::asio::awaitable<void> Connection::do_write() {
         SILKRPC_DEBUG << "Connection::do_write reply: " << reply_.content << "\n" << std::flush;
         const auto bytes_transferred = co_await boost::asio::async_write(socket_, reply_.to_buffers(), boost::asio::use_awaitable);
         SILKRPC_TRACE << "Connection::do_write bytes_transferred: " << bytes_transferred << "\n" << std::flush;
-        add_log_entry(reply_.content);
     } catch (const std::system_error& se) {
         std::rethrow_exception(std::make_exception_ptr(se));
     } catch (const std::exception& e) {
@@ -115,15 +113,6 @@ void Connection::clean() {
     request_.reset();
     request_parser_.reset();
     reply_.reset();
-}
-
-const std::string interface_log_path = "/tmp/rpc_interface.log";
-void Connection::add_log_entry(std::string_view message) {
-    std::ofstream outfile;
-    outfile.open(interface_log_path, std::ios_base::app);
-
-    outfile << message << "\n";
-    outfile.close();
 }
 
 } // namespace silkrpc::http
