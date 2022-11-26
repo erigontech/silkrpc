@@ -47,7 +47,7 @@ std::tuple<std::string, std::string> Server::parse_endpoint(const std::string& t
     return {host, port};
 }
 
-Server::Server(const std::string& end_point, const std::string& api_spec, Context& context, boost::asio::thread_pool& workers, std::string jwt_secret)
+Server::Server(const std::string& end_point, const std::string& api_spec, Context& context, boost::asio::thread_pool& workers, std::optional<std::string> jwt_secret)
 : context_(context), workers_(workers), acceptor_{*context.io_context()}, handler_table_{api_spec}, jwt_secret_(jwt_secret) {
     const auto [host, port] = parse_endpoint(end_point);
 
