@@ -36,7 +36,7 @@ namespace silkrpc::http {
 
 class RequestHandler {
 public:
-    RequestHandler(Context& context, boost::asio::thread_pool& workers, const commands::RpcApiTable& rpc_api_table, std::string jwt_secret)
+    RequestHandler(Context& context, boost::asio::thread_pool& workers, const commands::RpcApiTable& rpc_api_table, std::optional<std::string> jwt_secret)
         : rpc_api_{context, workers}, rpc_api_table_(rpc_api_table), jwt_secret_(jwt_secret) {}
 
     RequestHandler(const RequestHandler&) = delete;
@@ -47,7 +47,7 @@ public:
 private:
     commands::RpcApi rpc_api_;
     const commands::RpcApiTable& rpc_api_table_;
-    const std::string jwt_secret_;
+    const std::optional<std::string> jwt_secret_;
 };
 
 } // namespace silkrpc::http

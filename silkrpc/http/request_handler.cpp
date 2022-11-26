@@ -49,7 +49,7 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
             co_return;
         }
 
-        if (jwt_secret_.length() != 0) {
+        if (jwt_secret_) {
             const auto it = std::find_if(request.headers.begin(), request.headers.end(), [&](const Header& h){
                 return h.name == "Authorization";
             });
@@ -84,9 +84,9 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
 
                 // Validate token
                 auto verifier = jwt::verify()
-                    .allow_algorithm(jwt::algorithm::hs256{jwt_secret_});
+                    .allow_algorithm(jwt::algorithm::hs256{*jwt_secret_});
 
-                SILKRPC_TRACE << "jwt client token: " << client_token << " jwt_secret: " << jwt_secret_ << "\n";
+                SILKRPC_TRACE << "jwt client token: " << client_token << " jwt_secret: " << *jwt_secret_ << "\n";
                 verifier.verify(decoded_client_token);
             } catch (const std::system_error& se) {
                 SILKRPC_ERROR << "JWT invalid token: " << se.what() << "\n";
