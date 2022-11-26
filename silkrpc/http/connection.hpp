@@ -49,7 +49,7 @@ public:
     Connection& operator=(const Connection&) = delete;
 
     /// Construct a connection running within the given execution context.
-    Connection(Context& context, boost::asio::thread_pool& workers, commands::RpcApiTable& handler_table, std::string jwt_secret);
+    Connection(Context& context, boost::asio::thread_pool& workers, commands::RpcApiTable& handler_table, std::optional<std::string> jwt_secret);
 
     ~Connection();
 
