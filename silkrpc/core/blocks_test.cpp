@@ -202,6 +202,18 @@ TEST_CASE("get_latest_block_number", "[silkrpc][core][blocks]") {
     CHECK(result.get() == 0x0000ddff12345678);
 }
 
+TEST_CASE("get_latest_executed_block_number", "[silkrpc][core][blocks]") {
+    const silkworm::ByteView kExecutionStage{stages::kExecution};
+    test::MockDatabaseReader db_reader;
+    boost::asio::thread_pool pool{1};
+
+    EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
+        []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("0000ddff12345678")}; }
+    ));
+    auto result = boost::asio::co_spawn(pool, get_latest_executed_block_number(db_reader), boost::asio::use_future);
+    CHECK(result.get() == 0x0000ddff12345678);
+}
+
 TEST_CASE("get_latest_block_number with head forkchoice number", "[silkrpc][core][blocks]") {
     const silkworm::ByteView kExecutionStage{stages::kExecution};
     MockDatabaseReader db_reader;
