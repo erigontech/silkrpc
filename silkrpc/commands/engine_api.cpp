@@ -48,13 +48,13 @@ boost::asio::awaitable<void> EngineRpcApi::handle_engine_get_payload_v1(const nl
     #ifndef BUILD_COVERAGE
     } catch (const boost::system::system_error& se) {
         SILKRPC_ERROR << "error: \"" << se.code().message() << "\" processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, se.code().message());
+        reply = make_json_error(request["id"], -38001, se.code().message());
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
+        reply = make_json_error(request["id"], -38001, e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, "unexpected exception");
+        reply = make_json_error(request["id"], -38001, "unexpected exception");
     }
     #endif
 }
@@ -122,7 +122,7 @@ boost::asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(c
             co_return;
         }
 
-        if (params.size() == 2) {
+        if (params.size() == 2 && params[1] != nlohmann::detail::value_t::null) {
             const PayloadAttributes payload_attributes = params[1].get<PayloadAttributes>();
             const ForkChoiceUpdatedRequest forkchoice_update_request{
                 .fork_choice_state = forkchoice_state,
