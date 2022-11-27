@@ -531,6 +531,68 @@ TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params", "[sil
     cp.join();
 }
 
+TEST_CASE("handle_engine_forkchoice_updated_v1 succeeds with both params and second set to null", "[silkrpc][engine_api]") {
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    BackEndMock *backend = new BackEndMock;
+    EXPECT_CALL(*backend, engine_forkchoice_updated_v1(testing::_)).WillOnce(InvokeWithoutArgs(
+        []() -> boost::asio::awaitable<ForkChoiceUpdatedReply> {
+            co_return ForkChoiceUpdatedReply{
+                .payload_status = PayloadStatus{
+                    .status = "INVALID",
+                    .latest_valid_hash = 0x0000000000000000000000000000000000000000000000000000000000000040_bytes32,
+                    .validation_error = "some error"
+                },
+                .payload_id = std::nullopt
+            };
+        }
+    ));
+
+    nlohmann::json reply;
+    nlohmann::json request = R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":"engine_forkchoiceUpdatedv1",
+        "params":[
+            {
+                "headBlockHash":"0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a",
+                "safeBlockHash":"0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a",
+                "finalizedBlockHash":"0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a"
+            },
+            null
+        ]
+    })"_json;
+    // Initialize contex pool
+    ContextPool cp{1, []() { return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials()); }};
+    cp.start();
+    // Initialise components
+    std::unique_ptr<ethbackend::BackEnd> backend_ptr(backend);
+    std::unique_ptr<ethdb::Database> database;
+    EngineRpcApiTest rpc(database, backend_ptr);
+
+    // spawn routine
+    auto result{boost::asio::co_spawn(cp.next_io_context(), [&rpc, &reply, &request]() {
+        return rpc.handle_engine_forkchoice_updated_v1(
+            request,
+            reply
+        );
+    }, boost::asio::use_future)};
+    result.get();
+    CHECK(reply ==  R"({
+        "jsonrpc":"2.0",
+        "id":1,
+        "result": {
+           "payloadStatus":{
+               "latestValidHash":"0x0000000000000000000000000000000000000000000000000000000000000040",
+               "status":"INVALID",
+               "validationError":"some error"
+           }
+        }
+    })"_json);
+    cp.stop();
+    cp.join();
+}
+
 TEST_CASE("handle_engine_forkchoice_updated_v1 fails with invalid amount of params", "[silkrpc][engine_api]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
