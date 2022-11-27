@@ -30,6 +30,8 @@
 
 namespace silkrpc {
 
+using evmc::literals::operator""_address;
+
 std::string to_hex_no_leading_zeros(silkworm::ByteView bytes) {
     static const char* kHexDigits{"0123456789abcdef"};
 
@@ -485,15 +487,17 @@ void from_json(const nlohmann::json& json, Filter& filter) {
     }
     if (json.count("topics") != 0) {
         auto topics = json.at("topics");
-        for (auto& topic_item : topics) {
-            if (topic_item.is_null()) {
-                topic_item = FilterSubTopics{evmc::bytes32{}};
+        if (topics != nlohmann::detail::value_t::null) {
+            for (auto& topic_item : topics) {
+                if (topic_item.is_null()) {
+                    topic_item = FilterSubTopics{evmc::bytes32{}};
+                }
+                if (topic_item.is_string()) {
+                    topic_item = FilterSubTopics{evmc::bytes32{topic_item}};
+                }
             }
-            if (topic_item.is_string()) {
-                topic_item = FilterSubTopics{evmc::bytes32{topic_item}};
-            }
+            filter.topics = topics.get<FilterTopics>();
         }
-        filter.topics = topics.get<FilterTopics>();
     }
     if (json.count("blockHash") != 0) {
         filter.block_hash = json.at("blockHash").get<std::string>();
@@ -506,7 +510,7 @@ void to_json(nlohmann::json& json, const ExecutionPayload& execution_payload) {
         transaction_list.push_back("0x" + silkworm::to_hex(transaction));
     }
     json["parentHash"] = execution_payload.parent_hash;
-    json["suggestedFeeRecipient"] = execution_payload.suggested_fee_recipient;
+    json["feeRecipient"] = execution_payload.suggested_fee_recipient;
     json["stateRoot"] = execution_payload.state_root;
     json["receiptsRoot"] = execution_payload.receipts_root;
     json["logsBloom"] = "0x" + silkworm::to_hex(execution_payload.logs_bloom);
@@ -541,7 +545,7 @@ void from_json(const nlohmann::json& json, ExecutionPayload& execution_payload) 
         .timestamp = static_cast<uint64_t>(std::stol(json.at("timestamp").get<std::string>(), 0, 16)),
         .gas_limit = static_cast<uint64_t>(std::stol(json.at("gasLimit").get<std::string>(), 0, 16)),
         .gas_used = static_cast<uint64_t>(std::stol(json.at("gasUsed").get<std::string>(), 0, 16)),
-        .suggested_fee_recipient = json.at("suggestedFeeRecipient").get<evmc::address>(),
+        .suggested_fee_recipient = json.at("feeRecipient").get<evmc::address>(),
         .state_root = json.at("stateRoot").get<evmc::bytes32>(),
         .receipts_root = json.at("receiptsRoot").get<evmc::bytes32>(),
         .parent_hash = json.at("parentHash").get<evmc::bytes32>(),
@@ -571,14 +575,14 @@ void from_json(const nlohmann::json& json, ForkChoiceState& forkchoice_state) {
 void to_json(nlohmann::json& json, const PayloadAttributes& payload_attributes) {
     json["timestamp"] = silkrpc::to_quantity(payload_attributes.timestamp);
     json["prevRandao"] = payload_attributes.prev_randao;
-    json["suggestedFeeRecipient"] = payload_attributes.suggested_fee_recipient;
+    json["feeRecipient"] = payload_attributes.suggested_fee_recipient;
 }
 
 void from_json(const nlohmann::json& json, PayloadAttributes& payload_attributes) {
     payload_attributes = PayloadAttributes{
         .timestamp = static_cast<uint64_t>(std::stol(json.at("timestamp").get<std::string>(), 0, 16)),
         .prev_randao = json.at("prevRandao").get<evmc::bytes32>(),
-        .suggested_fee_recipient = json.at("suggestedFeeRecipient").get<evmc::address>(),
+        .suggested_fee_recipient = json.at("feeRecipient").get<evmc::address>(),
     };
 }
 
