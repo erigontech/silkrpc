@@ -2,19 +2,18 @@
 """ Run the JSON RPC API curl commands as integration tests """
 
 from datetime import datetime,timedelta
-import json
-import shlex
-import subprocess
-import sys
-import os
-import pytz
-import shutil
-import tarfile
-import time
-
 import getopt
 import gzip
+import json
 #import jsondiff
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+import tarfile
+import time
+import pytz
 import jwt
 
 SILK="silk"
@@ -134,14 +133,13 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
             if verbose:
                 print("Failed (bad json format on expected rsp)")
                 print(process.stdout)
-                return
-            else:
-                file = json_file.ljust(60)
-                print(f"{test_number:03d}. {file} Failed (bad json format on expected rsp)")
-                if exit_on_fail:
-                    print("TEST ABORTED!")
-                    sys.exit(1)
-                return
+                return 1
+            file = json_file.ljust(60)
+            print(f"{test_number:03d}. {file} Failed (bad json format on expected rsp)")
+            if exit_on_fail:
+                print("TEST ABORTED!")
+                sys.exit(1)
+            return 1
 
     if response != expected_response:
         if "result" in response and "result" in expected_response and expected_response["result"] is None:
