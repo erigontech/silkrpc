@@ -88,6 +88,16 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
         CHECK(result.get() == 0x1234567890123456);
     }
 
+    SECTION("kLatestExecutedBlockId") {
+        const std::string LATEST_BLOCK_ID = kLatestExecutedBlockId;
+        EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")};
+            }));
+        auto result = boost::asio::co_spawn(pool, get_block_number(LATEST_BLOCK_ID, db_reader), boost::asio::use_future);
+        CHECK(result.get() == 0x1234567890123456);
+    }
+
     SECTION("kPendingBlockId") {
         const std::string PENDING_BLOCK_ID = kPendingBlockId;
         EXPECT_CALL(db_reader, get(db::table::kLastForkchoice, _)).WillOnce(InvokeWithoutArgs(
