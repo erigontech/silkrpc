@@ -1259,6 +1259,20 @@ TEST_CASE("deserialize filter with topic", "[silkrpc::json][from_json]") {
     CHECK(f.block_hash == std::nullopt);
 }
 
+TEST_CASE("deserialize filter with topic null", "[silkrpc::json][from_json]") {
+    auto j = R"({
+        "address": "0x6090a6e47849629b7245dfa1ca21d94cd15878ef",
+        "fromBlock": "0x3d0000",
+        "toBlock": "0x3d2600",
+        "topics": null 
+    })"_json;
+    auto f = j.get<Filter>();
+    CHECK(f.from_block == 3997696u);
+    CHECK(f.to_block == 4007424u);
+    CHECK(f.addresses == std::vector<evmc::address>{0x6090a6e47849629b7245dfa1ca21d94cd15878ef_address});
+    CHECK(f.block_hash == std::nullopt);
+}
+
 TEST_CASE("deserialize null call", "[silkrpc::json][from_json]") {
     auto j1 = R"({})"_json;
     CHECK_NOTHROW(j1.get<Call>());
