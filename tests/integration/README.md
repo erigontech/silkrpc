@@ -3,6 +3,7 @@ json-diff install:
 - sudo apt update
 - sudo apt install npm
 - npm install -g json-diff
+- pip install pyjwt
 
 
 # Integration test (09/10)
@@ -10,10 +11,10 @@ json-diff install:
 ### To run integration tests comparing results with json file: ./run_tests.py -c
 
 ```
-Test time-elapsed (secs):     51
-Number of executed tests:     308/308
+Test time-elapsed (secs):     56
+Number of executed tests:     309/309
 Number of NOT executed tests: 0
-Number of success tests:      308
+Number of success tests:      309
 Number of failed tests:       0
 ```
 
