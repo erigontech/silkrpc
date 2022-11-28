@@ -67,7 +67,7 @@ commands:
             - ~/.hunter
       - run:
           name: "Build"
-          command: cmake --build ~/build -j
+          command: cmake --build ~/build -j 4 # limit parallel compilation jobs to avoid termination by OS
 
   # libc++ is an alternative standard library needed for coroutines support on Clang
   # https://libcxx.llvm.org
