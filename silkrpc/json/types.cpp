@@ -30,6 +30,8 @@
 
 namespace silkrpc {
 
+using evmc::literals::operator""_address;
+
 std::string to_hex_no_leading_zeros(silkworm::ByteView bytes) {
     static const char* kHexDigits{"0123456789abcdef"};
 
@@ -485,15 +487,17 @@ void from_json(const nlohmann::json& json, Filter& filter) {
     }
     if (json.count("topics") != 0) {
         auto topics = json.at("topics");
-        for (auto& topic_item : topics) {
-            if (topic_item.is_null()) {
-                topic_item = FilterSubTopics{evmc::bytes32{}};
+        if (topics != nlohmann::detail::value_t::null) {
+            for (auto& topic_item : topics) {
+                if (topic_item.is_null()) {
+                    topic_item = FilterSubTopics{evmc::bytes32{}};
+                }
+                if (topic_item.is_string()) {
+                    topic_item = FilterSubTopics{evmc::bytes32{topic_item}};
+                }
             }
-            if (topic_item.is_string()) {
-                topic_item = FilterSubTopics{evmc::bytes32{topic_item}};
-            }
+            filter.topics = topics.get<FilterTopics>();
         }
-        filter.topics = topics.get<FilterTopics>();
     }
     if (json.count("blockHash") != 0) {
         filter.block_hash = json.at("blockHash").get<std::string>();
