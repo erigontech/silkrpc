@@ -122,7 +122,7 @@ boost::asio::awaitable<void> EngineRpcApi::handle_engine_forkchoice_updated_v1(c
             co_return;
         }
 
-        if (params.size() == 2 && params[1] != nlohmann::detail::value_t::null) {
+        if (params.size() == 2 && !params[1].is_null()) {
             const PayloadAttributes payload_attributes = params[1].get<PayloadAttributes>();
             const ForkChoiceUpdatedRequest forkchoice_update_request{
                 .fork_choice_state = forkchoice_state,
