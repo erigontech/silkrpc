@@ -20,6 +20,7 @@
 #include <cstring>
 #include <exception>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <string>
 #include <utility>
@@ -1400,9 +1401,21 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann:
             auto block_number = co_await core::rawdb::read_header_number(tx_database, block_hash);
             start = end = block_number;
         } else {
-            auto latest_block_number = co_await core::get_latest_block_number(tx_database);
-            start = filter.from_block.value_or(0);
-            end = filter.to_block.value_or(latest_block_number);
+            uint64_t last_executed_block_number = std::numeric_limits<std::uint64_t>::max();
+            if (filter.from_block.has_value()) {
+               start = filter.from_block.value();
+            } else {
+               last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
+               start = last_executed_block_number;
+            }
+            if (filter.to_block.has_value()) {
+               end = filter.to_block.value();
+            } else {
+               if (last_executed_block_number == std::numeric_limits<std::uint64_t>::max()) {
+                  last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
+               }
+               end = last_executed_block_number;
+            }
         }
         SILKRPC_INFO << "start block: " << start << " end block: " << end << "\n";
 

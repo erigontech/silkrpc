@@ -316,6 +316,7 @@ types::ExecutionPayload RemoteBackEnd::encode_execution_payload(const ExecutionP
     execution_payload_grpc.set_allocated_receiptroot(H256_from_bytes(execution_payload.receipts_root.bytes));
     execution_payload_grpc.set_allocated_stateroot(H256_from_bytes(execution_payload.state_root.bytes));
     execution_payload_grpc.set_allocated_parenthash(H256_from_bytes(execution_payload.parent_hash.bytes));
+    execution_payload_grpc.set_allocated_blockhash(H256_from_bytes(execution_payload.block_hash.bytes));
     execution_payload_grpc.set_allocated_prevrandao(H256_from_bytes(execution_payload.prev_randao.bytes));
     execution_payload_grpc.set_allocated_basefeepergas(H256_from_uint256(execution_payload.base_fee));
     // Logs Bloom
