@@ -1,18 +1,20 @@
 #!/usr/bin/python3
 """ Run the JSON RPC API curl commands as integration tests """
 
-import json
-import shlex
-import subprocess
-import sys
-import os
-import shutil
-import tarfile
-import time
-
+from datetime import datetime,timedelta
 import getopt
 import gzip
+import json
 #import jsondiff
+import os
+import shlex
+import shutil
+import subprocess
+import sys
+import tarfile
+import time
+import pytz
+import jwt
 
 SILK="silk"
 RPCDAEMON="rpcdaemon"
@@ -36,12 +38,15 @@ tests_not_compared = [
    "debug_traceCall/test_14.json"
 ]
 
-
 def get_target(target_type: str, method: str, infura_url: str, host: str):
     """ determine target
     """
-    if "engine_" in method:
-        return host + ":8550"
+    if "engine_" in method and target_type == SILK:
+        return host + ":51516"
+
+    if "engine_" in method and target_type == RPCDAEMON:
+        return host + ":8551"
+
     if target_type == SILK:
         return host + ":51515"
 
@@ -58,6 +63,21 @@ def get_json_filename_ext(target_type: str):
     if target_type == INFURA:
         return "-infura.json"
     return "-rpcdaemon.json"
+
+#
+#
+#
+def get_jwt_secret(name):
+    """ parse secret file
+    """
+    try:
+        with open(name, encoding='utf8') as file:
+            contents = file.readline()
+            return contents[2:]
+    except FileNotFoundError:
+        return ""
+
+
 
 def is_skipped(api_name, requested_api, exclude_api_list, exclude_test_list, api_file: str, req_test, verify_with_daemon, global_test_number):
     """ determine if test must be skipped
@@ -113,12 +133,13 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
             if verbose:
                 print("Failed (bad json format on expected rsp)")
                 print(process.stdout)
-            else:
-                file = json_file.ljust(60)
-                print(f"{test_number:03d}. {file} Failed (bad json format on expected rsp)")
-                if exit_on_fail:
-                    print("TEST ABORTED!")
-                    sys.exit(1)
+                return 1
+            file = json_file.ljust(60)
+            print(f"{test_number:03d}. {file} Failed (bad json format on expected rsp)")
+            if exit_on_fail:
+                print("TEST ABORTED!")
+                sys.exit(1)
+            return 1
 
     if response != expected_response:
         if "result" in response and "result" in expected_response and expected_response["result"] is None:
@@ -177,7 +198,7 @@ def run_shell_command(command: str, command1: str, expected_response: str, verbo
     return 0
 
 def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, daemon_under_test: str, exit_on_fail: bool, verify_with_daemon: bool, daemon_as_reference: str,
-              dump_output: bool, test_number, infura_url: str, daemon_on_host: str):
+              dump_output: bool, test_number, infura_url: str, daemon_on_host: str, jwt_secret: str):
     """ Run integration tests. """
     json_filename = test_dir + json_file
     ext = os.path.splitext(json_file)[1]
@@ -203,8 +224,14 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
         request = json_rpc["request"]
         request_dumps = json.dumps(request)
         target = get_target(daemon_under_test, request["method"], infura_url, daemon_on_host)
+        if jwt_secret == "":
+            jwt_auth = ""
+        else:
+            byte_array_secret = bytes.fromhex(jwt_secret)
+            encoded = jwt.encode({"iat": datetime.now(pytz.utc)- timedelta(seconds=30), "exp": datetime.now() + timedelta(seconds=30)}, byte_array_secret, algorithm="HS256")
+            jwt_auth = "-H \"Authorization: Bearer " + encoded + "\" "
         if verify_with_daemon == 0:
-            cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
+            cmd = '''curl --silent -X POST -H "Content-Type: application/json" ''' + jwt_auth + ''' --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = ""
             output_api_filename = output_dir + json_file[:-4]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
@@ -213,13 +240,13 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
             exp_rsp_file = output_api_filename + "-expResponse.json"
             diff_file = output_api_filename + "-diff.json"
         else:
+            target = get_target(SILK, request["method"], infura_url, daemon_on_host)
+            target1 = get_target(daemon_as_reference, request["method"], infura_url, daemon_on_host)
+            cmd = '''curl --silent -X POST -H "Content-Type: application/json" ''' + jwt_auth + ''' --data \'''' + request_dumps + '''\' ''' + target
+            cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" ''' + jwt_auth + ''' --data \'''' + request_dumps + '''\' ''' + target1
             output_api_filename = output_dir + json_file[:-4]
             output_dir_name = output_api_filename[:output_api_filename.rfind("/")]
             response = ""
-            target = get_target(SILK, request["method"], infura_url, daemon_on_host)
-            cmd = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target
-            target1 = get_target(daemon_as_reference, request["method"], infura_url, daemon_on_host)
-            cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" --data \'''' + request_dumps + '''\' ''' + target1
             silk_file = output_api_filename + get_json_filename_ext(SILK)
             exp_rsp_file = output_api_filename + get_json_filename_ext(daemon_as_reference)
             diff_file = output_api_filename + "-diff.json"
@@ -259,10 +286,10 @@ def usage(argv):
     print("-b blockchain (default goerly)")
     print("-v verbose")
     print("-o dump response")
+    print("-k authentication token file")
     print("-x exclude api list (i.e txpool_content,txpool_status")
     print("-X exclude test list (i.e 18,22")
     print("-H host where the daemon is located(i.e 10.10.2.3)")
-
 
 #
 # main
@@ -286,9 +313,10 @@ def main(argv):
     output_dir = json_dir + results_dir + "/"
     exclude_api_list = ""
     exclude_test_list = ""
+    jwt_secret = ""
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:di:b:ox:X:H:")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:di:b:ox:X:H:k:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -320,6 +348,11 @@ def main(argv):
                 exclude_api_list = optarg
             elif option == "-X":
                 exclude_test_list = optarg
+            elif option == "-k":
+                jwt_secret = get_jwt_secret(optarg)
+                if jwt_secret == "":
+                    print ("secret file not found")
+                    sys.exit(-1)
             else:
                 usage(argv)
                 sys.exit(-1)
@@ -369,7 +402,7 @@ def main(argv):
                             else:
                                 print(f"{global_test_number:03d}. {file}\r", end = '', flush=True)
                             ret=run_tests(json_dir, output_dir, test_file, verbose, daemon_under_test, exit_on_fail, verify_with_daemon, daemon_as_reference,
-                                          dump_output, global_test_number, infura_url, daemon_on_host)
+                                          dump_output, global_test_number, infura_url, daemon_on_host, jwt_secret)
                             if ret == 0:
                                 success_tests = success_tests + 1
                             else:

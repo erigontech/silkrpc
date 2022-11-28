@@ -25,6 +25,7 @@
 #include <iostream>
 #include <utility>
 
+#include <jwt-cpp/jwt.h>
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/common/clock_time.hpp>
@@ -36,7 +37,6 @@ namespace silkrpc::http {
 boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request& request, http::Reply& reply) {
     SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
     auto start = clock_time::now();
-
     auto request_id{0};
     try {
         if (request.content.empty()) {
@@ -47,6 +47,57 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
             reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
             SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
             co_return;
+        }
+
+        if (jwt_secret_) {
+            const auto it = std::find_if(request.headers.begin(), request.headers.end(), [&](const Header& h){
+                return h.name == "Authorization";
+            });
+            if (it == request.headers.end()) {
+                SILKRPC_ERROR << "JWT request without Authorization in auth connection" << "\n";
+                reply.content = make_json_error(request_id, 403, "missing Authorization Header").dump() + "\n";
+                reply.status = http::Reply::unauthorized;
+                reply.headers.reserve(2);
+                reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
+                reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
+                SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
+                co_return;
+            }
+
+            std::string client_token;
+            if (it->value.substr(0, 7) == "Bearer ") {
+                client_token = it->value.substr(7);
+            } else {
+                SILKRPC_ERROR << "JWT client request without token: " << "\n";
+                reply.content = make_json_error(request_id, 403, "missing token").dump() + "\n";
+                reply.status = http::Reply::unauthorized;
+                reply.headers.reserve(2);
+                reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
+                reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
+                SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
+                co_return;
+            }
+
+            try {
+                // Parse token
+                auto decoded_client_token = jwt::decode(client_token);
+
+                // Validate token
+                auto verifier = jwt::verify()
+                    .allow_algorithm(jwt::algorithm::hs256{*jwt_secret_});
+
+                SILKRPC_TRACE << "jwt client token: " << client_token << " jwt_secret: " << *jwt_secret_ << "\n";
+                verifier.verify(decoded_client_token);
+            } catch (const std::system_error& se) {
+                SILKRPC_ERROR << "JWT invalid token: " << se.what() << "\n";
+                reply.content = make_json_error(request_id, 403, "invalid token").dump() + "\n";
+                reply.status = http::Reply::unauthorized;
+                reply.headers.reserve(2);
+                reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
+                reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
+                SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
+                co_return;
+            }
         }
 
         const auto request_json = nlohmann::json::parse(request.content);
@@ -76,16 +127,15 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
 
         nlohmann::json reply_json;
         co_await (rpc_api_.*handle_method)(request_json, reply_json);
-
         reply.content = reply_json.dump(
             /*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace) + "\n";
         reply.status = http::Reply::ok;
     } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+        SILKRPC_ERROR << "exception parse  [" << request.content << "]: " << e.what() << "\n";
         reply.content = make_json_error(request_id, 100, e.what()).dump() + "\n";
         reply.status = http::Reply::internal_server_error;
     } catch (...) {
-        SILKRPC_ERROR << "unexpected exception\n";
+        SILKRPC_ERROR << "unexpected exception [" << request.content << "]\n";
         reply.content = make_json_error(request_id, 100, "unexpected exception").dump() + "\n";
         reply.status = http::Reply::internal_server_error;
     }

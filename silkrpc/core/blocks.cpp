@@ -38,6 +38,8 @@ boost::asio::awaitable<uint64_t> get_block_number(const std::string& block_id, c
         block_number = co_await get_forkchoice_finalized_block_number(reader);
     } else if (block_id == kSafeBlockId) {
         block_number = co_await get_forkchoice_safe_block_number(reader);
+    } else if (block_id == kLatestExecutedBlockId) {
+        block_number = co_await get_latest_executed_block_number(reader);
     } else {
         block_number = std::stol(block_id, 0, 0);
     }
@@ -53,6 +55,11 @@ boost::asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::Dat
 boost::asio::awaitable<uint64_t> get_highest_block_number(const core::rawdb::DatabaseReader& reader) {
     const auto highest_block_number = co_await stages::get_sync_stage_progress(reader, stages::kHeaders);
     co_return highest_block_number;
+}
+
+boost::asio::awaitable<uint64_t> get_latest_executed_block_number(const core::rawdb::DatabaseReader& reader) {
+    const auto latest_executed_block_number = co_await stages::get_sync_stage_progress(reader, stages::kExecution);
+    co_return latest_executed_block_number;
 }
 
 boost::asio::awaitable<uint64_t> get_latest_block_number(const core::rawdb::DatabaseReader& reader) {

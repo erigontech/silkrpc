@@ -8,7 +8,7 @@
         },
         "response": {
             "error": {
-                "code": 100,
+                "code": -38001,
                 "message": "Unknown payload"
             },
             "id": 1,
