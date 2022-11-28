@@ -34,6 +34,7 @@
 #include <silkrpc/types/filter.hpp>
 #include <silkrpc/types/issuance.hpp>
 #include <silkrpc/types/log.hpp>
+#include <silkrpc/types/syncing_data.hpp>
 #include <silkrpc/types/receipt.hpp>
 #include <silkrpc/types/transaction.hpp>
 #include <silkworm/types/block.hpp>
@@ -74,6 +75,10 @@ void to_json(nlohmann::json& json, const AccessListResult& access_list_result);
 void to_json(nlohmann::json& json, const struct CallBundleTxInfo& tx_info);
 
 void to_json(nlohmann::json& json, const struct CallBundleInfo& bundle_info);
+
+void to_json(nlohmann::json& json, const struct SyncingData& syncing_data);
+
+void to_json(nlohmann::json& json, const struct StageData& stage_data);
 
 void to_json(nlohmann::json& json, const Rlp& rlp);
 
