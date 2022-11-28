@@ -42,6 +42,7 @@ struct DaemonSettings {
     uint32_t num_workers;
     LogLevel log_verbosity;
     WaitMode wait_mode;
+    std::string jwt_secret_filename;
 };
 
 struct DaemonInfo {
@@ -59,7 +60,7 @@ class Daemon {
   public:
     static int run(const DaemonSettings& settings, const DaemonInfo& info = {});
 
-    explicit Daemon(const DaemonSettings& settings);
+    explicit Daemon(const DaemonSettings& settings, const std::string& jwt_secret);
 
     Daemon(const Daemon&) = delete;
     Daemon& operator=(const Daemon&) = delete;
@@ -94,6 +95,9 @@ class Daemon {
 
     //! The stream handling StateChanges server-streaming RPC.
     std::unique_ptr<ethdb::kv::StateChangesStream> state_changes_stream_;
+
+    //! The secret key for communication from CL & EL
+    const std::string& jwt_secret_;
 };
 
 } // namespace silkrpc
