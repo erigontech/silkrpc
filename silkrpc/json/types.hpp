@@ -76,9 +76,9 @@ void to_json(nlohmann::json& json, const struct CallBundleTxInfo& tx_info);
 
 void to_json(nlohmann::json& json, const struct CallBundleInfo& bundle_info);
 
-void to_json(nlohmann::json& json, const struct SyncingData& syncing_data);
+void to_json(nlohmann::json& json, const SyncingData& syncing_data);
 
-void to_json(nlohmann::json& json, const struct StageData& stage_data);
+void to_json(nlohmann::json& json, const StageData& stage_data);
 
 void to_json(nlohmann::json& json, const Rlp& rlp);
 

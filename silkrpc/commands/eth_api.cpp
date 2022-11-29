@@ -130,12 +130,12 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_syncing(const nlohmann::
         if (current_block_height >= highest_block_height) {
             reply = make_json_content(request["id"], false);
         } else {
-            struct SyncingData syncing_data {};
+            SyncingData syncing_data {};
 
             syncing_data.current_block = to_quantity(current_block_height);
             syncing_data.highest_block = to_quantity(highest_block_height);
-            for (int i = 0; i < sizeof(silkworm::db::stages::kAllStages)/sizeof(char *); i++) {
-                struct StageData current_stage;
+            for (int i = 0; i < sizeof(silkworm::db::stages::kAllStages)/sizeof(char *)-1; i++) { // no unWind
+                StageData current_stage;
                 current_stage.stage_name = silkworm::db::stages::kAllStages[i];
                 current_stage.block_number = to_quantity(co_await stages::get_sync_stage_progress(tx_database, silkworm::bytes_of_string(current_stage.stage_name)));
                 syncing_data.stages.push_back(current_stage);

@@ -30,7 +30,7 @@ struct StageData {
 struct SyncingData {
      std::string current_block;
      std::string highest_block;
-     std::vector<struct StageData> stages;
+     std::vector<StageData> stages;
 };
 
 } // namespace silkrpc
