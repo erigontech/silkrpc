@@ -200,6 +200,17 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
 
 namespace silkrpc {
 
+void to_json(nlohmann::json& json, const StageData& stage_data) {
+    json["stage_name"] = stage_data.stage_name;
+    json["block_number"] = stage_data.block_number;
+}
+
+void to_json(nlohmann::json& json, const SyncingData& syncing_data) {
+    json["currentBlock"] = syncing_data.current_block;
+    json["highestBlock"] = syncing_data.highest_block;
+    json["stages"] = syncing_data.stages;
+}
+
 void to_json(nlohmann::json& json, const struct TxPoolStatusInfo& status_info) {
     json["queued"] = silkrpc::to_quantity(status_info.queued);
     json["pending"] = silkrpc::to_quantity(status_info.pending);
