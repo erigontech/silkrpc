@@ -31,6 +31,7 @@
 #include <silkworm/common/util.hpp>
 #include <silkworm/common/base.hpp>
 #include <silkworm/execution/address.hpp>
+#include <silkworm/db/stages.hpp>
 #include <silkworm/db/util.hpp>
 #include <silkworm/types/receipt.hpp>
 #include <silkworm/types/transaction.hpp>
@@ -53,9 +54,11 @@
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkrpc/ethdb/kv/cached_database.hpp>
 #include <silkrpc/json/types.hpp>
+#include <silkrpc/stagedsync/stages.hpp>
 #include <silkrpc/types/block.hpp>
 #include <silkrpc/types/call.hpp>
 #include <silkrpc/types/filter.hpp>
+#include <silkrpc/types/syncing_data.hpp>
 #include <silkrpc/types/transaction.hpp>
 
 namespace silkrpc::commands {
@@ -127,10 +130,17 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_syncing(const nlohmann::
         if (current_block_height >= highest_block_height) {
             reply = make_json_content(request["id"], false);
         } else {
-            reply = make_json_content(request["id"], {
-                {"currentBlock", to_quantity(current_block_height)},
-                {"highestBlock", to_quantity(highest_block_height)},
-            });
+            SyncingData syncing_data {};
+
+            syncing_data.current_block = to_quantity(current_block_height);
+            syncing_data.highest_block = to_quantity(highest_block_height);
+            for (int i = 0; i < sizeof(silkworm::db::stages::kAllStages)/sizeof(char *)-1; i++) { // no unWind
+                StageData current_stage;
+                current_stage.stage_name = silkworm::db::stages::kAllStages[i];
+                current_stage.block_number = to_quantity(co_await stages::get_sync_stage_progress(tx_database, silkworm::bytes_of_string(current_stage.stage_name)));
+                syncing_data.stages.push_back(current_stage);
+            }
+            reply = make_json_content(request["id"], syncing_data);
         }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";

@@ -700,6 +700,25 @@ TEST_CASE("serialize call_bundle with value", "[silkrpc][to_json]") {
     })"_json);
 }
 
+TEST_CASE("serialize filled SyncingData", "[silkrpc][to_json]") {
+    SyncingData syncing_data{};
+    StageData stage_data;
+
+    syncing_data.current_block = "0x1";
+    syncing_data.highest_block = "0x2";
+    stage_data.stage_name = "stage1";
+    stage_data.block_number = "0x3";
+    syncing_data.stages.push_back(stage_data);
+    stage_data.stage_name = "stage2";
+    stage_data.block_number = "0x4";
+    syncing_data.stages.push_back(stage_data);
+
+    nlohmann::json j = syncing_data;
+    CHECK(j == R"({
+      "currentBlock":"0x1","highestBlock":"0x2","stages":[{"block_number":"0x3","stage_name":"stage1"},{"block_number":"0x4","stage_name":"stage2"}]
+    })"_json);
+}
+
 TEST_CASE("serialize legacy transaction (type=0)", "[silkrpc][to_json]") {
     // https://etherscan.io/tx/0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060
     // Block 46147
