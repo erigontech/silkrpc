@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """ Run the JSON RPC API curl commands as integration tests """
 
-from datetime import datetime
+from datetime import datetime,timedelta
 import getopt
 import gzip
 import json
