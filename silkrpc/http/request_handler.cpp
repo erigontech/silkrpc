@@ -81,6 +81,16 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
             try {
                 // Parse token
                 auto decoded_client_token = jwt::decode(client_token);
+                if (decoded_client_token.has_issued_at() == 0) {
+                    SILKRPC_ERROR << "JWT iat(Issued At) not defined: \n";
+                    reply.content = make_json_error(request_id, 403, "iat(Issued At) not defined").dump() + "\n";
+                    reply.status = http::Reply::unauthorized;
+                    reply.headers.reserve(2);
+                    reply.headers.emplace_back(http::Header{"Content-Length", std::to_string(reply.content.size())});
+                    reply.headers.emplace_back(http::Header{"Content-Type", "application/json"});
+                    SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
+                    co_return;
+                }
 
                 // Validate token
                 auto verifier = jwt::verify()
