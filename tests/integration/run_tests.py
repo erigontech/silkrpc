@@ -90,16 +90,16 @@ def is_skipped(api_name, requested_api, exclude_api_list, exclude_test_list, api
         for curr_test in tests_not_compared:
             if curr_test == api_file:
                 return 1
-    # scans exclude api list (-X)
-    tokenize_exclude_api_list = exclude_api_list.split(",")
-    for exclude_api in tokenize_exclude_api_list:  # -x
-        if exclude_api == api_file:
-            return 1
-    # scans exclude test list (-x)
-    tokenize_exclude_test_list = exclude_test_list.split(",")
-    for exclude_test in tokenize_exclude_test_list:  # -X
-        if exclude_test == str(global_test_number):
-            return 1
+    if exclude_api_list != "": # scans exclude api list (-x)
+        tokenize_exclude_api_list = exclude_api_list.split(",")
+        for exclude_api in tokenize_exclude_api_list:
+            if exclude_api in api_name:
+                return 1
+    if exclude_test_list != "": # scans exclude test list (-X)
+        tokenize_exclude_test_list = exclude_test_list.split(",")
+        for exclude_test in tokenize_exclude_test_list:
+            if exclude_test == str(global_test_number):
+                return 1
     return 0
 
 def is_big_json(test_name: str):
@@ -229,7 +229,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
         else:
             byte_array_secret = bytes.fromhex(jwt_secret)
             encoded = jwt.encode({"iat": datetime.now(pytz.utc)}, byte_array_secret, algorithm="HS256")
-            jwt_auth = "-H \"Authorization: Bearer " + encoded + "\" "
+            jwt_auth = "-H \"Authorization: Bearer " + str(encoded) + "\" "
         if verify_with_daemon == 0:
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" ''' + jwt_auth + ''' --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = ""
@@ -287,7 +287,7 @@ def usage(argv):
     print("-v verbose")
     print("-o dump response")
     print("-k authentication token file")
-    print("-x exclude api list (i.e txpool_content,txpool_status")
+    print("-x exclude api list (i.e txpool_content,txpool_status,engine_")
     print("-X exclude test list (i.e 18,22")
     print("-H host where the daemon is located(i.e 10.10.2.3)")
 
