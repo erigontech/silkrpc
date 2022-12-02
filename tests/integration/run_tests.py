@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """ Run the JSON RPC API curl commands as integration tests """
 
-from datetime import datetime,timedelta
+from datetime import datetime
 import getopt
 import gzip
 import json
@@ -228,7 +228,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
             jwt_auth = ""
         else:
             byte_array_secret = bytes.fromhex(jwt_secret)
-            encoded = jwt.encode({"iat": datetime.now(pytz.utc)- timedelta(seconds=30), "exp": datetime.now() + timedelta(seconds=30)}, byte_array_secret, algorithm="HS256")
+            encoded = jwt.encode({"iat": datetime.now(pytz.utc)}, byte_array_secret, algorithm="HS256")
             jwt_auth = "-H \"Authorization: Bearer " + encoded + "\" "
         if verify_with_daemon == 0:
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" ''' + jwt_auth + ''' --data \'''' + request_dumps + '''\' ''' + target
