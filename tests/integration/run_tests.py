@@ -93,7 +93,7 @@ def is_skipped(api_name, requested_api, exclude_api_list, exclude_test_list, api
     # scans exclude api list (-X)
     tokenize_exclude_api_list = exclude_api_list.split(",")
     for exclude_api in tokenize_exclude_api_list:  # -x
-        if exclude_api == api_file:
+        if exclude_api == api_name:
             return 1
     # scans exclude test list (-x)
     tokenize_exclude_test_list = exclude_test_list.split(",")
