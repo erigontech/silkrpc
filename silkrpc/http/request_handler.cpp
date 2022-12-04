@@ -111,11 +111,6 @@ boost::asio::awaitable<std::optional<std::string>> RequestHandler::is_request_au
     } catch (const std::exception& se) {
         SILKRPC_ERROR << "JWT invalid token: " << se.what() << "\n";
         co_return "invalid token";
-    } catch (...) {
-        std::exception_ptr p_ex = std::current_exception();
-        const auto what = (p_ex ? p_ex.__cxa_exception_type()->name() : "null");
-        SILKRPC_ERROR << "JWT invalid token, unexpected exception: " <<  what << "\n";
-        co_return "invalid token";
     }
 
     co_return std::nullopt;
