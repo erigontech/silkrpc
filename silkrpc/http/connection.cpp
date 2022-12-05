@@ -40,7 +40,7 @@
 namespace silkrpc::http {
 
 Connection::Connection(Context& context, boost::asio::thread_pool& workers, commands::RpcApiTable& handler_table, std::optional<std::string> jwt_secret)
-: socket_{*context.io_context()}, request_handler_{context, workers, handler_table, jwt_secret} {
+        : socket_{*context.io_context()}, request_handler_{context, workers, socket_, handler_table, jwt_secret} {
     request_.content.reserve(kRequestContentInitialCapacity);
     request_.headers.reserve(kRequestHeadersInitialCapacity);
     request_.method.reserve(kRequestMethodInitialCapacity);
@@ -67,15 +67,15 @@ boost::asio::awaitable<void> Connection::do_read() {
         RequestParser::ResultType result = request_parser_.parse(request_, buffer_.data(), buffer_.data() + bytes_read);
 
         if (result == RequestParser::good) {
-            co_await request_handler_.handle_request(request_, reply_);
-            co_await do_write();
+            co_await request_handler_.handle_request(request_);
+            //co_await do_write();
             clean();
         } else if (result == RequestParser::bad) {
-            reply_ = Reply::stock_reply(Reply::bad_request);
+            reply_ = Reply::stock_reply(StatusType::bad_request);
             co_await do_write();
             clean();
         } else if (result == RequestParser::processing_continue) {
-            reply_ = Reply::stock_reply(Reply::processing_continue);
+            reply_ = Reply::stock_reply(StatusType::processing_continue);
             co_await do_write();
             reply_.reset();
         }
