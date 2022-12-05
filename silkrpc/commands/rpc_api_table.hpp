@@ -27,19 +27,22 @@
 #include <nlohmann/json.hpp>
 
 #include <silkrpc/commands/rpc_api.hpp>
+#include <silkrpc/json/stream.hpp>
 
 namespace silkrpc::commands {
 
 class RpcApiTable {
 public:
-    typedef boost::asio::awaitable<void> (RpcApi::*HandleMethod)(const nlohmann::json&, nlohmann::json&);
+    typedef boost::asio::awaitable<void> (RpcApi::*HandleJson)(const nlohmann::json&, nlohmann::json&);
+    typedef boost::asio::awaitable<void> (RpcApi::*HandleStream)(const nlohmann::json&, json::Stream&);
 
     explicit RpcApiTable(const std::string& api_spec);
 
     RpcApiTable(const RpcApiTable&) = delete;
     RpcApiTable& operator=(const RpcApiTable&) = delete;
 
-    std::optional<HandleMethod> find_handler(const std::string& method) const;
+    std::optional<HandleJson> find_json_handler(const std::string& method) const;
+    std::optional<HandleStream> find_stream_handler(const std::string& method) const;
 
 private:
     void build_handlers(const std::string& api_spec);
@@ -54,7 +57,8 @@ private:
     void add_engine_handlers();
     void add_txpool_handlers();
 
-    std::map<std::string, HandleMethod> handlers_;
+    std::map<std::string, HandleJson>   json_handlers_;
+    std::map<std::string, HandleStream> stream_handlers_;
 };
 
 } // namespace silkrpc::commands
