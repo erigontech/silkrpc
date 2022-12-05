@@ -8,7 +8,10 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#include <algorithm>
+#include <iterator>
 #include <string>
+#include <vector>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
@@ -37,47 +40,6 @@ const std::string bad_gateway = "HTTP/1.1 502 Bad Gateway\r\n";                 
 const std::string service_unavailable = "HTTP/1.1 503 Service Unavailable\r\n";     // NOLINT(runtime/string)
 const std::string processing_continue = "HTTP/1.1 100 Continue\r\n";                // NOLINT(runtime/string)
 
-boost::asio::const_buffer to_buffer(Reply::StatusType status) {
-    switch (status) {
-        case Reply::ok:
-            return boost::asio::buffer(ok);
-        case Reply::created:
-            return boost::asio::buffer(created);
-        case Reply::accepted:
-            return boost::asio::buffer(accepted);
-        case Reply::no_content:
-            return boost::asio::buffer(no_content);
-        case Reply::multiple_choices:
-            return boost::asio::buffer(multiple_choices);
-        case Reply::moved_permanently:
-            return boost::asio::buffer(moved_permanently);
-        case Reply::moved_temporarily:
-            return boost::asio::buffer(moved_temporarily);
-        case Reply::not_modified:
-            return boost::asio::buffer(not_modified);
-        case Reply::bad_request:
-            return boost::asio::buffer(bad_request);
-        case Reply::unauthorized:
-            return boost::asio::buffer(unauthorized);
-        case Reply::forbidden:
-            return boost::asio::buffer(forbidden);
-        case Reply::not_found:
-            return boost::asio::buffer(not_found);
-        case Reply::internal_server_error:
-            return boost::asio::buffer(internal_server_error);
-        case Reply::not_implemented:
-            return boost::asio::buffer(not_implemented);
-        case Reply::bad_gateway:
-            return boost::asio::buffer(bad_gateway);
-        case Reply::service_unavailable:
-            return boost::asio::buffer(service_unavailable);
-        case Reply::processing_continue:
-            return boost::asio::buffer(processing_continue);
-        default:
-            return boost::asio::buffer(internal_server_error);
-    }
-}
-
 } // namespace status_strings
 
 namespace misc_strings {
@@ -88,19 +50,72 @@ const char lf[] = { '\n' };
 
 } // namespace misc_strings
 
-std::vector<boost::asio::const_buffer> Reply::to_buffers() {
+boost::asio::const_buffer to_buffer(StatusType status) {
+    switch (status) {
+        case StatusType::ok:
+            return boost::asio::buffer(status_strings::ok);
+        case StatusType::created:
+            return boost::asio::buffer(status_strings::created);
+        case StatusType::accepted:
+            return boost::asio::buffer(status_strings::accepted);
+        case StatusType::no_content:
+            return boost::asio::buffer(status_strings::no_content);
+        case StatusType::multiple_choices:
+            return boost::asio::buffer(status_strings::multiple_choices);
+        case StatusType::moved_permanently:
+            return boost::asio::buffer(status_strings::moved_permanently);
+        case StatusType::moved_temporarily:
+            return boost::asio::buffer(status_strings::moved_temporarily);
+        case StatusType::not_modified:
+            return boost::asio::buffer(status_strings::not_modified);
+        case StatusType::bad_request:
+            return boost::asio::buffer(status_strings::bad_request);
+        case StatusType::unauthorized:
+            return boost::asio::buffer(status_strings::unauthorized);
+        case StatusType::forbidden:
+            return boost::asio::buffer(status_strings::forbidden);
+        case StatusType::not_found:
+            return boost::asio::buffer(status_strings::not_found);
+        case StatusType::internal_server_error:
+            return boost::asio::buffer(status_strings::internal_server_error);
+        case StatusType::not_implemented:
+            return boost::asio::buffer(status_strings::not_implemented);
+        case StatusType::bad_gateway:
+            return boost::asio::buffer(status_strings::bad_gateway);
+        case StatusType::service_unavailable:
+            return boost::asio::buffer(status_strings::service_unavailable);
+        case StatusType::processing_continue:
+            return boost::asio::buffer(status_strings::processing_continue);
+        default:
+            return boost::asio::buffer(status_strings::internal_server_error);
+    }
+}
+
+std::vector<boost::asio::const_buffer> to_buffers(const std::vector<Header>& headers) {
     std::vector<boost::asio::const_buffer> buffers;
-    buffers.reserve(1+headers.size()*4+2);
-    buffers.push_back(status_strings::to_buffer(status));
-    for (std::size_t i = 0; i < headers.size(); ++i) {
-        Header& h = headers[i];
-        buffers.push_back(boost::asio::buffer(h.name));
+    buffers.reserve(headers.size()*4);
+
+    for (const auto& header : headers) {
+        buffers.push_back(boost::asio::buffer(header.name));
         buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-        buffers.push_back(boost::asio::buffer(h.value));
+        buffers.push_back(boost::asio::buffer(header.value));
         buffers.push_back(boost::asio::buffer(misc_strings::crlf));
     }
+
+    return buffers;
+}
+
+std::vector<boost::asio::const_buffer> Reply::to_buffers() const {
+    std::vector<boost::asio::const_buffer> buffers;
+    buffers.reserve(1 + headers.size()*4 + 2);
+    buffers.push_back(to_buffer(status));
+
+    const auto headers_buf = http::to_buffers(headers);
+    copy(headers_buf.begin(), headers_buf.end(), back_inserter(buffers));
+
     buffers.push_back(boost::asio::buffer(misc_strings::crlf));
     buffers.push_back(boost::asio::buffer(content));
+
     SILKRPC_TRACE << "Reply::to_buffers buffers: " << buffers << "\n";
     return buffers;
 }
@@ -185,41 +200,41 @@ const char service_unavailable[] =
     "<body><h1>503 Service Unavailable</h1></body>"
     "</html>";
 
-std::string to_string(Reply::StatusType status) {
+std::string to_string(StatusType status) {
     switch (status) {
-        case Reply::processing_continue:
+        case StatusType::processing_continue:
             return processing_continue;
-        case Reply::ok:
+        case StatusType::ok:
             return ok;
-        case Reply::created:
+        case StatusType::created:
             return created;
-        case Reply::accepted:
+        case StatusType::accepted:
             return accepted;
-        case Reply::no_content:
+        case StatusType::no_content:
             return no_content;
-        case Reply::multiple_choices:
+        case StatusType::multiple_choices:
             return multiple_choices;
-        case Reply::moved_permanently:
+        case StatusType::moved_permanently:
             return moved_permanently;
-        case Reply::moved_temporarily:
+        case StatusType::moved_temporarily:
             return moved_temporarily;
-        case Reply::not_modified:
+        case StatusType::not_modified:
             return not_modified;
-        case Reply::bad_request:
+        case StatusType::bad_request:
             return bad_request;
-        case Reply::unauthorized:
+        case StatusType::unauthorized:
             return unauthorized;
-        case Reply::forbidden:
+        case StatusType::forbidden:
             return forbidden;
-        case Reply::not_found:
+        case StatusType::not_found:
             return not_found;
-        case Reply::internal_server_error:
+        case StatusType::internal_server_error:
             return internal_server_error;
-        case Reply::not_implemented:
+        case StatusType::not_implemented:
             return not_implemented;
-        case Reply::bad_gateway:
+        case StatusType::bad_gateway:
             return bad_gateway;
-        case Reply::service_unavailable:
+        case StatusType::service_unavailable:
             return service_unavailable;
         default:
             return internal_server_error;
@@ -228,7 +243,7 @@ std::string to_string(Reply::StatusType status) {
 
 } // namespace stock_replies
 
-Reply Reply::stock_reply(Reply::StatusType status) {
+Reply Reply::stock_reply(StatusType status) {
     Reply rep;
     rep.status = status;
     rep.content = stock_replies::to_string(status);
