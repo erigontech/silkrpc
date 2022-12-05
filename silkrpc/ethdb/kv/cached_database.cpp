@@ -31,9 +31,10 @@ boost::asio::awaitable<KeyValue> CachedDatabase::get(const std::string& table, c
 }
 
 boost::asio::awaitable<silkworm::Bytes> CachedDatabase::get_one(const std::string& table, const silkworm::ByteView& key) const {
-    // Check if target block is latest one: use local state cache (if any) for target transaction
     if (table != db::table::kPlainState && table != db::table::kCode)
-       co_return co_await txn_database_.get_one(table, key);
+        co_return co_await txn_database_.get_one(table, key);
+
+    // Check if target block is latest one: use local state cache (if any) for target transaction
     const bool is_latest_block = co_await core::is_latest_block_number(block_id_, txn_database_);
     if (is_latest_block) {
         // Just PlainState and Code tables are present in state cache
