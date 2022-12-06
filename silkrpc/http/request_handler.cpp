@@ -47,11 +47,11 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
         SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
 
         const auto request_json = nlohmann::json::parse(request.content);
-        auto request_id = request_json["id"].get<uint32_t>();
-        if (!request_json.contains("method")) {
-            reply.content = make_json_error(request_id, -32600, "method missing").dump() + "\n";
-            reply.status = http::StatusType::bad_request;
+        if (!request_json.contains("id")) {
+            reply.content = "\n";
+            reply.status = http::StatusType::ok;
         } else {
+            auto request_id = request_json["id"].get<uint32_t>();
             const auto error = co_await is_request_authorized(request_id, request);
             if (error.has_value()) {
                 reply.content = make_json_error(request_id, 403, error.value()).dump() + "\n";
@@ -65,6 +65,81 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
     co_await do_write(reply);
 
     SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
+}
+
+boost::asio::awaitable<void> RequestHandler::handle_request(const nlohmann::json& request_json, http::Reply& reply) {
+    auto request_id = request_json["id"].get<uint32_t>();
+    if (!request_json.contains("method")) {
+        reply.content = make_json_error(request_id, -32600, "method missing").dump() + "\n";
+        reply.status = http::StatusType::bad_request;
+        co_return;
+    }
+
+    const auto method = request_json["method"].get<std::string>();
+    const auto json_handler_opt = rpc_api_table_.find_json_handler(method);
+    if (json_handler_opt) {
+        const auto json_handler = json_handler_opt.value();
+
+        nlohmann::json reply_json;
+        co_await (rpc_api_.*json_handler)(request_json, reply_json);
+
+        reply.content = reply_json.dump(
+            /*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace) + "\n";
+        reply.status = http::StatusType::ok;
+        co_return;
+    }
+
+    const auto stream_handler_opt = rpc_api_table_.find_stream_handler(method);
+    if (stream_handler_opt) {
+        const auto stream_handler = stream_handler_opt.value();
+
+        json::Stream stream(socket_);
+        co_await (rpc_api_.*stream_handler)(request_json, stream);
+        co_return;
+    }
+
+    reply.content = make_json_error(request_id, -32601, "the method " + method + " does not exist/is not available").dump() + "\n";
+    reply.status = http::StatusType::not_implemented;
+
+    co_return;
+}
+
+boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::RpcApiTable::HandleMethod handler, const nlohmann::json& request_json, http::Reply& reply) {
+    auto request_id = request_json["id"].get<uint32_t>();
+    try {
+        nlohmann::json reply_json;
+        co_await (rpc_api_.*handler)(request_json, reply_json);
+
+        reply.content = reply_json.dump(
+            /*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace) + "\n";
+        reply.status = http::StatusType::ok;
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+        reply.content = make_json_error(request_id, 100, e.what()).dump() + "\n";
+        reply.status = http::StatusType::internal_server_error;
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception\n";
+        reply.content = make_json_error(request_id, 100, "unexpected exception").dump() + "\n";
+        reply.status = http::StatusType::internal_server_error;
+    }
+
+    co_return;
+}
+
+boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::RpcApiTable::HandleStream handler, const nlohmann::json& request_json, http::Reply& reply) {
+    auto request_id = request_json["id"].get<uint32_t>();
+    try {
+        json::Stream stream(socket_);
+
+        co_await write_headers();
+        co_await (rpc_api_.*handler)(request_json, stream);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << "\n";
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception\n";
+    }
+
+    co_return;
 }
 
 boost::asio::awaitable<std::optional<std::string>> RequestHandler::is_request_authorized(uint32_t request_id, const http::Request& request) {
@@ -114,75 +189,6 @@ boost::asio::awaitable<std::optional<std::string>> RequestHandler::is_request_au
     }
 
     co_return std::nullopt;
-}
-
-boost::asio::awaitable<void> RequestHandler::handle_request(const nlohmann::json& request_json, http::Reply& reply) {
-    const auto method = request_json["method"].get<std::string>();
-    const auto json_handler_opt = rpc_api_table_.find_json_handler(method);
-    if (json_handler_opt) {
-        const auto json_handler = json_handler_opt.value();
-
-        nlohmann::json reply_json;
-        co_await (rpc_api_.*json_handler)(request_json, reply_json);
-
-        reply.content = reply_json.dump(
-            /*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace) + "\n";
-        reply.status = http::StatusType::ok;
-        co_return;
-    }
-
-    const auto stream_handler_opt = rpc_api_table_.find_stream_handler(method);
-    if (stream_handler_opt) {
-        const auto stream_handler = stream_handler_opt.value();
-
-        json::Stream stream(socket_);
-        co_await (rpc_api_.*stream_handler)(request_json, stream);
-        co_return;
-    }
-
-    auto request_id = request_json["id"].get<uint32_t>();
-    reply.content = make_json_error(request_id, -32601, "the method " + method + " does not exist/is not available").dump() + "\n";
-    reply.status = http::StatusType::not_implemented;
-
-    co_return;
-}
-
-boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::RpcApiTable::HandleJson handler, const nlohmann::json& request_json, http::Reply& reply) {
-    auto request_id = request_json["id"].get<uint32_t>();
-    try {
-        nlohmann::json reply_json;
-        co_await (rpc_api_.*handler)(request_json, reply_json);
-
-        reply.content = reply_json.dump(
-            /*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace) + "\n";
-        reply.status = http::StatusType::ok;
-    } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << "\n";
-        reply.content = make_json_error(request_id, 100, e.what()).dump() + "\n";
-        reply.status = http::StatusType::internal_server_error;
-    } catch (...) {
-        SILKRPC_ERROR << "unexpected exception\n";
-        reply.content = make_json_error(request_id, 100, "unexpected exception").dump() + "\n";
-        reply.status = http::StatusType::internal_server_error;
-    }
-
-    co_return;
-}
-
-boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::RpcApiTable::HandleStream handler, const nlohmann::json& request_json, http::Reply& reply) {
-    auto request_id = request_json["id"].get<uint32_t>();
-    try {
-        json::Stream stream(socket_);
-
-        co_await write_headers();
-        co_await (rpc_api_.*handler)(request_json, stream);
-    } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << "\n";
-    } catch (...) {
-        SILKRPC_ERROR << "unexpected exception\n";
-    }
-
-    co_return;
 }
 
 boost::asio::awaitable<void> RequestHandler::do_write(Reply &reply) {
