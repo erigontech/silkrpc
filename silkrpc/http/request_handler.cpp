@@ -147,8 +147,6 @@ boost::asio::awaitable<std::optional<std::string>> RequestHandler::is_request_au
         co_return std::nullopt;
     }
 
-    SILKRPC_LOG << "JWT jwt_secret_: " << jwt_secret_.value() << "\n";
-
     const auto it = std::find_if(request.headers.begin(), request.headers.end(), [&](const Header& h){
         return h.name == "Authorization";
     });
@@ -165,8 +163,6 @@ boost::asio::awaitable<std::optional<std::string>> RequestHandler::is_request_au
         SILKRPC_ERROR << "JWT client request without token\n";
         co_return "missing token";
     }
-
-    SILKRPC_LOG << "JWT client_token: " << client_token << "\n";
 
     try {
         // Parse token
