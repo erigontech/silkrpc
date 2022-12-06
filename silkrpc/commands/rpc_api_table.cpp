@@ -28,9 +28,9 @@ RpcApiTable::RpcApiTable(const std::string& api_spec) {
     build_handlers(api_spec);
 }
 
-std::optional<RpcApiTable::HandleJson> RpcApiTable::find_json_handler(const std::string& method) const {
-    const auto handle_method_pair = json_handlers_.find(method);
-    if (handle_method_pair == json_handlers_.end()) {
+std::optional<RpcApiTable::HandleMethod> RpcApiTable::find_json_handler(const std::string& method) const {
+    const auto handle_method_pair = method_handlers_.find(method);
+    if (handle_method_pair == method_handlers_.end()) {
         return std::nullopt;
     }
     return handle_method_pair->second;
@@ -80,115 +80,115 @@ void RpcApiTable::add_handlers(const std::string& api_namespace) {
 }
 
 void RpcApiTable::add_debug_handlers() {
-    json_handlers_[http::method::k_debug_accountRange] = &commands::RpcApi::handle_debug_account_range;
-    json_handlers_[http::method::k_debug_getModifiedAccountsByNumber] = &commands::RpcApi::handle_debug_get_modified_accounts_by_number;
-    json_handlers_[http::method::k_debug_getModifiedAccountsByHash] = &commands::RpcApi::handle_debug_get_modified_accounts_by_hash;
-    json_handlers_[http::method::k_debug_storageRangeAt] = &commands::RpcApi::handle_debug_storage_range_at;
-    json_handlers_[http::method::k_debug_traceTransaction] = &commands::RpcApi::handle_debug_trace_transaction;
-    json_handlers_[http::method::k_debug_traceCall] = &commands::RpcApi::handle_debug_trace_call;
-    json_handlers_[http::method::k_debug_traceBlockByNumber] = &commands::RpcApi::handle_debug_trace_block_by_number;
-    json_handlers_[http::method::k_debug_traceBlockByHash] = &commands::RpcApi::handle_debug_trace_block_by_hash;
+    method_handlers_[http::method::k_debug_accountRange] = &commands::RpcApi::handle_debug_account_range;
+    method_handlers_[http::method::k_debug_getModifiedAccountsByNumber] = &commands::RpcApi::handle_debug_get_modified_accounts_by_number;
+    method_handlers_[http::method::k_debug_getModifiedAccountsByHash] = &commands::RpcApi::handle_debug_get_modified_accounts_by_hash;
+    method_handlers_[http::method::k_debug_storageRangeAt] = &commands::RpcApi::handle_debug_storage_range_at;
+    method_handlers_[http::method::k_debug_traceTransaction] = &commands::RpcApi::handle_debug_trace_transaction;
+    method_handlers_[http::method::k_debug_traceCall] = &commands::RpcApi::handle_debug_trace_call;
+    method_handlers_[http::method::k_debug_traceBlockByNumber] = &commands::RpcApi::handle_debug_trace_block_by_number;
+    method_handlers_[http::method::k_debug_traceBlockByHash] = &commands::RpcApi::handle_debug_trace_block_by_hash;
 }
 
 void RpcApiTable::add_eth_handlers() {
-    json_handlers_[http::method::k_eth_blockNumber] = &commands::RpcApi::handle_eth_block_number;
-    json_handlers_[http::method::k_eth_chainId] = &commands::RpcApi::handle_eth_chain_id;
-    json_handlers_[http::method::k_eth_protocolVersion] = &commands::RpcApi::handle_eth_protocol_version;
-    json_handlers_[http::method::k_eth_syncing] = &commands::RpcApi::handle_eth_syncing;
-    json_handlers_[http::method::k_eth_gasPrice] = &commands::RpcApi::handle_eth_gas_price;
-    json_handlers_[http::method::k_eth_getBlockByHash] = &commands::RpcApi::handle_eth_get_block_by_hash;
-    json_handlers_[http::method::k_eth_getBlockByNumber] = &commands::RpcApi::handle_eth_get_block_by_number;
-    json_handlers_[http::method::k_eth_getBlockTransactionCountByHash] = &commands::RpcApi::handle_eth_get_block_transaction_count_by_hash;
-    json_handlers_[http::method::k_eth_getBlockTransactionCountByNumber] = &commands::RpcApi::handle_eth_get_block_transaction_count_by_number;
-    json_handlers_[http::method::k_eth_getUncleByBlockHashAndIndex] = &commands::RpcApi::handle_eth_get_uncle_by_block_hash_and_index;
-    json_handlers_[http::method::k_eth_getUncleByBlockNumberAndIndex] = &commands::RpcApi::handle_eth_get_uncle_by_block_number_and_index;
-    json_handlers_[http::method::k_eth_getUncleCountByBlockHash] = &commands::RpcApi::handle_eth_get_uncle_count_by_block_hash;
-    json_handlers_[http::method::k_eth_getUncleCountByBlockNumber] = &commands::RpcApi::handle_eth_get_uncle_count_by_block_number;
-    json_handlers_[http::method::k_eth_getTransactionByHash] = &commands::RpcApi::handle_eth_get_transaction_by_hash;
-    json_handlers_[http::method::k_eth_getTransactionByBlockHashAndIndex] = &commands::RpcApi::handle_eth_get_transaction_by_block_hash_and_index;
-    json_handlers_[http::method::k_eth_getTransactionByBlockNumberAndIndex] = &commands::RpcApi::handle_eth_get_transaction_by_block_number_and_index;
-    json_handlers_[http::method::k_eth_getRawTransactionByHash] = &commands::RpcApi::handle_eth_get_raw_transaction_by_hash;
-    json_handlers_[http::method::k_eth_getRawTransactionByBlockHashAndIndex] = &commands::RpcApi::handle_eth_get_raw_transaction_by_block_hash_and_index;
-    json_handlers_[http::method::k_eth_getRawTransactionByBlockNumberAndIndex] = &commands::RpcApi::handle_eth_get_raw_transaction_by_block_number_and_index;
-    json_handlers_[http::method::k_eth_getTransactionReceipt] = &commands::RpcApi::handle_eth_get_transaction_receipt;
-    json_handlers_[http::method::k_eth_estimateGas] = &commands::RpcApi::handle_eth_estimate_gas;
-    json_handlers_[http::method::k_eth_getBalance] = &commands::RpcApi::handle_eth_get_balance;
-    json_handlers_[http::method::k_eth_getCode] = &commands::RpcApi::handle_eth_get_code;
-    json_handlers_[http::method::k_eth_getTransactionCount] = &commands::RpcApi::handle_eth_get_transaction_count;
-    json_handlers_[http::method::k_eth_getStorageAt] = &commands::RpcApi::handle_eth_get_storage_at;
-    json_handlers_[http::method::k_eth_call] = &commands::RpcApi::handle_eth_call;
-    json_handlers_[http::method::k_eth_callBundle] = &commands::RpcApi::handle_eth_call_bundle;
-    json_handlers_[http::method::k_eth_createAccessList] = &commands::RpcApi::handle_eth_create_access_list;
-    json_handlers_[http::method::k_eth_newFilter] = &commands::RpcApi::handle_eth_new_filter;
-    json_handlers_[http::method::k_eth_newBlockFilter] = &commands::RpcApi::handle_eth_new_block_filter;
-    json_handlers_[http::method::k_eth_newPendingTransactionFilter] = &commands::RpcApi::handle_eth_new_pending_transaction_filter;
-    json_handlers_[http::method::k_eth_getFilterChanges] = &commands::RpcApi::handle_eth_get_filter_changes;
-    json_handlers_[http::method::k_eth_uninstallFilter] = &commands::RpcApi::handle_eth_uninstall_filter;
-    json_handlers_[http::method::k_eth_getLogs] = &commands::RpcApi::handle_eth_get_logs;
-    json_handlers_[http::method::k_eth_sendRawTransaction] = &commands::RpcApi::handle_eth_send_raw_transaction;
-    json_handlers_[http::method::k_eth_sendTransaction] = &commands::RpcApi::handle_eth_send_transaction;
-    json_handlers_[http::method::k_eth_signTransaction] = &commands::RpcApi::handle_eth_sign_transaction;
-    json_handlers_[http::method::k_eth_getProof] = &commands::RpcApi::handle_eth_get_proof;
-    json_handlers_[http::method::k_eth_mining] = &commands::RpcApi::handle_eth_mining;
-    json_handlers_[http::method::k_eth_coinbase] = &commands::RpcApi::handle_eth_coinbase;
-    json_handlers_[http::method::k_eth_hashrate] = &commands::RpcApi::handle_eth_hashrate;
-    json_handlers_[http::method::k_eth_submitHashrate] = &commands::RpcApi::handle_eth_submit_hashrate;
-    json_handlers_[http::method::k_eth_getWork] = &commands::RpcApi::handle_eth_get_work;
-    json_handlers_[http::method::k_eth_submitWork] = &commands::RpcApi::handle_eth_submit_work;
-    json_handlers_[http::method::k_eth_subscribe] = &commands::RpcApi::handle_eth_subscribe;
-    json_handlers_[http::method::k_eth_unsubscribe] = &commands::RpcApi::handle_eth_unsubscribe;
-    json_handlers_[http::method::k_eth_getBlockReceipts] = &commands::RpcApi::handle_parity_get_block_receipts;
+    method_handlers_[http::method::k_eth_blockNumber] = &commands::RpcApi::handle_eth_block_number;
+    method_handlers_[http::method::k_eth_chainId] = &commands::RpcApi::handle_eth_chain_id;
+    method_handlers_[http::method::k_eth_protocolVersion] = &commands::RpcApi::handle_eth_protocol_version;
+    method_handlers_[http::method::k_eth_syncing] = &commands::RpcApi::handle_eth_syncing;
+    method_handlers_[http::method::k_eth_gasPrice] = &commands::RpcApi::handle_eth_gas_price;
+    method_handlers_[http::method::k_eth_getBlockByHash] = &commands::RpcApi::handle_eth_get_block_by_hash;
+    method_handlers_[http::method::k_eth_getBlockByNumber] = &commands::RpcApi::handle_eth_get_block_by_number;
+    method_handlers_[http::method::k_eth_getBlockTransactionCountByHash] = &commands::RpcApi::handle_eth_get_block_transaction_count_by_hash;
+    method_handlers_[http::method::k_eth_getBlockTransactionCountByNumber] = &commands::RpcApi::handle_eth_get_block_transaction_count_by_number;
+    method_handlers_[http::method::k_eth_getUncleByBlockHashAndIndex] = &commands::RpcApi::handle_eth_get_uncle_by_block_hash_and_index;
+    method_handlers_[http::method::k_eth_getUncleByBlockNumberAndIndex] = &commands::RpcApi::handle_eth_get_uncle_by_block_number_and_index;
+    method_handlers_[http::method::k_eth_getUncleCountByBlockHash] = &commands::RpcApi::handle_eth_get_uncle_count_by_block_hash;
+    method_handlers_[http::method::k_eth_getUncleCountByBlockNumber] = &commands::RpcApi::handle_eth_get_uncle_count_by_block_number;
+    method_handlers_[http::method::k_eth_getTransactionByHash] = &commands::RpcApi::handle_eth_get_transaction_by_hash;
+    method_handlers_[http::method::k_eth_getTransactionByBlockHashAndIndex] = &commands::RpcApi::handle_eth_get_transaction_by_block_hash_and_index;
+    method_handlers_[http::method::k_eth_getTransactionByBlockNumberAndIndex] = &commands::RpcApi::handle_eth_get_transaction_by_block_number_and_index;
+    method_handlers_[http::method::k_eth_getRawTransactionByHash] = &commands::RpcApi::handle_eth_get_raw_transaction_by_hash;
+    method_handlers_[http::method::k_eth_getRawTransactionByBlockHashAndIndex] = &commands::RpcApi::handle_eth_get_raw_transaction_by_block_hash_and_index;
+    method_handlers_[http::method::k_eth_getRawTransactionByBlockNumberAndIndex] = &commands::RpcApi::handle_eth_get_raw_transaction_by_block_number_and_index;
+    method_handlers_[http::method::k_eth_getTransactionReceipt] = &commands::RpcApi::handle_eth_get_transaction_receipt;
+    method_handlers_[http::method::k_eth_estimateGas] = &commands::RpcApi::handle_eth_estimate_gas;
+    method_handlers_[http::method::k_eth_getBalance] = &commands::RpcApi::handle_eth_get_balance;
+    method_handlers_[http::method::k_eth_getCode] = &commands::RpcApi::handle_eth_get_code;
+    method_handlers_[http::method::k_eth_getTransactionCount] = &commands::RpcApi::handle_eth_get_transaction_count;
+    method_handlers_[http::method::k_eth_getStorageAt] = &commands::RpcApi::handle_eth_get_storage_at;
+    method_handlers_[http::method::k_eth_call] = &commands::RpcApi::handle_eth_call;
+    method_handlers_[http::method::k_eth_callBundle] = &commands::RpcApi::handle_eth_call_bundle;
+    method_handlers_[http::method::k_eth_createAccessList] = &commands::RpcApi::handle_eth_create_access_list;
+    method_handlers_[http::method::k_eth_newFilter] = &commands::RpcApi::handle_eth_new_filter;
+    method_handlers_[http::method::k_eth_newBlockFilter] = &commands::RpcApi::handle_eth_new_block_filter;
+    method_handlers_[http::method::k_eth_newPendingTransactionFilter] = &commands::RpcApi::handle_eth_new_pending_transaction_filter;
+    method_handlers_[http::method::k_eth_getFilterChanges] = &commands::RpcApi::handle_eth_get_filter_changes;
+    method_handlers_[http::method::k_eth_uninstallFilter] = &commands::RpcApi::handle_eth_uninstall_filter;
+    method_handlers_[http::method::k_eth_getLogs] = &commands::RpcApi::handle_eth_get_logs;
+    method_handlers_[http::method::k_eth_sendRawTransaction] = &commands::RpcApi::handle_eth_send_raw_transaction;
+    method_handlers_[http::method::k_eth_sendTransaction] = &commands::RpcApi::handle_eth_send_transaction;
+    method_handlers_[http::method::k_eth_signTransaction] = &commands::RpcApi::handle_eth_sign_transaction;
+    method_handlers_[http::method::k_eth_getProof] = &commands::RpcApi::handle_eth_get_proof;
+    method_handlers_[http::method::k_eth_mining] = &commands::RpcApi::handle_eth_mining;
+    method_handlers_[http::method::k_eth_coinbase] = &commands::RpcApi::handle_eth_coinbase;
+    method_handlers_[http::method::k_eth_hashrate] = &commands::RpcApi::handle_eth_hashrate;
+    method_handlers_[http::method::k_eth_submitHashrate] = &commands::RpcApi::handle_eth_submit_hashrate;
+    method_handlers_[http::method::k_eth_getWork] = &commands::RpcApi::handle_eth_get_work;
+    method_handlers_[http::method::k_eth_submitWork] = &commands::RpcApi::handle_eth_submit_work;
+    method_handlers_[http::method::k_eth_subscribe] = &commands::RpcApi::handle_eth_subscribe;
+    method_handlers_[http::method::k_eth_unsubscribe] = &commands::RpcApi::handle_eth_unsubscribe;
+    method_handlers_[http::method::k_eth_getBlockReceipts] = &commands::RpcApi::handle_parity_get_block_receipts;
 }
 
 void RpcApiTable::add_net_handlers() {
-    json_handlers_[http::method::k_net_listening] = &commands::RpcApi::handle_net_listening;
-    json_handlers_[http::method::k_net_peerCount] = &commands::RpcApi::handle_net_peer_count;
-    json_handlers_[http::method::k_net_version] = &commands::RpcApi::handle_net_version;
+    method_handlers_[http::method::k_net_listening] = &commands::RpcApi::handle_net_listening;
+    method_handlers_[http::method::k_net_peerCount] = &commands::RpcApi::handle_net_peer_count;
+    method_handlers_[http::method::k_net_version] = &commands::RpcApi::handle_net_version;
 }
 
 void RpcApiTable::add_parity_handlers() {
-    json_handlers_[http::method::k_parity_getBlockReceipts] = &commands::RpcApi::handle_parity_get_block_receipts;
-    json_handlers_[http::method::k_parity_listStorageKeys] = &commands::RpcApi::handle_parity_list_storage_keys;
+    method_handlers_[http::method::k_parity_getBlockReceipts] = &commands::RpcApi::handle_parity_get_block_receipts;
+    method_handlers_[http::method::k_parity_listStorageKeys] = &commands::RpcApi::handle_parity_list_storage_keys;
 }
 
 void RpcApiTable::add_erigon_handlers() {
-    json_handlers_[http::method::k_erigon_getBlockByTimestamp] = &commands::RpcApi::handle_erigon_get_block_by_timestamp;
-    json_handlers_[http::method::k_erigon_getHeaderByHash] = &commands::RpcApi::handle_erigon_get_header_by_hash;
-    json_handlers_[http::method::k_erigon_getHeaderByNumber] = &commands::RpcApi::handle_erigon_get_header_by_number;
-    json_handlers_[http::method::k_erigon_getLogsByHash] = &commands::RpcApi::handle_erigon_get_logs_by_hash;
-    json_handlers_[http::method::k_erigon_forks] = &commands::RpcApi::handle_erigon_forks;
-    json_handlers_[http::method::k_erigon_watchTheBurn] = &commands::RpcApi::handle_erigon_watch_the_burn;
+    method_handlers_[http::method::k_erigon_getBlockByTimestamp] = &commands::RpcApi::handle_erigon_get_block_by_timestamp;
+    method_handlers_[http::method::k_erigon_getHeaderByHash] = &commands::RpcApi::handle_erigon_get_header_by_hash;
+    method_handlers_[http::method::k_erigon_getHeaderByNumber] = &commands::RpcApi::handle_erigon_get_header_by_number;
+    method_handlers_[http::method::k_erigon_getLogsByHash] = &commands::RpcApi::handle_erigon_get_logs_by_hash;
+    method_handlers_[http::method::k_erigon_forks] = &commands::RpcApi::handle_erigon_forks;
+    method_handlers_[http::method::k_erigon_watchTheBurn] = &commands::RpcApi::handle_erigon_watch_the_burn;
 }
 
 void RpcApiTable::add_trace_handlers() {
-    json_handlers_[http::method::k_trace_call] = &commands::RpcApi::handle_trace_call;
-    json_handlers_[http::method::k_trace_callMany] = &commands::RpcApi::handle_trace_call_many;
-    json_handlers_[http::method::k_trace_rawTransaction] = &commands::RpcApi::handle_trace_raw_transaction;
-    json_handlers_[http::method::k_trace_replayBlockTransactions] = &commands::RpcApi::handle_trace_replay_block_transactions;
-    json_handlers_[http::method::k_trace_replayTransaction] = &commands::RpcApi::handle_trace_replay_transaction;
-    json_handlers_[http::method::k_trace_block] = &commands::RpcApi::handle_trace_block;
-    json_handlers_[http::method::k_trace_filter] = &commands::RpcApi::handle_trace_filter;
-    json_handlers_[http::method::k_trace_get] = &commands::RpcApi::handle_trace_get;
-    json_handlers_[http::method::k_trace_transaction] = &commands::RpcApi::handle_trace_transaction;
+    method_handlers_[http::method::k_trace_call] = &commands::RpcApi::handle_trace_call;
+    method_handlers_[http::method::k_trace_callMany] = &commands::RpcApi::handle_trace_call_many;
+    method_handlers_[http::method::k_trace_rawTransaction] = &commands::RpcApi::handle_trace_raw_transaction;
+    method_handlers_[http::method::k_trace_replayBlockTransactions] = &commands::RpcApi::handle_trace_replay_block_transactions;
+    method_handlers_[http::method::k_trace_replayTransaction] = &commands::RpcApi::handle_trace_replay_transaction;
+    method_handlers_[http::method::k_trace_block] = &commands::RpcApi::handle_trace_block;
+    method_handlers_[http::method::k_trace_filter] = &commands::RpcApi::handle_trace_filter;
+    method_handlers_[http::method::k_trace_get] = &commands::RpcApi::handle_trace_get;
+    method_handlers_[http::method::k_trace_transaction] = &commands::RpcApi::handle_trace_transaction;
 
     // stream_handlers_[http::method::k_trace_transaction] = &commands::RpcApi::handle_trace_transaction_stream;
 }
 
 void RpcApiTable::add_web3_handlers() {
-    json_handlers_[http::method::k_web3_clientVersion] = &commands::RpcApi::handle_web3_client_version;
-    json_handlers_[http::method::k_web3_sha3] = &commands::RpcApi::handle_web3_sha3;
+    method_handlers_[http::method::k_web3_clientVersion] = &commands::RpcApi::handle_web3_client_version;
+    method_handlers_[http::method::k_web3_sha3] = &commands::RpcApi::handle_web3_sha3;
 }
 
 void RpcApiTable::add_engine_handlers() {
-    json_handlers_[http::method::k_engine_getPayloadV1] = &commands::RpcApi::handle_engine_get_payload_v1;
-    json_handlers_[http::method::k_engine_newPayloadV1] = &commands::RpcApi::handle_engine_new_payload_v1;
-    json_handlers_[http::method::k_engine_forkchoiceUpdatedV1] = &commands::RpcApi::handle_engine_forkchoice_updated_v1;
-    json_handlers_[http::method::k_engine_exchangeTransitionConfiguration] = &commands::RpcApi::handle_engine_exchange_transition_configuration_v1;
+    method_handlers_[http::method::k_engine_getPayloadV1] = &commands::RpcApi::handle_engine_get_payload_v1;
+    method_handlers_[http::method::k_engine_newPayloadV1] = &commands::RpcApi::handle_engine_new_payload_v1;
+    method_handlers_[http::method::k_engine_forkchoiceUpdatedV1] = &commands::RpcApi::handle_engine_forkchoice_updated_v1;
+    method_handlers_[http::method::k_engine_exchangeTransitionConfiguration] = &commands::RpcApi::handle_engine_exchange_transition_configuration_v1;
 }
 
 void RpcApiTable::add_txpool_handlers() {
-    json_handlers_[http::method::k_txpool_status] = &commands::RpcApi::handle_txpool_status;
-    json_handlers_[http::method::k_txpool_content] = &commands::RpcApi::handle_txpool_content;
+    method_handlers_[http::method::k_txpool_status] = &commands::RpcApi::handle_txpool_status;
+    method_handlers_[http::method::k_txpool_content] = &commands::RpcApi::handle_txpool_content;
 }
 
 } // namespace silkrpc::commands

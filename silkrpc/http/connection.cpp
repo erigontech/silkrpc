@@ -68,7 +68,6 @@ boost::asio::awaitable<void> Connection::do_read() {
 
         if (result == RequestParser::good) {
             co_await request_handler_.handle_request(request_);
-            //co_await do_write();
             clean();
         } else if (result == RequestParser::bad) {
             reply_ = Reply::stock_reply(StatusType::bad_request);
