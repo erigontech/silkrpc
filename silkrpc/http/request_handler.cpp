@@ -47,11 +47,11 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
         SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
 
         const auto request_json = nlohmann::json::parse(request.content);
-        auto request_id = request_json["id"].get<uint32_t>();
-        if (!request_json.contains("method")) {
-            reply.content = make_json_error(request_id, -32600, "method missing").dump() + "\n";
-            reply.status = http::StatusType::bad_request;
+        if (!request_json.contains("id")) {
+            reply.content = "\n";
+            reply.status = http::StatusType::ok;
         } else {
+            auto request_id = request_json["id"].get<uint32_t>();
             const auto error = co_await is_request_authorized(request_id, request);
             if (error.has_value()) {
                 reply.content = make_json_error(request_id, 403, error.value()).dump() + "\n";
@@ -67,56 +67,14 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
     SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
 }
 
-boost::asio::awaitable<std::optional<std::string>> RequestHandler::is_request_authorized(uint32_t request_id, const http::Request& request) {
-    if (!jwt_secret_.has_value()) {
-        co_return std::nullopt;
-    }
-
-    SILKRPC_LOG << "JWT jwt_secret_: " << jwt_secret_.value() << "\n";
-
-    const auto it = std::find_if(request.headers.begin(), request.headers.end(), [&](const Header& h){
-        return h.name == "Authorization";
-    });
-
-    if (it == request.headers.end()) {
-        SILKRPC_ERROR << "JWT request without Authorization in auth connection\n";
-        co_return "missing Authorization Header";
-    }
-
-    std::string client_token;
-    if (it->value.substr(0, 7) == "Bearer ") {
-        client_token = it->value.substr(7);
-    } else {
-        SILKRPC_ERROR << "JWT client request without token\n";
-        co_return "missing token";
-    }
-
-    SILKRPC_LOG << "JWT client_token: " << client_token << "\n";
-
-    try {
-        // Parse token
-        auto decoded_client_token = jwt::decode(client_token);
-        if (decoded_client_token.has_issued_at() == 0) {
-            SILKRPC_ERROR << "JWT iat (Issued At) not defined: \n";
-            co_return "iat(Issued At) not defined";
-        }
-        // Validate token
-        auto verifier = jwt::verify().allow_algorithm(jwt::algorithm::hs256{*jwt_secret_});
-
-        SILKRPC_TRACE << "jwt client token: " << client_token << " jwt_secret: " << *jwt_secret_ << "\n";
-        verifier.verify(decoded_client_token);
-    } catch (const std::system_error& se) {
-        SILKRPC_ERROR << "JWT invalid token: " << se.what() << "\n";
-        co_return "invalid token";
-    } catch (const std::exception& se) {
-        SILKRPC_ERROR << "JWT invalid token: " << se.what() << "\n";
-        co_return "invalid token";
-    }
-
-    co_return std::nullopt;
-}
-
 boost::asio::awaitable<void> RequestHandler::handle_request(const nlohmann::json& request_json, http::Reply& reply) {
+    auto request_id = request_json["id"].get<uint32_t>();
+    if (!request_json.contains("method")) {
+        reply.content = make_json_error(request_id, -32600, "method missing").dump() + "\n";
+        reply.status = http::StatusType::bad_request;
+        co_return;
+    }
+
     const auto method = request_json["method"].get<std::string>();
     const auto json_handler_opt = rpc_api_table_.find_json_handler(method);
     if (json_handler_opt) {
@@ -140,14 +98,13 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const nlohmann::json
         co_return;
     }
 
-    auto request_id = request_json["id"].get<uint32_t>();
     reply.content = make_json_error(request_id, -32601, "the method " + method + " does not exist/is not available").dump() + "\n";
     reply.status = http::StatusType::not_implemented;
 
     co_return;
 }
 
-boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::RpcApiTable::HandleJson handler, const nlohmann::json& request_json, http::Reply& reply) {
+boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::RpcApiTable::HandleMethod handler, const nlohmann::json& request_json, http::Reply& reply) {
     auto request_id = request_json["id"].get<uint32_t>();
     try {
         nlohmann::json reply_json;
@@ -183,6 +140,51 @@ boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::R
     }
 
     co_return;
+}
+
+boost::asio::awaitable<std::optional<std::string>> RequestHandler::is_request_authorized(uint32_t request_id, const http::Request& request) {
+    if (!jwt_secret_.has_value()) {
+        co_return std::nullopt;
+    }
+
+    const auto it = std::find_if(request.headers.begin(), request.headers.end(), [&](const Header& h){
+        return h.name == "Authorization";
+    });
+
+    if (it == request.headers.end()) {
+        SILKRPC_ERROR << "JWT request without Authorization in auth connection\n";
+        co_return "missing Authorization Header";
+    }
+
+    std::string client_token;
+    if (it->value.substr(0, 7) == "Bearer ") {
+        client_token = it->value.substr(7);
+    } else {
+        SILKRPC_ERROR << "JWT client request without token\n";
+        co_return "missing token";
+    }
+
+    try {
+        // Parse token
+        auto decoded_client_token = jwt::decode(client_token);
+        if (decoded_client_token.has_issued_at() == 0) {
+            SILKRPC_ERROR << "JWT iat (Issued At) not defined: \n";
+            co_return "iat(Issued At) not defined";
+        }
+        // Validate token
+        auto verifier = jwt::verify().allow_algorithm(jwt::algorithm::hs256{*jwt_secret_});
+
+        SILKRPC_TRACE << "jwt client token: " << client_token << " jwt_secret: " << *jwt_secret_ << "\n";
+        verifier.verify(decoded_client_token);
+    } catch (const std::system_error& se) {
+        SILKRPC_ERROR << "JWT invalid token: " << se.what() << "\n";
+        co_return "invalid token";
+    } catch (const std::exception& se) {
+        SILKRPC_ERROR << "JWT invalid token: " << se.what() << "\n";
+        co_return "invalid token";
+    }
+
+    co_return std::nullopt;
 }
 
 boost::asio::awaitable<void> RequestHandler::do_write(Reply &reply) {

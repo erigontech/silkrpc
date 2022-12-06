@@ -68,7 +68,6 @@ boost::asio::awaitable<void> Connection::do_read() {
 
         if (result == RequestParser::good) {
             co_await request_handler_.handle_request(request_);
-            //co_await do_write();
             clean();
         } else if (result == RequestParser::bad) {
             reply_ = Reply::stock_reply(StatusType::bad_request);
@@ -98,15 +97,9 @@ boost::asio::awaitable<void> Connection::do_read() {
 }
 
 boost::asio::awaitable<void> Connection::do_write() {
-    try {
-        SILKRPC_DEBUG << "Connection::do_write reply: " << reply_.content << "\n" << std::flush;
-        const auto bytes_transferred = co_await boost::asio::async_write(socket_, reply_.to_buffers(), boost::asio::use_awaitable);
-        SILKRPC_TRACE << "Connection::do_write bytes_transferred: " << bytes_transferred << "\n" << std::flush;
-    } catch (const std::system_error& se) {
-        std::rethrow_exception(std::make_exception_ptr(se));
-    } catch (const std::exception& e) {
-        std::rethrow_exception(std::make_exception_ptr(e));
-    }
+    SILKRPC_DEBUG << "Connection::do_write reply: " << reply_.content << "\n" << std::flush;
+    const auto bytes_transferred = co_await boost::asio::async_write(socket_, reply_.to_buffers(), boost::asio::use_awaitable);
+    SILKRPC_TRACE << "Connection::do_write bytes_transferred: " << bytes_transferred << "\n" << std::flush;
 }
 
 void Connection::clean() {
