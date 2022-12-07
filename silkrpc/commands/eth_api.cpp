@@ -906,10 +906,21 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohma
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::CachedDatabase tx_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
-        StateReader state_reader{tx_database};
+        ethdb::kv::CachedDatabase cached_tx_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
+        ethdb::TransactionDatabase tx_database{*tx};
+        ethdb::TransactionDatabase *tx_database_ptr;
 
-        const auto block_number = co_await core::get_block_number(block_id, tx_database);
+        // Check if target block is latest one: use local state cache (if any) for target transaction
+        const bool is_latest_block = co_await core::is_latest_block_number(BlockNumberOrHash{block_id}, tx_database);
+
+        if (is_latest_block) {
+           tx_database_ptr =  &tx_database;
+        } else {
+           tx_database_ptr =  (ethdb::TransactionDatabase *)&cached_tx_database;
+        }
+
+        StateReader state_reader{*tx_database_ptr};
+        const auto block_number = co_await core::get_block_number(block_id, *tx_database_ptr);
         std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
 
         reply = make_json_content(request["id"], "0x" + (account ? intx::hex(account->balance) : "0"));
