@@ -38,7 +38,7 @@ boost::asio::awaitable<silkworm::Bytes> CachedDatabase::get_one(const std::strin
             // TODO(canepat) remove key copy changing DatabaseReader interface
             const auto value = co_await view->get(silkworm::Bytes{key.data(), key.size()});
             co_return value ? *value : silkworm::Bytes{};
-        } 
+        }
     } else if (table == db::table::kCode) {
         std::shared_ptr<kv::StateView> view = state_cache_.get_view(txn_);
         if (view != nullptr) {
