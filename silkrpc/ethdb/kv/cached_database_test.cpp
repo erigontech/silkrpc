@@ -68,13 +68,6 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
         BlockNumberOrHash block_id{0};
         test::DummyTransaction fake_txn{0, mock_cursor};
         CachedDatabase cached_db{block_id, fake_txn, mock_cache};
-        // Mock cursor shall be used to read latest block from Execution state in table SyncStageProgress
-        EXPECT_CALL(*mock_cursor, seek(forkChoiceKey)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}};
-        }));
-        EXPECT_CALL(*mock_cursor, seek(stageSyncKey)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{kZeroBytes, kTestBlockNumberBytes};
-        }));
         // Mock cursor shall be used to read from table PlainState
         EXPECT_CALL(*mock_cursor, seek_exact(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{kZeroBytes, kTestData};
@@ -89,13 +82,6 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
         test::DummyTransaction fake_txn{0, mock_cursor};
         test::MockStateView* mock_view = new test::MockStateView;
         CachedDatabase cached_db{block_id, fake_txn, mock_cache};
-        // Mock cursor shall be used to read latest block from Execution stage in table SyncStageProgress
-        EXPECT_CALL(*mock_cursor, seek(forkChoiceKey)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}};
-        }));
-        EXPECT_CALL(*mock_cursor, seek(stageSyncKey)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{kZeroBytes, kTestBlockNumberBytes};
-        }));
         // Mock cache shall return the mock view instance
         EXPECT_CALL(mock_cache, get_view(_)).WillOnce(InvokeWithoutArgs([=]() -> std::unique_ptr<StateView> {
             return std::unique_ptr<test::MockStateView>{mock_view};
@@ -114,13 +100,6 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
         test::DummyTransaction fake_txn{0, mock_cursor};
         test::MockStateView* mock_view = new test::MockStateView;
         CachedDatabase cached_db{block_id, fake_txn, mock_cache};
-        // Mock cursor shall be used to read latest block from Execution stage in table SyncStageProgress
-        EXPECT_CALL(*mock_cursor, seek(forkChoiceKey)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}};
-        }));
-        EXPECT_CALL(*mock_cursor, seek(stageSyncKey)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{kZeroBytes, kTestBlockNumberBytes};
-        }));
         // Mock cache shall return the mock view instance
         EXPECT_CALL(mock_cache, get_view(_)).WillOnce(InvokeWithoutArgs([=]() -> std::unique_ptr<StateView> {
             return std::unique_ptr<test::MockStateView>{mock_view};
