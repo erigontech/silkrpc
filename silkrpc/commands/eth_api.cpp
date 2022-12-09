@@ -841,10 +841,8 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohm
 
     try {
         const BlockNumberOrHash block_number_or_hash{core::kLatestBlockId};
-        ethdb::kv::CachedDatabase cached_database{block_number_or_hash, *tx, *state_cache_};
         ethdb::TransactionDatabase tx_database{*tx};
-        StateReader state_reader {tx_database};
-        StateReader cached_state_reader {cached_database};
+        ethdb::kv::CachedDatabase cached_database{block_number_or_hash, *tx, *state_cache_};
 
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         const auto chain_config_ptr = lookup_chain_config(chain_id);
@@ -866,10 +864,10 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohm
 
         // Check if target block is latest one: use local state cache (if any) for target transaction
         const bool is_latest_block = co_await core::is_latest_block_number(block_number_or_hash, tx_database);
-        StateReader *current_state_reader_ptr = is_latest_block ? &cached_state_reader : &state_reader;
+        StateReader state_reader(is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database);
 
-        ego::AccountReader account_reader = [current_state_reader_ptr](const evmc::address& address, uint64_t block_number) {
-            return current_state_reader_ptr->read_account(address, block_number + 1);
+        ego::AccountReader account_reader = [&state_reader](const evmc::address& address, uint64_t block_number) {
+            return state_reader.read_account(address, block_number + 1);
         };
 
         ego::EstimateGasOracle estimate_gas_oracle{block_header_provider, account_reader, executor};
@@ -912,16 +910,14 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_balance(const nlohma
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::CachedDatabase cached_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
         ethdb::TransactionDatabase tx_database{*tx};
-        StateReader state_reader {tx_database};
-        StateReader cached_state_reader {cached_database};
+        ethdb::kv::CachedDatabase cached_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
 
         // Check if target block is latest one: use local state cache (if any) for target transaction
-        const bool is_latest_block = co_await core::is_latest_block_number(BlockNumberOrHash{block_id}, tx_database);
-        StateReader *current_state_reader_ptr = is_latest_block ? &cached_state_reader : &state_reader;
+        const auto is_latest_block = co_await core::is_latest_block_number(BlockNumberOrHash{block_id}, tx_database);
+        StateReader state_reader(is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database);
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
-        std::optional<silkworm::Account> account{co_await current_state_reader_ptr->read_account(address, block_number + 1)};
+        std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
 
         reply = make_json_content(request["id"], "0x" + (account ? intx::hex(account->balance) : "0"));
     } catch (const std::exception& e) {
@@ -952,16 +948,14 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_code(const nlohmann:
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::CachedDatabase cached_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
         ethdb::TransactionDatabase tx_database{*tx};
-        StateReader state_reader {tx_database};
-        StateReader cached_state_reader {cached_database};
+        ethdb::kv::CachedDatabase cached_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
         // Check if target block is latest one: use local state cache (if any) for target transaction
         const bool is_latest_block = co_await core::is_latest_block_number(BlockNumberOrHash{block_id}, tx_database);
-        StateReader *current_state_reader_ptr = is_latest_block ? &cached_state_reader : &state_reader;
+        StateReader state_reader(is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database);
 
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
-        std::optional<silkworm::Account> account{co_await current_state_reader_ptr->read_account(address, block_number + 1)};
+        std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
 
         if (account) {
             auto code{co_await state_reader.read_code(account->code_hash)};
@@ -998,16 +992,14 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(co
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::CachedDatabase cached_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
         ethdb::TransactionDatabase tx_database{*tx};
-        StateReader state_reader {tx_database};
-        StateReader cached_state_reader {cached_database};
+        ethdb::kv::CachedDatabase cached_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
         // Check if target block is latest one: use local state cache (if any) for target transaction
         const bool is_latest_block = co_await core::is_latest_block_number(BlockNumberOrHash{block_id}, tx_database);
-        StateReader *current_state_reader_ptr = is_latest_block ? &cached_state_reader : &state_reader;
+        StateReader state_reader(is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database);
 
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
-        std::optional<silkworm::Account> account{co_await current_state_reader_ptr->read_account(address, block_number + 1)};
+        std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
 
         if (account) {
             reply = make_json_content(request["id"], to_quantity(account->nonce));
@@ -1044,8 +1036,11 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_storage_at(const nlo
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::CachedDatabase tx_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
-        StateReader state_reader{tx_database};
+        ethdb::TransactionDatabase tx_database{*tx};
+        ethdb::kv::CachedDatabase cached_database{BlockNumberOrHash{block_id}, *tx, *state_cache_};
+        // Check if target block is latest one: use local state cache (if any) for target transaction
+        const bool is_latest_block = co_await core::is_latest_block_number(BlockNumberOrHash{block_id}, tx_database);
+        StateReader state_reader(is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database);
         const auto block_number = co_await core::get_block_number(block_id, tx_database);
         std::optional<silkworm::Account> account{co_await state_reader.read_account(address, block_number + 1)};
 
@@ -1135,13 +1130,16 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const
     auto tx = co_await database_->begin();
 
     try {
-        ethdb::kv::CachedDatabase tx_database{block_number_or_hash, *tx, *state_cache_};
+        ethdb::TransactionDatabase tx_database{*tx};
+        ethdb::kv::CachedDatabase cached_database{block_number_or_hash, *tx, *state_cache_};
 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*block_cache_, tx_database, block_number_or_hash);
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         const auto chain_config_ptr = lookup_chain_config(chain_id);
 
-        StateReader state_reader{tx_database};
+        // Check if target block is latest one: use local state cache (if any) for target transaction
+        const bool is_latest_block = co_await core::is_latest_block_number(BlockNumberOrHash{block_with_hash.block.header.number}, tx_database);
+        StateReader state_reader(is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database);
 
         evmc::address to{};
         if (call.to) {
