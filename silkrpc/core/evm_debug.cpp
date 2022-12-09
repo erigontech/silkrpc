@@ -262,7 +262,8 @@ boost::asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::e
 
     const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
     const auto chain_config_ptr = lookup_chain_config(chain_id);
-    EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number-1};
+    state::RemoteState remote_state{io_context_, database_reader_, block_number-1};
+    EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number-1, remote_state};
 
     std::vector<DebugTrace> debug_traces(transactions.size());
     for (std::uint64_t idx = 0; idx < transactions.size(); idx++) {
@@ -311,7 +312,8 @@ boost::asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execu
 
     const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
     const auto chain_config_ptr = lookup_chain_config(chain_id);
-    EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number};
+    state::RemoteState remote_state{io_context_, database_reader_, block_number};
+    EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number, remote_state};
 
     for (auto idx = 0; idx < index; idx++) {
         silkrpc::Transaction txn{block.transactions[idx]};
