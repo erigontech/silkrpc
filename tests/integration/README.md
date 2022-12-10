@@ -11,11 +11,12 @@ json-diff install:
 ### To run integration tests comparing results with json file: ./run_tests.py -c -k jwt.hex
 
 ```
-Test time-elapsed (secs):     52
-Number of executed tests:     309/309
+Test time-elapsed (secs):     49
+Number of executed tests:     320/320
 Number of NOT executed tests: 0
-Number of success tests:      309
+Number of success tests:      320
 Number of failed tests:       0
+
 ```
 
 
@@ -23,16 +24,11 @@ Number of failed tests:       0
 ```
 016. debug_traceCall/test_10.json                                 Skipped
 020. debug_traceCall/test_14.json                                 Skipped
-144. parity_getBlockReceipts/test_1.json                          Skipped
-242. trace_rawTransaction/test_01.json                            Skipped
-305. txpool_content/test_1.json                                   Skipped
-                                                                                    
-Test time-elapsed (secs):     72
-Number of executed tests:     304/309
-Number of NOT executed tests: 5
-Number of success tests:      304
-Number of failed tests:       0
-
+085. eth_getBlockByNumber/test_2.json                             Failed
+118. eth_getRawTransactionByBlockNumberAndIndex/test_2.json       Failed
+153. parity_getBlockReceipts/test_1.json                          Skipped
+253. trace_rawTransaction/test_01.json                            Skipped
+316. txpool_content/test_1.json                                   Skipped
 ```
 
 ### Skipped tests reasons
