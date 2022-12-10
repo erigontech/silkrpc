@@ -852,17 +852,18 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohm
 
         const auto latest_block_with_hash = co_await core::read_block_by_number(*block_cache_, tx_database, latest_block_number);
         const auto latest_block = latest_block_with_hash.block;
-        StateReader state_reader(tx_database);
+        StateReader state_reader(cached_database);
         state::RemoteState remote_state{*context_.io_context(), cached_database, latest_block.header.number};
 
-        EVMExecutor evm_executor{*context_.io_context(), tx_database, *chain_config_ptr, workers_, latest_block.header.number, remote_state};
+        Tracers tracers;
+        EVMExecutor evm_executor{*context_.io_context(), cached_database, *chain_config_ptr, workers_, latest_block.header.number, remote_state};
 
-        ego::Executor executor = [&latest_block, &evm_executor](const silkworm::Transaction &transaction) {
-            return evm_executor.call(latest_block, transaction);
+        ego::Executor executor = [&latest_block, &evm_executor, &tracers](const silkworm::Transaction &transaction) {
+            return evm_executor.call(latest_block, transaction, /*refund=*/true, /*gas_bailout=*/true, tracers);
         };
 
-        ego::BlockHeaderProvider block_header_provider = [&tx_database](uint64_t block_number) {
-            return core::rawdb::read_header_by_number(tx_database, block_number);
+        ego::BlockHeaderProvider block_header_provider = [&cached_database](uint64_t block_number) {
+            return core::rawdb::read_header_by_number(cached_database, block_number);
         };
 
 
@@ -872,7 +873,9 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohm
 
         ego::EstimateGasOracle estimate_gas_oracle{block_header_provider, account_reader, executor};
 
+        std::cout << "TRACE4\n";
         auto estimated_gas = co_await estimate_gas_oracle.estimate_gas(call, latest_block_number);
+        std::cout << "TRACE5\n";
 
         reply = make_json_content(request["id"], to_quantity(estimated_gas));
     } catch (const ego::EstimateGasException& e) {
