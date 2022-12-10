@@ -340,9 +340,7 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann
         // Check if target block is latest one: use local state cache (if any) for target transaction
         const auto is_latest_block = co_await core::is_latest_block_number(block_number_or_hash, tx_database);
         core::rawdb::DatabaseReader& db_reader = is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database;
-   
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), db_reader, block_number_or_hash);
-
         debug::DebugExecutor executor{*context_.io_context(), db_reader, workers_, config};
         const auto result = co_await executor.execute(block_with_hash.block, call);
 
