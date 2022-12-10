@@ -1087,8 +1087,8 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_call(const nlohmann::jso
 
         // Check if target block is latest one: use local state cache (if any) for target transaction
         const auto is_latest_block = co_await core::is_latest_block_number(BlockNumberOrHash{block_id}, tx_database);
-        state::RemoteState remote_state{*context_.io_context(), 
-                                        is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database, 
+        state::RemoteState remote_state{*context_.io_context(),
+                                        is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database,
                                         block_number};
         EVMExecutor executor{*context_.io_context(), tx_database, *chain_config_ptr, workers_, block_number, remote_state};
         const auto block_with_hash = co_await core::read_block_by_number(*block_cache_, tx_database, block_number);

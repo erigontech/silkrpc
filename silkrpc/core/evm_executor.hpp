@@ -59,7 +59,7 @@ public:
         boost::asio::io_context& io_context,
         const core::rawdb::DatabaseReader& db_reader,
         const silkworm::ChainConfig& config,
-        boost::asio::thread_pool& workers, 
+        boost::asio::thread_pool& workers,
         uint64_t block_number,
         state::RemoteState& remote_state)
         : io_context_(io_context), db_reader_(db_reader), config_(config), workers_{workers}, remote_state_{remote_state}, state_{remote_state_} {}

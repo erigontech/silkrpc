@@ -64,19 +64,6 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
     std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
     test::MockStateCache mock_cache;
 
-    SECTION("cache miss: empty key from PlainState in latest block") {
-        BlockNumberOrHash block_id{0};
-        test::DummyTransaction fake_txn{0, mock_cursor};
-        CachedDatabase cached_db{block_id, fake_txn, mock_cache};
-        // Mock cursor shall be used to read from table PlainState
-        EXPECT_CALL(*mock_cursor, seek_exact(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-            co_return KeyValue{kZeroBytes, kTestData};
-        }));
-        auto result = boost::asio::co_spawn(pool, cached_db.get_one(db::table::kPlainState, kZeroBytes), boost::asio::use_future);
-        const auto value = result.get();
-        CHECK(value == kTestData);
-    }
-
     SECTION("cache hit: empty key from PlainState in latest block") {
         BlockNumberOrHash block_id{kTestBlockNumber};
         test::DummyTransaction fake_txn{0, mock_cursor};
