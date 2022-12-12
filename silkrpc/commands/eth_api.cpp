@@ -252,7 +252,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_block_by_number(cons
         reply = make_json_content(request["id"], extended_block);
     } catch (const std::invalid_argument& iv) {
         SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], -32000, "rlp: end of list");
+        reply = make_json_content(request["id"], nlohmann::detail::value_t::null);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -757,7 +757,8 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_raw_transaction_by_b
             reply = make_json_content(request["id"], rlp);
         }
     } catch (const std::invalid_argument& iv) {
-        reply = make_json_error(request["id"], -32000, "rlp: end of list");
+        Rlp rlp{};
+        reply = make_json_content(request["id"], rlp);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -873,9 +874,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohm
 
         ego::EstimateGasOracle estimate_gas_oracle{block_header_provider, account_reader, executor};
 
-        std::cout << "TRACE4\n";
         auto estimated_gas = co_await estimate_gas_oracle.estimate_gas(call, latest_block_number);
-        std::cout << "TRACE5\n";
 
         reply = make_json_content(request["id"], to_quantity(estimated_gas));
     } catch (const ego::EstimateGasException& e) {
