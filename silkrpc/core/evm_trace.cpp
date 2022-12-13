@@ -1162,7 +1162,7 @@ boost::asio::awaitable<std::vector<TraceCallResult>> TraceCallExecutor<WorldStat
 
         tracers.push_back(ibsTracer);
 
-        auto execution_result = co_await executor.call(block, transaction, /*refund=*/true, /*gas_bailout=*/true, tracers);
+        auto execution_result = co_await executor.call(block, transaction, tracers, /*refund=*/true, /*gas_bailout=*/true);
         if (execution_result.pre_check_error) {
             result.pre_check_error = execution_result.pre_check_error.value();
         } else {
@@ -1225,7 +1225,7 @@ boost::asio::awaitable<TraceManyCallResult> TraceCallExecutor<WorldState, VM>::t
         }
         tracers.push_back(ibsTracer);
 
-        auto execution_result = co_await executor.call(block, transaction, /*refund=*/true, /*gas_bailout=*/true, tracers);
+        auto execution_result = co_await executor.call(block, transaction, tracers, /*refund=*/true, /*gas_bailout=*/true);
 
         if (execution_result.pre_check_error) {
             result.pre_check_error = "first run for txIndex " + std::to_string(index) + " error: " + execution_result.pre_check_error.value();
@@ -1389,7 +1389,7 @@ boost::asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execu
         if (!txn.from) {
            txn.recover_sender();
         }
-        const auto execution_result = co_await executor.call(block, txn, /*refund=*/true, /*gas_bailout=*/true, tracers);
+        const auto execution_result = co_await executor.call(block, txn, tracers, /*refund=*/true, /*gas_bailout=*/true);
         executor.reset();
     }
 
@@ -1411,7 +1411,7 @@ boost::asio::awaitable<TraceCallResult> TraceCallExecutor<WorldState, VM>::execu
         std::shared_ptr<silkworm::EvmTracer> tracer = std::make_shared<trace::StateDiffTracer>(traces.state_diff.value(), state_addresses);
         tracers.push_back(tracer);
     }
-    auto execution_result = co_await executor.call(block, transaction, /*refund=*/true, /*gas_bailout=*/true, tracers);
+    auto execution_result = co_await executor.call(block, transaction, tracers, /*refund=*/true, /*gas_bailout=*/true);
 
     if (execution_result.pre_check_error) {
         result.pre_check_error = execution_result.pre_check_error.value();
