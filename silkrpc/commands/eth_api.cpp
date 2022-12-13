@@ -860,7 +860,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_estimate_gas(const nlohm
         EVMExecutor evm_executor{*context_.io_context(), cached_database, *chain_config_ptr, workers_, latest_block.header.number, remote_state};
 
         ego::Executor executor = [&latest_block, &evm_executor, &tracers](const silkworm::Transaction &transaction) {
-            return evm_executor.call(latest_block, transaction, /*refund=*/true, /*gas_bailout=*/true, tracers);
+            return evm_executor.call(latest_block, transaction, tracers);
         };
 
         ego::BlockHeaderProvider block_header_provider = [&cached_database](uint64_t block_number) {
@@ -1182,7 +1182,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const
             EVMExecutor executor{*context_.io_context(), tx_database, *chain_config_ptr, workers_, block_with_hash.block.header.number, remote_state};
             const auto txn = call.to_transaction();
             tracer->reset_access_list();
-            const auto execution_result = co_await executor.call(block_with_hash.block, txn, /* refund */true, /* gasBailout */false, tracers);
+            const auto execution_result = co_await executor.call(block_with_hash.block, txn, tracers, /* refund */true, /* gasBailout */false);
             if (execution_result.pre_check_error) {
                 reply = make_json_error(request["id"], -32000, execution_result.pre_check_error.value());
                 break;
