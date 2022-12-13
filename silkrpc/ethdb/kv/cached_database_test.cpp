@@ -64,6 +64,38 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
     std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
     test::MockStateCache mock_cache;
 
+    SECTION("cache miss: request unexpected table in latest block") {
+        BlockNumberOrHash block_id{kTestBlockNumber};
+        test::DummyTransaction fake_txn{0, mock_cursor};
+        test::MockStateView* mock_view = new test::MockStateView;
+        CachedDatabase cached_db{block_id, fake_txn, mock_cache};
+        // Mock cursor shall provide the value returned by get
+        EXPECT_CALL(*mock_cursor, seek_exact(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+            co_return KeyValue{kZeroBytes, kZeroBytes};
+        }));
+        auto result = boost::asio::co_spawn(pool, cached_db.get_one(db::table::kHeaders, kZeroBytes), boost::asio::use_future);
+        const auto value = result.get();
+        CHECK(value == kZeroBytes);
+    }
+
+    SECTION("cache hit: empty key from PlainState in latest block return nullopt") {
+        BlockNumberOrHash block_id{kTestBlockNumber};
+        test::DummyTransaction fake_txn{0, mock_cursor};
+        test::MockStateView* mock_view = new test::MockStateView;
+        CachedDatabase cached_db{block_id, fake_txn, mock_cache};
+        // Mock cache shall return the mock view instance
+        EXPECT_CALL(mock_cache, get_view(_)).WillOnce(InvokeWithoutArgs([=]() -> std::unique_ptr<StateView> {
+            return std::unique_ptr<test::MockStateView>{mock_view};
+        }));
+        // Mock view shall be used to read value from data cache
+        EXPECT_CALL(*mock_view, get(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
+            co_return std::nullopt;
+        }));
+        auto result = boost::asio::co_spawn(pool, cached_db.get_one(db::table::kPlainState, kZeroBytes), boost::asio::use_future);
+        const auto value = result.get();
+        CHECK(value == kZeroBytes);
+    }
+
     SECTION("cache hit: empty key from PlainState in latest block") {
         BlockNumberOrHash block_id{kTestBlockNumber};
         test::DummyTransaction fake_txn{0, mock_cursor};
