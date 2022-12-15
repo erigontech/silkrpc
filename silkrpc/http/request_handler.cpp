@@ -47,19 +47,39 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
         SILKRPC_DEBUG << "handle_request content: " << request.content << "\n";
 
         const auto request_json = nlohmann::json::parse(request.content);
-        if (!request_json.contains("id")) {
-            reply.content = "\n";
-            reply.status = http::StatusType::ok;
-        } else {
-            auto request_id = request_json["id"].get<uint32_t>();
-            const auto error = co_await is_request_authorized(request_id, request);
-            if (error.has_value()) {
-                reply.content = make_json_error(request_id, 403, error.value()).dump() + "\n";
-                reply.status = http::StatusType::unauthorized;
+
+        if (request_json.is_object()) {
+            if (!request_json.contains("id")) {
+                reply.content = "\n";
+                reply.status = http::StatusType::ok;
             } else {
-                co_await handle_request(request_json, reply);
+                auto request_id = request_json["id"].get<uint32_t>();
+                const auto error = co_await is_request_authorized(request_id, request);
+                if (error.has_value()) {
+                    reply.content = make_json_error(request_id, 403, error.value()).dump() + "\n";
+                    reply.status = http::StatusType::unauthorized;
+                } else {
+                    co_await handle_request(request_json, reply);
+                }
             }
-        }
+       } else {
+            for (auto& el : request_json.items()) {
+                const auto element = el.value();
+                if (!element.contains("id")) {
+                    reply.content = "\n";
+                    reply.status = http::StatusType::ok;
+                } else {
+                    auto request_id = element["id"].get<uint32_t>();
+                    const auto error = co_await is_request_authorized(request_id, request);
+                    if (error.has_value()) {
+                        reply.content = make_json_error(request_id, 403, error.value()).dump() + "\n";
+                        reply.status = http::StatusType::unauthorized;
+                    } else {
+                        co_await handle_request(element, reply);
+                    }
+                }
+           }
+       }
     }
 
     co_await do_write(reply);
@@ -163,7 +183,6 @@ boost::asio::awaitable<std::optional<std::string>> RequestHandler::is_request_au
         SILKRPC_ERROR << "JWT client request without token\n";
         co_return "missing token";
     }
-
     try {
         // Parse token
         auto decoded_client_token = jwt::decode(client_token);
