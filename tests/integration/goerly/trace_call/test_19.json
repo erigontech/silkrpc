@@ -1,0 +1,27 @@
+[
+    {
+        "_comment": "# block 6257905 txn 8",
+        "request": {
+            "jsonrpc":"2.0",
+            "method":"trace_call",
+            "params":[
+                {
+                    "from": "0xf2c740b2d649dfd084fcb363d236a3f194beebb0",
+                    "gas": "0x1D098",
+                    "gasPrice": "0x3000",
+                    "value": "0x0",
+                    "data": "0x1ffbe7f9000000000000000000000000b63d2c2618bc300d96d5336943429aa85f24e85628b53e8d4960b980852cfc5d60f8b50a738c05db0000000000000000000000000000000000000000000000000000000000000000000000000000000000002710"
+                },
+                ["vmTrace", "trace", "stateDiff"],
+                "latest"
+            ],
+            "id":1
+        },
+        "response": {
+            "id": 1,
+            "jsonrpc": "2.0",
+            "result": null
+       }
+    }
+]
+
