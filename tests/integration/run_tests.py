@@ -223,12 +223,12 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
     for json_rpc in jsonrpc_commands:
         request = json_rpc["request"]
         try:
-           if (type(request) ==dict):
-              method = request["method"]
-           else:
-              method = request[0]["method"]
+            if isinstance(request) == dict:
+                method = request["method"]
+            else:
+                method = request[0]["method"]
         except KeyError:
-           method = ""
+            method = ""
         request_dumps = json.dumps(request)
         target = get_target(daemon_under_test, method, infura_url, daemon_on_host)
         if jwt_secret == "":
