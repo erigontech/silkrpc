@@ -12,11 +12,10 @@ json-diff install:
 
 ```
 Test time-elapsed (secs):     52
-Number of executed tests:     320/320
+Number of executed tests:     324/324
 Number of NOT executed tests: 0
-Number of success tests:      320
+Number of success tests:      324
 Number of failed tests:       0
-
 ```
 
 
@@ -24,16 +23,15 @@ Number of failed tests:       0
 ```
 016. debug_traceCall/test_10.json                                 Skipped
 020. debug_traceCall/test_14.json                                 Skipped
-153. parity_getBlockReceipts/test_1.json                          Skipped
-253. trace_rawTransaction/test_01.json                            Skipped
-316. txpool_content/test_1.json                                   Skipped
+157. parity_getBlockReceipts/test_1.json                          Skipped
+257. trace_rawTransaction/test_01.json                            Skipped
+320. txpool_content/test_1.json                                   Skipped
                                                                                     
-Test time-elapsed (secs):     70
-Number of executed tests:     315/320
+Test time-elapsed (secs):     78
+Number of executed tests:     319/324
 Number of NOT executed tests: 5
-Number of success tests:      315
+Number of success tests:      319
 Number of failed tests:       0
-
 ```
 
 ### Skipped tests reasons
