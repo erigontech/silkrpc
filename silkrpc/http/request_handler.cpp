@@ -224,7 +224,7 @@ boost::asio::awaitable<std::optional<std::string>> RequestHandler::is_request_au
 
         SILKRPC_TRACE << "jwt client token: " << client_token << " jwt_secret: " << *jwt_secret_ << "\n";
         verifier.verify(decoded_client_token);
-    } catch (const std::system_error& se) {
+    } catch (const boost::system::system_error& se) {
         SILKRPC_ERROR << "JWT invalid token: " << se.what() << "\n";
         co_return "invalid token";
     } catch (const std::exception& se) {
@@ -245,7 +245,7 @@ boost::asio::awaitable<void> RequestHandler::do_write(Reply &reply) {
 
         const auto bytes_transferred = co_await boost::asio::async_write(socket_, reply.to_buffers(), boost::asio::use_awaitable);
         SILKRPC_TRACE << "RequestHandler::do_write bytes_transferred: " << bytes_transferred << "\n" << std::flush;
-    } catch (const std::system_error& se) {
+    } catch (const boost::system::system_error& se) {
         std::rethrow_exception(std::make_exception_ptr(se));
     } catch (const std::exception& e) {
         std::rethrow_exception(std::make_exception_ptr(e));
@@ -260,7 +260,7 @@ boost::asio::awaitable<void> RequestHandler::write_headers() {
         headers.emplace_back(http::Header{"Content-Type", "application/json"});
 
         const auto bytes_transferred = co_await boost::asio::async_write(socket_, http::to_buffers(headers), boost::asio::use_awaitable);
-    } catch (const std::system_error& se) {
+    } catch (const boost::system::system_error& se) {
         std::rethrow_exception(std::make_exception_ptr(se));
     } catch (const std::exception& e) {
         std::rethrow_exception(std::make_exception_ptr(e));
