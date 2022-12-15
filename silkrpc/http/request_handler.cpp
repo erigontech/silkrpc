@@ -62,7 +62,7 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
                     co_await handle_request(request_json, reply, /* is_batch */ false);
                 }
             }
-       } else {
+        } else {
             std::string full_json = "[";
             bool first_element = true;
             for (auto& el : request_json.items()) {
@@ -86,10 +86,10 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
                         full_json += reply.content;
                     }
                 }
-           }
-           full_json += "]\n";
-           reply.content = full_json;
-       }
+            }
+            full_json += "]\n";
+            reply.content = full_json;
+        }
     }
 
     co_await do_write(reply);
