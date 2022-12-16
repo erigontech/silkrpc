@@ -315,6 +315,68 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const n
     co_return;
 }
 
+boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction_stream(const nlohmann::json& request, json::Stream& stream) {
+    auto params = request["params"];
+    if (params.size() < 1) {
+        auto error_msg = "invalid debug_traceTransaction params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        const auto reply = make_json_error(request["id"], 100, error_msg);
+        stream.write_json(reply);
+
+        co_return;
+    }
+    auto transaction_hash = params[0].get<evmc::bytes32>();
+
+    debug::DebugConfig config;
+    if (params.size() > 1) {
+        config = params[1].get<debug::DebugConfig>();
+    }
+
+    SILKRPC_DEBUG << "transaction_hash: " << transaction_hash << " config: {" << config << "}\n";
+
+    stream.open_object();
+    stream.write_field("id", request["id"]);
+    stream.write_field("jsonrpc", "2.0");
+
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+        const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache(), tx_database, transaction_hash);
+        if (!tx_with_block) {
+            std::ostringstream oss;
+            oss << "transaction 0x" << transaction_hash << " not found";
+            stream.write_field("code", -32000);
+            stream.write_field("message", oss.str());
+        } else {
+            debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
+
+            stream.write_field("result");
+            stream.open_object();
+            const auto result = co_await executor.execute(tx_with_block->block_with_hash.block, tx_with_block->transaction, &stream);
+            stream.close_object();
+
+            if (result.pre_check_error) {
+                stream.write_field("code", -32000);
+                stream.write_field("message", result.pre_check_error.value());
+            }
+        }
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        stream.write_field("code", 100);
+        stream.write_field("message", e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        stream.write_field("code", 100);
+        stream.write_field("message", "unexpected exception");
+    }
+
+    stream.close_object();
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_tracecall
 boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json& request, nlohmann::json& reply) {
     auto params = request["params"];

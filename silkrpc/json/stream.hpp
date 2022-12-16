@@ -17,21 +17,43 @@
 #ifndef SILKRPC_JSON_STREAM_HPP_
 #define SILKRPC_JSON_STREAM_HPP_
 
-#include <boost/asio/awaitable.hpp>
-#include <boost/asio/ip/tcp.hpp>
+#include <stack>
+#include <string>
 
 #include <nlohmann/json.hpp>
 
+#include <silkrpc/types/writer.hpp>
+
 namespace json {
+static const nlohmann::json JSON_NULL = nlohmann::json::value_t::null;
+static const nlohmann::json EMPTY_OBJECT = nlohmann::json::value_t::object;
+static const nlohmann::json EMPTY_ARRAY = nlohmann::json::value_t::array;
+
 class Stream {
 public:
-    explicit Stream(boost::asio::ip::tcp::socket& socket) : socket_(socket) {}
+    explicit Stream(silkrpc::Writer& writer) : writer_(writer) {}
+    Stream(const Stream& stream) = delete;
+    Stream& operator=(const Stream&) = delete;
 
-    boost::asio::awaitable<void> flush();
-    boost::asio::awaitable<void> write_json(const nlohmann::json& json);
+    void close() {writer_.close();}
+
+    void open_object();
+    void close_object();
+
+    void open_array();
+    void close_array();
+
+    void write_json(const nlohmann::json& json);
+
+    void write_field(const std::string& name);
+    void write_field(const std::string& name, const nlohmann::json& value);
 
 private:
-    boost::asio::ip::tcp::socket& socket_;
+    void write_string(const std::string& str);
+    void ensure_separator();
+
+    silkrpc::Writer& writer_;
+    std::stack<std::uint8_t> stack_;
 };
 
 } // namespace json

@@ -105,6 +105,19 @@ std::vector<boost::asio::const_buffer> to_buffers(const std::vector<Header>& hea
     return buffers;
 }
 
+std::vector<boost::asio::const_buffer> to_buffers(StatusType status, const std::vector<Header>& headers) {
+    std::vector<boost::asio::const_buffer> buffers;
+    buffers.reserve(1 + headers.size()*4 + 1);
+    buffers.push_back(to_buffer(status));
+
+    const auto headers_buf = http::to_buffers(headers);
+    copy(headers_buf.begin(), headers_buf.end(), back_inserter(buffers));
+
+    buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+
+    return buffers;
+}
+
 std::vector<boost::asio::const_buffer> Reply::to_buffers() const {
     std::vector<boost::asio::const_buffer> buffers;
     buffers.reserve(1 + headers.size()*4 + 2);
