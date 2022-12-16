@@ -53,25 +53,26 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
                 reply.content = "\n";
                 reply.status = http::StatusType::ok;
             } else {
-                auto request_id = request_json["id"].get<uint32_t>();
+                const auto request_id = request_json["id"].get<uint32_t>();
                 const auto error = co_await is_request_authorized(request_id, request);
                 if (error.has_value()) {
                     reply.content = make_json_error(request_id, 403, error.value()).dump() + "\n";
                     reply.status = http::StatusType::unauthorized;
                 } else {
-                    co_await handle_request(request_json, reply, /* is_batch */ false);
+                    co_await handle_request(request_json, reply);
+                    reply.content += "\n";
                 }
             }
        } else {
-            std::string full_json = "[";
+            std::string batch_reply_content = "[";
             bool first_element = true;
-            for (auto& el : request_json.items()) {
-                const auto element = el.value();
-                if (!element.contains("id")) {
+            for (auto& item : request_json.items()) {
+                const auto item_json = item.value();
+                if (!item_json.contains("id")) {
                     reply.content = "\n";
                     reply.status = http::StatusType::ok;
                 } else {
-                    auto request_id = element["id"].get<uint32_t>();
+                    auto request_id = item_json["id"].get<uint32_t>();
                     const auto error = co_await is_request_authorized(request_id, request);
                     if (error.has_value()) {
                         reply.content = make_json_error(request_id, 403, error.value()).dump() + "\n";
@@ -80,15 +81,15 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
                         if (first_element) {
                             first_element =  false;
                         } else {
-                            full_json += ",";
+                            batch_reply_content += ",";
                         }
-                        co_await handle_request(element, reply, /* is_batch */true);
-                        full_json += reply.content;
+                        co_await handle_request(item_json, reply);
+                        batch_reply_content += reply.content;
                     }
                 }
            }
-           full_json += "]\n";
-           reply.content = full_json;
+           batch_reply_content += "]\n";
+           reply.content = batch_reply_content;
        }
     }
 
@@ -97,12 +98,10 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const http::Request&
     SILKRPC_INFO << "handle_request t=" << clock_time::since(start) << "ns\n";
 }
 
-boost::asio::awaitable<void> RequestHandler::handle_request(const nlohmann::json& request_json, http::Reply& reply, bool is_batch) {
+boost::asio::awaitable<void> RequestHandler::handle_request(const nlohmann::json& request_json, http::Reply& reply) {
     auto request_id = request_json["id"].get<uint32_t>();
     if (!request_json.contains("method")) {
         reply.content = make_json_error(request_id, -32600, "invalid request").dump();
-        if (is_batch == false)
-            reply.content += "\n";
         reply.status = http::StatusType::bad_request;
         co_return;
     }
@@ -110,8 +109,6 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const nlohmann::json
     const auto method = request_json["method"].get<std::string>();
     if (method.size() == 0) {
         reply.content = make_json_error(request_id, -32600, "invalid request").dump();
-        if (is_batch == false)
-            reply.content += "\n";
         reply.status = http::StatusType::bad_request;
         co_return;
     }
@@ -124,8 +121,6 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const nlohmann::json
 
         reply.content = reply_json.dump(
             /*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace);
-        if (is_batch == false)
-            reply.content += "\n";
         reply.status = http::StatusType::ok;
         co_return;
     }
@@ -140,14 +135,12 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const nlohmann::json
     }
 
     reply.content = make_json_error(request_id, -32601, "the method " + method + " does not exist/is not available").dump();
-    if (is_batch == false)
-       reply.content += "\n";
     reply.status = http::StatusType::not_implemented;
 
     co_return;
 }
 
-boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::RpcApiTable::HandleMethod handler, const nlohmann::json& request_json, http::Reply& reply,  bool is_batch) {
+boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::RpcApiTable::HandleMethod handler, const nlohmann::json& request_json, http::Reply& reply) {
     auto request_id = request_json["id"].get<uint32_t>();
     try {
         nlohmann::json reply_json;
@@ -155,27 +148,21 @@ boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::R
 
         reply.content = reply_json.dump(
             /*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace);
-        if (is_batch == false)
-            reply.content += "\n";
         reply.status = http::StatusType::ok;
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
         reply.content = make_json_error(request_id, 100, e.what()).dump();
-        if (is_batch == false)
-            reply.content += "\n";
         reply.status = http::StatusType::internal_server_error;
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception\n";
         reply.content = make_json_error(request_id, 100, "unexpected exception").dump();
-        if (is_batch == false)
-            reply.content += "\n";
         reply.status = http::StatusType::internal_server_error;
     }
 
     co_return;
 }
 
-boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::RpcApiTable::HandleStream handler, const nlohmann::json& request_json, http::Reply& reply, bool is_batch) {
+boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::RpcApiTable::HandleStream handler, const nlohmann::json& request_json, http::Reply& reply) {
     auto request_id = request_json["id"].get<uint32_t>();
     try {
         json::Stream stream(socket_);
