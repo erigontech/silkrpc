@@ -223,7 +223,7 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
     for json_rpc in jsonrpc_commands:
         request = json_rpc["request"]
         try:
-            if isinstance(request) == dict:
+            if isinstance(request, dict) == 1:
                 method = request["method"]
             else:
                 method = request[0]["method"]
