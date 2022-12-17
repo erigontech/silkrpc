@@ -520,7 +520,7 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
 
 void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
               const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
-    const auto op_code = execution_state.code[pc];
+    const auto op_code = execution_state.original_code[pc];
     auto op_name = get_op_name(opcode_names_, op_code);
 
     auto& vm_trace = traces_stack_.top().get();
@@ -703,7 +703,7 @@ void TraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
 
 void TraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
               const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
-    const auto opcode = execution_state.code[pc];
+    const auto opcode = execution_state.original_code[pc];
     auto opcode_name = get_op_name(opcode_names_, opcode);
 
     SILKRPC_DEBUG << "TraceTracer::on_instruction_start:"
@@ -895,7 +895,7 @@ void StateDiffTracer::on_execution_start(evmc_revision rev, const evmc_message& 
 
 void StateDiffTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
               const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
-    const auto opcode = execution_state.code[pc];
+    const auto opcode = execution_state.original_code[pc];
     auto opcode_name = get_op_name(opcode_names_, opcode);
 
     if (opcode == evmc_opcode::OP_SSTORE) {
