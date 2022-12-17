@@ -9,10 +9,7 @@
         "response": {
             "id": 1,
             "jsonrpc": "2.0",
-            "error": { 
-               "code": -32000,
-               "message": "rlp: end of list"
-            }
+            "result": "0x"
         }
    }
 ]

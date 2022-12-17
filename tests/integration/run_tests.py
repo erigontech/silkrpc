@@ -222,8 +222,15 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
             jsonrpc_commands = json.load(json_file_ptr)
     for json_rpc in jsonrpc_commands:
         request = json_rpc["request"]
+        try:
+            if isinstance(request, dict) == 1:
+                method = request["method"]
+            else:
+                method = request[0]["method"]
+        except KeyError:
+            method = ""
         request_dumps = json.dumps(request)
-        target = get_target(daemon_under_test, request["method"], infura_url, daemon_on_host)
+        target = get_target(daemon_under_test, method, infura_url, daemon_on_host)
         if jwt_secret == "":
             jwt_auth = ""
         else:
@@ -240,8 +247,8 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
             exp_rsp_file = output_api_filename + "-expResponse.json"
             diff_file = output_api_filename + "-diff.json"
         else:
-            target = get_target(SILK, request["method"], infura_url, daemon_on_host)
-            target1 = get_target(daemon_as_reference, request["method"], infura_url, daemon_on_host)
+            target = get_target(SILK, method, infura_url, daemon_on_host)
+            target1 = get_target(daemon_as_reference, method, infura_url, daemon_on_host)
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" ''' + jwt_auth + ''' --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" ''' + jwt_auth + ''' --data \'''' + request_dumps + '''\' ''' + target1
             output_api_filename = output_dir + json_file[:-4]

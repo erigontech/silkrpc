@@ -71,9 +71,11 @@ TEST_CASE("EVMexecutor") {
         txn.from = 0xa872626373628737383927236382161739290870_address;
         silkworm::Block block{};
         block.header.number = block_number;
+        boost::asio::io_context& io_context = my_pool.next_io_context();
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), boost::asio::use_future);
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, {}), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         my_pool.join();
@@ -99,8 +101,10 @@ TEST_CASE("EVMexecutor") {
         txn.max_fee_per_gas = 0x2;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), boost::asio::use_future);
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, {}), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         my_pool.join();
@@ -127,8 +131,10 @@ TEST_CASE("EVMexecutor") {
         txn.from = 0xa872626373628737383927236382161739290870_address;
         txn.max_priority_fee_per_gas = 0x18;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), boost::asio::use_future);
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, {}), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         my_pool.join();
@@ -155,8 +161,10 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn), boost::asio::use_future);
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, {}), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         my_pool.join();
@@ -183,8 +191,10 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, false, /* gasBailout */true, {}), boost::asio::use_future);
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, {}, false, /* gasBailout */true), boost::asio::use_future);
         auto result = execution_result.get();
         executor.reset();
         my_pool.stop();
@@ -221,8 +231,10 @@ TEST_CASE("EVMexecutor") {
         txn.from = 0xa872626373628737383927236382161739290870_address;
         txn.access_list = access_list;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
-        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, true, true, {}), boost::asio::use_future);
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
+        auto execution_result = boost::asio::co_spawn(my_pool.next_io_context().get_executor(), executor.call(block, txn, {}, true, true), boost::asio::use_future);
         auto result = execution_result.get();
         my_pool.stop();
         my_pool.join();
@@ -269,7 +281,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, short_error_data_1);
         my_pool.stop();
         my_pool.join();
@@ -293,7 +307,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, short_error_data_2);
         my_pool.stop();
         my_pool.join();
@@ -317,7 +333,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, short_error_data_3);
         my_pool.stop();
         my_pool.join();
@@ -341,7 +359,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, short_error_data_4);
         my_pool.stop();
         my_pool.join();
@@ -365,7 +385,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, error_data);
         my_pool.stop();
         my_pool.join();
@@ -389,7 +411,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_FAILURE, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -413,7 +437,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_REVERT, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -437,7 +463,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_OUT_OF_GAS, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -461,7 +489,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_INVALID_INSTRUCTION, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -485,7 +515,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_UNDEFINED_INSTRUCTION, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -509,7 +541,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_STACK_OVERFLOW, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -533,7 +567,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_STACK_UNDERFLOW, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -557,7 +593,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_BAD_JUMP_DESTINATION, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -581,7 +619,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_INVALID_MEMORY_ACCESS, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -605,7 +645,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_CALL_DEPTH_EXCEEDED, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -629,7 +671,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_STATIC_MODE_VIOLATION, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -653,7 +697,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_PRECOMPILE_FAILURE, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -677,7 +723,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_CONTRACT_VALIDATION_FAILURE, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -701,7 +749,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_ARGUMENT_OUT_OF_RANGE, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -725,7 +775,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(8888, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -749,7 +801,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_WASM_UNREACHABLE_INSTRUCTION, error_data, false);
         my_pool.stop();
         my_pool.join();
@@ -773,7 +827,9 @@ TEST_CASE("EVMexecutor") {
         txn.gas_limit = 60000;
         txn.from = 0xa872626373628737383927236382161739290870_address;
 
-        EVMExecutor executor{my_pool.next_io_context(), tx_database, *chain_config_ptr, workers, block_number};
+        boost::asio::io_context& io_context = my_pool.next_io_context();
+        state::RemoteState remote_state{io_context, tx_database, block_number};
+        EVMExecutor executor{io_context, tx_database, *chain_config_ptr, workers, block_number, remote_state};
         auto error_message = executor.get_error_message(evmc_status_code::EVMC_WASM_TRAP, error_data, false);
         my_pool.stop();
         my_pool.join();

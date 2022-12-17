@@ -49,6 +49,7 @@ CoherentStateCache::CoherentStateCache(CoherentCacheConfig config) : config_(con
 
 std::unique_ptr<StateView> CoherentStateCache::get_view(Transaction& txn) {
     const auto view_id = txn.tx_id();
+    std::unique_lock write_lock{rw_mutex_};
     CoherentStateRoot* root = get_root(view_id);
     return root->ready ? std::make_unique<CoherentStateView>(txn, this) : nullptr;
 }
