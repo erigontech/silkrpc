@@ -64,7 +64,7 @@ void AccessListTracer::on_instruction_start(uint32_t pc, const intx::uint256 *st
     assert(execution_state.msg);
     evmc::address recipient(execution_state.msg->recipient);
 
-    const auto opcode = execution_state.code[pc];
+    const auto opcode = execution_state.original_code[pc];
     const auto opcode_name = get_opcode_name(opcode_names_, opcode);
 
     SILKRPC_DEBUG << "on_instruction_start:"
