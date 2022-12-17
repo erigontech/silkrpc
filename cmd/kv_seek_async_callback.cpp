@@ -28,6 +28,7 @@
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/interfaces/remote/kv.grpc.pb.h>
 
+
 class GrpcKvCallbackReactor final : public grpc::ClientBidiReactor<remote::Cursor, remote::Pair> {
 public:
     explicit GrpcKvCallbackReactor(remote::KV::Stub& stub, std::chrono::milliseconds timeout) : stub_(stub) {
@@ -64,7 +65,6 @@ private:
 
 int kv_seek_async_callback(const std::string& target, const std::string& table_name, const silkworm::Bytes& key, uint32_t timeout) {
     boost::asio::io_context context;
-    boost::asio::io_context::work work{context};
 
     const auto channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
     auto stub = remote::KV::NewStub(channel);
