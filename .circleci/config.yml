@@ -84,7 +84,7 @@ commands:
       - run:
           name: "Unit Tests"
           working_directory: ~/build
-          command: cmd/unit_test -s
+          command: cmd/unit_test
 
 jobs:
   linux-gcc-11:
