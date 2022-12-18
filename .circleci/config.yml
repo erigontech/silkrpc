@@ -82,10 +82,9 @@ commands:
   test:
     steps:
       - run:
-          no_output_timeout: 30m
           name: "Unit Tests"
           working_directory: ~/build
-          command: cmd/unit_test
+          command: cmd/unit_test -s
 
 jobs:
   linux-gcc-11:
