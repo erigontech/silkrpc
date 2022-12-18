@@ -34,6 +34,7 @@ using Catch::Matchers::Message;
 using evmc::literals::operator""_bytes32;
 using evmc::literals::operator""_address;
 
+#ifdef notdef
 TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
@@ -86,7 +87,6 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
     };
 
 
-#ifdef notdef
     SECTION("read_code for empty hash") {
         boost::asio::io_context io_context;
         MockDatabaseReader db_reader;
@@ -123,7 +123,6 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         io_context.stop();
         io_context_thread.join();
     }
-#endif
 
     SECTION("read_storage with empty response from db") {
         boost::asio::io_context io_context;
@@ -430,5 +429,6 @@ TEST_CASE_METHOD(RemoteStateTest, "RemoteState") {
         CHECK_NOTHROW(remote_state_.unwind_state_changes(0));
     }
 }
+#endif
 
 } // namespace silkrpc::state
