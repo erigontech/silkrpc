@@ -82,6 +82,7 @@ commands:
   test:
     steps:
       - run:
+          no_output_timeout: 30m
           name: "Unit Tests"
           working_directory: ~/build
           command: cmd/unit_test
