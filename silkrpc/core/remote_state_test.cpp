@@ -86,6 +86,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
     };
 
 
+#ifdef notdef
     SECTION("read_code for empty hash") {
         boost::asio::io_context io_context;
         MockDatabaseReader db_reader;
@@ -108,7 +109,6 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         CHECK(future_code.get() == silkworm::ByteView{code});
     }
 
-#ifdef notdef
     SECTION("read_code with empty response from db") {
         boost::asio::io_context io_context;
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
