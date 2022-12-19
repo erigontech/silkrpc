@@ -65,6 +65,7 @@ private:
 
 int kv_seek_async_callback(const std::string& target, const std::string& table_name, const silkworm::Bytes& key, uint32_t timeout) {
     boost::asio::io_context context;
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{context.get_executor()};
 
     const auto channel = grpc::CreateChannel(target, grpc::InsecureChannelCredentials());
     auto stub = remote::KV::NewStub(channel);
