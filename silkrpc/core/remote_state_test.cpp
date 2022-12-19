@@ -110,6 +110,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
     SECTION("read_code with empty response from db") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         silkworm::Bytes code{*silkworm::from_hex("0x0608")};
@@ -123,9 +124,9 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         io_context_thread.join();
     }
 
-#ifdef notdef
     SECTION("read_storage with empty response from db") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         silkworm::Bytes storage{*silkworm::from_hex("0x0608")};
@@ -142,6 +143,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
     SECTION("read_account with empty response from db") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         MockDatabaseReader db_reader;
@@ -156,6 +158,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
     SECTION("read_header with empty response from db") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         MockDatabaseReader db_reader;
@@ -171,6 +174,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
     SECTION("read_body with empty response from db") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         MockDatabaseReader db_reader;
@@ -187,6 +191,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
     SECTION("total_difficulty with empty response from db") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         MockDatabaseReader db_reader;
@@ -202,6 +207,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
     SECTION("previous_incarnation returns ok") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         MockDatabaseReader db_reader;
@@ -216,6 +222,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
     SECTION("current_canonical_block returns ok") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         MockDatabaseReader db_reader;
@@ -229,6 +236,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
     SECTION("canonical_hash with returns ok") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         MockDatabaseReader db_reader;
@@ -242,6 +250,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
     SECTION("state_root_hash with returns ok") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         MockDatabaseReader db_reader;
@@ -256,6 +265,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 /*
     SECTION("read_code with exception") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         silkworm::Bytes code{*silkworm::from_hex("0x0608")};
@@ -271,6 +281,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
     SECTION("read_storage with exception") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         silkworm::Bytes storage{*silkworm::from_hex("0x0608")};
@@ -287,6 +298,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
     SECTION("read_account with exception") {
         boost::asio::io_context io_context;
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work{io_context.get_executor()};
         std::thread io_context_thread{[&io_context]() { io_context.run(); }};
 
         MockDatabaseFailingReader db_reader;
@@ -409,7 +421,6 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         io_context.run();
         CHECK_THROWS_AS(future_code.get(), std::exception);
     }
-#endif
 }
 
 struct RemoteStateTest : public test::ContextTestBase {
