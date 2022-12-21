@@ -72,7 +72,6 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
             auto* io_context = context.io_context();
             boost::asio::post(*io_context, [&]() {
                 processed = true;
-                context.stop();
             });
             auto context_thread = std::thread([&]() { context.execute_loop(); });
             CHECK_NOTHROW(context.stop());
