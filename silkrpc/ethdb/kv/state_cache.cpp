@@ -27,7 +27,7 @@
 #include <silkrpc/ethdb/transaction_database.hpp>
 #include <silkworm/common/assert.hpp>
 #include <silkworm/common/util.hpp>
-#include <silkworm/rpc/conversion.hpp>
+#include <silkworm/rpc/common/conversion.hpp>
 
 namespace silkrpc::ethdb::kv {
 

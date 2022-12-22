@@ -57,7 +57,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
             Context context{create_channel, block_cache, state_cache, wait_mode};
             std::atomic_bool processed{false};
             auto* io_context = context.io_context();
-            io_context->post([&]() {
+            boost::asio::post(*io_context, [&]() {
                 processed = true;
                 context.stop();
             });
@@ -69,7 +69,8 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
         SECTION(std::string("Context::stop wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
             Context context{create_channel, block_cache, state_cache, wait_mode};
             std::atomic_bool processed{false};
-            context.io_context()->post([&]() {
+            auto* io_context = context.io_context();
+            boost::asio::post(*io_context, [&]() {
                 processed = true;
             });
             auto context_thread = std::thread([&]() { context.execute_loop(); });

@@ -139,7 +139,7 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
     evmc::address recipient(execution_state.msg->recipient);
     evmc::address sender(execution_state.msg->sender);
 
-    const auto opcode = execution_state.code[pc];
+    const auto opcode = execution_state.original_code[pc];
     auto opcode_name = get_opcode_name(opcode_names_, opcode);
 
     SILKRPC_DEBUG << "on_instruction_start:"
