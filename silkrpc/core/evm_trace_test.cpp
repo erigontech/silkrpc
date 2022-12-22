@@ -26,6 +26,7 @@
 #include <gmock/gmock.h>
 #include <silkpre/precompile.h>
 #include <silkworm/common/util.hpp>
+#include <silkworm/third_party/evmone/evmc/include/evmc/instructions.h>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
