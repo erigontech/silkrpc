@@ -128,10 +128,10 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        const auto start_block_number = co_await core::get_block_number(start_block_id, tx_database);
-        const auto end_block_number = co_await core::get_block_number(end_block_id, tx_database);
+        const auto start_block_number = co_await core::get_block_number(start_block_id, tx_database, false);
+        const auto end_block_number = co_await core::get_block_number(end_block_id, tx_database, false);
 
-        const auto addresses = co_await get_modified_accounts(tx_database, start_block_number, end_block_number);
+        const auto addresses = co_await get_modified_accounts(tx_database, start_block_number.number, end_block_number.number);
         reply = make_json_content(request["id"], addresses);
     } catch (const std::invalid_argument& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -337,6 +337,7 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann
     try {
         ethdb::TransactionDatabase tx_database{*tx};
         ethdb::kv::CachedDatabase cached_database{block_number_or_hash, *tx, *context_.state_cache()};
+
         // Check if target block is latest one: use local state cache (if any) for target transaction
         const auto is_latest_block = co_await core::is_latest_block_number(block_number_or_hash, tx_database);
         core::rawdb::DatabaseReader& db_reader = is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database;
@@ -453,14 +454,14 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const
 }
 
 boost::asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::TransactionDatabase& tx_database, uint64_t start_block_number, uint64_t end_block_number) {
-    const auto latest_block_number = co_await core::get_block_number(core::kLatestBlockId, tx_database);
+    const auto latest_block_number = co_await core::get_block_number(core::kLatestBlockId, tx_database, false);
 
-    SILKRPC_DEBUG << "latest: " << latest_block_number << " start: " << start_block_number << " end: " << end_block_number << "\n";
+    SILKRPC_DEBUG << "latest: " << latest_block_number.number << " start: " << start_block_number << " end: " << end_block_number << "\n";
 
     std::set<evmc::address> addresses;
-    if (start_block_number > latest_block_number) {
+    if (start_block_number > latest_block_number.number) {
         std::stringstream msg;
-        msg << "start block (" << start_block_number << ") is later than the latest block (" << latest_block_number << ")";
+        msg << "start block (" << start_block_number << ") is later than the latest block (" << latest_block_number.number << ")";
         throw std::invalid_argument(msg.str());
     } else if (start_block_number <= end_block_number) {
         core::rawdb::Walker walker = [&](const silkworm::Bytes& key, const silkworm::Bytes& value) {
