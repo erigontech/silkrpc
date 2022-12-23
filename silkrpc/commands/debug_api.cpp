@@ -338,10 +338,9 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann
         ethdb::TransactionDatabase tx_database{*tx};
         ethdb::kv::CachedDatabase cached_database{block_number_or_hash, *tx, *context_.state_cache()};
 
-        // Check if target block is latest one: use local state cache (if any) for target transaction
-        const auto is_latest_block = co_await core::is_latest_block_number(block_number_or_hash, tx_database);
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
+        const bool is_latest_block = co_await core::get_latest_executed_block_number(tx_database) == block_with_hash.block.header.number;
         core::rawdb::DatabaseReader& db_reader = is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database;
-        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), db_reader, block_number_or_hash);
         debug::DebugExecutor executor{*context_.io_context(), db_reader, workers_, config};
         const auto result = co_await executor.execute(block_with_hash.block, call);
 
