@@ -56,12 +56,10 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json
     try {
         ethdb::TransactionDatabase tx_database{*tx};
         ethdb::kv::CachedDatabase cached_database{block_number_or_hash, *tx, *context_.state_cache()};
-        // Check if target block is latest one: use local state cache (if any) for target transaction
-        const auto is_latest_block = co_await core::is_latest_block_number(block_number_or_hash, tx_database);
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
+        const bool is_latest_block = co_await core::get_latest_executed_block_number(tx_database) == block_with_hash.block.header.number;
+ 
         core::rawdb::DatabaseReader& db_reader = is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database;
-
-        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), db_reader, block_number_or_hash);
-
         trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), db_reader, workers_};
         const auto result = co_await executor.trace_call(block_with_hash.block, call, config);
 
@@ -101,12 +99,10 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_call_many(const nlohmann:
     try {
         ethdb::TransactionDatabase tx_database{*tx};
         ethdb::kv::CachedDatabase cached_database{block_number_or_hash, *tx, *context_.state_cache()};
-        // Check if target block is latest one: use local state cache (if any) for target transaction
-        const auto is_latest_block = co_await core::is_latest_block_number(block_number_or_hash, tx_database);
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
+        const bool is_latest_block = co_await core::get_latest_executed_block_number(tx_database) == block_with_hash.block.header.number;
+
         core::rawdb::DatabaseReader& db_reader = is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database;
-
-        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), db_reader, block_number_or_hash);
-
         trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), db_reader, workers_};
         const auto result = co_await executor.trace_calls(block_with_hash.block, trace_calls);
 
