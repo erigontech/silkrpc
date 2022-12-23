@@ -28,22 +28,32 @@ constexpr const char* kHeadBlockHash = "headBlockHash";
 constexpr const char* kFinalizedBlockHash = "finalizedBlockHash";
 constexpr const char* kSafeBlockHash = "safeBlockHash";
 
-boost::asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader) {
-    uint64_t block_number;
+boost::asio::awaitable<BlockNumber> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader, bool latest_is_required) {
+    BlockNumber  block_number  {0, false};
+    bool determine_is_latest_block = false;
     if (block_id == kEarliestBlockId) {
-        block_number = kEarliestBlockNumber;
+        block_number.number = kEarliestBlockNumber;
+        block_number.is_latest_block = false;
     } else if (block_id == kLatestBlockId || block_id == kPendingBlockId) {
-        block_number = co_await get_latest_block_number(reader);
+        block_number.number = co_await get_latest_block_number(reader);
+        block_number.is_latest_block = true;
     } else if (block_id == kFinalizedBlockId) {
-        block_number = co_await get_forkchoice_finalized_block_number(reader);
+        block_number.number = co_await get_forkchoice_finalized_block_number(reader);
+        determine_is_latest_block = latest_is_required;
     } else if (block_id == kSafeBlockId) {
-        block_number = co_await get_forkchoice_safe_block_number(reader);
+        block_number.number = co_await get_forkchoice_safe_block_number(reader);
+        determine_is_latest_block = latest_is_required;
     } else if (block_id == kLatestExecutedBlockId) {
-        block_number = co_await get_latest_executed_block_number(reader);
+        block_number.number = co_await get_latest_executed_block_number(reader);
+        block_number.is_latest_block = true;
     } else {
-        block_number = std::stol(block_id, 0, 0);
+        block_number.number = std::stol(block_id, 0, 0);
+        determine_is_latest_block = latest_is_required;
     }
-    SILKRPC_DEBUG << "get_block_number block_number: " << block_number << "\n";
+    if (determine_is_latest_block) {
+        block_number.is_latest_block = (block_number.number ==  co_await get_latest_executed_block_number(reader));
+    }
+    SILKRPC_DEBUG << "get_block_number block_number: " << block_number.number << "\n";
     co_return block_number;
 }
 
