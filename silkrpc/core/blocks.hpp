@@ -37,7 +37,12 @@ constexpr const char* kLatestExecutedBlockId{"latestExecuted"};
 
 constexpr uint64_t kEarliestBlockNumber{0ul};
 
-boost::asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader);
+struct BlockNumber {
+    uint64_t number;
+    bool is_latest_block;
+};
+
+boost::asio::awaitable<BlockNumber> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader, bool latest_is_required);
 
 boost::asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::DatabaseReader& reader);
 
