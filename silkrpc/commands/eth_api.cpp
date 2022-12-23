@@ -1135,8 +1135,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_create_access_list(const
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         const auto chain_config_ptr = lookup_chain_config(chain_id);
 
-        // Check if target block is latest one: use local state cache (if any) for target transaction
-        const bool is_latest_block = co_await core::is_latest_block_number(block_number_or_hash, tx_database);
+        const bool is_latest_block = co_await core::get_latest_executed_block_number(tx_database) == block_with_hash.block.header.number;
         const core::rawdb::DatabaseReader& db_reader = is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database;
         StateReader state_reader(db_reader);
         state::RemoteState remote_state{*context_.io_context(), db_reader, block_with_hash.block.header.number};
@@ -1237,8 +1236,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_call_bundle(const nlohma
         const auto chain_id = co_await core::rawdb::read_chain_id(tx_database);
         const auto chain_config_ptr = lookup_chain_config(chain_id);
 
-        // Check if target block is latest one: use local state cache (if any) for target transaction
-        const bool is_latest_block = co_await core::is_latest_block_number(block_number_or_hash, tx_database);
+        const bool is_latest_block = co_await core::get_latest_executed_block_number(tx_database) == block_with_hash.block.header.number;
         core::rawdb::DatabaseReader& db_reader = is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database;
         auto block_number = block_with_hash.block.header.number;
         state::RemoteState remote_state{*context_.io_context(), db_reader, block_number};
