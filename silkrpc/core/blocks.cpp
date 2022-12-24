@@ -33,7 +33,7 @@ boost::asio::awaitable<bool> is_latest_block_number(uint64_t block_number, const
     co_return last_executed_block_number == block_number;
 }
 
-boost::asio::awaitable<std::pair<uint64_t, bool>> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader, bool latest_is_required) {
+boost::asio::awaitable<std::pair<uint64_t, bool>> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader, bool latest_required) {
     uint64_t  block_number;
     bool is_latest_block = false;
     bool check_if_latest = false;
@@ -44,16 +44,16 @@ boost::asio::awaitable<std::pair<uint64_t, bool>> get_block_number(const std::st
         is_latest_block = true;
     } else if (block_id == kFinalizedBlockId) {
         block_number = co_await get_forkchoice_finalized_block_number(reader);
-        check_if_latest = latest_is_required;
+        check_if_latest = latest_required;
     } else if (block_id == kSafeBlockId) {
         block_number = co_await get_forkchoice_safe_block_number(reader);
-        check_if_latest = latest_is_required;
+        check_if_latest = latest_required;
     } else if (block_id == kLatestExecutedBlockId) {
         block_number = co_await get_latest_executed_block_number(reader);
         is_latest_block = true;
     } else {
         block_number = std::stol(block_id, 0, 0);
-        check_if_latest = latest_is_required;
+        check_if_latest = latest_required;
     }
     if (check_if_latest) {
         is_latest_block = co_await is_latest_block_number(block_number, reader);
