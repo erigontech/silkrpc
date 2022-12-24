@@ -128,10 +128,10 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        const auto start_block_number = co_await core::get_block_number(start_block_id, tx_database, false);
-        const auto end_block_number = co_await core::get_block_number(end_block_id, tx_database, false);
+        const auto [start_block_number, _] = co_await core::get_block_number(start_block_id, tx_database, /*latest_required=*/false);
+        const auto [end_block_number, ignore] = co_await core::get_block_number(end_block_id, tx_database, /*latest_required=*/false);
 
-        const auto addresses = co_await get_modified_accounts(tx_database, start_block_number.number, end_block_number.number);
+        const auto addresses = co_await get_modified_accounts(tx_database, start_block_number, end_block_number);
         reply = make_json_content(request["id"], addresses);
     } catch (const std::invalid_argument& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -339,7 +339,7 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann
         ethdb::kv::CachedDatabase cached_database{block_number_or_hash, *tx, *context_.state_cache()};
 
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
-        const bool is_latest_block = co_await core::get_latest_executed_block_number(tx_database) == block_with_hash.block.header.number;
+        const bool is_latest_block = co_await core::is_latest_block_number(block_with_hash.block.header.number, tx_database);
         core::rawdb::DatabaseReader& db_reader = is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database;
         debug::DebugExecutor executor{*context_.io_context(), db_reader, workers_, config};
         const auto result = co_await executor.execute(block_with_hash.block, call);
@@ -453,14 +453,14 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const
 }
 
 boost::asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::TransactionDatabase& tx_database, uint64_t start_block_number, uint64_t end_block_number) {
-    const auto latest_block_number = co_await core::get_block_number(core::kLatestBlockId, tx_database, false);
+    const auto [latest_block_number, ignore] = co_await core::get_block_number(core::kLatestBlockId, tx_database, /*latest_required=*/false);
 
-    SILKRPC_DEBUG << "latest: " << latest_block_number.number << " start: " << start_block_number << " end: " << end_block_number << "\n";
+    SILKRPC_DEBUG << "latest: " << latest_block_number << " start: " << start_block_number << " end: " << end_block_number << "\n";
 
     std::set<evmc::address> addresses;
-    if (start_block_number > latest_block_number.number) {
+    if (start_block_number > latest_block_number) {
         std::stringstream msg;
-        msg << "start block (" << start_block_number << ") is later than the latest block (" << latest_block_number.number << ")";
+        msg << "start block (" << start_block_number << ") is later than the latest block (" << latest_block_number << ")";
         throw std::invalid_argument(msg.str());
     } else if (start_block_number <= end_block_number) {
         core::rawdb::Walker walker = [&](const silkworm::Bytes& key, const silkworm::Bytes& value) {
