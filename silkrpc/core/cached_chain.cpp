@@ -56,8 +56,8 @@ boost::asio::awaitable<silkworm::BlockWithHash> read_block_by_number_or_hash(Blo
     } else if (bnoh.is_hash()) {
         co_return co_await read_block_by_hash(cache, reader, bnoh.hash());
     } else if (bnoh.is_tag()) {
-        auto block_number = co_await get_block_number(bnoh.tag(), reader, false);
-        co_return co_await read_block_by_number(cache, reader, block_number.number);
+        auto [block_number, ignore] = co_await get_block_number(bnoh.tag(), reader, false);
+        co_return co_await read_block_by_number(cache, reader, block_number);
     }
     throw std::runtime_error{"invalid block_number_or_hash value"};
 }
