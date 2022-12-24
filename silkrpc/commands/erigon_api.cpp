@@ -171,8 +171,8 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_number(co
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_number{co_await core::get_block_number(block_id, tx_database, false)};
-        const auto header{co_await core::rawdb::read_header_by_number(tx_database, block_number.number)};
+        const auto [block_number, ignore] = co_await core::get_block_number(block_id, tx_database, /*latest_required=*/false);
+        const auto header{co_await core::rawdb::read_header_by_number(tx_database, block_number)};
 
         reply = make_json_content(request["id"], header);
     } catch (const std::exception& e) {
@@ -276,8 +276,8 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nl
 
         Issuance issuance{}; // default is empty: no PoW => no issuance
         if (chain_config.config.count("ethash") != 0) {
-            const auto block_number{co_await core::get_block_number(block_id, tx_database, false)};
-            const auto block_with_hash{co_await core::rawdb::read_block_by_number(tx_database, block_number.number)};
+            const auto [block_number, ignore] = co_await core::get_block_number(block_id, tx_database, /*latest_required=*/false);
+            const auto block_with_hash{co_await core::rawdb::read_block_by_number(tx_database, block_number)};
             const auto block_reward{ethash::compute_reward(chain_config, block_with_hash.block)};
             intx::uint256 total_ommer_reward = 0;
             for (const auto ommer_reward :  block_reward.ommer_rewards) {
@@ -295,8 +295,8 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nl
             }
             issuance.burnt = "0x" + intx::hex(burnt);
 
-            const auto total_issued = co_await core::rawdb::read_total_issued(tx_database, block_number.number);
-            const auto total_burnt = co_await core::rawdb::read_total_burnt(tx_database, block_number.number);
+            const auto total_issued = co_await core::rawdb::read_total_issued(tx_database, block_number);
+            const auto total_burnt = co_await core::rawdb::read_total_burnt(tx_database, block_number);
 
             issuance.total_issued = "0x" + intx::hex(total_issued);
             issuance.total_burnt = "0x" + intx::hex(total_burnt);
