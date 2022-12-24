@@ -55,7 +55,7 @@ boost::asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(cons
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto [block_number, ignore] = co_await core::get_block_number(block_id, tx_database, false);
+        const auto [block_number, ignore] = co_await core::get_block_number(block_id, tx_database, /*latest_required=*/false);
         const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache(), tx_database, block_number);
         auto receipts{co_await core::get_receipts(tx_database, block_with_hash)};
         SILKRPC_INFO << "#receipts: " << receipts.size() << "\n";
