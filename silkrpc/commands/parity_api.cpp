@@ -55,8 +55,8 @@ boost::asio::awaitable<void> ParityRpcApi::handle_parity_get_block_receipts(cons
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_number = co_await core::get_block_number(block_id, tx_database, false);
-        const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache(), tx_database, block_number.number);
+        const auto [block_number, ignore] = co_await core::get_block_number(block_id, tx_database, false);
+        const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache(), tx_database, block_number);
         auto receipts{co_await core::get_receipts(tx_database, block_with_hash)};
         SILKRPC_INFO << "#receipts: " << receipts.size() << "\n";
 
@@ -111,9 +111,9 @@ boost::asio::awaitable<void> ParityRpcApi::handle_parity_list_storage_keys(const
         ethdb::TransactionDatabase tx_database{*tx};
         silkrpc::StateReader state_reader{tx_database};
 
-        const auto block_number = co_await silkrpc::core::get_block_number(block_id, tx_database, false);
-        SILKRPC_DEBUG << "read account with address: " << silkworm::to_hex(address) << " block number: " << block_number.number << "\n";
-        std::optional<silkworm::Account> account = co_await state_reader.read_account(address, block_number.number);
+        const auto [block_number, ignore] = co_await silkrpc::core::get_block_number(block_id, tx_database, /*latest_required=*/false);
+        SILKRPC_DEBUG << "read account with address: " << silkworm::to_hex(address) << " block number: " << block_number << "\n";
+        std::optional<silkworm::Account> account = co_await state_reader.read_account(address, block_number);
         if (!account) throw std::domain_error{"account not found"};
 
         silkworm::Bytes seek_bytes = silkworm::db::storage_prefix(full_view(address), account->incarnation);
