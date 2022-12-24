@@ -28,6 +28,23 @@ constexpr const char* kHeadBlockHash = "headBlockHash";
 constexpr const char* kFinalizedBlockHash = "finalizedBlockHash";
 constexpr const char* kSafeBlockHash = "safeBlockHash";
 
+boost::asio::awaitable<uint64_t> get_block_number_by_tag(const std::string& block_id, const core::rawdb::DatabaseReader& reader) {
+    uint64_t  block_number;
+    if (block_id == kEarliestBlockId) {
+        block_number = kEarliestBlockNumber;
+    } else if (block_id == kLatestBlockId || block_id == kPendingBlockId) {
+        block_number = co_await get_latest_block_number(reader);
+    } else if (block_id == kFinalizedBlockId) {
+        block_number = co_await get_forkchoice_finalized_block_number(reader);
+    } else if (block_id == kSafeBlockId) {
+        block_number = co_await get_forkchoice_safe_block_number(reader);
+    } else {
+        block_number = co_await get_latest_executed_block_number(reader);
+    }
+    SILKRPC_DEBUG << "get_block_number_by_tag block_number: " << block_number << "\n";
+    co_return block_number;
+}
+
 boost::asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader) {
     uint64_t block_number;
     if (block_id == kEarliestBlockId) {
