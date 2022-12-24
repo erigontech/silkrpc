@@ -69,7 +69,7 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
 
     SECTION("kEarliestBlockId") {
         const std::string EARLIEST_BLOCK_ID = kEarliestBlockId;
-        auto result = boost::asio::co_spawn(pool, get_block_number(EARLIEST_BLOCK_ID, db_reader, false), boost::asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_block_number(EARLIEST_BLOCK_ID, db_reader, /*latest_required=*/false), boost::asio::use_future);
         auto [number, ignore] = result.get();
         CHECK(number == kEarliestBlockNumber);
     }
@@ -85,7 +85,7 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
             []() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")};
             }));
-        auto result = boost::asio::co_spawn(pool, get_block_number(LATEST_BLOCK_ID, db_reader, false), boost::asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_block_number(LATEST_BLOCK_ID, db_reader, /*latest_required=*/false), boost::asio::use_future);
         auto [number, ignore] = result.get();
         CHECK(number == 0x1234567890123456);
     }
@@ -96,7 +96,7 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
             []() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")};
             }));
-        auto result = boost::asio::co_spawn(pool, get_block_number(LATEST_BLOCK_ID, db_reader, false), boost::asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_block_number(LATEST_BLOCK_ID, db_reader, /*latest_required=*/false), boost::asio::use_future);
         auto [number, ignore] = result.get();
         CHECK(number == 0x1234567890123456);
     }
@@ -111,7 +111,7 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
         EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
             []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")}; }
         ));
-        auto result = boost::asio::co_spawn(pool, get_block_number(PENDING_BLOCK_ID, db_reader, false), boost::asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_block_number(PENDING_BLOCK_ID, db_reader, /*latest_required=*/false), boost::asio::use_future);
         auto [number, ignore] = result.get();
         CHECK(number == 0x1234567890123456);
     }
@@ -134,7 +134,7 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
             []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kHeader; }
         ));
 
-        auto result = boost::asio::co_spawn(pool, get_block_number(FINALIZED_FORKCHOICE_BLOCK_ID, db_reader, false), boost::asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_block_number(FINALIZED_FORKCHOICE_BLOCK_ID, db_reader, /*latest_required=*/false), boost::asio::use_future);
         auto [number, ignore] = result.get();
         CHECK(number == 0x3d0900);
     }
@@ -157,21 +157,21 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
             []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kHeader; }
         ));
 
-        auto result = boost::asio::co_spawn(pool, get_block_number(SAFE_FORKCHOICE_BLOCK_ID, db_reader, false), boost::asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_block_number(SAFE_FORKCHOICE_BLOCK_ID, db_reader, /*latest_required=*/false), boost::asio::use_future);
         auto [number, ignore] = result.get();
         CHECK(number == 0x3d0900);
     }
 
     SECTION("number in hex") {
         const std::string BLOCK_ID_HEX = "0x12345";
-        auto result = boost::asio::co_spawn(pool, get_block_number(BLOCK_ID_HEX, db_reader, false), boost::asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_block_number(BLOCK_ID_HEX, db_reader, /*latest_required=*/false), boost::asio::use_future);
         auto [number, ignore] = result.get();
         CHECK(number == 0x12345);
     }
 
     SECTION("number in dec") {
         const std::string BLOCK_ID_DEC = "67890";
-        auto result = boost::asio::co_spawn(pool, get_block_number(BLOCK_ID_DEC, db_reader, false), boost::asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_block_number(BLOCK_ID_DEC, db_reader, /*latest_required=*/false), boost::asio::use_future);
         auto [number, ignore] = result.get();
         CHECK(number == 67890);
     }
@@ -182,7 +182,7 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
             []() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("0000000000001234")};
             }));
-        auto result = boost::asio::co_spawn(pool, get_block_number(BLOCK_ID_HEX, db_reader, true), boost::asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_block_number(BLOCK_ID_HEX, db_reader, /*latest_required=*/true), boost::asio::use_future);
         auto [number, is_latest_block] = result.get();
         CHECK(number == 0x0000000000001234);
         CHECK(is_latest_block == true);
@@ -194,7 +194,7 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
             []() -> boost::asio::awaitable<KeyValue> {
                 co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("0000000000001235")};
             }));
-        auto result = boost::asio::co_spawn(pool, get_block_number(BLOCK_ID_HEX, db_reader, true), boost::asio::use_future);
+        auto result = boost::asio::co_spawn(pool, get_block_number(BLOCK_ID_HEX, db_reader, /*latest_required=*/true), boost::asio::use_future);
         auto [number, is_latest_block] = result.get();
         CHECK(number == 0x0000000000001234);
         CHECK(is_latest_block == false);
