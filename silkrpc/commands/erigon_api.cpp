@@ -324,4 +324,43 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nl
     co_return;
 }
 
+
+// https://eth.wiki/json-rpc/API#erigon_blockNumber
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_block_number(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    std::string block_id;
+    if (params.size() == 0) {
+       block_id = core::kLatestExecutedBlockId;
+    } else if (params.size() > 1) {
+        auto error_msg = "invalid erigon_getBlockNumber params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    } else {
+        block_id = params[0];
+    }
+    SILKRPC_DEBUG << "block: " << block_id << "\n";
+
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+
+        const auto block_number{co_await core::get_block_number_by_tag(block_id, tx_database)};
+
+        std::ostringstream block_number_hex;
+        block_number_hex << std::hex << block_number;
+        reply = make_json_content(request["id"], "0x" + block_number_hex.str());
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
 } // namespace silkrpc::commands
