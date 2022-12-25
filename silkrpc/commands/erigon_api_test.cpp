@@ -36,6 +36,7 @@ public:
     using ErigonRpcApi::handle_erigon_get_logs_by_hash;
     using ErigonRpcApi::handle_erigon_forks;
     using ErigonRpcApi::handle_erigon_watch_the_burn;
+    using ErigonRpcApi::handle_erigon_block_number;
 };
 
 using ErigonRpcApiTest = test::JsonApiTestBase<ErigonRpcApi_ForTest>;
@@ -128,6 +129,24 @@ TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_watch_the_burn",
             "jsonrpc":"2.0",
             "id":1,
             "error":{"code":100,"message":"invalid erigon_watchTheBurn params: [\"0x49BDEF\",\"0x2\"]"}
+        })"_json);
+    }
+}
+
+TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_block_number", "[silkrpc][erigon_api]") {
+    nlohmann::json reply;
+
+    SECTION("request invalid params number") {
+        CHECK_NOTHROW(run<&ErigonRpcApi_ForTest::handle_erigon_block_number>(R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"erigon_blockNumber",
+            "params":["earliest", "3"]
+        })"_json, reply));
+        CHECK(reply == R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "error":{"code":100,"message":"invalid erigon_getBlockNumber params: [\"earliest\",\"3\"]"} 
         })"_json);
     }
 }
