@@ -149,6 +149,24 @@ TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_block_number", "
             "error":{"code":100,"message":"invalid erigon_getBlockNumber params: [\"earliest\",\"3\"]"} 
         })"_json);
     }
+
+    SECTION("request earlist") {
+        CHECK_THROWS_AS(run<&ErigonRpcApi_ForTest::handle_erigon_block_number>(R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"erigon_blockNumber",
+            "params":["earliest"]
+        })"_json, reply), std::exception);
+    }
+
+    SECTION("request empty param") {
+        CHECK_THROWS_AS(run<&ErigonRpcApi_ForTest::handle_erigon_block_number>(R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"erigon_blockNumber",
+            "params":[]
+        })"_json, reply), std::exception);
+    }
 }
 
 } // namespace silkrpc::commands
