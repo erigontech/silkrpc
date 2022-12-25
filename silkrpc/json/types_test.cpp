@@ -1225,7 +1225,6 @@ TEST_CASE("serialize receipt", "[silkrpc::json][to_json]") {
 }
 
 TEST_CASE("serialize empty filter", "[silkrpc::json][to_json]") {
-
     Filter f{0, 0, FilterAddresses{}, FilterTopics(2), ""};
     nlohmann::json j = f;
     CHECK(j == R"({"address":[],"blockHash":"","fromBlock":0,"toBlock":0,"topics":[[], []]})"_json);
