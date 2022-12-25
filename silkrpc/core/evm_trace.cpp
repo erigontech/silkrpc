@@ -292,13 +292,74 @@ void to_json(nlohmann::json& json, const TraceManyCallResult& result) {
 int get_stack_count(std::uint8_t op_code) {
     int count = 0;
     switch (op_code) {
-        case evmc_opcode::OP_PUSH1 ... evmc_opcode::OP_PUSH32:
+        case evmc_opcode::OP_PUSH1:
+        case evmc_opcode::OP_PUSH2:
+        case evmc_opcode::OP_PUSH3:
+        case evmc_opcode::OP_PUSH4:
+        case evmc_opcode::OP_PUSH5:
+        case evmc_opcode::OP_PUSH6:
+        case evmc_opcode::OP_PUSH7:
+        case evmc_opcode::OP_PUSH8:
+        case evmc_opcode::OP_PUSH9:
+        case evmc_opcode::OP_PUSH10:
+        case evmc_opcode::OP_PUSH11:
+        case evmc_opcode::OP_PUSH12:
+        case evmc_opcode::OP_PUSH13:
+        case evmc_opcode::OP_PUSH14:
+        case evmc_opcode::OP_PUSH15:
+        case evmc_opcode::OP_PUSH16:
+        case evmc_opcode::OP_PUSH17:
+        case evmc_opcode::OP_PUSH18:
+        case evmc_opcode::OP_PUSH19:
+        case evmc_opcode::OP_PUSH20:
+        case evmc_opcode::OP_PUSH21:
+        case evmc_opcode::OP_PUSH22:
+        case evmc_opcode::OP_PUSH23:
+        case evmc_opcode::OP_PUSH24:
+        case evmc_opcode::OP_PUSH25:
+        case evmc_opcode::OP_PUSH26:
+        case evmc_opcode::OP_PUSH27:
+        case evmc_opcode::OP_PUSH28:
+        case evmc_opcode::OP_PUSH29:
+        case evmc_opcode::OP_PUSH30:
+        case evmc_opcode::OP_PUSH31:
+        case evmc_opcode::OP_PUSH32:
             count = 1;
             break;
-        case evmc_opcode::OP_SWAP1 ... evmc_opcode::OP_SWAP16:
+        case evmc_opcode::OP_SWAP1:
+        case evmc_opcode::OP_SWAP2:
+        case evmc_opcode::OP_SWAP3:
+        case evmc_opcode::OP_SWAP4:
+        case evmc_opcode::OP_SWAP5:
+        case evmc_opcode::OP_SWAP6:
+        case evmc_opcode::OP_SWAP7:
+        case evmc_opcode::OP_SWAP8:
+        case evmc_opcode::OP_SWAP9:
+        case evmc_opcode::OP_SWAP10:
+        case evmc_opcode::OP_SWAP11:
+        case evmc_opcode::OP_SWAP12:
+        case evmc_opcode::OP_SWAP13:
+        case evmc_opcode::OP_SWAP14:
+        case evmc_opcode::OP_SWAP15:
+        case evmc_opcode::OP_SWAP16:
             count = op_code - evmc_opcode::OP_SWAP1 + 2;
             break;
-        case evmc_opcode::OP_DUP1 ... evmc_opcode::OP_DUP16:
+        case evmc_opcode::OP_DUP1:
+        case evmc_opcode::OP_DUP2:
+        case evmc_opcode::OP_DUP3:
+        case evmc_opcode::OP_DUP4:
+        case evmc_opcode::OP_DUP5:
+        case evmc_opcode::OP_DUP6:
+        case evmc_opcode::OP_DUP7:
+        case evmc_opcode::OP_DUP8:
+        case evmc_opcode::OP_DUP9:
+        case evmc_opcode::OP_DUP10:
+        case evmc_opcode::OP_DUP11:
+        case evmc_opcode::OP_DUP12:
+        case evmc_opcode::OP_DUP13:
+        case evmc_opcode::OP_DUP14:
+        case evmc_opcode::OP_DUP15:
+        case evmc_opcode::OP_DUP16:
             count = op_code - evmc_opcode::OP_DUP1 + 2;
             break;
         case evmc_opcode::OP_CALLDATALOAD:

@@ -32,6 +32,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-fcoroutines)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-stdlib=libc++)
+elseif(MSVC)
+    add_compile_options(/bigobj)
 endif()
 
 # Silkrpc toolbox

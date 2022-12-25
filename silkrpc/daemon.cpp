@@ -16,7 +16,9 @@
 
 #include "daemon.hpp"
 
+#ifndef WIN32
 #include <cxxabi.h>
+#endif
 
 #include <filesystem>
 #include <stdexcept>
@@ -40,8 +42,12 @@ void DaemonChecklist::success_or_throw() const {
 }
 
 const char* current_exception_name() {
+#ifdef WIN32
+    return "<Exception name not supported on Windows>";
+#else
     int status;
     return abi::__cxa_demangle(abi::__cxa_current_exception_type()->name(), nullptr, nullptr, &status);
+#endif
 }
 
 int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
