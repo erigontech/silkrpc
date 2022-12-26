@@ -62,6 +62,11 @@ boost::asio::awaitable<std::pair<uint64_t, bool>> get_block_number(const std::st
     co_return std::make_pair(block_number, is_latest_block);
 }
 
+boost::asio::awaitable<uint64_t> get_block_number(const std::string& block_id, const core::rawdb::DatabaseReader& reader) {
+   const auto [block_number, _] = co_await get_block_number(block_id, reader, /*latest_required=*/false);
+   co_return block_number;
+}
+
 boost::asio::awaitable<uint64_t> get_current_block_number(const core::rawdb::DatabaseReader& reader) {
     const auto current_block_number = co_await stages::get_sync_stage_progress(reader, stages::kFinish);
     co_return current_block_number;
