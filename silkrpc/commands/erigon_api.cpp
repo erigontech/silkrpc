@@ -327,7 +327,7 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nl
 
 // https://eth.wiki/json-rpc/API#erigon_blockNumber
 boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_block_number(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
+    const auto params = request["params"];
     std::string block_id;
     if (params.size() == 0) {
        block_id = core::kLatestExecutedBlockId;
@@ -348,9 +348,7 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_block_number(const nloh
 
         const auto block_number{co_await core::get_block_number_by_tag(block_id, tx_database)};
 
-        std::ostringstream block_number_hex;
-        block_number_hex << std::hex << block_number;
-        reply = make_json_content(request["id"], "0x" + block_number_hex.str());
+        reply = make_json_content(request["id"], to_quantity (block_number));
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
