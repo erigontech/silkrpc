@@ -61,7 +61,7 @@ public:
     MOCK_CONST_METHOD3(for_prefix, boost::asio::awaitable<void>(const std::string&, const silkworm::ByteView&, core::rawdb::Walker));
 };
 
-TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
+TEST_CASE("get_block_number latest_required", "[silkrpc][core][blocks]") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     const silkworm::ByteView kExecutionStage{stages::kExecution};
     test::MockDatabaseReader db_reader;
@@ -198,6 +198,20 @@ TEST_CASE("get_block_number", "[silkrpc][core][blocks]") {
         auto [number, is_latest_block] = result.get();
         CHECK(number == 0x0000000000001234);
         CHECK(is_latest_block == false);
+    }
+}
+
+TEST_CASE("get_block_number ", "[silkrpc][core][blocks]") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    const silkworm::ByteView kExecutionStage{stages::kExecution};
+    test::MockDatabaseReader db_reader;
+    boost::asio::thread_pool pool{1};
+
+    SECTION("kEarliestBlockId") {
+        const std::string EARLIEST_BLOCK_ID = kEarliestBlockId;
+        auto result = boost::asio::co_spawn(pool, get_block_number(EARLIEST_BLOCK_ID, db_reader), boost::asio::use_future);
+        auto number = result.get();
+        CHECK(number == kEarliestBlockNumber);
     }
 }
 
