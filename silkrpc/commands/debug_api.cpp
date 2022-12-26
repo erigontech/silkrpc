@@ -129,7 +129,7 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_
     try {
         ethdb::TransactionDatabase tx_database{*tx};
         const auto [start_block_number, _] = co_await core::get_block_number(start_block_id, tx_database, /*latest_required=*/false);
-        const auto [end_block_number, ignore] = co_await core::get_block_number(end_block_id, tx_database, /*latest_required=*/false);
+        const auto end_block_number = co_await core::get_block_number(end_block_id, tx_database);
 
         const auto addresses = co_await get_modified_accounts(tx_database, start_block_number, end_block_number);
         reply = make_json_content(request["id"], addresses);
@@ -453,7 +453,7 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const
 }
 
 boost::asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::TransactionDatabase& tx_database, uint64_t start_block_number, uint64_t end_block_number) {
-    const auto [latest_block_number, ignore] = co_await core::get_block_number(core::kLatestBlockId, tx_database, /*latest_required=*/false);
+    const auto latest_block_number = co_await core::get_block_number(core::kLatestBlockId, tx_database);
 
     SILKRPC_DEBUG << "latest: " << latest_block_number << " start: " << start_block_number << " end: " << end_block_number << "\n";
 
