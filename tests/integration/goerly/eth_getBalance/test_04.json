@@ -3,7 +3,7 @@
         "request": {
             "jsonrpc":"2.0",
             "method":"eth_getBalance",
-            "params":["0x0000000000000000000000000000000000000000", "earlist"],
+            "params":["0x0000000000000000000000000000000000000000", "earliest"],
             "id":3
         },
         "response": {
