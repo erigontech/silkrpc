@@ -72,7 +72,6 @@ TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_get_block_by_tim
         })"_json);
     }
     SECTION("request params are incomplete: return error") {
-        nlohmann::json reply;
         CHECK_NOTHROW(run<&ErigonRpcApi_ForTest::handle_erigon_get_block_by_timestamp>(R"({
             "jsonrpc":"2.0",
             "id":1,
