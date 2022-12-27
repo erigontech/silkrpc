@@ -1006,7 +1006,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_count(co
         if (account) {
             reply = make_json_content(request["id"], to_quantity(account->nonce));
         } else {
-            reply = make_json_content(request["id"], "0x");
+            reply = make_json_content(request["id"], "0x0");
         }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -1050,7 +1050,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_storage_at(const nlo
            auto storage{co_await state_reader.read_storage(address, account->incarnation, location, block_number + 1)};
            reply = make_json_content(request["id"], "0x" + silkworm::to_hex(storage));
         } else {
-           reply = make_json_content(request["id"], "0x");
+           reply = make_json_content(request["id"], "0x0000000000000000000000000000000000000000000000000000000000000000");
         }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
