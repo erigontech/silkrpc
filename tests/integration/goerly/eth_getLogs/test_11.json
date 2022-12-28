@@ -5,7 +5,7 @@
             "method":"eth_getLogs",
             "params":[
                 {
-                    "fromBlock": "earliest",
+                    "fromBlock": "0",
                     "toBlock": "0x100",
                     "address": "0x517c8c9c11586a99ff28fe97f6fe168d4f9f9989"
                 }
