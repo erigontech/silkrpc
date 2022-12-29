@@ -168,7 +168,7 @@ TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_block_number", "
         CHECK(reply == R"({
             "jsonrpc":"2.0",
             "id":1,
-            "error":{"code":100,"message":"invalid erigon_getBlockNumber params: [\"earliest\",\"3\"]"} 
+            "error":{"code":100,"message":"invalid erigon_blockNumber params: [\"earliest\",\"3\"]"} 
         })"_json);
     }
 
