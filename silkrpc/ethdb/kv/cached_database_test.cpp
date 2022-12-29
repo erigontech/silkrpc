@@ -73,7 +73,8 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
         EXPECT_CALL(*mock_cursor, seek_exact(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
             co_return KeyValue{kZeroBytes, kZeroBytes};
         }));
-        auto result = boost::asio::co_spawn(pool, cached_db.get_one(db::table::kHeaders, kZeroBytes), boost::asio::use_future);
+        std::string table = db::table::kHeaders;
+        auto result = boost::asio::co_spawn(pool, cached_db.get_one(table, kZeroBytes), boost::asio::use_future);
         const auto value = result.get();
         CHECK(value == kZeroBytes);
     }
@@ -91,7 +92,8 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
         EXPECT_CALL(*mock_view, get(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
             co_return std::nullopt;
         }));
-        auto result = boost::asio::co_spawn(pool, cached_db.get_one(db::table::kPlainState, kZeroBytes), boost::asio::use_future);
+        std::string table = db::table::kPlainState;
+        auto result = boost::asio::co_spawn(pool, cached_db.get_one(table, kZeroBytes), boost::asio::use_future);
         const auto value = result.get();
         CHECK(value == kZeroBytes);
     }
@@ -109,7 +111,8 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
         EXPECT_CALL(*mock_view, get(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
             co_return kTestData;
         }));
-        auto result = boost::asio::co_spawn(pool, cached_db.get_one(db::table::kPlainState, kZeroBytes), boost::asio::use_future);
+        std::string table = db::table::kPlainState;
+        auto result = boost::asio::co_spawn(pool, cached_db.get_one(table, kZeroBytes), boost::asio::use_future);
         const auto value = result.get();
         CHECK(value == kTestData);
     }
@@ -127,7 +130,8 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
         EXPECT_CALL(*mock_view, get_code(_)).WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
             co_return kTestData;
         }));
-        auto result = boost::asio::co_spawn(pool, cached_db.get_one(db::table::kCode, kZeroBytes), boost::asio::use_future);
+        std::string table = db::table::kCode;
+        auto result = boost::asio::co_spawn(pool, cached_db.get_one(table, kZeroBytes), boost::asio::use_future);
         const auto value = result.get();
         CHECK(value == kTestData);
     }
