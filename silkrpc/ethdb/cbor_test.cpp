@@ -25,10 +25,19 @@
 #include <silkrpc/types/log.hpp>
 #include <silkrpc/types/receipt.hpp>
 
+namespace {
+#ifdef _WIN32
+const auto invalidArgumentMessage = "invalid argument";
+#else
+const auto invalidArgumentMessage = "Invalid argument";
+#endif
+}
+
 namespace silkrpc {
 
 using Catch::Matchers::Message;
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
+using std::string_literals::operator""s;
 
 TEST_CASE("decode logs from empty bytes", "[silkrpc][ethdb][cbor]") {
     Logs logs{};
@@ -100,7 +109,7 @@ TEST_CASE("decode logs from incorrect bytes", "[silkrpc][ethdb][cbor]") {
     const auto b1 = *silkworm::from_hex("81");
     CHECK_THROWS(cbor_decode(b1, logs));
     const auto b2 = *silkworm::from_hex("83808040");
-    CHECK_THROWS_MATCHES(cbor_decode(b2, logs), std::system_error, Message("Log CBOR: missing entries: Invalid argument"));
+    CHECK_THROWS_MATCHES(cbor_decode(b2, logs), std::system_error, Message("Log CBOR: missing entries: "s + invalidArgumentMessage));
 }
 
 TEST_CASE("decode receipts from empty bytes", "[silkrpc][ethdb][cbor]") {
@@ -157,7 +166,7 @@ TEST_CASE("decode receipts from incorrect bytes", "[silkrpc][ethdb][cbor]") {
     const auto b1 = *silkworm::from_hex("81");
     CHECK_THROWS(cbor_decode(b1, receipts));
     const auto b2 = *silkworm::from_hex("83808040");
-    CHECK_THROWS_MATCHES(cbor_decode(b2, receipts), std::system_error, Message("Receipt CBOR: missing entries: Invalid argument"));
+    CHECK_THROWS_MATCHES(cbor_decode(b2, receipts), std::system_error, Message("Receipt CBOR: missing entries: "s + invalidArgumentMessage));
 }
 
 } // namespace silkrpc

@@ -28,11 +28,20 @@
 #include <silkworm/db/access_layer.hpp>
 #include <silkworm/db/prune_mode.hpp>
 
+namespace {
+#ifdef _WIN32
+const auto invalidArgumentMessage = "invalid argument";
+#else
+const auto invalidArgumentMessage = "Invalid argument";
+#endif
+}
+
 namespace silkrpc {
 
 using Catch::Matchers::Message;
 using evmc::literals::operator""_address, evmc::literals::operator""_bytes32;
 using silkworm::kGiga;
+using std::string_literals::operator""s;
 
 TEST_CASE("convert zero uint256 to quantity", "[silkrpc][to_quantity]") {
     intx::uint256 zero_u256{0};
@@ -1025,17 +1034,17 @@ TEST_CASE("shortest hex for 4206337", "[silkrpc][to_json]") {
 
 TEST_CASE("deserialize wrong size log", "[silkrpc][from_json]") {
     const auto j1 = nlohmann::json::from_cbor(*silkworm::from_hex("80"));
-    CHECK_THROWS_MATCHES(j1.get<Log>(), std::system_error, Message("Log CBOR: missing entries: Invalid argument"));
+    CHECK_THROWS_MATCHES(j1.get<Log>(), std::system_error, Message("Log CBOR: missing entries: "s + invalidArgumentMessage));
     const auto j2 = nlohmann::json::from_cbor(*silkworm::from_hex("81540000000000000000000000000000000000000000"));
-    CHECK_THROWS_MATCHES(j2.get<Log>(), std::system_error, Message("Log CBOR: missing entries: Invalid argument"));
+    CHECK_THROWS_MATCHES(j2.get<Log>(), std::system_error, Message("Log CBOR: missing entries: "s + invalidArgumentMessage));
     const auto j3 = nlohmann::json::from_cbor(*silkworm::from_hex("8254000000000000000000000000000000000000000080"));
-    CHECK_THROWS_MATCHES(j3.get<Log>(), std::system_error, Message("Log CBOR: missing entries: Invalid argument"));
+    CHECK_THROWS_MATCHES(j3.get<Log>(), std::system_error, Message("Log CBOR: missing entries: "s + invalidArgumentMessage));
     const auto j4 = nlohmann::json::from_cbor(*silkworm::from_hex("83808040"));
-    CHECK_THROWS_MATCHES(j4.get<Log>(), std::system_error, Message("Log CBOR: binary expected in [0]: Invalid argument"));
+    CHECK_THROWS_MATCHES(j4.get<Log>(), std::system_error, Message("Log CBOR: binary expected in [0]: "s + invalidArgumentMessage));
     const auto j5 = nlohmann::json::from_cbor(*silkworm::from_hex("835400000000000000000000000000000000000000004040"));
-    CHECK_THROWS_MATCHES(j5.get<Log>(), std::system_error, Message("Log CBOR: array expected in [1]: Invalid argument"));
+    CHECK_THROWS_MATCHES(j5.get<Log>(), std::system_error, Message("Log CBOR: array expected in [1]: "s + invalidArgumentMessage));
     const auto j6 = nlohmann::json::from_cbor(*silkworm::from_hex("835400000000000000000000000000000000000000008080"));
-    CHECK_THROWS_MATCHES(j6.get<Log>(), std::system_error, Message("Log CBOR: binary or null expected in [2]: Invalid argument"));
+    CHECK_THROWS_MATCHES(j6.get<Log>(), std::system_error, Message("Log CBOR: binary or null expected in [2]: "s + invalidArgumentMessage));
 }
 
 TEST_CASE("deserialize empty array log", "[silkrpc][from_json]") {
@@ -1086,21 +1095,21 @@ TEST_CASE("deserialize topics", "[silkrpc][from_json]") {
 
 TEST_CASE("deserialize wrong size receipt", "[silkrpc][from_json]") {
     const auto j1 = nlohmann::json::from_cbor(*silkworm::from_hex("80"));
-    CHECK_THROWS_MATCHES(j1.get<Receipt>(), std::system_error, Message("Receipt CBOR: missing entries: Invalid argument"));
+    CHECK_THROWS_MATCHES(j1.get<Receipt>(), std::system_error, Message("Receipt CBOR: missing entries: "s + invalidArgumentMessage));
     const auto j2 = nlohmann::json::from_cbor(*silkworm::from_hex("8100"));
-    CHECK_THROWS_MATCHES(j2.get<Receipt>(), std::system_error, Message("Receipt CBOR: missing entries: Invalid argument"));
+    CHECK_THROWS_MATCHES(j2.get<Receipt>(), std::system_error, Message("Receipt CBOR: missing entries: "s + invalidArgumentMessage));
     const auto j3 = nlohmann::json::from_cbor(*silkworm::from_hex("8200f6"));
-    CHECK_THROWS_MATCHES(j3.get<Receipt>(), std::system_error, Message("Receipt CBOR: missing entries: Invalid argument"));
+   CHECK_THROWS_MATCHES(j3.get<Receipt>(), std::system_error, Message("Receipt CBOR: missing entries: "s + invalidArgumentMessage));
     const auto j4 = nlohmann::json::from_cbor(*silkworm::from_hex("8300f600"));
-    CHECK_THROWS_MATCHES(j4.get<Receipt>(), std::system_error, Message("Receipt CBOR: missing entries: Invalid argument"));
+    CHECK_THROWS_MATCHES(j4.get<Receipt>(), std::system_error, Message("Receipt CBOR: missing entries: "s + invalidArgumentMessage));
     const auto j5 = nlohmann::json::from_cbor(*silkworm::from_hex("84f4f60000"));
-    CHECK_THROWS_MATCHES(j5.get<Receipt>(), std::system_error, Message("Receipt CBOR: number expected in [0]: Invalid argument"));
+    CHECK_THROWS_MATCHES(j5.get<Receipt>(), std::system_error, Message("Receipt CBOR: number expected in [0]: "s + invalidArgumentMessage));
     const auto j6 = nlohmann::json::from_cbor(*silkworm::from_hex("8400f40000"));
-    CHECK_THROWS_MATCHES(j6.get<Receipt>(), std::system_error, Message("Receipt CBOR: null expected in [1]: Invalid argument"));
+    CHECK_THROWS_MATCHES(j6.get<Receipt>(), std::system_error, Message("Receipt CBOR: null expected in [1]: "s + invalidArgumentMessage));
     const auto j7 = nlohmann::json::from_cbor(*silkworm::from_hex("8400f6f500"));
-    CHECK_THROWS_MATCHES(j7.get<Receipt>(), std::system_error, Message("Receipt CBOR: number expected in [2]: Invalid argument"));
+    CHECK_THROWS_MATCHES(j7.get<Receipt>(), std::system_error, Message("Receipt CBOR: number expected in [2]: "s + invalidArgumentMessage));
     const auto j8 = nlohmann::json::from_cbor(*silkworm::from_hex("8400f600f5"));
-    CHECK_THROWS_MATCHES(j8.get<Receipt>(), std::system_error, Message("Receipt CBOR: number expected in [3]: Invalid argument"));
+    CHECK_THROWS_MATCHES(j8.get<Receipt>(), std::system_error, Message("Receipt CBOR: number expected in [3]: "s + invalidArgumentMessage));
 }
 
 TEST_CASE("deserialize wrong receipt", "[silkrpc][from_json]") {
@@ -1225,7 +1234,7 @@ TEST_CASE("serialize receipt", "[silkrpc::json][to_json]") {
 }
 
 TEST_CASE("serialize empty filter", "[silkrpc::json][to_json]") {
-    Filter f{{0}, {0}, {{"", ""}}, {{{"", ""}, {"", ""}}}, {""}};
+    Filter f{0, 0, FilterAddresses{}, FilterTopics(2), ""};
     nlohmann::json j = f;
     CHECK(j == R"({"address":[],"blockHash":"","fromBlock":0,"toBlock":0,"topics":[[], []]})"_json);
 }
@@ -1238,7 +1247,7 @@ TEST_CASE("serialize filter with one address", "[silkrpc::json][to_json]") {
 }
 
 TEST_CASE("serialize filter with fromBlock and toBlock", "[silkrpc::json][to_json]") {
-    Filter f{{1000}, {2000}, {{"", ""}}, {{{"", ""}, {"", ""}}}, {""}};
+    Filter f{1000, 2000, FilterAddresses{}, FilterTopics(2), ""};
     nlohmann::json j = f;
     CHECK(j == R"({"address":[],"blockHash":"","fromBlock":1000,"toBlock":2000,"topics":[[], []]})"_json);
 }

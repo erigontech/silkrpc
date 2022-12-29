@@ -34,7 +34,9 @@ SplitCursor::SplitCursor(Cursor& inner_cursor, silkworm::ByteView key, uint64_t 
     }
 
     first_bytes_ = key.substr(0, match_bytes_ - 1);
-    last_bits_ = key[match_bytes_ - 1] & mask_;
+    if (match_bytes_ > 0) {
+        last_bits_ = key[match_bytes_ - 1] & mask_;
+    }
 }
 
 boost::asio::awaitable<SplittedKeyValue> SplitCursor::seek() {

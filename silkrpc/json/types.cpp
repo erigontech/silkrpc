@@ -504,7 +504,7 @@ void from_json(const nlohmann::json& json, Filter& filter) {
                     topic_item = FilterSubTopics{evmc::bytes32{}};
                 }
                 if (topic_item.is_string()) {
-                    topic_item = FilterSubTopics{evmc::bytes32{topic_item}};
+                    topic_item = FilterSubTopics{topic_item};
                 }
             }
             filter.topics = topics.get<FilterTopics>();
