@@ -179,12 +179,12 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
 
         MockDatabaseReader db_reader;
         const uint64_t block_number = 1'000'000;
-        std::optional<silkworm::BlockBody> body = std::nullopt;
+        silkworm::BlockBody body;
         const auto block_hash{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
         evmc::address address{0x0715a7794a1dc8e42615f059dd6e406a6594651a_address};
         RemoteState remote_state(io_context, db_reader, block_number);
-        auto header = remote_state.read_body(block_number, block_hash, *body);
-        CHECK(body == std::nullopt);
+        auto header = remote_state.read_body(block_number, block_hash, body);
+        CHECK(body == silkworm::BlockBody{});
         io_context.stop();
         io_context_thread.join();
     }
