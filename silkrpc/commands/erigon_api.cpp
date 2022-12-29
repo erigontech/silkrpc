@@ -171,7 +171,7 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_number(co
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_number{co_await core::get_block_number(block_id, tx_database)};
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
         const auto header{co_await core::rawdb::read_header_by_number(tx_database, block_number)};
 
         reply = make_json_content(request["id"], header);
@@ -276,7 +276,7 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nl
 
         Issuance issuance{}; // default is empty: no PoW => no issuance
         if (chain_config.config.count("ethash") != 0) {
-            const auto block_number{co_await core::get_block_number(block_id, tx_database)};
+            const auto block_number = co_await core::get_block_number(block_id, tx_database);
             const auto block_with_hash{co_await core::rawdb::read_block_by_number(tx_database, block_number)};
             const auto block_reward{ethash::compute_reward(chain_config, block_with_hash.block)};
             intx::uint256 total_ommer_reward = 0;
