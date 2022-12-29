@@ -128,7 +128,7 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_get_modified_accounts_by_
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        const auto [start_block_number, _] = co_await core::get_block_number(start_block_id, tx_database, /*latest_required=*/false);
+        const auto start_block_number = co_await core::get_block_number(start_block_id, tx_database);
         const auto end_block_number = co_await core::get_block_number(end_block_id, tx_database);
 
         const auto addresses = co_await get_modified_accounts(tx_database, start_block_number, end_block_number);
