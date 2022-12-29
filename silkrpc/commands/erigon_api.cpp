@@ -330,14 +330,14 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_block_number(const nloh
     const auto params = request["params"];
     std::string block_id;
     if (params.size() == 0) {
-       block_id = core::kLatestExecutedBlockId;
-    } else if (params.size() > 1) {
-        auto error_msg = "invalid erigon_getBlockNumber params: " + params.dump();
+        block_id = core::kLatestExecutedBlockId;
+    } else if (params.size() == 1) {
+        block_id = params[0];
+    } else {
+        auto error_msg = "invalid erigon_blockNumber params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
-    } else {
-        block_id = params[0];
     }
     SILKRPC_DEBUG << "block: " << block_id << "\n";
 
