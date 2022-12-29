@@ -91,6 +91,9 @@ boost::asio::awaitable<std::optional<silkworm::Bytes>> StateReader::read_histori
     }
 
     SILKRPC_DEBUG << "StateReader::read_historical_account kv_pair.value: " << silkworm::to_hex(kv_pair.value) << "\n";
+    if (kv_pair.value.empty()) {
+        co_return std::nullopt;
+    }
     const auto bitmap{silkworm::db::bitmap::parse(kv_pair.value)};
     SILKRPC_DEBUG << "StateReader::read_historical_account bitmap: " << bitmap.toString() << "\n";
 
