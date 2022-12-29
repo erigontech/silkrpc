@@ -319,13 +319,13 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::engine_forkchoice_updated_v1", "[silk
             .safe_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
             .finalized_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32
         },
-        .payload_attributes = std::make_optional<PayloadAttributes>({
+         .payload_attributes =
+            PayloadAttributes{
             .timestamp = 0x1,
             .prev_randao = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
             .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address
-        })
+        }
     };
-
     SECTION("call engine_forkchoice_updated_v1 and get VALID status") {
         ::remote::EngineForkChoiceUpdatedReply response;
         ::remote::EnginePayloadStatus* engine_payload_status = new ::remote::EnginePayloadStatus();

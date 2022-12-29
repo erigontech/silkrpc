@@ -38,8 +38,11 @@
 #include <silkrpc/http/methods.hpp>
 
 namespace silkrpc::http {
-
+#ifdef WIN32
+using reuse_port = boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEADDR>;
+#else
 using reuse_port = boost::asio::detail::socket_option::boolean<SOL_SOCKET, SO_REUSEPORT>;
+#endif
 
 std::tuple<std::string, std::string> Server::parse_endpoint(const std::string& tcp_end_point) {
     const auto host = tcp_end_point.substr(0, tcp_end_point.find(kAddressPortSeparator));

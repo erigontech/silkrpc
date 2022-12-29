@@ -27,11 +27,16 @@ if(SILKRPC_USE_MIMALLOC)
     find_package(mimalloc 2.0 REQUIRED)
 endif()
 
-add_compile_options(-std=c++2a)
+if (NOT MSVC)
+    add_compile_options(-std=c++2a)
+endif()
+
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-fcoroutines)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-stdlib=libc++)
+elseif(MSVC)
+    add_compile_options(/bigobj)
 endif()
 
 # Silkrpc toolbox
