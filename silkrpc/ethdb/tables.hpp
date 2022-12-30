@@ -66,6 +66,7 @@ constexpr const char* kTrieOfAccounts{"TrieAccount"};
 constexpr const char* kTrieOfStorage{"TrieStorage"};
 constexpr const char* kTxLookup{"BlockTransactionLookup"};
 constexpr const char* kIssuance{"Issuance"};
+constexpr const char* kCumulativeGasIndex{"CumulativeGasIndex"};
 
 
 }  // namespace silkrpc::db::table
