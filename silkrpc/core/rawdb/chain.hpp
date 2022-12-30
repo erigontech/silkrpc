@@ -68,6 +68,8 @@ boost::asio::awaitable<evmc::bytes32> read_head_header_hash(const DatabaseReader
 
 boost::asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
 
+boost::asio::awaitable<uint64_t> read_cumulative_transaction_count(const DatabaseReader& reader, uint64_t block_number);
+
 boost::asio::awaitable<silkworm::Bytes> read_header_rlp(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
 
 boost::asio::awaitable<silkworm::Bytes> read_body_rlp(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number);
@@ -86,6 +88,7 @@ boost::asio::awaitable<intx::uint256> read_total_issued(const core::rawdb::Datab
 
 boost::asio::awaitable<intx::uint256> read_total_burnt(const core::rawdb::DatabaseReader& reader, uint64_t block_number);
 
+boost::asio::awaitable<intx::uint256> read_cumulative_gas_used(const core::rawdb::DatabaseReader& reader, uint64_t block_number);
 
 } // namespace silkrpc::core::rawdb
 
