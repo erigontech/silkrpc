@@ -200,6 +200,11 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
 
 namespace silkrpc {
 
+void to_json(nlohmann::json& json, const ChainTraffic& chain_traffic) {
+    json["CumulativeGasUsed"] = to_quantity(chain_traffic.cumulative_gas_used);
+    json["CumulativeTransactionsCount"] = to_quantity(chain_traffic.cumulative_transactions_count);
+}
+
 void to_json(nlohmann::json& json, const StageData& stage_data) {
     json["stage_name"] = stage_data.stage_name;
     json["block_number"] = stage_data.block_number;
