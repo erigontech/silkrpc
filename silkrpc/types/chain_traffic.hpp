@@ -27,8 +27,8 @@
 namespace silkrpc {
 
 struct ChainTraffic {
-  intx::uint<256> cumulative_gas_used;
-  uint64_t cumulative_transactions_count;
+    intx::uint<256> cumulative_gas_used;
+    uint64_t cumulative_transactions_count;
 };
 
 
