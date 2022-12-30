@@ -172,6 +172,26 @@ boost::asio::awaitable<evmc::bytes32> read_head_header_hash(const DatabaseReader
     co_return head_header_hash;
 }
 
+boost::asio::awaitable<uint64_t> read_cumulative_transaction_count(const DatabaseReader& reader, uint64_t block_number) {
+    const auto block_hash = co_await read_canonical_block_hash(reader, block_number);
+    const auto data = co_await read_body_rlp(reader, block_hash, block_number);
+    if (data.empty()) {
+        throw std::runtime_error{"empty block body RLP in read_body"};
+    }
+    SILKRPC_TRACE << "RLP data for block body #" << block_number << ": " << silkworm::to_hex(data) << "\n";
+
+    try {
+        silkworm::ByteView data_view{data};
+        auto stored_body{silkworm::db::detail::decode_stored_block_body(data_view)};
+        // 1 system txn in the begining of block, and 1 at the end
+        SILKRPC_DEBUG << "base_txn_id: " << stored_body.base_txn_id + 1 << " txn_count: " << stored_body.txn_count -2 << "\n";
+        co_return stored_body.base_txn_id + stored_body.txn_count - 1;
+    } catch (silkworm::rlp::DecodingError error) {
+        SILKRPC_ERROR << "RLP decoding error for block body #" << block_number << " [" << error.what() << "]\n";
+        throw std::runtime_error{"RLP decoding error for block body [" + std::string(error.what()) + "]"};
+    }
+}
+
 boost::asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& reader, const evmc::bytes32& block_hash, uint64_t block_number) {
     const auto data = co_await read_body_rlp(reader, block_hash, block_number);
     if (data.empty()) {
