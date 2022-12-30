@@ -55,6 +55,9 @@ class ErigonRpcApi_ForTest : public ErigonRpcApi {
     boost::asio::awaitable<void> handle_erigon_block_number(const nlohmann::json& request, nlohmann::json& reply) {
         co_return co_await ErigonRpcApi::handle_erigon_block_number(request, reply);
     }
+    boost::asio::awaitable<void> handle_erigon_cumulative_chain_traffic(const nlohmann::json& request, nlohmann::json& reply) {
+        co_return co_await ErigonRpcApi::handle_erigon_cumulative_chain_traffic(request, reply);
+    }
 };
 
 using ErigonRpcApiTest = test::JsonApiTestBase<ErigonRpcApi_ForTest>;
@@ -187,6 +190,34 @@ TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_block_number", "
             "id":1,
             "method":"erigon_blockNumber",
             "params":[]
+        })"_json, reply), std::exception);
+    }
+}
+
+
+TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_cumulative_chain_traffic", "[silkrpc][erigon_api]") {
+    nlohmann::json reply;
+
+    SECTION("request invalid params number") {
+        CHECK_NOTHROW(run<&ErigonRpcApi_ForTest::handle_erigon_cumulative_chain_traffic>(R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"erigon_cumulativeChainTraffic",
+            "params":[]
+        })"_json, reply));
+        CHECK(reply == R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "error":{"code":100,"message":"invalid erigon_cumulativeChainTraffic params: []"} 
+        })"_json);
+    }
+
+    SECTION("request block_number") {
+        CHECK_THROWS_AS(run<&ErigonRpcApi_ForTest::handle_erigon_cumulative_chain_traffic>(R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"erigon_cumulativeChainTraffic",
+            "params":["100"]
         })"_json, reply), std::exception);
     }
 }
