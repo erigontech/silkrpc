@@ -1594,6 +1594,22 @@ TEST_CASE("read_noncanonical_transactions") {
     }
 }
 
+TEST_CASE("read_cumulative_transaction_count") {
+    SECTION("block found and matching") {
+        boost::asio::thread_pool pool{1};
+        MockDatabaseReader db_reader;
+        const uint64_t block_number{4'000'000};
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return *silkworm::from_hex("9816753229fc0736bf86a5048de4bc9fcdede8c91dadf88c828c76b2281dff"); }
+        ));
+        EXPECT_CALL(db_reader, get_one(db::table::kBlockBodies, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kBody; }
+        ));
+        auto result = boost::asio::co_spawn(pool, read_cumulative_transaction_count(db_reader, block_number), boost::asio::use_future);
+        CHECK(result.get() == 6939740);
+    }
+}
+
 TEST_CASE("read_total_issued") {
     boost::asio::thread_pool pool{1};
     MockDatabaseReader db_reader;
