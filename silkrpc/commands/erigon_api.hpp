@@ -43,6 +43,7 @@ public:
     ErigonRpcApi& operator=(const ErigonRpcApi&) = delete;
 
 protected:
+    boost::asio::awaitable<void> handle_erigon_block_number(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_erigon_get_block_by_timestamp(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_erigon_get_header_by_hash(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_erigon_get_header_by_number(const nlohmann::json& request, nlohmann::json& reply);

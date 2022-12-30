@@ -215,6 +215,108 @@ TEST_CASE("get_block_number ", "[silkrpc][core][blocks]") {
     }
 }
 
+TEST_CASE("get_block_number_by_tag", "[silkrpc][core][blocks]") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    const silkworm::ByteView kExecutionStage{stages::kExecution};
+    test::MockDatabaseReader db_reader;
+    boost::asio::thread_pool pool{1};
+
+    SECTION("kEarliestBlockId") {
+        const std::string EARLIEST_BLOCK_ID = kEarliestBlockId;
+        auto result = boost::asio::co_spawn(pool, get_block_number_by_tag(EARLIEST_BLOCK_ID, db_reader), boost::asio::use_future);
+        auto number = result.get();
+        CHECK(number == kEarliestBlockNumber);
+    }
+
+    SECTION("kLatestBlockId") {
+        const std::string LATEST_BLOCK_ID = kLatestBlockId;
+        EXPECT_CALL(db_reader, get(db::table::kLastForkchoice, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+
+        EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")};
+            }));
+        auto result = boost::asio::co_spawn(pool, get_block_number_by_tag(LATEST_BLOCK_ID, db_reader), boost::asio::use_future);
+        auto number = result.get();
+        CHECK(number == 0x1234567890123456);
+    }
+
+    SECTION("kLatestExecutedBlockId") {
+        const std::string LATEST_BLOCK_ID = kLatestExecutedBlockId;
+        EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")};
+            }));
+        auto result = boost::asio::co_spawn(pool, get_block_number_by_tag(LATEST_BLOCK_ID, db_reader), boost::asio::use_future);
+        auto number = result.get();
+        CHECK(number == 0x1234567890123456);
+    }
+
+    SECTION("kPendingBlockId") {
+        const std::string PENDING_BLOCK_ID = kPendingBlockId;
+        EXPECT_CALL(db_reader, get(db::table::kLastForkchoice, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, silkworm::Bytes{}}; }
+        ));
+
+        EXPECT_CALL(db_reader, get(db::table::kSyncStageProgress, kExecutionStage)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{silkworm::Bytes{}, *silkworm::from_hex("1234567890123456")}; }
+        ));
+        auto result = boost::asio::co_spawn(pool, get_block_number_by_tag(PENDING_BLOCK_ID, db_reader), boost::asio::use_future);
+        auto number = result.get();
+        CHECK(number == 0x1234567890123456);
+    }
+
+    SECTION("kFinalizedBlockId") {
+        const std::string FINALIZED_FORKCHOICE_BLOCK_ID = kFinalizedBlockId;
+        EXPECT_CALL(db_reader, get(db::table::kLastForkchoice, _)).WillOnce(InvokeWithoutArgs(
+            [&]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, block_hash};
+            }
+        ));
+
+        EXPECT_CALL(db_reader, get_one(db::table::kHeaderNumbers, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kNumber;
+            }
+        ));
+
+        EXPECT_CALL(db_reader, get_one(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kHeader; }
+        ));
+
+        auto result = boost::asio::co_spawn(pool, get_block_number_by_tag(FINALIZED_FORKCHOICE_BLOCK_ID, db_reader), boost::asio::use_future);
+        auto number = result.get();
+        CHECK(number == 0x3d0900);
+    }
+
+    SECTION("kSafeBlockId") {
+        const std::string SAFE_FORKCHOICE_BLOCK_ID = kSafeBlockId;
+        EXPECT_CALL(db_reader, get(db::table::kLastForkchoice, _)).WillOnce(InvokeWithoutArgs(
+            [&]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{silkworm::Bytes{}, block_hash};
+            }
+        ));
+
+        EXPECT_CALL(db_reader, get_one(db::table::kHeaderNumbers, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kNumber;
+            }
+        ));
+
+        EXPECT_CALL(db_reader, get_one(db::table::kHeaders, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kHeader; }
+        ));
+
+        auto result = boost::asio::co_spawn(pool, get_block_number_by_tag(SAFE_FORKCHOICE_BLOCK_ID, db_reader), boost::asio::use_future);
+        auto number = result.get();
+        CHECK(number == 0x3d0900);
+    }
+}
+
 TEST_CASE("get_current_block_number", "[silkrpc][core][blocks]") {
     const silkworm::ByteView kFinishStage{stages::kFinish};
     test::MockDatabaseReader db_reader;
