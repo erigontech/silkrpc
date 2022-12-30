@@ -362,16 +362,15 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_block_number(const nloh
 // https://eth.wiki/json-rpc/API#erigon_cumulativeChainTraffic
 boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_cumulative_chain_traffic(const nlohmann::json& request, nlohmann::json& reply) {
     const auto params = request["params"];
-    std::string block_id;
     if (params.size() != 1) {
         auto error_msg = "invalid erigon_cumulativeChainTraffic params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
-    const auto block_number = params[0];
+    const auto block_id = params[0].get<std::string>();
 
-    SILKRPC_DEBUG << "block_number: " << block_number << "\n";
+    SILKRPC_DEBUG << "block_id: " << block_id << "\n";
 
     auto tx = co_await database_->begin();
 
@@ -379,14 +378,15 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_cumulative_chain_traffi
         ethdb::TransactionDatabase tx_database{*tx};
         ChainTraffic chain_traffic;
 
-        const auto block_with_hash = co_await core::read_block_by_number(*block_cache_, tx_database, block_number);
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
         chain_traffic.cumulative_gas_used  = co_await core::rawdb::read_cumulative_gas_used(tx_database, block_number);
-        chain_traffic.cumulative_transactions_count = block_with_hash.block.transactions.size();
+        chain_traffic.cumulative_transactions_count = co_await core::rawdb::read_cumulative_transaction_count(tx_database, block_number);
 
         reply = make_json_content(request["id"], chain_traffic);
     } catch (const std::exception& e) {
+        ChainTraffic chain_traffic;
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
+        reply = make_json_content(request["id"], chain_traffic);
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
