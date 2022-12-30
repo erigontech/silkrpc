@@ -1482,8 +1482,8 @@ TEST_CASE("serialize chain_traffic", "[silkrpc::json][to_json]") {
     silkrpc::ChainTraffic chain_traffic{4, 5};
     nlohmann::json j = chain_traffic;
     CHECK(j == R"({
-        "CumulativeGasUsed":"0x4",
-        "CumulativeTransactionsCount":"0x5"
+        "cumulativeGasUsed":"0x4",
+        "cumulativeTransactionsCount":"0x5"
     })"_json);
 }
 
