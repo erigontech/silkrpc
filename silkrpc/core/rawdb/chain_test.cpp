@@ -1319,7 +1319,7 @@ TEST_CASE("read_canonical_transactions") {
     MockDatabaseReader db_reader;
 
     SECTION("zero transactions when transaction count is zero") {
-        uint64_t base_txn_id; // don't care
+        uint64_t base_txn_id{0};  // don't care
         const uint64_t txn_count{0};
         auto result = boost::asio::co_spawn(pool, read_canonical_transactions(db_reader, base_txn_id, txn_count), boost::asio::use_future);
         CHECK(result.get() == Transactions{});
@@ -1460,7 +1460,7 @@ TEST_CASE("read_noncanonical_transactions") {
     MockDatabaseReader db_reader;
 
     SECTION("zero transactions when transaction count is zero") {
-        uint64_t base_txn_id; // don't care
+        uint64_t base_txn_id{0};  // don't care
         const uint64_t txn_count{0};
         auto result = boost::asio::co_spawn(pool, read_noncanonical_transactions(db_reader, base_txn_id, txn_count), boost::asio::use_future);
         CHECK(result.get() == Transactions{});
