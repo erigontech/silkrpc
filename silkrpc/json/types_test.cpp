@@ -1478,6 +1478,16 @@ TEST_CASE("serialize empty issuance", "[silkrpc::json][to_json]") {
     })"_json);
 }
 
+TEST_CASE("serialize chain_traffic", "[silkrpc::json][to_json]") {
+    silkrpc::ChainTraffic chain_traffic{4, 5};
+    nlohmann::json j = chain_traffic;
+    CHECK(j == R"({
+        "CumulativeGasUsed":"0x4",
+        "CumulativeTransactionsCount":"0x5"
+    })"_json);
+}
+
+
 TEST_CASE("serialize issuance", "[silkrpc::json][to_json]") {
     silkrpc::Issuance issuance{
         "0x0",
