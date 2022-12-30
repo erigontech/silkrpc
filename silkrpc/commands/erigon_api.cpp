@@ -377,10 +377,13 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_cumulative_chain_traffi
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+        ChainTraffic chain_traffic;
 
-        const auto cumulative_gas_used{co_await core::rawdb::read_cumulative_gas_used(tx_database, block_number)};
+        const auto block_with_hash = co_await core::read_block_by_number(*block_cache_, tx_database, block_number);
+        chain_traffic.cumulative_gas_used  = co_await core::rawdb::read_cumulative_gas_used(tx_database, block_number);
+        chain_traffic.cumulative_transactions_count = block_with_hash.block.transactions.size();
 
-        reply = make_json_content(request["id"], to_quantity (cumulative_gas_index));
+        reply = make_json_content(request["id"], chain_traffic);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
