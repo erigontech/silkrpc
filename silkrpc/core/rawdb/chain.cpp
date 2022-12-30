@@ -402,6 +402,17 @@ boost::asio::awaitable<intx::uint256> read_total_burnt(const core::rawdb::Databa
     co_return total_burnt;
 }
 
+boost::asio::awaitable<intx::uint256> read_cumulative_gas_used(const core::rawdb::DatabaseReader& reader, uint64_t block_number) {
+    const auto block_key = silkworm::db::block_key(block_number);
+    const auto value = co_await reader.get_one(db::table::kCumulativeGasIndex, block_key);
+    intx::uint256 cumulative_gas_index = 0;
+    if (!value.empty()) {
+        cumulative_gas_index = std::stoul(silkworm::to_hex(value), 0, 16);
+    }
+    SILKRPC_DEBUG << "rawdb::read_cumulative_gas_used: " << cumulative_gas_index << "\n";
+    co_return cumulative_gas_index;
+}
+
 
 
 } // namespace silkrpc::core::rawdb
