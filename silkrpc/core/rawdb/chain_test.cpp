@@ -1651,19 +1651,6 @@ TEST_CASE("read_total_issued") {
     CHECK(result.get() == 7);
 }
 
-TEST_CASE("read_cumulative_gas_used") {
-    boost::asio::thread_pool pool{1};
-    MockDatabaseReader db_reader;
-
-    const auto block_hash{0x96908d141b3c2727342b48696f97b50845240e3ceda0c86ac3dc2e197eb9675b_bytes32};
-    const uint64_t block_number{20'000};
-    EXPECT_CALL(db_reader, get_one(_, _)).WillOnce(InvokeWithoutArgs(
-        []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kCumulativeGasUsed; }
-    ));
-    auto result = boost::asio::co_spawn(pool, read_cumulative_gas_used(db_reader, block_number), boost::asio::use_future);
-    CHECK(result.get() == 0x236);
-}
-
 TEST_CASE("read_total_burnt") {
     boost::asio::thread_pool pool{1};
     MockDatabaseReader db_reader;
@@ -1675,6 +1662,34 @@ TEST_CASE("read_total_burnt") {
     ));
     auto result = boost::asio::co_spawn(pool, read_total_burnt(db_reader, block_number), boost::asio::use_future);
     CHECK(result.get() == 5);
+}
+
+TEST_CASE("read_cumulative_gas_used") {
+    SECTION("read_cumulative_gas_used") {
+        boost::asio::thread_pool pool{1};
+        MockDatabaseReader db_reader;
+
+        const auto block_hash{0x96908d141b3c2727342b48696f97b50845240e3ceda0c86ac3dc2e197eb9675b_bytes32};
+        const uint64_t block_number{20'000};
+        EXPECT_CALL(db_reader, get_one(_, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kCumulativeGasUsed; }
+        ));
+        auto result = boost::asio::co_spawn(pool, read_cumulative_gas_used(db_reader, block_number), boost::asio::use_future);
+        CHECK(result.get() == 0x236);
+    }
+
+    SECTION("read_cumulative_gas_used get_one return empty") {
+        boost::asio::thread_pool pool{1};
+        MockDatabaseReader db_reader;
+
+        const auto block_hash{0x96908d141b3c2727342b48696f97b50845240e3ceda0c86ac3dc2e197eb9675b_bytes32};
+        const uint64_t block_number{20'000};
+        EXPECT_CALL(db_reader, get_one(_, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return silkworm::Bytes{}; }
+        ));
+        auto result = boost::asio::co_spawn(pool, read_cumulative_gas_used(db_reader, block_number), boost::asio::use_future);
+        CHECK(result.get() == 0);
+    }
 }
 
 } // namespace silkrpc::core::rawdb
