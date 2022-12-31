@@ -107,8 +107,8 @@ TEST_CASE("write 1-sized filter topics to ostream", "[silkrpc][types][filter]") 
 
 TEST_CASE("write filter to ostream", "[silkrpc][types][filter]") {
     Filter filter{
-        0,
-        10'000'000,
+        "0",
+        "10000000",
         FilterAddresses{0x6090a6e47849629b7245dfa1ca21d94cd15878ef_address},
         FilterTopics{
             {0x0000000000000000000000000000000000000000000000000000000000000000_bytes32},

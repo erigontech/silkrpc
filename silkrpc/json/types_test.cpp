@@ -1234,9 +1234,9 @@ TEST_CASE("serialize receipt", "[silkrpc::json][to_json]") {
 }
 
 TEST_CASE("serialize empty filter", "[silkrpc::json][to_json]") {
-    Filter f{0, 0, FilterAddresses{}, FilterTopics(2), ""};
+    Filter f{"0", "0", FilterAddresses{}, FilterTopics(2), ""};
     nlohmann::json j = f;
-    CHECK(j == R"({"address":[],"blockHash":"","fromBlock":0,"toBlock":0,"topics":[[], []]})"_json);
+    CHECK(j == R"({"address":[],"blockHash":"","fromBlock":"0","toBlock":"0","topics":[[], []]})"_json);
 }
 
 TEST_CASE("serialize filter with one address", "[silkrpc::json][to_json]") {
@@ -1247,9 +1247,9 @@ TEST_CASE("serialize filter with one address", "[silkrpc::json][to_json]") {
 }
 
 TEST_CASE("serialize filter with fromBlock and toBlock", "[silkrpc::json][to_json]") {
-    Filter f{1000, 2000, FilterAddresses{}, FilterTopics(2), ""};
+    Filter f{"1000", "2000", FilterAddresses{}, FilterTopics(2), ""};
     nlohmann::json j = f;
-    CHECK(j == R"({"address":[],"blockHash":"","fromBlock":1000,"toBlock":2000,"topics":[[], []]})"_json);
+    CHECK(j == R"({"address":[],"blockHash":"","fromBlock":"1000","toBlock":"2000","topics":[[], []]})"_json);
 }
 
 TEST_CASE("deserialize null filter", "[silkrpc::json][from_json]") {
@@ -1262,8 +1262,8 @@ TEST_CASE("deserialize null filter", "[silkrpc::json][from_json]") {
 TEST_CASE("deserialize empty filter", "[silkrpc::json][from_json]") {
     auto j1 = R"({"address":["",""],"blockHash":"","fromBlock":0,"toBlock":0,"topics":[["",""], ["",""]]})"_json;
     auto f1 = j1.get<Filter>();
-    CHECK(f1.from_block == 0);
-    CHECK(f1.to_block == 0);
+    CHECK(f1.from_block == "0x0");
+    CHECK(f1.to_block == "0x0");
 }
 
 TEST_CASE("deserialize filter with topic", "[silkrpc::json][from_json]") {
@@ -1277,8 +1277,8 @@ TEST_CASE("deserialize filter with topic", "[silkrpc::json][from_json]") {
         ]
     })"_json;
     auto f = j.get<Filter>();
-    CHECK(f.from_block == 3997696u);
-    CHECK(f.to_block == 4007424u);
+    CHECK(f.from_block == "0x3d0000");
+    CHECK(f.to_block == "0x3d2600");
     CHECK(f.addresses == std::vector<evmc::address>{0x6090a6e47849629b7245dfa1ca21d94cd15878ef_address});
     CHECK(f.topics == std::vector<std::vector<evmc::bytes32>>{
         {0x0000000000000000000000000000000000000000000000000000000000000000_bytes32},
@@ -1295,8 +1295,8 @@ TEST_CASE("deserialize filter with topic null", "[silkrpc::json][from_json]") {
         "topics": null 
     })"_json;
     auto f = j.get<Filter>();
-    CHECK(f.from_block == 3997696u);
-    CHECK(f.to_block == 4007424u);
+    CHECK(f.from_block == "0x3d0000");
+    CHECK(f.to_block == "0x3d2600");
     CHECK(f.addresses == std::vector<evmc::address>{0x6090a6e47849629b7245dfa1ca21d94cd15878ef_address});
     CHECK(f.block_hash == std::nullopt);
 }
