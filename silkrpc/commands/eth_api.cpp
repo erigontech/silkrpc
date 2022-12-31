@@ -1437,7 +1437,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann:
         } else {
             uint64_t last_executed_block_number = std::numeric_limits<std::uint64_t>::max();
             if (filter.from_block.has_value()) {
-               start = co_await core::get_block_number (filter.from_block.value(), tx_database);
+               start = co_await core::get_block_number(filter.from_block.value(), tx_database);
             } else {
                last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
                start = last_executed_block_number;
