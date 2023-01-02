@@ -166,7 +166,8 @@ TEST_CASE("serialize empty block header", "[silkrpc][to_json]") {
         "gasUsed":"0x0",
         "timestamp":"0x0",
         "extraData":"0x",
-        "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000000"
+        "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "withdrawalsRoot":null
     })"_json);
 }
 
@@ -212,7 +213,8 @@ TEST_CASE("serialize block header", "[silkrpc][to_json]") {
         "timestamp":"0x52795d",
         "extraData":"0x0001ff0100",
         "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",
-        "nonce":"0x00000000000000ff"
+        "nonce":"0x00000000000000ff",
+        "withdrawalsRoot":null
     })"_json);
 }
 
@@ -260,7 +262,8 @@ TEST_CASE("serialize block header with baseFeePerGas", "[silkrpc][to_json]") {
         "extraData":"0x0001ff0100",
         "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",
         "nonce":"0x0102030405060708",
-        "baseFeePerGas":"0x3e8"
+        "baseFeePerGas":"0x3e8",
+        "withdrawalsRoot":null
     })"_json);
 }
 
