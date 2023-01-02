@@ -150,6 +150,7 @@ void to_json(nlohmann::json& json, const BlockHeader& header) {
     } else {
        json["baseFeePerGas"] = nullptr;
     }
+    json["withdrawalsRoot"] = nullptr;  // waiting EIP-4895
 }
 
 void to_json(nlohmann::json& json, const AccessListEntry& access_list) {
