@@ -197,7 +197,7 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
     }
     DebugLog log;
     log.pc = pc;
-    log.op = opcode_name == "KECCAK256" ? "SHA3" : opcode_name; // TODO(sixtysixter) for RPCDAEMON compatibility
+    log.op = opcode_name;
     log.gas = execution_state.gas_left;
     log.depth = execution_state.msg->depth + 1;
 
