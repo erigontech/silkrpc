@@ -26,7 +26,8 @@
                 "sha3Uncles": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
                 "stateRoot": "0x020c2f084b82ad3f0c81c82c96dc95a14c99aeaf749e545837fffaff638421ae",
                 "timestamp": "0x602eb2de",
-                "transactionsRoot": "0x58abd7a6648af7c90efb41311795db59b4e9c9706f80f90b5aa1e24186cfcbca"
+                "transactionsRoot": "0x58abd7a6648af7c90efb41311795db59b4e9c9706f80f90b5aa1e24186cfcbca",
+                "withdrawalsRoot": null
           }
         }
     }
