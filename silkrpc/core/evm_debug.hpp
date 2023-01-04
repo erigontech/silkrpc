@@ -121,7 +121,16 @@ struct DebugTrace {
     DebugConfig debug_config;
 };
 
+struct DebugTraceResult {
+    DebugTrace debug_trace;
+};
+
+struct DebugTraceResultList {
+    std::vector<DebugTrace> debug_traces;
+};
+
 void to_json(nlohmann::json& json, const DebugTrace& debug_trace);
+void to_json(nlohmann::json& json, const DebugTraceResult& debug_trace_result);
 
 struct DebugExecutorResult {
     DebugTrace debug_trace;
@@ -143,6 +152,7 @@ public:
     DebugExecutor& operator=(const DebugExecutor&) = delete;
 
     boost::asio::awaitable<std::vector<DebugTrace>> execute(const silkworm::Block& block);
+    boost::asio::awaitable<std::vector<DebugTraceResult>> execute_block(const silkworm::Block& block);
     boost::asio::awaitable<DebugExecutorResult> execute(const silkworm::Block& block, const silkrpc::Call& call);
     boost::asio::awaitable<DebugExecutorResult> execute(const silkworm::Block& block, const silkrpc::Transaction& transaction) {
         return execute(block.header.number-1, block, transaction, transaction.transaction_index);
