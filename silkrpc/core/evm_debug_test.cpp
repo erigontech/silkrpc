@@ -1756,6 +1756,516 @@ TEST_CASE("DebugExecutor::execute block") {
     ])"_json);
 }
 
+TEST_CASE("DebugExecutor::execute_block") {
+    SILKRPC_LOG_STREAMS(null_stream(), null_stream());
+    SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    static silkworm::Bytes kAccountHistoryKey1{*silkworm::from_hex("daae090d53f9ed9e2e1fd25258c01bac4dd6d1c500000000000fa0a5")};
+    static silkworm::Bytes kAccountHistoryValue1{*silkworm::from_hex(
+        "0100000000000000000000003a300000020000000e0004000f0031001800000022000000eca7f4a7d3a9dea9dfa9fd1b191c301cb91cbe"
+        "1cf21cfc1c0f1d141d261d801d911da61d00440e4a485f4f5f427b537baf7bb17bb57bb97bbf7bc57bc97bd87bda7be17be47be97bfa7b"
+        "fe7b017c267c297c2c7c367c3a9d3b9d3d9d429d47a071a0a5a0aea0b4a0b8a0c3a0c9a0")};
+
+    static silkworm::Bytes kAccountHistoryKey2{*silkworm::from_hex("a85b4c37cd8f447848d49851a1bb06d10d410c1300000000000fa0a5")};
+    static silkworm::Bytes kAccountHistoryValue2{*silkworm::from_hex("0100000000000000000000003a300000010000000f00000010000000a5a0")};
+
+    static silkworm::Bytes kAccountHistoryKey3{*silkworm::from_hex("000000000000000000000000000000000000000000000000000fa0a5")};
+    static silkworm::Bytes kAccountHistoryValue3{*silkworm::from_hex(
+        "0100000000000000000000003b301800000001000000000002000100040007000600030008000200090000000e0011000f00060011000f"
+        "00130003001a0000001c0003001d0000001e0000001f00370020001d002100270222006b00230019002400320025004d00260004002700"
+        "04002a000f002b002700d0000000d2000000d6000000e6000000ee000000f4000000f60000001a01000028010000480100005001000052"
+        "0100005a0100005c0100005e010000ce0100000a02000000050000d80500000c060000720600000e070000180700002207000042070000"
+        "0000d03cd13cd1b6d3b617b718b719b72ab72cb774fa4611c695c795c8957184728474842d12377d4c7d547d767e848053819c81dc81d9"
+        "8fee8f059022902f9035903c903f904a9091902eb0fee1ffe101e202e203e205e2e6b1e8b1e9b1eab1edb1eeb1f0b1f1b1f2b1f3b1f5b1"
+        "f6b1f7b1f9b1fab1fcb1de62e562e662f2625209b453ba53c153d65304ebb1007f4b8a4b314c9b4c685dc25dcc5df05d045e0c5e315e51"
+        "5eb55e0f5f105f2d5fac890f9031907f907e9f0ca0f1a0f6a0faa009a120a126a1f3a1f5a1b1a2b3a21ca41fa425a445a456a458a443a5"
+        "95a698a68ad190d1a1e249e577e570e6c3e936f940f921fe28fe2dfe27ff39ff83ff25123612371230439f434d598c593d6c676c996ca0"
+        "6cc16cf26c337114826183e386f59729983b9870f284f2a2f283f3a1f3b7f3faf702f84cfa53fabd00d4070000d8070000dd0700000c08"
+        "0000730800007f080000c20c00003b1e00003f1e0000671e00006a1e0000ea200000fd200100f8230000ac240000333600008d3600009d"
+        "370000673a00000c3b00000b520000105200004d540200c2690000ce690100eb690100ee690000176a0400f9770000d4780000de780000"
+        "e478000076790000de790100e1790200007a0100037a0200297a04005b7c0a00677c04006d7c00006f7c0600777c0000797c0600817c00"
+        "00837c06008b7c00008d7c0600957c0000977c06009f7c0400a57c0200a97c0000ab7c0500b37c0700bd7c0000bf7c0400c57c0300eb7c"
+        "0000f97c0100017d0000057d00000d7d00001c7d0300217d08002b7d00002d7d0600357d0000377d06003f7d0000417d0500497d070053"
+        "7d0400597d02005d7d0000607d0500677d0000697d0800737d08007e7d0500857d0000877d0300ba7d0000bd7d0000cc7d0000d47d0000"
+        "118e0000978e0000aa8e0000128f0300178f0000198f0700238f0300288f0100408f0100438f06004b8f0400518f08005b8f01005e8f08"
+        "00698f00006b8f01006e8f0300748f07007d8f0000808f0300858f0000878f03008c8f0500948f020024900100279001002a9000002c90"
+        "020031900000349002003a9002003f9001004290000045900300759000001c91000013a8000023a8000043a8000055aa0000adab0100ca"
+        "bd0000b9c20000d9c20000e2c20000f8c2000031d100004ed1000051d1000062d1040068d1070071d109007cd1050084d105008bd10800"
+        "95d1000097d106009fd10000a1d10100a4d10300abd10100aed10300b3d10000b5d10000b7d10400bdd10000bfd10200c3d10200c7d100"
+        "00cad10200ced10600f6d100007bd20000afd2000038d402006cd4000086d402008ad401008dd400008fd40100c6d5000099d60600a1d6"
+        "0400a7d60000a9d60000acd60000aed60100c7d60000d4d60500dbd60200f2d60100f5d60200fad6020010d7010013d7030019d700001b"
+        "d701001ed7050025d704002bd7080035d70600a1d80000bad80000701777178b1793179b17ca17db1708181a1829183a183c183d183f18"
+        "7a1a811a941a9b1a2f1b371b3a1b514451475d4763477047f147f84701480748114818481c482f483d4843484b48ec59d45a6c5b0f5dca"
+        "716f72707271721ba320a37fa585a5c6b6f9b6fbb604b752b899b8b8b8e6b83eb98fb990b991b9bfbac7ba33ca47ca8ecb93cb58cc5fcc"
+        "f7cd6ed3c9d6ccd6d5d6a5e4b5e4d6e46fe58be596e597e598e599e59be59ce59ee59fe5a0e5a1e5aae5ace5b4e5b5e5b6e5bbe5bce5bd"
+        "e5c0e5c7e5c8e5ece5ede5eee5fae6ffe65cf6e3f7b4f9160e89108a109310aa100d118412ad5681669a669c66f86646675d679f67e067"
+        "1c68d86aa26dba6dba81c881b0820298219a40edb809cb09d909b60ad10ac00b3b8f618f958fbc90fba420a53ba5d5baedba07bb40bbb2"
+        "bbe2bb02bcd0bef0bf8bc08ec02ace40ce41ce38cfd8d181d4a1d4a3d4dce45be55ee567e572e578e590e59be5a1e5c0e5b8e6dbe693e8"
+        "9ee8fbe925ea53eaf6ecd7eea02ab42ae82afa2a042b222bb33db43db63dd13dd23dd53dd83dd93dda3dff3e003f2b3f2c3f2e3f423f43"
+        "3f443f4d3f4e3f1c4034402841b741d641e34114424f422d447944a444a944c444c844bd5537563e5644564f567a565b572458a669dd6b"
+        "1071127129716c719c71d171ed7115725d74a982ad82ce82d182d68277c47dc40bc53ac767c78cc7bcc71cc823c828c82dc892caa2caa3"
+        "cbbdcb39783e8391b992b93dffbb05c205728f928fb6c7b44a365b3f5b08b1f2c41bc52bc57dc592cafbca39cd79cd96f15af221f338f3"
+        "c434a94baa4ba84d424e1252125af45e625f645f6e5f556357637a633e64cf64fb66fc66fd66fe66ff6601670267036704670567066708"
+        "6709670a67a575f87a4b7b537b157dec7f938d948d958d968d")};
+
+    static silkworm::Bytes kAccountChangeSetKey{*silkworm::from_hex("00000000000fa0a5")};
+    static silkworm::Bytes kAccountChangeSetSubkey1{*silkworm::from_hex("daae090d53f9ed9e2e1fd25258c01bac4dd6d1c5")};
+    static silkworm::Bytes kAccountChangeSetValue1{*silkworm::from_hex("030127080334e1d62a9e3440")};
+
+    static silkworm::Bytes kAccountChangeSetSubkey2{*silkworm::from_hex("a85b4c37cd8f447848d49851a1bb06d10d410c13")};
+    static silkworm::Bytes kAccountChangeSetValue2{*silkworm::from_hex("")};
+
+    static silkworm::Bytes kAccountChangeSetKey3{*silkworm::from_hex("00000000000fb02e")};
+    static silkworm::Bytes kAccountChangeSetSubkey3{*silkworm::from_hex("0000000000000000000000000000000000000000")};
+    static silkworm::Bytes kAccountChangeSetValue3{*silkworm::from_hex("0208028ded68c33d1401")};
+
+    test::MockDatabaseReader db_reader;
+    boost::asio::thread_pool workers{1};
+
+    ChannelFactory channel_factory = []() {
+        return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
+    };
+    ContextPool context_pool{1, channel_factory};
+    context_pool.start();
+
+    EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+            SILKRPC_LOG << "EXPECT_CALL::get_one "
+                << " table: " << db::table::kCanonicalHashes
+                << " key: " << silkworm::to_hex(kZeroKey)
+                << " value: " << silkworm::to_hex(kZeroHeader)
+                << "\n";
+            co_return kZeroHeader;
+        }));
+    EXPECT_CALL(db_reader, get_one(db::table::kConfig, silkworm::ByteView{kConfigKey}))
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kConfig
+                << " key: " << silkworm::to_hex(kConfigKey)
+                << " value: " << silkworm::to_hex(kConfigValue)
+                << "\n";
+            co_return kConfigValue;
+        }));
+    EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kAccountHistory
+                << " key: " << silkworm::to_hex(kAccountHistoryKey1)
+                << " value: " << silkworm::to_hex(kAccountHistoryValue1)
+                << "\n";
+            co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
+        }));
+    EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
+        .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kAccountHistory
+                << " key: " << silkworm::to_hex(kAccountHistoryKey2)
+                << " value: " << silkworm::to_hex(kAccountHistoryValue2)
+                << "\n";
+            co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
+        }));
+    EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
+        .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+            SILKRPC_LOG << "EXPECT_CALL::get "
+                << " table: " << db::table::kAccountHistory
+                << " key: " << silkworm::to_hex(kAccountHistoryKey3)
+                << " value: " << silkworm::to_hex(kAccountHistoryValue3)
+                << "\n";
+            co_return KeyValue{kAccountHistoryKey3, kAccountHistoryValue3};
+        }));
+    EXPECT_CALL(db_reader,
+            get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey},
+                            silkworm::ByteView{kAccountChangeSetSubkey1}))
+        .WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
+            SILKRPC_LOG << "EXPECT_CALL::get_both_range "
+                << " table: " << db::table::kPlainAccountChangeSet
+                << " key: " << silkworm::to_hex(kAccountChangeSetKey)
+                << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey1)
+                << " value: " << silkworm::to_hex(kAccountChangeSetValue1)
+                << "\n";
+                co_return kAccountChangeSetValue1;
+            }));
+    EXPECT_CALL(db_reader,
+            get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey},
+                            silkworm::ByteView{kAccountChangeSetSubkey2}))
+        .WillRepeatedly(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
+            SILKRPC_LOG << "EXPECT_CALL::get_both_range "
+                << " table: " << db::table::kPlainAccountChangeSet
+                << " key: " << silkworm::to_hex(kAccountChangeSetKey)
+                << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey2)
+                << " value: " << silkworm::to_hex(kAccountChangeSetValue2)
+                << "\n";
+                co_return kAccountChangeSetValue2;
+            }));
+    EXPECT_CALL(db_reader,
+            get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey3},
+                            silkworm::ByteView{kAccountChangeSetSubkey3}))
+        .WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
+            SILKRPC_LOG << "EXPECT_CALL::get_both_range "
+                << " table: " << db::table::kPlainAccountChangeSet
+                << " key: " << silkworm::to_hex(kAccountChangeSetKey3)
+                << " subkey: " << silkworm::to_hex(kAccountChangeSetSubkey3)
+                << " value: " << silkworm::to_hex(kAccountChangeSetValue3)
+                << "\n";
+                co_return kAccountChangeSetValue3;
+            }));
+
+    uint64_t block_number = 1'024'165;
+
+    silkworm::Block block{};
+    block.header.number = block_number;
+
+    block.transactions.resize(1);
+    auto& transaction = block.transactions.at(0);
+    transaction.from = 0xdaae090d53f9ed9e2e1fd25258c01bac4dd6d1c5_address;
+    transaction.gas_limit = 4700000;
+    transaction.max_fee_per_gas = 1'000'000'000;
+    transaction.max_priority_fee_per_gas = 1'000'000'000;
+    transaction.data = *silkworm::from_hex(
+        "60806040526000805534801561001457600080fd5b5060c6806100236000396000f3fe6080604052348015600f57600080fd5b50600436"
+        "1060325760003560e01c806360fe47b11460375780636d4ce63c146062575b600080fd5b606060048036036020811015604b57600080fd"
+        "5b8101908080359060200190929190505050607e565b005b60686088565b6040518082815260200191505060405180910390f35b806000"
+        "8190555050565b6000805490509056fea265627a7a72305820ca7603d2458ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60"
+        "af2c64736f6c634300050a0032");
+
+    DebugExecutor executor{context_pool.next_io_context(), db_reader, workers};
+
+    boost::asio::io_context& io_context = context_pool.next_io_context();
+    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.execute_block(block), boost::asio::use_future);
+    auto result = execution_result.get();
+
+    context_pool.stop();
+    context_pool.join();
+
+    CHECK(result == R"([
+        {
+          "result": {
+            "failed": false,
+            "gas": 112583,
+            "returnValue": "6080604052348015600f57600080fd5b506004361060325760003560e01c806360fe47b11460375780636d4ce63c146062575b600080fd5b606060048036036020811015604b57600080fd5b8101908080359060200190929190505050607e565b005b60686088565b6040518082815260200191505060405180910390f35b8060008190555050565b6000805490509056fea265627a7a72305820ca7603d2458ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60af2c64736f6c634300050a0032",
+            "structLogs": [
+                {
+                    "depth": 1,
+                    "gas": 4632116,
+                    "gasCost": 3,
+                    "memory": [],
+                    "op": "PUSH1",
+                    "pc": 0,
+                    "stack": []
+                },
+                {
+                    "depth": 1,
+                    "gas": 4632113,
+                    "gasCost": 3,
+                    "memory": [],
+                    "op": "PUSH1",
+                    "pc": 2,
+                    "stack": [
+                        "0x80"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4632110,
+                    "gasCost": 12,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000"
+                    ],
+                    "op": "MSTORE",
+                    "pc": 4,
+                    "stack": [
+                        "0x80",
+                        "0x40"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4632098,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "PUSH1",
+                    "pc": 5,
+                    "stack": []
+                },
+                {
+                    "depth": 1,
+                    "gas": 4632095,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "DUP1",
+                    "pc": 7,
+                    "stack": [
+                        "0x0"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4632092,
+                    "gasCost": 5000,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "SSTORE",
+                    "pc": 8,
+                    "stack": [
+                        "0x0",
+                        "0x0"
+                    ],
+                    "storage": {
+                        "0000000000000000000000000000000000000000000000000000000000000000": "0000000000000000000000000000000000000000000000000000000000000000"
+                    }
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627092,
+                    "gasCost": 2,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "CALLVALUE",
+                    "pc": 9,
+                    "stack": []
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627090,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "DUP1",
+                    "pc": 10,
+                    "stack": [
+                        "0x0"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627087,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "ISZERO",
+                    "pc": 11,
+                    "stack": [
+                        "0x0",
+                        "0x0"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627084,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "PUSH2",
+                    "pc": 12,
+                    "stack": [
+                        "0x0",
+                        "0x1"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627081,
+                    "gasCost": 10,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "JUMPI",
+                    "pc": 15,
+                    "stack": [
+                        "0x0",
+                        "0x1",
+                        "0x14"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627071,
+                    "gasCost": 1,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "JUMPDEST",
+                    "pc": 20,
+                    "stack": [
+                        "0x0"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627070,
+                    "gasCost": 2,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "POP",
+                    "pc": 21,
+                    "stack": [
+                        "0x0"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627068,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "PUSH1",
+                    "pc": 22,
+                    "stack": []
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627065,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "DUP1",
+                    "pc": 24,
+                    "stack": [
+                        "0xc6"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627062,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "PUSH2",
+                    "pc": 25,
+                    "stack": [
+                        "0xc6",
+                        "0xc6"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627059,
+                    "gasCost": 3,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080"
+                    ],
+                    "op": "PUSH1",
+                    "pc": 28,
+                    "stack": [
+                        "0xc6",
+                        "0xc6",
+                        "0x23"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627056,
+                    "gasCost": 36,
+                    "memory": [
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000080",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000",
+                        "0000000000000000000000000000000000000000000000000000000000000000"
+                    ],
+                    "op": "CODECOPY",
+                    "pc": 30,
+                    "stack": [
+                        "0xc6",
+                        "0xc6",
+                        "0x23",
+                        "0x0"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627020,
+                    "gasCost": 3,
+                    "memory": [
+                        "6080604052348015600f57600080fd5b506004361060325760003560e01c8063",
+                        "60fe47b11460375780636d4ce63c146062575b600080fd5b6060600480360360",
+                        "20811015604b57600080fd5b8101908080359060200190929190505050607e56",
+                        "5b005b60686088565b6040518082815260200191505060405180910390f35b80",
+                        "60008190555050565b6000805490509056fea265627a7a72305820ca7603d245",
+                        "8ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60af2c64736f6c63",
+                        "4300050a00320000000000000000000000000000000000000000000000000000"
+                    ],
+                    "op": "PUSH1",
+                    "pc": 31,
+                    "stack": [
+                        "0xc6"
+                    ]
+                },
+                {
+                    "depth": 1,
+                    "gas": 4627017,
+                    "gasCost": 0,
+                    "memory": [
+                        "6080604052348015600f57600080fd5b506004361060325760003560e01c8063",
+                        "60fe47b11460375780636d4ce63c146062575b600080fd5b6060600480360360",
+                        "20811015604b57600080fd5b8101908080359060200190929190505050607e56",
+                        "5b005b60686088565b6040518082815260200191505060405180910390f35b80",
+                        "60008190555050565b6000805490509056fea265627a7a72305820ca7603d245",
+                        "8ae7a9db8bde091d8ba88a4637b54a8cc213b73af865f97c60af2c64736f6c63",
+                        "4300050a00320000000000000000000000000000000000000000000000000000"
+                    ],
+                    "op": "RETURN",
+                    "pc": 33,
+                    "stack": [
+                        "0xc6",
+                        "0x0"
+                    ]
+                }
+            ]
+        }
+      }
+    ])"_json);
+}
+
+
 
 TEST_CASE("DebugTrace json serialization") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
