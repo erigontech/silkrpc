@@ -390,9 +390,10 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(con
         const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache(), tx_database, block_number);
 
         debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
-        const auto debug_traces = co_await executor.execute(block_with_hash.block);
+        const auto debug_trace_result = co_await executor.execute_block(block_with_hash.block);
 
-        reply = make_json_content(request["id"], debug_traces);
+
+        reply = make_json_content(request["id"], debug_trace_result);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
 
@@ -434,9 +435,9 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const
         const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache(), tx_database, block_hash);
 
         debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
-        const auto debug_traces = co_await executor.execute(block_with_hash.block);
+        const auto debug_trace_result = co_await executor.execute_block(block_with_hash.block);
 
-        reply = make_json_content(request["id"], debug_traces);
+        reply = make_json_content(request["id"], debug_trace_result);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
 
