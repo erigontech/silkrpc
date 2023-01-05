@@ -407,23 +407,22 @@ def main(argv):
                     else:
                         # runs all tests req_test refers global test number or
                         # runs only tests on specific api req_test refers all test on specific api
-                        if ((requested_api == "" and start_test == "" and req_test in (-1, global_test_number)) or
-                            (requested_api == "" and start_test != "" and global_test_number >= int(start_test)) or
-                            (requested_api != "" and req_test in (-1, test_number))):
-                            file = test_file.ljust(60)
-                            if verbose:
-                                print(f"{global_test_number:03d}. {file} ", end = '', flush=True)
-                            else:
-                                print(f"{global_test_number:03d}. {file}\r", end = '', flush=True)
-                            ret=run_tests(json_dir, output_dir, test_file, verbose, daemon_under_test, exit_on_fail, verify_with_daemon, daemon_as_reference,
+                        if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
+                            if (start_test == "") or (start_test != "" and global_test_number >= int(start_test)):
+                                file = test_file.ljust(60)
+                                if verbose:
+                                    print(f"{global_test_number:03d}. {file} ", end = '', flush=True)
+                                else:
+                                    print(f"{global_test_number:03d}. {file}\r", end = '', flush=True)
+                                ret=run_tests(json_dir, output_dir, test_file, verbose, daemon_under_test, exit_on_fail, verify_with_daemon, daemon_as_reference,
                                           dump_output, global_test_number, infura_url, daemon_on_host, jwt_secret)
-                            if ret == 0:
-                                success_tests = success_tests + 1
-                            else:
-                                failed_tests = failed_tests + 1
-                            executed_tests = executed_tests + 1
-                            if req_test != -1 or requested_api != "":
-                                match = 1
+                                if ret == 0:
+                                    success_tests = success_tests + 1
+                                else:
+                                    failed_tests = failed_tests + 1
+                                executed_tests = executed_tests + 1
+                                if req_test != -1 or requested_api != "":
+                                    match = 1
 
                 global_test_number = global_test_number + 1
                 test_number = test_number + 1
