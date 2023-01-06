@@ -386,11 +386,13 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(con
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+        debug::DebugTraceResultList debug_trace_result;
 
         const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache(), tx_database, block_number);
 
         debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
-        const auto debug_trace_result = co_await executor.execute_block(block_with_hash.block);
+        const auto debug_traces = std::move(co_await executor.execute(block_with_hash.block));
+        debug_trace_result.debug_traces = std::move(debug_traces);
 
 
         reply = make_json_content(request["id"], debug_trace_result);
@@ -431,11 +433,13 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
+        debug::DebugTraceResultList debug_trace_result;
 
         const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache(), tx_database, block_hash);
 
         debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
-        const auto debug_trace_result = co_await executor.execute_block(block_with_hash.block);
+        const auto debug_traces = co_await executor.execute(block_with_hash.block);
+        debug_trace_result.debug_traces = std::move(debug_traces);
 
         reply = make_json_content(request["id"], debug_trace_result);
     } catch (const std::exception& e) {
