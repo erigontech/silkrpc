@@ -1430,7 +1430,40 @@ TEST_CASE("DebugTrace json serialization") {
             }]
         }])"_json);
     }
+
+    SECTION("DebugTraceResultList: no memory, stack and storage") {
+        DebugTraceResultList debug_trace_result_list;
+        DebugTrace debug_trace;
+        debug_trace.failed = false;
+        debug_trace.gas = 20;
+        debug_trace.return_value = "deadbeaf";
+        debug_trace.debug_logs.push_back(log);
+
+        debug_trace.debug_config.disableStorage = true;
+        debug_trace.debug_config.disableMemory = true;
+        debug_trace.debug_config.disableStack = true;
+
+        debug_trace_result_list.debug_traces.push_back(debug_trace);
+        nlohmann::json j = debug_trace_result_list;
+
+        CHECK(j == R"([{
+              "result": {
+                   "failed": false,
+                   "gas": 20,
+                   "returnValue": "deadbeaf",
+                   "structLogs": [{
+                       "depth": 1,
+                       "gas": 3,
+                       "gasCost": 4,
+                       "op": "PUSH1",
+                       "pc": 1
+                   }]
+              }
+           }]
+        )"_json);
+    }
 }
+
 
 TEST_CASE("DebugConfig") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
