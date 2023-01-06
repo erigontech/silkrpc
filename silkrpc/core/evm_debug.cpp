@@ -80,8 +80,13 @@ void to_json(nlohmann::json& json, const DebugTrace& debug_trace) {
     }
 }
 
-void to_json(nlohmann::json& json, const DebugTraceResult& debug_trace_result) {
-    json["result"] = debug_trace_result.debug_trace;
+void to_json(nlohmann::json& json, const DebugTraceResultList& debug_trace_result_list) {
+    json = nlohmann::json::array();
+    for (auto& debug_trace : debug_trace_result_list.debug_traces) {
+        nlohmann::json entry;
+        entry["result"] = debug_trace;
+        json.push_back(entry);
+    }
 }
 
 
@@ -296,46 +301,6 @@ boost::asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::e
         }
     }
     co_return debug_traces;
-}
-
-template<typename WorldState, typename VM>
-boost::asio::awaitable<std::vector<DebugTraceResult>> DebugExecutor<WorldState, VM>::execute_block(const silkworm::Block& block) {
-    auto block_number = block.header.number;
-    const auto& transactions = block.transactions;
-
-    SILKRPC_DEBUG << "execute_block: block_number: " << block_number << " #txns: " << transactions.size() << " config: " << config_ << "\n";
-
-    const auto chain_id = co_await core::rawdb::read_chain_id(database_reader_);
-    const auto chain_config_ptr = lookup_chain_config(chain_id);
-    state::RemoteState remote_state{io_context_, database_reader_, block_number-1};
-    EVMExecutor<WorldState, VM> executor{io_context_, database_reader_, *chain_config_ptr, workers_, block_number-1, remote_state};
-
-    std::vector<DebugTraceResult> debug_trace_result(transactions.size());
-    for (std::uint64_t idx = 0; idx < transactions.size(); idx++) {
-        silkrpc::Transaction txn{block.transactions[idx]};
-        if (!txn.from) {
-            txn.recover_sender();
-        }
-        SILKRPC_DEBUG << "processing transaction: idx: " << idx << " txn: " << txn << "\n";
-
-        auto& debug_trace = debug_trace_result.at(idx).debug_trace;
-
-        debug_trace.debug_config = config_;
-        auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_);
-
-        silkrpc::Tracers tracers{debug_tracer};
-        const auto execution_result = co_await executor.call(block, txn, tracers, /* refund */false, /* gasBailout */false);
-
-        if (execution_result.pre_check_error) {
-            SILKRPC_DEBUG << "debug failed: " << execution_result.pre_check_error.value() << "\n";
-            debug_trace.failed = true;
-        } else {
-            debug_trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
-            debug_trace.gas = txn.gas_limit - execution_result.gas_left;
-            debug_trace.return_value = silkworm::to_hex(execution_result.data);
-        }
-    }
-    co_return debug_trace_result;
 }
 
 template<typename WorldState, typename VM>
