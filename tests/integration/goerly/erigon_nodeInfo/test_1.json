@@ -1,0 +1,101 @@
+[
+    {
+        "request":{
+            "jsonrpc":"2.0",
+            "method":"erigon_nodeInfo",
+            "params":[],
+            "id":1
+        },
+        "response":{
+            "jsonrpc":"2.0",
+            "id":1,
+            "result": [
+             {
+               "id": "340e3cda481a935658b86f4987d50d0153a68f97fa2b9e8f70a8e9f5b755eeb6",
+               "name": "erigon/v2.32.0-stable-021891a3/linux-amd64/go1.19",
+               "enode": "enode://b428a8d89b621a1bea008922f5fb7cd7644e2289f85fc8620f1e497eff767e2bcdc778b966a1483690c93f744a3ce852c32e87c507d172f37cfeed0c543ef4a1@127.0.0.1:30303?discport=0",
+               "enr": "enr:-JK4QO5Xfrm1XSLt7plAcNO2osT211HWNoleQLSUQsdAfGU5Upho7qyf9QZEFcqwWuoaLzIFntRyz3uqyo-VBCnyVfmCBReDZXRox8aEuMYpnYCCaWSCdjSCaXCEfwAAAYlzZWNwMjU2azGhA7QoqNibYhob6gCJIvX7fNdkTiKJ-F_IYg8eSX7_dn4rg3RjcIJ2Xw",
+               "ip": "enode://b428a8d89b621a1bea008922f5fb7cd7644e2289f85fc8620f1e497eff767e2bcdc778b966a1483690c93f744a3ce852c32e87c507d172f37cfeed0c543ef4a1@127.0.0.1:30303?discport=0",
+               "ports": {
+                    "discovery": 0,
+                    "listener": 30303
+               },
+               "listenAddr": "[::]:30303",
+               "protocols": {
+                    "eth": {
+                         "network": 5,
+                         "difficulty": 10790000,
+                         "genesis": "0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a",
+                         "config": {
+                              "ChainName": "goerli",
+                              "chainId": 5,
+                              "consensus": "clique",
+                              "homesteadBlock": 0,
+                              "daoForkSupport": true,
+                              "eip150Block": 0,
+                              "eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                              "eip155Block": 0,
+                              "byzantiumBlock": 0,
+                              "constantinopleBlock": 0,
+                              "petersburgBlock": 0,
+                              "istanbulBlock": 1561651,
+                              "berlinBlock": 4460644,
+                              "londonBlock": 5062605,
+                              "terminalTotalDifficulty": 10790000,
+                              "terminalTotalDifficultyPassed": true,
+                              "clique": {
+                                   "period": 15,
+                                   "epoch": 30000
+                              }
+                         },
+                         "head": "0x11fce21bdebbcf09e1e2e37b874729c17518cd342fcf0959659e650fa45f9768"
+                    }
+               }
+          },
+          {
+               "id": "340e3cda481a935658b86f4987d50d0153a68f97fa2b9e8f70a8e9f5b755eeb6",
+               "name": "erigon/v2.32.0-stable-021891a3/linux-amd64/go1.19",
+               "enode": "enode://b428a8d89b621a1bea008922f5fb7cd7644e2289f85fc8620f1e497eff767e2bcdc778b966a1483690c93f744a3ce852c32e87c507d172f37cfeed0c543ef4a1@127.0.0.1:30305?discport=0",
+               "enr": "enr:-JC4QLIu2Rvl66C0EacmViwyripTeW7CwbeD87bQA3KhuDcmG0lBo1tCaLDkR4Sx0J2312BGbRIUyij8XdpsUJeWGUI2g2V0aMfGhLjGKZ2AgmlkgnY0gmlwhH8AAAGJc2VjcDI1NmsxoQO0KKjYm2IaG-oAiSL1-3zXZE4iifhfyGIPHkl-_3Z-K4N0Y3CCdmE",
+               "ip": "enode://b428a8d89b621a1bea008922f5fb7cd7644e2289f85fc8620f1e497eff767e2bcdc778b966a1483690c93f744a3ce852c32e87c507d172f37cfeed0c543ef4a1@127.0.0.1:30305?discport=0",
+               "ports": {
+                    "discovery": 0,
+                    "listener": 30305
+               },
+               "listenAddr": "[::]:30305",
+               "protocols": {
+                    "eth": {
+                         "network": 5,
+                         "difficulty": 10790000,
+                         "genesis": "0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a",
+                         "config": {
+                              "ChainName": "goerli",
+                              "chainId": 5,
+                              "consensus": "clique",
+                              "homesteadBlock": 0,
+                              "daoForkSupport": true,
+                              "eip150Block": 0,
+                              "eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                              "eip155Block": 0,
+                              "byzantiumBlock": 0,
+                              "constantinopleBlock": 0,
+                              "petersburgBlock": 0,
+                              "istanbulBlock": 1561651,
+                              "berlinBlock": 4460644,
+                              "londonBlock": 5062605,
+                              "terminalTotalDifficulty": 10790000,
+                              "terminalTotalDifficultyPassed": true,
+                              "clique": {
+                                   "period": 15,
+                                   "epoch": 30000
+                              }
+                         },
+                         "head": "0x11fce21bdebbcf09e1e2e37b874729c17518cd342fcf0959659e650fa45f9768"
+                    }
+               }
+             }
+          ]
+        }
+    }
+]
+
