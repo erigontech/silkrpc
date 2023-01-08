@@ -226,6 +226,13 @@ void to_json(nlohmann::json& json, const Rlp& rlp) {
     json = "0x" + silkworm::to_hex(rlp.buffer);
 }
 
+void to_json(nlohmann::json& json, const NodeInfo& node_info) {
+    json["id"] = node_info.id;
+    json["name"] = node_info.name;
+    json["enode"] = node_info.enode;
+    json["enr"] = node_info.enr;
+}
+
 void to_json(nlohmann::json& json, const struct CallBundleTxInfo& tx_info) {
     json["gasUsed"] = tx_info.gas_used;
     json["txHash"] = silkworm::to_bytes32({tx_info.hash.bytes, silkworm::kHashLength});
