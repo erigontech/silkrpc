@@ -51,6 +51,7 @@ public:
     boost::asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload);
     boost::asio::awaitable<ForkChoiceUpdatedReply> engine_forkchoice_updated_v1(
         ForkChoiceUpdatedRequest forkchoice_updated_request);
+    boost::asio::awaitable<uint64_t> engine_node_info();
 
 private:
     evmc::address address_from_H160(const types::H160& h160);
