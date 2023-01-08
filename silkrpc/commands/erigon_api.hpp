@@ -55,6 +55,7 @@ protected:
 
 private:
     Context& context_;
+    std::unique_ptr<ethbackend::BackEnd>& backend_;
     std::shared_ptr<BlockCache>& block_cache_;
     std::shared_ptr<ethdb::kv::StateCache>& state_cache_;
     std::unique_ptr<ethdb::Database>& database_;
