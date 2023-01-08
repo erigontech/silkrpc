@@ -18,10 +18,12 @@
 #define SILKRPC_ETHBACKEND_BACKEND_HPP_
 
 #include <string>
+#include <vector>
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
+#include <silkrpc/types/node_info.hpp>
 #include <silkrpc/types/execution_payload.hpp>
 
 namespace silkrpc::ethbackend {
@@ -36,9 +38,8 @@ public:
     virtual boost::asio::awaitable<uint64_t> net_peer_count() = 0;
     virtual boost::asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id) = 0;
     virtual boost::asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload) = 0;
-    virtual boost::asio::awaitable<ForkChoiceUpdatedReply> engine_forkchoice_updated_v1(
-        ForkChoiceUpdatedRequest forkchoice_updated_request) = 0;
-    virtual boost::asio::awaitable<uint64_t> engine_node_info() = 0;
+    virtual boost::asio::awaitable<ForkChoiceUpdatedReply> engine_forkchoice_updated_v1(ForkChoiceUpdatedRequest forkchoice_updated_request) = 0;
+    virtual boost::asio::awaitable<std::vector<NodeInfo>> engine_node_info() = 0;
 };
 
 } // namespace silkrpc::ethbackend
