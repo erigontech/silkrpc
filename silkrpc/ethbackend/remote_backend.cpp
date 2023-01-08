@@ -91,6 +91,16 @@ boost::asio::awaitable<uint64_t> RemoteBackEnd::net_peer_count() {
     co_return count;
 }
 
+boost::asio::awaitable<uint64_t> RemoteBackEnd::engine_node_info() {
+    const auto start_time = clock_time::now();
+    UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncNetPeerCount> npc_rpc{*stub_, grpc_context_};
+    //const auto reply = co_await npc_rpc.finish_on(executor_, ::remote::NetPeerCountRequest{});
+    //const auto count = reply.count();
+    SILKRPC_DEBUG << "RemoteBackEnd::engine_node_info t=" << clock_time::since(start_time) << "\n";
+    co_return 0;
+}
+
+
 boost::asio::awaitable<ExecutionPayload> RemoteBackEnd::engine_get_payload_v1(uint64_t payload_id) {
     const auto start_time = clock_time::now();
     UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncEngineGetPayloadV1> npc_rpc{*stub_, grpc_context_};
