@@ -402,7 +402,7 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_node_info(const nlohman
     try {
         const auto node_info_data = co_await backend_->engine_node_info();
 
-        reply = make_json_content(request["id"], "");
+        reply = make_json_content(request["id"], node_info_data);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
