@@ -108,7 +108,6 @@ boost::asio::awaitable<std::vector<NodeInfo>> RemoteBackEnd::engine_node_info() 
         node_info.listenerAddr = backend_node_info.listeneraddr();
         const auto protocols = backend_node_info.protocols();
         auto protocols_json = nlohmann::json::parse(protocols, nullptr, /* allow_exceptions = */ false);
-        std::cout << "Protocols: " << protocols << "\n";
         node_info.protocols = decode_protocols(protocols_json);
         if (backend_node_info.has_ports()) {
            const auto ports = backend_node_info.ports();
