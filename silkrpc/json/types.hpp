@@ -72,6 +72,14 @@ namespace silkrpc {
 
 void to_json(nlohmann::json& json, const struct NodeInfo& node_info);
 
+void to_json(nlohmann::json& json, const struct NodeInfoPorts& node_info_ports);
+
+void to_json(nlohmann::json& json, const NodeInfoProtocols& node_info_protocols);
+
+void to_json(nlohmann::json& json, const NodeInfoConfig& config);
+
+void to_json(nlohmann::json& json, const NodeInfoClique& clique);
+
 void to_json(nlohmann::json& json, const struct ChainTraffic& chain_traffic);
 
 void to_json(nlohmann::json& json, const struct TxPoolStatusInfo& status_info);
