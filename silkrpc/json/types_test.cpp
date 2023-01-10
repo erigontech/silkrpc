@@ -1506,7 +1506,7 @@ TEST_CASE("serialize NodeInfoPorts", "[silkrpc::json][to_json]") {
 }
 
 TEST_CASE("serialize NodeInfoConfig", "[silkrpc::json][to_json]") {
-    silkrpc::NodeInfoConfig config{"goerly", 5, "clique", 0, true, 1, 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32, 2, 3, 4, 5, 
+    silkrpc::NodeInfoConfig config{"goerly", 5, "clique", 0, true, 1, 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32, 2, 3, 4, 5,
                                    1561651, 4460644, 5062605, 10790000, true};
     nlohmann::json j = config;
     CHECK(j == R"({
@@ -1530,8 +1530,8 @@ TEST_CASE("serialize NodeInfoConfig", "[silkrpc::json][to_json]") {
 }
 
 TEST_CASE("serialize NodeInfoProtocols", "[silkrpc::json][to_json]") {
-    silkrpc::NodeInfoProtocols prot{5, 10790000, 0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a_bytes32, 
-                                     "goerly", 5, "clique", 0, true, 1, 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32, 2, 3, 4, 5, 
+    silkrpc::NodeInfoProtocols prot{5, 10790000, 0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a_bytes32,
+                                     "goerly", 5, "clique", 0, true, 1, 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32, 2, 3, 4, 5,
                                      1561651, 4460644, 5062605, 10790000, true};
     nlohmann::json j =  prot;
     CHECK(j == R"(
@@ -1563,8 +1563,8 @@ TEST_CASE("serialize NodeInfoProtocols", "[silkrpc::json][to_json]") {
 }
 
 TEST_CASE("serialize NodeInfo", "[silkrpc::json][to_json]") {
-    silkrpc::NodeInfo node_info{"340", "erigon", "enode", "enr", "[::]:30303", 5, 10790000, 0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a_bytes32, 
-                                     "goerly", 5, "clique", 0, true, 1, 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32, 2, 3, 4, 5, 
+    silkrpc::NodeInfo node_info{"340", "erigon", "enode", "enr", "[::]:30303", 5, 10790000, 0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a_bytes32,
+                                     "goerly", 5, "clique", 0, true, 1, 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32, 2, 3, 4, 5,
                                      1561651, 4460644, 5062605, 10790000, true};
     nlohmann::json j =  node_info;
     CHECK(j == R"( {"enode":"enode","enr":"enr","id":"340","ip":"enode","listenAddr":"[::]:30303","name":"erigon",
