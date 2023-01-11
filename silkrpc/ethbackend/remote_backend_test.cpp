@@ -197,11 +197,11 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::node_info", "[silkrpc][ethbackend][ba
         reply->set_enode("enode://b428a8d89b621a1bea008922f5fb7cd7644e2289f85fc8620f1e497eff767e2bcdc77");
         reply->set_enr("enr:-JK4QJMWPkW7iDLYfevZj80Rcs-B9GkRqptsH0L6hcFKSFJ3bKFlbzjnMk29y0ZD0omRMVDlrzgTThXYcd_");
         reply->set_listeneraddr("[::]:30303");
-        reply->set_protocols("{\"eth\":{\"network\":5,\"difficulty\":10790000,\"genesis\":\"0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a\",\
-                            \"config\":{\"ChainName\":\"goerli\",\"chainId\":5,\"consensus\":\"clique\",\"homesteadBlock\":0,\"daoForkSupport\":true,\"eip150Block\":0,\
-                            \"eip150Hash\":\"0x0000000000000000000000000000000000000000000000000000000000000000\",\"eip155Block\":0,\"byzantiumBlock\":0,\"constantinopleBlock\":0,\
-                            \"petersburgBlock\":0,\"istanbulBlock\":1561651,\"berlinBlock\":4460644,\"londonBlock\":5062605,\"terminalTotalDifficulty\":10790000,\
-                            \"terminalTotalDifficultyPassed\":true,\"clique\":{\"period\":15,\"epoch\":30000}},\
+        reply->set_protocols(" {\"eth\": {\"network\":5, \"difficulty\":10790000, \"genesis\":\"0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a\", \
+                            \"config\": {\"ChainName\":\"goerli\", \"chainId\":5, \"consensus\":\"clique\", \"homesteadBlock\":0, \"daoForkSupport\":true, \"eip150Block\":0, \
+                            \"eip150Hash\":\"0x0000000000000000000000000000000000000000000000000000000000000000\", \"eip155Block\":0, \"byzantiumBlock\":0, \"constantinopleBlock\":0, \
+                            \"petersburgBlock\":0, \"istanbulBlock\":1561651, \"berlinBlock\":4460644, \"londonBlock\":5062605, \"terminalTotalDifficulty\":10790000, \
+                            \"terminalTotalDifficultyPassed\":true, \"clique\": {\"period\":15, \"epoch\":30000}}, \
                             \"head\":\"0x11fce21bdebbcf09e1e2e37b874729c17518cd342fcf0959659e650fa45f9768\"}}");
         EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
         const auto node_info = run<&ethbackend::RemoteBackEnd::engine_node_info>();
