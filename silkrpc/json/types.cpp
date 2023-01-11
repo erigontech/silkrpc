@@ -241,46 +241,7 @@ void to_json(nlohmann::json& json, const NodeInfo& node_info) {
     json["listenAddr"] = node_info.listenerAddr;
     json["ports"] = node_info.ports;
     json["ip"] = node_info.enode;
-    json["protocols"] = node_info.protocols;
-}
-
-void to_json(nlohmann::json& json, const NodeInfoConfig& config) {
-    json["ChainName"] = config.chain_name;
-    json["chainId"] = config.chain_id;
-    json["consensus"] = config.consensus;
-    json["homesteadBlock"] = config.homestead_block;
-    json["daoForkSupport"] = config.dao_fork_support;
-    json["eip150Block"] = config.eip150_block;
-    json["eip150Hash"] = config.eip150_hash;
-    json["eip155Block"] = config.eip155_block;
-    json["byzantiumBlock"] = config.byzantium_block;
-    json["constantinopleBlock"] = config.constantinople_block;
-    json["petersburgBlock"] = config.petersburg_block;
-    json["istanbulBlock"] = config.istanbul_block;
-    json["berlinBlock"] = config.berlin_block;
-    json["londonBlock"] = config.london_block;
-    json["terminalTotalDifficulty"] = config.terminal_total_difficulty;
-    json["terminalTotalDifficultyPassed"] = config.terminal_total_difficulty_passed;
-    if (config.clique) {
-        json["clique"] = *(config.clique);
-    }
-}
-
-void to_json(nlohmann::json& json, const NodeInfoClique& clique) {
-    json["period"] = clique.period;
-    json["epoch"] = clique.epoch;
-}
-
-void to_json(nlohmann::json& json, const NodeInfoEthereum& ethereun) {
-    json["network"] = ethereun.network;
-    json["difficulty"] = ethereun.difficulty;
-    json["genesis"] = ethereun.genesis_hash;
-    json["config"] = ethereun.config;
-    json["head"] = ethereun.head;
-}
-
-void to_json(nlohmann::json& json, const NodeInfoProtocols& node_info_protocols) {
-    json["eth"] = node_info_protocols.eth;
+    json["protocols"] = nlohmann::json::parse(node_info.protocols, nullptr, /* allow_exceptions = */ false);
 }
 
 void to_json(nlohmann::json& json, const struct CallBundleTxInfo& tx_info) {
