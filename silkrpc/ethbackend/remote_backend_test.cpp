@@ -191,13 +191,17 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::node_info", "[silkrpc][ethbackend][ba
 
     SECTION("call node_info") {
         ::remote::NodesInfoReply response;
+        types::NodeInfoPorts ports;
         auto reply = response.add_nodesinfo();
+        const auto ports_ref = ports.New();
         reply->set_id("340e3cda481a935658b86f4987d50d0153a68f97fa2b9e8f70a8e9f5b755eeb6");
         reply->set_name("erigon/v2.32.0-stable-021891a3/linux-amd64/go1.19");
         reply->set_enode("enode://b428a8d89b621a1bea008922f5fb7cd7644e2289f85fc8620f1e497eff767e2bcdc77");
         reply->set_enr("enr:-JK4QJMWPkW7iDLYfevZj80Rcs-B9GkRqptsH0L6hcFKSFJ3bKFlbzjnMk29y0ZD0omRMVDlrzgTThXYcd_");
         reply->set_listeneraddr("[::]:30303");
-
+        ports_ref->set_discovery(32);
+        ports_ref->set_listener(30000);
+        reply->set_allocated_ports(ports_ref);
         std::string protocols = std::string("{\"eth\": {\"network\":5, \"difficulty\":10790000, \"genesis\":\"0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a\",");
         protocols += " \"config\": {\"ChainName\":\"goerli\", \"chainId\":5, \"consensus\":\"clique\", \"homesteadBlock\":0, \"daoForkSupport\":true, \"eip150Block\":0,";
         protocols += " \"eip150Hash\":\"0x0000000000000000000000000000000000000000000000000000000000000000\", \"eip155Block\":0, \"byzantiumBlock\":0, \"constantinopleBlock\":0,";
@@ -213,6 +217,8 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::node_info", "[silkrpc][ethbackend][ba
         CHECK(node_info[0].enr == "enr:-JK4QJMWPkW7iDLYfevZj80Rcs-B9GkRqptsH0L6hcFKSFJ3bKFlbzjnMk29y0ZD0omRMVDlrzgTThXYcd_");
         CHECK(node_info[0].listenerAddr == "[::]:30303");
         CHECK(node_info[0].protocols == protocols);
+        CHECK(node_info[0].ports.discovery == 32);
+        CHECK(node_info[0].ports.listener == 30000);
     }
 }
 
