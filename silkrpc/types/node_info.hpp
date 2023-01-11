@@ -37,7 +37,6 @@ struct NodeInfo {
     std::string       listenerAddr;
     std::string       protocols;
     NodeInfoPorts     ports;
-    //NodeInfoProtocols protocols;
 };
 
 } // namespace silkrpc
