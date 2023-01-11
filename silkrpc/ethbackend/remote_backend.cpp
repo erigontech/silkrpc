@@ -106,9 +106,7 @@ boost::asio::awaitable<std::vector<NodeInfo>> RemoteBackEnd::engine_node_info() 
         node_info.enode = backend_node_info.enode();
         node_info.enr = backend_node_info.enr();
         node_info.listenerAddr = backend_node_info.listeneraddr();
-        const auto protocols = backend_node_info.protocols();
-        auto protocols_json = nlohmann::json::parse(protocols, nullptr, /* allow_exceptions = */ false);
-        node_info.protocols = decode_protocols(protocols_json);
+        node_info.protocols = backend_node_info.protocols();
         if (backend_node_info.has_ports()) {
            const auto ports = backend_node_info.ports();
            node_info.ports.discovery = ports.discovery();
@@ -420,45 +418,6 @@ std::string RemoteBackEnd::decode_status_message(const remote::EngineStatus& sta
         default:
             return "INVALID";
     }
-}
-
-NodeInfoProtocols RemoteBackEnd::decode_protocols(const nlohmann::json& json) {
-    NodeInfoProtocols protocols;
-    if (json.contains("eth")) {
-         auto json_eth = json.at("eth");
-         protocols.eth.network = json_eth["network"].get<uint64_t>();
-         protocols.eth.difficulty = json_eth["difficulty"].get<uint64_t>();
-         protocols.eth.genesis_hash = json_eth["genesis"].get<evmc::bytes32>();
-         protocols.eth.head = json_eth["head"].get<evmc::bytes32>();
-         if (json_eth.contains("config")) {
-             auto json_config = json_eth.at("config");
-             protocols.eth.config.chain_name = json_config["ChainName"].get<std::string>();
-             protocols.eth.config.chain_id = json_config["chainId"].get<uint64_t>();
-             protocols.eth.config.consensus = json_config["consensus"].get<std::string>();
-             protocols.eth.config.homestead_block = json_config["homesteadBlock"].get<uint64_t>();
-             protocols.eth.config.dao_fork_support = json_config["daoForkSupport"].get<bool>();
-             protocols.eth.config.eip150_block = json_config["eip150Block"].get<uint64_t>();
-             protocols.eth.config.eip150_hash = json_config["eip150Hash"].get<evmc::bytes32>();
-             protocols.eth.config.eip155_block = json_config["eip155Block"].get<uint64_t>();
-             protocols.eth.config.byzantium_block = json_config["byzantiumBlock"].get<uint64_t>();
-             protocols.eth.config.constantinople_block = json_config["constantinopleBlock"].get<uint64_t>();
-             protocols.eth.config.petersburg_block = json_config["petersburgBlock"].get<uint64_t>();
-             protocols.eth.config.istanbul_block = json_config["istanbulBlock"].get<uint64_t>();
-             protocols.eth.config.berlin_block = json_config["berlinBlock"].get<uint64_t>();
-             protocols.eth.config.london_block = json_config["londonBlock"].get<uint64_t>();
-             protocols.eth.config.terminal_total_difficulty = json_config["terminalTotalDifficulty"].get<uint64_t>();
-             protocols.eth.config.terminal_total_difficulty_passed = json_config["terminalTotalDifficultyPassed"].get<bool>();
-             if (json_config.contains("clique")) {
-                 auto json_clique = json_config.at("clique");
-                 NodeInfoClique clique;
-                 clique.period = json_clique["period"].get<uint64_t>();
-                 clique.epoch = json_clique["epoch"].get<uint64_t>();
-                 protocols.eth.config.clique = clique;
-             }
-         }
-    }
-
-    return protocols;
 }
 
 } // namespace silkrpc::ethbackend
