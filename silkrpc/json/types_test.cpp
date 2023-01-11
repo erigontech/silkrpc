@@ -1490,15 +1490,6 @@ TEST_CASE("serialize chain_traffic", "[silkrpc::json][to_json]") {
     })"_json);
 }
 
-TEST_CASE("serialize NodeInfoClique", "[silkrpc::json][to_json]") {
-    silkrpc::NodeInfoClique clique{4, 5};
-    nlohmann::json j = clique;
-    CHECK(j == R"({
-        "period":4,
-        "epoch":5
-    })"_json);
-}
-
 TEST_CASE("serialize NodeInfoPorts", "[silkrpc::json][to_json]") {
     silkrpc::NodeInfoPorts ports{6, 7};
     nlohmann::json j = ports;
@@ -1508,94 +1499,19 @@ TEST_CASE("serialize NodeInfoPorts", "[silkrpc::json][to_json]") {
     })"_json);
 }
 
-TEST_CASE("serialize NodeInfoConfig", "[silkrpc::json][to_json]") {
-    silkrpc::NodeInfoConfig config{"goerly", 5, "clique", 0, true, 1, 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32, 2, 3, 4, 5,
-                                   1561651, 4460644, 5062605, 10790000, true};
-    nlohmann::json j = config;
-    CHECK(j == R"({
-        "ChainName":"goerly",
-        "chainId":5,
-        "consensus":"clique",
-        "homesteadBlock":0,
-        "daoForkSupport":true,
-        "eip150Block":1,
-        "eip150Hash":"0x0000000000000000000000000000000000000000000000000000000000000000",
-        "eip155Block":2,
-        "byzantiumBlock":3,
-        "constantinopleBlock":4,
-        "petersburgBlock":5,
-        "istanbulBlock":1561651,
-        "berlinBlock":4460644,
-        "londonBlock":5062605,
-        "terminalTotalDifficulty":10790000,
-        "terminalTotalDifficultyPassed":true
-    })"_json);
-}
-
-TEST_CASE("serialize NodeInfoProtocols", "[silkrpc::json][to_json]") {
-    silkrpc::NodeInfoProtocols prot{5, 10790000, 0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a_bytes32,
-                                     "goerly", 5, "clique", 0, true, 1, 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32, 2, 3, 4, 5,
-                                     1561651, 4460644, 5062605, 10790000, true};
-    nlohmann::json j =  prot;
-    CHECK(j == R"(
-         {
-          "eth":{
-            "config": {
-              "ChainName":"goerly",
-              "chainId":5,
-              "consensus":"clique",
-              "homesteadBlock":0,
-              "daoForkSupport":true,
-              "eip150Block":1,
-              "eip150Hash":"0x0000000000000000000000000000000000000000000000000000000000000000",
-              "eip155Block":2,
-              "byzantiumBlock":3,
-              "constantinopleBlock":4,
-              "petersburgBlock":5,
-              "istanbulBlock":1561651,
-              "berlinBlock":4460644,
-              "londonBlock":5062605,
-              "terminalTotalDifficulty":10790000,
-              "terminalTotalDifficultyPassed":true
-            },
-            "difficulty": 10790000,
-            "genesis": "0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a",
-            "head": "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "network": 5}
-    })"_json);
-}
-
 TEST_CASE("serialize NodeInfo", "[silkrpc::json][to_json]") {
-    silkrpc::NodeInfo node_info{"340", "erigon", "enode", "enr", "[::]:30303", 5, 10790000, 0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a_bytes32,
-                                     "goerly", 5, "clique", 0, true, 1, 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32, 2, 3, 4, 5,
-                                     1561651, 4460644, 5062605, 10790000, true};
+    silkrpc::NodeInfo node_info{"340", "erigon", "enode", "enr", "[::]:30303", "{\"eth\": {\"network\":5, \"difficulty\":10790000}}"};
     nlohmann::json j =  node_info;
-    CHECK(j == R"( {"enode":"enode","enr":"enr","id":"340","ip":"enode","listenAddr":"[::]:30303","name":"erigon",
-         "ports":{"discovery":0,"listener":0},"protocols": {
-          "eth":{
-            "config": {
-              "ChainName":"goerly",
-              "chainId":5,
-              "consensus":"clique",
-              "homesteadBlock":0,
-              "daoForkSupport":true,
-              "eip150Block":1,
-              "eip150Hash":"0x0000000000000000000000000000000000000000000000000000000000000000",
-              "eip155Block":2,
-              "byzantiumBlock":3,
-              "constantinopleBlock":4,
-              "petersburgBlock":5,
-              "istanbulBlock":1561651,
-              "berlinBlock":4460644,
-              "londonBlock":5062605,
-              "terminalTotalDifficulty":10790000,
-              "terminalTotalDifficultyPassed":true
-            },
-            "difficulty": 10790000,
-            "genesis": "0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a",
-            "head": "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "network": 5}
-    }})"_json);
+    CHECK(j == R"( {
+              "enode":"enode",
+              "enr":"enr",
+              "id":"340",
+              "ip":"enode",
+              "listenAddr":"[::]:30303",
+              "name":"erigon",
+              "ports":{"discovery":0,"listener":0},
+              "protocols":  { "eth":  {"network":5, "difficulty":10790000}}
+    })"_json);
 }
 
 
