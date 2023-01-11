@@ -80,6 +80,16 @@ void to_json(nlohmann::json& json, const DebugTrace& debug_trace) {
     }
 }
 
+void to_json(nlohmann::json& json, const DebugTraceResultList& debug_trace_result_list) {
+    json = nlohmann::json::array();
+    for (auto& debug_trace : debug_trace_result_list.debug_traces) {
+        nlohmann::json entry;
+        entry["result"] = debug_trace;
+        json.push_back(entry);
+    }
+}
+
+
 std::string get_opcode_name(const char* const* names, std::uint8_t opcode) {
     const auto name = names[opcode];
     return (name != nullptr) ?name : "opcode 0x" + evmc::hex(opcode) + " not defined";
@@ -197,7 +207,7 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
     }
     DebugLog log;
     log.pc = pc;
-    log.op = opcode_name == "KECCAK256" ? "SHA3" : opcode_name; // TODO(sixtysixter) for RPCDAEMON compatibility
+    log.op = opcode_name;
     log.gas = execution_state.gas_left;
     log.depth = execution_state.msg->depth + 1;
 
