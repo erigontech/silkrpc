@@ -24,46 +24,9 @@
 
 namespace silkrpc {
 
-struct NodeInfoClique {
-    uint64_t period;
-    uint64_t epoch;
-};
-
-struct NodeInfoConfig {
-    std::string chain_name;
-    uint64_t chain_id;
-    std::string consensus;
-    uint64_t homestead_block;
-    bool  dao_fork_support;
-    uint64_t eip150_block;
-    evmc::bytes32 eip150_hash;
-    uint64_t eip155_block;
-    uint64_t byzantium_block;
-    uint64_t constantinople_block;
-    uint64_t petersburg_block;
-    uint64_t istanbul_block;
-    uint64_t berlin_block;
-    uint64_t london_block;
-    uint64_t terminal_total_difficulty;
-    bool  terminal_total_difficulty_passed;
-    std::optional<NodeInfoClique> clique;
-};
-
 struct NodeInfoPorts{
     uint64_t discovery;
     uint64_t listener;
-};
-
-struct NodeInfoEthereum {
-    uint64_t network;
-    uint64_t difficulty;
-    evmc::bytes32 genesis_hash;
-    NodeInfoConfig config;
-    evmc::bytes32 head;
-};
-
-struct NodeInfoProtocols {
-    NodeInfoEthereum eth;
 };
 
 struct NodeInfo {
@@ -72,8 +35,9 @@ struct NodeInfo {
     std::string       enode;
     std::string       enr;
     std::string       listenerAddr;
-    NodeInfoProtocols protocols;
+    std::string       protocols;
     NodeInfoPorts     ports;
+    //NodeInfoProtocols protocols;
 };
 
 } // namespace silkrpc
