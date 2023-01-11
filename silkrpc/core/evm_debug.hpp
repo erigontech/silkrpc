@@ -121,7 +121,13 @@ struct DebugTrace {
     DebugConfig debug_config;
 };
 
+
+struct DebugTraceResultList {
+    std::vector<DebugTrace> debug_traces;
+};
+
 void to_json(nlohmann::json& json, const DebugTrace& debug_trace);
+void to_json(nlohmann::json& json, const DebugTraceResultList& debug_trace_result_list);
 
 struct DebugExecutorResult {
     DebugTrace debug_trace;
