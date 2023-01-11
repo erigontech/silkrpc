@@ -78,7 +78,6 @@ private:
     remote::EngineForkChoiceUpdatedRequest encode_forkchoice_updated_request(const ForkChoiceUpdatedRequest& forkchoice_updated_request);
     PayloadStatus decode_payload_status(const remote::EnginePayloadStatus& payload_status_grpc);
     std::string decode_status_message(const remote::EngineStatus& status);
-    NodeInfoProtocols decode_protocols(const nlohmann::json& protocols_json);
 
 
     boost::asio::io_context::executor_type executor_;
