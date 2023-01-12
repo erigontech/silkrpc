@@ -215,7 +215,7 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::node_info", "[silkrpc][ethbackend][ba
         CHECK(node_info[0].name == "erigon/v2.32.0-stable-021891a3/linux-amd64/go1.19");
         CHECK(node_info[0].enode == "enode://b428a8d89b621a1bea008922f5fb7cd7644e2289f85fc8620f1e497eff767e2bcdc77");
         CHECK(node_info[0].enr == "enr:-JK4QJMWPkW7iDLYfevZj80Rcs-B9GkRqptsH0L6hcFKSFJ3bKFlbzjnMk29y0ZD0omRMVDlrzgTThXYcd_");
-        CHECK(node_info[0].listenerAddr == "[::]:30303");
+        CHECK(node_info[0].listener_addr == "[::]:30303");
         CHECK(node_info[0].protocols == protocols);
         CHECK(node_info[0].ports.discovery == 32);
         CHECK(node_info[0].ports.listener == 30000);
