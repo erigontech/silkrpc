@@ -30,13 +30,13 @@ struct NodeInfoPorts{
 };
 
 struct NodeInfo {
-    std::string       id;
-    std::string       name;
-    std::string       enode;
-    std::string       enr;
-    std::string       listenerAddr;
-    std::string       protocols;
-    NodeInfoPorts     ports;
+    std::string id;
+    std::string name;
+    std::string enode;
+    std::string enr;
+    std::string listener_addr;
+    std::string protocols;
+    NodeInfoPorts ports;
 };
 
 } // namespace silkrpc
