@@ -21,12 +21,14 @@
 
 #include <boost/endian/conversion.hpp>
 #include <grpcpp/grpcpp.h>
+#include <nlohmann/json.hpp>
 
 #include <silkrpc/grpc/unary_rpc.hpp>
 #include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
 #include <silkrpc/config.hpp>
+#include <silkrpc/json/types.hpp>
 
 namespace silkrpc::ethbackend {
 
@@ -89,6 +91,31 @@ boost::asio::awaitable<uint64_t> RemoteBackEnd::net_peer_count() {
     const auto count = reply.count();
     SILKRPC_DEBUG << "RemoteBackEnd::net_peer_count count=" << count << " t=" << clock_time::since(start_time) << "\n";
     co_return count;
+}
+
+boost::asio::awaitable<std::vector<NodeInfo>> RemoteBackEnd::engine_node_info() {
+    std::vector<NodeInfo> node_info_list;
+    const auto start_time = clock_time::now();
+    UnaryRpc<&::remote::ETHBACKEND::StubInterface::AsyncNodeInfo> ni_rpc{*stub_, grpc_context_};
+    const auto reply = co_await ni_rpc.finish_on(executor_, ::remote::NodesInfoRequest{});
+    for (int i = 0; i < reply.nodesinfo_size(); i++) {
+        NodeInfo node_info;
+        const auto backend_node_info = reply.nodesinfo(i);
+        node_info.id = backend_node_info.id();
+        node_info.name = backend_node_info.name();
+        node_info.enode = backend_node_info.enode();
+        node_info.enr = backend_node_info.enr();
+        node_info.listener_addr = backend_node_info.listeneraddr();
+        node_info.protocols = backend_node_info.protocols();
+        if (backend_node_info.has_ports()) {
+           const auto ports = backend_node_info.ports();
+           node_info.ports.discovery = ports.discovery();
+           node_info.ports.listener = ports.listener();
+        }
+        node_info_list.push_back(node_info);
+    }
+    SILKRPC_DEBUG << "RemoteBackEnd::engine_node_info t=" << clock_time::since(start_time) << "\n";
+    co_return node_info_list;
 }
 
 boost::asio::awaitable<ExecutionPayload> RemoteBackEnd::engine_get_payload_v1(uint64_t payload_id) {

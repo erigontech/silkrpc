@@ -58,6 +58,9 @@ class ErigonRpcApi_ForTest : public ErigonRpcApi {
     boost::asio::awaitable<void> handle_erigon_cumulative_chain_traffic(const nlohmann::json& request, nlohmann::json& reply) {
         co_return co_await ErigonRpcApi::handle_erigon_cumulative_chain_traffic(request, reply);
     }
+    boost::asio::awaitable<void> handle_erigon_node_info(const nlohmann::json& request, nlohmann::json& reply) {
+        co_return co_await ErigonRpcApi::handle_erigon_node_info(request, reply);
+    }
 };
 
 using ErigonRpcApiTest = test::JsonApiTestBase<ErigonRpcApi_ForTest>;
@@ -219,6 +222,19 @@ TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_cumulative_chain
             "method":"erigon_cumulativeChainTraffic",
             "params":["100"]
         })"_json, reply), std::exception);
+    }
+}
+
+TEST_CASE_METHOD(ErigonRpcApiTest, "ErigonRpcApi::handle_erigon_node_info", "[silkrpc][erigon_api]") {
+    nlohmann::json reply;
+
+    SECTION("request node_info") {
+        CHECK_NOTHROW(run<&ErigonRpcApi_ForTest::handle_erigon_node_info>(R"({
+            "jsonrpc":"2.0",
+            "id":1,
+            "method":"erigon_nodeInfo",
+            "params":[]
+        })"_json, reply));
     }
 }
 

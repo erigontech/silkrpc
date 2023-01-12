@@ -1490,6 +1490,30 @@ TEST_CASE("serialize chain_traffic", "[silkrpc::json][to_json]") {
     })"_json);
 }
 
+TEST_CASE("serialize NodeInfoPorts", "[silkrpc::json][to_json]") {
+    silkrpc::NodeInfoPorts ports{6, 7};
+    nlohmann::json j = ports;
+    CHECK(j == R"({
+        "discovery":6,
+        "listener":7
+    })"_json);
+}
+
+TEST_CASE("serialize NodeInfo", "[silkrpc::json][to_json]") {
+    silkrpc::NodeInfo node_info{"340", "erigon", "enode", "enr", "[::]:30303", "{\"eth\": {\"network\":5, \"difficulty\":10790000}}"};
+    nlohmann::json j =  node_info;
+    CHECK(j == R"( {
+              "enode":"enode",
+              "enr":"enr",
+              "id":"340",
+              "ip":"enode",
+              "listenAddr":"[::]:30303",
+              "name":"erigon",
+              "ports":{"discovery":0,"listener":0},
+              "protocols":  { "eth":  {"network":5, "difficulty":10790000}}
+    })"_json);
+}
+
 
 TEST_CASE("serialize issuance", "[silkrpc::json][to_json]") {
     silkrpc::Issuance issuance{

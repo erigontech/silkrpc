@@ -132,7 +132,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | erigon_forks                               | Yes          |                                            |
 | erigon_issuance                            | -            | equivalent to erigon_watchTheBurn          |
 | erigon_watchTheBurn                        | Yes          |                                            |
-| erigon_nodeInfo                            | -            | not yet implemented                        |
+| erigon_nodeInfo                            | Yes          |                                            |
 | erigon_blockNumber                         | Yes          |                                            |
 | erigon_getBlockReceiptsByBlockHash         | -            | not yet implemented                        |
 | erigon_cacheCheck                          | -            | not yet implemented                        |
