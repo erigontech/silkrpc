@@ -41,6 +41,7 @@ namespace silkrpc::commands {
 
 ErigonRpcApi::ErigonRpcApi(Context& context)
     : database_(context.database()),
+      backend_(context.backend()),
       context_(context),
       block_cache_(context.block_cache()),
       state_cache_(context.state_cache()) {}
@@ -396,5 +397,21 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_cumulative_chain_traffi
     co_return;
 }
 
+// https://eth.wiki/json-rpc/API#erigon_nodeInfo
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_node_info(const nlohmann::json& request, nlohmann::json& reply) {
+    try {
+        const auto node_info_data = co_await backend_->engine_node_info();
+
+        reply = make_json_content(request["id"], node_info_data);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    co_return;
+}
 
 } // namespace silkrpc::commands

@@ -166,7 +166,8 @@ TEST_CASE("serialize empty block header", "[silkrpc][to_json]") {
         "gasUsed":"0x0",
         "timestamp":"0x0",
         "extraData":"0x",
-        "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000000"
+        "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000000",
+        "withdrawalsRoot":null
     })"_json);
 }
 
@@ -212,7 +213,8 @@ TEST_CASE("serialize block header", "[silkrpc][to_json]") {
         "timestamp":"0x52795d",
         "extraData":"0x0001ff0100",
         "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",
-        "nonce":"0x00000000000000ff"
+        "nonce":"0x00000000000000ff",
+        "withdrawalsRoot":null
     })"_json);
 }
 
@@ -260,7 +262,8 @@ TEST_CASE("serialize block header with baseFeePerGas", "[silkrpc][to_json]") {
         "extraData":"0x0001ff0100",
         "mixHash":"0x0000000000000000000000000000000000000000000000000000000000000001",
         "nonce":"0x0102030405060708",
-        "baseFeePerGas":"0x3e8"
+        "baseFeePerGas":"0x3e8",
+        "withdrawalsRoot":null
     })"_json);
 }
 
@@ -1484,6 +1487,30 @@ TEST_CASE("serialize chain_traffic", "[silkrpc::json][to_json]") {
     CHECK(j == R"({
         "cumulativeGasUsed":"0x4",
         "cumulativeTransactionsCount":"0x5"
+    })"_json);
+}
+
+TEST_CASE("serialize NodeInfoPorts", "[silkrpc::json][to_json]") {
+    silkrpc::NodeInfoPorts ports{6, 7};
+    nlohmann::json j = ports;
+    CHECK(j == R"({
+        "discovery":6,
+        "listener":7
+    })"_json);
+}
+
+TEST_CASE("serialize NodeInfo", "[silkrpc::json][to_json]") {
+    silkrpc::NodeInfo node_info{"340", "erigon", "enode", "enr", "[::]:30303", "{\"eth\": {\"network\":5, \"difficulty\":10790000}}"};
+    nlohmann::json j =  node_info;
+    CHECK(j == R"( {
+              "enode":"enode",
+              "enr":"enr",
+              "id":"340",
+              "ip":"enode",
+              "listenAddr":"[::]:30303",
+              "name":"erigon",
+              "ports":{"discovery":0,"listener":0},
+              "protocols":  { "eth":  {"network":5, "difficulty":10790000}}
     })"_json);
 }
 

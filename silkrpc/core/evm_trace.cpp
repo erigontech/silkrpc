@@ -605,7 +605,7 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     trace_op.idx = index_prefix;
     trace_op.depth = execution_state.msg->depth;
     trace_op.op_code = op_code;
-    trace_op.op_name = op_name == "KECCAK256" ? "SHA3" : op_name; // TODO(sixtysixter) for RPCDAEMON compatibility
+    trace_op.op_name = op_name;
     trace_op.pc = pc;
 
     copy_memory_offset_len(op_code, stack_top, trace_op.trace_ex.memory);

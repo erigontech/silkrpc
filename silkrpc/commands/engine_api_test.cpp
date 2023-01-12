@@ -49,6 +49,7 @@ public:
     MOCK_METHOD((boost::asio::awaitable<ExecutionPayload>), engine_get_payload_v1, (uint64_t));
     MOCK_METHOD((boost::asio::awaitable<PayloadStatus>), engine_new_payload_v1, (ExecutionPayload));
     MOCK_METHOD((boost::asio::awaitable<ForkChoiceUpdatedReply>), engine_forkchoice_updated_v1, (ForkChoiceUpdatedRequest));
+    MOCK_METHOD((boost::asio::awaitable<std::vector<NodeInfo>>), engine_node_info, ());
 };
 
 class MockCursor : public ethdb::Cursor {

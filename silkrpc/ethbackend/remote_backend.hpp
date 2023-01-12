@@ -17,14 +17,16 @@
 #ifndef SILKRPC_ETHBACKEND_REMOTE_BACKEND_HPP_
 #define SILKRPC_ETHBACKEND_REMOTE_BACKEND_HPP_
 
-#include <utility>
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <agrpc/grpc_context.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
+#include <nlohmann/json.hpp>
 
 #include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkrpc/interfaces/types/types.pb.h>
@@ -49,8 +51,8 @@ public:
     boost::asio::awaitable<uint64_t> net_peer_count();
     boost::asio::awaitable<ExecutionPayload> engine_get_payload_v1(uint64_t payload_id);
     boost::asio::awaitable<PayloadStatus> engine_new_payload_v1(ExecutionPayload payload);
-    boost::asio::awaitable<ForkChoiceUpdatedReply> engine_forkchoice_updated_v1(
-        ForkChoiceUpdatedRequest forkchoice_updated_request);
+    boost::asio::awaitable<ForkChoiceUpdatedReply> engine_forkchoice_updated_v1( ForkChoiceUpdatedRequest forkchoice_updated_request);
+    boost::asio::awaitable<std::vector<NodeInfo>> engine_node_info();
 
 private:
     evmc::address address_from_H160(const types::H160& h160);
