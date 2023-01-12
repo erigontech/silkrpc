@@ -105,7 +105,7 @@ boost::asio::awaitable<std::vector<NodeInfo>> RemoteBackEnd::engine_node_info() 
         node_info.name = backend_node_info.name();
         node_info.enode = backend_node_info.enode();
         node_info.enr = backend_node_info.enr();
-        node_info.listenerAddr = backend_node_info.listeneraddr();
+        node_info.listener_addr = backend_node_info.listeneraddr();
         node_info.protocols = backend_node_info.protocols();
         if (backend_node_info.has_ports()) {
            const auto ports = backend_node_info.ports();
