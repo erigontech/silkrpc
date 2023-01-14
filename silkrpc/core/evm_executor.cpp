@@ -222,6 +222,7 @@ boost::asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(
             boost::asio::post(workers_, [this, &block, &txn, &tracers, &refund, &gas_bailout, self = std::move(self)]() mutable {
                 VM evm{block, state_, config_};
                 auto consensus_engine = silkworm::consensus::engine_factory(config_);
+                assert(consensus_engine != NULL);
                 evm.beneficiary = consensus_engine->get_beneficiary(block.header);
 
                 for (auto& tracer : tracers) {
