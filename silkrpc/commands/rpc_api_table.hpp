@@ -56,6 +56,7 @@ private:
     void add_web3_handlers();
     void add_engine_handlers();
     void add_txpool_handlers();
+    void add_ots_handlers();
 
     std::map<std::string, HandleMethod> method_handlers_;
     std::map<std::string, HandleStream> stream_handlers_;
