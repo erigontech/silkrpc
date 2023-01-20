@@ -30,7 +30,6 @@
 #include <silkworm/chain/intrinsic_gas.hpp>
 #include <silkworm/chain/protocol_param.hpp>
 #include <silkworm/common/util.hpp>
-#include <silkworm/consensus/engine.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
@@ -221,9 +220,7 @@ boost::asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(
             SILKRPC_TRACE << "EVMExecutor::call post block: " << block.header.number << " txn: " << &txn << "\n";
             boost::asio::post(workers_, [this, &block, &txn, &tracers, &refund, &gas_bailout, self = std::move(self)]() mutable {
                 VM evm{block, state_, config_};
-                auto consensus_engine = silkworm::consensus::engine_factory(config_);
-                assert(consensus_engine != NULL);
-                evm.beneficiary = consensus_engine->get_beneficiary(block.header);
+                evm.beneficiary = _consensus_engine->get_beneficiary(block.header);
 
                 for (auto& tracer : tracers) {
                     evm.add_tracer(*tracer);
