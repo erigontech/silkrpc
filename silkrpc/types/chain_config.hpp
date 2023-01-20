@@ -41,9 +41,9 @@ struct Forks {
         if (!cc) {
             throw std::system_error{std::make_error_code(std::errc::invalid_argument), "Chain config missing"};
         }
-        for (auto& fork_block : cc->evmc_fork_blocks) {
-            if (fork_block && *fork_block) {  // Skip any forks in block 0, that's the genesis ruleset
-                block_numbers.push_back(*fork_block);
+        for (auto& fork_block : cc->distinct_fork_numbers()) {
+            if (fork_block) {  // Skip any forks in block 0, that's the genesis ruleset
+                block_numbers.push_back(fork_block);
             }
         }
     }
