@@ -33,6 +33,7 @@
 #include <silkrpc/common/clock_time.hpp>
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/http/header.hpp>
+#include <silkrpc/types/writer.hpp>
 
 namespace silkrpc::http {
 
@@ -116,12 +117,8 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const nlohmann::json
     if (json_handler_opt) {
         const auto json_handler = json_handler_opt.value();
 
-        nlohmann::json reply_json;
-        co_await (rpc_api_.*json_handler)(request_json, reply_json);
+        co_await handle_request(json_handler, request_json, reply);
 
-        reply.content = reply_json.dump(
-            /*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace);
-        reply.status = http::StatusType::ok;
         co_return;
     }
 
@@ -129,8 +126,8 @@ boost::asio::awaitable<void> RequestHandler::handle_request(const nlohmann::json
     if (stream_handler_opt) {
         const auto stream_handler = stream_handler_opt.value();
 
-        json::Stream stream(socket_);
-        co_await (rpc_api_.*stream_handler)(request_json, stream);
+        co_await handle_request(stream_handler, request_json);
+
         co_return;
     }
 
@@ -162,13 +159,16 @@ boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::R
     co_return;
 }
 
-boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::RpcApiTable::HandleStream handler, const nlohmann::json& request_json, http::Reply& reply) {
-    auto request_id = request_json["id"].get<uint32_t>();
+boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::RpcApiTable::HandleStream handler, const nlohmann::json& request_json) {
     try {
-        json::Stream stream(socket_);
+        SocketWriter socket_writer(socket_);
+        ChunksWriter chunks_writer(socket_writer);
+        json::Stream stream(chunks_writer);
 
         co_await write_headers();
         co_await (rpc_api_.*handler)(request_json, stream);
+
+        stream.close();
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << "\n";
     } catch (...) {
@@ -243,11 +243,15 @@ boost::asio::awaitable<void> RequestHandler::write_headers() {
     try {
         std::vector<http::Header> headers;
         headers.reserve(2);
-        headers.emplace_back(http::Header{"Content-Length", 0});
         headers.emplace_back(http::Header{"Content-Type", "application/json"});
+        headers.emplace_back(http::Header{"Transfer-Encoding", "chunked"});
 
-        const auto bytes_transferred = co_await boost::asio::async_write(socket_, http::to_buffers(headers), boost::asio::use_awaitable);
-    } catch (const boost::system::system_error& se) {
+        auto buffers = http::to_buffers(StatusType::ok, headers);
+
+        const auto bytes_transferred = co_await boost::asio::async_write(socket_, buffers, boost::asio::use_awaitable);
+
+        SILKRPC_LOG << "RequestHandler::write_headers bytes_transferred: " << bytes_transferred << "\n" << std::flush;
+    } catch (const std::system_error& se) {
         std::rethrow_exception(std::make_exception_ptr(se));
     } catch (const std::exception& e) {
         std::rethrow_exception(std::make_exception_ptr(e));
