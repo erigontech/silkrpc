@@ -55,7 +55,7 @@ private:
     boost::asio::awaitable<void> handle_request(silkrpc::commands::RpcApiTable::HandleStream handler, const nlohmann::json& request_json);
 
     boost::asio::awaitable<void> do_write(http::Reply& reply);
-    boost::asio::awaitable<void> start_streaming();
+    boost::asio::awaitable<void> write_headers();
 
     commands::RpcApi rpc_api_;
     boost::asio::io_context& io_context_;

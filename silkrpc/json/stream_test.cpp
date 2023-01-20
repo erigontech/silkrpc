@@ -86,18 +86,6 @@ TEST_CASE("JsonStream calls") {
 
         CHECK(string_writer.get_content() == "{\"test\":\"test\"}");
     }
-    // SECTION("write_json string") {
-    //     nlohmann::json json = R"({
-    //         "test": "test"
-    //     })"_json;
-
-    //     const auto content = json.dump(/*indent=*/-1, /*indent_char=*/' ', /*ensure_ascii=*/false, nlohmann::json::error_handler_t::replace);
-
-    //     stream.write_json(content);
-    //     stream.close();
-
-    //     CHECK(string_writer.get_content() == "{\"test\":\"test\"}");
-    // }
     SECTION("empty object 1") {
         stream.open_object();
         stream.close_object();

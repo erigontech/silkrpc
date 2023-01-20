@@ -24,50 +24,50 @@
 
 namespace json {
 
-static std::uint8_t OBJECT_OPEN = 1;
-static std::uint8_t ARRAY_OPEN = 2;
-static std::uint8_t FIELD_WRITTEN = 3;
-static std::uint8_t ENTRY_WRITTEN = 4;
+static std::uint8_t kObjectOpen = 1;
+static std::uint8_t kArrayOpen = 2;
+static std::uint8_t kFieldWritten = 3;
+static std::uint8_t kEntryWritten = 4;
 
-static std::string OPEN_BRACE{"{"}; // NOLINT(runtime/string)
-static std::string CLOSE_BRACE{"}"}; // NOLINT(runtime/string)
-static std::string OPEN_BRACKET{"["}; // NOLINT(runtime/string)
-static std::string CLOSE_BRACKET{"]"}; // NOLINT(runtime/string)
-static std::string FIELD_SEPARATOR{","}; // NOLINT(runtime/string)
+static std::string kOpenBrace{"{"}; // NOLINT(runtime/string)
+static std::string kCloseBrace{"}"}; // NOLINT(runtime/string)
+static std::string kOpenBracket{"["}; // NOLINT(runtime/string)
+static std::string kCloseBracket{"]"}; // NOLINT(runtime/string)
+static std::string kFieldSeparator{","}; // NOLINT(runtime/string)
 
 void Stream::open_object() {
-    writer_.write(OPEN_BRACE);
-    stack_.push(OBJECT_OPEN);
+    writer_.write(kOpenBrace);
+    stack_.push(kObjectOpen);
 }
 
 void Stream::close_object() {
-    if (stack_.top() == FIELD_WRITTEN) {
+    if (stack_.top() == kFieldWritten) {
         stack_.pop();
     }
     stack_.pop();
-    writer_.write(CLOSE_BRACE);
+    writer_.write(kCloseBrace);
 }
 
 void Stream::open_array() {
-    writer_.write(OPEN_BRACKET);
-    stack_.push(ARRAY_OPEN);
+    writer_.write(kOpenBracket);
+    stack_.push(kArrayOpen);
 }
 
 void Stream::close_array() {
-    if (stack_.top() == ENTRY_WRITTEN) {
+    if (stack_.top() == kEntryWritten) {
         stack_.pop();
     }
     stack_.pop();
-    writer_.write(CLOSE_BRACKET);
+    writer_.write(kCloseBracket);
 }
 
 void Stream::write_json(const nlohmann::json& json) {
-    bool isEntry = stack_.size() > 0 && (stack_.top() == ARRAY_OPEN || stack_.top() == ENTRY_WRITTEN);
+    bool isEntry = stack_.size() > 0 && (stack_.top() == kArrayOpen || stack_.top() == kEntryWritten);
     if (isEntry) {
-        if (stack_.top() != ENTRY_WRITTEN) {
-            stack_.push(ENTRY_WRITTEN);
+        if (stack_.top() != kEntryWritten) {
+            stack_.push(kEntryWritten);
         } else {
-            writer_.write(FIELD_SEPARATOR);
+            writer_.write(kFieldSeparator);
         }
     }
 
@@ -98,10 +98,10 @@ void Stream::write_string(const std::string& str) {
 
 void Stream::ensure_separator() {
     if (stack_.size() > 0) {
-        if (stack_.top() != FIELD_WRITTEN) {
-            stack_.push(FIELD_WRITTEN);
+        if (stack_.top() != kFieldWritten) {
+            stack_.push(kFieldWritten);
         } else {
-            writer_.write(FIELD_SEPARATOR);
+            writer_.write(kFieldSeparator);
         }
     }
 }

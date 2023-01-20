@@ -165,7 +165,7 @@ boost::asio::awaitable<void> RequestHandler::handle_request(silkrpc::commands::R
         ChunksWriter chunks_writer(socket_writer);
         json::Stream stream(chunks_writer);
 
-        co_await start_streaming();
+        co_await write_headers();
         co_await (rpc_api_.*handler)(request_json, stream);
 
         stream.close();
@@ -239,7 +239,7 @@ boost::asio::awaitable<void> RequestHandler::do_write(Reply &reply) {
     }
 }
 
-boost::asio::awaitable<void> RequestHandler::start_streaming() {
+boost::asio::awaitable<void> RequestHandler::write_headers() {
     try {
         std::vector<http::Header> headers;
         headers.reserve(2);
