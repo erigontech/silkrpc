@@ -266,12 +266,14 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_storage_range_at(const nl
 }
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_tracetransaction
-boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const nlohmann::json& request, json::Stream& stream) {
     auto params = request["params"];
     if (params.size() < 1) {
         auto error_msg = "invalid debug_traceTransaction params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
-        reply = make_json_error(request["id"], 100, error_msg);
+        const auto reply = make_json_error(request["id"], 100, error_msg);
+        stream.write_json(reply);
+
         co_return;
     }
     auto transaction_hash = params[0].get<evmc::bytes32>();
@@ -283,6 +285,10 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const n
 
     SILKRPC_DEBUG << "transaction_hash: " << transaction_hash << " config: {" << config << "}\n";
 
+    stream.open_object();
+    stream.write_field("id", request["id"]);
+    stream.write_field("jsonrpc", "2.0");
+
     auto tx = co_await database_->begin();
 
     try {
@@ -291,25 +297,32 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const n
         if (!tx_with_block) {
             std::ostringstream oss;
             oss << "transaction 0x" << transaction_hash << " not found";
-            reply = make_json_error(request["id"], -32000, oss.str());
+            stream.write_field("code", -32000);
+            stream.write_field("message", oss.str());
         } else {
             debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
-            const auto result = co_await executor.execute(tx_with_block->block_with_hash.block, tx_with_block->transaction);
+
+            stream.write_field("result");
+            stream.open_object();
+            const auto result = co_await executor.execute(tx_with_block->block_with_hash.block, tx_with_block->transaction, &stream);
+            stream.close_object();
 
             if (result.pre_check_error) {
-                reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
-            } else {
-                SILKRPC_INFO << "LOGS size : " << result.debug_trace.debug_logs.size() << "\n";
-                reply = make_json_content(request["id"], result.debug_trace);
+                stream.write_field("code", -32000);
+                stream.write_field("message", result.pre_check_error.value());
             }
         }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
+        stream.write_field("code", 100);
+        stream.write_field("message", e.what());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, "unexpected exception");
+        stream.write_field("code", 100);
+        stream.write_field("message", "unexpected exception");
     }
+
+    stream.close_object();
 
     co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;

@@ -451,36 +451,4 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_transaction(const nlohman
     co_return;
 }
 
-boost::asio::awaitable<void> TraceRpcApi::handle_trace_transaction_stream(const nlohmann::json& request, json::Stream& stream) {
-    const auto params = request["params"];
-    if (params.size() < 1) {
-        auto error_msg = "invalid trace_transaction params: " + params.dump();
-        SILKRPC_ERROR << error_msg << "\n";
-        auto error = make_json_error(request["id"], 100, error_msg);
-        co_return;
-    }
-    const auto transaction_hash = params[0].get<evmc::bytes32>();
-
-    SILKRPC_INFO << "transaction_hash: " << transaction_hash << "\n";
-
-    auto tx = co_await database_->begin();
-
-    try {
-        ethdb::TransactionDatabase tx_database{*tx};
-        const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache(), tx_database, transaction_hash);
-        if (!tx_with_block) {
-            const auto reply = make_json_content(request["id"]);
-            co_await stream.write_json(reply);
-        }
-    } catch (const std::exception& e) {
-        auto error = make_json_content(request["id"]);
-    } catch (...) {
-        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        auto error = make_json_error(request["id"], 100, "unexpected exception");
-    }
-
-    co_await tx->close(); // RAII not (yet) available with coroutines
-    co_return;
-}
-
 } // namespace silkrpc::commands
