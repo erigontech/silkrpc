@@ -42,6 +42,7 @@ enum StatusType {
 
 boost::asio::const_buffer to_buffer(StatusType status);
 std::vector<boost::asio::const_buffer> to_buffers(const std::vector<Header>& headers);
+std::vector<boost::asio::const_buffer> to_buffers(StatusType status, const std::vector<Header>& headers);
 
 /// A reply to be sent to a client.
 struct Reply {
