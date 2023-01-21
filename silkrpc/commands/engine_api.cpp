@@ -192,7 +192,7 @@ boost::asio::awaitable<void> EngineRpcApi::handle_engine_exchange_transition_con
         const auto transition_configuration = TransitionConfiguration{
             .terminal_total_difficulty = config.terminal_total_difficulty.value(),
             .terminal_block_hash = 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32,
-            .terminal_block_number = config.terminal_block_number.value_or(0) // we default to returning zero if we dont have terminal_block_number
+            .terminal_block_number = 0 // terminal_block_number removed from chain_config we default to returning zero
         };
         reply = make_json_content(request["id"], transition_configuration);
     #ifndef BUILD_COVERAGE
