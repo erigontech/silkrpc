@@ -27,7 +27,7 @@ BlockReward compute_reward(const ChainConfig& config, const silkworm::Block& blo
         throw std::runtime_error("Invalid chain config");
     }
     const auto chain_config = cc_optional.value();
-    const auto revision = chain_config.revision(block.header.number);
+    const auto revision = chain_config.revision(block.header.number, /*block_time=*/0);
     BlockReward block_reward;
     block_reward.miner_reward = silkworm::param::kBlockRewardFrontier;
     if (revision > evmc_revision::EVMC_BYZANTIUM) {
