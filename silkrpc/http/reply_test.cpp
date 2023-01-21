@@ -37,17 +37,26 @@ TEST_CASE("headers to_buffers", "[silkrpc][http][reply]") {
     auto buffers = to_buffers(headers);
     CHECK(buffers.size() == 4);
 
-    std::string result(static_cast<const char*>(buffers[0].data()), buffers[0].size());
-    CHECK(result == "Accept");
+    std::string result;
+    for (const auto& buffer : buffers) {
+        std::string buf(static_cast<const char*>(buffer.data()), buffer.size());
+        result += buf;
+    }
+    CHECK(result == "Accept: */*\r\n");
+}
 
-    result = std::string(static_cast<const char*>(buffers[1].data()), buffers[1].size());
-    CHECK(result == ": ");
+TEST_CASE("status & headers to_buffers", "[silkrpc][http][reply]") {
+    std::vector<Header> headers{{"Accept", "*/*"}};
 
-    result = std::string(static_cast<const char*>(buffers[2].data()), buffers[2].size());
-    CHECK(result == "*/*");
+    auto buffers = to_buffers(StatusType::ok, headers);
+    CHECK(buffers.size() == 6);
 
-    result = std::string(static_cast<const char*>(buffers[3].data()), buffers[3].size());
-    CHECK(result == "\r\n");
+    std::string result;
+    for (const auto& buffer : buffers) {
+        std::string buf(static_cast<const char*>(buffer.data()), buffer.size());
+        result += buf;
+    }
+    CHECK(result == "HTTP/1.1 200 OK\r\nAccept: */*\r\n\r\n");
 }
 
 TEST_CASE("StatusType to_buffer", "[silkrpc][http][reply]") {
