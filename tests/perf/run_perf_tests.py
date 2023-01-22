@@ -493,17 +493,23 @@ class TestReport:
         tmp = os.popen(command).readline().replace('\n', '').split(':')[1]
         bogomips = tmp.replace(' ', '')
 
-        command = "cd " + self.config.silkrpc_build_dir + " && git branch --show-current"
-        silkrpc_branch = os.popen(command).read().replace('\n', '')
+        erigon_branch = ""
+        erigon_commit = ""
+        silkrpc_branch = ""
+        silkrpc_commit = ""
+        if self.config.test_mode in ("1", "3"):
+            command = "cd " + self.config.silkrpc_build_dir + " && git branch --show-current"
+            silkrpc_branch = os.popen(command).read().replace('\n', '')
 
-        command = "cd " + self.config.erigon_builddir + " && git branch --show-current"
-        erigon_branch = os.popen(command).read().replace('\n', '')
+            command = "cd " + self.config.silkrpc_build_dir + " && git rev-parse HEAD"
+            silkrpc_commit = os.popen(command).read().replace('\n', '')
 
-        command = "cd " + self.config.silkrpc_build_dir + " && git rev-parse HEAD"
-        silkrpc_commit = os.popen(command).read().replace('\n', '')
+        if self.config.test_mode in ("2", "3"):
+            command = "cd " + self.config.erigon_builddir + " && git branch --show-current"
+            erigon_branch = os.popen(command).read().replace('\n', '')
 
-        command = "cd " + self.config.erigon_builddir + " && git rev-parse HEAD"
-        erigon_commit = os.popen(command).read().replace('\n', '')
+            command = "cd " + self.config.erigon_builddir + " && git rev-parse HEAD"
+            erigon_commit = os.popen(command).read().replace('\n', '')
 
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Vendor", Hardware.vendor()])
         self.writer.writerow(["", "", "", "", "", "", "", "", "", "", "", "", "Product", Hardware.product()])
