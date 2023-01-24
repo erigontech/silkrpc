@@ -150,6 +150,7 @@ void to_json(nlohmann::json& json, const BlockHeader& header) {
     } else {
        json["baseFeePerGas"] = nullptr;
     }
+    json["withdrawalsRoot"] = nullptr;  // waiting EIP-4895
 }
 
 void to_json(nlohmann::json& json, const AccessListEntry& access_list) {
@@ -200,6 +201,11 @@ void to_json(nlohmann::json& json, const Transaction& transaction) {
 
 namespace silkrpc {
 
+void to_json(nlohmann::json& json, const ChainTraffic& chain_traffic) {
+    json["cumulativeGasUsed"] = to_quantity(chain_traffic.cumulative_gas_used);
+    json["cumulativeTransactionsCount"] = to_quantity(chain_traffic.cumulative_transactions_count);
+}
+
 void to_json(nlohmann::json& json, const StageData& stage_data) {
     json["stage_name"] = stage_data.stage_name;
     json["block_number"] = stage_data.block_number;
@@ -219,6 +225,22 @@ void to_json(nlohmann::json& json, const struct TxPoolStatusInfo& status_info) {
 
 void to_json(nlohmann::json& json, const Rlp& rlp) {
     json = "0x" + silkworm::to_hex(rlp.buffer);
+}
+
+void to_json(nlohmann::json& json, const NodeInfoPorts& node_info_ports) {
+    json["discovery"] = node_info_ports.discovery;
+    json["listener"] = node_info_ports.listener;
+}
+
+void to_json(nlohmann::json& json, const NodeInfo& node_info) {
+    json["id"] = node_info.id;
+    json["name"] = node_info.name;
+    json["enode"] = node_info.enode;
+    json["enr"] = node_info.enr;
+    json["listenAddr"] = node_info.listener_addr;
+    json["ports"] = node_info.ports;
+    json["ip"] = node_info.enode;
+    json["protocols"] = nlohmann::json::parse(node_info.protocols, nullptr, /* allow_exceptions = */ false);
 }
 
 void to_json(nlohmann::json& json, const struct CallBundleTxInfo& tx_info) {
@@ -476,17 +498,17 @@ void from_json(const nlohmann::json& json, Filter& filter) {
     if (json.count("fromBlock") != 0) {
         auto json_from_block = json.at("fromBlock");
         if (json_from_block.is_string()) {
-            filter.from_block = std::stol(json_from_block.get<std::string>(), 0, 16);
+            filter.from_block = json_from_block.get<std::string>();
         } else {
-            filter.from_block = json_from_block.get<uint64_t>();
+            filter.from_block = to_quantity(json_from_block.get<uint64_t>());
         }
     }
     if (json.count("toBlock") != 0) {
         auto json_to_block = json.at("toBlock");
         if (json_to_block.is_string()) {
-            filter.to_block = std::stol(json_to_block.get<std::string>(), 0, 16);
+            filter.to_block = json_to_block.get<std::string>();
         } else {
-            filter.to_block = json_to_block.get<uint64_t>();
+            filter.to_block = to_quantity(json_to_block.get<uint64_t>());
         }
     }
     if (json.count("address") != 0) {
@@ -504,7 +526,7 @@ void from_json(const nlohmann::json& json, Filter& filter) {
                     topic_item = FilterSubTopics{evmc::bytes32{}};
                 }
                 if (topic_item.is_string()) {
-                    topic_item = FilterSubTopics{evmc::bytes32{topic_item}};
+                    topic_item = FilterSubTopics{topic_item};
                 }
             }
             filter.topics = topics.get<FilterTopics>();

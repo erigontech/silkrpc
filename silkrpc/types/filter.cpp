@@ -67,8 +67,8 @@ std::ostream& operator<<(std::ostream& out, const std::optional<silkrpc::FilterT
 namespace silkrpc {
 
 std::ostream& operator<<(std::ostream& out, const Filter& filter) {
-    out << "from_block: " << filter.from_block.value_or(0) << " ";
-    out << "to_block: " << filter.to_block.value_or(0) << " ";
+    out << "from_block: " << filter.from_block.value_or("null") << " ";
+    out << "to_block: " << filter.to_block.value_or("null") << " ";
     out << "address: " << filter.addresses << " ";
     out << "topics: " << filter.topics << " ";
     out << "block_hash: " << filter.block_hash.value_or("null");

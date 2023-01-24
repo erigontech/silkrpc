@@ -30,29 +30,31 @@
                "returnValue": "",
                "structLogs": [
                   {
-                        "depth": 1,
-                        "gas": 156082,
-                        "gasCost": 2,
-                        "memory": [],
-                        "op": "COINBASE",
-                        "pc": 0,
-                        "stack": []
+                    "pc": 0,
+                    "op": "COINBASE",
+                    "gas": 156082,
+                    "gasCost": 2,
+                    "depth": 1,
+                    "stack": [],
+                    "memory": []
                   },
                   {
-                        "depth": 1,
-                        "error": {},
-                        "gas": 156080,
-                        "gasCost": 2,
-                        "memory": [],
-                        "op": "opcode 0x4b not defined",
-                        "pc": 1,
-                        "stack": [
-                              "0x0"
-                        ]
-                  }
-            ]
+                    "pc": 1,
+                    "op": "opcode 0x4b not defined",
+                    "gas": 156080,
+                    "gasCost": 2,
+                    "depth": 1,
+                    "error": {},
+                    "stack": [
+                         "0x8b24eb4e6aae906058242d83e51fb077370c4720"
+                    ],
+                    "memory": []
+                 }
+          ],
+          "gas": 211190,
+          "failed": true,
+          "returnValue": ""
          }
-
         }
     }
 ]

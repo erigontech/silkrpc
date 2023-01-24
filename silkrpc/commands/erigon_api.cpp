@@ -41,6 +41,7 @@ namespace silkrpc::commands {
 
 ErigonRpcApi::ErigonRpcApi(Context& context)
     : database_(context.database()),
+      backend_(context.backend()),
       context_(context),
       block_cache_(context.block_cache()),
       state_cache_(context.state_cache()) {}
@@ -171,7 +172,7 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_get_header_by_number(co
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        const auto block_number{co_await core::get_block_number(block_id, tx_database)};
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
         const auto header{co_await core::rawdb::read_header_by_number(tx_database, block_number)};
 
         reply = make_json_content(request["id"], header);
@@ -276,7 +277,7 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nl
 
         Issuance issuance{}; // default is empty: no PoW => no issuance
         if (chain_config.config.count("ethash") != 0) {
-            const auto block_number{co_await core::get_block_number(block_id, tx_database)};
+            const auto block_number = co_await core::get_block_number(block_id, tx_database);
             const auto block_with_hash{co_await core::rawdb::read_block_by_number(tx_database, block_number)};
             const auto block_reward{ethash::compute_reward(chain_config, block_with_hash.block)};
             intx::uint256 total_ommer_reward = 0;
@@ -321,6 +322,95 @@ boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_watch_the_burn(const nl
     }
 
     co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
+
+// https://eth.wiki/json-rpc/API#erigon_blockNumber
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_block_number(const nlohmann::json& request, nlohmann::json& reply) {
+    const auto params = request["params"];
+    std::string block_id;
+    if (params.size() == 0) {
+        block_id = core::kLatestExecutedBlockId;
+    } else if (params.size() == 1) {
+        block_id = params[0];
+    } else {
+        auto error_msg = "invalid erigon_blockNumber params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    SILKRPC_DEBUG << "block: " << block_id << "\n";
+
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+        const auto block_number{co_await core::get_block_number_by_tag(block_id, tx_database)};
+        reply = make_json_content(request["id"], to_quantity (block_number));
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
+// https://eth.wiki/json-rpc/API#erigon_cumulativeChainTraffic
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_cumulative_chain_traffic(const nlohmann::json& request, nlohmann::json& reply) {
+    const auto params = request["params"];
+    if (params.size() != 1) {
+        auto error_msg = "invalid erigon_cumulativeChainTraffic params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    const auto block_id = params[0].get<std::string>();
+
+    SILKRPC_DEBUG << "block_id: " << block_id << "\n";
+
+    auto tx = co_await database_->begin();
+
+    ChainTraffic chain_traffic;
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+
+        const auto block_number = co_await core::get_block_number(block_id, tx_database);
+        chain_traffic.cumulative_transactions_count = co_await core::rawdb::read_cumulative_transaction_count(tx_database, block_number);
+        chain_traffic.cumulative_gas_used  = co_await core::rawdb::read_cumulative_gas_used(tx_database, block_number);
+
+        reply = make_json_content(request["id"], chain_traffic);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_content(request["id"], chain_traffic);
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
+// https://eth.wiki/json-rpc/API#erigon_nodeInfo
+boost::asio::awaitable<void> ErigonRpcApi::handle_erigon_node_info(const nlohmann::json& request, nlohmann::json& reply) {
+    try {
+        const auto node_info_data = co_await backend_->engine_node_info();
+
+        reply = make_json_content(request["id"], node_info_data);
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
+    }
+
     co_return;
 }
 

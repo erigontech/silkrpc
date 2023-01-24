@@ -222,8 +222,15 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
             jsonrpc_commands = json.load(json_file_ptr)
     for json_rpc in jsonrpc_commands:
         request = json_rpc["request"]
+        try:
+            if isinstance(request, dict) == 1:
+                method = request["method"]
+            else:
+                method = request[0]["method"]
+        except KeyError:
+            method = ""
         request_dumps = json.dumps(request)
-        target = get_target(daemon_under_test, request["method"], infura_url, daemon_on_host)
+        target = get_target(daemon_under_test, method, infura_url, daemon_on_host)
         if jwt_secret == "":
             jwt_auth = ""
         else:
@@ -240,8 +247,8 @@ def run_tests(test_dir: str, output_dir: str, json_file: str, verbose: bool, dae
             exp_rsp_file = output_api_filename + "-expResponse.json"
             diff_file = output_api_filename + "-diff.json"
         else:
-            target = get_target(SILK, request["method"], infura_url, daemon_on_host)
-            target1 = get_target(daemon_as_reference, request["method"], infura_url, daemon_on_host)
+            target = get_target(SILK, method, infura_url, daemon_on_host)
+            target1 = get_target(daemon_as_reference, method, infura_url, daemon_on_host)
             cmd = '''curl --silent -X POST -H "Content-Type: application/json" ''' + jwt_auth + ''' --data \'''' + request_dumps + '''\' ''' + target
             cmd1 = '''curl --silent -X POST -H "Content-Type: application/json" ''' + jwt_auth + ''' --data \'''' + request_dumps + '''\' ''' + target1
             output_api_filename = output_dir + json_file[:-4]
@@ -280,6 +287,7 @@ def usage(argv):
     print("-r connect to rpcdaemon [ default connect to silk ] ")
     print("-l <number of loops>")
     print("-a <test api >: run all tests of the specified API")
+    print("-s <start_test_number>: run tests starting from input")
     print("-t <test_number>: run single test")
     print("-d provides same request also to the reference daemon (default RPCDAEMON)")
     print("-i provides request also to the reference daemon (INFURA)")
@@ -313,10 +321,11 @@ def main(argv):
     output_dir = json_dir + results_dir + "/"
     exclude_api_list = ""
     exclude_test_list = ""
+    start_test = ""
     jwt_secret = ""
 
     try:
-        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:di:b:ox:X:H:k:")
+        opts, _ = getopt.getopt(argv[1:], "hrcvt:l:a:di:b:ox:X:H:k:s:")
         for option, optarg in opts:
             if option in ("-h", "--help"):
                 usage(argv)
@@ -334,6 +343,8 @@ def main(argv):
                 verbose = 1
             elif option == "-t":
                 req_test = int(optarg)
+            elif option == "-s":
+                start_test = int(optarg)
             elif option == "-a":
                 requested_api = optarg
             elif option == "-l":
@@ -386,30 +397,32 @@ def main(argv):
             test_lists = sorted(os.listdir(test_dir))
             test_number = 1
             for test_name in test_lists:
-                if requested_api in ("", api_file): # -a
+                if requested_api in api_file or requested_api == "": # -a
                     test_file = api_file + "/" + test_name
-                    if is_skipped(api_file, requested_api, exclude_api_list, exclude_test_list, test_file, req_test, verify_with_daemon, global_test_number) == 1:
-                        file = test_file.ljust(60)
-                        print(f"{global_test_number:03d}. {file} Skipped")
-                        tests_not_executed = tests_not_executed + 1
+                    if  is_skipped(api_file, requested_api, exclude_api_list, exclude_test_list, test_file, req_test, verify_with_daemon, global_test_number) == 1:
+                        if start_test == "" or global_test_number >= int(start_test):
+                            file = test_file.ljust(60)
+                            print(f"{global_test_number:03d}. {file} Skipped")
+                            tests_not_executed = tests_not_executed + 1
                     else:
                         # runs all tests req_test refers global test number or
                         # runs only tests on specific api req_test refers all test on specific api
                         if (requested_api == "" and req_test in (-1, global_test_number)) or (requested_api != "" and req_test in (-1, test_number)):
-                            file = test_file.ljust(60)
-                            if verbose:
-                                print(f"{global_test_number:03d}. {file} ", end = '', flush=True)
-                            else:
-                                print(f"{global_test_number:03d}. {file}\r", end = '', flush=True)
-                            ret=run_tests(json_dir, output_dir, test_file, verbose, daemon_under_test, exit_on_fail, verify_with_daemon, daemon_as_reference,
+                            if (start_test == "") or (start_test != "" and global_test_number >= int(start_test)):
+                                file = test_file.ljust(60)
+                                if verbose:
+                                    print(f"{global_test_number:03d}. {file} ", end = '', flush=True)
+                                else:
+                                    print(f"{global_test_number:03d}. {file}\r", end = '', flush=True)
+                                ret=run_tests(json_dir, output_dir, test_file, verbose, daemon_under_test, exit_on_fail, verify_with_daemon, daemon_as_reference,
                                           dump_output, global_test_number, infura_url, daemon_on_host, jwt_secret)
-                            if ret == 0:
-                                success_tests = success_tests + 1
-                            else:
-                                failed_tests = failed_tests + 1
-                            executed_tests = executed_tests + 1
-                            if req_test != -1 or requested_api != "":
-                                match = 1
+                                if ret == 0:
+                                    success_tests = success_tests + 1
+                                else:
+                                    failed_tests = failed_tests + 1
+                                executed_tests = executed_tests + 1
+                                if req_test != -1 or requested_api != "":
+                                    match = 1
 
                 global_test_number = global_test_number + 1
                 test_number = test_number + 1

@@ -220,6 +220,8 @@ boost::asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(
             SILKRPC_TRACE << "EVMExecutor::call post block: " << block.header.number << " txn: " << &txn << "\n";
             boost::asio::post(workers_, [this, &block, &txn, &tracers, &refund, &gas_bailout, self = std::move(self)]() mutable {
                 VM evm{block, state_, config_};
+                evm.beneficiary = consensus_engine_->get_beneficiary(block.header);
+
                 for (auto& tracer : tracers) {
                     evm.add_tracer(*tracer);
                 }
@@ -229,7 +231,7 @@ boost::asio::awaitable<ExecutionResult> EVMExecutor<WorldState, VM>::call(
 
                 const evmc_revision rev{evm.revision()};
                 const intx::uint256 base_fee_per_gas{evm.block().header.base_fee_per_gas.value_or(0)};
-                const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev >= EVMC_HOMESTEAD, rev >= EVMC_ISTANBUL)};
+                const intx::uint128 g0{silkworm::intrinsic_gas(txn, rev)};
                 assert(g0 <= UINT64_MAX); // true due to the precondition (transaction must be valid)
 
                 const auto error = pre_check(evm, txn, base_fee_per_gas, g0);

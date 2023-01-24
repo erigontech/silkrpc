@@ -86,10 +86,11 @@ void RpcApiTable::add_debug_handlers() {
     method_handlers_[http::method::k_debug_getModifiedAccountsByNumber] = &commands::RpcApi::handle_debug_get_modified_accounts_by_number;
     method_handlers_[http::method::k_debug_getModifiedAccountsByHash] = &commands::RpcApi::handle_debug_get_modified_accounts_by_hash;
     method_handlers_[http::method::k_debug_storageRangeAt] = &commands::RpcApi::handle_debug_storage_range_at;
-    method_handlers_[http::method::k_debug_traceTransaction] = &commands::RpcApi::handle_debug_trace_transaction;
     method_handlers_[http::method::k_debug_traceCall] = &commands::RpcApi::handle_debug_trace_call;
     method_handlers_[http::method::k_debug_traceBlockByNumber] = &commands::RpcApi::handle_debug_trace_block_by_number;
     method_handlers_[http::method::k_debug_traceBlockByHash] = &commands::RpcApi::handle_debug_trace_block_by_hash;
+
+    stream_handlers_[http::method::k_debug_traceTransaction] = &commands::RpcApi::handle_debug_trace_transaction;
 }
 
 void RpcApiTable::add_eth_handlers() {
@@ -160,6 +161,9 @@ void RpcApiTable::add_erigon_handlers() {
     method_handlers_[http::method::k_erigon_getLogsByHash] = &commands::RpcApi::handle_erigon_get_logs_by_hash;
     method_handlers_[http::method::k_erigon_forks] = &commands::RpcApi::handle_erigon_forks;
     method_handlers_[http::method::k_erigon_watchTheBurn] = &commands::RpcApi::handle_erigon_watch_the_burn;
+    method_handlers_[http::method::k_erigon_cumulative_chain_traffic] = &commands::RpcApi::handle_erigon_cumulative_chain_traffic;
+    method_handlers_[http::method::k_erigon_blockNumber] = &commands::RpcApi::handle_erigon_block_number;
+    method_handlers_[http::method::k_erigon_nodeInfo] = &commands::RpcApi::handle_erigon_node_info;
 }
 
 void RpcApiTable::add_trace_handlers() {
@@ -172,8 +176,6 @@ void RpcApiTable::add_trace_handlers() {
     method_handlers_[http::method::k_trace_filter] = &commands::RpcApi::handle_trace_filter;
     method_handlers_[http::method::k_trace_get] = &commands::RpcApi::handle_trace_get;
     method_handlers_[http::method::k_trace_transaction] = &commands::RpcApi::handle_trace_transaction;
-
-    // stream_handlers_[http::method::k_trace_transaction] = &commands::RpcApi::handle_trace_transaction_stream;
 }
 
 void RpcApiTable::add_web3_handlers() {

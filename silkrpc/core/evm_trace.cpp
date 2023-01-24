@@ -292,13 +292,74 @@ void to_json(nlohmann::json& json, const TraceManyCallResult& result) {
 int get_stack_count(std::uint8_t op_code) {
     int count = 0;
     switch (op_code) {
-        case evmc_opcode::OP_PUSH1 ... evmc_opcode::OP_PUSH32:
+        case evmc_opcode::OP_PUSH1:
+        case evmc_opcode::OP_PUSH2:
+        case evmc_opcode::OP_PUSH3:
+        case evmc_opcode::OP_PUSH4:
+        case evmc_opcode::OP_PUSH5:
+        case evmc_opcode::OP_PUSH6:
+        case evmc_opcode::OP_PUSH7:
+        case evmc_opcode::OP_PUSH8:
+        case evmc_opcode::OP_PUSH9:
+        case evmc_opcode::OP_PUSH10:
+        case evmc_opcode::OP_PUSH11:
+        case evmc_opcode::OP_PUSH12:
+        case evmc_opcode::OP_PUSH13:
+        case evmc_opcode::OP_PUSH14:
+        case evmc_opcode::OP_PUSH15:
+        case evmc_opcode::OP_PUSH16:
+        case evmc_opcode::OP_PUSH17:
+        case evmc_opcode::OP_PUSH18:
+        case evmc_opcode::OP_PUSH19:
+        case evmc_opcode::OP_PUSH20:
+        case evmc_opcode::OP_PUSH21:
+        case evmc_opcode::OP_PUSH22:
+        case evmc_opcode::OP_PUSH23:
+        case evmc_opcode::OP_PUSH24:
+        case evmc_opcode::OP_PUSH25:
+        case evmc_opcode::OP_PUSH26:
+        case evmc_opcode::OP_PUSH27:
+        case evmc_opcode::OP_PUSH28:
+        case evmc_opcode::OP_PUSH29:
+        case evmc_opcode::OP_PUSH30:
+        case evmc_opcode::OP_PUSH31:
+        case evmc_opcode::OP_PUSH32:
             count = 1;
             break;
-        case evmc_opcode::OP_SWAP1 ... evmc_opcode::OP_SWAP16:
+        case evmc_opcode::OP_SWAP1:
+        case evmc_opcode::OP_SWAP2:
+        case evmc_opcode::OP_SWAP3:
+        case evmc_opcode::OP_SWAP4:
+        case evmc_opcode::OP_SWAP5:
+        case evmc_opcode::OP_SWAP6:
+        case evmc_opcode::OP_SWAP7:
+        case evmc_opcode::OP_SWAP8:
+        case evmc_opcode::OP_SWAP9:
+        case evmc_opcode::OP_SWAP10:
+        case evmc_opcode::OP_SWAP11:
+        case evmc_opcode::OP_SWAP12:
+        case evmc_opcode::OP_SWAP13:
+        case evmc_opcode::OP_SWAP14:
+        case evmc_opcode::OP_SWAP15:
+        case evmc_opcode::OP_SWAP16:
             count = op_code - evmc_opcode::OP_SWAP1 + 2;
             break;
-        case evmc_opcode::OP_DUP1 ... evmc_opcode::OP_DUP16:
+        case evmc_opcode::OP_DUP1:
+        case evmc_opcode::OP_DUP2:
+        case evmc_opcode::OP_DUP3:
+        case evmc_opcode::OP_DUP4:
+        case evmc_opcode::OP_DUP5:
+        case evmc_opcode::OP_DUP6:
+        case evmc_opcode::OP_DUP7:
+        case evmc_opcode::OP_DUP8:
+        case evmc_opcode::OP_DUP9:
+        case evmc_opcode::OP_DUP10:
+        case evmc_opcode::OP_DUP11:
+        case evmc_opcode::OP_DUP12:
+        case evmc_opcode::OP_DUP13:
+        case evmc_opcode::OP_DUP14:
+        case evmc_opcode::OP_DUP15:
+        case evmc_opcode::OP_DUP16:
             count = op_code - evmc_opcode::OP_DUP1 + 2;
             break;
         case evmc_opcode::OP_CALLDATALOAD:
@@ -520,7 +581,7 @@ void VmTraceTracer::on_execution_start(evmc_revision rev, const evmc_message& ms
 
 void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
               const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
-    const auto op_code = execution_state.code[pc];
+    const auto op_code = execution_state.original_code[pc];
     auto op_name = get_op_name(opcode_names_, op_code);
 
     auto& vm_trace = traces_stack_.top().get();
@@ -544,7 +605,7 @@ void VmTraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stac
     trace_op.idx = index_prefix;
     trace_op.depth = execution_state.msg->depth;
     trace_op.op_code = op_code;
-    trace_op.op_name = op_name == "KECCAK256" ? "SHA3" : op_name; // TODO(sixtysixter) for RPCDAEMON compatibility
+    trace_op.op_name = op_name;
     trace_op.pc = pc;
 
     copy_memory_offset_len(op_code, stack_top, trace_op.trace_ex.memory);
@@ -703,7 +764,7 @@ void TraceTracer::on_execution_start(evmc_revision rev, const evmc_message& msg,
 
 void TraceTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
               const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
-    const auto opcode = execution_state.code[pc];
+    const auto opcode = execution_state.original_code[pc];
     auto opcode_name = get_op_name(opcode_names_, opcode);
 
     SILKRPC_DEBUG << "TraceTracer::on_instruction_start:"
@@ -895,7 +956,7 @@ void StateDiffTracer::on_execution_start(evmc_revision rev, const evmc_message& 
 
 void StateDiffTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
               const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept {
-    const auto opcode = execution_state.code[pc];
+    const auto opcode = execution_state.original_code[pc];
     auto opcode_name = get_op_name(opcode_names_, opcode);
 
     if (opcode == evmc_opcode::OP_SSTORE) {

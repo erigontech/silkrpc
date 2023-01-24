@@ -123,16 +123,20 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | shh_getFilterChanges                       | No           | deprecated                                 |
 | shh_getMessages                            | No           | deprecated                                 |
 |                                            |              |                                            |
-| erigon_cumulativeChainTraffic              | -            | not yet implemented                        |
+| erigon_cumulativeChainTraffic              | Yes          |                                            |
 | erigon_getHeaderByHash                     | Yes          |                                            |
 | erigon_getHeaderByNumber                   | Yes          |                                            |
 | erigon_getBlockByTimestamp                 | Yes          |                                            |
 | erigon_getBalanceChangesInBlock            | -            | not yet implemented                        |
 | erigon_getLogsByHash                       | Yes          |                                            |
 | erigon_forks                               | Yes          |                                            |
-| erigon_issuance                            | Yes          |                                            |
-| erigon_watchTheBurn                        | -            | not yet implemented (same as _issuance?)   |
-| erigon_nodeInfo                            | -            | not yet implemented                        |
+| erigon_issuance                            | -            | equivalent to erigon_watchTheBurn          |
+| erigon_watchTheBurn                        | Yes          |                                            |
+| erigon_nodeInfo                            | Yes          |                                            |
+| erigon_blockNumber                         | Yes          |                                            |
+| erigon_getBlockReceiptsByBlockHash         | -            | not yet implemented                        |
+| erigon_cacheCheck                          | -            | not yet implemented                        |
+| erigon_getLatestLogs                       | -            | not yet implemented                        |
 |                                            |              |                                            |
 | starknet_call                              | -            | not yet implemented                        |
 |                                            |              |                                            |

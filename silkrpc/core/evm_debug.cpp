@@ -80,6 +80,16 @@ void to_json(nlohmann::json& json, const DebugTrace& debug_trace) {
     }
 }
 
+void to_json(nlohmann::json& json, const DebugTraceResultList& debug_trace_result_list) {
+    json = nlohmann::json::array();
+    for (auto& debug_trace : debug_trace_result_list.debug_traces) {
+        nlohmann::json entry;
+        entry["result"] = debug_trace;
+        json.push_back(entry);
+    }
+}
+
+
 std::string get_opcode_name(const char* const* names, std::uint8_t opcode) {
     const auto name = names[opcode];
     return (name != nullptr) ?name : "opcode 0x" + evmc::hex(opcode) + " not defined";
@@ -139,7 +149,7 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
     evmc::address recipient(execution_state.msg->recipient);
     evmc::address sender(execution_state.msg->sender);
 
-    const auto opcode = execution_state.code[pc];
+    const auto opcode = execution_state.original_code[pc];
     auto opcode_name = get_opcode_name(opcode_names_, opcode);
 
     SILKRPC_DEBUG << "on_instruction_start:"
@@ -194,10 +204,14 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
         } else if (depth == execution_state.msg->depth) {
             log.gas_cost = log.gas - execution_state.gas_left;
         }
+        if (stream_ != nullptr) {
+            write_log(log);
+            logs_.pop_back();
+        }
     }
     DebugLog log;
     log.pc = pc;
-    log.op = opcode_name == "KECCAK256" ? "SHA3" : opcode_name; // TODO(sixtysixter) for RPCDAEMON compatibility
+    log.op = opcode_name;
     log.gas = execution_state.gas_left;
     log.depth = execution_state.msg->depth + 1;
 
@@ -244,6 +258,11 @@ void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::In
             log.gas_cost = log.gas - result.gas_left;
             break;
         }
+
+        if (stream_ != nullptr) {
+            write_log(log);
+            logs_.pop_back();
+        }
     }
 
     SILKRPC_DEBUG << "on_execution_end:"
@@ -251,6 +270,30 @@ void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::In
         << " start_gas: " << std::dec << start_gas_
         << " gas_left: " << std::dec << result.gas_left
         << "\n";
+}
+
+void DebugTracer::write_log(const DebugLog& log) {
+    nlohmann::json json;
+
+    json["depth"] = log.depth;
+    json["gas"] = log.gas;
+    json["gasCost"] = log.gas_cost;
+    json["op"] = log.op;
+    json["pc"] = log.pc;
+    if (!config_.disableStack) {
+        json["stack"] = log.stack;
+    }
+    if (!config_.disableMemory) {
+        json["memory"] = log.memory;
+    }
+    if (!config_.disableStorage && !log.storage.empty()) {
+        json["storage"] = log.storage;
+    }
+    if (log.error) {
+        json["error"] = nlohmann::json::object();
+    }
+
+    stream_->write_json(json);
 }
 
 template<typename WorldState, typename VM>
@@ -302,7 +345,7 @@ boost::asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execu
 
 template<typename WorldState, typename VM>
 boost::asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(std::uint64_t block_number, const silkworm::Block& block,
-        const silkrpc::Transaction& transaction, std::int32_t index) {
+        const silkrpc::Transaction& transaction, std::int32_t index, json::Stream* stream) {
     SILKRPC_INFO << "DebugExecutor::execute: "
         << " block_number: " << block_number
         << " transaction: {" << transaction << "}"
@@ -327,20 +370,33 @@ boost::asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execu
 
     DebugExecutorResult result;
     auto& debug_trace = result.debug_trace;
-
     debug_trace.debug_config = config_;
 
-    auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_);
+    auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_, stream);
 
     silkrpc::Tracers tracers{debug_tracer};
+
+    if (stream != nullptr) {
+        stream->write_field("structLogs");
+        stream->open_array();
+    }
     const auto execution_result = co_await executor.call(block, transaction, tracers);
+    if (stream) {
+        stream->close_array();
+    }
 
     if (execution_result.pre_check_error) {
         result.pre_check_error = "tracing failed: " + execution_result.pre_check_error.value();
     } else {
-        debug_trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
-        debug_trace.gas = transaction.gas_limit - execution_result.gas_left;
-        debug_trace.return_value = silkworm::to_hex(execution_result.data);
+        if (stream) {
+            stream->write_field("failed", execution_result.error_code != evmc_status_code::EVMC_SUCCESS);
+            stream->write_field("gas", transaction.gas_limit - execution_result.gas_left);
+            stream->write_field("returnValue", silkworm::to_hex(execution_result.data));
+        } else {
+            debug_trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
+            debug_trace.gas = transaction.gas_limit - execution_result.gas_left;
+            debug_trace.return_value = silkworm::to_hex(execution_result.data);
+        }
     }
 
     co_return result;

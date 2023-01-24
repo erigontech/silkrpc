@@ -31,8 +31,8 @@ typedef std::vector<evmc::bytes32> FilterSubTopics;
 typedef std::vector<FilterSubTopics> FilterTopics;
 
 struct Filter {
-    std::optional<uint64_t> from_block;
-    std::optional<uint64_t> to_block;
+    std::optional<std::string> from_block;
+    std::optional<std::string> to_block;
     std::optional<FilterAddresses> addresses;
     std::optional<FilterTopics> topics;
     std::optional<std::string> block_hash;

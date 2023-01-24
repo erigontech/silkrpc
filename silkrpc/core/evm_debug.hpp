@@ -35,6 +35,7 @@
 
 #include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/json/stream.hpp>
 #include <silkrpc/types/block.hpp>
 #include <silkrpc/types/call.hpp>
 #include <silkrpc/types/transaction.hpp>
@@ -68,8 +69,8 @@ struct DebugLog {
 
 class DebugTracer : public silkworm::EvmTracer {
 public:
-    explicit DebugTracer(std::vector<DebugLog>& logs, const DebugConfig& config = {})
-        : logs_(logs), config_(config) {}
+    explicit DebugTracer(std::vector<DebugLog>& logs, const DebugConfig& config = {}, json::Stream* stream = nullptr)
+        : logs_(logs), config_(config), stream_(stream) {}
 
     DebugTracer(const DebugTracer&) = delete;
     DebugTracer& operator=(const DebugTracer&) = delete;
@@ -77,17 +78,18 @@ public:
     void on_execution_start(evmc_revision rev, const evmc_message& msg, evmone::bytes_view code) noexcept override;
 
     void on_instruction_start(uint32_t pc , const intx::uint256 *stack_top, const int stack_height,
-            const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
+        const evmone::ExecutionState& execution_state, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_precompiled_run(const evmc_result& result, int64_t gas, const silkworm::IntraBlockState& intra_block_state) noexcept override;
     void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
     void on_creation_completed(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
 
-
-
 private:
+    void write_log(const DebugLog& log);
+
     std::vector<DebugLog>& logs_;
     const DebugConfig& config_;
+    json::Stream* stream_ = nullptr;
     std::map<evmc::address, Storage> storage_;
     const char* const* opcode_names_ = nullptr;
     std::int64_t start_gas_{0};
@@ -121,7 +123,13 @@ struct DebugTrace {
     DebugConfig debug_config;
 };
 
+
+struct DebugTraceResultList {
+    std::vector<DebugTrace> debug_traces;
+};
+
 void to_json(nlohmann::json& json, const DebugTrace& debug_trace);
+void to_json(nlohmann::json& json, const DebugTraceResultList& debug_trace_result_list);
 
 struct DebugExecutorResult {
     DebugTrace debug_trace;
@@ -144,12 +152,14 @@ public:
 
     boost::asio::awaitable<std::vector<DebugTrace>> execute(const silkworm::Block& block);
     boost::asio::awaitable<DebugExecutorResult> execute(const silkworm::Block& block, const silkrpc::Call& call);
-    boost::asio::awaitable<DebugExecutorResult> execute(const silkworm::Block& block, const silkrpc::Transaction& transaction) {
-        return execute(block.header.number-1, block, transaction, transaction.transaction_index);
+    boost::asio::awaitable<DebugExecutorResult> execute(const silkworm::Block& block, const silkrpc::Transaction& transaction,
+            json::Stream* stream = nullptr) {
+        return execute(block.header.number-1, block, transaction, transaction.transaction_index, stream);
     }
 
 private:
-    boost::asio::awaitable<DebugExecutorResult> execute(std::uint64_t block_number, const silkworm::Block& block, const silkrpc::Transaction& transaction, std::int32_t = -1);
+    boost::asio::awaitable<DebugExecutorResult> execute(std::uint64_t block_number, const silkworm::Block& block,
+        const silkrpc::Transaction& transaction, std::int32_t = -1, json::Stream* stream = nullptr);
 
     boost::asio::io_context& io_context_;
     const core::rawdb::DatabaseReader& database_reader_;

@@ -109,6 +109,9 @@ constexpr const char* k_erigon_getHeaderByNumber{"erigon_getHeaderByNumber"};
 constexpr const char* k_erigon_getLogsByHash{"erigon_getLogsByHash"};
 constexpr const char* k_erigon_forks{"erigon_forks"};
 constexpr const char* k_erigon_watchTheBurn{"erigon_watchTheBurn"};
+constexpr const char* k_erigon_cumulative_chain_traffic{"erigon_cumulativeChainTraffic"};
+constexpr const char* k_erigon_blockNumber{"erigon_blockNumber"};
+constexpr const char* k_erigon_nodeInfo{"erigon_nodeInfo"};
 
 constexpr const char* k_parity_getBlockReceipts{"parity_getBlockReceipts"};
 constexpr const char* k_parity_listStorageKeys{"parity_listStorageKeys"};

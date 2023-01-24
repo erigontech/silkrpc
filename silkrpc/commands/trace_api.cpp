@@ -56,12 +56,9 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_call(const nlohmann::json
     try {
         ethdb::TransactionDatabase tx_database{*tx};
         ethdb::kv::CachedDatabase cached_database{block_number_or_hash, *tx, *context_.state_cache()};
-        // Check if target block is latest one: use local state cache (if any) for target transaction
-        const auto is_latest_block = co_await core::is_latest_block_number(block_number_or_hash, tx_database);
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
+        const bool is_latest_block = co_await core::is_latest_block_number(block_with_hash.block.header.number, tx_database);
         core::rawdb::DatabaseReader& db_reader = is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database;
-
-        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), db_reader, block_number_or_hash);
-
         trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), db_reader, workers_};
         const auto result = co_await executor.trace_call(block_with_hash.block, call, config);
 
@@ -101,12 +98,10 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_call_many(const nlohmann:
     try {
         ethdb::TransactionDatabase tx_database{*tx};
         ethdb::kv::CachedDatabase cached_database{block_number_or_hash, *tx, *context_.state_cache()};
-        // Check if target block is latest one: use local state cache (if any) for target transaction
-        const auto is_latest_block = co_await core::is_latest_block_number(block_number_or_hash, tx_database);
+        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
+        const bool is_latest_block = co_await core::is_latest_block_number(block_with_hash.block.header.number, tx_database);
+
         core::rawdb::DatabaseReader& db_reader = is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database;
-
-        const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), db_reader, block_number_or_hash);
-
         trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), db_reader, workers_};
         const auto result = co_await executor.trace_calls(block_with_hash.block, trace_calls);
 
@@ -450,38 +445,6 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_transaction(const nlohman
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
-    }
-
-    co_await tx->close(); // RAII not (yet) available with coroutines
-    co_return;
-}
-
-boost::asio::awaitable<void> TraceRpcApi::handle_trace_transaction_stream(const nlohmann::json& request, json::Stream& stream) {
-    const auto params = request["params"];
-    if (params.size() < 1) {
-        auto error_msg = "invalid trace_transaction params: " + params.dump();
-        SILKRPC_ERROR << error_msg << "\n";
-        auto error = make_json_error(request["id"], 100, error_msg);
-        co_return;
-    }
-    const auto transaction_hash = params[0].get<evmc::bytes32>();
-
-    SILKRPC_INFO << "transaction_hash: " << transaction_hash << "\n";
-
-    auto tx = co_await database_->begin();
-
-    try {
-        ethdb::TransactionDatabase tx_database{*tx};
-        const auto tx_with_block = co_await core::read_transaction_by_hash(*context_.block_cache(), tx_database, transaction_hash);
-        if (!tx_with_block) {
-            const auto reply = make_json_content(request["id"]);
-            co_await stream.write_json(reply);
-        }
-    } catch (const std::exception& e) {
-        auto error = make_json_content(request["id"]);
-    } catch (...) {
-        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        auto error = make_json_error(request["id"], 100, "unexpected exception");
     }
 
     co_await tx->close(); // RAII not (yet) available with coroutines

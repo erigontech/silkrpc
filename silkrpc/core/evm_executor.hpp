@@ -31,7 +31,9 @@
 #include <silkworm/execution/evm.hpp>
 #pragma GCC diagnostic pop
 #include <silkworm/chain/config.hpp>
+#include <silkworm/common/assert.hpp>
 #include <silkworm/common/util.hpp>
+#include <silkworm/consensus/engine.hpp>
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 
@@ -62,7 +64,10 @@ public:
         boost::asio::thread_pool& workers,
         uint64_t block_number,
         state::RemoteState& remote_state)
-        : io_context_(io_context), db_reader_(db_reader), config_(config), workers_{workers}, remote_state_{remote_state}, state_{remote_state_} {}
+        : io_context_(io_context), db_reader_(db_reader), config_(config), workers_{workers}, remote_state_{remote_state}, state_{remote_state_} {
+             consensus_engine_ = silkworm::consensus::engine_factory(config);
+             SILKWORM_ASSERT(consensus_engine_ != NULL);
+    }
     virtual ~EVMExecutor() {}
 
     EVMExecutor(const EVMExecutor&) = delete;
@@ -81,6 +86,7 @@ private:
     boost::asio::thread_pool& workers_;
     state::RemoteState& remote_state_;
     WorldState state_;
+    std::unique_ptr<silkworm::consensus::IEngine> consensus_engine_;
 };
 
 } // namespace silkrpc

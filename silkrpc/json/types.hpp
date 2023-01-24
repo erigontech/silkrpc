@@ -29,11 +29,13 @@
 #include <silkrpc/types/block.hpp>
 #include <silkrpc/types/call.hpp>
 #include <silkrpc/types/chain_config.hpp>
+#include <silkrpc/types/chain_traffic.hpp>
 #include <silkrpc/types/error.hpp>
 #include <silkrpc/types/execution_payload.hpp>
 #include <silkrpc/types/filter.hpp>
 #include <silkrpc/types/issuance.hpp>
 #include <silkrpc/types/log.hpp>
+#include <silkrpc/types/node_info.hpp>
 #include <silkrpc/types/syncing_data.hpp>
 #include <silkrpc/types/receipt.hpp>
 #include <silkrpc/types/transaction.hpp>
@@ -67,6 +69,12 @@ void from_json(const nlohmann::json& json, AccessListEntry& entry);
 } // namespace silkworm
 
 namespace silkrpc {
+
+void to_json(nlohmann::json& json, const struct NodeInfo& node_info);
+
+void to_json(nlohmann::json& json, const struct NodeInfoPorts& node_info_ports);
+
+void to_json(nlohmann::json& json, const struct ChainTraffic& chain_traffic);
 
 void to_json(nlohmann::json& json, const struct TxPoolStatusInfo& status_info);
 

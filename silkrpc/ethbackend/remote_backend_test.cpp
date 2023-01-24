@@ -185,6 +185,44 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::net_peer_count", "[silkrpc][ethbacken
     }
 }
 
+TEST_CASE_METHOD(EthBackendTest, "BackEnd::node_info", "[silkrpc][ethbackend][backend]") {
+    test::StrictMockAsyncResponseReader<::remote::NodesInfoReply> reader;
+    EXPECT_CALL(*stub_, AsyncNodeInfoRaw).WillOnce(testing::Return(&reader));
+
+    SECTION("call node_info") {
+        ::remote::NodesInfoReply response;
+        types::NodeInfoPorts ports;
+        auto reply = response.add_nodesinfo();
+        const auto ports_ref = ports.New();
+        reply->set_id("340e3cda481a935658b86f4987d50d0153a68f97fa2b9e8f70a8e9f5b755eeb6");
+        reply->set_name("erigon/v2.32.0-stable-021891a3/linux-amd64/go1.19");
+        reply->set_enode("enode://b428a8d89b621a1bea008922f5fb7cd7644e2289f85fc8620f1e497eff767e2bcdc77");
+        reply->set_enr("enr:-JK4QJMWPkW7iDLYfevZj80Rcs-B9GkRqptsH0L6hcFKSFJ3bKFlbzjnMk29y0ZD0omRMVDlrzgTThXYcd_");
+        reply->set_listeneraddr("[::]:30303");
+        ports_ref->set_discovery(32);
+        ports_ref->set_listener(30000);
+        reply->set_allocated_ports(ports_ref);
+        std::string protocols = std::string("{\"eth\": {\"network\":5, \"difficulty\":10790000, \"genesis\":\"0xbf7e331f7f7c1dd2e05159666b3bf8bc7a8a3a9eb1d518969eab529dd9b88c1a\",");
+        protocols += " \"config\": {\"ChainName\":\"goerli\", \"chainId\":5, \"consensus\":\"clique\", \"homesteadBlock\":0, \"daoForkSupport\":true, \"eip150Block\":0,";
+        protocols += " \"eip150Hash\":\"0x0000000000000000000000000000000000000000000000000000000000000000\", \"eip155Block\":0, \"byzantiumBlock\":0, \"constantinopleBlock\":0,";
+        protocols += "\"petersburgBlock\":0, \"istanbulBlock\":1561651, \"berlinBlock\":4460644, \"londonBlock\":5062605, \"terminalTotalDifficulty\":10790000,";
+        protocols += "\"terminalTotalDifficultyPassed\":true, \"clique\": {\"period\":15, \"epoch\":30000}},";
+        protocols += "\"head\":\"0x11fce21bdebbcf09e1e2e37b874729c17518cd342fcf0959659e650fa45f9768\"}}";
+        reply->set_protocols(protocols);
+        EXPECT_CALL(reader, Finish).WillOnce(test::finish_with(grpc_context_, std::move(response)));
+        const auto node_info = run<&ethbackend::RemoteBackEnd::engine_node_info>();
+        CHECK(node_info[0].id == "340e3cda481a935658b86f4987d50d0153a68f97fa2b9e8f70a8e9f5b755eeb6");
+        CHECK(node_info[0].name == "erigon/v2.32.0-stable-021891a3/linux-amd64/go1.19");
+        CHECK(node_info[0].enode == "enode://b428a8d89b621a1bea008922f5fb7cd7644e2289f85fc8620f1e497eff767e2bcdc77");
+        CHECK(node_info[0].enr == "enr:-JK4QJMWPkW7iDLYfevZj80Rcs-B9GkRqptsH0L6hcFKSFJ3bKFlbzjnMk29y0ZD0omRMVDlrzgTThXYcd_");
+        CHECK(node_info[0].listener_addr == "[::]:30303");
+        CHECK(node_info[0].protocols == protocols);
+        CHECK(node_info[0].ports.discovery == 32);
+        CHECK(node_info[0].ports.listener == 30000);
+    }
+}
+
+
 TEST_CASE_METHOD(EthBackendTest, "BackEnd::engine_get_payload_v1", "[silkrpc][ethbackend][backend]") {
     test::StrictMockAsyncResponseReader<::types::ExecutionPayload> reader;
     EXPECT_CALL(*stub_, AsyncEngineGetPayloadV1Raw).WillOnce(testing::Return(&reader));
@@ -319,13 +357,13 @@ TEST_CASE_METHOD(EthBackendTest, "BackEnd::engine_forkchoice_updated_v1", "[silk
             .safe_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32,
             .finalized_block_hash = 0x3b8fb240d288781d4aac94d3fd16809ee413bc99294a085798a589dae51ddd4a_bytes32
         },
-        .payload_attributes = std::make_optional<PayloadAttributes>({
+         .payload_attributes =
+            PayloadAttributes{
             .timestamp = 0x1,
             .prev_randao = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
             .suggested_fee_recipient = 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b_address
-        })
+        }
     };
-
     SECTION("call engine_forkchoice_updated_v1 and get VALID status") {
         ::remote::EngineForkChoiceUpdatedReply response;
         ::remote::EnginePayloadStatus* engine_payload_status = new ::remote::EnginePayloadStatus();
