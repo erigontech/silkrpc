@@ -31,6 +31,7 @@ constexpr const char* kErigonApiNamespace{"erigon"};
 constexpr const char* kTxPoolApiNamespace{"txpool"};
 constexpr const char* kTraceApiNamespace{"trace"};
 constexpr const char* kWeb3ApiNamespace{"web3"};
+constexpr const char* kOtterscanApiNamespace{"ots"};
 
 constexpr const char* kAddressPortSeparator{":"};
 constexpr const char* kApiSpecSeparator{","};

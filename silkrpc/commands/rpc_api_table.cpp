@@ -74,6 +74,8 @@ void RpcApiTable::add_handlers(const std::string& api_namespace) {
         add_engine_handlers();
     } else if (api_namespace == kTxPoolApiNamespace) {
         add_txpool_handlers();
+    } else if (api_namespace == kOtterscanApiNamespace) {
+        add_ots_handlers();
     } else {
         SILKRPC_WARN << "Server::add_handlers invalid namespace [" << api_namespace << "] ignored\n";
     }
@@ -191,6 +193,11 @@ void RpcApiTable::add_engine_handlers() {
 void RpcApiTable::add_txpool_handlers() {
     method_handlers_[http::method::k_txpool_status] = &commands::RpcApi::handle_txpool_status;
     method_handlers_[http::method::k_txpool_content] = &commands::RpcApi::handle_txpool_content;
+}
+
+void RpcApiTable::add_ots_handlers() {
+    method_handlers_[http::method::k_ots_getApiLevel] = &commands::RpcApi::handle_ots_get_api_level;
+    method_handlers_[http::method::k_ots_hasCode] = &commands::RpcApi::handle_ots_has_code;
 }
 
 } // namespace silkrpc::commands

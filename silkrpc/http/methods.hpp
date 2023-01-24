@@ -124,6 +124,9 @@ constexpr const char* k_engine_exchangeTransitionConfiguration{"engine_exchangeT
 constexpr const char* k_txpool_status{"txpool_status"};
 constexpr const char* k_txpool_content{"txpool_content"};
 
+constexpr const char* k_ots_getApiLevel{"ots_getApiLevel"};
+constexpr const char* k_ots_hasCode{"ots_hasCode"};
+
 } // namespace silkrpc::http::method
 
 #endif // SILKRPC_HTTP_METHODS_HPP_

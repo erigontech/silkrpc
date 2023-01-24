@@ -152,14 +152,14 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | parity_getBlockReceipts                    | Yes          | same as eth_getBlockReceipts               |
 | parity_listStorageKeys                     | Yes          |                                            |
 |                                            |              |                                            |
-| ots_getApiLevel                            | -            | not yet implemented                        |
+| ots_getApiLevel                            | Yes          |                                            |
 | ots_getInternalOperations                  | -            | not yet implemented                        |
 | ots_searchTransactionsBefore               | -            | not yet implemented                        |
 | ots_searchTransactionsAfter                | -            | not yet implemented                        |
 | ots_getBlockDetails                        | -            | not yet implemented                        |
 | ots_getBlockDetailsByHash                  | -            | not yet implemented                        |
 | ots_getBlockTransactions                   | -            | not yet implemented                        |
-| ots_hasCode                                | -            | not yet implemented                        |
+| ots_hasCode                                | Yes          |                                            |
 | ots_traceTransaction                       | -            | not yet implemented                        |
 | ots_getTransactionError                    | -            | not yet implemented                        |
 | ots_getTransactionBySenderAndNonce         | -            | not yet implemented                        |
