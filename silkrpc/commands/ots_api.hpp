@@ -20,6 +20,7 @@
 #include <memory>
 #include <vector>
 
+
 #include <silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <boost/asio/awaitable.hpp>
@@ -39,8 +40,7 @@ namespace silkrpc::commands {
 
 class OtsRpcApi {
 public:
-
-    explicit OtsRpcApi(Context& context): database_(context.database()), state_cache_(context.state_cache()){}
+    explicit OtsRpcApi(Context& context): database_(context.database()), state_cache_(context.state_cache()) {}
     virtual ~OtsRpcApi() = default;
 
     OtsRpcApi(const OtsRpcApi&) = delete;
@@ -53,7 +53,6 @@ protected:
     std::unique_ptr<ethdb::Database>& database_;
     std::shared_ptr<ethdb::kv::StateCache>& state_cache_;
     friend class silkrpc::http::RequestHandler;
-
 };
 } // namespace silkrpc::commands
 

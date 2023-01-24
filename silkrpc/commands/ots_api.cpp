@@ -16,6 +16,8 @@
 
 #include "ots_api.hpp"
 
+#include <string>
+
 #include <silkrpc/json/types.hpp>
 
 #include "silkrpc/core/blocks.hpp"
@@ -25,15 +27,17 @@
 
 namespace silkrpc::commands {
 
+constexpr int kCurrentApiLevel{8};
+
 boost::asio::awaitable<void> OtsRpcApi::handle_ots_get_api_level(const nlohmann::json& request, nlohmann::json& reply) {
-    reply = make_json_content(request["id"], 8);
+    reply = make_json_content(request["id"], kCurrentApiLevel);
     co_return;
 }
 
 boost::asio::awaitable<void> OtsRpcApi::handle_ots_has_code(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
+    const auto params = request["params"];
     if (params.size() != 2) {
-        auto error_msg = "invalid ots_hasCode params: " + params.dump();
+        const auto error_msg = "invalid ots_hasCode params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
