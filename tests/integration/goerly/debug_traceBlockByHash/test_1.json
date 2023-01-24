@@ -2,9 +2,9 @@
     {
         "request": {
             "jsonrpc":"2.0",
-            "method":"debug_traceBlockByNumber",
+            "method":"debug_traceBlockByHash",
             "params":[
-                1024165,
+                "0x527198f474c1f1f1d01129d3a17ecc17895d85884a31b05ef0ecd480faee1592",
                 {
                     "disableStorage": false,
                     "disableMemory": false,

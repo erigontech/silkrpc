@@ -36,12 +36,20 @@ static std::string kCloseBracket{"]"}; // NOLINT(runtime/string)
 static std::string kFieldSeparator{","}; // NOLINT(runtime/string)
 
 void Stream::open_object() {
+    bool isEntry = !stack_.empty() && (stack_.top() == kArrayOpen || stack_.top() == kEntryWritten);
+    if (isEntry) {
+        if (stack_.top() != kEntryWritten) {
+            stack_.push(kEntryWritten);
+        } else {
+            writer_.write(kFieldSeparator);
+        }
+    }
     writer_.write(kOpenBrace);
     stack_.push(kObjectOpen);
 }
 
 void Stream::close_object() {
-    if (stack_.top() == kFieldWritten) {
+    if (!stack_.empty() && stack_.top() == kFieldWritten) {
         stack_.pop();
     }
     stack_.pop();
@@ -54,7 +62,7 @@ void Stream::open_array() {
 }
 
 void Stream::close_array() {
-    if (stack_.top() == kEntryWritten) {
+    if (!stack_.empty() && (stack_.top() == kEntryWritten || stack_.top() == kFieldWritten)) {
         stack_.pop();
     }
     stack_.pop();
@@ -62,7 +70,7 @@ void Stream::close_array() {
 }
 
 void Stream::write_json(const nlohmann::json& json) {
-    bool isEntry = stack_.size() > 0 && (stack_.top() == kArrayOpen || stack_.top() == kEntryWritten);
+    bool isEntry = !stack_.empty() && (stack_.top() == kArrayOpen || stack_.top() == kEntryWritten);
     if (isEntry) {
         if (stack_.top() != kEntryWritten) {
             stack_.push(kEntryWritten);
@@ -97,7 +105,7 @@ void Stream::write_string(const std::string& str) {
 }
 
 void Stream::ensure_separator() {
-    if (stack_.size() > 0) {
+    if (!stack_.empty()) {
         if (stack_.top() != kFieldWritten) {
             stack_.push(kFieldWritten);
         } else {

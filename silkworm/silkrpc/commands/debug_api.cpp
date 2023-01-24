@@ -400,14 +400,13 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(con
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        debug::DebugTraceResultList debug_trace_result;
 
         const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache(), tx_database, block_number);
 
         debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
-        debug_trace_result.debug_traces = co_await executor.execute(block_with_hash.block);
+        const auto debug_traces = co_await executor.execute(block_with_hash.block);
 
-        reply = make_json_content(request["id"], debug_trace_result);
+        reply = make_json_content(request["id"], debug_traces);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
 
@@ -418,6 +417,66 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(con
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
+// https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_traceblockbynumber
+boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number_stream(const nlohmann::json& request, json::Stream& stream) {
+    auto params = request["params"];
+    if (params.size() < 1) {
+        auto error_msg = "invalid debug_traceBlockByNumber params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        const auto reply = make_json_error(request["id"], 100, error_msg);
+        stream.write_json(reply);
+        co_return;
+    }
+    const auto block_number = params[0].get<std::uint64_t>();
+
+    debug::DebugConfig config;
+    if (params.size() > 1) {
+        config = params[1].get<debug::DebugConfig>();
+    }
+
+    SILKRPC_DEBUG << "block_number: " << block_number << " config: {" << config << "}\n";
+
+    stream.open_object();
+    stream.write_field("id", request["id"]);
+    stream.write_field("jsonrpc", "2.0");
+
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+
+        const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache(), tx_database, block_number);
+
+        debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
+
+        stream.write_field("result");
+        stream.open_array();
+        const auto debug_traces = co_await executor.execute(block_with_hash.block, &stream);
+        stream.close_array();
+    } catch (const std::invalid_argument& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+
+        std::ostringstream oss;
+        oss << "block_number " << block_number << " not found";
+        stream.write_field("code", -32000);
+        stream.write_field("message", oss.str());
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+
+        stream.write_field("code", 100);
+        stream.write_field("message", e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        stream.write_field("code", 100);
+        stream.write_field("message", "unexpected exception");
+    }
+
+    stream.close_object();
 
     co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
@@ -445,14 +504,13 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
-        debug::DebugTraceResultList debug_trace_result;
 
         const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache(), tx_database, block_hash);
 
         debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
-        debug_trace_result.debug_traces = co_await executor.execute(block_with_hash.block);
+        const auto debug_traces = co_await executor.execute(block_with_hash.block);
 
-        reply = make_json_content(request["id"], debug_trace_result);
+        reply = make_json_content(request["id"], debug_traces);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
 
@@ -463,6 +521,66 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
+// https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_traceblockbyhash
+boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash_stream(const nlohmann::json& request, json::Stream& stream) {
+    auto params = request["params"];
+    if (params.size() < 1) {
+        auto error_msg = "invalid debug_traceBlockByHash params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        const auto reply = make_json_error(request["id"], 100, error_msg);
+        stream.write_json(reply);
+        co_return;
+    }
+    const auto block_hash = params[0].get<evmc::bytes32>();
+
+    debug::DebugConfig config;
+    if (params.size() > 1) {
+        config = params[1].get<debug::DebugConfig>();
+    }
+
+    SILKRPC_DEBUG << "block_hash: " << block_hash << " config: {" << config << "}\n";
+
+    stream.open_object();
+    stream.write_field("id", request["id"]);
+    stream.write_field("jsonrpc", "2.0");
+
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+
+        const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache(), tx_database, block_hash);
+
+        debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
+
+        stream.write_field("result");
+        stream.open_array();
+        const auto debug_traces = co_await executor.execute(block_with_hash.block, &stream);
+        stream.close_array();
+    } catch (const std::invalid_argument& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+
+        std::ostringstream oss;
+        oss << "block_hash " << block_hash << " not found";
+        stream.write_field("code", -32000);
+        stream.write_field("message", oss.str());
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+
+        stream.write_field("code", 100);
+        stream.write_field("message", e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        stream.write_field("code", 100);
+        stream.write_field("message", "unexpected exception");
+    }
+
+    stream.close_object();
 
     co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;

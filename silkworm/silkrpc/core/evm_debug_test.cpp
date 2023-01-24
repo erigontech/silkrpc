@@ -1432,7 +1432,6 @@ TEST_CASE("DebugTrace json serialization") {
     }
 
     SECTION("DebugTraceResultList: no memory, stack and storage") {
-        DebugTraceResultList debug_trace_result_list;
         DebugTrace debug_trace;
         debug_trace.failed = false;
         debug_trace.gas = 20;
@@ -1443,22 +1442,21 @@ TEST_CASE("DebugTrace json serialization") {
         debug_trace.debug_config.disableMemory = true;
         debug_trace.debug_config.disableStack = true;
 
-        debug_trace_result_list.debug_traces.push_back(debug_trace);
-        nlohmann::json j = debug_trace_result_list;
+        std::vector<DebugTrace> debug_traces;
+        debug_traces.push_back(debug_trace);
+        nlohmann::json j = debug_traces;
 
         CHECK(j == R"([{
-              "result": {
-                   "failed": false,
-                   "gas": 20,
-                   "returnValue": "deadbeaf",
-                   "structLogs": [{
-                       "depth": 1,
-                       "gas": 3,
-                       "gasCost": 4,
-                       "op": "PUSH1",
-                       "pc": 1
-                   }]
-              }
+                "failed": false,
+                "gas": 20,
+                "returnValue": "deadbeaf",
+                "structLogs": [{
+                    "depth": 1,
+                    "gas": 3,
+                    "gasCost": 4,
+                    "op": "PUSH1",
+                    "pc": 1
+                }]
            }]
         )"_json);
     }

@@ -87,10 +87,12 @@ void RpcApiTable::add_debug_handlers() {
     method_handlers_[http::method::k_debug_getModifiedAccountsByHash] = &commands::RpcApi::handle_debug_get_modified_accounts_by_hash;
     method_handlers_[http::method::k_debug_storageRangeAt] = &commands::RpcApi::handle_debug_storage_range_at;
     method_handlers_[http::method::k_debug_traceCall] = &commands::RpcApi::handle_debug_trace_call;
-    method_handlers_[http::method::k_debug_traceBlockByNumber] = &commands::RpcApi::handle_debug_trace_block_by_number;
-    method_handlers_[http::method::k_debug_traceBlockByHash] = &commands::RpcApi::handle_debug_trace_block_by_hash;
+    // method_handlers_[http::method::k_debug_traceBlockByNumber] = &commands::RpcApi::handle_debug_trace_block_by_number;
+    // method_handlers_[http::method::k_debug_traceBlockByHash] = &commands::RpcApi::handle_debug_trace_block_by_hash;
 
     stream_handlers_[http::method::k_debug_traceTransaction] = &commands::RpcApi::handle_debug_trace_transaction;
+    stream_handlers_[http::method::k_debug_traceBlockByNumber] = &commands::RpcApi::handle_debug_trace_block_by_number_stream;
+    stream_handlers_[http::method::k_debug_traceBlockByHash] = &commands::RpcApi::handle_debug_trace_block_by_hash_stream;
 }
 
 void RpcApiTable::add_eth_handlers() {

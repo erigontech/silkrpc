@@ -58,6 +58,8 @@ protected:
     boost::asio::awaitable<void> handle_debug_trace_block_by_hash(const nlohmann::json& request, nlohmann::json& reply);
 
     boost::asio::awaitable<void> handle_debug_trace_transaction(const nlohmann::json& request, json::Stream& stream);
+    boost::asio::awaitable<void> handle_debug_trace_block_by_number_stream(const nlohmann::json& request, json::Stream& stream);
+    boost::asio::awaitable<void> handle_debug_trace_block_by_hash_stream(const nlohmann::json& request, json::Stream& stream);
 
 private:
     Context& context_;

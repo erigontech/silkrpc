@@ -80,16 +80,6 @@ void to_json(nlohmann::json& json, const DebugTrace& debug_trace) {
     }
 }
 
-void to_json(nlohmann::json& json, const DebugTraceResultList& debug_trace_result_list) {
-    json = nlohmann::json::array();
-    for (auto& debug_trace : debug_trace_result_list.debug_traces) {
-        nlohmann::json entry;
-        entry["result"] = debug_trace;
-        json.push_back(entry);
-    }
-}
-
-
 std::string get_opcode_name(const char* const* names, std::uint8_t opcode) {
     const auto name = names[opcode];
     return (name != nullptr) ?name : "opcode 0x" + evmc::hex(opcode) + " not defined";
@@ -297,7 +287,7 @@ void DebugTracer::write_log(const DebugLog& log) {
 }
 
 template<typename WorldState, typename VM>
-boost::asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::execute(const silkworm::Block& block) {
+boost::asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::execute(const silkworm::Block& block, json::Stream* stream) {
     auto block_number = block.header.number;
     const auto& transactions = block.transactions;
 
@@ -319,18 +309,40 @@ boost::asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::e
         auto& debug_trace = debug_traces.at(idx);
 
         debug_trace.debug_config = config_;
-        auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_);
+        auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_, stream);
+
+        if (stream != nullptr) {
+            stream->open_object();
+            stream->write_field("structLogs");
+            stream->open_array();
+        }
 
         silkrpc::Tracers tracers{debug_tracer};
         const auto execution_result = co_await executor.call(block, txn, tracers, /* refund */false, /* gasBailout */false);
 
+        if (stream) {
+            stream->close_array();
+        }
+
         if (execution_result.pre_check_error) {
             SILKRPC_DEBUG << "debug failed: " << execution_result.pre_check_error.value() << "\n";
-            debug_trace.failed = true;
+            if (stream) {
+                stream->write_field("failed", true);
+                stream->close_object();
+            } else {
+                debug_trace.failed = true;
+            }
         } else {
-            debug_trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
-            debug_trace.gas = txn.gas_limit - execution_result.gas_left;
-            debug_trace.return_value = silkworm::to_hex(execution_result.data);
+            if (stream) {
+                stream->write_field("failed", execution_result.error_code != evmc_status_code::EVMC_SUCCESS);
+                stream->write_field("gas", txn.gas_limit - execution_result.gas_left);
+                stream->write_field("returnValue", silkworm::to_hex(execution_result.data));
+                stream->close_object();
+            } else {
+                debug_trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
+                debug_trace.gas = txn.gas_limit - execution_result.gas_left;
+                debug_trace.return_value = silkworm::to_hex(execution_result.data);
+            }
         }
     }
     co_return debug_traces;
@@ -374,13 +386,14 @@ boost::asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execu
 
     auto debug_tracer = std::make_shared<debug::DebugTracer>(debug_trace.debug_logs, config_, stream);
 
-    silkrpc::Tracers tracers{debug_tracer};
-
     if (stream != nullptr) {
         stream->write_field("structLogs");
         stream->open_array();
     }
+
+    silkrpc::Tracers tracers{debug_tracer};
     const auto execution_result = co_await executor.call(block, transaction, tracers);
+
     if (stream) {
         stream->close_array();
     }
