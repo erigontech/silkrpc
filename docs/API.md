@@ -5,6 +5,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | Command                                    | Availability | Notes                                      |
 | :------------------------------------------| :----------: | -----------------------------------------: |
 | admin_nodeInfo                             | -            | not yet implemented                        |
+| admin_peers                                | -            | not yet implemented                        |
 |                                            |              |                                            |
 | web3_clientVersion                         | Yes          |                                            |
 | web3_sha3                                  | Yes          |                                            |
@@ -18,6 +19,8 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_protocolVersion                        | Yes          |                                            |
 | eth_syncing                                | Yes          |                                            |
 | eth_gasPrice                               | Yes          |                                            |
+| eth_maxPriorityFeePerGas                   | -            | not yet implemented                        |
+| eth_feeHistory                             | -            | not yet implemented                        |
 |                                            |              |                                            |
 | eth_getBlockByHash                         | Yes          |                                            |
 | eth_getBlockByNumber                       | Yes          |                                            |
@@ -45,11 +48,11 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getTransactionCount                    | Yes          |                                            |
 | eth_getStorageAt                           | Yes          |                                            |
 | eth_call                                   | Yes          |                                            |
-| eth_callMany                               | -            | not yet implemented                        |
+| eth_callMany                               | -            | not yet implemented (see Erigon PR #4567)  |
 | eth_callBundle                             | Yes          |                                            |
 | eth_createAccessList                       | Yes          |                                            |
 |                                            |              |                                            |
-| eth_newFilter                              | -            | not yet implemented                        |
+| eth_newFilter                              | -            | not yet implemented (see Erigon PR #4253)  |
 | eth_newBlockFilter                         | -            | not yet implemented                        |
 | eth_newPendingTransactionFilter            | -            | not yet implemented                        |
 | eth_getFilterChanges                       | -            | not yet implemented                        |
@@ -72,22 +75,27 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | eth_getWork                                | Yes          |                                            |
 | eth_submitWork                             | Yes          |                                            |
 |                                            |              |                                            |
-| eth_subscribe                              | -            | not yet implemented                        |
-| eth_unsubscribe                            | -            | not yet implemented                        |
+| eth_subscribe                              | -            | not yet implemented (WebSockets only)      |
+| eth_unsubscribe                            | -            | not yet implemented (WebSockets only)      |
 |                                            |              |                                            |
 | engine_newPayloadV1                        | Yes          |                                            |
+| engine_newPayloadV2                        | -            | not yet implemented                        |
 | engine_forkchoiceUpdatedV1                 | Yes          |                                            |
+| engine_forkchoiceUpdatedV2                 | -            | not yet implemented                        |
 | engine_getPayloadV1                        | Yes          |                                            |
+| engine_getPayloadV2                        | -            | not yet implemented                        |
 | engine_exchangeTransitionConfigurationV1   | Yes          |                                            |
 |                                            |              |                                            |
 | debug_accountRange                         | Yes          |                                            |
+| debug_accountAt                            | -            | not yet implemented                        |
 | debug_getModifiedAccountsByHash            | Yes          |                                            |
 | debug_getModifiedAccountsByNumber          | Yes          |                                            |
 | debug_storageRangeAt                       | Yes          |                                            |
 | debug_traceBlockByHash                     | Yes          |                                            |
 | debug_traceBlockByNumber                   | Yes          |                                            |
-| debug_traceTransaction                     | Yes          |                                            |
+| debug_traceTransaction                     | Yes          | uses JSON streaming                        |
 | debug_traceCall                            | Yes          |                                            |
+| debug_traceCallMany                        | -            | not yet implemented (see Erigon PR #4567)  |
 |                                            |              |                                            |
 | trace_call                                 | Yes          |                                            |
 | trace_callMany                             | Yes          |                                            |
@@ -126,19 +134,16 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | erigon_cumulativeChainTraffic              | Yes          |                                            |
 | erigon_getHeaderByHash                     | Yes          |                                            |
 | erigon_getHeaderByNumber                   | Yes          |                                            |
-| erigon_getBlockByTimestamp                 | Yes          |                                            |
 | erigon_getBalanceChangesInBlock            | -            | not yet implemented                        |
+| erigon_getBlockByTimestamp                 | Yes          |                                            |
+| erigon_getBlockReceiptsByBlockHash         | -            | not yet implemented                        |
 | erigon_getLogsByHash                       | Yes          |                                            |
 | erigon_forks                               | Yes          |                                            |
-| erigon_issuance                            | -            | equivalent to erigon_watchTheBurn          |
 | erigon_watchTheBurn                        | Yes          |                                            |
 | erigon_nodeInfo                            | Yes          |                                            |
 | erigon_blockNumber                         | Yes          |                                            |
-| erigon_getBlockReceiptsByBlockHash         | -            | not yet implemented                        |
 | erigon_cacheCheck                          | -            | not yet implemented                        |
 | erigon_getLatestLogs                       | -            | not yet implemented                        |
-|                                            |              |                                            |
-| starknet_call                              | -            | not yet implemented                        |
 |                                            |              |                                            |
 | bor_getSnapshot                            | -            | not yet implemented                        |
 | bor_getAuthor                              | -            | not yet implemented                        |
