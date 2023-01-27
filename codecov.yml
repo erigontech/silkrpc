@@ -17,6 +17,6 @@ coverage:
 ignore:
   - "**/*_test.cpp"
   - "cmd"
-  - "silkrpc/croaring"
-  - "silkrpc/interfaces"
-  - "silkrpc/test"
+  - "third-party/croaring"
+  - "silkworm/silkrpc/interfaces"
+  - "silkworm/silkrpc/test"
