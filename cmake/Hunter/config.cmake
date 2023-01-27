@@ -15,7 +15,7 @@
 ]]
 
 # silkworm configuration
-include(${CMAKE_SOURCE_DIR}/silkworm/cmake/Hunter/config.cmake)
+include(${CMAKE_SOURCE_DIR}/third-party/silkworm/cmake/Hunter/config.cmake)
 
 hunter_config(
     asio-grpc
