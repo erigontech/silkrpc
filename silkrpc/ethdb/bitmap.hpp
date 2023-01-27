@@ -23,9 +23,10 @@
 
 #include <boost/asio/awaitable.hpp>
 
+#include <croaring/roaring.hh>
+
 #include <silkworm/common/util.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/croaring/roaring.hh>
 
 namespace silkrpc::ethdb::bitmap {
 
