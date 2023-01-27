@@ -89,6 +89,6 @@ if(SILKRPC_CLANG_COVERAGE)
 endif()
 
 add_subdirectory(third-party)
-add_subdirectory(silkrpc)
+add_subdirectory(silkworm)
 add_subdirectory(cmd)
 add_subdirectory(examples)
