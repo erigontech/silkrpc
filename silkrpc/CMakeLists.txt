@@ -146,6 +146,7 @@ endif()
 
 add_library(silkrpc ${SILKRPC_SRC})
 target_include_directories(silkrpc PUBLIC ${CMAKE_SOURCE_DIR})
+target_include_directories(silkrpc PUBLIC ${CMAKE_SOURCE_DIR}/third-party)
 target_link_libraries(silkrpc PUBLIC ${SILKRPC_LIBRARIES})
 target_compile_features(silkrpc PUBLIC cxx_std_20)
 target_compile_options(silkrpc PUBLIC $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:GNU>>:-fcoroutines>)
