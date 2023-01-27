@@ -27,11 +27,12 @@
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
+#include <croaring/roaring.hh>
+
 #include <silkrpc/txpool/transaction_pool.hpp>
 #include <silkworm/types/receipt.hpp>
 #include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/croaring/roaring.hh>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethbackend/backend.hpp>
 #include <silkrpc/ethdb/database.hpp>
