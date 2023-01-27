@@ -329,12 +329,14 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const n
 }
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_tracecall
-boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json& request, nlohmann::json& reply) {
+boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann::json& request, json::Stream& stream) {
     auto params = request["params"];
     if (params.size() < 2) {
         auto error_msg = "invalid debug_traceCall params: " + params.dump();
         SILKRPC_ERROR << error_msg << "\n";
-        reply = make_json_error(request["id"], 100, error_msg);
+        const auto reply = make_json_error(request["id"], 100, error_msg);
+        stream.write_json(reply);
+
         co_return;
     }
     const auto call = params[0].get<Call>();
@@ -346,6 +348,10 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann
 
     SILKRPC_DEBUG << "call: " << call << " block_number_or_hash: " << block_number_or_hash << " config: {" << config << "}\n";
 
+    stream.open_object();
+    stream.write_field("id", request["id"]);
+    stream.write_field("jsonrpc", "2.0");
+
     auto tx = co_await database_->begin();
 
     try {
@@ -356,74 +362,37 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann
         const bool is_latest_block = co_await core::is_latest_block_number(block_with_hash.block.header.number, tx_database);
         core::rawdb::DatabaseReader& db_reader = is_latest_block ? (core::rawdb::DatabaseReader&)cached_database : (core::rawdb::DatabaseReader&)tx_database;
         debug::DebugExecutor executor{*context_.io_context(), db_reader, workers_, config};
-        const auto result = co_await executor.execute(block_with_hash.block, call);
+
+        stream.write_field("result");
+        stream.open_object();
+        const auto result = co_await executor.execute(block_with_hash.block, call, &stream);
+        stream.close_object();
 
         if (result.pre_check_error) {
-            reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
-        } else {
-            reply = make_json_content(request["id"], result.debug_trace);
+            stream.write_field("code", -32000);
+            stream.write_field("message", result.pre_check_error.value());
         }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
 
         std::ostringstream oss;
         oss << "block " << block_number_or_hash.number() << "(" << block_number_or_hash.hash() << ") not found";
-        reply = make_json_error(request["id"], -32000, oss.str());
+        stream.write_field("code", -32000);
+        stream.write_field("message", oss.str());
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, "unexpected exception");
+        stream.write_field("code", 100);
+        stream.write_field("message", "unexpected exception");
     }
+
+    stream.close_object();
 
     co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
 }
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_traceblockbynumber
-boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
-    if (params.size() < 1) {
-        auto error_msg = "invalid debug_traceBlockByNumber params: " + params.dump();
-        SILKRPC_ERROR << error_msg << "\n";
-        reply = make_json_error(request["id"], 100, error_msg);
-        co_return;
-    }
-    const auto block_number = params[0].get<std::uint64_t>();
-
-    debug::DebugConfig config;
-    if (params.size() > 1) {
-        config = params[1].get<debug::DebugConfig>();
-    }
-
-    SILKRPC_DEBUG << "block_number: " << block_number << " config: {" << config << "}\n";
-
-    auto tx = co_await database_->begin();
-
-    try {
-        ethdb::TransactionDatabase tx_database{*tx};
-
-        const auto block_with_hash = co_await core::read_block_by_number(*context_.block_cache(), tx_database, block_number);
-
-        debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
-        const auto debug_traces = co_await executor.execute(block_with_hash.block);
-
-        reply = make_json_content(request["id"], debug_traces);
-    } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-
-        std::ostringstream oss;
-        oss << "block_number " << block_number << " not found";
-        reply = make_json_error(request["id"], -32000, oss.str());
-    } catch (...) {
-        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, "unexpected exception");
-    }
-
-    co_await tx->close(); // RAII not (yet) available with coroutines
-    co_return;
-}
-
-// https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_traceblockbynumber
-boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number_stream(const nlohmann::json& request, json::Stream& stream) {
+boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(const nlohmann::json& request, json::Stream& stream) {
     auto params = request["params"];
     if (params.size() < 1) {
         auto error_msg = "invalid debug_traceBlockByNumber params: " + params.dump();
@@ -483,51 +452,7 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number_str
 }
 
 // https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_traceblockbyhash
-boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const nlohmann::json& request, nlohmann::json& reply) {
-    auto params = request["params"];
-    if (params.size() < 1) {
-        auto error_msg = "invalid debug_traceBlockByHash params: " + params.dump();
-        SILKRPC_ERROR << error_msg << "\n";
-        reply = make_json_error(request["id"], 100, error_msg);
-        co_return;
-    }
-    const auto block_hash = params[0].get<evmc::bytes32>();
-
-    debug::DebugConfig config;
-    if (params.size() > 1) {
-        config = params[1].get<debug::DebugConfig>();
-    }
-
-    SILKRPC_DEBUG << "block_hash: " << block_hash << " config: {" << config << "}\n";
-
-    auto tx = co_await database_->begin();
-
-    try {
-        ethdb::TransactionDatabase tx_database{*tx};
-
-        const auto block_with_hash = co_await core::read_block_by_hash(*context_.block_cache(), tx_database, block_hash);
-
-        debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
-        const auto debug_traces = co_await executor.execute(block_with_hash.block);
-
-        reply = make_json_content(request["id"], debug_traces);
-    } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-
-        std::ostringstream oss;
-        oss << "block_hash " << block_hash << " not found";
-        reply = make_json_error(request["id"], -32000, oss.str());
-    } catch (...) {
-        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, "unexpected exception");
-    }
-
-    co_await tx->close(); // RAII not (yet) available with coroutines
-    co_return;
-}
-
-// https://github.com/ethereum/retesteth/wiki/RPC-Methods#debug_traceblockbyhash
-boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash_stream(const nlohmann::json& request, json::Stream& stream) {
+boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const nlohmann::json& request, json::Stream& stream) {
     auto params = request["params"];
     if (params.size() < 1) {
         auto error_msg = "invalid debug_traceBlockByHash params: " + params.dump();

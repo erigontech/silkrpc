@@ -144,7 +144,7 @@ public:
     DebugExecutor& operator=(const DebugExecutor&) = delete;
 
     boost::asio::awaitable<std::vector<DebugTrace>> execute(const silkworm::Block& block, json::Stream* stream = nullptr);
-    boost::asio::awaitable<DebugExecutorResult> execute(const silkworm::Block& block, const silkrpc::Call& call);
+    boost::asio::awaitable<DebugExecutorResult> execute(const silkworm::Block& block, const silkrpc::Call& call, json::Stream* stream = nullptr);
     boost::asio::awaitable<DebugExecutorResult> execute(const silkworm::Block& block, const silkrpc::Transaction& transaction,
             json::Stream* stream = nullptr) {
         return execute(block.header.number-1, block, transaction, transaction.transaction_index, stream);

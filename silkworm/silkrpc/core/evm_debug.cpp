@@ -349,9 +349,9 @@ boost::asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::e
 }
 
 template<typename WorldState, typename VM>
-boost::asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(const silkworm::Block& block, const silkrpc::Call& call) {
+boost::asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execute(const silkworm::Block& block, const silkrpc::Call& call, json::Stream* stream) {
     silkrpc::Transaction transaction{call.to_transaction()};
-    auto result = co_await execute(block.header.number, block, transaction, -1);
+    auto result = co_await execute(block.header.number, block, transaction, -1, stream);
     co_return result;
 }
 
