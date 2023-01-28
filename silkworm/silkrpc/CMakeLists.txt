@@ -33,7 +33,7 @@ if(SILKRPC_USE_MIMALLOC)
 endif()
 
 # Define gRPC proto files
-set(IF_PROTO_PATH "${CMAKE_SOURCE_DIR}/interfaces")
+set(IF_PROTO_PATH "${CMAKE_SOURCE_DIR}/interfaces/proto")
 
 # Generate Protocol Buffers and gRPC bindings
 set(PROTO_GENERATED_SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/proto-bindings)
@@ -80,7 +80,7 @@ target_link_libraries(silkinterfaces PUBLIC
     protobuf::libprotobuf)
 
 # Copy generated Protocol Buffers and gRPC headers to Silkrpc source tree
-set(IF_GENERATED_HEADER_DIR ${CMAKE_SOURCE_DIR}/silkrpc/interfaces)
+set(IF_GENERATED_HEADER_DIR ${CMAKE_SOURCE_DIR}/silkworm/silkrpc/interfaces)
 
 set(REMOTE_IF_GENERATED_HEADER_DIR ${IF_GENERATED_HEADER_DIR}/remote)
 file(MAKE_DIRECTORY ${REMOTE_IF_GENERATED_HEADER_DIR})
@@ -146,6 +146,8 @@ endif()
 
 add_library(silkrpc ${SILKRPC_SRC})
 target_include_directories(silkrpc PUBLIC ${CMAKE_SOURCE_DIR})
+target_include_directories(silkrpc PUBLIC ${CMAKE_SOURCE_DIR}/third-party)
+target_include_directories(silkrpc PUBLIC ${CMAKE_SOURCE_DIR}/silkworm)
 target_link_libraries(silkrpc PUBLIC ${SILKRPC_LIBRARIES})
 target_compile_features(silkrpc PUBLIC cxx_std_20)
 target_compile_options(silkrpc PUBLIC $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:GNU>>:-fcoroutines>)

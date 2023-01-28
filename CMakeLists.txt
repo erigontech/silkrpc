@@ -20,21 +20,21 @@ cmake_minimum_required(VERSION 3.16)
 set(CMAKE_OSX_ARCHITECTURES ${ARCHS_STANDARD} CACHE INTERNAL "" FORCE)
 
 # Check that submodules initialization has been done
-if(NOT EXISTS ${CMAKE_SOURCE_DIR}/silkworm/.git)
+if(NOT EXISTS ${CMAKE_SOURCE_DIR}/third-party/silkworm/.git)
   message(FATAL_ERROR "Git submodules not initialized, execute:\n  git submodule update --init --recursive")
 endif()
 
 # Use default toolchain file if not specified on the command line
 if(NOT CMAKE_TOOLCHAIN_FILE)
-  set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/silkworm/cmake/toolchain/cxx20.cmake CACHE FILEPATH "" FORCE)
+  set(CMAKE_TOOLCHAIN_FILE ${CMAKE_SOURCE_DIR}/third-party/silkworm/cmake/toolchain/cxx20.cmake CACHE FILEPATH "" FORCE)
 endif()
 
 # Enable language *before* indirectly including GNUInstallDirs (see CableBuildInfo)
 enable_language(CXX)
 
-include(silkworm/third_party/evmone/cmake/cable/bootstrap.cmake)
+include(third-party/silkworm/third_party/evmone/cmake/cable/bootstrap.cmake)
 include(CableBuildInfo)
-include(silkworm/third_party/evmone/cmake/cable/HunterGate.cmake)
+include(third-party/silkworm/third_party/evmone/cmake/cable/HunterGate.cmake)
 HunterGate(
   URL "https://github.com/cpp-pm/hunter/archive/v0.24.3.tar.gz"
   SHA1 "10738b59e539818a01090e64c2d09896247530c7"
@@ -78,7 +78,6 @@ set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
 find_package(ethash CONFIG REQUIRED)
 find_package(intx CONFIG REQUIRED)
 
-add_subdirectory(silkworm)
 
 # Silkrpc itself
 option(SILKRPC_CLANG_COVERAGE "Clang instrumentation for code coverage reports" OFF)
@@ -89,6 +88,7 @@ if(SILKRPC_CLANG_COVERAGE)
   add_link_options(-fprofile-instr-generate -fcoverage-mapping)
 endif()
 
-add_subdirectory(silkrpc)
+add_subdirectory(third-party)
+add_subdirectory(silkworm)
 add_subdirectory(cmd)
 add_subdirectory(examples)

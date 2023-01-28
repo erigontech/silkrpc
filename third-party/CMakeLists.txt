@@ -1,5 +1,5 @@
 #[[
-   Copyright 2020 The SilkRpc Authors
+   Copyright 2020 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -14,14 +14,6 @@
    limitations under the License.
 ]]
 
-# silkworm configuration
-include(${CMAKE_SOURCE_DIR}/third-party/silkworm/cmake/Hunter/config.cmake)
+cmake_minimum_required(VERSION 3.16)
 
-hunter_config(
-    asio-grpc
-    VERSION 2.0.0
-    URL https://github.com/Tradias/asio-grpc/archive/refs/tags/v2.0.0.tar.gz
-    SHA1 a727806a5c93c811e8f73ecb1e733efc4739d5ff
-    CMAKE_ARGS
-      ASIO_GRPC_USE_BOOST_CONTAINER=ON
-)
+add_subdirectory(silkworm)
