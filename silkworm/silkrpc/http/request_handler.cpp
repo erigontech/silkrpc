@@ -250,7 +250,7 @@ boost::asio::awaitable<void> RequestHandler::write_headers() {
 
         const auto bytes_transferred = co_await boost::asio::async_write(socket_, buffers, boost::asio::use_awaitable);
 
-        SILKRPC_LOG << "RequestHandler::write_headers bytes_transferred: " << bytes_transferred << "\n" << std::flush;
+        SILKRPC_TRACE << "RequestHandler::write_headers bytes_transferred: " << bytes_transferred << "\n" << std::flush;
     } catch (const std::system_error& se) {
         std::rethrow_exception(std::make_exception_ptr(se));
     } catch (const std::exception& e) {
