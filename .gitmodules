@@ -2,7 +2,7 @@
 	path = third-party/silkworm
 	url = https://github.com/torquem-ch/silkworm
 [submodule "interfaces"]
-	path = interfaces
+	path = interfaces/proto
 	url = https://github.com/ledgerwatch/interfaces
 [submodule "silkrpc/croaring"]
 	path = third-party/croaring
