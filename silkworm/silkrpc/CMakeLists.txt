@@ -33,7 +33,7 @@ if(SILKRPC_USE_MIMALLOC)
 endif()
 
 # Define gRPC proto files
-set(IF_PROTO_PATH "${CMAKE_SOURCE_DIR}/interfaces")
+set(IF_PROTO_PATH "${CMAKE_SOURCE_DIR}/interfaces/proto")
 
 # Generate Protocol Buffers and gRPC bindings
 set(PROTO_GENERATED_SRC_DIR ${CMAKE_CURRENT_BINARY_DIR}/proto-bindings)
