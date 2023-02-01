@@ -297,8 +297,8 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const n
         if (!tx_with_block) {
             std::ostringstream oss;
             oss << "transaction 0x" << transaction_hash << " not found";
-            stream.write_field("code", -32000);
-            stream.write_field("message", oss.str());
+            const Error error{-32000, oss.str()};
+            stream.write_field("error", error);
         } else {
             debug::DebugExecutor executor{*context_.io_context(), tx_database, workers_, config};
 
@@ -308,18 +308,18 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_transaction(const n
             stream.close_object();
 
             if (result.pre_check_error) {
-                stream.write_field("code", -32000);
-                stream.write_field("message", result.pre_check_error.value());
+                const Error error{-32000, result.pre_check_error.value()};
+                stream.write_field("error", error);
             }
         }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        stream.write_field("code", 100);
-        stream.write_field("message", e.what());
+        const Error error{100, e.what()};
+        stream.write_field("error", error);
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        stream.write_field("code", 100);
-        stream.write_field("message", "unexpected exception");
+        const Error error{100, "unexpected exception"};
+        stream.write_field("error", error);
     }
 
     stream.close_object();
@@ -369,20 +369,22 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_call(const nlohmann
         stream.close_object();
 
         if (result.pre_check_error) {
-            stream.write_field("code", -32000);
-            stream.write_field("message", result.pre_check_error.value());
+            const Error error{-32000, result.pre_check_error.value()};
+            stream.write_field("error", error);
         }
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
 
         std::ostringstream oss;
         oss << "block " << block_number_or_hash.number() << "(" << block_number_or_hash.hash() << ") not found";
-        stream.write_field("code", -32000);
-        stream.write_field("message", oss.str());
+
+        const Error error{-32000, oss.str()};
+        stream.write_field("error", error);
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        stream.write_field("code", 100);
-        stream.write_field("message", "unexpected exception");
+
+        const Error error{100, "unexpected exception"};
+        stream.write_field("error", error);
     }
 
     stream.close_object();
@@ -432,17 +434,19 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_number(con
 
         std::ostringstream oss;
         oss << "block_number " << block_number << " not found";
-        stream.write_field("code", -32000);
-        stream.write_field("message", oss.str());
+
+        const Error error{-32000, oss.str()};
+        stream.write_field("error", error);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
 
-        stream.write_field("code", 100);
-        stream.write_field("message", e.what());
+        const Error error{100, e.what()};
+        stream.write_field("error", error);
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        stream.write_field("code", 100);
-        stream.write_field("message", "unexpected exception");
+
+        const Error error{100, "unexpected exception"};
+        stream.write_field("error", error);
     }
 
     stream.close_object();
@@ -492,17 +496,19 @@ boost::asio::awaitable<void> DebugRpcApi::handle_debug_trace_block_by_hash(const
 
         std::ostringstream oss;
         oss << "block_hash " << block_hash << " not found";
-        stream.write_field("code", -32000);
-        stream.write_field("message", oss.str());
+
+        const Error error{-32000, oss.str()};
+        stream.write_field("error", error);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
 
-        stream.write_field("code", 100);
-        stream.write_field("message", e.what());
+        const Error error{100, e.what()};
+        stream.write_field("error", error);
     } catch (...) {
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        stream.write_field("code", 100);
-        stream.write_field("message", "unexpected exception");
+
+        const Error error{100, "unexpected exception"};
+        stream.write_field("error", error);
     }
 
     stream.close_object();
