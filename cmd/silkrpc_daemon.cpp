@@ -42,6 +42,7 @@ ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeou
 ABSL_FLAG(silkrpc::LogLevel, log_verbosity, silkrpc::LogLevel::Critical, "logging verbosity level");
 ABSL_FLAG(silkrpc::WaitMode, wait_mode, silkrpc::WaitMode::blocking, "scheduler wait mode");
 ABSL_FLAG(std::string, jwt_secret_file, silkrpc::kDefaultJwtFilename, "Token file to ensure safe connection between CL and EL");
+ABSL_FLAG(std::string, db_filename, silkrpc::kDefaultDbFileName, "DB Local Filename");
 
 //! Assemble the application version using the Cable build information
 std::string get_version_from_build_info() {
@@ -102,7 +103,8 @@ silkrpc::DaemonSettings parse_args(int argc, char* argv[]) {
         absl::GetFlag(FLAGS_num_workers),
         absl::GetFlag(FLAGS_log_verbosity),
         absl::GetFlag(FLAGS_wait_mode),
-        absl::GetFlag(FLAGS_jwt_secret_file)
+        absl::GetFlag(FLAGS_jwt_secret_file),
+        absl::GetFlag(FLAGS_db_filename)
     };
 
     return rpc_daemon_settings;
