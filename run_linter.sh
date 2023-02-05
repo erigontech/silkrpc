@@ -3,7 +3,7 @@
 cpplint \
     cmd/*.cpp \
     examples/*.cpp \
-    silkrpc/*.hpp silkrpc/*.cpp silkrpc/**/*.hpp silkrpc/**/*.cpp silkrpc/**/**/*.hpp silkrpc/**/**/*.cpp
+    silkworm/silkrpc/*.hpp silkworm/silkrpc/*.cpp silkworm/silkrpc/**/*.hpp silkworm/silkrpc/**/*.cpp silkworm/silkrpc/**/**/*.hpp silkworm/silkrpc/**/**/*.cpp
 
 if [ $? -ne 0 ];
 then
