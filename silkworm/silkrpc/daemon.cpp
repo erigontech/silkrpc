@@ -202,7 +202,7 @@ ChannelFactory Daemon::make_channel_factory(const DaemonSettings& settings) {
 Daemon::Daemon(const DaemonSettings& settings, const std::string& jwt_secret)
     : settings_(settings),
       create_channel_{make_channel_factory(settings_)},
-      context_pool_{settings_.num_contexts, create_channel_, settings_.wait_mode},
+      context_pool_{settings_.num_contexts, create_channel_, "", settings_.wait_mode}, // ADD option
       worker_pool_{settings_.num_workers},
       jwt_secret_{jwt_secret},
       kv_stub_{remote::KV::NewStub(create_channel_())} {
