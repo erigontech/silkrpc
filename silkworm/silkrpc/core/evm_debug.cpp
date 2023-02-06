@@ -313,6 +313,8 @@ boost::asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::e
 
         if (stream != nullptr) {
             stream->open_object();
+            stream->write_field("result");
+            stream->open_object();
             stream->write_field("structLogs");
             stream->open_array();
         }
@@ -329,6 +331,7 @@ boost::asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::e
             if (stream) {
                 stream->write_field("failed", true);
                 stream->close_object();
+                stream->close_object();
             } else {
                 debug_trace.failed = true;
             }
@@ -337,6 +340,7 @@ boost::asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::e
                 stream->write_field("failed", execution_result.error_code != evmc_status_code::EVMC_SUCCESS);
                 stream->write_field("gas", txn.gas_limit - execution_result.gas_left);
                 stream->write_field("returnValue", silkworm::to_hex(execution_result.data));
+                stream->close_object();
                 stream->close_object();
             } else {
                 debug_trace.failed = execution_result.error_code != evmc_status_code::EVMC_SUCCESS;
