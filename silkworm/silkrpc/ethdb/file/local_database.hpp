@@ -23,11 +23,13 @@
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/transaction.hpp>
 
+#include <silkworm/db/mdbx.hpp>
+
 namespace silkrpc::ethdb::file {
 
 class LocalDatabase: public Database {
 public:
-    LocalDatabase(std::string filename);
+    explicit LocalDatabase(std::string filename);
 
     ~LocalDatabase();
 
@@ -35,6 +37,11 @@ public:
     LocalDatabase& operator=(const LocalDatabase&) = delete;
 
     boost::asio::awaitable<std::unique_ptr<Transaction>> begin() override;
+
+private:
+    silkworm::db::EnvConfig db_config_;
+    mdbx::env_managed chaindata_;
+    mdbx::env* chaindata_env_;
 };
 
 } // namespace silkrpc::ethdb::file

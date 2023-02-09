@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_KV_STATE_CHANGES_STREAM_HPP_
-#define SILKRPC_ETHDB_KV_STATE_CHANGES_STREAM_HPP_
+#pragma once
 
 #include <chrono>
 #include <functional>
@@ -101,4 +100,3 @@ private:
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_ETHDB_KV_STATE_CHANGES_STREAM_HPP_

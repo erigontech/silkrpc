@@ -20,22 +20,25 @@
 #include <string>
 #include <utility>
 
-#include <silkrpc/config.hpp>
-
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/use_awaitable.hpp>
 
 #include <silkrpc/common/log.hpp>
 #include <silkrpc/common/util.hpp>
+#include <silkrpc/config.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
+
 #include <silkworm/common/util.hpp>
+#include <silkworm/db/mdbx.hpp>
+
 
 namespace silkrpc::ethdb::file {
 
 class LocalCursor : public CursorDupSort {
 public:
-    explicit LocalCursor() : cursor_id_{0} {}
+    explicit LocalCursor(mdbx::txn_managed& read_only_txn, uint32_t cursor_id, std::string table_name) : cursor_id_{cursor_id},
+                    db_cursor_{read_only_txn, silkworm::db::MapConfig{table_name.c_str()}}, read_only_txn_{read_only_txn} {}
 
     uint32_t cursor_id() const override { return cursor_id_; };
 
@@ -57,6 +60,9 @@ public:
 
 private:
     uint32_t cursor_id_;
+    silkworm::db::Cursor db_cursor_;
+    std::string table_name_;
+    mdbx::txn_managed& read_only_txn_;
 };
 
 } // namespace silkrpc::ethdb::file

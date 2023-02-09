@@ -21,20 +21,22 @@
 #include <string>
 #include <type_traits>
 
-#include <silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 
 #include <silkrpc/common/log.hpp>
+#include <silkrpc/config.hpp>
 #include <silkrpc/ethdb/cursor.hpp>
 #include <silkrpc/ethdb/transaction.hpp>
 #include <silkrpc/ethdb/file/local_cursor.hpp>
+
+#include <silkworm/db/mdbx.hpp>
 
 namespace silkrpc::ethdb::file {
 
 class LocalTransaction : public Transaction {
 public:
-    explicit LocalTransaction();
+    explicit LocalTransaction(mdbx::env* chaindata_env);
 
     ~LocalTransaction();
 
@@ -54,6 +56,10 @@ private:
     std::map<std::string, std::shared_ptr<CursorDupSort>> cursors_;
     std::map<std::string, std::shared_ptr<CursorDupSort>> dup_cursors_;
     uint64_t tx_id_;
+
+    mdbx::env* chaindata_env_;
+    mdbx::txn_managed read_only_txn_;
+    uint32_t last_cursor_id_;
 };
 
 } // namespace silkrpc::ethdb::file
