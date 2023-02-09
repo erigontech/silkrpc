@@ -49,7 +49,7 @@ class Context {
         ChannelFactory create_channel,
         std::shared_ptr<BlockCache> block_cache,
         std::shared_ptr<ethdb::kv::StateCache> state_cache,
-        std::string local_file_name = "",
+        std::string db_path = "",
         WaitMode wait_mode = WaitMode::blocking);
 
     boost::asio::io_context* io_context() const noexcept { return io_context_.get(); }
@@ -104,7 +104,7 @@ std::ostream& operator<<(std::ostream& out, Context& c);
 // [currently cannot start/stop more than once because grpc::CompletionQueue cannot be used after shutdown]
 class ContextPool {
 public:
-    explicit ContextPool(std::size_t pool_size, ChannelFactory create_channel, std::string local_file_name = "", WaitMode wait_mode = WaitMode::blocking);
+    explicit ContextPool(std::size_t pool_size, ChannelFactory create_channel, std::string db_path = "", WaitMode wait_mode = WaitMode::blocking);
     ~ContextPool();
 
     ContextPool(const ContextPool&) = delete;
