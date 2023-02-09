@@ -23,6 +23,11 @@ namespace silkrpc::ethdb::file {
 
 LocalDatabase::LocalDatabase(std::string local_database) {
     SILKRPC_TRACE << "LocalDatabase::ctor " << this << "\n";
+    db_config_.path = local_database;
+    db_config_.create = true;
+    db_config_.inmemory = true;
+    chaindata_ = silkworm::db::open_env(db_config_);
+    chaindata_env_ = &chaindata_;
 }
 
 LocalDatabase::~LocalDatabase() {
@@ -31,7 +36,7 @@ LocalDatabase::~LocalDatabase() {
 
 boost::asio::awaitable<std::unique_ptr<Transaction>> LocalDatabase::begin() {
     SILKRPC_TRACE << "LocalDatabase::begin " << this << " start\n";
-    auto txn = std::make_unique<LocalTransaction>();
+    auto txn = std::make_unique<LocalTransaction>(chaindata_env_);
     co_await txn->open();
     SILKRPC_TRACE << "LocalDatabase::begin " << this << " txn: " << txn.get() << " end\n";
     co_return txn;
