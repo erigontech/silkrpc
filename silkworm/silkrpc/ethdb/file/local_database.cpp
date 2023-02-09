@@ -21,10 +21,9 @@
 
 namespace silkrpc::ethdb::file {
 
-LocalDatabase::LocalDatabase(std::string local_database) {
+LocalDatabase::LocalDatabase(std::string db_path) {
     SILKRPC_TRACE << "LocalDatabase::ctor " << this << "\n";
-    db_config_.path = local_database;
-    db_config_.create = true;
+    db_config_.path = db_path;
     db_config_.inmemory = true;
     chaindata_ = silkworm::db::open_env(db_config_);
     chaindata_env_ = &chaindata_;

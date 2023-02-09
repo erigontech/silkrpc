@@ -42,7 +42,7 @@ struct DaemonSettings {
     LogLevel log_verbosity;
     WaitMode wait_mode;
     std::string jwt_secret_filename;
-    std::string db_filename;
+    std::string db_path;
 };
 
 struct DaemonInfo {

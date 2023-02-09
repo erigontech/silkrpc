@@ -29,7 +29,7 @@ namespace silkrpc::ethdb::file {
 
 class LocalDatabase: public Database {
 public:
-    explicit LocalDatabase(std::string filename);
+    explicit LocalDatabase(std::string db_path);
 
     ~LocalDatabase();
 
