@@ -45,7 +45,7 @@ boost::asio::awaitable<KeyValue> LocalCursor::seek(silkworm::ByteView key) {
 
     if (result) {
         SILKRPC_DEBUG << "LocalCursor::seek found: " << " key: " << key << " value: " << result.value.as_string() << "\n";
-        co_return KeyValue{*silkworm::from_hex(result.key.as_string()), *silkworm::from_hex(result.value.as_string())}; 
+        co_return KeyValue{*silkworm::from_hex(result.key.as_string()), *silkworm::from_hex(result.value.as_string())};
     }
     co_return KeyValue{};
 }
@@ -60,7 +60,7 @@ boost::asio::awaitable<KeyValue> LocalCursor::seek_exact(silkworm::ByteView key)
     if (found) {
         SILKRPC_DEBUG << "LocalCursor::seek_exact found: " << " key: " << key << "\n";
         const auto result = db_cursor_.current(/*throw_notfound=*/false);
-        co_return KeyValue{*silkworm::from_hex(result.key.as_string()), *silkworm::from_hex(result.value.as_string())}; 
+        co_return KeyValue{*silkworm::from_hex(result.key.as_string()), *silkworm::from_hex(result.value.as_string())};
     }
     co_return KeyValue{};
 }
@@ -74,7 +74,7 @@ boost::asio::awaitable<KeyValue> LocalCursor::next() {
 
     if (result) {
         SILKRPC_DEBUG << "LocalCursor::next\n";
-        co_return KeyValue{*silkworm::from_hex(result.key.as_string()), *silkworm::from_hex(result.value.as_string())}; 
+        co_return KeyValue{*silkworm::from_hex(result.key.as_string()), *silkworm::from_hex(result.value.as_string())};
     }
     co_return KeyValue{};
 }
@@ -88,7 +88,7 @@ boost::asio::awaitable<KeyValue> LocalCursor::next_dup() {
 
     if (result) {
         SILKRPC_DEBUG << "LocalCursor::next_dup\n";
-        co_return KeyValue{*silkworm::from_hex(result.key.as_string()), *silkworm::from_hex(result.value.as_string())}; 
+        co_return KeyValue{*silkworm::from_hex(result.key.as_string()), *silkworm::from_hex(result.value.as_string())};
     }
     co_return KeyValue{};
 }
@@ -120,7 +120,7 @@ boost::asio::awaitable<KeyValue> LocalCursor::seek_both_exact(silkworm::ByteView
 
     if (result) {
         SILKRPC_DEBUG << "LocalCursor::seek_both_exact found: " << " key: " << key << " value: " << value << "\n";
-        co_return KeyValue{*silkworm::from_hex(result.key.as_string()), *silkworm::from_hex(result.value.as_string())}; 
+        co_return KeyValue{*silkworm::from_hex(result.key.as_string()), *silkworm::from_hex(result.value.as_string())};
     }
     co_return KeyValue{};
 }
