@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_WRITER_HPP_
-#define SILKRPC_TYPES_WRITER_HPP_
+#pragma once
 
 #include <deque>
 #include <string>
@@ -86,4 +85,3 @@ private:
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_WRITER_HPP_

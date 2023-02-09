@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_PROTOCOL_VERSION_HPP_
-#define SILKRPC_PROTOCOL_VERSION_HPP_
+#pragma once
 
 #include <iostream>
 #include <memory>
@@ -63,4 +62,3 @@ ProtocolVersionResult wait_for_txpool_protocol_check(const std::shared_ptr<grpc:
 
 } // namespace silkrpc
 
-#endif // SILKRPC_PROTOCOL_VERSION_HPP_

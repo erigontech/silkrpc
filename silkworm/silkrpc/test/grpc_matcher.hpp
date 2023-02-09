@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TEST_GRPC_MATCHER_HPP_
-#define SILKRPC_TEST_GRPC_MATCHER_HPP_
+#pragma once
 
 #include <grpcpp/grpcpp.h>
 
@@ -39,4 +38,3 @@ inline auto exception_has_unknown_grpc_status_code() {
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_TEST_GRPC_MATCHER_HPP_

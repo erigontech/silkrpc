@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMON_BLOCK_CACHE_HPP_
-#define SILKRPC_COMMON_BLOCK_CACHE_HPP_
+#pragma once
 
 #include <cstddef>
 #include <mutex>
@@ -62,4 +61,3 @@ private:
 
 } // namespace silkrpc
 
-#endif // SILKRPC_COMMON_BLOCK_CACHE_HPP_

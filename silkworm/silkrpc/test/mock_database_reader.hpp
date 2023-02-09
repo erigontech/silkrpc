@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TEST_MOCK_DATABASE_READER_HPP_
-#define SILKRPC_TEST_MOCK_DATABASE_READER_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -43,4 +42,3 @@ public:
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_TEST_MOCK_DATABASE_READER_HPP_

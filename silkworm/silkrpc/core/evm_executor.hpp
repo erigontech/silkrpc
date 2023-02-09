@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_EVM_EXECUTOR_HPP_
-#define SILKRPC_CORE_EVM_EXECUTOR_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -91,4 +90,3 @@ private:
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_CORE_EVM_EXECUTOR_HPP_

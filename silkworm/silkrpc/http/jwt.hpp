@@ -20,8 +20,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef SILKRPC_HTTP_JWT_HPP_
-#define SILKRPC_HTTP_JWT_HPP_
+#pragma once
 
 #include <string>
 
@@ -36,4 +35,3 @@ bool load_jwt_token(const std::string& file_path, std::string& jwt_token);
 
 } // namespace silkrpc
 
-#endif // SILKRPC_HTTP_JWT_HPP_

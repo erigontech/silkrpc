@@ -20,8 +20,8 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef SILKRPC_HTTP_REQUEST_PARSER_HPP_
-#define SILKRPC_HTTP_REQUEST_PARSER_HPP_
+
+#pragma once
 
 #include <tuple>
 
@@ -101,4 +101,3 @@ private:
 
 } // namespace silkrpc::http
 
-#endif // SILKRPC_HTTP_REQUEST_PARSER_HPP_

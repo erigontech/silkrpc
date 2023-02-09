@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TEST_GRPC_RESPONDER_HPP_
-#define SILKRPC_TEST_GRPC_RESPONDER_HPP_
+#pragma once
 
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
@@ -62,4 +61,3 @@ using StrictMockAsyncReaderWriter = testing::StrictMock<MockAsyncReaderWriter<Re
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_TEST_GRPC_RESPONDER_HPP_

@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_FILTER_HPP_
-#define SILKRPC_TYPES_FILTER_HPP_
+#pragma once
 
 #include <iostream>
 #include <optional>
@@ -46,4 +45,3 @@ std::ostream& operator<<(std::ostream& out, const std::optional<silkrpc::FilterA
 
 std::ostream& operator<<(std::ostream& out, const std::optional<silkrpc::FilterTopics>& topics);
 
-#endif  // SILKRPC_TYPES_FILTER_HPP_

@@ -20,8 +20,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef SILKRPC_HTTP_METHODS_HPP_
-#define SILKRPC_HTTP_METHODS_HPP_
+#pragma once
 
 #include <string>
 
@@ -129,4 +128,3 @@ constexpr const char* k_ots_hasCode{"ots_hasCode"};
 
 } // namespace silkrpc::http::method
 
-#endif // SILKRPC_HTTP_METHODS_HPP_

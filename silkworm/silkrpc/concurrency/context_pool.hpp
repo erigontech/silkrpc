@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CONCURRENCY_CONTEXT_POOL_HPP_
-#define SILKRPC_CONCURRENCY_CONTEXT_POOL_HPP_
+#pragma once
 
 #include <cstddef>
 #include <functional>
@@ -50,7 +49,7 @@ class Context {
         ChannelFactory create_channel,
         std::shared_ptr<BlockCache> block_cache,
         std::shared_ptr<ethdb::kv::StateCache> state_cache,
-        std::string local_file_name,
+        std::string local_file_name = "",
         WaitMode wait_mode = WaitMode::blocking);
 
     boost::asio::io_context* io_context() const noexcept { return io_context_.get(); }
@@ -139,4 +138,3 @@ private:
 
 } // namespace silkrpc
 
-#endif // SILKRPC_CONCURRENCY_CONTEXT_POOL_HPP_

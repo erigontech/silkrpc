@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_TABLES_HPP_
-#define SILKRPC_ETHDB_TABLES_HPP_
+#pragma once
 
 namespace silkrpc::db::table {
 
@@ -71,4 +70,3 @@ constexpr const char* kCumulativeGasIndex{"CumulativeGasIndex"};
 
 }  // namespace silkrpc::db::table
 
-#endif  // SILKRPC_ETHDB_TABLES_HPP_

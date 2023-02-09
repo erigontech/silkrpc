@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TEST_DUMMY_TRANSACTION_HPP_
-#define SILKRPC_TEST_DUMMY_TRANSACTION_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -54,4 +53,3 @@ private:
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_TEST_DUMMY_TRANSACTION_HPP_

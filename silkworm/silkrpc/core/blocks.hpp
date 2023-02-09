@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_BLOCKS_HPP_
-#define SILKRPC_CORE_BLOCKS_HPP_
+#pragma once
 
 #include <string>
 #include <utility>
@@ -63,4 +62,3 @@ boost::asio::awaitable<bool> is_latest_block_number(const BlockNumberOrHash& bno
 
 }  // namespace silkrpc::core
 
-#endif  // SILKRPC_CORE_BLOCKS_HPP_

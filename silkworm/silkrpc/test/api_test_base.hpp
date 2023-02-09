@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TEST_API_TEST_BASE_HPP_
-#define SILKRPC_TEST_API_TEST_BASE_HPP_
+
+#pragma once
 
 #include <memory>
 #include <silkrpc/config.hpp>
@@ -48,4 +48,3 @@ class GrpcApiTestBase : public ContextTestBase {
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_TEST_API_TEST_BASE_HPP_

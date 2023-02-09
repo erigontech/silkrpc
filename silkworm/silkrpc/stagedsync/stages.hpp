@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_STAGEDSYNC_STAGES_HPP_
-#define SILKRPC_STAGEDSYNC_STAGES_HPP_
+#pragma once
 
 #include <silkrpc/config.hpp>
 
@@ -35,4 +34,3 @@ boost::asio::awaitable<uint64_t> get_sync_stage_progress(const core::rawdb::Data
 
 } // namespace silkrpc::stages
 
-#endif  // SILKRPC_STAGEDSYNC_STAGES_HPP_

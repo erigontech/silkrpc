@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMANDS_RPC_API_TABLE_HPP_
-#define SILKRPC_COMMANDS_RPC_API_TABLE_HPP_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -64,4 +63,3 @@ private:
 
 } // namespace silkrpc::commands
 
-#endif  // SILKRPC_COMMANDS_RPC_API_TABLE_HPP_

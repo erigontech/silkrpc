@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_EVM_TRACE_HPP_
-#define SILKRPC_CORE_EVM_TRACE_HPP_
+#pragma once
 
 #include <deque>
 #include <functional>
@@ -394,4 +393,3 @@ private:
 };
 } // namespace silkrpc::trace
 
-#endif  // SILKRPC_CORE_EVM_TRACE_HPP_
