@@ -29,7 +29,7 @@ namespace silkrpc::ethdb::file {
 
 class LocalDatabase: public Database {
 public:
-    explicit LocalDatabase(std::string db_path);
+    explicit LocalDatabase(mdbx::env* env);
 
     ~LocalDatabase();
 
@@ -39,8 +39,6 @@ public:
     boost::asio::awaitable<std::unique_ptr<Transaction>> begin() override;
 
 private:
-    silkworm::db::EnvConfig db_config_;
-    mdbx::env_managed chaindata_;
     mdbx::env* chaindata_env_;
 };
 
