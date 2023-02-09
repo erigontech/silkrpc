@@ -18,13 +18,16 @@
 
 #include <utility>
 
-#include <silkrpc/config.hpp>
+#include "silkworm/db/mdbx.hpp"
 
+#include <silkrpc/config.hpp>
 #include <silkrpc/common/log.hpp>
 
 namespace silkrpc::ethdb::file {
 
-LocalTransaction::LocalTransaction() {
+LocalTransaction::LocalTransaction(mdbx::env* chaindata_env) {
+    chaindata_env_ = chaindata_env;
+    last_cursor_id_ = 0;
 }
 
 LocalTransaction::~LocalTransaction() {
@@ -32,6 +35,8 @@ LocalTransaction::~LocalTransaction() {
 
 boost::asio::awaitable<void> LocalTransaction::open() {
     tx_id_ = 0;
+    // Create a new read-only transaction.
+    read_only_txn_ = chaindata_env_->start_read();
     co_return;
 }
 
@@ -61,7 +66,7 @@ boost::asio::awaitable<std::shared_ptr<CursorDupSort>> LocalTransaction::get_cur
            co_return cursor_it->second;
        }
     }
-    auto cursor = std::make_shared<LocalCursor>();
+    auto cursor = std::make_shared<LocalCursor>(read_only_txn_, ++last_cursor_id_, table);
     co_await cursor->open_cursor(table, is_cursor_sorted);
     if (is_cursor_sorted) {
        dup_cursors_[table] = cursor;
