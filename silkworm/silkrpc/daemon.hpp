@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_DAEMON_HPP_
-#define SILKRPC_DAEMON_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -103,4 +102,3 @@ class Daemon {
 
 } // namespace silkrpc
 
-#endif // SILKRPC_DAEMON_HPP_
