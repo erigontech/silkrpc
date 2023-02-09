@@ -37,6 +37,7 @@ Context::Context(
     std::shared_ptr<BlockCache> block_cache,
     std::shared_ptr<ethdb::kv::StateCache> state_cache,
     std::string db_path,
+    mdbx::env* env,
     WaitMode wait_mode)
     : io_context_{std::make_shared<boost::asio::io_context>()},
       io_context_work_{boost::asio::make_work_guard(*io_context_)},
@@ -47,7 +48,7 @@ Context::Context(
       wait_mode_(wait_mode) {
     std::shared_ptr<grpc::Channel> channel = create_channel();
     if (!db_path.empty()) {
-        database_ = std::make_unique<ethdb::file::LocalDatabase>(db_path);
+        database_ = std::make_unique<ethdb::file::LocalDatabase>(env);
     } else {
         database_ = std::make_unique<ethdb::kv::RemoteDatabase>(*grpc_context_, channel);
     }
@@ -119,6 +120,14 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, s
         throw std::logic_error("ContextPool::ContextPool pool_size is 0");
     }
     SILKRPC_DEBUG << "ContextPool::ContextPool creating pool with size: " << pool_size << "\n";
+    if (!db_path.empty()) {
+       silkworm::db::EnvConfig db_config{};
+       db_config.path = db_path;
+       db_config.inmemory = true;
+       db_config.shared = true;
+       db_config.readonly = true;
+       chaindata_ = silkworm::db::open_env(db_config);
+    }
 
     // Create the unique block cache to be shared among the execution contexts
     auto block_cache = std::make_shared<BlockCache>();
@@ -128,7 +137,7 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, s
 
     // Create as many execution contexts as required by the pool size
     for (std::size_t i{0}; i < pool_size; ++i) {
-        contexts_.emplace_back(Context{create_channel, block_cache, state_cache, db_path, wait_mode});
+        contexts_.emplace_back(Context{create_channel, block_cache, state_cache, db_path, &chaindata_, wait_mode});
         SILKRPC_DEBUG << "ContextPool::ContextPool context[" << i << "] " << contexts_[i] << "\n";
     }
 }

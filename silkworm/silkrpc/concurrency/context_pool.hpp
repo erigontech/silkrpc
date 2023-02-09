@@ -50,6 +50,7 @@ class Context {
         std::shared_ptr<BlockCache> block_cache,
         std::shared_ptr<ethdb::kv::StateCache> state_cache,
         std::string db_path = "",
+        mdbx::env* env = 0,
         WaitMode wait_mode = WaitMode::blocking);
 
     boost::asio::io_context* io_context() const noexcept { return io_context_.get(); }
@@ -134,6 +135,9 @@ private:
 
     //! Flag indicating if pool has been stopped.
     bool stopped_{false};
+
+    // chaindata
+    mdbx::env_managed chaindata_;
 };
 
 } // namespace silkrpc
