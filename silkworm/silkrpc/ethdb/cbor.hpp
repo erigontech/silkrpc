@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_CBOR_HPP_
-#define SILKRPC_ETHDB_CBOR_HPP_
+#pragma once
 
 #include <vector>
 
@@ -32,4 +31,3 @@ namespace silkrpc {
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_ETHDB_CBOR_HPP_

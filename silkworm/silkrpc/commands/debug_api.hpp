@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMANDS_DEBUG_API_HPP_
-#define SILKRPC_COMMANDS_DEBUG_API_HPP_
+#pragma once
 
 #include <memory>
 #include <set>
@@ -73,4 +72,3 @@ boost::asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::Tra
 
 } // namespace silkrpc::commands
 
-#endif  // SILKRPC_COMMANDS_DEBUG_API_HPP_

@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_JSON_TYPES_HPP_
-#define SILKRPC_JSON_TYPES_HPP_
+#pragma once
 
 #include <optional>
 #include <set>
@@ -160,4 +159,3 @@ struct adl_serializer<silkrpc::BlockNumberOrHash> {
 
 } // namespace nlohmann
 
-#endif  // SILKRPC_JSON_TYPES_HPP_

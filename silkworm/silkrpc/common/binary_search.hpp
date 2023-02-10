@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMON_BINARY_SEARCH_HPP_
-#define SILKRPC_COMMON_BINARY_SEARCH_HPP_
+#pragma once
 
 #include <cstddef>
 
@@ -32,4 +31,3 @@ boost::asio::awaitable<std::size_t> binary_search(std::size_t n, BinaryPredicate
 
 } // namespace silkrpc
 
-#endif // SILKRPC_COMMON_BINARY_SEARCH_HPP_

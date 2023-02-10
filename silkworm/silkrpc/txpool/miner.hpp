@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_TXPOOL_MINER_HPP_
-#define SILKRPC_TXPOOL_MINER_HPP_
+#pragma once
 
 #include <memory>
 #include <utility>
@@ -75,4 +74,3 @@ private:
 
 } // namespace silkrpc::txpool
 
-#endif // SILKRPC_TXPOOL_MINER_HPP_

@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_RAWDB_CHAIN_HPP_
-#define SILKRPC_CORE_RAWDB_CHAIN_HPP_
+#pragma once
 
 #include <vector>
 
@@ -92,4 +91,3 @@ boost::asio::awaitable<intx::uint256> read_cumulative_gas_used(const core::rawdb
 
 } // namespace silkrpc::core::rawdb
 
-#endif  // SILKRPC_CORE_RAWDB_CHAIN_HPP_

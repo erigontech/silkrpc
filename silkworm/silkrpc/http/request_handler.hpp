@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_HTTP_REQUEST_HANDLER_HPP_
-#define SILKRPC_HTTP_REQUEST_HANDLER_HPP_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -66,4 +65,3 @@ private:
 
 } // namespace silkrpc::http
 
-#endif // SILKRPC_HTTP_REQUEST_HANDLER_HPP_

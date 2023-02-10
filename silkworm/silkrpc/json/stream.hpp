@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_JSON_STREAM_HPP_
-#define SILKRPC_JSON_STREAM_HPP_
+#pragma once
 
 #include <stack>
 #include <string>
@@ -58,4 +57,3 @@ private:
 
 } // namespace json
 
-#endif  // SILKRPC_JSON_STREAM_HPP_

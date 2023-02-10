@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_GRPC_UTIL_HPP_
-#define SILKRPC_GRPC_UTIL_HPP_
+#pragma once
 
 #include <ostream>
 
@@ -35,4 +34,3 @@ inline std::ostream& operator<<(std::ostream& out, const grpc::Status& status) {
 
 } // namespace grpc
 
-#endif // SILKRPC_GRPC_UTIL_HPP_

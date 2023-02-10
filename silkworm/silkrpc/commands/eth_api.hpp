@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMANDS_ETH_API_HPP_
-#define SILKRPC_COMMANDS_ETH_API_HPP_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -127,4 +126,3 @@ protected:
 
 } // namespace silkrpc::commands
 
-#endif  // SILKRPC_COMMANDS_ETH_API_HPP_

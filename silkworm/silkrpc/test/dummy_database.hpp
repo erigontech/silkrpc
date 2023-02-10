@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TEST_DUMMY_DATABASE_HPP_
-#define SILKRPC_TEST_DUMMY_DATABASE_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -44,4 +43,3 @@ private:
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_TEST_DUMMY_DATABASE_HPP_

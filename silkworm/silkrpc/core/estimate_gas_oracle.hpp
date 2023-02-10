@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_ESTIMATE_GAS_ORACLE_HPP_
-#define SILKRPC_CORE_ESTIMATE_GAS_ORACLE_HPP_
+#pragma once
 
 #include <functional>
 #include <optional>
@@ -97,4 +96,3 @@ private:
 
 } // namespace silkrpc::ego
 
-#endif  // SILKRPC_CORE_ESTIMATE_GAS_ORACLE_HPP_

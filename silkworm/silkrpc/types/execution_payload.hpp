@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
-#define SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
+#pragma once
 
 #include <vector>
 #include <optional>
@@ -93,4 +92,3 @@ std::ostream& operator<<(std::ostream& out, const TransitionConfiguration& trans
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_EXECUTION_PAYLOAD_HPP_
