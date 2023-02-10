@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_LOG_HPP_
-#define SILKRPC_TYPES_LOG_HPP_
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -47,4 +46,3 @@ std::ostream& operator<<(std::ostream& out, const Log& log);
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_LOG_HPP_

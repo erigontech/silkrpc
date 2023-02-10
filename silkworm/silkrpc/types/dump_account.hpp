@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_DUMP_ACCOUNT_HPP_
-#define SILKRPC_TYPES_DUMP_ACCOUNT_HPP_
+#pragma once
 
 #include <cstdint>
 #include <iostream>
@@ -57,4 +56,3 @@ void to_json(nlohmann::json& json, const DumpAccount& dump_account);
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_DUMP_ACCOUNT_HPP_

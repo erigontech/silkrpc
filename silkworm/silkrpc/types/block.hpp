@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_BLOCK_HPP_
-#define SILKRPC_TYPES_BLOCK_HPP_
+#pragma once
 
 #include <iostream>
 #include <memory>
@@ -87,4 +86,3 @@ std::ostream& operator<<(std::ostream& out, const BlockNumberOrHash& b);
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_BLOCK_HPP_

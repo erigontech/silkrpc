@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_TRANSACTION_DATABASE_HPP_
-#define SILKRPC_ETHDB_TRANSACTION_DATABASE_HPP_
+#pragma once
 
 #include <optional>
 #include <string>
@@ -49,4 +48,3 @@ private:
 
 } // namespace silkrpc::ethdb
 
-#endif  // SILKRPC_ETHDB_TRANSACTION_DATABASE_HPP_

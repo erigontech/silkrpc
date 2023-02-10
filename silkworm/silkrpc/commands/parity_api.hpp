@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMANDS_PARITY_API_HPP_
-#define SILKRPC_COMMANDS_PARITY_API_HPP_
+#pragma once
 
 #include <memory>
 
@@ -54,4 +53,3 @@ private:
 
 } // namespace silkrpc::commands
 
-#endif  // SILKRPC_COMMANDS_PARITY_API_HPP_

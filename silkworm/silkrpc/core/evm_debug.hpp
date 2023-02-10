@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_EVM_DEBUG_HPP_
-#define SILKRPC_CORE_EVM_DEBUG_HPP_
+#pragma once
 
 #include <map>
 #include <stack>
@@ -168,4 +167,3 @@ private:
 };
 } // namespace silkrpc::debug
 
-#endif  // SILKRPC_CORE_EVM_DEBUG_HPP_

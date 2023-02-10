@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMON_UTIL_HPP_
-#define SILKRPC_COMMON_UTIL_HPP_
+#pragma once
 
 #include <iomanip>
 #include <iostream>
@@ -151,4 +150,3 @@ inline std::ostream& operator<<(std::ostream& out, const std::vector<boost::asio
     return out;
 }
 
-#endif // SILKRPC_COMMON_UTIL_HPP_

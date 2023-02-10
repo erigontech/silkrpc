@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_RECEIPTS_HPP_
-#define SILKRPC_CORE_RECEIPTS_HPP_
+#pragma once
 
 #include <silkrpc/config.hpp>
 
@@ -33,4 +32,3 @@ boost::asio::awaitable<Receipts> get_receipts(const rawdb::DatabaseReader& db_re
 
 } // namespace silkrpc::core
 
-#endif  // SILKRPC_CORE_RECEIPTS_HPP_

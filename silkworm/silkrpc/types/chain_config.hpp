@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_CHAIN_CONFIG_HPP_
-#define SILKRPC_TYPES_CHAIN_CONFIG_HPP_
+#pragma once
 
 #include <stdexcept>
 #include <iostream>
@@ -53,4 +52,3 @@ std::ostream& operator<<(std::ostream& out, const ChainConfig& chain_config);
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_CHAIN_CONFIG_HPP_

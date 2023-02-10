@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_ETHBACKEND_BACKEND_HPP_
-#define SILKRPC_ETHBACKEND_BACKEND_HPP_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -44,4 +43,3 @@ public:
 
 } // namespace silkrpc::ethbackend
 
-#endif // SILKRPC_ETHBACKEND_BACKEND_HPP_

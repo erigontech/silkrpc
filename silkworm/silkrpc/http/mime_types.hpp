@@ -8,8 +8,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef SILKRPC_HTTP_MIME_TYPES_HPP_
-#define SILKRPC_HTTP_MIME_TYPES_HPP_
+#pragma once
 
 #include <string>
 
@@ -20,4 +19,3 @@ std::string extension_to_type(const std::string& extension);
 
 } // namespace silkrpc::http::mime_types
 
-#endif // SILKRPC_HTTP_MIME_TYPES_HPP_

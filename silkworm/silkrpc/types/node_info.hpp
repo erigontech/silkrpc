@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_NODE_INFO_HPP_
-#define SILKRPC_TYPES_NODE_INFO_HPP_
+#pragma once
 
 #include <optional>
 #include <string>
@@ -41,4 +40,3 @@ struct NodeInfo {
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_NODE_INFO_HPP_

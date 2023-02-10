@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_TRANSACTION_HPP_
-#define SILKRPC_TYPES_TRANSACTION_HPP_
+#pragma once
 
 #include <iostream>
 #include <map>
@@ -85,4 +84,3 @@ std::ostream& operator<<(std::ostream& out, const silkworm::Transaction& t);
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_TRANSACTION_HPP_

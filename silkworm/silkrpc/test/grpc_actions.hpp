@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TEST_GRPC_ACTIONS_HPP_
-#define SILKRPC_TEST_GRPC_ACTIONS_HPP_
+#pragma once
 
 #include <utility>
 
@@ -107,4 +106,3 @@ inline auto read_failure(agrpc::GrpcContext& grpc_context) {
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_TEST_GRPC_ACTIONS_HPP_

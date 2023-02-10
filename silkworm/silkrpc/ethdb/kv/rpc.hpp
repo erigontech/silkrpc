@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_KV_RPC_HPP_
-#define SILKRPC_ETHDB_KV_RPC_HPP_
+#pragma once
 
 #include <silkrpc/grpc/bidi_streaming_rpc.hpp>
 #include <silkrpc/grpc/server_streaming_rpc.hpp>
@@ -29,4 +28,3 @@ using StateChangesRpc = ServerStreamingRpc<&remote::KV::StubInterface::PrepareAs
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_ETHDB_KV_RPC_HPP_

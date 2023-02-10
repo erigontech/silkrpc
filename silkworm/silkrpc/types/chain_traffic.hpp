@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_CHAIN_TRAFFIC_HPP_
-#define SILKRPC_TYPES_CHAIN_TRAFFIC_HPP_
+#pragma once
 
 #include <iostream>
 #include <optional>
@@ -34,4 +33,3 @@ struct ChainTraffic {
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_CHAIN_TRAFFIC_HPP_

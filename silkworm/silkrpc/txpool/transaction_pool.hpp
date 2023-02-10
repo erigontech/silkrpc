@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_TXPOOL_TRANSACTION_POOL_HPP_
-#define SILKRPC_TXPOOL_TRANSACTION_POOL_HPP_
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -96,4 +95,3 @@ private:
 
 } // namespace silkrpc::txpool
 
-#endif // SILKRPC_TXPOOL_TRANSACTION_POOL_HPP_

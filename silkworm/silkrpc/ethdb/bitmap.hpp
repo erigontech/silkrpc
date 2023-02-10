@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_BITMAP_HPP_
-#define SILKRPC_ETHDB_BITMAP_HPP_
+#pragma once
 
 #include <string>
 
@@ -34,4 +33,3 @@ boost::asio::awaitable<roaring::Roaring> get(core::rawdb::DatabaseReader& db_rea
 
 } // silkrpc::ethdb::bitmap
 
-#endif  // SILKRPC_ETHDB_BITMAP_HPP_

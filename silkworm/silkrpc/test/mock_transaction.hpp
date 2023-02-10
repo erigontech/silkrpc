@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TEST_MOCK_TRANSACTION_HPP_
-#define SILKRPC_TEST_MOCK_TRANSACTION_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -41,4 +40,3 @@ class MockTransaction : public ethdb::Transaction {
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_TEST_MOCK_TRANSACTION_HPP_

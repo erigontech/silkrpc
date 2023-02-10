@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_RECEIPT_HPP_
-#define SILKRPC_TYPES_RECEIPT_HPP_
+#pragma once
 
 #include <optional>
 #include <vector>
@@ -57,4 +56,3 @@ typedef std::vector<Receipt> Receipts;
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_RECEIPT_HPP_

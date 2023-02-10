@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_CONFIG_HPP_
-#define SILKRPC_CONFIG_HPP_
+#pragma once
 
 #if __has_include(<coroutine>)
 # include <boost/asio/detail/config.hpp>
@@ -30,4 +29,3 @@ namespace std {
 } // namespace std
 #endif // __has_include(<coroutine>)
 
-#endif // SILKRPC_CONFIG_HPP_

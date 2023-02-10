@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_CACHED_CHAIN_HPP_
-#define SILKRPC_CORE_CACHED_CHAIN_HPP_
+#pragma once
 
 #include <silkrpc/config.hpp>
 
@@ -37,4 +36,3 @@ boost::asio::awaitable<std::optional<TransactionWithBlock>> read_transaction_by_
 
 } // namespace silkrpc::core
 
-#endif // SILKRPC_CORE_CACHED_CHAIN_HPP_

@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_KV_REMOTE_TRANSACTION_HPP_
-#define SILKRPC_ETHDB_KV_REMOTE_TRANSACTION_HPP_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -63,4 +62,3 @@ private:
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_ETHDB_KV_REMOTE_TRANSACTION_HPP_
