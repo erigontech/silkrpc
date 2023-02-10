@@ -25,7 +25,7 @@
 
 namespace silkrpc::ethdb::file {
 
-LocalTransaction::LocalTransaction(mdbx::env* chaindata_env) {
+LocalTransaction::LocalTransaction(std::shared_ptr<mdbx::env> chaindata_env) {
     chaindata_env_ = chaindata_env;
     last_cursor_id_ = 0;
 }

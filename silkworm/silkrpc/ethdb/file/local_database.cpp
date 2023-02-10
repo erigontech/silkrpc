@@ -21,9 +21,9 @@
 
 namespace silkrpc::ethdb::file {
 
-LocalDatabase::LocalDatabase(mdbx::env* env) {
+LocalDatabase::LocalDatabase(std::shared_ptr<mdbx::env> chaindata_env) {
     SILKRPC_TRACE << "LocalDatabase::ctor " << this << "\n";
-    chaindata_env_ = env;
+    chaindata_env_ = chaindata_env;
 }
 
 LocalDatabase::~LocalDatabase() {
