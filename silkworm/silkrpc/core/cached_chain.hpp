@@ -35,3 +35,4 @@ boost::asio::awaitable<silkworm::BlockWithHash> read_block_by_transaction_hash(B
 boost::asio::awaitable<std::optional<TransactionWithBlock>> read_transaction_by_hash(BlockCache& cache, const rawdb::DatabaseReader& reader, const evmc::bytes32& transaction_hash);
 
 } // namespace silkrpc::core
+
