@@ -37,7 +37,7 @@ Context::Context(
     std::shared_ptr<BlockCache> block_cache,
     std::shared_ptr<ethdb::kv::StateCache> state_cache,
     std::string db_path,
-    std::shared_ptr<mdbx::env> chaindata_env, 
+    std::shared_ptr<mdbx::env> chaindata_env,
     WaitMode wait_mode)
     : io_context_{std::make_shared<boost::asio::io_context>()},
       io_context_work_{boost::asio::make_work_guard(*io_context_)},
