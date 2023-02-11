@@ -37,7 +37,7 @@ Context::Context(
     std::shared_ptr<BlockCache> block_cache,
     std::shared_ptr<ethdb::kv::StateCache> state_cache,
     std::string db_path,
-    std::shared_ptr<mdbx::env> chaindata_env,
+    std::shared_ptr<mdbx::env_managed> chaindata_env,
     WaitMode wait_mode)
     : io_context_{std::make_shared<boost::asio::io_context>()},
       io_context_work_{boost::asio::make_work_guard(*io_context_)},
@@ -121,14 +121,14 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, s
         throw std::logic_error("ContextPool::ContextPool pool_size is 0");
     }
     SILKRPC_DEBUG << "ContextPool::ContextPool creating pool with size: " << pool_size << "\n";
-    auto chain_env = std::make_shared<mdbx::env>();
+    auto chain_env = std::make_shared<mdbx::env_managed>();
 
     if (!db_path.empty()) {
-       silkworm::db::EnvConfig db_config{};
-       db_config.path = db_path;
-       db_config.inmemory = true;
-       db_config.shared = true;
-       db_config.readonly = true;
+       silkworm::db::EnvConfig db_config{
+           .path = db_path,
+           .inmemory = true,
+           .shared = true
+       };
        *chain_env = silkworm::db::open_env(db_config);
     }
 

@@ -50,7 +50,7 @@ class Context {
         std::shared_ptr<BlockCache> block_cache,
         std::shared_ptr<ethdb::kv::StateCache> state_cache,
         std::string db_path = "",
-        std::shared_ptr<mdbx::env> chaindata_env = 0,
+        std::shared_ptr<mdbx::env_managed> chaindata_env = {},
         WaitMode wait_mode = WaitMode::blocking);
 
     boost::asio::io_context* io_context() const noexcept { return io_context_.get(); }
@@ -96,7 +96,7 @@ class Context {
     std::unique_ptr<txpool::TransactionPool> tx_pool_;
     std::shared_ptr<BlockCache> block_cache_;
     std::shared_ptr<ethdb::kv::StateCache> state_cache_;
-    std::shared_ptr<mdbx::env> chaindata_env_;
+    std::shared_ptr<mdbx::env_managed> chaindata_env_;
     WaitMode wait_mode_;
 };
 
