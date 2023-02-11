@@ -36,9 +36,9 @@ namespace silkrpc::ethdb::file {
 
 class LocalTransaction : public Transaction {
 public:
-    explicit LocalTransaction(std::shared_ptr<mdbx::env> chaindata_env);
+    explicit LocalTransaction(std::shared_ptr<mdbx::env_managed> chaindata_env) : tx_id_{0}, last_cursor_id_{0}, chaindata_env_{chaindata_env} {}
 
-    ~LocalTransaction();
+    ~LocalTransaction() {}
 
     uint64_t tx_id() const override { return tx_id_; }
 
@@ -57,7 +57,7 @@ private:
     std::map<std::string, std::shared_ptr<CursorDupSort>> dup_cursors_;
     uint64_t tx_id_;
 
-    std::shared_ptr<mdbx::env> chaindata_env_;
+    std::shared_ptr<mdbx::env_managed> chaindata_env_;
     mdbx::txn_managed read_only_txn_;
     uint32_t last_cursor_id_;
 };

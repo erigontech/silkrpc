@@ -25,16 +25,7 @@
 
 namespace silkrpc::ethdb::file {
 
-LocalTransaction::LocalTransaction(std::shared_ptr<mdbx::env> chaindata_env) {
-    chaindata_env_ = chaindata_env;
-    last_cursor_id_ = 0;
-}
-
-LocalTransaction::~LocalTransaction() {
-}
-
 boost::asio::awaitable<void> LocalTransaction::open() {
-    tx_id_ = 0;
     // Create a new read-only transaction.
     read_only_txn_ = chaindata_env_->start_read();
     co_return;
