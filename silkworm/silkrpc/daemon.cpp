@@ -59,7 +59,10 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
     SILKRPC_LOG_VERBOSITY(settings.log_verbosity);
     SILKRPC_LOG_THREAD(true);
 
+    auto mdbx_ver{mdbx::get_version()};
+    auto mdbx_bld{mdbx::get_build()};
     SILKRPC_LOG << "Silkrpc build info: " << info.build << " " << info.libraries << "\n";
+    SILKRPC_LOG << "Silkrpc libmdbx  version: " << mdbx_ver.git.describe << " build: " << mdbx_bld.target << " compiler: " << mdbx_bld.compiler << "\n";
 
     std::set_terminate([]() {
         try {
@@ -214,13 +217,23 @@ Daemon::Daemon(const DaemonSettings& settings, const std::string& jwt_secret)
 DaemonChecklist Daemon::run_checklist() {
     const auto core_service_channel{create_channel_()};
 
-    const auto kv_protocol_check{silkrpc::wait_for_kv_protocol_check(core_service_channel)};
-    const auto ethbackend_protocol_check{silkrpc::wait_for_ethbackend_protocol_check(core_service_channel)};
-    const auto mining_protocol_check{silkrpc::wait_for_mining_protocol_check(core_service_channel)};
-    const auto txpool_protocol_check{silkrpc::wait_for_txpool_protocol_check(core_service_channel)};
-
-    DaemonChecklist checklist{{kv_protocol_check, ethbackend_protocol_check, mining_protocol_check, txpool_protocol_check}};
-    return checklist;
+    if (settings_.db_path.empty()) {
+        const auto kv_protocol_check{silkrpc::wait_for_kv_protocol_check(core_service_channel)};
+        const auto ethbackend_protocol_check{silkrpc::wait_for_ethbackend_protocol_check(core_service_channel)};
+        const auto mining_protocol_check{silkrpc::wait_for_mining_protocol_check(core_service_channel)};
+        const auto txpool_protocol_check{silkrpc::wait_for_txpool_protocol_check(core_service_channel)};
+        DaemonChecklist checklist{{kv_protocol_check, ethbackend_protocol_check, mining_protocol_check, txpool_protocol_check}};
+        return checklist;
+    }
+    else {
+        // TBD 
+        //const auto kv_protocol_check{silkrpc::wait_for_kv_protocol_check(core_service_channel)};
+        //const auto ethbackend_protocol_check{silkrpc::wait_for_ethbackend_protocol_check(core_service_channel)};
+        //const auto mining_protocol_check{silkrpc::wait_for_mining_protocol_check(core_service_channel)};
+        //DaemonChecklist checklist{{ethbackend_protocol_check, mining_protocol_check, txpool_protocol_check}};
+        DaemonChecklist checklist{};
+        return checklist;
+    }
 }
 
 void Daemon::start() {
