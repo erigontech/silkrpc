@@ -194,11 +194,13 @@ void DebugTracer::on_instruction_start(uint32_t pc , const intx::uint256 *stack_
         } else if (depth == execution_state.msg->depth) {
             log.gas_cost = log.gas - execution_state.gas_left;
         }
-        if (stream_ != nullptr) {
-            write_log(log);
-            logs_.pop_back();
-        }
     }
+    if (stream_ != nullptr && logs_.size() > 1) {
+        auto& log = logs_.front();
+        write_log(log);
+        logs_.erase(logs_.begin());
+    }
+
     DebugLog log;
     log.pc = pc;
     log.op = opcode_name;
@@ -230,7 +232,6 @@ void DebugTracer::on_precompiled_run(const evmc_result& result, int64_t gas, con
     gas_on_precompiled_ = gas;
 }
 
-
 void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept {
     if (logs_.size() > 0) {
         auto& log = logs_[logs_.size() - 1];
@@ -248,11 +249,12 @@ void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::In
             log.gas_cost = log.gas - result.gas_left;
             break;
         }
+    }
 
-        if (stream_ != nullptr) {
-            write_log(log);
-            logs_.pop_back();
-        }
+    if (stream_ != nullptr && logs_.size() > 1) {
+        auto& log = logs_.front();
+        write_log(log);
+        logs_.erase(logs_.begin());
     }
 
     SILKRPC_DEBUG << "on_execution_end:"
@@ -260,6 +262,12 @@ void DebugTracer::on_execution_end(const evmc_result& result, const silkworm::In
         << " start_gas: " << std::dec << start_gas_
         << " gas_left: " << std::dec << result.gas_left
         << "\n";
+}
+
+void DebugTracer::flush_logs() {
+    for (const auto& log : logs_) {
+        write_log(log);
+    }
 }
 
 void DebugTracer::write_log(const DebugLog& log) {
@@ -323,6 +331,7 @@ boost::asio::awaitable<std::vector<DebugTrace>> DebugExecutor<WorldState, VM>::e
         const auto execution_result = co_await executor.call(block, txn, tracers, /* refund */false, /* gasBailout */false);
 
         if (stream) {
+            debug_tracer->flush_logs();
             stream->close_array();
         }
 
@@ -399,6 +408,7 @@ boost::asio::awaitable<DebugExecutorResult> DebugExecutor<WorldState, VM>::execu
     const auto execution_result = co_await executor.call(block, transaction, tracers);
 
     if (stream) {
+        debug_tracer->flush_logs();
         stream->close_array();
     }
 

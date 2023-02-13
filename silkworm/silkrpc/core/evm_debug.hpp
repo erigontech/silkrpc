@@ -83,6 +83,8 @@ public:
     void on_reward_granted(const silkworm::CallResult& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
     void on_creation_completed(const evmc_result& result, const silkworm::IntraBlockState& intra_block_state) noexcept override {};
 
+    void flush_logs();
+
 private:
     void write_log(const DebugLog& log);
 
