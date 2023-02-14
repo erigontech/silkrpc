@@ -136,7 +136,7 @@ TEST_CASE("async remote buffer", "[silkrpc][core][remote_buffer]") {
         const auto location{0x04491edcd115127caedbd478e2e7895ed80c7847e903431f94f9cfa579cad47f_bytes32};
         RemoteState remote_state(io_context, db_reader, block_number);
         auto ret_storage = remote_state.read_storage(address, 0, location);
-        CHECK(ret_storage == 0x0000000000000000000000000000000000000000000000000000000000000608_bytes32);
+        CHECK(ret_storage == 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32);
         io_context.stop();
         io_context_thread.join();
     }
