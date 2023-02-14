@@ -91,10 +91,10 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | debug_getModifiedAccountsByHash            | Yes          |                                            |
 | debug_getModifiedAccountsByNumber          | Yes          |                                            |
 | debug_storageRangeAt                       | Yes          |                                            |
-| debug_traceBlockByHash                     | Yes          |                                            |
-| debug_traceBlockByNumber                   | Yes          |                                            |
+| debug_traceBlockByHash                     | Yes          | uses JSON streaming                        |
+| debug_traceBlockByNumber                   | Yes          | uses JSON streaming                        |
 | debug_traceTransaction                     | Yes          | uses JSON streaming                        |
-| debug_traceCall                            | Yes          |                                            |
+| debug_traceCall                            | Yes          | uses JSON streaming                        |
 | debug_traceCallMany                        | -            | not yet implemented (see Erigon PR #4567)  |
 |                                            |              |                                            |
 | trace_call                                 | Yes          |                                            |
