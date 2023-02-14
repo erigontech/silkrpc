@@ -36,4 +36,11 @@ silkworm::Bytes composite_storage_key(const evmc::address& address, uint64_t inc
     return res;
 }
 
+silkworm::Bytes composite_storage_key_without_hash_lookup(const evmc::address& address, uint64_t incarnation) {
+    silkworm::Bytes res(silkworm::kAddressLength + silkworm::db::kIncarnationLength, '\0');
+    std::memcpy(&res[0], address.bytes, silkworm::kAddressLength);
+    boost::endian::store_big_u64(&res[silkworm::kAddressLength], incarnation);
+    return res;
+}
+
 } // namespace silkrpc
