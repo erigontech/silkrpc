@@ -249,6 +249,39 @@ TEST_CASE("JsonStream calls") {
 
         CHECK(string_writer.get_content() == "{\"numeric\":10,\"double\":10.3,\"boolean\":true}");
     }
+    SECTION("complex object 8") {
+        stream.open_object();
+            stream.write_field("result");
+
+            stream.open_array();
+
+                stream.open_object();
+                    stream.write_field("item", 1);
+                    stream.write_field("logs");
+                    stream.open_array();
+                        stream.open_object();
+                            stream.write_field("item", 1.1);
+                        stream.close_object();
+                    stream.close_array();
+                stream.close_object();
+
+                stream.open_object();
+                    stream.write_field("item", 2);
+                    stream.write_field("logs");
+                    stream.open_array();
+                        stream.open_object();
+                            stream.write_field("item", 2.1);
+                        stream.close_object();
+                    stream.close_array();
+                stream.close_object();
+
+            stream.close_array();
+        stream.close_object();
+        stream.close();
+
+        CHECK(string_writer.get_content() ==
+              "{\"result\":[{\"item\":1,\"logs\":[{\"item\":1.1}]},{\"item\":2,\"logs\":[{\"item\":2.1}]}]}");
+    }
     SECTION("simple array 1") {
         nlohmann::json json = R"({
             "test": "test"
@@ -273,6 +306,16 @@ TEST_CASE("JsonStream calls") {
         stream.close();
 
         CHECK(string_writer.get_content() == "[{\"test\":\"test\"},{\"test\":\"test\"}]");
+    }
+    SECTION("simple array 3") {
+        stream.open_array();
+        stream.write_json(10);
+        stream.write_json(10.3);
+        stream.write_json(true);
+        stream.close_array();
+        stream.close();
+
+        CHECK(string_writer.get_content() == "[10,10.3,true]");
     }
 }
 } // namespace json
