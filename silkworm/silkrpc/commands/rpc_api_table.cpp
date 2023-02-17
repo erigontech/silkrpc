@@ -176,6 +176,8 @@ void RpcApiTable::add_trace_handlers() {
     method_handlers_[http::method::k_trace_filter] = &commands::RpcApi::handle_trace_filter;
     method_handlers_[http::method::k_trace_get] = &commands::RpcApi::handle_trace_get;
     method_handlers_[http::method::k_trace_transaction] = &commands::RpcApi::handle_trace_transaction;
+
+    stream_handlers_[http::method::k_trace_filter] = &commands::RpcApi::handle_trace_filter_stream;
 }
 
 void RpcApiTable::add_web3_handlers() {

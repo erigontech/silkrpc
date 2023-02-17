@@ -2676,7 +2676,9 @@ TEST_CASE("TraceCallExecutor::trace_block") {
     BlockCache block_cache;
     TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
     boost::asio::io_context& io_context = context_pool.next_io_context();
-    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_block(block_with_hash), boost::asio::use_future);
+
+    Filter filter;
+    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_block(block_with_hash, filter), boost::asio::use_future);
     auto result = execution_result.get();
 
     context_pool.stop();

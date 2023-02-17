@@ -308,7 +308,8 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_block(const nlohmann::jso
         const auto block_with_hash = co_await core::read_block_by_number_or_hash(*context_.block_cache(), tx_database, block_number_or_hash);
 
         trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
-        const auto result = co_await executor.trace_block(block_with_hash);
+        trace::Filter filter;
+        const auto result = co_await executor.trace_block(block_with_hash, filter);
         reply = make_json_content(request["id"], result);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
@@ -355,6 +356,59 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_filter(const nlohmann::js
         SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, "unexpected exception");
     }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
+    co_return;
+}
+
+// https://eth.wiki/json-rpc/API#trace_filter
+boost::asio::awaitable<void> TraceRpcApi::handle_trace_filter_stream(const nlohmann::json& request, json::Stream& stream) {
+    const auto params = request["params"];
+    if (params.size() < 1) {
+        auto error_msg = "invalid trace_filter params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        const auto reply = make_json_error(request["id"], 100, error_msg);
+        stream.write_json(reply);
+        co_return;
+    }
+
+    const auto trace_filter = params[0].get<trace::TraceFilter>();
+
+    SILKRPC_INFO << "trace_filter: " << trace_filter << "\n";
+
+    stream.open_object();
+    stream.write_field("id", request["id"]);
+    stream.write_field("jsonrpc", "2.0");
+
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+
+        trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
+
+        stream.write_field("result");
+        stream.open_object();
+        const auto result = co_await executor.trace_filter(trace_filter, &stream);
+        stream.close_object();
+
+        if (result.pre_check_error) {
+            const Error error{-32000, result.pre_check_error.value()};
+            stream.write_field("error", error);
+        }
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+
+        const Error error{100, e.what()};
+        stream.write_field("error", error);
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+
+        const Error error{100, "unexpected exception"};
+        stream.write_field("error", error);
+    }
+
+    stream.close_object();
 
     co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;

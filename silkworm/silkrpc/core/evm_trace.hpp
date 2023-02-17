@@ -40,6 +40,7 @@
 #include <silkrpc/common/block_cache.hpp>
 #include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/json/stream.hpp>
 #include <silkrpc/types/block.hpp>
 #include <silkrpc/types/call.hpp>
 #include <silkrpc/types/transaction.hpp>
@@ -359,6 +360,14 @@ private:
     StateAddresses& state_addresses_;
 };
 
+struct Filter {
+    std::set<evmc::address> from_addresses;
+    std::set<evmc::address> to_addresses;
+    std::optional<std::string> mode;
+    std::uint32_t after{0};
+    std::uint32_t count{std::numeric_limits<uint32_t>::max()};
+};
+
 template<typename WorldState = silkworm::IntraBlockState, typename VM = silkworm::EVM>
 class TraceCallExecutor {
 public:
@@ -372,7 +381,7 @@ public:
     TraceCallExecutor(const TraceCallExecutor&) = delete;
     TraceCallExecutor& operator=(const TraceCallExecutor&) = delete;
 
-    boost::asio::awaitable<std::vector<Trace>> trace_block(const silkworm::BlockWithHash& block_with_hash);
+    boost::asio::awaitable<std::vector<Trace>> trace_block(const silkworm::BlockWithHash& block_with_hash, Filter& filter, json::Stream* stream = nullptr);
     boost::asio::awaitable<std::vector<TraceCallResult>> trace_block_transactions(const silkworm::Block& block, const TraceConfig& config);
     boost::asio::awaitable<TraceCallResult> trace_call(const silkworm::Block& block, const silkrpc::Call& call, const TraceConfig& config);
     boost::asio::awaitable<TraceManyCallResult> trace_calls(const silkworm::Block& block, const std::vector<TraceCall>& calls);
@@ -380,7 +389,7 @@ public:
         return execute(block.header.number-1, block, transaction, transaction.transaction_index, config);
     }
     boost::asio::awaitable<std::vector<Trace>> trace_transaction(const silkworm::BlockWithHash& block, const silkrpc::Transaction& transaction);
-    boost::asio::awaitable<TraceFilterResult> trace_filter(const TraceFilter& trace_filter);
+    boost::asio::awaitable<TraceFilterResult> trace_filter(const TraceFilter& trace_filter, json::Stream* stream = nullptr);
 
 private:
     boost::asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block,
