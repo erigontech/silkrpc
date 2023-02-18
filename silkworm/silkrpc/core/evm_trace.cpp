@@ -1136,40 +1136,51 @@ boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::tr
         if (!transaction.from) {
             transaction.recover_sender();
         }
-        if (!filter.from_addresses.empty()) {
-            if (filter.from_addresses.find(transaction.from.value()) == filter.from_addresses.end()) {
-                break;
-            }
-        }
-
         const auto hash = hash_of_transaction(transaction);
         const auto tnx_hash = silkworm::to_bytes32({hash.bytes, silkworm::kHashLength});
 
         const auto& trace_call_result = trace_call_results.at(pos);
         const auto& call_traces = trace_call_result.traces.trace;
+        int idx = 0;
         for (const auto& call_trace : call_traces) {
-            if (filter.after > 0) {
-                filter.after--;
-                break;
-            }
             Trace trace{call_trace};
-
+            nlohmann::json json = trace;
+            SILKRPC_LOG << "PROCESSING TRACE[" << pos << "-" << idx++ << "]: " << json << "\n";
+            bool skip = !(filter.from_addresses.empty() && filter.to_addresses.empty());
             if (std::holds_alternative<TraceAction>(trace.action)) {
                 const auto& action = std::get<TraceAction>(trace.action);
-                if (!filter.to_addresses.empty() && action.to) {
-                    if (filter.to_addresses.find(action.to.value()) == filter.to_addresses.end()) {
-                        break;
+                if (!filter.from_addresses.empty()) {
+                    SILKRPC_LOG << "FROM_ADDRESS is not empty: looking for " << action.from << "\n";
+                    if (filter.from_addresses.find(action.from) != filter.from_addresses.end()) {
+                        SILKRPC_LOG << "FROM_ADDRES FOUND\n";
+                        skip = false;
+                    }
+                }
+                if (skip && !filter.to_addresses.empty() && action.to) {
+                    SILKRPC_LOG << "TO_ADDRESS is not empty: looking for " << action.to.value() << " \n";
+                    if (filter.to_addresses.find(action.to.value()) != filter.to_addresses.end()) {
+                        SILKRPC_LOG << "TO_ADDRES FOUND\n";
+                        skip = false;
                     }
                 }
             }
+            if (!skip) { 
+                if (filter.after > 0) {
+                    SILKRPC_LOG << "FILTER.after: " << std::dec << filter.after << " SKIPPING TRACE\n";
+                    filter.after--;
+                } else {
+                    trace.block_number = block_with_hash.block.header.number;
+                    trace.block_hash = block_with_hash.hash;
+                    trace.transaction_position = pos;
+                    trace.transaction_hash = tnx_hash;
 
-            trace.block_number = block_with_hash.block.header.number;
-            trace.block_hash = block_with_hash.hash;
-            trace.transaction_position = pos;
-            trace.transaction_hash = tnx_hash;
-
-            traces.push_back(trace);
-            filter.count--;
+                    SILKRPC_LOG << "FILTER.count: " << std::dec << filter.count << " ADDING TRACE\n";
+                    traces.push_back(trace);
+                    filter.count--;
+                }
+            } else {
+                SILKRPC_LOG << "SKIPPED\n";
+            }
             if (filter.count == 0) {
                 break;
             }
@@ -1198,6 +1209,8 @@ boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::tr
         trace.type = "reward";
         trace.action = action;
 
+        nlohmann::json json = trace;
+        SILKRPC_LOG << "FILTER.after: " << std::dec << filter.after << "FILTER.count: " << filter.count << " ADDING TRACE: " << json << "\n";
         traces.push_back(trace);
         filter.count--;
     } else if (filter.after > 0) {
@@ -1435,7 +1448,10 @@ boost::asio::awaitable<TraceFilterResult> TraceCallExecutor<WorldState, VM>::tra
         //     count -= end - begin;
         // }
         // result.traces.insert(result.traces.end(), begin, end);
+        SILKRPC_LOG << "ADDING " << traces.size() << " traces \n";
         result.traces.insert(result.traces.end(), traces.begin(), traces.end());
+
+        SILKRPC_LOG << "TOTAL TRACES " << result.traces.size() << "\n";
 
         if (filter.count == 0) {
             break;
