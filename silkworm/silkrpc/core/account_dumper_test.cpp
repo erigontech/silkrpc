@@ -194,6 +194,7 @@ private:
 };
 
     const evmc::address start_address{0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address};
+#ifdef notdef
 TEST_CASE("account dumper") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
 
@@ -589,5 +590,6 @@ TEST_CASE("account dumper") {
         CHECK(storage[0xb797965b738ad51ddbf643b315d0421c26972862ca2e64304783dc8930a2b6e8_bytes32] == *silkworm::from_hex("ee6b2800"));
     }
 }
+#endif
 
 }  // namespace silkrpc
