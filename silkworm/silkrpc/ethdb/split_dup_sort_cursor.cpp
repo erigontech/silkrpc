@@ -41,15 +41,12 @@ SplitDupSortCursor::SplitDupSortCursor(CursorDupSort& inner_cursor, silkworm::By
 }
 
 boost::asio::awaitable<SplittedKeyValue> SplitDupSortCursor::seek_both() {
-    SILKRPC_LOG << "SplitDupSortCursor::seek key: " << silkworm::to_hex(key_) << "\n";
     auto value = co_await inner_cursor_.seek_both(key_, subkey_);
-    SILKRPC_LOG << "SplitDupSortCursor::seek ret Key: " << silkworm::to_hex(key_) << " subkey: " << silkworm::to_hex(subkey_) << " value: " << value << "\n";
     co_return split_key_value(KeyValue{key_, value});
 }
 
 boost::asio::awaitable<SplittedKeyValue> SplitDupSortCursor::next_dup() {
     KeyValue kv = co_await inner_cursor_.next_dup();
-    SILKRPC_LOG << "SplitDupSortCursor::next_dup key: " << silkworm::to_hex(kv.key) << " value: " << silkworm::to_hex(kv.value) << "\n";
     co_return split_key_value(kv);
 }
 
@@ -81,11 +78,8 @@ SplittedKeyValue SplitDupSortCursor::split_key_value(const KeyValue& kv) {
 
     SplittedKeyValue skv{key.substr(0, part1_end_)};
 
-    skv.key2 = kv.value.substr(0, silkworm::kHashLength); 
+    skv.key2 = kv.value.substr(0, silkworm::kHashLength);
     skv.value =  kv.value.substr(silkworm::kHashLength);
-    SILKRPC_LOG << "SplittedKeyValue::key1: " << silkworm::to_hex(skv.key1) << "\n";
-    SILKRPC_LOG << "SplittedKeyValue::key2: " << silkworm::to_hex(skv.key2) << "\n";
-    SILKRPC_LOG << "SplittedKeyValue::key3: " << silkworm::to_hex(skv.key3) << "\n";
 
     return skv;
 }
