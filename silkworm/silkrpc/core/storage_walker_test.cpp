@@ -238,7 +238,6 @@ TEST_CASE("StorageWalker::walk_of_storages") {
         return true;
     };
 
-#ifdef notdef
     SECTION("collect storage 1") {
         const evmc::address start_address{0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address};
         const uint64_t incarnation{0};
@@ -249,6 +248,7 @@ TEST_CASE("StorageWalker::walk_of_storages") {
         CHECK(storage.size() == 0);
     }
 
+#ifdef notdef
     SECTION("collect storage 2") {
         const evmc::address start_address{0x79a4d492a05cfd836ea0967edb5943161dd041f7_address};
         const uint64_t incarnation{1};
@@ -307,7 +307,6 @@ TEST_CASE("StorageWalker::walk_of_storages") {
 #endif
 }
 
-#ifdef notdef
 TEST_CASE("StorageWalker::storage_range_at") {
     boost::asio::thread_pool pool{1};
     nlohmann::json json;
@@ -362,6 +361,7 @@ TEST_CASE("StorageWalker::storage_range_at") {
         CHECK(storage.size() == 0);
     }
 
+#ifdef notdef
     SECTION("storage range 2") {
         const evmc::address start_address{0x79a4d492a05cfd836ea0967edb5943161dd041f7_address};
 
@@ -411,8 +411,8 @@ TEST_CASE("StorageWalker::storage_range_at") {
             }
         })"_json);
     }
-}
 #endif
+}
 
 TEST_CASE("make key for address and location") {
     evmc::address address = 0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address;
