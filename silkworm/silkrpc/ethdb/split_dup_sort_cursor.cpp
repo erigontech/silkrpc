@@ -20,10 +20,12 @@
 
 namespace silkrpc::ethdb {
 
-SplitDupSortCursor::SplitDupSortCursor(CursorDupSort& inner_cursor, silkworm::ByteView key, silkworm::ByteView subkey, uint64_t match_bits, uint64_t part1_end, uint64_t part2_start)
+SplitDupSortCursor::SplitDupSortCursor(CursorDupSort& inner_cursor, silkworm::ByteView key, silkworm::ByteView subkey, uint64_t match_bits, 
+                                       uint64_t part1_end, uint64_t part2_start, uint64_t value_offset)
 : inner_cursor_{inner_cursor}, key_{key}, subkey_{subkey} {
     part1_end_ = part1_end;
     part2_start_ = part2_start;
+    value_offset_ = value_offset;
 
     match_bytes_ = (match_bits + 7) / 8;
 
@@ -77,10 +79,10 @@ SplittedKeyValue SplitDupSortCursor::split_key_value(const KeyValue& kv) {
     }
 
     SplittedKeyValue skv{};
-    if (kv.value.size() >= silkworm::kHashLength) {
+    if (kv.value.size() >= value_offset_) {
        skv.key1 = key.substr(0, part1_end_);
-       skv.key2 = kv.value.substr(0, silkworm::kHashLength);
-       skv.value =  kv.value.substr(silkworm::kHashLength);
+       skv.key2 = kv.value.substr(0, value_offset_);
+       skv.value =  kv.value.substr(value_offset_);
     }
 
     return skv;
