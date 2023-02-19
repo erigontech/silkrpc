@@ -20,7 +20,7 @@
 
 namespace silkrpc::ethdb {
 
-SplitDupSortCursor::SplitDupSortCursor(CursorDupSort& inner_cursor, silkworm::ByteView key, silkworm::ByteView subkey, uint64_t match_bits, 
+SplitDupSortCursor::SplitDupSortCursor(CursorDupSort& inner_cursor, silkworm::ByteView key, silkworm::ByteView subkey, uint64_t match_bits,
                                        uint64_t part1_end, uint64_t part2_start, uint64_t value_offset)
 : inner_cursor_{inner_cursor}, key_{key}, subkey_{subkey} {
     part1_end_ = part1_end;
