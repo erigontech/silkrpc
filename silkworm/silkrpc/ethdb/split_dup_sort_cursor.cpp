@@ -76,10 +76,12 @@ SplittedKeyValue SplitDupSortCursor::split_key_value(const KeyValue& kv) {
         return SplittedKeyValue{};
     }
 
-    SplittedKeyValue skv{key.substr(0, part1_end_)};
-
-    skv.key2 = kv.value.substr(0, silkworm::kHashLength);
-    skv.value =  kv.value.substr(silkworm::kHashLength);
+    SplittedKeyValue skv{};
+    if (kv.value.size() >= silkworm::kHashLength) {
+       skv.key1 = key.substr(0, part1_end_);
+       skv.key2 = kv.value.substr(0, silkworm::kHashLength);
+       skv.value =  kv.value.substr(silkworm::kHashLength);
+    }
 
     return skv;
 }
