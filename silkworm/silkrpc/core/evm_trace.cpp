@@ -1141,32 +1141,26 @@ boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::tr
 
         const auto& trace_call_result = trace_call_results.at(pos);
         const auto& call_traces = trace_call_result.traces.trace;
-        int idx = 0;
+
         for (const auto& call_trace : call_traces) {
             Trace trace{call_trace};
             nlohmann::json json = trace;
-            SILKRPC_LOG << "PROCESSING TRACE[" << pos << "-" << idx++ << "]: " << json << "\n";
             bool skip = !(filter.from_addresses.empty() && filter.to_addresses.empty());
             if (std::holds_alternative<TraceAction>(trace.action)) {
                 const auto& action = std::get<TraceAction>(trace.action);
-                if (!filter.from_addresses.empty()) {
-                    SILKRPC_LOG << "FROM_ADDRESS is not empty: looking for " << action.from << "\n";
+                if (skip && !filter.from_addresses.empty()) {
                     if (filter.from_addresses.find(action.from) != filter.from_addresses.end()) {
-                        SILKRPC_LOG << "FROM_ADDRES FOUND\n";
                         skip = false;
                     }
                 }
                 if (skip && !filter.to_addresses.empty() && action.to) {
-                    SILKRPC_LOG << "TO_ADDRESS is not empty: looking for " << action.to.value() << " \n";
                     if (filter.to_addresses.find(action.to.value()) != filter.to_addresses.end()) {
-                        SILKRPC_LOG << "TO_ADDRES FOUND\n";
                         skip = false;
                     }
                 }
             }
-            if (!skip) { 
+            if (!skip) {
                 if (filter.after > 0) {
-                    SILKRPC_LOG << "FILTER.after: " << std::dec << filter.after << " SKIPPING TRACE\n";
                     filter.after--;
                 } else {
                     trace.block_number = block_with_hash.block.header.number;
@@ -1174,12 +1168,13 @@ boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::tr
                     trace.transaction_position = pos;
                     trace.transaction_hash = tnx_hash;
 
-                    SILKRPC_LOG << "FILTER.count: " << std::dec << filter.count << " ADDING TRACE\n";
-                    traces.push_back(trace);
+                    if (stream != nullptr) {
+                        stream->write_json(trace);
+                    } else {
+                        traces.push_back(trace);
+                    }
                     filter.count--;
                 }
-            } else {
-                SILKRPC_LOG << "SKIPPED\n";
             }
             if (filter.count == 0) {
                 break;
@@ -1209,9 +1204,11 @@ boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::tr
         trace.type = "reward";
         trace.action = action;
 
-        nlohmann::json json = trace;
-        SILKRPC_LOG << "FILTER.after: " << std::dec << filter.after << "FILTER.count: " << filter.count << " ADDING TRACE: " << json << "\n";
-        traces.push_back(trace);
+        if (stream != nullptr) {
+            stream->write_json(trace);
+        } else {
+            traces.push_back(trace);
+        }
         filter.count--;
     } else if (filter.after > 0) {
         filter.after--;
@@ -1374,17 +1371,20 @@ boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::tr
 }
 
 template<typename WorldState, typename VM>
-boost::asio::awaitable<TraceFilterResult> TraceCallExecutor<WorldState, VM>::trace_filter(const TraceFilter& trace_filter, json::Stream* stream) {
+boost::asio::awaitable<void> TraceCallExecutor<WorldState, VM>::trace_filter(const TraceFilter& trace_filter, json::Stream* stream) {
     SILKRPC_INFO << "TraceCallExecutor::trace_filter: filter " << trace_filter << "\n";
 
     const auto from_block_with_hash = co_await core::read_block_by_number_or_hash(block_cache_, database_reader_, trace_filter.from_block);
     const auto to_block_with_hash = co_await core::read_block_by_number_or_hash(block_cache_, database_reader_, trace_filter.to_block);
 
-    TraceFilterResult result;
     if (from_block_with_hash.block.header.number > to_block_with_hash.block.header.number) {
-        result.pre_check_error = "invalid parameters: fromBlock cannot be greater than toBlock";
-        co_return result;
+        const Error error{-32000, "invalid parameters: fromBlock cannot be greater than toBlock"};
+        stream->write_field("error", error);
+        co_return;
     }
+
+    stream->write_field("result");
+    stream->open_array();
 
     Filter filter;
     filter.from_addresses.insert(trace_filter.from_addresses.begin(), trace_filter.from_addresses.end());
@@ -1401,57 +1401,7 @@ boost::asio::awaitable<TraceFilterResult> TraceCallExecutor<WorldState, VM>::tra
             << " block: " << block
             << "\n";
 
-        std::vector<Trace> traces = co_await trace_block(block_with_hash, filter, stream);
-        // if (!from_addresses.empty() || !to_addresses.empty()) {
-        //     std::vector<Trace>::iterator itr = traces.begin();
-        //     while (itr != traces.end()) {
-        //         const auto& trace = *itr;
-        //         bool to_be_deleted = true;
-        //         if (std::holds_alternative<TraceAction>(trace.action)) {
-        //             const auto& action = std::get<TraceAction>(trace.action);
-        //             if (!from_addresses.empty()) {
-        //                 if (from_addresses.find(action.from) != from_addresses.end()) {
-        //                     to_be_deleted = false;
-        //                 }
-        //             }
-        //             if (!to_addresses.empty() && action.to) {
-        //                 if (to_addresses.find(action.to.value()) != to_addresses.end()) {
-        //                     to_be_deleted = false;
-        //                 }
-        //             }
-        //         }
-        //         if (to_be_deleted) {
-        //             itr = traces.erase(itr);
-        //         } else {
-        //             ++itr;
-        //         }
-        //     }
-
-        //     SILKRPC_DEBUG << "TraceCallExecutor::trace_filter: remaining " << traces.size() << " entries for "
-        //         << " block_number: " << block_number-1
-        //         << " after processing\n";
-        // }
-
-        // auto begin = traces.begin();
-        // if (after < traces.size()) {
-        //     begin += after;
-        //     after = 0;
-        // } else {
-        //     begin = traces.end();
-        //     after -= traces.size();
-        // }
-        // auto end   = traces.end();
-        // if (end - begin > count) {
-        //     end = begin + count;
-        //     count = 0;
-        // } else {
-        //     count -= end - begin;
-        // }
-        // result.traces.insert(result.traces.end(), begin, end);
-        SILKRPC_LOG << "ADDING " << traces.size() << " traces \n";
-        result.traces.insert(result.traces.end(), traces.begin(), traces.end());
-
-        SILKRPC_LOG << "TOTAL TRACES " << result.traces.size() << "\n";
+        co_await trace_block(block_with_hash, filter, stream);
 
         if (filter.count == 0) {
             break;
@@ -1464,9 +1414,11 @@ boost::asio::awaitable<TraceFilterResult> TraceCallExecutor<WorldState, VM>::tra
         }
     }
 
+    stream->close_array();
+
     SILKRPC_INFO << "TraceCallExecutor::trace_filter: ends \n";
 
-    co_return result;
+    co_return;
 }
 
 template<typename WorldState, typename VM>

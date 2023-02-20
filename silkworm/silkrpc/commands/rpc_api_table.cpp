@@ -173,11 +173,10 @@ void RpcApiTable::add_trace_handlers() {
     method_handlers_[http::method::k_trace_replayBlockTransactions] = &commands::RpcApi::handle_trace_replay_block_transactions;
     method_handlers_[http::method::k_trace_replayTransaction] = &commands::RpcApi::handle_trace_replay_transaction;
     method_handlers_[http::method::k_trace_block] = &commands::RpcApi::handle_trace_block;
-    method_handlers_[http::method::k_trace_filter] = &commands::RpcApi::handle_trace_filter;
     method_handlers_[http::method::k_trace_get] = &commands::RpcApi::handle_trace_get;
     method_handlers_[http::method::k_trace_transaction] = &commands::RpcApi::handle_trace_transaction;
 
-    stream_handlers_[http::method::k_trace_filter] = &commands::RpcApi::handle_trace_filter_stream;
+    stream_handlers_[http::method::k_trace_filter] = &commands::RpcApi::handle_trace_filter;
 }
 
 void RpcApiTable::add_web3_handlers() {

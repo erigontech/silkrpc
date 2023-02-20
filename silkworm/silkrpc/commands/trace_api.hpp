@@ -52,11 +52,10 @@ protected:
     boost::asio::awaitable<void> handle_trace_replay_block_transactions(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_trace_replay_transaction(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_trace_block(const nlohmann::json& request, nlohmann::json& reply);
-    boost::asio::awaitable<void> handle_trace_filter(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_trace_get(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_trace_transaction(const nlohmann::json& request, nlohmann::json& reply);
 
-    boost::asio::awaitable<void> handle_trace_filter_stream(const nlohmann::json& request, json::Stream& stream);
+    boost::asio::awaitable<void> handle_trace_filter(const nlohmann::json& request, json::Stream& stream);
 
 private:
     Context& context_;

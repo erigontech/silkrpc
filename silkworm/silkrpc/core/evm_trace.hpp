@@ -331,11 +331,6 @@ struct TraceManyCallResult {
     std::optional<std::string> pre_check_error{std::nullopt};
 };
 
-struct TraceFilterResult {
-    std::vector<Trace> traces;
-    std::optional<std::string> pre_check_error{std::nullopt};
-};
-
 void to_json(nlohmann::json& json, const TraceCallTraces& result);
 void to_json(nlohmann::json& json, const TraceCallResult& result);
 void to_json(nlohmann::json& json, const TraceManyCallResult& result);
@@ -389,7 +384,7 @@ public:
         return execute(block.header.number-1, block, transaction, transaction.transaction_index, config);
     }
     boost::asio::awaitable<std::vector<Trace>> trace_transaction(const silkworm::BlockWithHash& block, const silkrpc::Transaction& transaction);
-    boost::asio::awaitable<TraceFilterResult> trace_filter(const TraceFilter& trace_filter, json::Stream* stream = nullptr);
+    boost::asio::awaitable<void> trace_filter(const TraceFilter& trace_filter, json::Stream* stream);
 
 private:
     boost::asio::awaitable<TraceCallResult> execute(std::uint64_t block_number, const silkworm::Block& block,

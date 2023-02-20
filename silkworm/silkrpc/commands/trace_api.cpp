@@ -324,45 +324,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_block(const nlohmann::jso
 }
 
 // https://eth.wiki/json-rpc/API#trace_filter
-boost::asio::awaitable<void> TraceRpcApi::handle_trace_filter(const nlohmann::json& request, nlohmann::json& reply) {
-    const auto params = request["params"];
-    if (params.size() < 1) {
-        auto error_msg = "invalid trace_filter params: " + params.dump();
-        SILKRPC_ERROR << error_msg << "\n";
-        reply = make_json_error(request["id"], 100, error_msg);
-        co_return;
-    }
-
-    const auto trace_filter = params[0].get<trace::TraceFilter>();
-
-    SILKRPC_INFO << "trace_filter: " << trace_filter << "\n";
-
-    auto tx = co_await database_->begin();
-
-    try {
-        ethdb::TransactionDatabase tx_database{*tx};
-
-        trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
-        const auto result = co_await executor.trace_filter(trace_filter);
-        if (result.pre_check_error) {
-            reply = make_json_error(request["id"], -32000, result.pre_check_error.value());
-        } else {
-            reply = make_json_content(request["id"], result.traces);
-        }
-    } catch (const std::exception& e) {
-        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, e.what());
-    } catch (...) {
-        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-        reply = make_json_error(request["id"], 100, "unexpected exception");
-    }
-
-    co_await tx->close(); // RAII not (yet) available with coroutines
-    co_return;
-}
-
-// https://eth.wiki/json-rpc/API#trace_filter
-boost::asio::awaitable<void> TraceRpcApi::handle_trace_filter_stream(const nlohmann::json& request, json::Stream& stream) {
+boost::asio::awaitable<void> TraceRpcApi::handle_trace_filter(const nlohmann::json& request, json::Stream& stream) {
     const auto params = request["params"];
     if (params.size() < 1) {
         auto error_msg = "invalid trace_filter params: " + params.dump();
@@ -387,15 +349,7 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_filter_stream(const nlohm
 
         trace::TraceCallExecutor executor{*context_.io_context(), *context_.block_cache(), tx_database, workers_};
 
-        stream.write_field("result");
-        stream.open_object();
-        const auto result = co_await executor.trace_filter(trace_filter, &stream);
-        stream.close_object();
-
-        if (result.pre_check_error) {
-            const Error error{-32000, result.pre_check_error.value()};
-            stream.write_field("error", error);
-        }
+        co_await executor.trace_filter(trace_filter, &stream);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
 
