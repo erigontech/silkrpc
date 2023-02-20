@@ -2676,7 +2676,9 @@ TEST_CASE("TraceCallExecutor::trace_block") {
     BlockCache block_cache;
     TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
     boost::asio::io_context& io_context = context_pool.next_io_context();
-    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_block(block_with_hash), boost::asio::use_future);
+
+    Filter filter;
+    auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_block(block_with_hash, filter), boost::asio::use_future);
     auto result = execution_result.get();
 
     context_pool.stop();
@@ -3929,6 +3931,9 @@ TEST_CASE("TraceCallExecutor::trace_transaction") {
 TEST_CASE("TraceCallExecutor::trace_filter") {
     SILKRPC_LOG_STREAMS(null_stream(), null_stream());
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    StringWriter string_writer(4096);
+    json::Stream stream(string_writer);
 
     test::MockDatabaseReader db_reader;
     boost::asio::thread_pool workers{1};
@@ -5451,15 +5456,25 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
         BlockCache block_cache;
         TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
         boost::asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
-        auto result = execution_result.get();
+
+        stream.open_object();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter, &stream), boost::asio::use_future);
+        execution_result.get();
 
         context_pool.stop();
         io_context.stop();
         pool_thread.join();
 
-        CHECK(result.pre_check_error.has_value() == true);
-        CHECK(result.pre_check_error.value() == "invalid parameters: fromBlock cannot be greater than toBlock");
+        stream.close_object();
+        stream.close();
+
+        nlohmann::json json = nlohmann::json::parse(string_writer.get_content());
+        CHECK(json == R"({
+            "error":{
+                "code":-32000,
+                "message":"invalid parameters: fromBlock cannot be greater than toBlock"
+            }
+        })"_json);
     }
 
     SECTION("from block to block") {
@@ -5507,15 +5522,20 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
         BlockCache block_cache;
         TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
         boost::asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
-        auto result = execution_result.get();
+
+        stream.open_object();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter, &stream), boost::asio::use_future);
+        execution_result.get();
 
         context_pool.stop();
         io_context.stop();
         pool_thread.join();
 
-        CHECK(result.pre_check_error.has_value() == false);
-        CHECK(result.traces == R"([
+        stream.close_object();
+        stream.close();
+
+        nlohmann::json json = nlohmann::json::parse(string_writer.get_content());
+        CHECK(json["result"] == R"([
             {
                 "action": {
                     "author": "0x0000000000000000000000000000000000000000",
@@ -5591,15 +5611,20 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
         BlockCache block_cache;
         TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
         boost::asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
-        auto result = execution_result.get();
+
+        stream.open_object();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter, &stream), boost::asio::use_future);
+        execution_result.get();
 
         context_pool.stop();
         io_context.stop();
         pool_thread.join();
 
-        CHECK(result.pre_check_error.has_value() == false);
-        CHECK(result.traces == R"([
+        stream.close_object();
+        stream.close();
+
+        nlohmann::json json = nlohmann::json::parse(string_writer.get_content());
+        CHECK(json["result"] == R"([
         ])"_json);
     }
 
@@ -5649,15 +5674,20 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
         BlockCache block_cache;
         TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
         boost::asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
-        auto result = execution_result.get();
+
+        stream.open_object();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter, &stream), boost::asio::use_future);
+        execution_result.get();
 
         context_pool.stop();
         io_context.stop();
         pool_thread.join();
 
-        CHECK(result.pre_check_error.has_value() == false);
-        CHECK(result.traces == R"([
+        stream.close_object();
+        stream.close();
+
+        nlohmann::json json = nlohmann::json::parse(string_writer.get_content());
+        CHECK(json["result"] == R"([
         ])"_json);
     }
 
@@ -5671,15 +5701,20 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
         BlockCache block_cache;
         TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
         boost::asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
-        auto result = execution_result.get();
+
+        stream.open_object();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter, &stream), boost::asio::use_future);
+        execution_result.get();
 
         context_pool.stop();
         io_context.stop();
         pool_thread.join();
 
-        CHECK(result.pre_check_error.has_value() == false);
-        CHECK(result.traces == R"([
+        stream.close_object();
+        stream.close();
+
+        nlohmann::json json = nlohmann::json::parse(string_writer.get_content());
+        CHECK(json["result"] == R"([
         ])"_json);
     }
 
@@ -5693,15 +5728,20 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
         BlockCache block_cache;
         TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
         boost::asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
-        auto result = execution_result.get();
+
+        stream.open_object();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter, &stream), boost::asio::use_future);
+        execution_result.get();
 
         context_pool.stop();
         io_context.stop();
         pool_thread.join();
 
-        CHECK(result.pre_check_error.has_value() == false);
-        CHECK(result.traces == R"([
+        stream.close_object();
+        stream.close();
+
+        nlohmann::json json = nlohmann::json::parse(string_writer.get_content());
+        CHECK(json["result"] == R"([
             {
                 "action": {
                     "author": "0x0000000000000000000000000000000000000000",
@@ -5764,15 +5804,20 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
         BlockCache block_cache;
         TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
         boost::asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
-        auto result = execution_result.get();
+
+        stream.open_object();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter, &stream), boost::asio::use_future);
+        execution_result.get();
 
         context_pool.stop();
         io_context.stop();
         pool_thread.join();
 
-        CHECK(result.pre_check_error.has_value() == false);
-        CHECK(result.traces == R"([
+        stream.close_object();
+        stream.close();
+
+        nlohmann::json json = nlohmann::json::parse(string_writer.get_content());
+        CHECK(json["result"]  == R"([
             {
                 "action": {
                     "author": "0x0000000000000000000000000000000000000000",
@@ -5848,15 +5893,20 @@ TEST_CASE("TraceCallExecutor::trace_filter") {
         BlockCache block_cache;
         TraceCallExecutor executor{context_pool.next_io_context(), block_cache, db_reader, workers};
         boost::asio::io_context& io_context = context_pool.next_io_context();
-        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter), boost::asio::use_future);
-        auto result = execution_result.get();
+
+        stream.open_object();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.trace_filter(trace_filter, &stream), boost::asio::use_future);
+        execution_result.get();
 
         context_pool.stop();
         io_context.stop();
         pool_thread.join();
 
-        CHECK(result.pre_check_error.has_value() == false);
-        CHECK(result.traces == R"([
+        stream.close_object();
+        stream.close();
+
+        nlohmann::json json = nlohmann::json::parse(string_writer.get_content());
+        CHECK(json["result"] == R"([
             {
                 "action": {
                     "author": "0x0000000000000000000000000000000000000000",

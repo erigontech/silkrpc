@@ -103,7 +103,7 @@ The following table shows the current [JSON RPC API](https://eth.wiki/json-rpc/A
 | trace_replayBlockTransactions              | Yes          |                                            |
 | trace_replayTransaction                    | Yes          |                                            |
 | trace_block                                | Yes          |                                            |
-| trace_filter                               | Yes          |                                            |
+| trace_filter                               | Yes          | uses JSON streaming                        |
 | trace_get                                  | Yes          |                                            |
 | trace_transaction                          | Yes          |                                            |
 |                                            |              |                                            |
