@@ -25,7 +25,7 @@
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 #include <silkrpc/ethdb/file/local_database.hpp>
 
-const std::string dbRelativePath = "/chaindata";
+static const char dbRelativePath[] = "/chaindata";
 
 namespace silkrpc {
 
