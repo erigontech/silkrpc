@@ -70,7 +70,7 @@ TEST_CASE("split dup sort cursor") {
         const evmc::address key = 0x79a4d35bd00b1843ec5292217e71dace5e5a7439_address;
         const evmc::bytes32 location = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32;
 
-        SplitDupSortCursor sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength, 
+        SplitDupSortCursor sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
                               silkworm::kAddressLength,  silkworm::kHashLength);
 
         EXPECT_CALL(csdp, seek_both(_, _))
@@ -90,7 +90,7 @@ TEST_CASE("split dup sort cursor") {
         const evmc::address key = 0x79a4d35bd00b1843ec5292217e71dace5e5a7439_address;
         const evmc::bytes32 location = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32;
 
-        SplitDupSortCursor sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength, 
+        SplitDupSortCursor sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
                               silkworm::kAddressLength,  silkworm::kHashLength);
 
         EXPECT_CALL(csdp, seek_both(_, _))
@@ -110,7 +110,7 @@ TEST_CASE("split dup sort cursor") {
         const evmc::address key = 0x79a4d35bd00b1843ec5292217e71dace5e5a7439_address;
         const evmc::bytes32 location = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32;
 
-        SplitDupSortCursor sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength, 
+        SplitDupSortCursor sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
                               silkworm::kAddressLength,  silkworm::kHashLength);
 
         EXPECT_CALL(csdp, next_dup())
@@ -130,7 +130,7 @@ TEST_CASE("split dup sort cursor") {
         const evmc::address key = 0x79a4d35bd00b1843ec5292217e71dace5e5a7439_address;
         const evmc::bytes32 location = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32;
 
-        SplitDupSortCursor sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength, 
+        SplitDupSortCursor sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
                               silkworm::kAddressLength,  silkworm::kHashLength);
 
         EXPECT_CALL(csdp, next_dup())
@@ -150,7 +150,7 @@ TEST_CASE("split dup sort cursor") {
         const evmc::address key = 0x79a4d35bd00b1843ec5292217e71dace5e5a7439_address;
         const evmc::bytes32 location = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32;
 
-        SplitDupSortCursor sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength, 
+        SplitDupSortCursor sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
                               silkworm::kAddressLength,  silkworm::kHashLength);
 
         EXPECT_CALL(csdp, next_dup())
