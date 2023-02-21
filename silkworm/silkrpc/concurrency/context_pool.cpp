@@ -25,6 +25,8 @@
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 #include <silkrpc/ethdb/file/local_database.hpp>
 
+const std::string dbRelativePath = "/chaindata";
+
 namespace silkrpc {
 
 std::ostream& operator<<(std::ostream& out, Context& c) {
@@ -36,7 +38,6 @@ Context::Context(
     ChannelFactory create_channel,
     std::shared_ptr<BlockCache> block_cache,
     std::shared_ptr<ethdb::kv::StateCache> state_cache,
-    std::string db_path,
     std::shared_ptr<mdbx::env_managed> chaindata_env,
     WaitMode wait_mode)
     : io_context_{std::make_shared<boost::asio::io_context>()},
@@ -48,7 +49,7 @@ Context::Context(
       chaindata_env_(chaindata_env),
       wait_mode_(wait_mode) {
     std::shared_ptr<grpc::Channel> channel = create_channel();
-    if (!db_path.empty()) {
+    if (chaindata_env) {
         database_ = std::make_unique<ethdb::file::LocalDatabase>(chaindata_env);
     } else {
         database_ = std::make_unique<ethdb::kv::RemoteDatabase>(*grpc_context_, channel);
@@ -116,14 +117,17 @@ void Context::stop() {
     SILKRPC_DEBUG << "Context::stop io_context " << io_context_ << " [" << this << "]\n";
 }
 
-ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, std::string db_path, WaitMode wait_mode) : next_index_{0} {
+ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, std::optional<std::string> datadir, WaitMode wait_mode) : next_index_{0} {
     if (pool_size == 0) {
         throw std::logic_error("ContextPool::ContextPool pool_size is 0");
     }
     SILKRPC_DEBUG << "ContextPool::ContextPool creating pool with size: " << pool_size << "\n";
-    auto chain_env = std::make_shared<mdbx::env_managed>();
 
-    if (!db_path.empty()) {
+    std::shared_ptr<mdbx::env_managed> chain_env = nullptr;
+
+    if (datadir) {
+       chain_env = std::make_shared<mdbx::env_managed>();
+       std::string db_path = *datadir + dbRelativePath;
        silkworm::db::EnvConfig db_config{
            .path = db_path,
            .inmemory = true,
@@ -140,7 +144,7 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, s
 
     // Create as many execution contexts as required by the pool size
     for (std::size_t i{0}; i < pool_size; ++i) {
-        contexts_.emplace_back(Context{create_channel, block_cache, state_cache, db_path, chain_env, wait_mode});
+        contexts_.emplace_back(Context{create_channel, block_cache, state_cache, chain_env, wait_mode});
         SILKRPC_DEBUG << "ContextPool::ContextPool context[" << i << "] " << contexts_[i] << "\n";
     }
 }
