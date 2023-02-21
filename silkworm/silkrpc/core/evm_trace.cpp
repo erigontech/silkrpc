@@ -66,7 +66,6 @@ std::ostream& operator<<(std::ostream& out, const TraceConfig& tc) {
 std::ostream& operator<<(std::ostream& out, const TraceFilter& tf) {
     out << "from_block: " << std::dec << tf.from_block;
     out << ", to_block: " << std::dec << tf.to_block;
-
     if (tf.from_addresses.size() > 0) {
         out << ", from_addresses: [";
         std::copy(tf.from_addresses.begin(), tf.from_addresses.end(), std::ostream_iterator<evmc::address>(out, ", "));
@@ -1128,7 +1127,7 @@ void IntraBlockStateTracer::on_reward_granted(const silkworm::CallResult& result
 }
 
 template<typename WorldState, typename VM>
-boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_block(const silkworm::BlockWithHash& block_with_hash) {
+boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::trace_block(const silkworm::BlockWithHash& block_with_hash, Filter& filter, json::Stream* stream) {
     std::vector<Trace> traces;
 
     const auto trace_call_results = co_await trace_block_transactions(block_with_hash.block, {false, true, false});
@@ -1142,33 +1141,78 @@ boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::tr
 
         const auto& trace_call_result = trace_call_results.at(pos);
         const auto& call_traces = trace_call_result.traces.trace;
+
         for (const auto& call_trace : call_traces) {
             Trace trace{call_trace};
+            nlohmann::json json = trace;
+            bool skip = !(filter.from_addresses.empty() && filter.to_addresses.empty());
+            if (std::holds_alternative<TraceAction>(trace.action)) {
+                const auto& action = std::get<TraceAction>(trace.action);
+                if (skip && !filter.from_addresses.empty()) {
+                    if (filter.from_addresses.find(action.from) != filter.from_addresses.end()) {
+                        skip = false;
+                    }
+                }
+                if (skip && !filter.to_addresses.empty() && action.to) {
+                    if (filter.to_addresses.find(action.to.value()) != filter.to_addresses.end()) {
+                        skip = false;
+                    }
+                }
+            }
+            if (!skip) {
+                if (filter.after > 0) {
+                    filter.after--;
+                } else {
+                    trace.block_number = block_with_hash.block.header.number;
+                    trace.block_hash = block_with_hash.hash;
+                    trace.transaction_position = pos;
+                    trace.transaction_hash = tnx_hash;
 
-            trace.block_number = block_with_hash.block.header.number;
-            trace.block_hash = block_with_hash.hash;
-            trace.transaction_position = pos;
-            trace.transaction_hash = tnx_hash;
-
-            traces.push_back(trace);
+                    if (stream != nullptr) {
+                        stream->write_json(trace);
+                    } else {
+                        traces.push_back(trace);
+                    }
+                    filter.count--;
+                }
+            }
+            if (filter.count == 0) {
+                break;
+            }
+        }
+        if (filter.count == 0) {
+            break;
         }
     }
 
-    const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(database_reader_)};
-    const auto block_rewards = ethash::compute_reward(chain_config, block_with_hash.block);
+    if (!filter.from_addresses.empty() || !filter.to_addresses.empty()) {
+        co_return traces;
+    }
 
-    RewardAction action;
-    action.author = block_with_hash.block.header.beneficiary;
-    action.reward_type = "block";
-    action.value = block_rewards.miner_reward;
+    if (filter.count > 0 && filter.after == 0) {
+        const auto chain_config{co_await silkrpc::core::rawdb::read_chain_config(database_reader_)};
+        const auto block_rewards = ethash::compute_reward(chain_config, block_with_hash.block);
 
-    Trace trace;
-    trace.block_number = block_with_hash.block.header.number;
-    trace.block_hash = block_with_hash.hash;
-    trace.type = "reward";
-    trace.action = action;
+        RewardAction action;
+        action.author = block_with_hash.block.header.beneficiary;
+        action.reward_type = "block";
+        action.value = block_rewards.miner_reward;
 
-    traces.push_back(trace);
+        Trace trace;
+        trace.block_number = block_with_hash.block.header.number;
+        trace.block_hash = block_with_hash.hash;
+        trace.type = "reward";
+        trace.action = action;
+
+        if (stream != nullptr) {
+            stream->write_json(trace);
+        } else {
+            traces.push_back(trace);
+        }
+        filter.count--;
+    } else if (filter.after > 0) {
+        filter.after--;
+    }
 
     co_return traces;
 }
@@ -1327,26 +1371,26 @@ boost::asio::awaitable<std::vector<Trace>> TraceCallExecutor<WorldState, VM>::tr
 }
 
 template<typename WorldState, typename VM>
-boost::asio::awaitable<TraceFilterResult> TraceCallExecutor<WorldState, VM>::trace_filter(const TraceFilter& trace_filter) {
+boost::asio::awaitable<void> TraceCallExecutor<WorldState, VM>::trace_filter(const TraceFilter& trace_filter, json::Stream* stream) {
     SILKRPC_INFO << "TraceCallExecutor::trace_filter: filter " << trace_filter << "\n";
 
     const auto from_block_with_hash = co_await core::read_block_by_number_or_hash(block_cache_, database_reader_, trace_filter.from_block);
     const auto to_block_with_hash = co_await core::read_block_by_number_or_hash(block_cache_, database_reader_, trace_filter.to_block);
 
-    TraceFilterResult result;
     if (from_block_with_hash.block.header.number > to_block_with_hash.block.header.number) {
-        result.pre_check_error = "invalid parameters: fromBlock cannot be greater than toBlock";
-        co_return result;
+        const Error error{-32000, "invalid parameters: fromBlock cannot be greater than toBlock"};
+        stream->write_field("error", error);
+        co_return;
     }
 
-    std::set<evmc::address> from_addresses;
-    from_addresses.insert(trace_filter.from_addresses.begin(), trace_filter.from_addresses.end());
+    stream->write_field("result");
+    stream->open_array();
 
-    std::set<evmc::address> to_addresses;
-    to_addresses.insert(trace_filter.to_addresses.begin(), trace_filter.to_addresses.end());
-
-    auto after = trace_filter.after;
-    auto count = trace_filter.count;
+    Filter filter;
+    filter.from_addresses.insert(trace_filter.from_addresses.begin(), trace_filter.from_addresses.end());
+    filter.to_addresses.insert(trace_filter.to_addresses.begin(), trace_filter.to_addresses.end());
+    filter.after = trace_filter.after;
+    filter.count = trace_filter.count;
 
     auto block_number = from_block_with_hash.block.header.number;
     auto block_with_hash = from_block_with_hash;
@@ -1357,55 +1401,9 @@ boost::asio::awaitable<TraceFilterResult> TraceCallExecutor<WorldState, VM>::tra
             << " block: " << block
             << "\n";
 
-        std::vector<Trace> traces = co_await trace_block(block_with_hash);
-        if (!from_addresses.empty() || !to_addresses.empty()) {
-            std::vector<Trace>::iterator itr = traces.begin();
-            while (itr != traces.end()) {
-                const auto& trace = *itr;
-                bool to_be_deleted = true;
-                if (std::holds_alternative<TraceAction>(trace.action)) {
-                    const auto& action = std::get<TraceAction>(trace.action);
-                    if (!from_addresses.empty()) {
-                        if (from_addresses.find(action.from) != from_addresses.end()) {
-                            to_be_deleted = false;
-                        }
-                    }
-                    if (!to_addresses.empty() && action.to) {
-                        if (to_addresses.find(action.to.value()) != to_addresses.end()) {
-                            to_be_deleted = false;
-                        }
-                    }
-                }
-                if (to_be_deleted) {
-                    itr = traces.erase(itr);
-                } else {
-                    ++itr;
-                }
-            }
+        co_await trace_block(block_with_hash, filter, stream);
 
-            SILKRPC_DEBUG << "TraceCallExecutor::trace_filter: remaining " << traces.size() << " entries for "
-                << " block_number: " << block_number-1
-                << " after processing\n";
-        }
-
-        auto begin = traces.begin();
-        if (after < traces.size()) {
-            begin += after;
-            after = 0;
-        } else {
-            begin = traces.end();
-            after -= traces.size();
-        }
-        auto end   = traces.end();
-        if (end - begin > count) {
-            end = begin + count;
-            count = 0;
-        } else {
-            count -= end - begin;
-        }
-        result.traces.insert(result.traces.end(), begin, end);
-
-        if (count == 0) {
+        if (filter.count == 0) {
             break;
         }
 
@@ -1416,9 +1414,11 @@ boost::asio::awaitable<TraceFilterResult> TraceCallExecutor<WorldState, VM>::tra
         }
     }
 
+    stream->close_array();
+
     SILKRPC_INFO << "TraceCallExecutor::trace_filter: ends \n";
 
-    co_return result;
+    co_return;
 }
 
 template<typename WorldState, typename VM>

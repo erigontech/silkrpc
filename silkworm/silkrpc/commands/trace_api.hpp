@@ -27,6 +27,7 @@
 
 #include <silkrpc/concurrency/context_pool.hpp>
 #include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkrpc/json/stream.hpp>
 #include <silkrpc/json/types.hpp>
 #include <silkrpc/ethdb/database.hpp>
 #include <silkrpc/ethdb/transaction_database.hpp>
@@ -51,9 +52,10 @@ protected:
     boost::asio::awaitable<void> handle_trace_replay_block_transactions(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_trace_replay_transaction(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_trace_block(const nlohmann::json& request, nlohmann::json& reply);
-    boost::asio::awaitable<void> handle_trace_filter(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_trace_get(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_trace_transaction(const nlohmann::json& request, nlohmann::json& reply);
+
+    boost::asio::awaitable<void> handle_trace_filter(const nlohmann::json& request, json::Stream& stream);
 
 private:
     Context& context_;
