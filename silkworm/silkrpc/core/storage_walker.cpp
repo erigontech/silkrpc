@@ -99,7 +99,7 @@ boost::asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_numb
 
     auto ps_cursor = co_await transaction_.cursor_dup_sort(db::table::kPlainState);
     auto ps_key{make_key(address, incarnation)};
-    silkrpc::ethdb::SplitDupSortCursor ps_split_cursor{*ps_cursor,
+    silkrpc::ethdb::SplitCursorDupSort ps_split_cursor{*ps_cursor,
         ps_key,
         location_hash,                      /* subkey */
         8 * (silkworm::kAddressLength + 8), /* match_bits */
