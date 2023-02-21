@@ -89,10 +89,10 @@ private:
     SplittedKeyValue split_key_value(const KeyValue& kv);
 };
 
-class SplitDupSortCursor {
+class SplitCursorDupSort {
 public:
-    SplitDupSortCursor(CursorDupSort& inner_cursor, silkworm::ByteView key, silkworm::ByteView subkey, uint64_t match_bits, uint64_t part1_end, uint64_t part2_start, uint64_t value_offset);
-    SplitDupSortCursor& operator=(const SplitDupSortCursor&) = delete;
+    SplitCursorDupSort(CursorDupSort& inner_cursor, silkworm::ByteView key, silkworm::ByteView subkey, uint64_t match_bits, uint64_t part1_end, uint64_t part2_start, uint64_t value_offset);
+    SplitCursorDupSort& operator=(const SplitCursorDupSort&) = delete;
 
     boost::asio::awaitable<SplittedKeyValue> seek_both();
 
