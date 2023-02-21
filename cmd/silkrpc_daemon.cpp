@@ -42,7 +42,7 @@ ABSL_FLAG(uint32_t, timeout, silkrpc::kDefaultTimeout.count(), "gRPC call timeou
 ABSL_FLAG(silkrpc::LogLevel, log_verbosity, silkrpc::LogLevel::Critical, "logging verbosity level");
 ABSL_FLAG(silkrpc::WaitMode, wait_mode, silkrpc::WaitMode::blocking, "scheduler wait mode");
 ABSL_FLAG(std::string, jwt_secret_file, silkrpc::kDefaultJwtFilename, "Token file to ensure safe connection between CL and EL");
-ABSL_FLAG(std::string, db_path, silkrpc::kDefaultDbPath, "DB Path");
+ABSL_FLAG(std::string, datadir, silkrpc::kDefaultDataDir, "DB Path");
 
 //! Assemble the application version using the Cable build information
 std::string get_version_from_build_info() {
@@ -93,8 +93,13 @@ silkrpc::DaemonSettings parse_args(int argc, char* argv[]) {
     absl::SetProgramUsageMessage("C++ implementation of Ethereum JSON RPC API service within Thorax architecture");
     absl::ParseCommandLine(argc, argv);
 
+    const auto datadir = absl::GetFlag(FLAGS_datadir);
+    std::optional<std::string> datadir_optional;
+    if (!datadir.empty())  {
+        datadir_optional = datadir;
+    }
     const silkrpc::DaemonSettings rpc_daemon_settings{
-        absl::GetFlag(FLAGS_chaindata),
+        datadir_optional,
         absl::GetFlag(FLAGS_http_port),
         absl::GetFlag(FLAGS_engine_port),
         absl::GetFlag(FLAGS_api_spec),
@@ -104,8 +109,8 @@ silkrpc::DaemonSettings parse_args(int argc, char* argv[]) {
         absl::GetFlag(FLAGS_log_verbosity),
         absl::GetFlag(FLAGS_wait_mode),
         absl::GetFlag(FLAGS_jwt_secret_file),
-        absl::GetFlag(FLAGS_db_path)
     };
+    std::cout << "datadir: " << absl::GetFlag(FLAGS_datadir) << "\n";
 
     return rpc_daemon_settings;
 }
