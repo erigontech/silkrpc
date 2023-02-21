@@ -23,246 +23,299 @@
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <boost/asio/use_future.hpp>
+#include <gmock/gmock.h>
+
+#include <silkworm/silkrpc/test/mock_cursor.hpp>
+
 #include <catch2/catch.hpp>
 
 namespace silkrpc::ethdb {
 
 using Catch::Matchers::Message;
+using evmc::literals::operator""_bytes32;
+using evmc::literals::operator""_address;
+using testing::_;
+using testing::InvokeWithoutArgs;
 
-static silkworm::Bytes value{*silkworm::from_hex("00")};
+static const silkworm::Bytes value{*silkworm::from_hex("0x000000000000000000000000000000000000000000000000000000000000001134567")};
+static const silkworm::Bytes empty_key{};
+static const silkworm::Bytes empty_value{};
+static const silkworm::Bytes short_key{*silkworm::from_hex("0x79a4d35bd00b1843ec5292217e71dace5e5")};
+static const silkworm::Bytes wrong_key_last_byte{*silkworm::from_hex("0x79a4d35bd00b1843ec5292217e71dace5e5a7430")};
+static const silkworm::Bytes wrong_key_first_byte{*silkworm::from_hex("0x59a4d35bd00b1843ec5292217e71dace5e5a7430")};
+static const evmc::address key = 0x79a4d35bd00b1843ec5292217e71dace5e5a7439_address;
+static const silkworm::Bytes correct_key{*silkworm::from_hex("0x79a4d35bd00b1843ec5292217e71dace5e5a7439")};
+static const evmc::bytes32 location = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32;
 
-struct TriString {
-    std::string part1;
-    std::string part2;
-    std::string part3;
-};
+TEST_CASE("split cursor dup sort") {
+    boost::asio::thread_pool pool{1};
+    test::MockCursorDupSort  csdp;
 
-struct TriBytes {
-    silkworm::Bytes part1;
-    silkworm::Bytes part2;
-    silkworm::Bytes part3;
-};
+    SECTION("0 maching bits: seek_both, key not exists") {
+        SplitCursorDupSort sc(csdp, key, location, 0, silkworm::kAddressLength, silkworm::kAddressLength, 0);
 
-class ArrayCursor : public Cursor {
-public:
-    explicit ArrayCursor(const std::vector<TriBytes>& vector) : vector_{vector}, index_{0} {}
+        EXPECT_CALL(csdp, seek_both(_, _))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return silkworm::Bytes{};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.seek_both(), boost::asio::use_future);
+        const SplittedKeyValue &skv = result.get();
 
-    ArrayCursor(const ArrayCursor&) = delete;
-    ArrayCursor& operator=(const ArrayCursor&) = delete;
-
-    uint32_t cursor_id() const override { return 0; }
-
-    boost::asio::awaitable<void> open_cursor(const std::string& table_name, bool is_dup_sorted) override { co_return; }
-
-    boost::asio::awaitable<KeyValue> seek(silkworm::ByteView seek_key) override {
-        index_ = 0;
-        for (; index_ < vector_.size(); index_++) {
-            if (vector_[index_].part1 == seek_key) {
-                silkworm::Bytes full_key = vector_[index_].part1 + vector_[index_].part2 + vector_[index_].part3;
-                co_return KeyValue{full_key, value};
-            }
-        }
-        co_return KeyValue{};
+        CHECK(silkworm::to_hex(skv.key1) == silkworm::to_hex(key));
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
     }
 
-    boost::asio::awaitable<KeyValue> seek_exact(silkworm::ByteView key) override { co_return KeyValue{silkworm::Bytes{key}, value}; }
+    SECTION("evmc:.address maching bits: seek_both, key not exists") {
+        SplitCursorDupSort sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
+                              silkworm::kAddressLength,  silkworm::kHashLength);
 
-    boost::asio::awaitable<KeyValue> next() override {
-        if (++index_ >= vector_.size()) {
-            co_return KeyValue{};
-        }
-        silkworm::Bytes full_key = vector_[index_].part1 + vector_[index_].part2 + vector_[index_].part3;
-        co_return KeyValue{full_key, value};
+        EXPECT_CALL(csdp, seek_both(_, _))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return silkworm::Bytes{};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.seek_both(), boost::asio::use_future);
+        const SplittedKeyValue &skv = result.get();
+
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
     }
 
-    boost::asio::awaitable<void> close_cursor() override { co_return; }
+    SECTION("evmc:.address odd maching bits: seek_both, key not exists") {
+        SplitCursorDupSort sc(csdp, key, location, 153, silkworm::kAddressLength,
+                              silkworm::kAddressLength,  silkworm::kHashLength);
 
-    uint32_t index() const { return index_; }
+        EXPECT_CALL(csdp, seek_both(_, _))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return silkworm::Bytes{};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.seek_both(), boost::asio::use_future);
+        const SplittedKeyValue &skv = result.get();
 
-private:
-    uint32_t index_;
-    const std::vector<TriBytes>& vector_;
-};
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
+    }
 
-static silkworm::Bytes to_bytes(const std::string& string) {
-    silkworm::Bytes bytes{*silkworm::from_hex(string)};
-    return bytes;
-}
+    SECTION("evmc:.address maching bits: seek_both, key exists") {
+        SplitCursorDupSort sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
+                              silkworm::kAddressLength,  silkworm::kHashLength);
 
-static TriBytes to_tri_bytes(const TriString& ts) {
-    return TriBytes {
-        to_bytes(ts.part1),
-        to_bytes(ts.part2),
-        to_bytes(ts.part3)
-    };
+        EXPECT_CALL(csdp, seek_both(_, _))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return value;
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.seek_both(), boost::asio::use_future);
+        const SplittedKeyValue &skv = result.get();
+
+        CHECK(silkworm::to_hex(skv.key1) == silkworm::to_hex(key));
+        CHECK(silkworm::to_hex(skv.key2) == silkworm::to_hex(location));
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "134567");
+    }
+
+    SECTION("evmc:.address maching bits: next_dup, key exists short key") {
+        SplitCursorDupSort sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
+                              silkworm::kAddressLength,  silkworm::kHashLength);
+
+        EXPECT_CALL(csdp, next_dup())
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{short_key, value};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.next_dup(), boost::asio::use_future);
+        const SplittedKeyValue &skv = result.get();
+
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
+    }
+
+    SECTION("evmc:.address maching bits: next_dup, key exists empty key") {
+        SplitCursorDupSort sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
+                              silkworm::kAddressLength,  silkworm::kHashLength);
+
+        EXPECT_CALL(csdp, next_dup())
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{empty_key, value};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.next_dup(), boost::asio::use_future);
+        const SplittedKeyValue &skv = result.get();
+
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
+    }
+
+    SECTION("evmc:.address maching bits: next_dup, key exists wrong key last byte") {
+        SplitCursorDupSort sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
+                              silkworm::kAddressLength,  silkworm::kHashLength);
+
+        EXPECT_CALL(csdp, next_dup())
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{wrong_key_last_byte, value};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.next_dup(), boost::asio::use_future);
+        const SplittedKeyValue &skv = result.get();
+
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
+    }
+
+    SECTION("evmc:.address maching bits: next_dup, key exists wrong key first byte") {
+        SplitCursorDupSort sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
+                              silkworm::kAddressLength,  silkworm::kHashLength);
+
+        EXPECT_CALL(csdp, next_dup())
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{wrong_key_first_byte, value};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.next_dup(), boost::asio::use_future);
+        const SplittedKeyValue &skv = result.get();
+
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
+    }
 }
 
 TEST_CASE("split cursor") {
     boost::asio::thread_pool pool{1};
+    test::MockCursor  csdp;
 
-    std::vector<TriString> hex {
-        {"79a4d35bd00b1843ec5292217e71dace5e5a7439", "ffffffffffffffff", "deadbeaf"}, // 0
-        {"79a4d418f7887dd4d5123a41b6c8c186686ae8cb", "00000000005151a3", "deadbeaf"},
-        {"79a4d418f7887dd4d5123a41b6c8c186686ae8cb", "000000000052a0b3", "deadbeaf"},
-        {"79a4d418f7887dd4d5123a41b6c8c186686ae8cb", "000000000052a140", "deadbeaf"},
-        {"79a4d418f7887dd4d5123a41b6c8c186686ae8cb", "ffffffffffffffff", "deadbeaf"},
-        {"79a4d419a05cfd856ea78962edb543161aa05610", "00000000005151a3", "deadbeaf"}, // 5
-        {"79a4d419a05cfd856ea78962edb543161aa05610", "0000000000711143", "deadbeaf"},
-        {"79a4d492a05cfd836ea0967edb5943161dd041f7", "ffffffffffffffff", "deadbeaf"},
-        {"79a4d706e4bc7fd8ff9d0593a1311386a7a981ea", "ffffffffffffffff", "deadbeaf"},
-        {"79a4d7ba9e355258fad372164f2f5184dde5e3e4", "ffffffffffffffff", "deadbeaf"},
-        {"79a4ddca4ae487beba98526c7b3cc4ba4d05d9d4", "ffffffffffffffff", "deadbeaf"} // 10
-    };
+    SECTION("0 maching bits: seek, key not exists") {
+        SplitCursor sc(csdp, key, 0, silkworm::kAddressLength, 0, silkworm::kAddressLength);
 
-    std::vector<TriBytes> tbv;
-    for (TriString entry : hex) {
-        auto tb = to_tri_bytes(entry);
-
-        tbv.push_back(tb);
-    }
-    ArrayCursor ac{tbv};
-
-    SECTION("0 maching bits: seek, key exixts") {
-        uint32_t index = 0;
-        silkworm::Bytes key = to_bytes(hex[index].part1);
-
-        SplitCursor sc(ac, key, 0, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
-
+        EXPECT_CALL(csdp, seek(_))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{correct_key, {}};
+            }));
         auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
-        CHECK(skv.key1 == key);
-        CHECK(skv.key2 == to_bytes(hex[index].part2));
-        CHECK(skv.key3 == to_bytes(hex[index].part3));
+        CHECK(silkworm::to_hex(skv.key1) == silkworm::to_hex(key));
+        CHECK(silkworm::to_hex(skv.key2) == silkworm::to_hex(key));
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
     }
 
-    SECTION("0 maching bits: seek & next, key exixts in first position") {
-        uint32_t index = 0;
-        silkworm::Bytes key = to_bytes(hex[index].part1);
+    SECTION("evmc:.address maching bits: seek, key not exists") {
+        SplitCursor sc(csdp, key, 8*silkworm::kAddressLength, silkworm::kAddressLength, 0, silkworm::kAddressLength);
 
-        SplitCursor sc(ac, key, 0, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
-
+        EXPECT_CALL(csdp, seek(_))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{short_key, value};
+            }));
         auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
-        CHECK(skv.key1 == key);
-        CHECK(skv.key2 == to_bytes(hex[index].part2));
-        CHECK(skv.key3 == to_bytes(hex[index].part3));
-
-        auto count  = 0;
-        while (true) {
-            auto result = boost::asio::co_spawn(pool, sc.next(), boost::asio::use_future);
-            const SplittedKeyValue &skv = result.get();
-            if (skv.key1.length() == 0) {
-                break;
-            }
-            count++;
-
-            CHECK(skv.key1 == to_bytes(hex[ac.index()].part1));
-            CHECK(skv.key2 == to_bytes(hex[ac.index()].part2));
-            CHECK(skv.key3 == to_bytes(hex[ac.index()].part3));
-        }
-        CHECK(count + 1 == hex.size());
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
     }
 
-    SECTION("0 maching bits: seek & next, key exixts in 5th position") {
-        uint32_t index = 5;
-        silkworm::Bytes key = to_bytes(hex[index].part1);
+    SECTION("evmc:.address odd maching bits: seek, key not exists") {
+        SplitCursor sc(csdp, key, 131, silkworm::kAddressLength, 0, silkworm::kAddressLength);
 
-        SplitCursor sc(ac, key, 0, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
-
+        EXPECT_CALL(csdp, seek(_))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{short_key, value};
+            }));
         auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
-        CHECK(skv.key1 == key);
-        CHECK(skv.key2 == to_bytes(hex[index].part2));
-        CHECK(skv.key3 == to_bytes(hex[index].part3));
-
-        auto count  = 0;
-        while (true) {
-            auto result = boost::asio::co_spawn(pool, sc.next(), boost::asio::use_future);
-            const SplittedKeyValue &skv = result.get();
-            if (skv.key1.length() == 0) {
-                break;
-            }
-            count++;
-
-            CHECK(skv.key1 == to_bytes(hex[ac.index()].part1));
-            CHECK(skv.key2 == to_bytes(hex[ac.index()].part2));
-            CHECK(skv.key3 == to_bytes(hex[ac.index()].part3));
-        }
-        CHECK(count + 1 == hex.size() - index);
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
     }
 
-    SECTION("0 maching bits: seek, key does not exixt") {
-        silkworm::Bytes key = to_bytes("79a4d75bd00b1843ec5292217e71dace5e5a7438");
+    SECTION("evmc:.address maching bits: seek, key exists") {
+        SplitCursor sc(csdp, key, 8*silkworm::kAddressLength, silkworm::kAddressLength, 0, silkworm::kAddressLength);
 
-        SplitCursor sc(ac, key, 0, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
-
+        EXPECT_CALL(csdp, seek(_))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{correct_key, value};
+            }));
         auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
-        CHECK(skv.key1.length() == 0);
-        CHECK(skv.key2.length() == 0);
-        CHECK(skv.key3.length() == 0);
+        CHECK(silkworm::to_hex(skv.key1) == silkworm::to_hex(key));
+        CHECK(silkworm::to_hex(skv.key2) == silkworm::to_hex(key));
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "0000000000000000000000000000000000000000000000000000000000000001134567");
     }
 
-    SECTION("28 maching bits: seek, key exixts") {
-        uint32_t index = 1;
-        silkworm::Bytes key = to_bytes(hex[index].part1);
+    SECTION("evmc:.address maching bits: next_dup, key exists short key") {
+        SplitCursor sc(csdp, key, 8*silkworm::kAddressLength, silkworm::kAddressLength, 0, silkworm::kAddressLength);
 
-        SplitCursor sc(ac, key, 28, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
-
-        auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
+        EXPECT_CALL(csdp, next())
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{short_key, value};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.next(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
-        CHECK(skv.key1 == key);
-        CHECK(skv.key2 == to_bytes(hex[index].part2));
-        CHECK(skv.key3 == to_bytes(hex[index].part3));
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
     }
 
-    SECTION("28 maching bits: seek & next, key exixts in 5th position") {
-        uint32_t index = 1;
-        silkworm::Bytes key = to_bytes(hex[index].part1);
+    SECTION("evmc:.address maching bits: next, empty key") {
+        SplitCursor sc(csdp, key, 8*silkworm::kAddressLength, silkworm::kAddressLength, 0, silkworm::kAddressLength);
 
-        SplitCursor sc(ac, key, 28, silkworm::kAddressLength, silkworm::kAddressLength, silkworm::kAddressLength + 8);
-
-        auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
+        EXPECT_CALL(csdp, next())
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{empty_key, value};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.next(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
-        CHECK(skv.key1 == key);
-        CHECK(skv.key2 == to_bytes(hex[index].part2));
-        CHECK(skv.key3 == to_bytes(hex[index].part3));
-
-        auto count  = 0;
-        while (true) {
-            auto result = boost::asio::co_spawn(pool, sc.next(), boost::asio::use_future);
-            const SplittedKeyValue &skv = result.get();
-            if (skv.key1.length() == 0) {
-                break;
-            }
-            count++;
-
-            CHECK(skv.key1 == to_bytes(hex[ac.index()].part1));
-            CHECK(skv.key2 == to_bytes(hex[ac.index()].part2));
-            CHECK(skv.key3 == to_bytes(hex[ac.index()].part3));
-        }
-        CHECK(count == 5);
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
     }
 
-    SECTION("0 maching bits: seek, key exixts, length too long") {
-        uint32_t index = 1;
-        silkworm::Bytes key = to_bytes(hex[index].part1);
-
-        SplitCursor sc(ac, key, 28, silkworm::kAddressLength, silkworm::kAddressLength + 8, silkworm::kAddressLength + 12);
-
-        auto result = boost::asio::co_spawn(pool, sc.seek(), boost::asio::use_future);
+    SECTION("evmc:.address maching bits: next, key exists wrong key last byte") {
+        SplitCursor sc(csdp, key, 8*silkworm::kAddressLength, silkworm::kAddressLength, 0, silkworm::kAddressLength);
+        EXPECT_CALL(csdp, next())
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{wrong_key_last_byte, value};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.next(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();
 
-        CHECK(skv.key1 == key);
-        CHECK(skv.key2 == to_bytes(hex[index].part3));
-        CHECK(skv.key3.length() == 0);
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
+    }
+
+    SECTION("evmc:.address maching bits: next, key exists wrong key first byte") {
+        SplitCursor sc(csdp, key, 8*silkworm::kAddressLength, silkworm::kAddressLength, 0, silkworm::kAddressLength);
+
+        EXPECT_CALL(csdp, next())
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{wrong_key_first_byte, value};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.next(), boost::asio::use_future);
+        const SplittedKeyValue &skv = result.get();
+
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
     }
 }
-
 } // namespace silkrpc::ethdb
