@@ -41,7 +41,8 @@ static const silkworm::Bytes value{*silkworm::from_hex("0x0000000000000000000000
 static const silkworm::Bytes short_key{*silkworm::from_hex("0x00")};
 static const silkworm::Bytes empty_key{};
 static const silkworm::Bytes empty_value{};
-static const silkworm::Bytes wrong_key{*silkworm::from_hex("0x79a4d35bd00b1843ec5292217e71dace5e5a7430")};
+static const silkworm::Bytes wrong_key_last_byte{*silkworm::from_hex("0x79a4d35bd00b1843ec5292217e71dace5e5a7430")};
+static const silkworm::Bytes wrong_key_first_byte{*silkworm::from_hex("0x79a4d35bd00b1843ec5292217e71dace5e5a7430")};
 
 TEST_CASE("split dup sort cursor") {
     boost::asio::thread_pool pool{1};
@@ -71,6 +72,26 @@ TEST_CASE("split dup sort cursor") {
         const evmc::bytes32 location = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32;
 
         SplitDupSortCursor sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
+                              silkworm::kAddressLength,  silkworm::kHashLength);
+
+        EXPECT_CALL(csdp, seek_both(_, _))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return silkworm::Bytes{};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.seek_both(), boost::asio::use_future);
+        const SplittedKeyValue &skv = result.get();
+
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
+    }
+
+    SECTION("evmc:.address odd maching bits: seek_both, key not exists") {
+        const evmc::address key = 0x79a4d35bd00b1843ec5292217e71dace5e5a7439_address;
+        const evmc::bytes32 location = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32;
+
+        SplitDupSortCursor sc(csdp, key, location, 153, silkworm::kAddressLength,
                               silkworm::kAddressLength,  silkworm::kHashLength);
 
         EXPECT_CALL(csdp, seek_both(_, _))
@@ -146,7 +167,7 @@ TEST_CASE("split dup sort cursor") {
         CHECK(silkworm::to_hex(skv.value) == "");
     }
 
-    SECTION("evmc:.address maching bits: next_dup, key exists wrong key") {
+    SECTION("evmc:.address maching bits: next_dup, key exists wrong key last byte") {
         const evmc::address key = 0x79a4d35bd00b1843ec5292217e71dace5e5a7439_address;
         const evmc::bytes32 location = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32;
 
@@ -155,7 +176,27 @@ TEST_CASE("split dup sort cursor") {
 
         EXPECT_CALL(csdp, next_dup())
             .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
-                co_return KeyValue{wrong_key, value};
+                co_return KeyValue{wrong_key_last_byte, value};
+            }));
+        auto result = boost::asio::co_spawn(pool, sc.next_dup(), boost::asio::use_future);
+        const SplittedKeyValue &skv = result.get();
+
+        CHECK(silkworm::to_hex(skv.key1) == "");
+        CHECK(silkworm::to_hex(skv.key2) == "");
+        CHECK(silkworm::to_hex(skv.key3) == "");
+        CHECK(silkworm::to_hex(skv.value) == "");
+    }
+
+    SECTION("evmc:.address maching bits: next_dup, key exists wrong key first byte") {
+        const evmc::address key = 0x79a4d35bd00b1843ec5292217e71dace5e5a7439_address;
+        const evmc::bytes32 location = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32;
+
+        SplitDupSortCursor sc(csdp, key, location, 8 * silkworm::kAddressLength, silkworm::kAddressLength,
+                              silkworm::kAddressLength,  silkworm::kHashLength);
+
+        EXPECT_CALL(csdp, next_dup())
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{wrong_key_first_byte, value};
             }));
         auto result = boost::asio::co_spawn(pool, sc.next_dup(), boost::asio::use_future);
         const SplittedKeyValue &skv = result.get();

@@ -32,7 +32,7 @@
 namespace silkrpc {
 
 struct DaemonSettings {
-    std::string chaindata;
+    std::optional<std::string> datadir;
     std::string http_port; // eth_end_point
     std::string engine_port; // engine_end_point
     std::string api_spec; // eth_api_spec
@@ -42,7 +42,6 @@ struct DaemonSettings {
     LogLevel log_verbosity;
     WaitMode wait_mode;
     std::string jwt_secret_filename;
-    std::string db_path;
 };
 
 struct DaemonInfo {
