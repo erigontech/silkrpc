@@ -80,6 +80,21 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
     }
 }
 
+TEST_CASE("Context with chain_env", "[silkrpc][context_pool]") {
+      std::shared_ptr<mdbx::env_managed> chain_env = std::make_shared<mdbx::env_managed>();
+      auto block_cache = std::make_shared<BlockCache>();
+      auto state_cache = std::make_shared<ethdb::kv::CoherentStateCache>();
+      Context context{create_channel, block_cache, state_cache, chain_env};
+      std::atomic_bool processed{false};
+      auto* io_context = context.io_context();
+      boost::asio::post(*io_context, [&]() {
+         processed = true;
+      });
+      auto context_thread = std::thread([&]() { context.execute_loop(); });
+      CHECK_NOTHROW(context.stop());
+      CHECK_NOTHROW(context_thread.join());
+}
+
 TEST_CASE("create context pool", "[silkrpc][context_pool]") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
 
