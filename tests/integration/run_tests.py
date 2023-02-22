@@ -82,11 +82,11 @@ def get_jwt_secret(name):
 def is_skipped(api_name, requested_api, exclude_api_list, exclude_test_list, api_file: str, req_test, verify_with_daemon, global_test_number):
     """ determine if test must be skipped
     """
-    if requested_api == "" and req_test == -1 and verify_with_daemon == 1:
+    if req_test == -1 and verify_with_daemon == 1:
         for curr_test_name in api_not_compared:
             if curr_test_name == api_name:
                 return 1
-    if requested_api == "" and req_test == -1 and verify_with_daemon == 1:
+    if req_test == -1 and verify_with_daemon == 1:
         for curr_test in tests_not_compared:
             if curr_test == api_file:
                 return 1
