@@ -14,12 +14,10 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_GRPC_ERROR_HPP_
-#define SILKRPC_GRPC_ERROR_HPP_
+#pragma once
 
 #include <system_error>
 #include <string>
 
 std::error_code make_error_code(int errc, std::string&& errmsg);
 
-#endif // SILKRPC_GRPC_ERROR_HPP_

@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_ERROR_HPP_
-#define SILKRPC_TYPES_ERROR_HPP_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -41,4 +40,3 @@ std::ostream& operator<<(std::ostream& out, const RevertError& error);
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_ERROR_HPP_

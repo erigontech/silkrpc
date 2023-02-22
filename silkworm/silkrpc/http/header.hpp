@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_HTTP_HEADER_HPP_
-#define SILKRPC_HTTP_HEADER_HPP_
+#pragma once
 
 #include <string>
 
@@ -34,4 +33,3 @@ inline bool operator==(const Header& lhs, const Header& rhs) {
 
 } // namespace silkrpc::http
 
-#endif // SILKRPC_HTTP_HEADER_HPP_

@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_GRPC_SERVER_STREAMING_RPC_HPP_
-#define SILKRPC_GRPC_SERVER_STREAMING_RPC_HPP_
+#pragma once
 
 #include <silkrpc/config.hpp>
 
@@ -213,4 +212,3 @@ private:
 
 } // namespace silkrpc
 
-#endif // SILKRPC_GRPC_SERVER_STREAMING_RPC_HPP_

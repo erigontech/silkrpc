@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_GRPC_UNARY_RPC_HPP_
-#define SILKRPC_GRPC_UNARY_RPC_HPP_
+#pragma once
 
 #include <memory>
 #include <system_error>
@@ -113,4 +112,3 @@ private:
 
 } // namespace silkrpc
 
-#endif // SILKRPC_GRPC_UNARY_RPC_HPP_

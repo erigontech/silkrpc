@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_EVM_ACCESS_LIST_TRACER_HPP_
-#define SILKRPC_CORE_EVM_ACCESS_LIST_TRACER_HPP_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -86,4 +85,3 @@ inline bool operator==(const AccessList& acl1, const AccessList& acl2) {
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_CORE_EVM_ACCESS_LIST_TRACER_HPP_

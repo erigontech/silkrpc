@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMON_CLOCK_TIME_HPP_
-#define SILKRPC_COMMON_CLOCK_TIME_HPP_
+#pragma once
 
 #include <chrono>
 #include <cstdint>
@@ -27,4 +26,3 @@ uint64_t since(uint64_t start);
 
 } // namespace silkrpc::clock_time
 
-#endif  // SILKRPC_COMMON_CLOCK_TIME_HPP_

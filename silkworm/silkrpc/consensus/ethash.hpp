@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CONSENSUS_ETHASH_HPP_
-#define SILKRPC_CONSENSUS_ETHASH_HPP_
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -39,4 +38,3 @@ std::ostream& operator<<(std::ostream& out, const BlockReward& reward);
 
 } // namespace silkrpc::ethash
 
-#endif  // SILKRPC_CONSENSUS_ETHASH_HPP_

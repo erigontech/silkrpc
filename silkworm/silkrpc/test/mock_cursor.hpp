@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TEST_MOCK_CURSOR_HPP_
-#define SILKRPC_TEST_MOCK_CURSOR_HPP_
+#pragma once
 
 #include <string>
 
@@ -43,4 +42,3 @@ public:
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_TEST_MOCK_CURSOR_HPP_

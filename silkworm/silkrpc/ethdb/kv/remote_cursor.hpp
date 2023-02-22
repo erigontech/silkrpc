@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_
-#define SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -64,4 +63,3 @@ private:
 
 } // namespace silkrpc::ethdb::kv
 
-#endif // SILKRPC_ETHDB_KV_REMOTE_CURSOR_HPP_

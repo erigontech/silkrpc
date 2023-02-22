@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMON_CONSTANTS_HPP_
-#define SILKRPC_COMMON_CONSTANTS_HPP_
+#pragma once
 
 #include <chrono>
 #include <cstddef>
@@ -54,4 +53,3 @@ constexpr const std::size_t kRequestUriInitialCapacity{64};
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_COMMON_CONSTANTS_HPP_

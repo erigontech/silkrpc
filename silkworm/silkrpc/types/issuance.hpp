@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TYPES_ISSUANCE_HPP_
-#define SILKRPC_TYPES_ISSUANCE_HPP_
+#pragma once
 
 #include <iostream>
 #include <optional>
@@ -37,4 +36,3 @@ std::ostream& operator<<(std::ostream& out, const Issuance& issuance);
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_TYPES_ISSUANCE_HPP_

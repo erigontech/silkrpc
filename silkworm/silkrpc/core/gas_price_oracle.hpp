@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_GAS_PRICE_ORACLE_HPP_
-#define SILKRPC_CORE_GAS_PRICE_ORACLE_HPP_
+#pragma once
 
 #include <functional>
 #include <string>
@@ -66,4 +65,3 @@ private:
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_CORE_GAS_PRICE_ORACLE_HPP_

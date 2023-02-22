@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TEST_KV_TEST_BASE_HPP_
-#define SILKRPC_TEST_KV_TEST_BASE_HPP_
+#pragma once
 
 #include <memory>
 
@@ -73,4 +72,3 @@ struct KVTestBase : test::ContextTestBase {
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_TEST_KV_TEST_BASE_HPP_

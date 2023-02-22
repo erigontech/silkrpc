@@ -34,8 +34,7 @@
 
 // Portions of the following code are based on Disruptor-cpp [https://github.com/Abc-Arbitrage/Disruptor-cpp]
 
-#ifndef SILKRPC_CONCURRENCY_WAIT_STRATEGY_HPP_
-#define SILKRPC_CONCURRENCY_WAIT_STRATEGY_HPP_
+#pragma once
 
 #include <chrono>
 #include <limits>
@@ -162,4 +161,3 @@ std::string AbslUnparseFlag(WaitMode wait_mode);
 
 } // namespace silkrpc
 
-#endif // SILKRPC_CONCURRENCY_WAIT_STRATEGY_HPP_

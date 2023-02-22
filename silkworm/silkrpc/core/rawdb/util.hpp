@@ -14,8 +14,8 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_RAWDB_UTIL_HPP_
-#define SILKRPC_CORE_RAWDB_UTIL_HPP_
+
+#pragma once
 
 #include <string>
 
@@ -29,4 +29,3 @@ silkworm::Bytes composite_storage_key(const evmc::address& address, uint64_t inc
 
 } // namespace silkrpc
 
-#endif // SILKRPC_CORE_RAWDB_UTIL_HPP_

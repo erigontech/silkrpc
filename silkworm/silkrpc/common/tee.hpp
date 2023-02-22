@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMON_TEE_HPP_
-#define SILKRPC_COMMON_TEE_HPP_
+#pragma once
 
 #include <cstdio>
 #include <ctime>
@@ -73,4 +72,3 @@ class teestream : public std::ostream {
 
 }  // namespace silkrpc
 
-#endif  // SILKRPC_COMMON_TEE_HPP_

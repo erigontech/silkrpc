@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_CORE_ACCOUNT_WALKER_HPP_
-#define SILKRPC_CORE_ACCOUNT_WALKER_HPP_
+#pragma once
 
 #include <optional>
 #include <map>
@@ -58,4 +57,3 @@ private:
 
 } // namespace silkrpc
 
-#endif  // SILKRPC_CORE_ACCOUNT_WALKER_HPP_

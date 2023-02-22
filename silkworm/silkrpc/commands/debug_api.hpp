@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMANDS_DEBUG_API_HPP_
-#define SILKRPC_COMMANDS_DEBUG_API_HPP_
+#pragma once
 
 #include <memory>
 #include <set>
@@ -54,11 +53,11 @@ protected:
     boost::asio::awaitable<void> handle_debug_get_modified_accounts_by_number(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_debug_get_modified_accounts_by_hash(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_debug_storage_range_at(const nlohmann::json& request, nlohmann::json& reply);
-    boost::asio::awaitable<void> handle_debug_trace_call(const nlohmann::json& request, nlohmann::json& reply);
-    boost::asio::awaitable<void> handle_debug_trace_block_by_number(const nlohmann::json& request, nlohmann::json& reply);
-    boost::asio::awaitable<void> handle_debug_trace_block_by_hash(const nlohmann::json& request, nlohmann::json& reply);
 
     boost::asio::awaitable<void> handle_debug_trace_transaction(const nlohmann::json& request, json::Stream& stream);
+    boost::asio::awaitable<void> handle_debug_trace_call(const nlohmann::json& request, json::Stream& stream);
+    boost::asio::awaitable<void> handle_debug_trace_block_by_number(const nlohmann::json& request, json::Stream& stream);
+    boost::asio::awaitable<void> handle_debug_trace_block_by_hash(const nlohmann::json& request, json::Stream& stream);
 
 private:
     Context& context_;
@@ -73,4 +72,3 @@ boost::asio::awaitable<std::set<evmc::address>> get_modified_accounts(ethdb::Tra
 
 } // namespace silkrpc::commands
 
-#endif  // SILKRPC_COMMANDS_DEBUG_API_HPP_

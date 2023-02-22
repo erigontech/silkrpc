@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_ETHDB_KV_STATE_CACHE_HPP_
-#define SILKRPC_ETHDB_KV_STATE_CACHE_HPP_
+#pragma once
 
 #include <cstddef>
 #include <list>
@@ -161,4 +160,3 @@ private:
 
 }  // namespace silkrpc::ethdb::kv
 
-#endif  // SILKRPC_ETHDB_KV_STATE_CACHE_HPP_

@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_COMMON_LOG_HPP_
-#define SILKRPC_COMMON_LOG_HPP_
+#pragma once
 
 #include <mutex>
 #include <string>
@@ -75,4 +74,3 @@ std::string AbslUnparseFlag(LogLevel level);
 
 #define SILKRPC_LOG_STREAMS(stream1_, stream2_) silkrpc::log_set_streams_((stream1_), (stream2_))
 
-#endif  // SILKRPC_COMMON_LOG_HPP_

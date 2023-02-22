@@ -798,6 +798,107 @@ TEST_CASE("DebugExecutor::execute call 1") {
             ]
         })"_json);
     }
+
+    SECTION("Call with stream") {
+        EXPECT_CALL(db_reader, get_one(db::table::kCanonicalHashes, silkworm::ByteView{kZeroKey}))
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kZeroHeader;
+            }));
+        EXPECT_CALL(db_reader, get_one(db::table::kConfig, silkworm::ByteView{kConfigKey}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return kConfigValue;
+            }));
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey1}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey1, kAccountHistoryValue1};
+            }));
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey3}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey3, kAccountHistoryValue3};
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey1}, silkworm::ByteView{kAccountChangeSetSubkey1}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
+                co_return kAccountChangeSetValue1;
+            }));
+        EXPECT_CALL(db_reader, get_both_range(db::table::kPlainAccountChangeSet, silkworm::ByteView{kAccountChangeSetKey2}, silkworm::ByteView{kAccountChangeSetSubKey2}))
+            .WillOnce(InvokeWithoutArgs([]() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> {
+                co_return kAccountChangeSetValue2;
+            }));
+        EXPECT_CALL(db_reader, get(db::table::kAccountHistory, silkworm::ByteView{kAccountHistoryKey2}))
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<KeyValue> {
+                co_return KeyValue{kAccountHistoryKey2, kAccountHistoryValue2};
+            }));
+        EXPECT_CALL(db_reader, get_one(db::table::kPlainState, silkworm::ByteView{kPlainStateKey2}))
+            .WillRepeatedly(InvokeWithoutArgs([]() -> boost::asio::awaitable<silkworm::Bytes> {
+                co_return silkworm::Bytes{};
+            }));
+
+        const auto block_number = 5'405'095; // 0x5279A7
+        silkrpc::Call call;
+        call.from = 0xe0a2Bd4258D2768837BAa26A28fE71Dc079f84c7_address;
+        call.gas = 118'936;
+        call.gas_price = 7;
+        call.data = *silkworm::from_hex("602a60005500");
+
+        silkworm::Block block{};
+        block.header.number = block_number;
+
+        StringWriter writer(4096);
+        json::Stream stream(writer);
+
+        DebugConfig config{true, true, true};
+        DebugExecutor executor{context_pool.next_io_context(), db_reader, workers, config};
+        boost::asio::io_context& io_context = context_pool.next_io_context();
+
+        stream.open_object();
+        auto execution_result = boost::asio::co_spawn(io_context.get_executor(), executor.execute(block, call, &stream), boost::asio::use_future);
+        auto result = execution_result.get();
+
+        context_pool.stop();
+        context_pool.join();
+
+        stream.close_object();
+        stream.close();
+
+        nlohmann::json json = nlohmann::json::parse(writer.get_content());
+
+        CHECK(result.pre_check_error.has_value() == false);
+        CHECK(json == R"({
+            "failed": false,
+            "gas": 75178,
+            "returnValue": "",
+            "structLogs": [
+                {
+                    "depth": 1,
+                    "gas": 65864,
+                    "gasCost": 3,
+                    "op": "PUSH1",
+                    "pc": 0
+                },
+                {
+                    "depth": 1,
+                    "gas": 65861,
+                    "gasCost": 3,
+                    "op": "PUSH1",
+                    "pc": 2
+                },
+                {
+                    "depth": 1,
+                    "gas": 65858,
+                    "gasCost": 22100,
+                    "op": "SSTORE",
+                    "pc": 4
+                },
+                {
+                    "depth": 1,
+                    "gas": 43758,
+                    "gasCost": 0,
+                    "op": "STOP",
+                    "pc": 5
+                }
+            ]
+        })"_json);
+    }
 }
 
 TEST_CASE("DebugExecutor::execute call 2") {
@@ -1432,7 +1533,6 @@ TEST_CASE("DebugTrace json serialization") {
     }
 
     SECTION("DebugTraceResultList: no memory, stack and storage") {
-        DebugTraceResultList debug_trace_result_list;
         DebugTrace debug_trace;
         debug_trace.failed = false;
         debug_trace.gas = 20;
@@ -1443,22 +1543,21 @@ TEST_CASE("DebugTrace json serialization") {
         debug_trace.debug_config.disableMemory = true;
         debug_trace.debug_config.disableStack = true;
 
-        debug_trace_result_list.debug_traces.push_back(debug_trace);
-        nlohmann::json j = debug_trace_result_list;
+        std::vector<DebugTrace> debug_traces;
+        debug_traces.push_back(debug_trace);
+        nlohmann::json j = debug_traces;
 
         CHECK(j == R"([{
-              "result": {
-                   "failed": false,
-                   "gas": 20,
-                   "returnValue": "deadbeaf",
-                   "structLogs": [{
-                       "depth": 1,
-                       "gas": 3,
-                       "gasCost": 4,
-                       "op": "PUSH1",
-                       "pc": 1
-                   }]
-              }
+                "failed": false,
+                "gas": 20,
+                "returnValue": "deadbeaf",
+                "structLogs": [{
+                    "depth": 1,
+                    "gas": 3,
+                    "gasCost": 4,
+                    "op": "PUSH1",
+                    "pc": 1
+                }]
            }]
         )"_json);
     }

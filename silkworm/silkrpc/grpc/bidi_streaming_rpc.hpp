@@ -14,8 +14,7 @@
     limitations under the License.
 */
 
-#ifndef SILKRPC_GRPC_BIDI_STREAMING_RPC_HPP_
-#define SILKRPC_GRPC_BIDI_STREAMING_RPC_HPP_
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -214,4 +213,3 @@ private:
 
 } // namespace silkrpc
 
-#endif // SILKRPC_GRPC_BIDI_STREAMING_RPC_HPP_

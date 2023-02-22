@@ -14,8 +14,7 @@
    limitations under the License.
 */
 
-#ifndef SILKRPC_TEST_MOCK_STATE_CACHE_HPP_
-#define SILKRPC_TEST_MOCK_STATE_CACHE_HPP_
+#pragma once
 
 #include <cstddef>
 #include <memory>
@@ -55,4 +54,3 @@ class MockStateCache : public ethdb::kv::StateCache {
 
 }  // namespace silkrpc::test
 
-#endif  // SILKRPC_TEST_MOCK_STATE_CACHE_HPP_
