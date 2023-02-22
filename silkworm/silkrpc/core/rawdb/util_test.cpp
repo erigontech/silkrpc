@@ -32,6 +32,13 @@ TEST_CASE("all-zero composite key", "[silkrpc][core][rawdb][util]") {
     CHECK(ckey == silkworm::Bytes(60, '\0'));
 }
 
+TEST_CASE("all-zero composite key without lookup", "[silkrpc][core][rawdb][util]") {
+    constexpr auto zero_address = 0x0000000000000000000000000000000000000000_address;
+
+    const auto ckey{composite_storage_key_without_hash_lookup(zero_address, 0)};
+    CHECK(ckey == silkworm::Bytes(28, '\0'));
+}
+
 TEST_CASE("non-zero address composite key", "[silkrpc][core][rawdb][util]") {
     constexpr auto address = 0x79a4d418f7887dd4d5123a41b6c8c186686ae8cb_address;
     constexpr auto zero_hash = 0x0000000000000000000000000000000000000000000000000000000000000000_bytes32;

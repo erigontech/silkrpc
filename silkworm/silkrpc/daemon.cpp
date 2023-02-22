@@ -59,7 +59,10 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
     SILKRPC_LOG_VERBOSITY(settings.log_verbosity);
     SILKRPC_LOG_THREAD(true);
 
+    auto mdbx_ver{mdbx::get_version()};
+    auto mdbx_bld{mdbx::get_build()};
     SILKRPC_LOG << "Silkrpc build info: " << info.build << " " << info.libraries << "\n";
+    SILKRPC_LOG << "Silkrpc libmdbx  version: " << mdbx_ver.git.describe << " build: " << mdbx_bld.target << " compiler: " << mdbx_bld.compiler << "\n";
 
     std::set_terminate([]() {
         try {
@@ -79,11 +82,11 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
     const auto tid = std::this_thread::get_id();
 
     try {
-        if (settings.chaindata.empty()) {
+        if (!settings.datadir) {
             SILKRPC_LOG << "Silkrpc launched with target " << settings.target << " using " << settings.num_contexts
                         << " contexts, " << settings.num_workers << " workers\n";
         } else {
-            SILKRPC_LOG << "Silkrpc launched with chaindata " << settings.chaindata << " using " << settings.num_contexts
+            SILKRPC_LOG << "Silkrpc launched with datadir " << *settings.datadir << " using " << settings.num_contexts
                         << " contexts, " << settings.num_workers << " workers\n";
         }
 
@@ -144,10 +147,10 @@ int Daemon::run(const DaemonSettings& settings, const DaemonInfo& info) {
 }
 
 bool Daemon::validate_settings(const DaemonSettings& settings) {
-    const auto chaindata = settings.chaindata;
-    if (!chaindata.empty() && !std::filesystem::exists(chaindata)) {
-        SILKRPC_ERROR << "Parameter chaindata is invalid: [" << chaindata << "]\n";
-        SILKRPC_ERROR << "Use --chaindata flag to specify the path of Erigon database\n";
+    const auto datadir = settings.datadir;
+    if (datadir && !std::filesystem::exists(*datadir)) {
+        SILKRPC_ERROR << "Parameter datadir is invalid: [" << *datadir << "]\n";
+        SILKRPC_ERROR << "Use --datadir flag to specify the path of Erigon database\n";
         return false;
     }
 
@@ -172,9 +175,9 @@ bool Daemon::validate_settings(const DaemonSettings& settings) {
         return false;
     }
 
-    if (chaindata.empty() && target.empty()) {
-        SILKRPC_ERROR << "Parameters chaindata and target cannot be both empty, specify one of them\n";
-        SILKRPC_ERROR << "Use --chaindata or --target flag to specify the path or the location of Erigon instance\n";
+    if (!datadir && target.empty()) {
+        SILKRPC_ERROR << "Parameters datadir and target cannot be both empty, specify one of them\n";
+        SILKRPC_ERROR << "Use --datadir or --target flag to specify the path or the location of Erigon instance\n";
         return false;
     }
 
@@ -202,7 +205,7 @@ ChannelFactory Daemon::make_channel_factory(const DaemonSettings& settings) {
 Daemon::Daemon(const DaemonSettings& settings, const std::string& jwt_secret)
     : settings_(settings),
       create_channel_{make_channel_factory(settings_)},
-      context_pool_{settings_.num_contexts, create_channel_, settings_.wait_mode},
+      context_pool_{settings_.num_contexts, create_channel_, settings.datadir, settings_.wait_mode},
       worker_pool_{settings_.num_workers},
       jwt_secret_{jwt_secret},
       kv_stub_{remote::KV::NewStub(create_channel_())} {
@@ -214,13 +217,22 @@ Daemon::Daemon(const DaemonSettings& settings, const std::string& jwt_secret)
 DaemonChecklist Daemon::run_checklist() {
     const auto core_service_channel{create_channel_()};
 
-    const auto kv_protocol_check{silkrpc::wait_for_kv_protocol_check(core_service_channel)};
-    const auto ethbackend_protocol_check{silkrpc::wait_for_ethbackend_protocol_check(core_service_channel)};
-    const auto mining_protocol_check{silkrpc::wait_for_mining_protocol_check(core_service_channel)};
-    const auto txpool_protocol_check{silkrpc::wait_for_txpool_protocol_check(core_service_channel)};
-
-    DaemonChecklist checklist{{kv_protocol_check, ethbackend_protocol_check, mining_protocol_check, txpool_protocol_check}};
-    return checklist;
+    if (!settings_.datadir) {
+        const auto kv_protocol_check{silkrpc::wait_for_kv_protocol_check(core_service_channel)};
+        const auto ethbackend_protocol_check{silkrpc::wait_for_ethbackend_protocol_check(core_service_channel)};
+        const auto mining_protocol_check{silkrpc::wait_for_mining_protocol_check(core_service_channel)};
+        const auto txpool_protocol_check{silkrpc::wait_for_txpool_protocol_check(core_service_channel)};
+        DaemonChecklist checklist{{kv_protocol_check, ethbackend_protocol_check, mining_protocol_check, txpool_protocol_check}};
+        return checklist;
+    } else {
+        // TBD: temporary commented until new version of MDBX is used on silkworm. To permit to open MDBX file in parallel to erigon
+        //const auto kv_protocol_check{silkrpc::wait_for_kv_protocol_check(core_service_channel)};
+        //const auto ethbackend_protocol_check{silkrpc::wait_for_ethbackend_protocol_check(core_service_channel)};
+        //const auto mining_protocol_check{silkrpc::wait_for_mining_protocol_check(core_service_channel)};
+        //DaemonChecklist checklist{{ethbackend_protocol_check, mining_protocol_check, txpool_protocol_check}};
+        DaemonChecklist checklist{};
+        return checklist;
+    }
 }
 
 void Daemon::start() {

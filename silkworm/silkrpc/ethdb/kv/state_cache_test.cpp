@@ -384,7 +384,7 @@ TEST_CASE("CoherentStateCache::get_view one view", "[silkrpc][ethdb][kv][state_c
         cache.on_new_block(batch);
         CHECK(cache.latest_data_size() == 1);
 
-        std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
+        std::shared_ptr<test::MockCursorDupSort> mock_cursor = std::make_shared<test::MockCursorDupSort>();
         test::DummyTransaction txn{kTestViewId0, mock_cursor};
 
         std::unique_ptr<StateView> view = cache.get_view(txn);

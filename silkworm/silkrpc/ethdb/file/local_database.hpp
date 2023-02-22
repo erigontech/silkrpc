@@ -16,17 +16,31 @@
 
 #pragma once
 
+#include <memory>
+#include <utility>
 #include <string>
 
-#include <evmc/evmc.hpp>
+#include <silkrpc/ethdb/database.hpp>
+#include <silkrpc/ethdb/transaction.hpp>
 
-#include <silkworm/common/util.hpp>
+#include <silkworm/db/mdbx.hpp>
 
-namespace silkrpc {
+namespace silkrpc::ethdb::file {
 
-silkworm::Bytes composite_storage_key(const evmc::address& address, uint64_t incarnation, const uint8_t (&hash)[silkworm::kHashLength]);
+class LocalDatabase: public Database {
+public:
+    explicit LocalDatabase(std::shared_ptr<mdbx::env_managed> chaindata_env);
 
-silkworm::Bytes composite_storage_key_without_hash_lookup(const evmc::address& address, uint64_t incarnation);
+    ~LocalDatabase();
 
-} // namespace silkrpc
+    LocalDatabase(const LocalDatabase&) = delete;
+    LocalDatabase& operator=(const LocalDatabase&) = delete;
+
+    boost::asio::awaitable<std::unique_ptr<Transaction>> begin() override;
+
+private:
+    std::shared_ptr<mdbx::env_managed> chaindata_env_;
+};
+
+} // namespace silkrpc::ethdb::file
 
