@@ -110,7 +110,6 @@ silkrpc::DaemonSettings parse_args(int argc, char* argv[]) {
         absl::GetFlag(FLAGS_wait_mode),
         absl::GetFlag(FLAGS_jwt_secret_file),
     };
-    std::cout << "datadir: " << absl::GetFlag(FLAGS_datadir) << "\n";
 
     return rpc_daemon_settings;
 }
