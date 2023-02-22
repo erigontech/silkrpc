@@ -119,7 +119,6 @@ public:
     }
 
     boost::asio::awaitable<silkworm::Bytes> seek_both(silkworm::ByteView key, silkworm::ByteView value) override {
-        std::cout << "key: " << silkworm::to_hex(key) << " value: " << silkworm::to_hex(value) << "\n";
         silkworm::Bytes key_{key};
         key_ += value;
 
