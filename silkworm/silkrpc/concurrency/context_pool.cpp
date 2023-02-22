@@ -25,7 +25,7 @@
 #include <silkrpc/ethdb/kv/remote_database.hpp>
 #include <silkrpc/ethdb/file/local_database.hpp>
 
-static const char dbRelativePath[] = "/chaindata";
+static const char kChaindataRelativePath[] = "/chaindata";
 
 namespace silkrpc {
 
@@ -127,7 +127,7 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, s
 
     if (datadir) {
        chain_env = std::make_shared<mdbx::env_managed>();
-       std::string db_path = *datadir + dbRelativePath;
+       std::string db_path = *datadir + kChaindataRelativePath;
        silkworm::db::EnvConfig db_config{
            .path = db_path,
            .inmemory = true,
