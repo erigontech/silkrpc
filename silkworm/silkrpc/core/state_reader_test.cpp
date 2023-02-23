@@ -164,9 +164,9 @@ TEST_CASE_METHOD(StateReaderTest, "StateReader::read_storage") {
         EXPECT_CALL(database_reader_, get(db::table::kStorageHistory, _)).WillOnce(InvokeWithoutArgs(
             []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{}; }
         ));
-        // 2. DatabaseReader::get_one call on kPlainState returns empty value
-        EXPECT_CALL(database_reader_, get_one(db::table::kPlainState, _)).WillOnce(InvokeWithoutArgs(
-            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return silkworm::Bytes{}; }
+        // 2. DatabaseReader::get_both_range call on kPlainState returns empty value
+        EXPECT_CALL(database_reader_, get_both_range(db::table::kPlainState, _, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> { co_return silkworm::Bytes{}; }
         ));
 
         // Execute the test: calling read_storage should return empty storage value
@@ -181,9 +181,9 @@ TEST_CASE_METHOD(StateReaderTest, "StateReader::read_storage") {
         EXPECT_CALL(database_reader_, get(db::table::kStorageHistory, _)).WillOnce(InvokeWithoutArgs(
             []() -> boost::asio::awaitable<KeyValue> { co_return KeyValue{}; }
         ));
-        // 2. DatabaseReader::get_one call on kPlainState returns the storage location value
-        EXPECT_CALL(database_reader_, get_one(db::table::kPlainState, _)).WillOnce(InvokeWithoutArgs(
-            []() -> boost::asio::awaitable<silkworm::Bytes> { co_return kStorageLocation; }
+        // 2. DatabaseReader::get_both_range call on kPlainState returns empty value
+        EXPECT_CALL(database_reader_, get_both_range(db::table::kPlainState, _, _)).WillOnce(InvokeWithoutArgs(
+            []() -> boost::asio::awaitable<std::optional<silkworm::Bytes>> { co_return kStorageLocation; }
         ));
 
         // Execute the test: calling read_storage should return expected storage location

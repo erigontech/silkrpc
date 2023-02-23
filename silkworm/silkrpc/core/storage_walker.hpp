@@ -36,7 +36,7 @@
 namespace silkrpc {
 
 silkworm::Bytes make_key(const evmc::address& address, const evmc::bytes32& location);
-silkworm::Bytes make_key(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location);
+silkworm::Bytes make_key(const evmc::address& address, uint64_t incarnation);
 
 class StorageWalker {
 public:

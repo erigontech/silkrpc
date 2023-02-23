@@ -89,5 +89,30 @@ private:
     SplittedKeyValue split_key_value(const KeyValue& kv);
 };
 
+class SplitCursorDupSort {
+public:
+    SplitCursorDupSort(CursorDupSort& inner_cursor, silkworm::ByteView key, silkworm::ByteView subkey, uint64_t match_bits, uint64_t part1_end, uint64_t part2_start, uint64_t value_offset);
+    SplitCursorDupSort& operator=(const SplitCursorDupSort&) = delete;
+
+    boost::asio::awaitable<SplittedKeyValue> seek_both();
+
+    boost::asio::awaitable<SplittedKeyValue> next_dup();
+
+private:
+    CursorDupSort& inner_cursor_;
+    silkworm::Bytes key_;
+    silkworm::Bytes subkey_;
+    silkworm::Bytes first_bytes_;
+    uint8_t last_bits_;
+    uint64_t part1_end_;
+    uint64_t part2_start_;
+    uint64_t match_bytes_;
+    uint8_t mask_;
+    uint8_t value_offset_;
+
+    bool match_key(const silkworm::ByteView& key);
+    SplittedKeyValue split_key_value(const KeyValue& kv);
+};
+
 } // namespace silkrpc::ethdb
 

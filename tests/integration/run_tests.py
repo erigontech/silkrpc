@@ -21,10 +21,14 @@ RPCDAEMON="rpcdaemon"
 INFURA="infura"
 
 tests_with_big_json = [
-   "trace_replayBlockTransactions/test_01.json.tar",
-   "trace_replayBlockTransactions/test_02.json.tar",
-   "trace_replayTransaction/test_16.json.tar",
-   "trace_replayTransaction/test_23.json.tar"
+   "debug_traceBlockByHash/test_02.tar",
+   "debug_traceBlockByHash/test_03.tar",
+   "debug_traceBlockByHash/test_04.tar",
+   "debug_traceBlockByNumber/test_02.tar",
+   "trace_replayBlockTransactions/test_01.tar",
+   "trace_replayBlockTransactions/test_02.tar",
+   "trace_replayTransaction/test_16.tar",
+   "trace_replayTransaction/test_23.tar"
 ]
 
 api_not_compared = [
@@ -34,8 +38,13 @@ api_not_compared = [
 ]
 
 tests_not_compared = [
+   "debug_traceBlockByHash/test_02.tar",
+   "debug_traceBlockByHash/test_03.tar",
+   "debug_traceBlockByHash/test_04.tar",
+   "debug_traceBlockByNumber/test_02.tar",
    "debug_traceCall/test_10.json",
-   "debug_traceCall/test_14.json"
+   "debug_traceCall/test_14.json",
+   "debug_traceCall/test_17.json"
 ]
 
 def get_target(target_type: str, method: str, infura_url: str, host: str):

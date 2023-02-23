@@ -45,11 +45,10 @@ silkworm::Bytes make_key(const evmc::address& address, const evmc::bytes32& loca
     return res;
 }
 
-silkworm::Bytes make_key(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location) {
-    silkworm::Bytes res(silkworm::kAddressLength + silkworm::kHashLength + 8, '\0');
+silkworm::Bytes make_key(const evmc::address& address, uint64_t incarnation) {
+    silkworm::Bytes res(silkworm::kAddressLength + 8, '\0');
     std::memcpy(&res[0], address.bytes, silkworm::kAddressLength);
     boost::endian::store_big_u64(&res[silkworm::kAddressLength], incarnation);
-    std::memcpy(&res[silkworm::kAddressLength + 8], location.bytes, silkworm::kHashLength);
     return res;
 }
 
@@ -98,30 +97,30 @@ boost::asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_numb
         const evmc::bytes32& location_hash, uint64_t incarnation, AccountCollector& collector) {
     SILKRPC_TRACE << "block_number=" << block_number << " address=" << address << " START\n";
 
-    auto ps_cursor = co_await transaction_.cursor(db::table::kPlainState);
-    auto ps_key{make_key(address, incarnation, location_hash)};
-    silkrpc::ethdb::SplitCursor ps_split_cursor{*ps_cursor,
+    auto ps_cursor = co_await transaction_.cursor_dup_sort(db::table::kPlainState);
+    auto ps_key{make_key(address, incarnation)};
+    silkrpc::ethdb::SplitCursorDupSort ps_split_cursor{*ps_cursor,
         ps_key,
-        8 * (silkworm::kAddressLength + 8),
-        silkworm::kAddressLength,
-        silkworm::kAddressLength + 8,
-        silkworm::kAddressLength + 8 + silkworm::kHashLength};
+        location_hash,                      /* subkey */
+        8 * (silkworm::kAddressLength + 8), /* match_bits */
+        silkworm::kAddressLength,           /* part1_end */
+        silkworm::kAddressLength + 8,       /* part_2_start */
+        silkworm::kHashLength};             /* value_offset */
 
     auto sh_cursor = co_await transaction_.cursor(db::table::kStorageHistory);
     auto sh_key{make_key(address, location_hash)};
     silkrpc::ethdb::SplitCursor sh_split_cursor{*sh_cursor,
         sh_key,
-        8 * silkworm::kAddressLength,
-        silkworm::kAddressLength,
-        silkworm::kAddressLength,
-        silkworm::kAddressLength + silkworm::kHashLength};
+        8 * silkworm::kAddressLength,                         /* match_bits */
+        silkworm::kAddressLength,                             /* part1_end */
+        silkworm::kAddressLength,                             /* part2_start */
+        silkworm::kAddressLength + silkworm::kHashLength};    /* part3_start */
 
-    auto ps_skv = co_await ps_split_cursor.seek();
+    auto ps_skv = co_await ps_split_cursor.seek_both();
     auto sh_skv = co_await sh_split_cursor.seek();
     auto h_loc = sh_skv.key2;
 
     uint64_t block = silkworm::endian::load_big_u64(sh_skv.key3.data());
-
     auto cs_cursor = co_await transaction_.cursor_dup_sort(db::table::kPlainStorageChangeSet);
 
     if (block < block_number) {
@@ -138,14 +137,18 @@ boost::asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_numb
             if (ps_skv.key2.empty() && h_loc.empty()) {
                 break;
             }
-            auto cmp = ps_skv.key2.compare(h_loc);
+            cmp = ps_skv.key2.compare(h_loc);
         }
         if (cmp < 0) {
             auto address = silkworm::to_evmc_address(ps_skv.key1);
             go_on = collector(address, ps_skv.key2, ps_skv.value);
         } else {
-            const auto bitmap = silkworm::db::bitmap::parse(sh_skv.value);
-            const auto found = silkworm::db::bitmap::seek(bitmap, block_number);
+            std::optional<uint64_t> found;
+
+            if (!sh_skv.value.empty()) {
+                const auto bitmap = silkworm::db::bitmap::parse(sh_skv.value);
+                found = silkworm::db::bitmap::seek(bitmap, block_number);
+            }
             if (found) {
                 auto dup_key{silkworm::db::storage_change_key(found.value(), address, incarnation)};
 
@@ -162,7 +165,7 @@ boost::asio::awaitable<void> StorageWalker::walk_of_storages(uint64_t block_numb
         }
         if (go_on) {
             if (cmp <= 0) {
-                ps_skv = co_await ps_split_cursor.next();
+                ps_skv = co_await ps_split_cursor.next_dup();
             }
             if (cmp >= 0) {
                 auto block = silkworm::endian::load_big_u64(sh_skv.key3.data());

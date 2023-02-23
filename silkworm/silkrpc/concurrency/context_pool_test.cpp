@@ -45,7 +45,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
     };
     for (auto wait_mode : all_wait_modes) {
         SECTION(std::string("Context::Context wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
-            Context context{create_channel, block_cache, state_cache, wait_mode};
+            Context context{create_channel, block_cache, state_cache, {}, wait_mode};
             CHECK_NOTHROW(context.io_context() != nullptr);
             CHECK_NOTHROW(context.grpc_context() != nullptr);
             CHECK_NOTHROW(context.backend() != nullptr);
@@ -54,7 +54,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
         }
 
         SECTION(std::string("Context::execute_loop wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
-            Context context{create_channel, block_cache, state_cache, wait_mode};
+            Context context{create_channel, block_cache, state_cache,  /* env */{}, wait_mode};
             std::atomic_bool processed{false};
             auto* io_context = context.io_context();
             boost::asio::post(*io_context, [&]() {
@@ -67,7 +67,7 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
         }
 
         SECTION(std::string("Context::stop wait_mode=") + std::to_string(static_cast<int>(wait_mode))) {
-            Context context{create_channel, block_cache, state_cache, wait_mode};
+            Context context{create_channel, block_cache, state_cache, /* env */{}, wait_mode};
             std::atomic_bool processed{false};
             auto* io_context = context.io_context();
             boost::asio::post(*io_context, [&]() {
@@ -78,6 +78,21 @@ TEST_CASE("Context", "[silkrpc][context_pool]") {
             CHECK_NOTHROW(context_thread.join());
         }
     }
+}
+
+TEST_CASE("Context with chain_env", "[silkrpc][context_pool]") {
+      std::shared_ptr<mdbx::env_managed> chain_env = std::make_shared<mdbx::env_managed>();
+      auto block_cache = std::make_shared<BlockCache>();
+      auto state_cache = std::make_shared<ethdb::kv::CoherentStateCache>();
+      Context context{create_channel, block_cache, state_cache, chain_env};
+      std::atomic_bool processed{false};
+      auto* io_context = context.io_context();
+      boost::asio::post(*io_context, [&]() {
+         processed = true;
+      });
+      auto context_thread = std::thread([&]() { context.execute_loop(); });
+      CHECK_NOTHROW(context.stop());
+      CHECK_NOTHROW(context_thread.join());
 }
 
 TEST_CASE("create context pool", "[silkrpc][context_pool]") {

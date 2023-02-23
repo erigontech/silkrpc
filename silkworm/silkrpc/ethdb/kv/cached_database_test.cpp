@@ -61,7 +61,7 @@ TEST_CASE("CachedDatabase::CachedDatabase", "[silkrpc][ethdb][kv][cached_databas
 
 TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
     boost::asio::thread_pool pool{1};
-    std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
+    std::shared_ptr<test::MockCursorDupSort> mock_cursor = std::make_shared<test::MockCursorDupSort>();
     test::MockStateCache mock_cache;
 
     SECTION("cache miss: request unexpected table in latest block") {
@@ -139,7 +139,7 @@ TEST_CASE("CachedDatabase::get_one", "[silkrpc][ethdb][kv][cached_database]") {
 
 TEST_CASE("CachedDatabase::get", "[silkrpc][ethdb][kv][cached_database]") {
     boost::asio::thread_pool pool{1};
-    std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
+    std::shared_ptr<test::MockCursorDupSort> mock_cursor = std::make_shared<test::MockCursorDupSort>();
     test::DummyTransaction fake_txn{0, mock_cursor};
     test::MockStateCache mock_cache;
     BlockNumberOrHash block_id{kTestBlockNumber};
@@ -155,7 +155,7 @@ TEST_CASE("CachedDatabase::get", "[silkrpc][ethdb][kv][cached_database]") {
 
 TEST_CASE("CachedDatabase::get_both_range", "[silkrpc][ethdb][kv][cached_database]") {
     boost::asio::thread_pool pool{1};
-    std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
+    std::shared_ptr<test::MockCursorDupSort> mock_cursor = std::make_shared<test::MockCursorDupSort>();
     test::DummyTransaction fake_txn{0, mock_cursor};
     test::MockStateCache mock_cache;
     BlockNumberOrHash block_id{kTestBlockNumber};
@@ -174,7 +174,7 @@ TEST_CASE("CachedDatabase::get_both_range", "[silkrpc][ethdb][kv][cached_databas
 
 TEST_CASE("CachedDatabase::walk", "[silkrpc][ethdb][kv][cached_database]") {
     boost::asio::thread_pool pool{1};
-    std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
+    std::shared_ptr<test::MockCursorDupSort> mock_cursor = std::make_shared<test::MockCursorDupSort>();
     test::DummyTransaction fake_txn{0, mock_cursor};
     test::MockStateCache mock_cache;
     BlockNumberOrHash block_id{kTestBlockNumber};
@@ -192,7 +192,7 @@ TEST_CASE("CachedDatabase::walk", "[silkrpc][ethdb][kv][cached_database]") {
 
 TEST_CASE("CachedDatabase::for_prefix", "[silkrpc][ethdb][kv][cached_database]") {
     boost::asio::thread_pool pool{1};
-    std::shared_ptr<test::MockCursor> mock_cursor = std::make_shared<test::MockCursor>();
+    std::shared_ptr<test::MockCursorDupSort> mock_cursor = std::make_shared<test::MockCursorDupSort>();
     test::DummyTransaction fake_txn{0, mock_cursor};
     test::MockStateCache mock_cache;
     BlockNumberOrHash block_id{kTestBlockNumber};

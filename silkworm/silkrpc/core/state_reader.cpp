@@ -58,9 +58,9 @@ boost::asio::awaitable<evmc::bytes32> StateReader::read_storage(const evmc::addr
     uint64_t block_number) const {
     std::optional<silkworm::Bytes> value{co_await read_historical_storage(address, incarnation, location_hash, block_number)};
     if (!value) {
-        auto composite_key{silkrpc::composite_storage_key(address, incarnation, location_hash.bytes)};
+        auto composite_key{silkrpc::composite_storage_key_without_hash_lookup(address, incarnation)};
         SILKRPC_DEBUG << "StateReader::read_storage composite_key: " << composite_key << "\n";
-        value = co_await db_reader_.get_one(db::table::kPlainState, composite_key);
+        value = co_await db_reader_.get_both_range(db::table::kPlainState, composite_key, location_hash);
         SILKRPC_DEBUG << "StateReader::read_storage value: " << (value ? *value : silkworm::Bytes{}) << "\n";
     }
     if (!value) {
