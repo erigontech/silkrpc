@@ -26,16 +26,16 @@
 #include <tuple>
 #include <vector>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/thread_pool.hpp>
 
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/http/request_handler.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/http/request_handler.hpp>
 
-#include <silkrpc/commands/rpc_api_table.hpp>
+#include <silkworm/silkrpc/commands/rpc_api_table.hpp>
 
 namespace silkrpc::http {
 

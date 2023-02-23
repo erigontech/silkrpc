@@ -21,7 +21,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/types/writer.hpp>
+#include <silkworm/silkrpc/types/writer.hpp>
 
 namespace json {
 static const nlohmann::json JSON_NULL = nlohmann::json::value_t::null;

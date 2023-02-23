@@ -20,16 +20,16 @@
 
 #include <boost/asio/thread_pool.hpp>
 
-#include <silkrpc/commands/eth_api.hpp>
-#include <silkrpc/commands/debug_api.hpp>
-#include <silkrpc/commands/net_api.hpp>
-#include <silkrpc/commands/parity_api.hpp>
-#include <silkrpc/commands/erigon_api.hpp>
-#include <silkrpc/commands/trace_api.hpp>
-#include <silkrpc/commands/web3_api.hpp>
-#include <silkrpc/commands/engine_api.hpp>
-#include <silkrpc/commands/txpool_api.hpp>
-#include <silkrpc/commands/ots_api.hpp>
+#include <silkworm/silkrpc/commands/eth_api.hpp>
+#include <silkworm/silkrpc/commands/debug_api.hpp>
+#include <silkworm/silkrpc/commands/net_api.hpp>
+#include <silkworm/silkrpc/commands/parity_api.hpp>
+#include <silkworm/silkrpc/commands/erigon_api.hpp>
+#include <silkworm/silkrpc/commands/trace_api.hpp>
+#include <silkworm/silkrpc/commands/web3_api.hpp>
+#include <silkworm/silkrpc/commands/engine_api.hpp>
+#include <silkworm/silkrpc/commands/txpool_api.hpp>
+#include <silkworm/silkrpc/commands/ots_api.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 

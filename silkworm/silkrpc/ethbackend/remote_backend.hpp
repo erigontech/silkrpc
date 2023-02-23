@@ -27,10 +27,10 @@
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
-#include <silkrpc/interfaces/types/types.pb.h>
-#include <silkrpc/types/execution_payload.hpp>
-#include <silkrpc/ethbackend/backend.hpp>
+#include <silkworm/silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/types/types.pb.h>
+#include <silkworm/silkrpc/types/execution_payload.hpp>
+#include <silkworm/silkrpc/ethbackend/backend.hpp>
 
 namespace silkrpc::ethbackend {
 

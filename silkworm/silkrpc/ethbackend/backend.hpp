@@ -22,8 +22,8 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
-#include <silkrpc/types/node_info.hpp>
-#include <silkrpc/types/execution_payload.hpp>
+#include <silkworm/silkrpc/types/node_info.hpp>
+#include <silkworm/silkrpc/types/execution_payload.hpp>
 
 namespace silkrpc::ethbackend {
 

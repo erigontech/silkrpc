@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <utility>
 

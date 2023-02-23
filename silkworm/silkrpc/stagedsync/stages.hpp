@@ -16,13 +16,13 @@
 
 #pragma once
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 #include <silkworm/common/base.hpp>
 #include <silkworm/db/stages.hpp>
 
-#include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
 
 namespace silkrpc::stages {
 

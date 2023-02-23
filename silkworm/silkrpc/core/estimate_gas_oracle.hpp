@@ -21,18 +21,18 @@
 #include <string>
 #include <vector>
 
-#include <silkrpc/config.hpp> // NOLINT(build/include_order)
+#include <silkworm/silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <boost/asio/awaitable.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/block.hpp>
 
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/core/evm_executor.hpp>
-#include <silkrpc/types/call.hpp>
-#include <silkrpc/types/transaction.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/core/evm_executor.hpp>
+#include <silkworm/silkrpc/types/call.hpp>
+#include <silkworm/silkrpc/types/transaction.hpp>
 
 namespace silkrpc::ego {
 

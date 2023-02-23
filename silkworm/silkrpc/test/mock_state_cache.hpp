@@ -23,9 +23,9 @@
 #include <boost/asio/awaitable.hpp>
 #include <gmock/gmock.h>
 
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/ethdb/kv/state_cache.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/ethdb/kv/state_cache.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
 #include <silkworm/common/util.hpp>
 
 namespace silkrpc::test {

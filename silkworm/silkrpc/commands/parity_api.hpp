@@ -18,15 +18,15 @@
 
 #include <memory>
 
-#include <silkrpc/config.hpp> // NOLINT(build/include_order)
+#include <silkworm/silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <boost/asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/json/types.hpp>
-#include <silkrpc/ethdb/database.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/ethdb/database.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 

@@ -20,8 +20,8 @@
 #include <utility>
 #include <string>
 
-#include <silkrpc/ethdb/database.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/ethdb/database.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
 
 #include <silkworm/db/mdbx.hpp>
 

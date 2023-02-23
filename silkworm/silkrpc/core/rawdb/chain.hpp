@@ -18,7 +18,7 @@
 
 #include <vector>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
@@ -27,10 +27,10 @@
 
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/types/block.hpp>
-#include <silkrpc/types/chain_config.hpp>
-#include <silkrpc/types/receipt.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/types/block.hpp>
+#include <silkworm/silkrpc/types/chain_config.hpp>
+#include <silkworm/silkrpc/types/receipt.hpp>
 
 namespace silkrpc::core::rawdb {
 

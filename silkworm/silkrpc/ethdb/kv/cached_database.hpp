@@ -19,11 +19,11 @@
 #include <optional>
 #include <string>
 
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/ethdb/kv/state_cache.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
-#include <silkrpc/ethdb/transaction_database.hpp>
-#include <silkrpc/types/block.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/ethdb/kv/state_cache.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/ethdb/transaction_database.hpp>
+#include <silkworm/silkrpc/types/block.hpp>
 #include <silkworm/common/util.hpp>
 
 namespace silkrpc::ethdb::kv {

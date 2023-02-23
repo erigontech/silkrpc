@@ -16,13 +16,13 @@
 
 #pragma once
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/types/receipt.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/types/receipt.hpp>
 
 #include <silkworm/types/block.hpp>
 

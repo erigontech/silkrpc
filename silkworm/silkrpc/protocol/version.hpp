@@ -22,11 +22,11 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
-#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
-#include <silkrpc/interfaces/txpool/mining.grpc.pb.h>
-#include <silkrpc/interfaces/txpool/txpool.grpc.pb.h>
-#include <silkrpc/interfaces/types/types.pb.h>
+#include <silkworm/silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/remote/kv.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/txpool/mining.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/txpool/txpool.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/types/types.pb.h>
 
 namespace silkrpc {
 

@@ -23,7 +23,7 @@
 #include <intx/intx.hpp>
 #include <silkworm/types/block.hpp>
 
-#include <silkrpc/types/chain_config.hpp>
+#include <silkworm/silkrpc/types/chain_config.hpp>
 
 namespace silkrpc::ethash {
 

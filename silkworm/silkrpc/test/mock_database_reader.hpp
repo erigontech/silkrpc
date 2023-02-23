@@ -22,8 +22,8 @@
 #include <boost/asio/awaitable.hpp>
 #include <gmock/gmock.h>
 
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
 #include <silkworm/common/base.hpp>
 
 namespace silkrpc::test {

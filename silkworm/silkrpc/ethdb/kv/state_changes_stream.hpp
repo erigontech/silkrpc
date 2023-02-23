@@ -21,7 +21,7 @@
 #include <future>
 #include <memory>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 #ifndef BOOST_ASIO_HAS_BOOST_DATE_TIME
@@ -31,10 +31,10 @@
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_context.hpp>
 
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/ethdb/kv/rpc.hpp>
-#include <silkrpc/ethdb/kv/state_cache.hpp>
-#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/ethdb/kv/rpc.hpp>
+#include <silkworm/silkrpc/ethdb/kv/state_cache.hpp>
+#include <silkworm/silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 //! Unfortunately gRPC does not define operator<< for generated data types
 namespace remote {

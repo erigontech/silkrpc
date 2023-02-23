@@ -23,14 +23,14 @@
 #include <optional>
 #include <shared_mutex>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <absl/container/btree_set.h>
 #include <boost/asio/awaitable.hpp>
 
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
-#include <silkrpc/interfaces/remote/kv.pb.h>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/interfaces/remote/kv.pb.h>
 #include <silkworm/common/base.hpp>
 
 namespace silkrpc::ethdb::kv {

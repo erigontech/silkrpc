@@ -26,7 +26,7 @@
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/transaction.hpp>
 
-#include <silkrpc/types/transaction.hpp>
+#include <silkworm/silkrpc/types/transaction.hpp>
 
 namespace silkrpc {
 

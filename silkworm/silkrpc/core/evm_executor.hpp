@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include <silkrpc/config.hpp> // NOLINT(build/include_order)
+#include <silkworm/silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/io_context.hpp>
@@ -36,9 +36,9 @@
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/core/remote_state.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/core/remote_state.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
 
 namespace silkrpc {
 

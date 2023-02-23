@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <memory>
 #include <string>
@@ -24,7 +24,7 @@
 #include <boost/asio/awaitable.hpp>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
 
 namespace silkrpc::ethdb {
 

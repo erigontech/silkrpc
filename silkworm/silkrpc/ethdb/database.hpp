@@ -18,12 +18,12 @@
 
 #include <memory>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/io_context.hpp>
 
-#include <silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
 
 namespace silkrpc::ethdb {
 

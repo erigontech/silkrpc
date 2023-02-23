@@ -20,18 +20,18 @@
 #include <map>
 
 #include <nlohmann/json.hpp>
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/account.hpp>
 
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/ethdb/cursor.hpp>
-#include <silkrpc/ethdb/database.hpp>
-#include <silkrpc/types/block.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/ethdb/cursor.hpp>
+#include <silkworm/silkrpc/ethdb/database.hpp>
+#include <silkworm/silkrpc/types/block.hpp>
 
 namespace silkrpc {
 

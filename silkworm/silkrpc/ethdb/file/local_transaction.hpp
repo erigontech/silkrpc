@@ -24,11 +24,11 @@
 
 #include <boost/asio/awaitable.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/config.hpp>
-#include <silkrpc/ethdb/cursor.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
-#include <silkrpc/ethdb/file/local_cursor.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/config.hpp>
+#include <silkworm/silkrpc/ethdb/cursor.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/ethdb/file/local_cursor.hpp>
 
 #include <silkworm/db/mdbx.hpp>
 

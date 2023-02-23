@@ -17,8 +17,8 @@
 #pragma once
 
 #include <memory>
-#include <silkrpc/config.hpp>
-#include <silkrpc/test/context_test_base.hpp>
+#include <silkworm/silkrpc/config.hpp>
+#include <silkworm/silkrpc/test/context_test_base.hpp>
 #include <utility>
 
 namespace silkrpc::test {
