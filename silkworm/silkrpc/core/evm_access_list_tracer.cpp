@@ -25,9 +25,9 @@
 #include <silkworm/third_party/evmone/lib/evmone/instructions.hpp>
 
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/evm_executor.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/evm_executor.hpp>
 
 namespace silkrpc {
 

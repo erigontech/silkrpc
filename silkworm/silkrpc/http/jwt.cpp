@@ -21,8 +21,8 @@
 #include <string>
 #include <filesystem>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/http/jwt.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/http/jwt.hpp>
 
 #include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>

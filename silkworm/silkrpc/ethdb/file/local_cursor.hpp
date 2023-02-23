@@ -24,10 +24,10 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/use_awaitable.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/config.hpp>
-#include <silkrpc/ethdb/cursor.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/config.hpp>
+#include <silkworm/silkrpc/ethdb/cursor.hpp>
 
 #include <silkworm/common/util.hpp>
 #include <silkworm/db/mdbx.hpp>

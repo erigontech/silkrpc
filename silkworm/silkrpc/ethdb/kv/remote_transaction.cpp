@@ -18,11 +18,11 @@
 
 #include <utility>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
 
 namespace silkrpc::ethdb::kv {
 

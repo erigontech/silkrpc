@@ -16,8 +16,8 @@
 
 #include "remote_database.hpp"
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/ethdb/kv/remote_transaction.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/ethdb/kv/remote_transaction.hpp>
 
 namespace silkrpc::ethdb::kv {
 

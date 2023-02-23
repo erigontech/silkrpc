@@ -28,13 +28,13 @@
 #include <silkworm/common/util.hpp>
 #include <silkworm/third_party/evmone/evmc/include/evmc/instructions.h>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/core/rawdb/chain.hpp>
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkrpc/test/mock_database_reader.hpp>
-#include <silkrpc/types/transaction.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/core/rawdb/chain.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/test/mock_database_reader.hpp>
+#include <silkworm/silkrpc/types/transaction.hpp>
 
 namespace silkrpc::trace {
 

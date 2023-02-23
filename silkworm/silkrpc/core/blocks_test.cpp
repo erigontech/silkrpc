@@ -24,10 +24,10 @@
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkrpc/stagedsync/stages.hpp>
-#include <silkrpc/test/mock_database_reader.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/stagedsync/stages.hpp>
+#include <silkworm/silkrpc/test/mock_database_reader.hpp>
 #include <silkworm/common/base.hpp>
 
 namespace silkrpc::core {

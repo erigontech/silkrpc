@@ -25,16 +25,16 @@
 #include <gmock/gmock.h>
 #include <grpcpp/server_builder.h>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
-#include <silkrpc/interfaces/remote/ethbackend_mock_fix24351.grpc.pb.h>
-#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
-#include <silkrpc/interfaces/remote/kv_mock_fix24351.grpc.pb.h>
-#include <silkrpc/interfaces/txpool/mining.grpc.pb.h>
-#include <silkrpc/interfaces/txpool/mining_mock_fix24351.grpc.pb.h>
-#include <silkrpc/interfaces/txpool/txpool.grpc.pb.h>
-#include <silkrpc/interfaces/txpool/txpool_mock_fix24351.grpc.pb.h>
-#include <silkrpc/interfaces/types/types.pb.h>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/remote/ethbackend_mock_fix24351.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/remote/kv.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/remote/kv_mock_fix24351.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/txpool/mining.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/txpool/mining_mock_fix24351.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/txpool/txpool.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/txpool/txpool_mock_fix24351.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/types/types.pb.h>
 
 namespace silkrpc {
 

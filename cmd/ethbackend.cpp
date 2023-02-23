@@ -21,11 +21,11 @@
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/common/constants.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/grpc/util.hpp>
-#include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
-#include <silkrpc/interfaces/types/types.pb.h>
+#include <silkworm/silkrpc/common/constants.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/grpc/util.hpp>
+#include <silkworm/silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/types/types.pb.h>
 
 inline std::ostream& operator<<(std::ostream& out, const types::H160& address) {
     out << "address=" << address.has_hi();

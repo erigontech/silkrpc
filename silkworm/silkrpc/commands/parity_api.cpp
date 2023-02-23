@@ -22,19 +22,19 @@
 
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/common/constants.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/core/cached_chain.hpp>
-#include <silkrpc/core/receipts.hpp>
-#include <silkrpc/core/state_reader.hpp>
-#include <silkrpc/core/rawdb/chain.hpp>
-#include <silkrpc/ethdb/transaction_database.hpp>
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkrpc/json/types.hpp>
-#include <silkrpc/types/log.hpp>
-#include <silkrpc/types/receipt.hpp>
+#include <silkworm/silkrpc/common/constants.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/core/cached_chain.hpp>
+#include <silkworm/silkrpc/core/receipts.hpp>
+#include <silkworm/silkrpc/core/state_reader.hpp>
+#include <silkworm/silkrpc/core/rawdb/chain.hpp>
+#include <silkworm/silkrpc/ethdb/transaction_database.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/types/log.hpp>
+#include <silkworm/silkrpc/types/receipt.hpp>
 
 namespace silkrpc::commands {
 

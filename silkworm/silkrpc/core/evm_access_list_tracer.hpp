@@ -25,11 +25,11 @@
 #pragma GCC diagnostic pop
 #include <silkworm/state/intra_block_state.hpp>
 
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/types/block.hpp>
-#include <silkrpc/types/call.hpp>
-#include <silkrpc/types/transaction.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/types/block.hpp>
+#include <silkworm/silkrpc/types/call.hpp>
+#include <silkworm/silkrpc/types/transaction.hpp>
 
 namespace silkrpc {
 

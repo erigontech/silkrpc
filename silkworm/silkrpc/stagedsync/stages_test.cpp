@@ -24,8 +24,8 @@
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkrpc/test/mock_database_reader.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/test/mock_database_reader.hpp>
 
 namespace silkrpc::stages {
 

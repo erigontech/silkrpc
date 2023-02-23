@@ -20,7 +20,7 @@
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
 
 namespace silkrpc {
 

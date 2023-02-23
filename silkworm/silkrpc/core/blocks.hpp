@@ -19,12 +19,12 @@
 #include <string>
 #include <utility>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/types/block.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/types/block.hpp>
 
 namespace silkrpc::core {
 

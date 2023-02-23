@@ -23,8 +23,8 @@
 #include <intx/intx.hpp>
 #include <silkworm/types/bloom.hpp>
 
-#include <silkrpc/types/log.hpp>
-#include <silkrpc/types/transaction.hpp>
+#include <silkworm/silkrpc/types/log.hpp>
+#include <silkworm/silkrpc/types/transaction.hpp>
 
 namespace silkrpc {
 

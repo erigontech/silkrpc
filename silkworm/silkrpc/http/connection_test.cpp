@@ -20,7 +20,7 @@
 #include <catch2/catch.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/commands/rpc_api_table.hpp>
+#include <silkworm/silkrpc/commands/rpc_api_table.hpp>
 
 namespace silkrpc::http {
 

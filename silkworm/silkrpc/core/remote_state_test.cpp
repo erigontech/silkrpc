@@ -23,10 +23,10 @@
 #include <evmc/evmc.hpp>
 #include <silkworm/common/base.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/test/context_test_base.hpp>
-#include <silkrpc/test/mock_database_reader.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/test/context_test_base.hpp>
+#include <silkworm/silkrpc/test/mock_database_reader.hpp>
 
 namespace silkrpc::state {
 

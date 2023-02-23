@@ -31,13 +31,13 @@
 #include <silkworm/third_party/evmone/lib/evmone/execution_state.hpp>
 #include <silkworm/third_party/evmone/lib/evmone/instructions.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/consensus/ethash.hpp>
-#include <silkrpc/core/cached_chain.hpp>
-#include <silkrpc/core/evm_executor.hpp>
-#include <silkrpc/core/rawdb/chain.hpp>
-#include <silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/consensus/ethash.hpp>
+#include <silkworm/silkrpc/core/cached_chain.hpp>
+#include <silkworm/silkrpc/core/evm_executor.hpp>
+#include <silkworm/silkrpc/core/rawdb/chain.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
 
 namespace silkrpc::trace {
 

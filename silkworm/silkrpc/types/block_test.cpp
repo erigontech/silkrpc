@@ -20,7 +20,7 @@
 #include <silkworm/common/base.hpp>
 #include <silkworm/types/transaction.hpp>
 
-#include <silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
 
 namespace silkrpc {
 

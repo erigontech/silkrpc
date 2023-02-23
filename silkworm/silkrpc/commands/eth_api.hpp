@@ -19,7 +19,7 @@
 #include <memory>
 #include <vector>
 
-#include <silkrpc/config.hpp> // NOLINT(build/include_order)
+#include <silkworm/silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/thread_pool.hpp>
@@ -28,16 +28,16 @@
 
 #include <croaring/roaring.hh>
 
-#include <silkrpc/txpool/transaction_pool.hpp>
+#include <silkworm/silkrpc/txpool/transaction_pool.hpp>
 #include <silkworm/types/receipt.hpp>
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/json/types.hpp>
-#include <silkrpc/ethbackend/backend.hpp>
-#include <silkrpc/ethdb/database.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
-#include <silkrpc/types/log.hpp>
-#include <silkrpc/types/receipt.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/ethbackend/backend.hpp>
+#include <silkworm/silkrpc/ethdb/database.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/types/log.hpp>
+#include <silkworm/silkrpc/types/receipt.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 

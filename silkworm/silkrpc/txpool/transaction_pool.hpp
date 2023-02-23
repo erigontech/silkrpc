@@ -22,7 +22,7 @@
 #include <utility>
 #include <vector>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <agrpc/grpc_context.hpp>
 #include <boost/asio/io_context.hpp>
@@ -30,11 +30,11 @@
 #include <evmc/evmc.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/common/clock_time.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/interfaces/txpool/txpool.grpc.pb.h>
-#include <silkrpc/interfaces/types/types.pb.h>
+#include <silkworm/silkrpc/common/clock_time.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/interfaces/txpool/txpool.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/types/types.pb.h>
 #include <silkworm/common/base.hpp>
 
 namespace silkrpc::txpool {

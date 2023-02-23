@@ -29,14 +29,14 @@
 #include <boost/asio/io_context.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/common/block_cache.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/concurrency/wait_strategy.hpp>
-#include <silkrpc/ethbackend/backend.hpp>
-#include <silkrpc/ethdb/database.hpp>
-#include <silkrpc/ethdb/kv/state_cache.hpp>
-#include <silkrpc/txpool/miner.hpp>
-#include <silkrpc/txpool/transaction_pool.hpp>
+#include <silkworm/silkrpc/common/block_cache.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/concurrency/wait_strategy.hpp>
+#include <silkworm/silkrpc/ethbackend/backend.hpp>
+#include <silkworm/silkrpc/ethdb/database.hpp>
+#include <silkworm/silkrpc/ethdb/kv/state_cache.hpp>
+#include <silkworm/silkrpc/txpool/miner.hpp>
+#include <silkworm/silkrpc/txpool/transaction_pool.hpp>
 
 namespace silkrpc {
 

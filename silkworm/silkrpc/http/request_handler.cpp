@@ -30,10 +30,10 @@
 #include <boost/asio/write.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/common/clock_time.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/http/header.hpp>
-#include <silkrpc/types/writer.hpp>
+#include <silkworm/silkrpc/common/clock_time.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/http/header.hpp>
+#include <silkworm/silkrpc/types/writer.hpp>
 
 namespace silkrpc::http {
 

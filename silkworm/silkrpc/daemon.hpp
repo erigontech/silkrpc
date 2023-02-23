@@ -22,12 +22,12 @@
 
 #include <boost/asio/thread_pool.hpp>
 
-#include <silkrpc/common/constants.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/ethdb/kv/state_changes_stream.hpp>
-#include <silkrpc/http/server.hpp>
-#include <silkrpc/protocol/version.hpp>
+#include <silkworm/silkrpc/common/constants.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/ethdb/kv/state_changes_stream.hpp>
+#include <silkworm/silkrpc/http/server.hpp>
+#include <silkworm/silkrpc/protocol/version.hpp>
 
 namespace silkrpc {
 

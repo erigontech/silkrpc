@@ -20,10 +20,10 @@
 #include <thread>
 #include <utility>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/ethbackend/remote_backend.hpp>
-#include <silkrpc/ethdb/kv/remote_database.hpp>
-#include <silkrpc/ethdb/file/local_database.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/ethbackend/remote_backend.hpp>
+#include <silkworm/silkrpc/ethdb/kv/remote_database.hpp>
+#include <silkworm/silkrpc/ethdb/file/local_database.hpp>
 
 static const char kChaindataRelativePath[] = "/chaindata";
 

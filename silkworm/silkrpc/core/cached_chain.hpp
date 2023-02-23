@@ -16,15 +16,15 @@
 
 #pragma once
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 
-#include <silkrpc/common/block_cache.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/types/block.hpp>
-#include <silkrpc/types/transaction.hpp>
+#include <silkworm/silkrpc/common/block_cache.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/types/block.hpp>
+#include <silkworm/silkrpc/types/transaction.hpp>
 
 namespace silkrpc::core  {
 

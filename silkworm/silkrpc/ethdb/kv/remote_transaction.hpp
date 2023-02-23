@@ -21,17 +21,17 @@
 #include <string>
 #include <type_traits>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <agrpc/grpc_context.hpp>
 #include <boost/asio/awaitable.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/ethdb/cursor.hpp>
-#include <silkrpc/ethdb/kv/remote_cursor.hpp>
-#include <silkrpc/ethdb/kv/rpc.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/ethdb/cursor.hpp>
+#include <silkworm/silkrpc/ethdb/kv/remote_cursor.hpp>
+#include <silkworm/silkrpc/ethdb/kv/rpc.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
 
 namespace silkrpc::ethdb::kv {
 

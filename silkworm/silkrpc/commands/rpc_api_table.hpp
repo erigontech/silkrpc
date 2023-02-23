@@ -20,13 +20,13 @@
 #include <memory>
 #include <string>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/commands/rpc_api.hpp>
-#include <silkrpc/json/stream.hpp>
+#include <silkworm/silkrpc/commands/rpc_api.hpp>
+#include <silkworm/silkrpc/json/stream.hpp>
 
 namespace silkrpc::commands {
 

@@ -16,7 +16,7 @@
 
 #include "remote_cursor.hpp"
 
-#include <silkrpc/common/clock_time.hpp>
+#include <silkworm/silkrpc/common/clock_time.hpp>
 
 namespace silkrpc::ethdb::kv {
 

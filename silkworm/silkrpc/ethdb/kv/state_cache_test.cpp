@@ -29,11 +29,11 @@
 #include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/core/rawdb/util.hpp>
-#include <silkrpc/test/dummy_transaction.hpp>
-#include <silkrpc/test/mock_cursor.hpp>
-#include <silkrpc/test/mock_transaction.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/core/rawdb/util.hpp>
+#include <silkworm/silkrpc/test/dummy_transaction.hpp>
+#include <silkworm/silkrpc/test/mock_cursor.hpp>
+#include <silkworm/silkrpc/test/mock_transaction.hpp>
 #include <silkworm/common/assert.hpp>
 #include <silkworm/common/base.hpp>
 #include <silkworm/common/util.hpp>

@@ -23,9 +23,9 @@
 #include <boost/asio/thread_pool.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/json/types.hpp>
-#include <silkrpc/ethbackend/backend.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/ethbackend/backend.hpp>
 
 
 namespace silkrpc::http { class RequestHandler; }

@@ -25,10 +25,10 @@
 #include <catch2/catch.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/ethdb/kv/state_cache.hpp>
-#include <silkrpc/stagedsync/stages.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/ethdb/kv/state_cache.hpp>
+#include <silkworm/silkrpc/stagedsync/stages.hpp>
 
 namespace silkrpc::commands {
 

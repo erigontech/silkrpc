@@ -26,7 +26,7 @@
 #include <boost/asio/signal_set.hpp>
 #include <boost/process/environment.hpp>
 #include <grpcpp/grpcpp.h>
-#include <silkrpc/http/jwt.hpp>
+#include <silkworm/silkrpc/http/jwt.hpp>
 
 namespace silkrpc {
 

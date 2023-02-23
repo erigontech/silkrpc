@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include <silkrpc/config.hpp> // NOLINT(build/include_order)
+#include <silkworm/silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <boost/asio/awaitable.hpp>
 #include <silkworm/chain/config.hpp>
@@ -28,8 +28,8 @@
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
 
 namespace silkrpc {
 

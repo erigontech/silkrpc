@@ -29,9 +29,9 @@
 
 #include <silkworm/common/util.hpp>
 #include <silkworm/node/silkworm/common/log.hpp>
-#include <silkrpc/ethdb/database.hpp>
-#include <silkrpc/ethdb/cursor.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/ethdb/database.hpp>
+#include <silkworm/silkrpc/ethdb/cursor.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
 #include <silkworm/rlp/encode.hpp>
 
 

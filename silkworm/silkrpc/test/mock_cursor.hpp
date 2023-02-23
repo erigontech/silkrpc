@@ -22,8 +22,8 @@
 #include <gmock/gmock.h>
 #include <silkworm/common/base.hpp>
 
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/ethdb/cursor.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/ethdb/cursor.hpp>
 
 namespace silkrpc::test {
 

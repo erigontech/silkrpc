@@ -21,21 +21,21 @@
 #include <vector>
 
 #include <nlohmann/json.hpp>
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/types/account.hpp>
 
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/cached_chain.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/ethdb/cursor.hpp>
-#include <silkrpc/ethdb/database.hpp>
-#include <silkrpc/ethdb/transaction_database.hpp>
-#include <silkrpc/types/block.hpp>
-#include <silkrpc/types/dump_account.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/cached_chain.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/ethdb/cursor.hpp>
+#include <silkworm/silkrpc/ethdb/database.hpp>
+#include <silkworm/silkrpc/ethdb/transaction_database.hpp>
+#include <silkworm/silkrpc/types/block.hpp>
+#include <silkworm/silkrpc/types/dump_account.hpp>
 
 namespace silkrpc {
 

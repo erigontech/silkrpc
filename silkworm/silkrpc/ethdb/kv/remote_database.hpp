@@ -22,9 +22,9 @@
 #include <agrpc/grpc_context.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/ethdb/database.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
-#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
+#include <silkworm/silkrpc/ethdb/database.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 namespace silkrpc::ethdb::kv {
 

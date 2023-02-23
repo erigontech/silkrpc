@@ -27,7 +27,7 @@
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 
-#include <silkrpc/types/block.hpp>
+#include <silkworm/silkrpc/types/block.hpp>
 
 namespace silkrpc::ego {
 

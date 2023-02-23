@@ -24,9 +24,9 @@
 #include <boost/asio/use_future.hpp>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/core/rawdb/chain.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/core/rawdb/chain.hpp>
 
 namespace silkrpc::state {
 

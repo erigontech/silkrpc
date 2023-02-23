@@ -24,9 +24,9 @@
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/common/constants.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/interfaces/remote/kv.grpc.pb.h>
+#include <silkworm/silkrpc/common/constants.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 
 class GrpcKvCallbackReactor final : public grpc::ClientBidiReactor<remote::Cursor, remote::Pair> {

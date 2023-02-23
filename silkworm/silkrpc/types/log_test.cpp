@@ -19,7 +19,7 @@
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 
-#include <silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
 
 namespace silkrpc {
 

@@ -20,7 +20,7 @@
 #include <silkworm/common/base.hpp>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
 
 namespace silkworm {
 

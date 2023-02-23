@@ -22,8 +22,8 @@
 #include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/types/log.hpp>
-#include <silkrpc/types/receipt.hpp>
+#include <silkworm/silkrpc/types/log.hpp>
+#include <silkworm/silkrpc/types/receipt.hpp>
 
 namespace {
 #ifdef _WIN32

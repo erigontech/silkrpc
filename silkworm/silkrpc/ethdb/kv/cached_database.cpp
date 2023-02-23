@@ -18,8 +18,8 @@
 
 #include <memory>
 
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
 
 namespace silkrpc::ethdb::kv {
 

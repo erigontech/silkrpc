@@ -20,7 +20,7 @@
 #include <system_error>
 #include <utility>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <agrpc/rpc.hpp>
 #include <boost/asio/bind_executor.hpp>
@@ -28,10 +28,10 @@
 #include <boost/asio/experimental/append.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/grpc/dispatcher.hpp>
-#include <silkrpc/grpc/error.hpp>
-#include <silkrpc/grpc/util.hpp>
-#include <silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/grpc/dispatcher.hpp>
+#include <silkworm/silkrpc/grpc/error.hpp>
+#include <silkworm/silkrpc/grpc/util.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
 
 namespace silkrpc {
 

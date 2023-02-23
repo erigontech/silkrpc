@@ -19,7 +19,7 @@
 #include <memory>
 #include <utility>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <agrpc/grpc_context.hpp>
 #include <boost/asio/io_context.hpp>
@@ -28,10 +28,10 @@
 #include <intx/intx.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/interfaces/txpool/mining.grpc.pb.h>
-#include <silkrpc/interfaces/types/types.pb.h>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/interfaces/txpool/mining.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/types/types.pb.h>
 #include <silkworm/common/base.hpp>
 
 namespace silkrpc::txpool {

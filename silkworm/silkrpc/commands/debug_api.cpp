@@ -34,25 +34,25 @@
 #include <silkworm/core/silkworm/state/intra_block_state.hpp>
 #include <silkworm/node/silkworm/db/util.hpp>
 
-#include <silkrpc/common/constants.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/cached_chain.hpp>
-#include <silkrpc/core/account_dumper.hpp>
-#include <silkrpc/core/account_walker.hpp>
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/core/evm_executor.hpp>
-#include <silkrpc/core/evm_debug.hpp>
-#include <silkrpc/core/rawdb/chain.hpp>
-#include <silkrpc/core/state_reader.hpp>
-#include <silkrpc/core/storage_walker.hpp>
-#include <silkrpc/ethdb/kv/cached_database.hpp>
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkrpc/ethdb/transaction_database.hpp>
-#include <silkrpc/json/types.hpp>
-#include <silkrpc/types/block.hpp>
-#include <silkrpc/types/call.hpp>
-#include <silkrpc/types/dump_account.hpp>
+#include <silkworm/silkrpc/common/constants.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/cached_chain.hpp>
+#include <silkworm/silkrpc/core/account_dumper.hpp>
+#include <silkworm/silkrpc/core/account_walker.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/core/evm_executor.hpp>
+#include <silkworm/silkrpc/core/evm_debug.hpp>
+#include <silkworm/silkrpc/core/rawdb/chain.hpp>
+#include <silkworm/silkrpc/core/state_reader.hpp>
+#include <silkworm/silkrpc/core/storage_walker.hpp>
+#include <silkworm/silkrpc/ethdb/kv/cached_database.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/ethdb/transaction_database.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/types/block.hpp>
+#include <silkworm/silkrpc/types/call.hpp>
+#include <silkworm/silkrpc/types/dump_account.hpp>
 
 namespace silkrpc::commands {
 

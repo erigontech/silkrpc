@@ -26,11 +26,11 @@
 #include <grpcpp/grpcpp.h>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/ethdb/cursor.hpp>
-#include <silkrpc/ethdb/database.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/ethdb/cursor.hpp>
+#include <silkworm/silkrpc/ethdb/database.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
 
 namespace silkrpc::commands {
 

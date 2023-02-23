@@ -24,8 +24,8 @@
 #include <intx/intx.hpp>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
 #include <silkworm/common/endian.hpp>
 
 namespace silkrpc {

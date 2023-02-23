@@ -18,8 +18,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
 
 namespace silkrpc {
 

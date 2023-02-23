@@ -19,15 +19,15 @@
 #include <memory>
 #include <vector>
 
-#include <silkrpc/config.hpp> // NOLINT(build/include_order)
+#include <silkworm/silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <boost/asio/awaitable.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/json/types.hpp>
-#include <silkrpc/types/log.hpp>
-#include <silkrpc/ethbackend/backend.hpp>
-#include <silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/types/log.hpp>
+#include <silkworm/silkrpc/ethbackend/backend.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
 
 namespace silkrpc::http { class RequestHandler; }
 

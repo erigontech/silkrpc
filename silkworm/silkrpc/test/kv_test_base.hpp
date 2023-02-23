@@ -20,10 +20,10 @@
 
 #include <agrpc/test.hpp>
 
-#include <silkrpc/config.hpp>
-#include <silkrpc/test/context_test_base.hpp>
-#include <silkrpc/test/grpc_responder.hpp>
-#include <silkrpc/interfaces/remote/kv_mock.grpc.pb.h>
+#include <silkworm/silkrpc/config.hpp>
+#include <silkworm/silkrpc/test/context_test_base.hpp>
+#include <silkworm/silkrpc/test/grpc_responder.hpp>
+#include <silkworm/silkrpc/interfaces/remote/kv_mock.grpc.pb.h>
 
 namespace silkrpc::test {
 

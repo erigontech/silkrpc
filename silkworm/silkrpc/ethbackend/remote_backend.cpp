@@ -23,12 +23,12 @@
 #include <grpcpp/grpcpp.h>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/grpc/unary_rpc.hpp>
-#include <silkrpc/common/clock_time.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/config.hpp>
-#include <silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/grpc/unary_rpc.hpp>
+#include <silkworm/silkrpc/common/clock_time.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/config.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
 
 namespace silkrpc::ethbackend {
 

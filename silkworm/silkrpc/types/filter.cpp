@@ -16,7 +16,7 @@
 
 #include "filter.hpp"
 
-#include <silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
 
 std::ostream& operator<<(std::ostream& out, const std::optional<silkrpc::FilterAddresses>& addresses) {
     if (addresses.has_value()) {

@@ -27,10 +27,10 @@
 #include <catch2/catch.hpp>
 
 #include <silkworm/common/util.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/ethdb/database.hpp>
-#include <silkrpc/ethdb/cursor.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/ethdb/database.hpp>
+#include <silkworm/silkrpc/ethdb/cursor.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
 #include <silkworm/rlp/encode.hpp>
 
 namespace silkrpc {

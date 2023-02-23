@@ -18,8 +18,8 @@
 
 #include <string>
 
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
 #include <silkworm/common/assert.hpp>
 #include <silkworm/common/endian.hpp>
 #include <silkworm/core/silkworm/rlp/encode_vector.hpp>

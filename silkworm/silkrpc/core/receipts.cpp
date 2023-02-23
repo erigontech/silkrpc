@@ -16,8 +16,8 @@
 
 #include "receipts.hpp"
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/core/rawdb/chain.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/core/rawdb/chain.hpp>
 
 namespace silkrpc::core {
 

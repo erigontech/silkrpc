@@ -25,19 +25,19 @@
 #include <array>
 #include <string>
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/thread_pool.hpp>
 
-#include <silkrpc/commands/rpc_api_table.hpp>
-#include <silkrpc/common/constants.hpp>
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/http/reply.hpp>
-#include <silkrpc/http/request.hpp>
-#include <silkrpc/http/request_handler.hpp>
-#include <silkrpc/http/request_parser.hpp>
+#include <silkworm/silkrpc/commands/rpc_api_table.hpp>
+#include <silkworm/silkrpc/common/constants.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/http/reply.hpp>
+#include <silkworm/silkrpc/http/request.hpp>
+#include <silkworm/silkrpc/http/request_handler.hpp>
+#include <silkworm/silkrpc/http/request_parser.hpp>
 
 namespace silkrpc::http {
 

@@ -21,11 +21,11 @@
 
 #include <boost/asio/awaitable.hpp>
 
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/ethdb/cursor.hpp>
-#include <silkrpc/ethdb/database.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
-#include <silkrpc/test/dummy_transaction.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/ethdb/cursor.hpp>
+#include <silkworm/silkrpc/ethdb/database.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/test/dummy_transaction.hpp>
 
 namespace silkrpc::test {
 

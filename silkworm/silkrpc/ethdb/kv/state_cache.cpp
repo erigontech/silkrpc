@@ -20,11 +20,11 @@
 
 #include <magic_enum.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/rawdb/util.hpp>
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkrpc/ethdb/transaction_database.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/rawdb/util.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/ethdb/transaction_database.hpp>
 #include <silkworm/common/assert.hpp>
 #include <silkworm/common/util.hpp>
 #include <silkworm/rpc/common/conversion.hpp>

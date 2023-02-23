@@ -16,10 +16,10 @@
 
 #include "blocks.hpp"
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/core/rawdb/chain.hpp>
-#include <silkrpc/stagedsync/stages.hpp>
-#include <silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/core/rawdb/chain.hpp>
+#include <silkworm/silkrpc/stagedsync/stages.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
 #include <silkworm/common/assert.hpp>
 
 namespace silkrpc::core {

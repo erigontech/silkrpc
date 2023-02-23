@@ -25,19 +25,19 @@
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/types/block.hpp>
-#include <silkrpc/types/call.hpp>
-#include <silkrpc/types/chain_config.hpp>
-#include <silkrpc/types/chain_traffic.hpp>
-#include <silkrpc/types/error.hpp>
-#include <silkrpc/types/execution_payload.hpp>
-#include <silkrpc/types/filter.hpp>
-#include <silkrpc/types/issuance.hpp>
-#include <silkrpc/types/log.hpp>
-#include <silkrpc/types/node_info.hpp>
-#include <silkrpc/types/syncing_data.hpp>
-#include <silkrpc/types/receipt.hpp>
-#include <silkrpc/types/transaction.hpp>
+#include <silkworm/silkrpc/types/block.hpp>
+#include <silkworm/silkrpc/types/call.hpp>
+#include <silkworm/silkrpc/types/chain_config.hpp>
+#include <silkworm/silkrpc/types/chain_traffic.hpp>
+#include <silkworm/silkrpc/types/error.hpp>
+#include <silkworm/silkrpc/types/execution_payload.hpp>
+#include <silkworm/silkrpc/types/filter.hpp>
+#include <silkworm/silkrpc/types/issuance.hpp>
+#include <silkworm/silkrpc/types/log.hpp>
+#include <silkworm/silkrpc/types/node_info.hpp>
+#include <silkworm/silkrpc/types/syncing_data.hpp>
+#include <silkworm/silkrpc/types/receipt.hpp>
+#include <silkworm/silkrpc/types/transaction.hpp>
 #include <silkworm/types/block.hpp>
 #include <silkworm/types/transaction.hpp>
 

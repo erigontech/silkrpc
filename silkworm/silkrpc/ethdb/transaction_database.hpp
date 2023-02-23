@@ -20,8 +20,8 @@
 #include <string>
 
 #include <silkworm/common/util.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/ethdb/transaction.hpp>
 
 namespace silkrpc::ethdb {
 

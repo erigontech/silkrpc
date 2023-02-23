@@ -21,15 +21,15 @@
 #include <string>
 #include <vector>
 
-#include <silkrpc/config.hpp> // NOLINT(build/include_order)
+#include <silkworm/silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/io_context.hpp>
 #include <evmc/evmc.hpp>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/core/state_reader.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/core/state_reader.hpp>
 #include <silkworm/state/state.hpp>
 
 namespace silkrpc::state {
