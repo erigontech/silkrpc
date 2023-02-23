@@ -79,8 +79,8 @@ target_link_libraries(silkinterfaces PUBLIC
     gRPC::grpc++
     protobuf::libprotobuf)
 
-# Copy generated Protocol Buffers and gRPC headers to Silkrpc source tree
-set(IF_GENERATED_HEADER_DIR ${CMAKE_SOURCE_DIR}/silkworm/silkrpc/interfaces)
+# Copy generated Protocol Buffers and gRPC headers to source tree
+set(IF_GENERATED_HEADER_DIR ${CMAKE_SOURCE_DIR}/silkworm/interfaces)
 
 set(REMOTE_IF_GENERATED_HEADER_DIR ${IF_GENERATED_HEADER_DIR}/remote)
 file(MAKE_DIRECTORY ${REMOTE_IF_GENERATED_HEADER_DIR})
