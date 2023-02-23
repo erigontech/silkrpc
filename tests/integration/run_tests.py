@@ -88,7 +88,7 @@ def get_jwt_secret(name):
 
 
 
-def is_skipped(api_name, requested_api, exclude_api_list, exclude_test_list, api_file: str, req_test, verify_with_daemon, global_test_number):
+def is_skipped(api_name, exclude_api_list, exclude_test_list, api_file: str, req_test, verify_with_daemon, global_test_number):
     """ determine if test must be skipped
     """
     if req_test == -1 and verify_with_daemon == 1:
@@ -408,7 +408,7 @@ def main(argv):
             for test_name in test_lists:
                 if requested_api in api_file or requested_api == "": # -a
                     test_file = api_file + "/" + test_name
-                    if  is_skipped(api_file, requested_api, exclude_api_list, exclude_test_list, test_file, req_test, verify_with_daemon, global_test_number) == 1:
+                    if  is_skipped(api_file, exclude_api_list, exclude_test_list, test_file, req_test, verify_with_daemon, global_test_number) == 1:
                         if start_test == "" or global_test_number >= int(start_test):
                             file = test_file.ljust(60)
                             print(f"{global_test_number:03d}. {file} Skipped")
