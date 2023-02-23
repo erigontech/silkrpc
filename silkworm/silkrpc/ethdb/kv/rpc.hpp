@@ -16,9 +16,9 @@
 
 #pragma once
 
+#include <silkworm/interfaces/remote/kv.grpc.pb.h>
 #include <silkworm/silkrpc/grpc/bidi_streaming_rpc.hpp>
 #include <silkworm/silkrpc/grpc/server_streaming_rpc.hpp>
-#include <silkworm/silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 namespace silkrpc::ethdb::kv {
 

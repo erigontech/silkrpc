@@ -34,7 +34,7 @@
 #include <silkworm/silkrpc/concurrency/context_pool.hpp>
 #include <silkworm/silkrpc/ethdb/kv/rpc.hpp>
 #include <silkworm/silkrpc/ethdb/kv/state_cache.hpp>
-#include <silkworm/silkrpc/interfaces/remote/kv.grpc.pb.h>
+#include <silkworm/interfaces/remote/kv.grpc.pb.h>
 
 //! Unfortunately gRPC does not define operator<< for generated data types
 namespace remote {

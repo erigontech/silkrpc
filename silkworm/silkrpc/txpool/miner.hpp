@@ -30,8 +30,8 @@
 
 #include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/silkrpc/common/util.hpp>
-#include <silkworm/silkrpc/interfaces/txpool/mining.grpc.pb.h>
-#include <silkworm/silkrpc/interfaces/types/types.pb.h>
+#include <silkworm/interfaces/txpool/mining.grpc.pb.h>
+#include <silkworm/interfaces/types/types.pb.h>
 #include <silkworm/common/base.hpp>
 
 namespace silkrpc::txpool {
