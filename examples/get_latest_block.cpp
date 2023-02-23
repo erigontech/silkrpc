@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <functional>
 #include <future>
@@ -34,13 +34,13 @@
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/common/constants.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/ethdb/transaction_database.hpp>
-#include <silkrpc/ethdb/kv/remote_database.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/common/constants.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/ethdb/transaction_database.hpp>
+#include <silkworm/silkrpc/ethdb/kv/remote_database.hpp>
 
 ABSL_FLAG(std::string, target, silkrpc::kDefaultTarget, "server location as string <address>:<port>");
 ABSL_FLAG(silkrpc::LogLevel, log_verbosity, silkrpc::LogLevel::Critical, "logging level");
