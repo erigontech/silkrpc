@@ -18,7 +18,7 @@
 
 #include <iomanip>
 
-#include <silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
 #include <silkworm/common/endian.hpp>
 
 namespace silkrpc {

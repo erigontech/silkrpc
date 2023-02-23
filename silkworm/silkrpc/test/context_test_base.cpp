@@ -16,9 +16,9 @@
 
 #include "context_test_base.hpp"
 
-#include <silkrpc/common/block_cache.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/ethdb/kv/state_cache.hpp>
+#include <silkworm/silkrpc/common/block_cache.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/ethdb/kv/state_cache.hpp>
 
 namespace silkrpc::test {
 

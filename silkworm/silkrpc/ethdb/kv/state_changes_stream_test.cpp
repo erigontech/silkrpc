@@ -24,10 +24,10 @@
 #include <boost/asio/io_context.hpp>
 #include <catch2/catch.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/test/grpc_actions.hpp>
-#include <silkrpc/test/grpc_matcher.hpp>
-#include <silkrpc/test/kv_test_base.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/test/grpc_actions.hpp>
+#include <silkworm/silkrpc/test/grpc_matcher.hpp>
+#include <silkworm/silkrpc/test/kv_test_base.hpp>
 
 namespace silkrpc::ethdb::kv {
 

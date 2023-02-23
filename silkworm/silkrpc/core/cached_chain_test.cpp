@@ -16,7 +16,7 @@
 
 #include <string>
 
-#include <silkrpc/config.hpp> // NOLINT(build/include_order)
+#include <silkworm/silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/co_spawn.hpp>
@@ -26,21 +26,21 @@
 #include <gmock/gmock.h>
 #include <nlohmann/json.hpp>
 
-#include <silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
 
 #include <silkworm/common/util.hpp>
 #include <silkworm/common/base.hpp>
 #include <silkworm/chain/config.hpp>
 #include <silkworm/common/log.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/core/rawdb/accessors.hpp>
-#include <silkrpc/core/rawdb/chain.hpp>
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkrpc/types/block.hpp>
-#include <silkrpc/types/chain_config.hpp>
-#include <silkrpc/types/receipt.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/core/rawdb/accessors.hpp>
+#include <silkworm/silkrpc/core/rawdb/chain.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/types/block.hpp>
+#include <silkworm/silkrpc/types/chain_config.hpp>
+#include <silkworm/silkrpc/types/receipt.hpp>
 
 #include "cached_chain.hpp"
 

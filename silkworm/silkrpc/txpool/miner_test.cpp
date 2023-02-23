@@ -25,13 +25,13 @@
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/interfaces/txpool/mining.grpc.pb.h>
-#include <silkrpc/interfaces/txpool/mining_mock_fix24351.grpc.pb.h>
-#include <silkrpc/test/api_test_base.hpp>
-#include <silkrpc/test/grpc_actions.hpp>
-#include <silkrpc/test/grpc_responder.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/interfaces/txpool/mining.grpc.pb.h>
+#include <silkworm/silkrpc/interfaces/txpool/mining_mock_fix24351.grpc.pb.h>
+#include <silkworm/silkrpc/test/api_test_base.hpp>
+#include <silkworm/silkrpc/test/grpc_actions.hpp>
+#include <silkworm/silkrpc/test/grpc_responder.hpp>
 #include <silkworm/common/base.hpp>
 
 namespace silkrpc::txpool {

@@ -16,7 +16,7 @@
 
 #include "chain_config.hpp"
 
-#include <silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
 
 namespace silkrpc {
 

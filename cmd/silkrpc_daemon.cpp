@@ -14,7 +14,7 @@
    limitations under the License.
 */
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 
 #include <iostream>
 #include <string>
@@ -28,8 +28,8 @@
 #include <grpcpp/grpcpp.h>
 
 #include <silkrpc/buildinfo.h>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/daemon.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/daemon.hpp>
 
 ABSL_FLAG(std::string, chaindata, silkrpc::kEmptyChainData, "chain data path as string");
 ABSL_FLAG(std::string, http_port, silkrpc::kDefaultHttpPort, "Ethereum JSON RPC API local end-point as string <address>:<port>");

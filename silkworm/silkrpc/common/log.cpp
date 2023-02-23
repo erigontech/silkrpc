@@ -22,7 +22,7 @@
 #include <absl/strings/str_cat.h>
 #include <absl/time/clock.h>
 
-#include <silkrpc/common/tee.hpp>
+#include <silkworm/silkrpc/common/tee.hpp>
 
 namespace silkrpc {
 

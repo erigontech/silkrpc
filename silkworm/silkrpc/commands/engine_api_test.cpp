@@ -27,11 +27,11 @@
 #include <nlohmann/json.hpp>
 #include <silkworm/common/base.hpp>
 
-#include <silkrpc/core/rawdb/chain.hpp>
-#include <silkrpc/ethdb/transaction_database.hpp>
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkrpc/http/methods.hpp>
-#include <silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/core/rawdb/chain.hpp>
+#include <silkworm/silkrpc/ethdb/transaction_database.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/http/methods.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
 
 namespace silkrpc::commands {
 

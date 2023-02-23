@@ -31,14 +31,14 @@
 #include <silkworm/rlp/decode.hpp>
 #include <silkworm/rlp/encode.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/ethdb/cbor.hpp>
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkrpc/json/types.hpp>
-#include <silkrpc/types/log.hpp>
-#include <silkrpc/types/receipt.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/ethdb/cbor.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/types/log.hpp>
+#include <silkworm/silkrpc/types/receipt.hpp>
 
 namespace silkrpc::core::rawdb {
 

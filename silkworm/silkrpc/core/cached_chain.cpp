@@ -16,8 +16,8 @@
 
 #include "cached_chain.hpp"
 
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/core/rawdb/chain.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/core/rawdb/chain.hpp>
 
 namespace silkrpc::core {
 

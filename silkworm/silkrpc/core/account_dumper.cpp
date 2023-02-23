@@ -26,17 +26,17 @@
 #include <silkworm/node/silkworm/db/bitmap.hpp>
 #include <silkworm/node/silkworm/db/util.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/cached_chain.hpp>
-#include <silkrpc/core/account_walker.hpp>
-#include <silkrpc/core/rawdb/chain.hpp>
-#include <silkrpc/core/state_reader.hpp>
-#include <silkrpc/core/storage_walker.hpp>
-#include <silkrpc/ethdb/cursor.hpp>
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkrpc/ethdb/transaction_database.hpp>
-#include <silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/cached_chain.hpp>
+#include <silkworm/silkrpc/core/account_walker.hpp>
+#include <silkworm/silkrpc/core/rawdb/chain.hpp>
+#include <silkworm/silkrpc/core/state_reader.hpp>
+#include <silkworm/silkrpc/core/storage_walker.hpp>
+#include <silkworm/silkrpc/ethdb/cursor.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/ethdb/transaction_database.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
 
 namespace silkrpc {
 

@@ -18,12 +18,12 @@
 
 #include <string>
 
-#include <silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
 
-#include "silkrpc/core/blocks.hpp"
-#include "silkrpc/core/state_reader.hpp"
-#include "silkrpc/ethdb/kv/cached_database.hpp"
-#include "silkrpc/ethdb/transaction_database.hpp"
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/core/state_reader.hpp>
+#include <silkworm/silkrpc/ethdb/kv/cached_database.hpp>
+#include <silkworm/silkrpc/ethdb/transaction_database.hpp>
 
 namespace silkrpc::commands {
 

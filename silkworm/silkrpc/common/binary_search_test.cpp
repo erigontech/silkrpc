@@ -22,7 +22,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <silkrpc/test/context_test_base.hpp>
+#include <silkworm/silkrpc/test/context_test_base.hpp>
 
 namespace silkrpc {
 

@@ -19,10 +19,10 @@
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/common/constants.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/grpc/util.hpp>
-#include <silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
+#include <silkworm/silkrpc/common/constants.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/grpc/util.hpp>
+#include <silkworm/silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
 
 int ethbackend_async(const std::string& target) {
     // Create ETHBACKEND stub using insecure channel to target

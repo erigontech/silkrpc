@@ -21,10 +21,10 @@
 #include <boost/system/system_error.hpp>
 #include <catch2/catch.hpp>
 
-#include <silkrpc/test/kv_test_base.hpp>
-#include <silkrpc/test/grpc_responder.hpp>
-#include <silkrpc/test/grpc_actions.hpp>
-#include <silkrpc/test/grpc_matcher.hpp>
+#include <silkworm/silkrpc/test/kv_test_base.hpp>
+#include <silkworm/silkrpc/test/grpc_responder.hpp>
+#include <silkworm/silkrpc/test/grpc_actions.hpp>
+#include <silkworm/silkrpc/test/grpc_matcher.hpp>
 
 namespace silkrpc::ethdb::kv {
 

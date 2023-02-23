@@ -21,9 +21,9 @@
 
 #include <evmc/evmc.hpp>
 
-#include <silkrpc/core/rawdb/chain.hpp>
-#include <silkrpc/types/execution_payload.hpp>
-#include <silkrpc/ethdb/transaction_database.hpp>
+#include <silkworm/silkrpc/core/rawdb/chain.hpp>
+#include <silkworm/silkrpc/types/execution_payload.hpp>
+#include <silkworm/silkrpc/ethdb/transaction_database.hpp>
 
 namespace silkrpc::commands {
 using evmc::literals::operator""_bytes32;

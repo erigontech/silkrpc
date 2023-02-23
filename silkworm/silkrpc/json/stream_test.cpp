@@ -20,7 +20,7 @@
 
 #include <catch2/catch.hpp>
 
-#include <silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
 
 namespace json {
 TEST_CASE("JsonStream", "[json]") {

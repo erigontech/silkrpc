@@ -20,8 +20,8 @@
 
 #include "silkworm/db/mdbx.hpp"
 
-#include <silkrpc/config.hpp>
-#include <silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/config.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
 
 namespace silkrpc::ethdb::file {
 

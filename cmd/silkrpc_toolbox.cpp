@@ -22,8 +22,8 @@
 #include <absl/flags/usage.h>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/common/constants.hpp>
-#include <silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/constants.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
 
 int ethbackend_async(const std::string& target);
 int ethbackend_coroutines(const std::string& target);

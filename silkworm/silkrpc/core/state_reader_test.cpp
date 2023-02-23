@@ -16,16 +16,16 @@
 
 #include "state_reader.hpp"
 
-#include <silkrpc/config.hpp>
+#include <silkworm/silkrpc/config.hpp>
 #include <boost/asio/awaitable.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
 
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/ethdb/tables.hpp>
-#include <silkrpc/test/context_test_base.hpp>
-#include <silkrpc/test/mock_database_reader.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/test/context_test_base.hpp>
+#include <silkworm/silkrpc/test/mock_database_reader.hpp>
 
 namespace silkrpc {
 

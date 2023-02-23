@@ -25,10 +25,10 @@
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 
-#include <silkrpc/test/kv_test_base.hpp>
-#include <silkrpc/test/grpc_responder.hpp>
-#include <silkrpc/test/grpc_actions.hpp>
-#include <silkrpc/test/grpc_matcher.hpp>
+#include <silkworm/silkrpc/test/kv_test_base.hpp>
+#include <silkworm/silkrpc/test/grpc_responder.hpp>
+#include <silkworm/silkrpc/test/grpc_actions.hpp>
+#include <silkworm/silkrpc/test/grpc_matcher.hpp>
 #include <silkworm/common/util.hpp>
 
 namespace silkrpc::ethdb::kv {

@@ -31,11 +31,11 @@
 #include <boost/asio/dispatch.hpp>
 #include <boost/asio/use_awaitable.hpp>
 
-#include <silkrpc/common/constants.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/http/connection.hpp>
-#include <silkrpc/http/methods.hpp>
+#include <silkworm/silkrpc/common/constants.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/http/connection.hpp>
+#include <silkworm/silkrpc/http/methods.hpp>
 
 namespace silkrpc::http {
 #ifdef WIN32

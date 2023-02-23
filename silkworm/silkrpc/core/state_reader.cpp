@@ -22,10 +22,10 @@
 #include <silkworm/db/util.hpp>
 #include <silkworm/types/account.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/common/util.hpp>
-#include <silkrpc/core/rawdb/util.hpp>
-#include <silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/core/rawdb/util.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
 
 namespace silkrpc {
 

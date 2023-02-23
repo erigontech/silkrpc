@@ -18,9 +18,9 @@
 
 #include <cstring>
 
-#include <silkrpc/common/constants.hpp>
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/http/methods.hpp>
+#include <silkworm/silkrpc/common/constants.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/http/methods.hpp>
 
 namespace silkrpc::commands {
 

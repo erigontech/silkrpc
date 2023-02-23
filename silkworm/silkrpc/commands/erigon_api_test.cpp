@@ -18,7 +18,7 @@
 
 #include <catch2/catch.hpp>
 #include <nlohmann/json.hpp>
-#include <silkrpc/test/api_test_base.hpp>
+#include <silkworm/silkrpc/test/api_test_base.hpp>
 
 namespace silkrpc::commands {
 

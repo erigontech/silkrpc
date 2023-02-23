@@ -18,7 +18,7 @@
 
 #include <string>
 
-#include <silkrpc/json/types.hpp>
+#include <silkworm/silkrpc/json/types.hpp>
 
 namespace silkrpc::commands {
 

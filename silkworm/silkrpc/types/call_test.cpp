@@ -23,7 +23,7 @@
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 #include <silkworm/common/util.hpp>
-#include <silkrpc/types/transaction.hpp>
+#include <silkworm/silkrpc/types/transaction.hpp>
 
 namespace silkrpc {
 

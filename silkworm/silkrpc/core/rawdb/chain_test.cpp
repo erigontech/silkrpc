@@ -28,9 +28,9 @@
 #include <silkworm/common/rlp_err.hpp>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/common/block_cache.hpp>
-#include <silkrpc/core/blocks.hpp>
-#include <silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/common/block_cache.hpp>
+#include <silkworm/silkrpc/core/blocks.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
 
 namespace silkrpc::core::rawdb {
 

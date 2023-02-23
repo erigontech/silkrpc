@@ -18,8 +18,8 @@
 
 #include <boost/endian/conversion.hpp>
 
-#include <silkrpc/common/clock_time.hpp>
-#include <silkrpc/grpc/unary_rpc.hpp>
+#include <silkworm/silkrpc/common/clock_time.hpp>
+#include <silkworm/silkrpc/grpc/unary_rpc.hpp>
 
 namespace silkrpc::txpool {
 

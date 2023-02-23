@@ -26,11 +26,11 @@
 #include <catch2/catch.hpp>
 #include <silkworm/common/util.hpp>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/concurrency/context_pool.hpp>
-#include <silkrpc/http/request.hpp>
-#include <silkrpc/http/reply.hpp>
-#include <silkrpc/http/header.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/http/request.hpp>
+#include <silkworm/silkrpc/http/reply.hpp>
+#include <silkworm/silkrpc/http/header.hpp>
 
 namespace silkrpc::http {
 

@@ -15,7 +15,7 @@
 */
 
 #include "execution_payload.hpp"
-#include <silkrpc/common/util.hpp>
+#include <silkworm/silkrpc/common/util.hpp>
 
 namespace silkrpc {
 std::ostream& operator<<(std::ostream& out, const ExecutionPayload& payload) {

@@ -24,8 +24,8 @@
 #include <boost/system/error_code.hpp>
 #include <grpc/grpc.h>
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/grpc/util.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/grpc/util.hpp>
 
 namespace silkrpc::ethdb::kv {
 

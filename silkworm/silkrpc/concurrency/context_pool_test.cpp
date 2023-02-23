@@ -25,7 +25,7 @@
 #include <catch2/catch.hpp>
 #include <grpcpp/grpcpp.h>
 
-#include <silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/common/log.hpp>
 
 namespace silkrpc {

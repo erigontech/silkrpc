@@ -22,7 +22,7 @@
 
 #include <silkworm/db/tables.hpp>
 
-#include <silkrpc/ethdb/tables.hpp>
+#include <silkworm/silkrpc/ethdb/tables.hpp>
 
 namespace silkrpc::stages {
 

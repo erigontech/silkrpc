@@ -16,8 +16,8 @@
 
 #include "local_database.hpp"
 
-#include <silkrpc/common/log.hpp>
-#include <silkrpc/ethdb/file/local_transaction.hpp>
+#include <silkworm/silkrpc/common/log.hpp>
+#include <silkworm/silkrpc/ethdb/file/local_transaction.hpp>
 
 namespace silkrpc::ethdb::file {
 
