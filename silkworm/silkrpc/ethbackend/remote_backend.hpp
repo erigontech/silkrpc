@@ -27,8 +27,8 @@
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkworm/silkrpc/interfaces/remote/ethbackend.grpc.pb.h>
-#include <silkworm/silkrpc/interfaces/types/types.pb.h>
+#include <silkworm/interfaces/remote/ethbackend.grpc.pb.h>
+#include <silkworm/interfaces/types/types.pb.h>
 #include <silkworm/silkrpc/types/execution_payload.hpp>
 #include <silkworm/silkrpc/ethbackend/backend.hpp>
 

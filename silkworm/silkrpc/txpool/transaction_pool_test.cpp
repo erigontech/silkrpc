@@ -28,8 +28,8 @@
 
 #include <silkworm/silkrpc/concurrency/context_pool.hpp>
 #include <silkworm/silkrpc/common/log.hpp>
-#include <silkworm/silkrpc/interfaces/txpool/txpool.grpc.pb.h>
-#include <silkworm/silkrpc/interfaces/txpool/txpool_mock_fix24351.grpc.pb.h>
+#include <silkworm/interfaces/txpool/txpool.grpc.pb.h>
+#include <silkworm/interfaces/txpool/txpool_mock_fix24351.grpc.pb.h>
 #include <silkworm/silkrpc/test/api_test_base.hpp>
 #include <silkworm/silkrpc/test/grpc_actions.hpp>
 #include <silkworm/silkrpc/test/grpc_responder.hpp>

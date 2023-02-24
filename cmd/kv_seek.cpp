@@ -20,10 +20,11 @@
 #include <grpcpp/grpcpp.h>
 #include <silkworm/common/util.hpp>
 
+#include <silkworm/interfaces/remote/kv.grpc.pb.h>
+
 #include <silkworm/silkrpc/common/constants.hpp>
 #include <silkworm/silkrpc/common/util.hpp>
 #include <silkworm/silkrpc/grpc/util.hpp>
-#include <silkworm/silkrpc/interfaces/remote/kv.grpc.pb.h>
 
 int kv_seek(const std::string& target, const std::string& table_name, const silkworm::Bytes& key) {
     // Create KV stub using insecure channel to target

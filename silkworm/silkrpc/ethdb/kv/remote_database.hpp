@@ -24,7 +24,7 @@
 
 #include <silkworm/silkrpc/ethdb/database.hpp>
 #include <silkworm/silkrpc/ethdb/transaction.hpp>
-#include <silkworm/silkrpc/interfaces/remote/kv.grpc.pb.h>
+#include <silkworm/interfaces/remote/kv.grpc.pb.h>
 
 namespace silkrpc::ethdb::kv {
 
