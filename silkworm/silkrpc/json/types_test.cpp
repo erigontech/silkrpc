@@ -1284,7 +1284,7 @@ TEST_CASE("deserialize filter with topic", "[silkrpc::json][from_json]") {
     CHECK(f.to_block == "0x3d2600");
     CHECK(f.addresses == std::vector<evmc::address>{0x6090a6e47849629b7245dfa1ca21d94cd15878ef_address});
     CHECK(f.topics == std::vector<std::vector<evmc::bytes32>>{
-        {0x0000000000000000000000000000000000000000000000000000000000000000_bytes32},
+        {},
         {0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32}
     });
     CHECK(f.block_hash == std::nullopt);

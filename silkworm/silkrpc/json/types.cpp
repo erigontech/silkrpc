@@ -523,7 +523,8 @@ void from_json(const nlohmann::json& json, Filter& filter) {
         if (topics != nlohmann::detail::value_t::null) {
             for (auto& topic_item : topics) {
                 if (topic_item.is_null()) {
-                    topic_item = FilterSubTopics{evmc::bytes32{}};
+                    // topic_item = FilterSubTopics{evmc::bytes32{}};
+                    topic_item = FilterSubTopics{};
                 }
                 if (topic_item.is_string()) {
                     topic_item = FilterSubTopics{topic_item};
