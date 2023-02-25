@@ -26,8 +26,7 @@
 #include <silkworm/silkrpc/ethdb/file/local_database.hpp>
 
 static const char kChaindataRelativePath[] = "/chaindata";
-static const int maxReaders = 32000;
-
+static const int kMaxReaders = 32000;
 
 namespace silkrpc {
 
@@ -134,7 +133,7 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, s
            .path = db_path,
            .inmemory = true,
            .shared = true,
-           .max_readers = maxReaders
+           .max_readers = kMaxReaders
        };
        *chain_env = silkworm::db::open_env(db_config);
     }
