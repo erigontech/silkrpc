@@ -44,6 +44,7 @@ def usage(argv):
     print("-h                      print this help")
     print("-D                      perf command")
     print("-z                      do not start server")
+    print("-Z                      doen't verify server is still active")
     print("-u                      save test report in Git repo")
     print("-v                      verbose")
     print("-x                      verbose and tracing")
@@ -94,6 +95,7 @@ class Config:
         self.wait_mode = DEFAULT_WAIT_MODE
         self.versioned_test_report = False
         self.verbose = False
+        self.check_server_alive = True
         self.tracing = False
 
         self.__parse_args(argv)
@@ -101,7 +103,7 @@ class Config:
     def __parse_args(self, argv):
         try:
             local_config = 0
-            opts, _ = getopt.getopt(argv[1:], "D:hm:d:p:c:a:g:s:r:t:n:y:zw:i:o:uvx")
+            opts, _ = getopt.getopt(argv[1:], "D:hm:d:p:c:a:g:s:r:t:n:y:zw:i:o:uvxZ")
 
             for option, optarg in opts:
                 if option in ("-h", "--help"):
@@ -159,6 +161,8 @@ class Config:
                     self.test_type = optarg
                 elif option == "-i":
                     self.wait_mode = optarg
+                elif option == "-Z":
+                    self.check_server_alive = False
                 elif option == "-n":
                     if local_config == 2:
                         print("ERROR: incompatible option -d with -a -g -s -n")
@@ -363,14 +367,15 @@ class PerfTest:
 
         while 1:
             time.sleep(3)
-            if name == "silkrpc":
-                pid = os.popen("ps aux | grep 'silkrpc' | grep -v 'grep' | awk '{print $2}'").read()
-            else:
-                pid = os.popen("ps aux | grep 'rpcdaemon' | grep -v 'grep' | awk '{print $2}'").read()
-            if pid == "":
-                # the server is dead; kill vegeta and returns fails
-                os.system("kill -2 $(ps aux | grep 'vegeta' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
-                return 0
+            if self.config.check_server_alive:
+                if name == "silkrpc":
+                    pid = os.popen("ps aux | grep 'silkrpc' | grep -v 'grep' | awk '{print $2}'").read()
+                else:
+                    pid = os.popen("ps aux | grep 'rpcdaemon' | grep -v 'grep' | awk '{print $2}'").read()
+                if pid == "" :
+                    # the server is dead; kill vegeta and returns fails
+                    os.system("kill -2 $(ps aux | grep 'vegeta' | grep -v 'grep' | grep -v 'python' | awk '{print $2}') 2> /dev/null")
+                    return 0
 
             pid = os.popen("ps aux | grep 'vegeta report' | grep -v 'grep' | awk '{print $2}'").read()
             if pid == "":
