@@ -271,6 +271,7 @@ TEST_CASE("serialize block with baseFeePerGas", "[silkrpc][to_json]") {
     silkrpc::Block rpc_block {
         std::vector<silkworm::Transaction> {},
         std::vector<silkworm::BlockHeader> {},
+        std::nullopt,
         0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
         0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d_bytes32,
         0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
@@ -511,6 +512,7 @@ TEST_CASE("serialize block with hydrated transactions", "[silkrpc][to_json]") {
         silkworm::Block{
             std::vector<silkworm::Transaction>{tx1, tx2}, // transactions
             std::vector<silkworm::BlockHeader>{}, // ommers
+            std::nullopt,
             header // header
         },
         0xc9e65d063911aa583e17bbb7070893482203217caf6d9fbb50265c72e7bf73e5_bytes32,

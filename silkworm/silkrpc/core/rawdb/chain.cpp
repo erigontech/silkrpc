@@ -127,7 +127,7 @@ boost::asio::awaitable<silkworm::BlockWithHash> read_block(const DatabaseReader&
     SILKRPC_INFO << "header: number=" << header.number << "\n";
     auto body = co_await read_body(reader, block_hash, block_number);
     SILKRPC_INFO << "body: #txn=" << body.transactions.size() << " #ommers=" << body.ommers.size() << "\n";
-    silkworm::BlockWithHash block{silkworm::Block{body.transactions, body.ommers, header}, block_hash};
+    silkworm::BlockWithHash block{silkworm::Block{body.transactions, body.ommers, std::nullopt, header}, block_hash};
     co_return block;
 }
 
