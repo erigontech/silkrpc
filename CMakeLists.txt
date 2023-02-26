@@ -36,9 +36,9 @@ include(third-party/silkworm/third_party/evmone/cmake/cable/bootstrap.cmake)
 include(CableBuildInfo)
 include(third-party/silkworm/third_party/evmone/cmake/cable/HunterGate.cmake)
 HunterGate(
-  URL "https://github.com/cpp-pm/hunter/archive/v0.24.3.tar.gz"
-  SHA1 "10738b59e539818a01090e64c2d09896247530c7"
-  FILEPATH "${CMAKE_SOURCE_DIR}/cmake/Hunter/config.cmake"
+  URL "https://github.com/cpp-pm/hunter/archive/v0.24.15.tar.gz"
+  SHA1 "8010d63d5ae611c564889d5fe12d3cb7a45703ac"
+  FILEPATH "${CMAKE_SOURCE_DIR}/third-party/silkworm/cmake/Hunter/config.cmake"
 )
 
 project(silkrpc)
