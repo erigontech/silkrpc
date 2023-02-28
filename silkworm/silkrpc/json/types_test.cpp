@@ -521,8 +521,8 @@ TEST_CASE("serialize block with hydrated transactions", "[silkrpc][to_json]") {
        {   /* BlockWithHash */
             {  /* Block */
                 {  /* BlockBody */
-                   .transactions = std::vector<silkworm::Transaction>{tx1, tx2}, 
-                   .ommers = std::vector<silkworm::BlockHeader>{}, 
+                   .transactions = std::vector<silkworm::Transaction>{tx1, tx2},
+                   .ommers = std::vector<silkworm::BlockHeader>{},
                    .withdrawals = std::nullopt,
                 },
                 {.header = header},
