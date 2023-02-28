@@ -142,9 +142,9 @@ boost::asio::awaitable<void> TraceRpcApi::handle_trace_raw_transaction(const nlo
 
     silkworm::ByteView encoded_tx_view{*encoded_tx_bytes};
     Transaction transaction;
-    const auto err{silkworm::rlp::decode<silkworm::Transaction>(encoded_tx_view, transaction)};
-    if (err != silkworm::DecodingResult::kOk) {
-        const auto error_msg = decoding_result_to_string(err);
+    const auto decoding_result{silkworm::rlp::decode<silkworm::Transaction>(encoded_tx_view, transaction)};
+    if (!decoding_result) {
+        const auto error_msg = decoding_result_to_string(decoding_result.error());
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;

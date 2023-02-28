@@ -514,8 +514,8 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(
             if (tx_rlp_buffer) {
                 silkworm::ByteView encoded_tx_view{*tx_rlp_buffer};
                 Transaction transaction;
-                const auto error = silkworm::rlp::decode<silkworm::Transaction>(encoded_tx_view, transaction);
-                if (error == silkworm::DecodingResult::kOk) {
+                const auto decoding_result = silkworm::rlp::decode<silkworm::Transaction>(encoded_tx_view, transaction);
+                if (!decoding_result) {
                     transaction.queued_in_pool = true;
                     reply = make_json_content(request["id"], transaction);
                 } else {
@@ -1567,9 +1567,9 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_send_raw_transaction(con
 
     silkworm::ByteView encoded_tx_view{*encoded_tx_bytes};
     Transaction txn;
-    const auto err{silkworm::rlp::decode<silkworm::Transaction>(encoded_tx_view, txn)};
-    if (err != silkworm::DecodingResult::kOk) {
-        const auto error_msg = decoding_result_to_string(err);
+    const auto decoding_result{silkworm::rlp::decode<silkworm::Transaction>(encoded_tx_view, txn)};
+    if (!decoding_result) {
+        const auto error_msg = decoding_result_to_string(decoding_result.error());
         SILKRPC_ERROR << error_msg << "\n";
         reply = make_json_error(request["id"], -32000, error_msg);
         co_return;
