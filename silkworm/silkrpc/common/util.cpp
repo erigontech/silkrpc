@@ -157,35 +157,35 @@ bool is_replay_protected(const silkworm::Transaction& txn) {
     return false;
 }
 
-std::string decoding_result_to_string(silkworm::DecodingResult decode_result) {
+std::string decoding_result_to_string(silkworm::DecodingError decode_result) {
     switch (decode_result) {
-        case silkworm::DecodingResult::kOverflow:
+        case silkworm::DecodingError::kOverflow:
             return "rlp: uint overflow";
-        case silkworm::DecodingResult::kLeadingZero:
+        case silkworm::DecodingError::kLeadingZero:
             return "rlp: leading Zero";
-        case silkworm::DecodingResult::kInputTooShort:
+        case silkworm::DecodingError::kInputTooShort:
             return "rlp: value size exceeds available input length";
-        case silkworm::DecodingResult::kNonCanonicalSize:
+        case silkworm::DecodingError::kNonCanonicalSize:
             return "rlp: non-canonical size information";
-        case silkworm::DecodingResult::kUnexpectedLength:
+        case silkworm::DecodingError::kUnexpectedLength:
             return "rlp: unexpected Length";
-        case silkworm::DecodingResult::kUnexpectedString:
+        case silkworm::DecodingError::kUnexpectedString:
             return "rlp: unexpected String";
-        case silkworm::DecodingResult::kUnexpectedList:
+        case silkworm::DecodingError::kUnexpectedList:
             return "rlp: element is larger than containing list";
-        case silkworm::DecodingResult::kListLengthMismatch:
+        case silkworm::DecodingError::kListLengthMismatch:
             return "rlp: list Length Mismatch";
-        case silkworm::DecodingResult::kInvalidVInSignature: // v != 27 && v != 28 && v < 35, see EIP-155
+        case silkworm::DecodingError::kInvalidVInSignature: // v != 27 && v != 28 && v < 35, see EIP-155
             return "rlp: invalid V in signature";
-        case silkworm::DecodingResult::kUnsupportedTransactionType:
+        case silkworm::DecodingError::kUnsupportedTransactionType:
             return "rlp: unknown tx type prefix";
-        case silkworm::DecodingResult::kInvalidFieldset:
+        case silkworm::DecodingError::kInvalidFieldset:
             return "rlp: invalid field set";
-        case silkworm::DecodingResult::kUnexpectedEip2718Serialization:
+        case silkworm::DecodingError::kUnexpectedEip2718Serialization:
             return "rlp: unexpected EIP-2178 serialization";
-        case silkworm::DecodingResult::kInvalidHashesLength:
+        case silkworm::DecodingError::kInvalidHashesLength:
             return "rlp: invalid hashes length";
-        case silkworm::DecodingResult::kInvalidMasksSubsets:
+        case silkworm::DecodingError::kInvalidMasksSubsets:
             return "rlp: invalid masks subsets";
         default:
             return "rlp: unknown error [" + std::to_string(static_cast<int>(decode_result)) + "]";

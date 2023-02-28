@@ -55,7 +55,7 @@ bool check_tx_fee_less_cap(float cap, intx::uint256 max_fee_per_gas, uint64_t ga
 
 bool is_replay_protected(const silkworm::Transaction& txn);
 
-std::string decoding_result_to_string(silkworm::DecodingResult decode_result);
+std::string decoding_result_to_string(silkworm::DecodingError decode_result);
 
 template <unsigned N>
 silkworm::ByteView full_view(const uint8_t (&bytes)[N]) {
