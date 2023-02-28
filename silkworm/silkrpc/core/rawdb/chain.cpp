@@ -152,7 +152,7 @@ boost::asio::awaitable<silkworm::BlockHeader> read_header(const DatabaseReader& 
     silkworm::ByteView data_view{data};
     silkworm::BlockHeader header{};
     const auto error = silkworm::rlp::decode(data_view, header);
-    if (!error){
+    if (!error) {
         throw std::runtime_error{"invalid RLP decoding for block header"};
     }
     co_return header;
