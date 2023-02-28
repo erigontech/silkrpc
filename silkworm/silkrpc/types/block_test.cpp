@@ -146,7 +146,6 @@ TEST_CASE("block_number_or_hash") {
         CHECK(bnoh.is_hash() == copy.is_hash());
         CHECK(bnoh.is_number() == copy.is_number());
         CHECK(bnoh.is_tag() == copy.is_tag());
-
         CHECK(bnoh.tag() == copy.tag());
     }
     SECTION("number overflow") {
