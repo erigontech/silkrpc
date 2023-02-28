@@ -515,7 +515,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_transaction_by_hash(
                 silkworm::ByteView encoded_tx_view{*tx_rlp_buffer};
                 Transaction transaction;
                 const auto decoding_result = silkworm::rlp::decode<silkworm::Transaction>(encoded_tx_view, transaction);
-                if (!decoding_result) {
+                if (decoding_result) {
                     transaction.queued_in_pool = true;
                     reply = make_json_content(request["id"], transaction);
                 } else {
