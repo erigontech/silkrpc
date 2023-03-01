@@ -518,19 +518,19 @@ TEST_CASE("serialize block with hydrated transactions", "[silkrpc][to_json]") {
 
     // 1.4) build the full block
     silkrpc::Block rpc_block{
-        {  /* BlockWithHash */
-            .block = {  /* Block */
-                {  /* BlockBody */
+        {  // BlockWithHash
+            /*.block =*/ {  // Block
+                {  // BlockBody
                     .transactions = std::vector<silkworm::Transaction>{tx1, tx2},
                     .ommers = std::vector<silkworm::BlockHeader>{},
                     .withdrawals = std::nullopt,
                 },
-                .header = header,
+                /*.header =*/ header,
             },
-           .hash = 0xc9e65d063911aa583e17bbb7070893482203217caf6d9fbb50265c72e7bf73e5_bytes32,
+            /*.hash =*/ 0xc9e65d063911aa583e17bbb7070893482203217caf6d9fbb50265c72e7bf73e5_bytes32,
         },
-        .total_difficulty = intx::uint256{0x4e33ae},
-        .full_tx = true,
+        /*.total_difficulty =*/ intx::uint256{0x4e33ae},
+        /*.full_tx =*/ true,
     };
 
     nlohmann::json rpc_block_json = rpc_block;
