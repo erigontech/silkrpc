@@ -14,6 +14,8 @@
    limitations under the License.
 */
 
+#include <sstream>
+
 #include "block.hpp"
 
 #include <catch2/catch.hpp>
