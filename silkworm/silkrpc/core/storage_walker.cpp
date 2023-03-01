@@ -22,8 +22,6 @@
 
 #include <boost/endian/conversion.hpp>
 
-
-
 #include <silkworm/core/silkworm/common/decoding_result.hpp>
 #include <silkworm/core/silkworm/common/endian.hpp>
 #include <silkworm/node/silkworm/db/bitmap.hpp>
