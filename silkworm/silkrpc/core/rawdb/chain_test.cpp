@@ -18,7 +18,6 @@
 
 #include <string>
 
-
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <boost/asio/use_future.hpp>
