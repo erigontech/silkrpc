@@ -268,34 +268,34 @@ TEST_CASE("serialize block header with baseFeePerGas", "[silkrpc][to_json]") {
 }
 
 TEST_CASE("serialize block with baseFeePerGas", "[silkrpc][to_json]") {
-    silkrpc::Block rpc_block {
-        {   /* BlockWithHash */
+    silkrpc::Block rpc_block{
+        {  /* BlockWithHash */
             {  /* Block */
                 {  /* BlockBody */
-                  .transactions = std::vector<silkworm::Transaction>{},
-                  .ommers =  std::vector<silkworm::BlockHeader>{},
-                  .withdrawals = std::nullopt,
+                    .transactions = std::vector<silkworm::Transaction>{},
+                    .ommers =  std::vector<silkworm::BlockHeader>{},
+                    .withdrawals = std::nullopt,
                 },
-             { /* BlockHeader */
-                .parent_hash = 0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
-                .ommers_hash = 0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d_bytes32,
-                .beneficiary = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
-                .state_root = 0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d_bytes32,
-                .transactions_root = 0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e_bytes32,
-                .receipts_root = 0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f_bytes32,
-                .logs_bloom = silkworm::Bloom{},
-                .difficulty = intx::uint256{0},
-                .number = uint64_t(5),
-                .gas_limit = uint64_t(1000000),
-                .gas_used = uint64_t(1000000),
-                .timestamp = uint64_t(5405021),
-                .extra_data = *silkworm::from_hex("0001FF0100"),
-                .mix_hash = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
-                .nonce = {0, 0, 0, 0, 0, 0, 0, 255},
-                .base_fee_per_gas = std::optional<intx::uint256>(0x244428),
-             } // BlockHeader
-         } // Block
-       } // BlockWithHash
+                {  /* BlockHeader */
+                    .parent_hash = 0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
+                    .ommers_hash = 0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d_bytes32,
+                    .beneficiary = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+                    .state_root = 0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d_bytes32,
+                    .transactions_root = 0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e_bytes32,
+                    .receipts_root = 0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f_bytes32,
+                    .logs_bloom = silkworm::Bloom{},
+                    .difficulty = intx::uint256{0},
+                    .number = uint64_t(5),
+                    .gas_limit = uint64_t(1000000),
+                    .gas_used = uint64_t(1000000),
+                    .timestamp = uint64_t(5405021),
+                    .extra_data = *silkworm::from_hex("0001FF0100"),
+                    .mix_hash = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
+                    .nonce = {0, 0, 0, 0, 0, 0, 0, 255},
+                    .base_fee_per_gas = std::optional<intx::uint256>(0x244428),
+                }
+            }
+        }
     };
     auto body = rpc_block.block;
     body.transactions.resize(2);
