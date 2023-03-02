@@ -103,7 +103,7 @@ TEST_CASE("CoherentCacheConfig", "[silkrpc][ethdb][kv][state_cache]") {
 remote::StateChangeBatch new_batch(uint64_t view_id, silkworm::BlockNum block_height, const evmc::bytes32& block_hash,
                                    const std::vector<silkworm::Bytes>& tx_rlps, bool unwind) {
     remote::StateChangeBatch state_changes;
-    state_changes.set_databaseviewid(view_id);
+    state_changes.set_stateversionid(view_id);
 
     remote::StateChange* latest_change = state_changes.add_changebatch();
     latest_change->set_blockheight(block_height);

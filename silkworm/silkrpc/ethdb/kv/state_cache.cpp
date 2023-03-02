@@ -78,7 +78,7 @@ void CoherentStateCache::on_new_block(const remote::StateChangeBatch& state_chan
 
     std::unique_lock write_lock{rw_mutex_};
 
-    const auto view_id = state_changes.databaseviewid();
+    const auto view_id = state_changes.stateversionid();
     CoherentStateRoot* root = advance_root(view_id);
     for (const auto& state_change : state_changes.changebatch()) {
         for (const auto& account_change : state_change.changes()) {
