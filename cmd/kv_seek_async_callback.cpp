@@ -22,7 +22,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <grpcpp/grpcpp.h>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 #include <silkworm/interfaces/remote/kv.grpc.pb.h>
 #include <silkworm/silkrpc/common/constants.hpp>

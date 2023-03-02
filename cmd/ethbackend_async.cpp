@@ -17,7 +17,7 @@
 #include <iostream>
 
 #include <grpcpp/grpcpp.h>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 #include <silkworm//interfaces/remote/ethbackend.grpc.pb.h>
 #include <silkworm/silkrpc/common/constants.hpp>

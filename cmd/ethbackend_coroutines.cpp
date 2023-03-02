@@ -23,7 +23,7 @@
 #include <boost/asio/co_spawn.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <grpcpp/grpcpp.h>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 #include <silkworm/interfaces/types/types.pb.h>
 #include <silkworm/silkrpc/common/constants.hpp>
