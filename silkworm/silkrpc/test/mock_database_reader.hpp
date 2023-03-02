@@ -24,7 +24,7 @@
 
 #include <silkworm/silkrpc/common/util.hpp>
 #include <silkworm/silkrpc/core/rawdb/accessors.hpp>
-#include <silkworm/common/base.hpp>
+#include <silkworm/core/common/base.hpp>
 
 namespace silkrpc::test {
 

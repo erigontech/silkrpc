@@ -31,7 +31,7 @@
 #include <silkworm/silkrpc/common/util.hpp>
 #include <silkworm/silkrpc/ethdb/transaction.hpp>
 #include <silkworm/interfaces/remote/kv.pb.h>
-#include <silkworm/common/base.hpp>
+#include <silkworm/core/common/base.hpp>
 
 namespace silkrpc::ethdb::kv {
 

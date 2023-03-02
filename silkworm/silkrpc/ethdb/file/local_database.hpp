@@ -23,7 +23,7 @@
 #include <silkworm/silkrpc/ethdb/database.hpp>
 #include <silkworm/silkrpc/ethdb/transaction.hpp>
 
-#include <silkworm/db/mdbx.hpp>
+#include <silkworm/node/db/mdbx.hpp>
 
 namespace silkrpc::ethdb::file {
 

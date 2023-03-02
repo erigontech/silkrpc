@@ -19,7 +19,7 @@
 #include <optional>
 #include <string>
 
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 #include <silkworm/silkrpc/core/rawdb/accessors.hpp>
 #include <silkworm/silkrpc/ethdb/transaction.hpp>
 

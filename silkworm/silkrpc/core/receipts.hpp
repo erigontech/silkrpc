@@ -24,7 +24,7 @@
 #include <silkworm/silkrpc/core/rawdb/accessors.hpp>
 #include <silkworm/silkrpc/types/receipt.hpp>
 
-#include <silkworm/types/block.hpp>
+#include <silkworm/core/types/block.hpp>
 
 namespace silkrpc::core {
 

@@ -20,7 +20,7 @@
 
 #include <boost/asio/awaitable.hpp>
 #include <gmock/gmock.h>
-#include <silkworm/common/base.hpp>
+#include <silkworm/core/common/base.hpp>
 
 #include <silkworm/silkrpc/common/util.hpp>
 #include <silkworm/silkrpc/ethdb/cursor.hpp>

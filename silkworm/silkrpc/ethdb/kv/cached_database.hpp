@@ -24,7 +24,7 @@
 #include <silkworm/silkrpc/ethdb/transaction.hpp>
 #include <silkworm/silkrpc/ethdb/transaction_database.hpp>
 #include <silkworm/silkrpc/types/block.hpp>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 namespace silkrpc::ethdb::kv {
 

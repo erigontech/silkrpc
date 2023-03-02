@@ -22,8 +22,8 @@
 
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
-#include <silkworm/common/base.hpp>
-#include <silkworm/types/bloom.hpp>
+#include <silkworm/core/common/base.hpp>
+#include <silkworm/core/types/bloom.hpp>
 
 namespace silkrpc {
 

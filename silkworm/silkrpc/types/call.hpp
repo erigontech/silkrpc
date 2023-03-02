@@ -23,8 +23,8 @@
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 
-#include <silkworm/common/util.hpp>
-#include <silkworm/types/transaction.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/core/types/transaction.hpp>
 
 #include <silkworm/silkrpc/types/transaction.hpp>
 

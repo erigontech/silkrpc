@@ -29,8 +29,8 @@
 #include <silkworm/silkrpc/config.hpp>
 #include <silkworm/silkrpc/ethdb/cursor.hpp>
 
-#include <silkworm/common/util.hpp>
-#include <silkworm/db/mdbx.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/node/db/mdbx.hpp>
 
 
 namespace silkrpc::ethdb::file {

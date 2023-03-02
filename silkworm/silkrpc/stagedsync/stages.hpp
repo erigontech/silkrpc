@@ -19,8 +19,8 @@
 #include <silkworm/silkrpc/config.hpp>
 
 #include <boost/asio/awaitable.hpp>
-#include <silkworm/common/base.hpp>
-#include <silkworm/db/stages.hpp>
+#include <silkworm/core/common/base.hpp>
+#include <silkworm/node/db/stages.hpp>
 
 #include <silkworm/silkrpc/core/rawdb/accessors.hpp>
 

@@ -23,8 +23,8 @@
 
 #include <intx/intx.hpp>
 
-#include <silkworm/common/base.hpp>
-#include <silkworm/types/block.hpp>
+#include <silkworm/core/common/base.hpp>
+#include <silkworm/core/types/block.hpp>
 
 namespace silkrpc {
 

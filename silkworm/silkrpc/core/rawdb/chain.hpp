@@ -25,8 +25,8 @@
 #include <intx/intx.hpp>
 #include <nlohmann/json.hpp>
 
-#include <silkworm/types/block.hpp>
-#include <silkworm/types/transaction.hpp>
+#include <silkworm/core/types/block.hpp>
+#include <silkworm/core/types/transaction.hpp>
 #include <silkworm/silkrpc/core/rawdb/accessors.hpp>
 #include <silkworm/silkrpc/types/block.hpp>
 #include <silkworm/silkrpc/types/chain_config.hpp>

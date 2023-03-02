@@ -26,11 +26,11 @@
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/io_context.hpp>
 #include <evmc/evmc.hpp>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 #include <silkworm/silkrpc/core/rawdb/accessors.hpp>
 #include <silkworm/silkrpc/core/state_reader.hpp>
-#include <silkworm/state/state.hpp>
+#include <silkworm/core/state/state.hpp>
 
 namespace silkrpc::state {
 

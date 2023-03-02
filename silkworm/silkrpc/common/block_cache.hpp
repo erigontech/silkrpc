@@ -20,13 +20,13 @@
 #include <mutex>
 
 #include <evmc/evmc.hpp>
-#include <silkworm/chain/config.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/common/base.hpp>
-#include <silkworm/execution/address.hpp>
-#include <silkworm/db/util.hpp>
-#include <silkworm/types/receipt.hpp>
-#include <silkworm/types/transaction.hpp>
+#include <silkworm/core/chain/config.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/core/common/base.hpp>
+#include <silkworm/core/execution/address.hpp>
+#include <silkworm/core/types/receipt.hpp>
+#include <silkworm/core/types/transaction.hpp>
+#include <silkworm/node/db/util.hpp>
 
 #include <boost/compute/detail/lru_cache.hpp>
 

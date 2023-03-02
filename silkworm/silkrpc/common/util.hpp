@@ -25,12 +25,12 @@
 #include <ethash/keccak.hpp>
 #include <evmc/evmc.hpp>
 
-#include <silkworm/common/base.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/types/transaction.hpp>
-#include <silkworm/core/silkworm/types/account.hpp>
-#include <silkworm/core/silkworm/chain/config.hpp>
-#include <silkworm/core/silkworm/types/bloom.hpp>
+#include <silkworm/core/common/base.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/core/types/transaction.hpp>
+#include <silkworm/core/types/account.hpp>
+#include <silkworm/core/chain/config.hpp>
+#include <silkworm/core/types/bloom.hpp>
 
 namespace silkrpc {
 
