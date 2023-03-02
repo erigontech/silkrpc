@@ -62,7 +62,7 @@ private:
             if (ok) {
                 SILKRPC_DEBUG << "BidiStreamingRpc::ReadNext(op, ok): rw=" << self_.reader_writer_.get() << " before read\n";
                 agrpc::read(self_.reader_writer_, self_.reply_,
-                    boost::asio::bind_executor(self_.grpc_context_, boost::asio::experimental::append(std::move(op), detail::ReadDoneTag{})));
+                    boost::asio::bind_executor(self_.grpc_context_, boost::asio::append(std::move(op), detail::ReadDoneTag{})));
                 SILKRPC_DEBUG << "BidiStreamingRpc::ReadNext(op, ok): rw=" << self_.reader_writer_.get() << " after read\n";
             } else {
                 self_.finish(std::move(op));

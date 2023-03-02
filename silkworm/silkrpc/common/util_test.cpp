@@ -195,63 +195,59 @@ TEST_CASE("is_replay_protected returns false", "[silkrpc][common][util]") {
 }
 
 TEST_CASE("decoding_result_to_string(kOverflow)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kOverflow) == "rlp: uint overflow");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kOverflow) == "rlp: uint overflow");
 }
 
 TEST_CASE("decoding_result_to_string(kLeadingZero)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kLeadingZero) == "rlp: leading Zero");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kLeadingZero) == "rlp: leading Zero");
 }
 
 TEST_CASE("decoding_result_to_string(kInputTooShort)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInputTooShort) == "rlp: value size exceeds available input length");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kInputTooShort) == "rlp: value size exceeds available input length");
 }
 
 TEST_CASE("decoding_result_to_string(kNonCanonicalSize)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kNonCanonicalSize) == "rlp: non-canonical size information");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kNonCanonicalSize) == "rlp: non-canonical size information");
 }
 
 TEST_CASE("decoding_result_to_string(kUnexpectedLength)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kUnexpectedLength) == "rlp: unexpected Length");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kUnexpectedLength) == "rlp: unexpected Length");
 }
 
 TEST_CASE("decoding_result_to_string(kUnexpectedString)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kUnexpectedString) == "rlp: unexpected String");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kUnexpectedString) == "rlp: unexpected String");
 }
 
 TEST_CASE("decoding_result_to_string(kUnexpectedList)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kUnexpectedList) == "rlp: element is larger than containing list");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kUnexpectedList) == "rlp: element is larger than containing list");
 }
 
 TEST_CASE("decoding_result_to_string(kListLengthMismatch)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kListLengthMismatch) == "rlp: list Length Mismatch");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kListLengthMismatch) == "rlp: list Length Mismatch");
 }
 
 TEST_CASE("decoding_result_to_string(kInvalidVInSignature)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidVInSignature) == "rlp: invalid V in signature");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kInvalidVInSignature) == "rlp: invalid V in signature");
 }
 
 TEST_CASE("decoding_result_to_string(kUnsupportedTransactionType)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kUnsupportedTransactionType) == "rlp: unknown tx type prefix");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kUnsupportedTransactionType) == "rlp: unknown tx type prefix");
 }
 
 TEST_CASE("decoding_result_to_string(kInvalidFieldset)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidFieldset) == "rlp: invalid field set");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kInvalidFieldset) == "rlp: invalid field set");
 }
 
 TEST_CASE("decoding_result_to_string(kUnexpectedEip2718Serialization)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kUnexpectedEip2718Serialization) == "rlp: unexpected EIP-2178 serialization");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kUnexpectedEip2718Serialization) == "rlp: unexpected EIP-2178 serialization");
 }
 
 TEST_CASE("decoding_result_to_string(kInvalidHashesLength)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidHashesLength) == "rlp: invalid hashes length");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kInvalidHashesLength) == "rlp: invalid hashes length");
 }
 
 TEST_CASE("decoding_result_to_string(kInvalidMasksSubsets)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kInvalidMasksSubsets) == "rlp: invalid masks subsets");
-}
-
-TEST_CASE("decoding_result_to_string(kOk)", "[silkrpc][common][util]") {
-    CHECK(decoding_result_to_string(silkworm::DecodingResult::kOk) == "rlp: unknown error [0]");
+    CHECK(decoding_result_to_string(silkworm::DecodingError::kInvalidMasksSubsets) == "rlp: invalid masks subsets");
 }
 
 TEST_CASE("lookup_chain_config", "[silkrpc][common][util]") {

@@ -14,6 +14,8 @@
    limitations under the License.
 */
 
+#include <sstream>
+
 #include "block.hpp"
 
 #include <catch2/catch.hpp>
@@ -146,7 +148,6 @@ TEST_CASE("block_number_or_hash") {
         CHECK(bnoh.is_hash() == copy.is_hash());
         CHECK(bnoh.is_number() == copy.is_number());
         CHECK(bnoh.is_tag() == copy.is_tag());
-
         CHECK(bnoh.tag() == copy.tag());
     }
     SECTION("number overflow") {
@@ -208,7 +209,7 @@ TEST_CASE("check size of EIP-2718 block from RLP", "[silkrpc][types][block]") {
     silkworm::ByteView view{rlp_bytes};
     Block rpc_block_with_hash;
 
-    REQUIRE(silkworm::rlp::decode(view, rpc_block_with_hash.block) == silkworm::DecodingResult::kOk);
+    REQUIRE(silkworm::rlp::decode(view, rpc_block_with_hash.block));
     CHECK(view.empty());
 
     CHECK(rpc_block_with_hash.get_block_size() == rlp_bytes.size());

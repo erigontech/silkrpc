@@ -20,6 +20,7 @@
 #include <silkworm/db/access_layer.hpp>
 #include <silkworm/db/bitmap.hpp>
 #include <silkworm/db/util.hpp>
+#include <silkworm/node/silkworm/common/decoding_exception.hpp>
 #include <silkworm/types/account.hpp>
 
 #include <silkworm/silkrpc/common/log.hpp>
@@ -39,19 +40,19 @@ boost::asio::awaitable<std::optional<silkworm::Account>> StateReader::read_accou
         co_return std::nullopt;
     }
 
-    auto [account, err]{silkworm::Account::from_encoded_storage(*encoded)};
-    silkworm::rlp::success_or_throw(err); // TODO(canepat) suggest rename as throw_if_error or better throw_if(err != kOk)
+    auto account{silkworm::Account::from_encoded_storage(*encoded)};
+    silkworm::success_or_throw(account); // TODO(canepat) suggest rename as throw_if_error or better throw_if(err != kOk)
 
-    if (account.incarnation > 0 && account.code_hash == silkworm::kEmptyHash) {
+    if (account->incarnation > 0 && account->code_hash == silkworm::kEmptyHash) {
         // Restore code hash
-        const auto storage_key{silkworm::db::storage_prefix(full_view(address), account.incarnation)};
+        const auto storage_key{silkworm::db::storage_prefix(full_view(address), account->incarnation)};
         auto code_hash{co_await db_reader_.get_one(db::table::kPlainContractCode, storage_key)};
         if (code_hash.length() == silkworm::kHashLength) {
-            std::memcpy(account.code_hash.bytes, code_hash.data(), silkworm::kHashLength);
+            std::memcpy(account->code_hash.bytes, code_hash.data(), silkworm::kHashLength);
         }
     }
 
-    co_return account;
+    co_return *account;
 }
 
 boost::asio::awaitable<evmc::bytes32> StateReader::read_storage(const evmc::address& address, uint64_t incarnation, const evmc::bytes32& location_hash,

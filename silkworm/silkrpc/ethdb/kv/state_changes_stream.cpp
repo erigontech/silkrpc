@@ -30,7 +30,7 @@
 namespace silkrpc::ethdb::kv {
 
 //! Define Asio coroutine-based completion token using error codes instead of exceptions for errors
-constexpr auto use_nothrow_awaitable = boost::asio::experimental::as_tuple(boost::asio::use_awaitable);
+constexpr auto use_nothrow_awaitable = boost::asio::as_tuple(boost::asio::use_awaitable);
 
 boost::posix_time::milliseconds StateChangesStream::registration_interval_{kDefaultRegistrationInterval};
 

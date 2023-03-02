@@ -37,7 +37,7 @@ struct ExecutorDispatcher {
     void dispatch(CompletionToken&& token, Args&&... args) {
         boost::asio::dispatch(
             boost::asio::bind_executor(executor_,
-                boost::asio::experimental::append(std::forward<CompletionToken>(token), std::forward<Args>(args)...)));
+                boost::asio::append(std::forward<CompletionToken>(token), std::forward<Args>(args)...)));
     }
 };
 

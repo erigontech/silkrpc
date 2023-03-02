@@ -25,9 +25,10 @@
 #include <evmc/evmc.h>
 #include <gmock/gmock.h>
 #include <nlohmann/json.hpp>
-#include <silkworm/common/rlp_err.hpp>
 #include <silkworm/common/util.hpp>
 
+#include <silkworm/core/silkworm/common/decoding_result.hpp>
+#include <silkworm/node/silkworm/common/decoding_exception.hpp>
 #include <silkworm/silkrpc/common/block_cache.hpp>
 #include <silkworm/silkrpc/core/blocks.hpp>
 #include <silkworm/silkrpc/ethdb/tables.hpp>

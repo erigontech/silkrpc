@@ -22,9 +22,10 @@
 
 #include <boost/endian/conversion.hpp>
 
+#include <silkworm/core/silkworm/common/decoding_result.hpp>
 #include <silkworm/core/silkworm/common/endian.hpp>
-#include <silkworm/node/silkworm/common/rlp_err.hpp>
 #include <silkworm/node/silkworm/db/bitmap.hpp>
+#include <silkworm/node/silkworm/common/decoding_exception.hpp>
 #include <silkworm/node/silkworm/db/util.hpp>
 
 #include <silkworm/silkrpc/common/log.hpp>
@@ -183,8 +184,8 @@ boost::asio::awaitable<void> StorageWalker::storage_range_at(uint64_t block_numb
     ethdb::TransactionDatabase tx_database{transaction_};
     auto account_data = co_await tx_database.get_one(db::table::kPlainState, full_view(address));
 
-    auto [account, err] = silkworm::Account::from_encoded_storage(account_data);
-    silkworm::rlp::success_or_throw(err);
+    auto account = silkworm::Account::from_encoded_storage(account_data);
+    silkworm::success_or_throw(account);
 
     std::set<StorageItem> storage;
     AccountCollector walker = [&](const evmc::address& addr, const silkworm::ByteView loc, const silkworm::ByteView data) {
@@ -211,7 +212,7 @@ boost::asio::awaitable<void> StorageWalker::storage_range_at(uint64_t block_numb
     };
 
     StorageWalker storage_walker{transaction_};
-    co_await storage_walker.walk_of_storages(block_number + 1, address, start_location, account.incarnation, walker);
+    co_await storage_walker.walk_of_storages(block_number + 1, address, start_location, account->incarnation, walker);
 
     for (auto item : storage) {
         collector(item.key, item.sec_key, item.value);

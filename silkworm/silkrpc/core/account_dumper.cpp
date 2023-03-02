@@ -19,10 +19,11 @@
 #include <sstream>
 #include <utility>
 
+#include <silkworm/core/silkworm/common/decoding_result.hpp>
 #include <silkworm/core/silkworm/common/endian.hpp>
 #include <silkworm/core/silkworm/trie/hash_builder.hpp>
 #include <silkworm/core/silkworm/trie/nibbles.hpp>
-#include <silkworm/node/silkworm/common/rlp_err.hpp>
+#include <silkworm/node/silkworm/common/decoding_exception.hpp>
 #include <silkworm/node/silkworm/db/bitmap.hpp>
 #include <silkworm/node/silkworm/db/util.hpp>
 
@@ -87,24 +88,24 @@ boost::asio::awaitable<void> AccountDumper::load_accounts(ethdb::TransactionData
     for (auto kv : collected_data) {
         const auto address = silkworm::to_evmc_address(kv.key);
 
-        auto [account, err]{silkworm::Account::from_encoded_storage(kv.value)};
-        silkworm::rlp::success_or_throw(err);
+        auto account{silkworm::Account::from_encoded_storage(kv.value)};
+        silkworm::success_or_throw(account);
 
         DumpAccount dump_account;
-        dump_account.balance = account.balance;
-        dump_account.nonce = account.nonce;
-        dump_account.code_hash = account.code_hash;
-        dump_account.incarnation = account.incarnation;
+        dump_account.balance = account->balance;
+        dump_account.nonce = account->nonce;
+        dump_account.code_hash = account->code_hash;
+        dump_account.incarnation = account->incarnation;
 
-        if (account.incarnation > 0 && account.code_hash == silkworm::kEmptyHash) {
-            const auto storage_key{silkworm::db::storage_prefix(full_view(address), account.incarnation)};
+        if (account->incarnation > 0 && account->code_hash == silkworm::kEmptyHash) {
+            const auto storage_key{silkworm::db::storage_prefix(full_view(address), account->incarnation)};
             auto code_hash{co_await tx_database.get_one(db::table::kPlainContractCode, storage_key)};
             if (code_hash.length() == silkworm::kHashLength) {
                 std::memcpy(dump_account.code_hash.bytes, code_hash.data(), silkworm::kHashLength);
             }
         }
         if (!exclude_code) {
-            auto code = co_await state_reader.read_code(account.code_hash);
+            auto code = co_await state_reader.read_code(account->code_hash);
             dump_account.code.swap(code);
         }
         dump_accounts.accounts.insert(std::pair<evmc::address, DumpAccount>(address, dump_account));

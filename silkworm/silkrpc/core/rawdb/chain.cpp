@@ -27,6 +27,7 @@
 #include <silkworm/common/util.hpp>
 #include <silkworm/db/access_layer.hpp>
 #include <silkworm/db/util.hpp>
+#include <silkworm/node/silkworm/common/decoding_exception.hpp>
 #include <silkworm/execution/address.hpp>
 #include <silkworm/rlp/decode.hpp>
 #include <silkworm/rlp/encode.hpp>
@@ -95,7 +96,7 @@ boost::asio::awaitable<intx::uint256> read_total_difficulty(const DatabaseReader
     silkworm::ByteView value{result};
     intx::uint256 total_difficulty{0};
     auto decoding_result{silkworm::rlp::decode(value, total_difficulty)};
-    if (decoding_result != silkworm::DecodingResult::kOk) {
+    if (!decoding_result) {
         throw std::runtime_error{"cannot RLP-decode total difficulty value in read_total_difficulty"};
     }
     SILKRPC_DEBUG << "rawdb::read_total_difficulty canonical total difficulty: " << total_difficulty << "\n";
@@ -127,7 +128,16 @@ boost::asio::awaitable<silkworm::BlockWithHash> read_block(const DatabaseReader&
     SILKRPC_INFO << "header: number=" << header.number << "\n";
     auto body = co_await read_body(reader, block_hash, block_number);
     SILKRPC_INFO << "body: #txn=" << body.transactions.size() << " #ommers=" << body.ommers.size() << "\n";
-    silkworm::BlockWithHash block{silkworm::Block{body.transactions, body.ommers, header}, block_hash};
+    silkworm::BlockWithHash block{
+        .block = {
+            {
+                .transactions = body.transactions,
+                .ommers = body.ommers,
+            },
+            header
+        },
+        .hash = block_hash
+    };
     co_return block;
 }
 
@@ -150,7 +160,7 @@ boost::asio::awaitable<silkworm::BlockHeader> read_header(const DatabaseReader& 
     silkworm::ByteView data_view{data};
     silkworm::BlockHeader header{};
     const auto error = silkworm::rlp::decode(data_view, header);
-    if (error != silkworm::DecodingResult::kOk) {
+    if (!error) {
         throw std::runtime_error{"invalid RLP decoding for block header"};
     }
     co_return header;
@@ -186,7 +196,7 @@ boost::asio::awaitable<uint64_t> read_cumulative_transaction_count(const Databas
         // 1 system txn in the begining of block, and 1 at the end
         SILKRPC_DEBUG << "base_txn_id: " << stored_body.base_txn_id + 1 << " txn_count: " << stored_body.txn_count - 2 << "\n";
         co_return stored_body.base_txn_id + stored_body.txn_count - 1;
-    } catch (silkworm::rlp::DecodingError error) {
+    } catch (silkworm::DecodingException error) {
         SILKRPC_ERROR << "RLP decoding error for block body #" << block_number << " [" << error.what() << "]\n";
         throw std::runtime_error{"RLP decoding error for block body [" + std::string(error.what()) + "]"};
     }
@@ -219,7 +229,7 @@ boost::asio::awaitable<silkworm::BlockBody> read_body(const DatabaseReader& read
         }
         silkworm::BlockBody body{transactions, stored_body.ommers};
         co_return body;
-    } catch (silkworm::rlp::DecodingError error) {
+    } catch (silkworm::DecodingException error) {
         SILKRPC_ERROR << "RLP decoding error for block body #" << block_number << " [" << error.what() << "]\n";
         throw std::runtime_error{"RLP decoding error for block body [" + std::string(error.what()) + "]"};
     }
@@ -351,7 +361,7 @@ boost::asio::awaitable<Transactions> read_canonical_transactions(const DatabaseR
         silkworm::ByteView value{v};
         silkworm::Transaction tx{};
         const auto error = silkworm::rlp::decode(value, tx);
-        if (error != silkworm::DecodingResult::kOk) {
+        if (!error) {
             SILKRPC_ERROR << "invalid RLP decoding for transaction index " << i << "\n";
             return false;
         }
@@ -383,7 +393,7 @@ boost::asio::awaitable<Transactions> read_noncanonical_transactions(const Databa
         silkworm::ByteView value{v};
         silkworm::Transaction tx{};
         const auto error = silkworm::rlp::decode(value, tx);
-        if (error != silkworm::DecodingResult::kOk) {
+        if (!error) {
             SILKRPC_ERROR << "invalid RLP decoding for transaction index " << i << "\n";
             return false;
         }

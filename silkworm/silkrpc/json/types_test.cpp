@@ -268,25 +268,34 @@ TEST_CASE("serialize block header with baseFeePerGas", "[silkrpc][to_json]") {
 }
 
 TEST_CASE("serialize block with baseFeePerGas", "[silkrpc][to_json]") {
-    silkrpc::Block rpc_block {
-        std::vector<silkworm::Transaction> {},
-        std::vector<silkworm::BlockHeader> {},
-        0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
-        0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d_bytes32,
-        0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
-        0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d_bytes32,
-        0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e_bytes32,
-        0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f_bytes32,
-        silkworm::Bloom{},
-        intx::uint256{0},
-        uint64_t(5),
-        uint64_t(1000000),
-        uint64_t(1000000),
-        uint64_t(5405021),
-        *silkworm::from_hex("0001FF0100"),                                          // extradata
-        0x0000000000000000000000000000000000000000000000000000000000000001_bytes32, // mixhash
-        {0, 0, 0, 0, 0, 0, 0, 255},                                                 // nonce
-        std::optional<intx::uint256>(0x244428),                                     // base_fee_per_gas
+    silkrpc::Block rpc_block{
+        {  /* BlockWithHash */
+            {  /* Block */
+                {  /* BlockBody */
+                    .transactions = std::vector<silkworm::Transaction>{},
+                    .ommers =  std::vector<silkworm::BlockHeader>{},
+                    .withdrawals = std::nullopt,
+                },
+                {  /* BlockHeader */
+                    .parent_hash = 0x374f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126c_bytes32,
+                    .ommers_hash = 0x474f3a049e006f36f6cf91b02a3b0ee16c858af2f75858733eb0e927b5b7126d_bytes32,
+                    .beneficiary = 0x0715a7794a1dc8e42615f059dd6e406a6594651a_address,
+                    .state_root = 0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126d_bytes32,
+                    .transactions_root = 0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126e_bytes32,
+                    .receipts_root = 0xb02a3b0ee16c858afaa34bcd6770b3c20ee56aa2f75858733eb0e927b5b7126f_bytes32,
+                    .logs_bloom = silkworm::Bloom{},
+                    .difficulty = intx::uint256{0},
+                    .number = uint64_t(5),
+                    .gas_limit = uint64_t(1000000),
+                    .gas_used = uint64_t(1000000),
+                    .timestamp = uint64_t(5405021),
+                    .extra_data = *silkworm::from_hex("0001FF0100"),
+                    .mix_hash = 0x0000000000000000000000000000000000000000000000000000000000000001_bytes32,
+                    .nonce = {0, 0, 0, 0, 0, 0, 0, 255},
+                    .base_fee_per_gas = std::optional<intx::uint256>(0x244428),
+                }
+            }
+        }
     };
     auto body = rpc_block.block;
     body.transactions.resize(2);
@@ -418,7 +427,7 @@ TEST_CASE("serialize EIP-2718 block", "[silkrpc][to_json]") {
     silkworm::ByteView view{rlp_bytes};
 
     silkrpc::Block rpc_block;
-    REQUIRE(silkworm::rlp::decode(view, rpc_block.block) == silkworm::DecodingResult::kOk);
+    REQUIRE(silkworm::rlp::decode(view, rpc_block.block));
 
     nlohmann::json rpc_block_json = rpc_block;
     CHECK(rpc_block_json == R"({
@@ -473,7 +482,7 @@ TEST_CASE("serialize block with hydrated transactions", "[silkrpc][to_json]") {
     silkworm::Bytes header_rlp_bytes{*silkworm::from_hex(header_rlp_hex)};
     silkworm::ByteView header_view{header_rlp_bytes};
     silkworm::BlockHeader header;
-    REQUIRE(silkworm::rlp::decode(header_view, header) == silkworm::DecodingResult::kOk);
+    REQUIRE(silkworm::rlp::decode(header_view, header));
 
     // 1.2) value from table BlockBody for key 000000000035db84c9e65d063911aa583e17bbb7070893482203217caf6d9fbb50265c72e7bf73e5
     const char* body_rlp_hex{"c68341b58302c0"};
@@ -491,7 +500,7 @@ TEST_CASE("serialize block with hydrated transactions", "[silkrpc][to_json]") {
     silkworm::Bytes tx1_rlp_bytes{*silkworm::from_hex(tx1_rlp_hex)};
     silkworm::ByteView tx1_view{tx1_rlp_bytes};
     silkworm::Transaction tx1;
-    REQUIRE(silkworm::rlp::decode(tx1_view, tx1) == silkworm::DecodingResult::kOk);
+    REQUIRE(silkworm::rlp::decode(tx1_view, tx1));
     const char* tx2_rlp_hex{
         "f901aa02843b9aca008304fa4a9431af35bdfa897cd42b204c003560c385d444707580b901449b4e463400000000000000000000000000"
         "0000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000c081c2ac5b"
@@ -504,18 +513,24 @@ TEST_CASE("serialize block with hydrated transactions", "[silkrpc][to_json]") {
     silkworm::Bytes tx2_rlp_bytes{*silkworm::from_hex(tx2_rlp_hex)};
     silkworm::ByteView tx2_view{tx2_rlp_bytes};
     silkworm::Transaction tx2;
-    REQUIRE(silkworm::rlp::decode(tx2_view, tx2) == silkworm::DecodingResult::kOk);
+    REQUIRE(silkworm::rlp::decode(tx2_view, tx2));
+
 
     // 1.4) build the full block
     silkrpc::Block rpc_block{
-        silkworm::Block{
-            std::vector<silkworm::Transaction>{tx1, tx2}, // transactions
-            std::vector<silkworm::BlockHeader>{}, // ommers
-            header // header
+        {  // BlockWithHash
+            /*.block =*/ {  // Block
+                {  // BlockBody
+                    .transactions = std::vector<silkworm::Transaction>{tx1, tx2},
+                    .ommers = std::vector<silkworm::BlockHeader>{},
+                    .withdrawals = std::nullopt,
+                },
+                /*.header =*/ header,
+            },
+            /*.hash =*/ 0xc9e65d063911aa583e17bbb7070893482203217caf6d9fbb50265c72e7bf73e5_bytes32,
         },
-        0xc9e65d063911aa583e17bbb7070893482203217caf6d9fbb50265c72e7bf73e5_bytes32,
-        intx::uint256{0x4e33ae},
-        true
+        /*.total_difficulty =*/ intx::uint256{0x4e33ae},
+        /*.full_tx =*/ true,
     };
 
     nlohmann::json rpc_block_json = rpc_block;
@@ -621,7 +636,7 @@ TEST_CASE("serialize block body with ommers", "[silkrpc][to_json]") {
 
     silkrpc::Block rpc_block;
     silkworm::BlockBody block_body;
-    REQUIRE(silkworm::rlp::decode(in, block_body) == silkworm::DecodingResult::kOk);
+    REQUIRE(silkworm::rlp::decode(in, block_body));
     rpc_block.block.ommers = block_body.ommers;
 
     nlohmann::json rpc_block_json = rpc_block;
