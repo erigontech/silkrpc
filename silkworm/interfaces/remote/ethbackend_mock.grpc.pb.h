@@ -21,15 +21,24 @@ class MockETHBACKENDStub : public ETHBACKEND::StubInterface {
   MOCK_METHOD3(NetPeerCount, ::grpc::Status(::grpc::ClientContext* context, const ::remote::NetPeerCountRequest& request, ::remote::NetPeerCountReply* response));
   MOCK_METHOD3(AsyncNetPeerCountRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::NetPeerCountReply>*(::grpc::ClientContext* context, const ::remote::NetPeerCountRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(PrepareAsyncNetPeerCountRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::NetPeerCountReply>*(::grpc::ClientContext* context, const ::remote::NetPeerCountRequest& request, ::grpc::CompletionQueue* cq));
-  MOCK_METHOD3(EngineGetPayloadV1, ::grpc::Status(::grpc::ClientContext* context, const ::remote::EngineGetPayloadRequest& request, ::types::ExecutionPayload* response));
-  MOCK_METHOD3(AsyncEngineGetPayloadV1Raw, ::grpc::ClientAsyncResponseReaderInterface< ::types::ExecutionPayload>*(::grpc::ClientContext* context, const ::remote::EngineGetPayloadRequest& request, ::grpc::CompletionQueue* cq));
-  MOCK_METHOD3(PrepareAsyncEngineGetPayloadV1Raw, ::grpc::ClientAsyncResponseReaderInterface< ::types::ExecutionPayload>*(::grpc::ClientContext* context, const ::remote::EngineGetPayloadRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(EngineNewPayloadV1, ::grpc::Status(::grpc::ClientContext* context, const ::types::ExecutionPayload& request, ::remote::EnginePayloadStatus* response));
   MOCK_METHOD3(AsyncEngineNewPayloadV1Raw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::EnginePayloadStatus>*(::grpc::ClientContext* context, const ::types::ExecutionPayload& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(PrepareAsyncEngineNewPayloadV1Raw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::EnginePayloadStatus>*(::grpc::ClientContext* context, const ::types::ExecutionPayload& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(EngineNewPayloadV2, ::grpc::Status(::grpc::ClientContext* context, const ::types::ExecutionPayloadV2& request, ::remote::EnginePayloadStatus* response));
+  MOCK_METHOD3(AsyncEngineNewPayloadV2Raw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::EnginePayloadStatus>*(::grpc::ClientContext* context, const ::types::ExecutionPayloadV2& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PrepareAsyncEngineNewPayloadV2Raw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::EnginePayloadStatus>*(::grpc::ClientContext* context, const ::types::ExecutionPayloadV2& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(EngineForkChoiceUpdatedV1, ::grpc::Status(::grpc::ClientContext* context, const ::remote::EngineForkChoiceUpdatedRequest& request, ::remote::EngineForkChoiceUpdatedReply* response));
   MOCK_METHOD3(AsyncEngineForkChoiceUpdatedV1Raw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::EngineForkChoiceUpdatedReply>*(::grpc::ClientContext* context, const ::remote::EngineForkChoiceUpdatedRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(PrepareAsyncEngineForkChoiceUpdatedV1Raw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::EngineForkChoiceUpdatedReply>*(::grpc::ClientContext* context, const ::remote::EngineForkChoiceUpdatedRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(EngineForkChoiceUpdatedV2, ::grpc::Status(::grpc::ClientContext* context, const ::remote::EngineForkChoiceUpdatedRequestV2& request, ::remote::EngineForkChoiceUpdatedReply* response));
+  MOCK_METHOD3(AsyncEngineForkChoiceUpdatedV2Raw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::EngineForkChoiceUpdatedReply>*(::grpc::ClientContext* context, const ::remote::EngineForkChoiceUpdatedRequestV2& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PrepareAsyncEngineForkChoiceUpdatedV2Raw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::EngineForkChoiceUpdatedReply>*(::grpc::ClientContext* context, const ::remote::EngineForkChoiceUpdatedRequestV2& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(EngineGetPayloadV1, ::grpc::Status(::grpc::ClientContext* context, const ::remote::EngineGetPayloadRequest& request, ::types::ExecutionPayload* response));
+  MOCK_METHOD3(AsyncEngineGetPayloadV1Raw, ::grpc::ClientAsyncResponseReaderInterface< ::types::ExecutionPayload>*(::grpc::ClientContext* context, const ::remote::EngineGetPayloadRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PrepareAsyncEngineGetPayloadV1Raw, ::grpc::ClientAsyncResponseReaderInterface< ::types::ExecutionPayload>*(::grpc::ClientContext* context, const ::remote::EngineGetPayloadRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(EngineGetPayloadV2, ::grpc::Status(::grpc::ClientContext* context, const ::remote::EngineGetPayloadRequest& request, ::types::ExecutionPayloadV2* response));
+  MOCK_METHOD3(AsyncEngineGetPayloadV2Raw, ::grpc::ClientAsyncResponseReaderInterface< ::types::ExecutionPayloadV2>*(::grpc::ClientContext* context, const ::remote::EngineGetPayloadRequest& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PrepareAsyncEngineGetPayloadV2Raw, ::grpc::ClientAsyncResponseReaderInterface< ::types::ExecutionPayloadV2>*(::grpc::ClientContext* context, const ::remote::EngineGetPayloadRequest& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(Version, ::grpc::Status(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::types::VersionReply* response));
   MOCK_METHOD3(AsyncVersionRaw, ::grpc::ClientAsyncResponseReaderInterface< ::types::VersionReply>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(PrepareAsyncVersionRaw, ::grpc::ClientAsyncResponseReaderInterface< ::types::VersionReply>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
@@ -57,6 +66,9 @@ class MockETHBACKENDStub : public ETHBACKEND::StubInterface {
   MOCK_METHOD3(Peers, ::grpc::Status(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::remote::PeersReply* response));
   MOCK_METHOD3(AsyncPeersRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::PeersReply>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
   MOCK_METHOD3(PrepareAsyncPeersRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::PeersReply>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PendingBlock, ::grpc::Status(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::remote::PendingBlockReply* response));
+  MOCK_METHOD3(AsyncPendingBlockRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::PendingBlockReply>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
+  MOCK_METHOD3(PrepareAsyncPendingBlockRaw, ::grpc::ClientAsyncResponseReaderInterface< ::remote::PendingBlockReply>*(::grpc::ClientContext* context, const ::google::protobuf::Empty& request, ::grpc::CompletionQueue* cq));
 };
 
 } // namespace remote
