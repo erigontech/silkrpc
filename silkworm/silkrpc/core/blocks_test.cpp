@@ -28,7 +28,7 @@
 #include <silkworm/silkrpc/ethdb/tables.hpp>
 #include <silkworm/silkrpc/stagedsync/stages.hpp>
 #include <silkworm/silkrpc/test/mock_database_reader.hpp>
-#include <silkworm/common/base.hpp>
+#include <silkworm/core/common/base.hpp>
 
 namespace silkrpc::core {
 

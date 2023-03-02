@@ -20,7 +20,7 @@
 
 #include <boost/endian/conversion.hpp>
 
-#include <silkworm/db/tables.hpp>
+#include <silkworm/node/db/tables.hpp>
 
 #include <silkworm/silkrpc/ethdb/tables.hpp>
 

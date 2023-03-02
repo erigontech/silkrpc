@@ -26,12 +26,12 @@
 #include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
 
-#include <silkworm/common/util.hpp>
-#include <silkworm/node/silkworm/common/log.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/core/rlp/encode.hpp>
+#include <silkworm/node/common/log.hpp>
 #include <silkworm/silkrpc/ethdb/database.hpp>
 #include <silkworm/silkrpc/ethdb/cursor.hpp>
 #include <silkworm/silkrpc/ethdb/transaction.hpp>
-#include <silkworm/rlp/encode.hpp>
 
 namespace silkrpc {
 

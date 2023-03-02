@@ -29,7 +29,7 @@
 #include <silkworm/silkrpc/test/grpc_responder.hpp>
 #include <silkworm/silkrpc/test/grpc_actions.hpp>
 #include <silkworm/silkrpc/test/grpc_matcher.hpp>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 namespace silkrpc::ethdb::kv {
 

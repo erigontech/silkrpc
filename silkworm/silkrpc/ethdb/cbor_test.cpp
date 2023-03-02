@@ -20,7 +20,7 @@
 
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 #include <silkworm/silkrpc/types/log.hpp>
 #include <silkworm/silkrpc/types/receipt.hpp>

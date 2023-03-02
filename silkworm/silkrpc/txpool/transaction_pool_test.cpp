@@ -24,7 +24,7 @@
 #include <evmc/evmc.hpp>
 #include <gmock/gmock.h>
 #include <grpcpp/grpcpp.h>
-#include <silkworm/common/base.hpp>
+#include <silkworm/core/common/base.hpp>
 
 #include <silkworm/silkrpc/concurrency/context_pool.hpp>
 #include <silkworm/silkrpc/common/log.hpp>

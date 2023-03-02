@@ -34,10 +34,11 @@
 #include <silkworm/silkrpc/test/dummy_transaction.hpp>
 #include <silkworm/silkrpc/test/mock_cursor.hpp>
 #include <silkworm/silkrpc/test/mock_transaction.hpp>
-#include <silkworm/common/assert.hpp>
-#include <silkworm/common/base.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/rpc/common/conversion.hpp>
+#include <silkworm/core/common/assert.hpp>
+#include <silkworm/core/common/base.hpp>
+#include <silkworm/core/common/util.hpp>
+
+#include <silkworm/node/rpc/common/conversion.hpp>
 
 namespace silkrpc::ethdb::kv {
 

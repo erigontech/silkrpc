@@ -27,9 +27,9 @@
 #include <boost/asio/use_awaitable.hpp>
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
-#include <silkworm/chain/intrinsic_gas.hpp>
-#include <silkworm/chain/protocol_param.hpp>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/chain/intrinsic_gas.hpp>
+#include <silkworm/core/chain/protocol_param.hpp>
+#include <silkworm/core/common/util.hpp>
 
 #include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/silkrpc/common/util.hpp>

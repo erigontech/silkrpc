@@ -19,8 +19,8 @@
 #include "block.hpp"
 
 #include <catch2/catch.hpp>
-#include <silkworm/common/base.hpp>
-#include <silkworm/types/transaction.hpp>
+#include <silkworm/core/common/base.hpp>
+#include <silkworm/core/types/transaction.hpp>
 
 #include <silkworm/silkrpc/common/log.hpp>
 

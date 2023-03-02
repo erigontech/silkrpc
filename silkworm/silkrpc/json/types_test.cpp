@@ -24,9 +24,9 @@
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
 #include <nlohmann/json.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/db/access_layer.hpp>
-#include <silkworm/db/prune_mode.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/node/db/access_layer.hpp>
+#include <silkworm/node/db/prune_mode.hpp>
 
 namespace {
 #ifdef _WIN32

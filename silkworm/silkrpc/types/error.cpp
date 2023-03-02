@@ -18,7 +18,7 @@
 
 #include <iomanip>
 
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 namespace silkrpc {
 

@@ -24,13 +24,13 @@
 
 #include <boost/endian/conversion.hpp>
 
-#include <silkworm/common/util.hpp>
-#include <silkworm/db/access_layer.hpp>
-#include <silkworm/db/util.hpp>
-#include <silkworm/node/silkworm/common/decoding_exception.hpp>
-#include <silkworm/execution/address.hpp>
-#include <silkworm/rlp/decode.hpp>
-#include <silkworm/rlp/encode.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/core/execution/address.hpp>
+#include <silkworm/core/rlp/decode.hpp>
+#include <silkworm/core/rlp/encode.hpp>
+#include <silkworm/node/db/access_layer.hpp>
+#include <silkworm/node/db/util.hpp>
+#include <silkworm/node/common/decoding_exception.hpp>
 
 #include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/silkrpc/common/util.hpp>

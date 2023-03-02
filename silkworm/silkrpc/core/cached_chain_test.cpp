@@ -28,10 +28,10 @@
 
 #include <silkworm/silkrpc/concurrency/context_pool.hpp>
 
-#include <silkworm/common/util.hpp>
-#include <silkworm/common/base.hpp>
-#include <silkworm/chain/config.hpp>
-#include <silkworm/common/log.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/core/common/base.hpp>
+#include <silkworm/core/chain/config.hpp>
+#include <silkworm/node/common/log.hpp>
 
 #include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/silkrpc/core/blocks.hpp>

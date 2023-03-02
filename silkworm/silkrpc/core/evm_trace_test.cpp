@@ -25,7 +25,7 @@
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 #include <silkpre/precompile.h>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 #include <silkworm/third_party/evmone/evmc/include/evmc/instructions.h>
 
 #include <silkworm/silkrpc/common/log.hpp>

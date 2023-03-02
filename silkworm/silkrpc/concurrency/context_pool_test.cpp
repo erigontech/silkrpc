@@ -26,7 +26,7 @@
 #include <grpcpp/grpcpp.h>
 
 #include <silkworm/silkrpc/common/log.hpp>
-#include <silkworm/common/log.hpp>
+#include <silkworm/node/common/log.hpp>
 
 namespace silkrpc {
 

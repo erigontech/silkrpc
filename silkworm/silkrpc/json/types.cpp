@@ -22,11 +22,11 @@
 
 #include <boost/endian/conversion.hpp>
 #include <intx/intx.hpp>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 #include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/silkrpc/common/util.hpp>
-#include <silkworm/common/endian.hpp>
+#include <silkworm/core/common/endian.hpp>
 
 namespace silkrpc {
 

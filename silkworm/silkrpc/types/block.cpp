@@ -20,9 +20,9 @@
 
 #include <silkworm/silkrpc/common/util.hpp>
 #include <silkworm/silkrpc/core/blocks.hpp>
-#include <silkworm/common/assert.hpp>
-#include <silkworm/common/endian.hpp>
-#include <silkworm/core/silkworm/rlp/encode_vector.hpp>
+#include <silkworm/core/common/assert.hpp>
+#include <silkworm/core/common/endian.hpp>
+#include <silkworm/core/rlp/encode_vector.hpp>
 
 namespace silkrpc {
 

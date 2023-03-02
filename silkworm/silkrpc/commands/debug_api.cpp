@@ -28,11 +28,11 @@
 #include <ctime>
 
 #include <evmc/evmc.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/core/silkworm/common/endian.hpp>
-#include <silkworm/core/silkworm/consensus/ethash/engine.hpp>
-#include <silkworm/core/silkworm/state/intra_block_state.hpp>
-#include <silkworm/node/silkworm/db/util.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/core/common/endian.hpp>
+#include <silkworm/core/consensus/ethash/engine.hpp>
+#include <silkworm/core/state/intra_block_state.hpp>
+#include <silkworm/node/db/util.hpp>
 
 #include <silkworm/silkrpc/common/constants.hpp>
 #include <silkworm/silkrpc/common/log.hpp>

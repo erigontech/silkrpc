@@ -24,7 +24,7 @@
 #include <boost/asio/thread_pool.hpp>
 #include <boost/asio/use_future.hpp>
 #include <catch2/catch.hpp>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 #include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/silkrpc/concurrency/context_pool.hpp>

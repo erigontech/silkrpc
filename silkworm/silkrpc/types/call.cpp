@@ -18,9 +18,9 @@
 
 #include <string>
 
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/endian.hpp>
+#include <silkworm/core/common/util.hpp>
 #include <silkworm/silkrpc/common/util.hpp>
-#include <silkworm/common/endian.hpp>
 
 namespace silkrpc {
 
