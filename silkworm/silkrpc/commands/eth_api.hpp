@@ -31,11 +31,13 @@
 #include <silkworm/silkrpc/txpool/transaction_pool.hpp>
 #include <silkworm/types/receipt.hpp>
 #include <silkworm/silkrpc/concurrency/context_pool.hpp>
+#include <silkworm/silkrpc/core/filter_storage.hpp>
 #include <silkworm/silkrpc/core/rawdb/accessors.hpp>
 #include <silkworm/silkrpc/json/types.hpp>
 #include <silkworm/silkrpc/ethbackend/backend.hpp>
 #include <silkworm/silkrpc/ethdb/database.hpp>
 #include <silkworm/silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/types/filter.hpp>
 #include <silkworm/silkrpc/types/log.hpp>
 #include <silkworm/silkrpc/types/receipt.hpp>
 
@@ -92,6 +94,7 @@ protected:
     boost::asio::awaitable<void> handle_eth_new_filter(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_eth_new_block_filter(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_eth_new_pending_transaction_filter(const nlohmann::json& request, nlohmann::json& reply);
+    boost::asio::awaitable<void> handle_eth_get_filter_logs(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_eth_get_filter_changes(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_eth_uninstall_filter(const nlohmann::json& request, nlohmann::json& reply);
     boost::asio::awaitable<void> handle_eth_get_logs(const nlohmann::json& request, nlohmann::json& reply);
@@ -110,6 +113,7 @@ protected:
     boost::asio::awaitable<roaring::Roaring> get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end);
     boost::asio::awaitable<roaring::Roaring> get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end);
 
+    boost::asio::awaitable<void> get_logs(std::uint32_t id, Filter& filter, nlohmann::json& reply);
     std::vector<Log> filter_logs(std::vector<Log>& logs, const Filter& filter);
 
     Context& context_;
@@ -120,6 +124,8 @@ protected:
     std::unique_ptr<txpool::Miner>& miner_;
     std::unique_ptr<txpool::TransactionPool>& tx_pool_;
     boost::asio::thread_pool& workers_;
+
+    filter::FilterStorage filter_storage_;
 
     friend class silkrpc::http::RequestHandler;
 };
