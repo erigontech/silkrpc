@@ -22,13 +22,15 @@
 
 namespace silkrpc::test {
 
+filter::FilterStorage filter_storage{0x400};
+
 ContextTestBase::ContextTestBase()
     : init_dummy{[] {
           SILKRPC_LOG_VERBOSITY(LogLevel::None);
           return true;
       }()},
       context_{[]() { return grpc::CreateChannel("localhost:12345", grpc::InsecureChannelCredentials()); },
-               std::make_shared<BlockCache>(), std::make_shared<ethdb::kv::CoherentStateCache>()},
+               std::make_shared<BlockCache>(), std::make_shared<ethdb::kv::CoherentStateCache>(), filter_storage},
       io_context_{*context_.io_context()},
       grpc_context_{*context_.grpc_context()},
       context_thread_{[&]() { context_.execute_loop(); }} {

@@ -26,10 +26,12 @@ using Catch::Matchers::Message;
 
 TEST_CASE("TraceRpcApi") {
     SILKRPC_LOG_VERBOSITY(LogLevel::None);
+
+    filter::FilterStorage filter_storage{0x400};
     ChannelFactory create_channel = []() {
         return grpc::CreateChannel("localhost", grpc::InsecureChannelCredentials());
     };
-    Context context{create_channel, std::make_shared<BlockCache>(), std::make_shared<ethdb::kv::CoherentStateCache>()};
+    Context context{create_channel, std::make_shared<BlockCache>(), std::make_shared<ethdb::kv::CoherentStateCache>(), filter_storage};
     boost::asio::thread_pool workers{1};
 
     SECTION("CTOR") {

@@ -17,6 +17,7 @@
 #pragma once
 
 #include <chrono>
+#include <functional>
 #include <map>
 #include <mutex>
 #include <random>
@@ -32,15 +33,17 @@ struct FilterEntry {
     Filter filter;
 };
 
+typedef std::function<std::uint64_t()> Generator;
+
 class FilterStorage {
 public:
-    explicit FilterStorage(double filter_duration = DEFAULT_FILTER_DURATION) :
-       filter_duration_{filter_duration} {}
+    explicit FilterStorage(std::size_t max_size, double filter_duration = DEFAULT_FILTER_DURATION);
+    explicit FilterStorage(Generator& generator, std::size_t max_size, double filter_duration = DEFAULT_FILTER_DURATION);
 
     FilterStorage(const FilterStorage&) = delete;
     FilterStorage& operator=(const FilterStorage&) = delete;
 
-    std::string add_filter(const Filter& filter);
+    std::optional<std::string> add_filter(const Filter& filter);
     bool remove_filter(const std::string& filter_id);
     std::optional<Filter> get_filter(const std::string& filter_id);
 
@@ -51,17 +54,20 @@ public:
 private:
     static const std::size_t DEFAULT_FILTER_DURATION = 0x800;
 
+    void clean_up();
     // std::string generate_id() {
     //     std::stringstream stream;
     //     stream << std::hex << random_engine();    
     //     return stream.str();
     // }
 
+    std::size_t max_size_;
     std::chrono::duration<double> filter_duration_;
     std::mutex mutex_;
     std::map<std::string, FilterEntry> storage_;
     // std::default_random_engine random_engine{std::random_device{}()};
-    std::mt19937_64 random_engine{std::random_device{}()};
+    Generator& generator_;
+    // std::mt19937_64 random_engine{std::random_device{}()};
 };
 
 } // namespace silkrpc::filter

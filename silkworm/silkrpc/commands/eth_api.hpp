@@ -55,7 +55,8 @@ public:
           backend_(context.backend()),
           miner_{context.miner()},
           tx_pool_{context.tx_pool()},
-          workers_{workers} {}
+          workers_{workers},
+          filter_storage_{context.filter_storage()} {}
 
     virtual ~EthereumRpcApi() {}
 
@@ -125,7 +126,7 @@ protected:
     std::unique_ptr<txpool::TransactionPool>& tx_pool_;
     boost::asio::thread_pool& workers_;
 
-    filter::FilterStorage filter_storage_;
+    filter::FilterStorage& filter_storage_;
 
     friend class silkrpc::http::RequestHandler;
 };

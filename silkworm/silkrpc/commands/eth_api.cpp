@@ -1317,7 +1317,11 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_new_filter(const nlohman
     const auto filter_id = filter_storage_.add_filter(filter);
     SILKRPC_INFO << "storage size: " << filter_storage_.size() << "\n";
 
-    reply = make_json_content(request["id"], filter_id);
+    if (filter_id) {
+        reply = make_json_content(request["id"], filter_id.value());
+    } else {
+        reply = make_json_error(request["id"], 100, "TODO");
+    }
 
     co_return;
 }
@@ -1388,21 +1392,6 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_logs(const nl
     std::uint32_t id = request["id"];
     co_await get_logs(id, filter, reply);
 
-    // auto tx = co_await database_->begin();
-
-    // try {
-    //     ethdb::TransactionDatabase tx_database{*tx};
-
-    //     reply = make_json_content(request["id"], to_quantity(0));
-    // } catch (const std::exception& e) {
-    //     SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
-    //     reply = make_json_error(request["id"], 100, e.what());
-    // } catch (...) {
-    //     SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
-    //     reply = make_json_error(request["id"], 100, "unexpected exception");
-    // }
-
-    // co_await tx->close(); // RAII not (yet) available with coroutines
     co_return;
 }
 

@@ -23,14 +23,46 @@
 
 namespace silkrpc::filter {
 
-std::string FilterStorage::add_filter(const Filter& filter) {
+std::mt19937_64 random_engine{std::random_device{}()};
+Generator default_generator = []() {return random_engine();};
+
+FilterStorage::FilterStorage(std::size_t max_size, double filter_duration) :
+       generator_{default_generator}, max_size_{max_size}, filter_duration_{filter_duration} {}
+
+FilterStorage::FilterStorage(Generator& generator, std::size_t max_size, double filter_duration) :
+       generator_{generator}, max_size_{max_size}, filter_duration_{filter_duration} {}
+
+std::optional<std::string> FilterStorage::add_filter(const Filter& filter) {
     std::lock_guard<std::mutex> lock (mutex_);
 
-    FilterEntry entry{std::chrono::system_clock::now(), filter};
-    const auto id = to_quantity(random_engine());
-    storage_.emplace(id, entry);
+    if (storage_.size() >= max_size_) {
+        clean_up();
+    }
 
-    return id;
+    if (storage_.size() >= max_size_) {
+        SILKRPC_INFO << "No room avaliable in storage, max size " << max_size_ << " reached" << std::endl << std::flush;
+        return std::nullopt; 
+    }
+
+    const auto now = std::chrono::system_clock::now();
+    FilterEntry entry{now, filter};
+    std::string filter_id;
+    bool slot_found;
+    std::size_t count{0};
+    while (max_size_ > count++) {
+        filter_id = to_quantity(generator_());
+        slot_found = storage_.find(filter_id) == storage_.end();
+        if (slot_found) {
+            break;
+        }
+    }
+    if (!slot_found) {
+        SILKRPC_INFO << "Unable to generate a new filter_id without clashing" << std::endl << std::flush;
+        return std::nullopt; 
+    }
+
+    storage_.emplace(filter_id, entry);
+    return filter_id;
 }
 
 bool FilterStorage::remove_filter(const std::string& filter_id) {
@@ -63,6 +95,20 @@ std::optional<Filter> FilterStorage::get_filter(const std::string& filter_id) {
 
     itr->second.last_access = now;
     return itr->second.filter;
+}
+
+void FilterStorage::clean_up() {
+    const auto now = std::chrono::system_clock::now();
+    auto itr = storage_.begin();
+    while (itr != storage_.end()) {
+        std::chrono::duration<double> diff = now - itr->second.last_access;
+        if (diff > filter_duration_) {
+            SILKRPC_INFO << "Filter  " << itr->first << " exhausted: removed" << std::endl << std::flush;
+            itr = storage_.erase(itr);
+        } else {
+            ++itr;
+        }
+    }
 }
 
 // std::string FilterStorage::generate_id() {
