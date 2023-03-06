@@ -28,8 +28,8 @@
 
 #include <croaring/roaring.hh>
 
+#include <silkworm/core/types/receipt.hpp>
 #include <silkworm/silkrpc/txpool/transaction_pool.hpp>
-#include <silkworm/types/receipt.hpp>
 #include <silkworm/silkrpc/concurrency/context_pool.hpp>
 #include <silkworm/silkrpc/core/rawdb/accessors.hpp>
 #include <silkworm/silkrpc/json/types.hpp>

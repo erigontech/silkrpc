@@ -24,9 +24,9 @@
 #include <silkworm/silkrpc/config.hpp> // NOLINT(build/include_order)
 
 #include <boost/asio/awaitable.hpp>
-#include <silkworm/chain/config.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/types/block.hpp>
+#include <silkworm/core/chain/config.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/core/types/block.hpp>
 
 #include <silkworm/silkrpc/core/blocks.hpp>
 #include <silkworm/silkrpc/core/rawdb/accessors.hpp>

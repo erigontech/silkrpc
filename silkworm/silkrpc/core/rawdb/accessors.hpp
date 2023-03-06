@@ -24,7 +24,7 @@
 
 #include <boost/asio/awaitable.hpp>
 
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 #include <silkworm/silkrpc/common/util.hpp>
 

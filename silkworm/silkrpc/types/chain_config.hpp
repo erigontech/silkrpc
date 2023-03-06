@@ -22,7 +22,7 @@
 
 #include <evmc/evmc.hpp>
 #include <nlohmann/json.hpp>
-#include <silkworm/chain/config.hpp>
+#include <silkworm/core/chain/config.hpp>
 
 namespace silkrpc {
 

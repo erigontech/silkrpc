@@ -21,7 +21,7 @@
 #include <boost/asio/thread_pool.hpp>
 #include <catch2/catch.hpp>
 #include <evmc/evmc.hpp>
-#include <silkworm/common/base.hpp>
+#include <silkworm/core/common/base.hpp>
 
 #include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/silkrpc/core/rawdb/accessors.hpp>

@@ -21,9 +21,9 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wattributes"
-#include <silkworm/execution/evm.hpp>
+#include <silkworm/core/execution/evm.hpp>
 #pragma GCC diagnostic pop
-#include <silkworm/state/intra_block_state.hpp>
+#include <silkworm/core/state/intra_block_state.hpp>
 
 #include <silkworm/silkrpc/concurrency/context_pool.hpp>
 #include <silkworm/silkrpc/core/rawdb/accessors.hpp>

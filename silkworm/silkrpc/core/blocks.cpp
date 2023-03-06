@@ -20,7 +20,7 @@
 #include <silkworm/silkrpc/core/rawdb/chain.hpp>
 #include <silkworm/silkrpc/stagedsync/stages.hpp>
 #include <silkworm/silkrpc/ethdb/tables.hpp>
-#include <silkworm/common/assert.hpp>
+#include <silkworm/core/common/assert.hpp>
 
 namespace silkrpc::core {
 

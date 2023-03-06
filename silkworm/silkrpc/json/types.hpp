@@ -38,8 +38,8 @@
 #include <silkworm/silkrpc/types/syncing_data.hpp>
 #include <silkworm/silkrpc/types/receipt.hpp>
 #include <silkworm/silkrpc/types/transaction.hpp>
-#include <silkworm/types/block.hpp>
-#include <silkworm/types/transaction.hpp>
+#include <silkworm/core/types/block.hpp>
+#include <silkworm/core/types/transaction.hpp>
 
 namespace evmc {
 

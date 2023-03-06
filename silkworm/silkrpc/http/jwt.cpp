@@ -25,7 +25,7 @@
 #include <silkworm/silkrpc/http/jwt.hpp>
 
 #include <evmc/evmc.hpp>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 namespace silkrpc {
 

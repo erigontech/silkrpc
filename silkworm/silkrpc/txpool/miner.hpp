@@ -32,7 +32,7 @@
 #include <silkworm/silkrpc/common/util.hpp>
 #include <silkworm/interfaces/txpool/mining.grpc.pb.h>
 #include <silkworm/interfaces/types/types.pb.h>
-#include <silkworm/common/base.hpp>
+#include <silkworm/core/common/base.hpp>
 
 namespace silkrpc::txpool {
 

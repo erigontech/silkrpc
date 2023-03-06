@@ -19,9 +19,9 @@
 
 #include <sstream>
 
-#include <silkworm/core/silkworm/common/endian.hpp>
-#include <silkworm/db/util.hpp>
-#include <silkworm/node/silkworm/db/bitmap.hpp>
+#include <silkworm/core/common/endian.hpp>
+#include <silkworm/node/db/util.hpp>
+#include <silkworm/node/db/bitmap.hpp>
 
 #include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/silkrpc/common/util.hpp>

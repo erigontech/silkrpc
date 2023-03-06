@@ -131,7 +131,7 @@ ContextPool::ContextPool(std::size_t pool_size, ChannelFactory create_channel, s
        std::string db_path = *datadir + kChaindataRelativePath;
        silkworm::db::EnvConfig db_config{
            .path = db_path,
-           .inmemory = true,
+           .in_memory = true,
            .shared = true,
            .max_readers = kMaxReaders
        };

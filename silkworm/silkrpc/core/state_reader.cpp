@@ -16,12 +16,12 @@
 
 #include "state_reader.hpp"
 
-#include <silkworm/common/util.hpp>
-#include <silkworm/db/access_layer.hpp>
-#include <silkworm/db/bitmap.hpp>
-#include <silkworm/db/util.hpp>
-#include <silkworm/node/silkworm/common/decoding_exception.hpp>
-#include <silkworm/types/account.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/core/types/account.hpp>
+#include <silkworm/node/db/access_layer.hpp>
+#include <silkworm/node/db/bitmap.hpp>
+#include <silkworm/node/db/util.hpp>
+#include <silkworm/node/common/decoding_exception.hpp>
 
 #include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/silkrpc/common/util.hpp>

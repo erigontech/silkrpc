@@ -21,7 +21,7 @@
 
 #include <evmc/evmc.hpp>
 #include <intx/intx.hpp>
-#include <silkworm/types/bloom.hpp>
+#include <silkworm/core/types/bloom.hpp>
 
 #include <silkworm/silkrpc/types/log.hpp>
 #include <silkworm/silkrpc/types/transaction.hpp>

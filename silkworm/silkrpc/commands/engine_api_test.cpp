@@ -25,7 +25,7 @@
 #include <catch2/catch.hpp>
 #include <gmock/gmock.h>
 #include <nlohmann/json.hpp>
-#include <silkworm/common/base.hpp>
+#include <silkworm/core/common/base.hpp>
 
 #include <silkworm/silkrpc/core/rawdb/chain.hpp>
 #include <silkworm/silkrpc/ethdb/transaction_database.hpp>

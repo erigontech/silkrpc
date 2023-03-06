@@ -33,7 +33,7 @@
 #include <silkworm/silkrpc/test/mock_state_cache.hpp>
 #include <silkworm/silkrpc/test/mock_transaction.hpp>
 #include <silkworm/silkrpc/types/block.hpp>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
 
 namespace silkrpc::ethdb::kv {
 

@@ -22,11 +22,11 @@
 
 #include <boost/endian/conversion.hpp>
 
-#include <silkworm/core/silkworm/common/decoding_result.hpp>
-#include <silkworm/core/silkworm/common/endian.hpp>
-#include <silkworm/node/silkworm/db/bitmap.hpp>
-#include <silkworm/node/silkworm/common/decoding_exception.hpp>
-#include <silkworm/node/silkworm/db/util.hpp>
+#include <silkworm/core/common/decoding_result.hpp>
+#include <silkworm/core/common/endian.hpp>
+#include <silkworm/node/db/bitmap.hpp>
+#include <silkworm/node/common/decoding_exception.hpp>
+#include <silkworm/node/db/util.hpp>
 
 #include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/silkrpc/common/util.hpp>

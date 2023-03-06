@@ -30,7 +30,7 @@
 #include <silkworm/silkrpc/ethdb/transaction.hpp>
 #include <silkworm/silkrpc/ethdb/file/local_cursor.hpp>
 
-#include <silkworm/db/mdbx.hpp>
+#include <silkworm/node/db/mdbx.hpp>
 
 namespace silkrpc::ethdb::file {
 

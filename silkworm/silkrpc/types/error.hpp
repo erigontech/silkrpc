@@ -21,7 +21,7 @@
 
 #include <evmc/evmc.hpp>
 
-#include <silkworm/common/base.hpp>
+#include <silkworm/core/common/base.hpp>
 
 namespace silkrpc {
 

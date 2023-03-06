@@ -34,8 +34,8 @@
 #include <silkworm/silkrpc/ethdb/kv/cached_database.hpp>
 #include <silkworm/silkrpc/ethdb/transaction_database.hpp>
 #include <silkworm/silkrpc/json/types.hpp>
-#include <silkworm/common/binary_search.hpp>
-#include <silkworm/common/util.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/node/common/binary_search.hpp>
 
 namespace silkrpc::commands {
 

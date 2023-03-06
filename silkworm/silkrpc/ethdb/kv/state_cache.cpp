@@ -25,9 +25,9 @@
 #include <silkworm/silkrpc/core/rawdb/util.hpp>
 #include <silkworm/silkrpc/ethdb/tables.hpp>
 #include <silkworm/silkrpc/ethdb/transaction_database.hpp>
-#include <silkworm/common/assert.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/rpc/common/conversion.hpp>
+#include <silkworm/core/common/assert.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/node/rpc/common/conversion.hpp>
 
 namespace silkrpc::ethdb::kv {
 
@@ -78,7 +78,7 @@ void CoherentStateCache::on_new_block(const remote::StateChangeBatch& state_chan
 
     std::unique_lock write_lock{rw_mutex_};
 
-    const auto view_id = state_changes.databaseviewid();
+    const auto view_id = state_changes.stateversionid();
     CoherentStateRoot* root = advance_root(view_id);
     for (const auto& state_change : state_changes.changebatch()) {
         for (const auto& account_change : state_change.changes()) {

@@ -29,8 +29,8 @@
 #include <silkworm/silkrpc/config.hpp>
 #include <silkworm/silkrpc/ethdb/cursor.hpp>
 
-#include <silkworm/common/util.hpp>
-#include <silkworm/db/mdbx.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/node/db/mdbx.hpp>
 
 
 namespace silkrpc::ethdb::file {
@@ -60,7 +60,7 @@ public:
 
 private:
     uint32_t cursor_id_;
-    silkworm::db::Cursor db_cursor_;
+    silkworm::db::PooledCursor db_cursor_;
     mdbx::txn_managed& read_only_txn_;
 };
 

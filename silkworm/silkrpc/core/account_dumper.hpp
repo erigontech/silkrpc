@@ -25,8 +25,8 @@
 
 #include <boost/asio/awaitable.hpp>
 #include <evmc/evmc.hpp>
-#include <silkworm/common/util.hpp>
-#include <silkworm/types/account.hpp>
+#include <silkworm/core/common/util.hpp>
+#include <silkworm/core/types/account.hpp>
 
 #include <silkworm/silkrpc/common/util.hpp>
 #include <silkworm/silkrpc/core/cached_chain.hpp>

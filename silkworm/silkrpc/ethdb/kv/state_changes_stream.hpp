@@ -40,7 +40,7 @@
 namespace remote {
 
 inline std::ostream& operator<<(std::ostream& out, const remote::StateChangeBatch& batch) {
-    out << "changebatch_size=" << batch.changebatch_size() << " databaseviewid=" << batch.databaseviewid()
+    out << "changebatch_size=" << batch.changebatch_size() << " stateversionid=" << batch.stateversionid()
         << " pendingblockbasefee=" << batch.pendingblockbasefee() << " blockgaslimit=" << batch.blockgaslimit();
     return out;
 }

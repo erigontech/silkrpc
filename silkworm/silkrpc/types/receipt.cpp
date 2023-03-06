@@ -20,7 +20,7 @@
 
 #include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/silkrpc/common/util.hpp>
-#include <silkworm/types/bloom.cpp> // NOLINT(build/include) m3_2048 not exported
+#include <silkworm/core/types/bloom.cpp> // NOLINT(build/include) m3_2048 not exported
 
 namespace silkrpc {
 
