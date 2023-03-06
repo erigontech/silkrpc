@@ -49,17 +49,12 @@ public:
 
     auto size() const {
         return storage_.size();
-    };
+    }
 
 private:
     static const std::size_t DEFAULT_FILTER_DURATION = 0x800;
 
     void clean_up();
-    // std::string generate_id() {
-    //     std::stringstream stream;
-    //     stream << std::hex << random_engine();    
-    //     return stream.str();
-    // }
 
     std::size_t max_size_;
     std::chrono::duration<double> filter_duration_;

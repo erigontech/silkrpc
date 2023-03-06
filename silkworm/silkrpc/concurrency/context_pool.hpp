@@ -99,7 +99,7 @@ class Context {
     std::shared_ptr<BlockCache> block_cache_;
     std::shared_ptr<ethdb::kv::StateCache> state_cache_;
     std::shared_ptr<mdbx::env_managed> chaindata_env_;
-    
+
     filter::FilterStorage& filter_storage_;
 
     WaitMode wait_mode_;

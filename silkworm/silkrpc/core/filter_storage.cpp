@@ -23,7 +23,7 @@
 
 namespace silkrpc::filter {
 
-std::mt19937_64 random_engine{std::random_device{}()};
+std::mt19937_64 random_engine {std::random_device {}() };
 Generator default_generator = []() {return random_engine();};
 
 FilterStorage::FilterStorage(std::size_t max_size, double filter_duration) :
@@ -41,7 +41,7 @@ std::optional<std::string> FilterStorage::add_filter(const Filter& filter) {
 
     if (storage_.size() >= max_size_) {
         SILKRPC_INFO << "No room avaliable in storage, max size " << max_size_ << " reached" << std::endl << std::flush;
-        return std::nullopt; 
+        return std::nullopt;
     }
 
     const auto now = std::chrono::system_clock::now();
@@ -58,7 +58,7 @@ std::optional<std::string> FilterStorage::add_filter(const Filter& filter) {
     }
     if (!slot_found) {
         SILKRPC_INFO << "Unable to generate a new filter_id without clashing" << std::endl << std::flush;
-        return std::nullopt; 
+        return std::nullopt;
     }
 
     storage_.emplace(filter_id, entry);
@@ -110,11 +110,4 @@ void FilterStorage::clean_up() {
         }
     }
 }
-
-// std::string FilterStorage::generate_id() {
-//     std::stringstream stream;
-//     stream << std::hex << random_engine();
-    
-//     return stream.str();
-// }
 } // namespace silkrpc::filter
