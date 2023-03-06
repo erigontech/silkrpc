@@ -60,7 +60,7 @@ public:
 
 private:
     uint32_t cursor_id_;
-    silkworm::db::Cursor db_cursor_;
+    silkworm::db::PooledCursor db_cursor_;
     mdbx::txn_managed& read_only_txn_;
 };
 
