@@ -37,6 +37,7 @@
 #include <silkworm/silkrpc/ethbackend/backend.hpp>
 #include <silkworm/silkrpc/ethdb/database.hpp>
 #include <silkworm/silkrpc/ethdb/transaction.hpp>
+#include <silkworm/silkrpc/ethdb/transaction_database.hpp>
 #include <silkworm/silkrpc/types/filter.hpp>
 #include <silkworm/silkrpc/types/log.hpp>
 #include <silkworm/silkrpc/types/receipt.hpp>
@@ -114,8 +115,11 @@ protected:
     boost::asio::awaitable<roaring::Roaring> get_topics_bitmap(core::rawdb::DatabaseReader& db_reader, FilterTopics& topics, uint64_t start, uint64_t end);
     boost::asio::awaitable<roaring::Roaring> get_addresses_bitmap(core::rawdb::DatabaseReader& db_reader, FilterAddresses& addresses, uint64_t start, uint64_t end);
 
-    boost::asio::awaitable<void> get_logs(std::uint32_t id, Filter& filter, nlohmann::json& reply);
-    std::vector<Log> filter_logs(std::vector<Log>& logs, const Filter& filter);
+    boost::asio::awaitable<void> get_logs(ethdb::TransactionDatabase& tx_database, std::uint64_t start, std::uint64_t end,
+        FilterAddresses& addresses, FilterTopics& topics, std::vector<Log>& logs);
+    std::vector<Log> filter_logs(std::vector<Log>& logs, FilterAddresses& addresses, FilterTopics& topics);
+    // boost::asio::awaitable<void> get_logs(Transaction& tx, std::uint32_t id, Filter& filter, nlohmann::json& reply);
+    // std::vector<Log> filter_logs(std::vector<Log>& logs, const Filter& filter);
 
     Context& context_;
     std::shared_ptr<BlockCache>& block_cache_;

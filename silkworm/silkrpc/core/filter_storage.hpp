@@ -28,17 +28,27 @@
 
 namespace silkrpc::filter {
 
+enum FilterType {
+    logs,
+    pending_transactions,
+    block
+};
+
 struct FilterEntry {
-    std::chrono::system_clock::time_point last_access;
+    void renew() {last_access = std::chrono::system_clock::now();}
+    std::chrono::duration<double> age() { return std::chrono::system_clock::now() - last_access;}
+
     Filter filter;
+    FilterType type = FilterType::logs;
+    std::chrono::system_clock::time_point last_access = std::chrono::system_clock::now();
 };
 
 typedef std::function<std::uint64_t()> Generator;
 
 class FilterStorage {
 public:
-    explicit FilterStorage(std::size_t max_size, double filter_duration = DEFAULT_FILTER_DURATION);
-    explicit FilterStorage(Generator& generator, std::size_t max_size, double filter_duration = DEFAULT_FILTER_DURATION);
+    explicit FilterStorage(std::size_t max_size, double max_filter_age = DEFAULT_MAX_FILTER_AGE);
+    explicit FilterStorage(Generator& generator, std::size_t max_size, double max_filter_age = DEFAULT_MAX_FILTER_AGE);
 
     FilterStorage(const FilterStorage&) = delete;
     FilterStorage& operator=(const FilterStorage&) = delete;
@@ -52,12 +62,12 @@ public:
     }
 
 private:
-    static const std::size_t DEFAULT_FILTER_DURATION = 0x800;
+    static const std::size_t DEFAULT_MAX_FILTER_AGE = 0x800;
 
     void clean_up();
 
     std::size_t max_size_;
-    std::chrono::duration<double> filter_duration_;
+    std::chrono::duration<double> max_filter_age_;
     std::mutex mutex_;
     std::map<std::string, FilterEntry> storage_;
     // std::default_random_engine random_engine{std::random_device{}()};

@@ -16,8 +16,6 @@
 
 #include "filter_storage.hpp"
 
-// #include <sstream>
-
 #include <silkworm/silkrpc/common/log.hpp>
 #include <silkworm/silkrpc/json/types.hpp>
 
@@ -26,11 +24,11 @@ namespace silkrpc::filter {
 std::mt19937_64 random_engine {std::random_device {}() };
 Generator default_generator = []() {return random_engine();};
 
-FilterStorage::FilterStorage(std::size_t max_size, double filter_duration) :
-       generator_{default_generator}, max_size_{max_size}, filter_duration_{filter_duration} {}
+FilterStorage::FilterStorage(std::size_t max_size, double max_filter_age) :
+       generator_{default_generator}, max_size_{max_size}, max_filter_age_{max_filter_age} {}
 
-FilterStorage::FilterStorage(Generator& generator, std::size_t max_size, double filter_duration) :
-       generator_{generator}, max_size_{max_size}, filter_duration_{filter_duration} {}
+FilterStorage::FilterStorage(Generator& generator, std::size_t max_size, double max_filter_age) :
+       generator_{generator}, max_size_{max_size}, max_filter_age_{max_filter_age} {}
 
 std::optional<std::string> FilterStorage::add_filter(const Filter& filter) {
     std::lock_guard<std::mutex> lock (mutex_);
@@ -44,8 +42,8 @@ std::optional<std::string> FilterStorage::add_filter(const Filter& filter) {
         return std::nullopt;
     }
 
-    const auto now = std::chrono::system_clock::now();
-    FilterEntry entry{now, filter};
+    // const auto now = std::chrono::system_clock::now();
+    FilterEntry entry{filter};
     std::string filter_id;
     bool slot_found;
     std::size_t count{0};
@@ -80,29 +78,29 @@ bool FilterStorage::remove_filter(const std::string& filter_id) {
 std::optional<Filter> FilterStorage::get_filter(const std::string& filter_id) {
     std::lock_guard<std::mutex> lock (mutex_);
 
+    clean_up();
+
     const auto itr = storage_.find(filter_id);
     if (itr == storage_.end()) {
         return std::nullopt;
     }
 
-    const auto now = std::chrono::system_clock::now();
-    std::chrono::duration<double> diff = now - itr->second.last_access;
-    if (diff > filter_duration_) {
+    auto age = itr->second.age();
+    if (age > max_filter_age_) {
         SILKRPC_INFO << "Filter  " << filter_id << " exhausted: removed" << std::endl << std::flush;
         storage_.erase(itr);
         return std::nullopt;
     }
 
-    itr->second.last_access = now;
+    itr->second.renew();
     return itr->second.filter;
 }
 
 void FilterStorage::clean_up() {
-    const auto now = std::chrono::system_clock::now();
     auto itr = storage_.begin();
     while (itr != storage_.end()) {
-        std::chrono::duration<double> diff = now - itr->second.last_access;
-        if (diff > filter_duration_) {
+        auto age = itr->second.age();
+        if (age > max_filter_age_) {
             SILKRPC_INFO << "Filter  " << itr->first << " exhausted: removed" << std::endl << std::flush;
             itr = storage_.erase(itr);
         } else {
