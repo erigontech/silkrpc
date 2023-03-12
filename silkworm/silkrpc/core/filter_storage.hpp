@@ -1,5 +1,5 @@
 /*
-   Copyright 2020 The Silkrpc Authors
+   Copyright 2023 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -18,13 +18,16 @@
 
 #include <chrono>
 #include <functional>
+#include <limits>
 #include <map>
 #include <mutex>
 #include <random>
 #include <sstream>
 #include <string>
+#include <vector>
 
 #include <silkworm/silkrpc/types/filter.hpp>
+#include <silkworm/silkrpc/types/log.hpp>
 
 namespace silkrpc::filter {
 
@@ -34,12 +37,18 @@ enum FilterType {
     block
 };
 
+struct StoredFilter: public Filter {
+    FilterType type = FilterType::logs;
+    uint64_t start = std::numeric_limits<std::uint64_t>::max();
+    uint64_t end = std::numeric_limits<std::uint64_t>::max();
+    std::vector<Log> logs;
+};
+
 struct FilterEntry {
     void renew() {last_access = std::chrono::system_clock::now();}
     std::chrono::duration<double> age() { return std::chrono::system_clock::now() - last_access;}
 
-    Filter filter;
-    FilterType type = FilterType::logs;
+    StoredFilter filter;
     std::chrono::system_clock::time_point last_access = std::chrono::system_clock::now();
 };
 
@@ -53,9 +62,9 @@ public:
     FilterStorage(const FilterStorage&) = delete;
     FilterStorage& operator=(const FilterStorage&) = delete;
 
-    std::optional<std::string> add_filter(const Filter& filter);
+    std::optional<std::string> add_filter(const StoredFilter& filter);
     bool remove_filter(const std::string& filter_id);
-    std::optional<Filter> get_filter(const std::string& filter_id);
+    std::optional<std::reference_wrapper<StoredFilter>> get_filter(const std::string& filter_id);
 
     auto size() const {
         return storage_.size();

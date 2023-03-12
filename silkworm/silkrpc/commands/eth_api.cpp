@@ -52,7 +52,6 @@
 #include <silkworm/silkrpc/ethdb/bitmap.hpp>
 #include <silkworm/silkrpc/ethdb/cbor.hpp>
 #include <silkworm/silkrpc/ethdb/tables.hpp>
-// #include <silkworm/silkrpc/ethdb/transaction_database.hpp>
 #include <silkworm/silkrpc/ethdb/kv/cached_database.hpp>
 #include <silkworm/silkrpc/json/types.hpp>
 #include <silkworm/silkrpc/stagedsync/stages.hpp>
@@ -62,6 +61,37 @@
 #include <silkworm/silkrpc/types/transaction.hpp>
 
 namespace silkrpc::commands {
+
+boost::asio::awaitable<std::pair<uint64_t, uint64_t>> get_block_numbers(const Filter& filter, const core::rawdb::DatabaseReader& reader) {
+    uint64_t start{}, end{};
+    if (filter.block_hash.has_value()) {
+        auto block_hash_bytes = silkworm::from_hex(filter.block_hash.value());
+        if (!block_hash_bytes.has_value()) {
+            start = end = std::numeric_limits<std::uint64_t>::max();
+        } else {
+            auto block_hash = silkworm::to_bytes32(block_hash_bytes.value());
+            auto block_number = co_await core::rawdb::read_header_number(reader, block_hash);
+            start = end = block_number;
+        }
+    } else {
+        uint64_t last_executed_block_number = std::numeric_limits<std::uint64_t>::max();
+        if (filter.from_block.has_value()) {
+            start = co_await core::get_block_number(filter.from_block.value(), reader);
+        } else {
+            last_executed_block_number = co_await core::get_latest_executed_block_number(reader);
+            start = last_executed_block_number;
+        }
+        if (filter.to_block.has_value()) {
+            end = co_await core::get_block_number(filter.to_block.value(), reader);
+        } else {
+            if (last_executed_block_number == std::numeric_limits<std::uint64_t>::max()) {
+                last_executed_block_number = co_await core::get_latest_executed_block_number(reader);
+            }
+            end = last_executed_block_number;
+        }
+    }
+    co_return std::make_pair(start, end);
+}
 
 // https://eth.wiki/json-rpc/API#eth_blocknumber
 boost::asio::awaitable<void> EthereumRpcApi::handle_eth_block_number(const nlohmann::json& request, nlohmann::json& reply) {
@@ -1310,7 +1340,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_new_filter(const nlohman
         reply = make_json_error(request["id"], 100, error_msg);
         co_return;
     }
-    auto filter = params[0].get<Filter>();
+    auto filter = params[0].get<filter::StoredFilter>();
     SILKRPC_DEBUG << "filter: " << filter << "\n";
 
     if ((filter.from_block && filter.from_block.value() == core::kPendingBlockId) ||
@@ -1319,14 +1349,59 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_new_filter(const nlohman
         co_return;
     }
 
-    const auto filter_id = filter_storage_.add_filter(filter);
-    SILKRPC_INFO << "Added a new filter, storage size: " << filter_storage_.size() << "\n";
+    // const auto filter_id = filter_storage_.add_filter(filter);
+    // SILKRPC_INFO << "Added a new filter, storage size: " << filter_storage_.size() << "\n";
 
-    if (filter_id) {
-        reply = make_json_content(request["id"], filter_id.value());
-    } else {
-        reply = make_json_error(request["id"], -32000, "TODO");
+    // if (filter_id) {
+    //     reply = make_json_content(request["id"], filter_id.value());
+    // } else {
+    //     reply = make_json_error(request["id"], -32000, "TODO");
+    // }
+
+    auto tx = co_await database_->begin();
+
+    try {
+        ethdb::TransactionDatabase tx_database{*tx};
+
+        const auto [start, end] = co_await get_block_numbers(filter, tx_database);
+        filter.start = start;
+        filter.end = end;
+        // uint64_t last_executed_block_number = std::numeric_limits<std::uint64_t>::max();
+        // if (filter.from_block.has_value()) {
+        //     filter.start = co_await core::get_block_number(filter.from_block.value(), tx_database);
+        // } else {
+        //     last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
+        //     filter.start = last_executed_block_number;
+        // }
+        // if (filter.to_block.has_value()) {
+        //     filter.end = co_await core::get_block_number(filter.to_block.value(), tx_database);
+        // } else {
+        //     if (last_executed_block_number == std::numeric_limits<std::uint64_t>::max()) {
+        //         last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
+        //     }
+        //     filter.end = last_executed_block_number;
+        // }
+
+        const auto filter_id = filter_storage_.add_filter(filter);
+        SILKRPC_INFO << "Added a new filter, storage size: " << filter_storage_.size() << "\n";
+
+        if (filter_id) {
+            reply = make_json_content(request["id"], filter_id.value());
+        } else {
+            reply = make_json_error(request["id"], -32000, "TODO");
+        }
+    } catch (const std::invalid_argument& iv) {
+        SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_content(request["id"], {});
+    } catch (const std::exception& e) {
+        SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, e.what());
+    } catch (...) {
+        SILKRPC_ERROR << "unexpected exception processing request: " << request.dump() << "\n";
+        reply = make_json_error(request["id"], 100, "unexpected exception");
     }
+
+    co_await tx->close(); // RAII not (yet) available with coroutines
 
     co_return;
 }
@@ -1389,41 +1464,49 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_logs(const nl
 
     if (!filter_opt) {
         reply = make_json_error(request["id"], -32000, "filter not found");
-
         co_return;
     }
 
-    auto filter = filter_opt.value();
+    auto& filter = filter_opt.value().get();
 
     auto tx = co_await database_->begin();
 
-    std::vector<Log> logs;
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        uint64_t start{}, end{};
-        uint64_t last_executed_block_number = std::numeric_limits<std::uint64_t>::max();
-        if (filter.from_block.has_value()) {
-            start = co_await core::get_block_number(filter.from_block.value(), tx_database);
-        } else {
-            last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
-            start = last_executed_block_number;
-        }
-        if (filter.to_block.has_value()) {
-            end = co_await core::get_block_number(filter.to_block.value(), tx_database);
-        } else {
-            if (last_executed_block_number == std::numeric_limits<std::uint64_t>::max()) {
-                last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
-            }
-            end = last_executed_block_number;
-        }
+        const auto [start, end] = co_await get_block_numbers(filter, tx_database);
 
-        co_await get_logs(tx_database, start, end, filter.addresses, filter.topics, logs);
+        // uint64_t start{}, end{};
+        // uint64_t last_executed_block_number = std::numeric_limits<std::uint64_t>::max();
+        // if (filter.from_block.has_value()) {
+        //     start = co_await core::get_block_number(filter.from_block.value(), tx_database);
+        // } else {
+        //     last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
+        //     start = last_executed_block_number;
+        // }
+        // if (filter.to_block.has_value()) {
+        //     end = co_await core::get_block_number(filter.to_block.value(), tx_database);
+        // } else {
+        //     if (last_executed_block_number == std::numeric_limits<std::uint64_t>::max()) {
+        //         last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
+        //     }
+        //     end = last_executed_block_number;
+        // }
+        if (filter.start == start && filter.end != end) {
+            co_await get_logs(tx_database, start, end, filter.addresses, filter.topics, filter.logs);
+        } else if (filter.start != start && filter.end != end) {
+            filter.logs.clear();
+            co_await get_logs(tx_database, start, end, filter.addresses, filter.topics, filter.logs);
+        } else {
+            co_await get_logs(tx_database, start, end, filter.addresses, filter.topics, filter.logs);
+        }
+        filter.start = start;
+        filter.end = end;
 
-        reply = make_json_content(request["id"], logs);
+        reply = make_json_content(request["id"], filter.logs);
     } catch (const std::invalid_argument& iv) {
         SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_content(request["id"], logs);
+        reply = make_json_content(request["id"], {});
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
@@ -1529,41 +1612,49 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann:
 
     auto tx = co_await database_->begin();
 
-    std::vector<Log> logs;
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        uint64_t start{}, end{};
-        if (filter.block_hash.has_value()) {
-            auto block_hash_bytes = silkworm::from_hex(filter.block_hash.value());
-            if (!block_hash_bytes.has_value()) {
-                auto error_msg = "invalid eth_getLogs filter block_hash: " + filter.block_hash.value();
-                SILKRPC_ERROR << error_msg << "\n";
-                reply = make_json_error(request["id"], 100, error_msg);
-                co_await tx->close(); // RAII not (yet) available with coroutines
-                co_return;
-            }
-            auto block_hash = silkworm::to_bytes32(block_hash_bytes.value());
-            auto block_number = co_await core::rawdb::read_header_number(tx_database, block_hash);
-            start = end = block_number;
-        } else {
-            uint64_t last_executed_block_number = std::numeric_limits<std::uint64_t>::max();
-            if (filter.from_block.has_value()) {
-               start = co_await core::get_block_number(filter.from_block.value(), tx_database);
-            } else {
-               last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
-               start = last_executed_block_number;
-            }
-            if (filter.to_block.has_value()) {
-               end = co_await core::get_block_number(filter.to_block.value(), tx_database);
-            } else {
-               if (last_executed_block_number == std::numeric_limits<std::uint64_t>::max()) {
-                  last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
-               }
-               end = last_executed_block_number;
-            }
+        const auto [start, end] = co_await get_block_numbers(filter, tx_database);
+        if (start == end && start == std::numeric_limits<std::uint64_t>::max()) {
+            auto error_msg = "invalid eth_getLogs filter block_hash: " + filter.block_hash.value();
+            SILKRPC_ERROR << error_msg << "\n";
+            reply = make_json_error(request["id"], 100, error_msg);
+            co_await tx->close(); // RAII not (yet) available with coroutines
+            co_return;
         }
+        // uint64_t start{}, end{};
+        // if (filter.block_hash.has_value()) {
+        //     auto block_hash_bytes = silkworm::from_hex(filter.block_hash.value());
+        //     if (!block_hash_bytes.has_value()) {
+        //         auto error_msg = "invalid eth_getLogs filter block_hash: " + filter.block_hash.value();
+        //         SILKRPC_ERROR << error_msg << "\n";
+        //         reply = make_json_error(request["id"], 100, error_msg);
+        //         co_await tx->close(); // RAII not (yet) available with coroutines
+        //         co_return;
+        //     }
+        //     auto block_hash = silkworm::to_bytes32(block_hash_bytes.value());
+        //     auto block_number = co_await core::rawdb::read_header_number(tx_database, block_hash);
+        //     start = end = block_number;
+        // } else {
+        //     uint64_t last_executed_block_number = std::numeric_limits<std::uint64_t>::max();
+        //     if (filter.from_block.has_value()) {
+        //        start = co_await core::get_block_number(filter.from_block.value(), tx_database);
+        //     } else {
+        //        last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
+        //        start = last_executed_block_number;
+        //     }
+        //     if (filter.to_block.has_value()) {
+        //        end = co_await core::get_block_number(filter.to_block.value(), tx_database);
+        //     } else {
+        //        if (last_executed_block_number == std::numeric_limits<std::uint64_t>::max()) {
+        //           last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
+        //        }
+        //        end = last_executed_block_number;
+        //     }
+        // }
 
+        std::vector<Log> logs;
         co_await get_logs(tx_database, start, end, filter.addresses, filter.topics, logs);
 
         // SILKRPC_INFO << "start block: " << start << " end block: " << end << "\n";
@@ -1649,7 +1740,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_logs(const nlohmann:
         reply = make_json_content(request["id"], logs);
     } catch (const std::invalid_argument& iv) {
         SILKRPC_WARN << "invalid_argument: " << iv.what() << " processing request: " << request.dump() << "\n";
-        reply = make_json_content(request["id"], logs);
+        reply = make_json_content(request["id"], {});
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());

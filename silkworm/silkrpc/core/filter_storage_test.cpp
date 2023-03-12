@@ -1,5 +1,5 @@
 /*
-   Copyright 2021 The Silkrpc Authors
+   Copyright 2023 The Silkrpc Authors
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ using Catch::Matchers::Message;
 TEST_CASE("FilterStorage base") {
     FilterStorage filter_storage{3, 1};
     SECTION("adding 1 entry") {
-        Filter filter;
+        StoredFilter filter;
         const auto filter_id = filter_storage.add_filter(filter);
 
         CHECK(filter_id.has_value() == true);
@@ -50,14 +50,14 @@ TEST_CASE("FilterStorage base") {
         CHECK(result == json);
     }
     SECTION("removing 1 entry") {
-        Filter filter;
+        StoredFilter filter;
         const auto filter_id = filter_storage.add_filter(filter);
         auto result = filter_storage.remove_filter(filter_id.value());
         CHECK(result == true);
         CHECK(filter_storage.size() == 0);
     }
     SECTION("adding 2 entries") {
-        Filter filter;
+        StoredFilter filter;
         const auto filter_id_1 = filter_storage.add_filter(filter);
         const auto filter_id_2 = filter_storage.add_filter(filter);
 
@@ -67,7 +67,7 @@ TEST_CASE("FilterStorage base") {
         CHECK(filter_storage.size() == 2);
     }
     SECTION("adding 3 entries") {
-        Filter filter;
+        StoredFilter filter;
         filter_storage.add_filter(filter);
         filter_storage.add_filter(filter);
         const auto filter_id = filter_storage.add_filter(filter);
@@ -76,7 +76,7 @@ TEST_CASE("FilterStorage base") {
         CHECK(filter_storage.size() == 3);
     }
     SECTION("adding too many entries") {
-        Filter filter;
+        StoredFilter filter;
         filter_storage.add_filter(filter);
         filter_storage.add_filter(filter);
         filter_storage.add_filter(filter);
@@ -86,7 +86,7 @@ TEST_CASE("FilterStorage base") {
         CHECK(filter_storage.size() == 3);
     }
     SECTION("filter expires") {
-        Filter filter;
+        StoredFilter filter;
         const auto filter_id = filter_storage.add_filter(filter);
         std::this_thread::sleep_for(std::chrono::seconds(1));
         const auto filter_opt = filter_storage.get_filter(filter_id.value());
@@ -95,7 +95,7 @@ TEST_CASE("FilterStorage base") {
         CHECK(filter_storage.size() == 0);
     }
     SECTION("filters expire") {
-        Filter filter;
+        StoredFilter filter;
         filter_storage.add_filter(filter);
         filter_storage.add_filter(filter);
         filter_storage.add_filter(filter);
@@ -114,7 +114,7 @@ TEST_CASE("FilterStorage enhanced") {
 
     FilterStorage filter_storage{default_generator, 2 * max_keys, 1};
     SECTION("keys OK") {
-        Filter filter;
+        StoredFilter filter;
         filter_storage.add_filter(filter);
         filter_storage.add_filter(filter);
         const auto filter_id = filter_storage.add_filter(filter);
@@ -123,7 +123,7 @@ TEST_CASE("FilterStorage enhanced") {
         CHECK(filter_storage.size() == 3);
     }
     SECTION("no more keys") {
-        Filter filter;
+        StoredFilter filter;
         filter_storage.add_filter(filter);
         filter_storage.add_filter(filter);
         filter_storage.add_filter(filter);

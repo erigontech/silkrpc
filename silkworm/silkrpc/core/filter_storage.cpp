@@ -1,5 +1,5 @@
 /*
-    Copyright 2020 The Silkrpc Authors
+    Copyright 2023 The Silkrpc Authors
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ FilterStorage::FilterStorage(std::size_t max_size, double max_filter_age) :
 FilterStorage::FilterStorage(Generator& generator, std::size_t max_size, double max_filter_age) :
        generator_{generator}, max_size_{max_size}, max_filter_age_{max_filter_age} {}
 
-std::optional<std::string> FilterStorage::add_filter(const Filter& filter) {
+std::optional<std::string> FilterStorage::add_filter(const StoredFilter& filter) {
     std::lock_guard<std::mutex> lock (mutex_);
 
     if (storage_.size() >= max_size_) {
@@ -75,7 +75,7 @@ bool FilterStorage::remove_filter(const std::string& filter_id) {
     return true;
 }
 
-std::optional<Filter> FilterStorage::get_filter(const std::string& filter_id) {
+std::optional<std::reference_wrapper<StoredFilter>> FilterStorage::get_filter(const std::string& filter_id) {
     std::lock_guard<std::mutex> lock (mutex_);
 
     clean_up();
