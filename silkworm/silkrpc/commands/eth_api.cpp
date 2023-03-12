@@ -1473,11 +1473,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_uninstall_filter(const n
 
     SILKRPC_INFO << "Removing filter " << (success ? "succedeed" : "failed") << ", storage size: " << filter_storage_.size() << "\n";
 
-    if (success) {
-        reply = make_json_content(request["id"], success);
-    } else {
-        reply = make_json_error(request["id"], -32000, "filter not found");
-    }
+    reply = make_json_content(request["id"], success);
 
     co_return;
 }
