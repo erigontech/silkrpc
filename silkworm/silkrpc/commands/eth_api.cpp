@@ -1456,9 +1456,7 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_logs(const nl
         co_return;
     }
     auto filter_id = params[0].get<std::string>();
-    SILKRPC_DEBUG << "filter_id: " << filter_id << "\n";
-
-    SILKRPC_INFO << "storage size: " << filter_storage_.size() << "\n";
+    SILKRPC_INFO << "filter_id: " << filter_id << "\n";
 
     const auto filter_opt = filter_storage_.get_filter(filter_id);
 
@@ -1476,22 +1474,6 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_logs(const nl
 
         const auto [start, end] = co_await get_block_numbers(filter, tx_database);
 
-        // uint64_t start{}, end{};
-        // uint64_t last_executed_block_number = std::numeric_limits<std::uint64_t>::max();
-        // if (filter.from_block.has_value()) {
-        //     start = co_await core::get_block_number(filter.from_block.value(), tx_database);
-        // } else {
-        //     last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
-        //     start = last_executed_block_number;
-        // }
-        // if (filter.to_block.has_value()) {
-        //     end = co_await core::get_block_number(filter.to_block.value(), tx_database);
-        // } else {
-        //     if (last_executed_block_number == std::numeric_limits<std::uint64_t>::max()) {
-        //         last_executed_block_number = co_await core::get_latest_executed_block_number(tx_database);
-        //     }
-        //     end = last_executed_block_number;
-        // }
         if (filter.start == start && filter.end != end) {
             co_await get_logs(tx_database, start, end, filter.addresses, filter.topics, filter.logs);
         } else if (filter.start != start && filter.end != end) {
@@ -1522,12 +1504,44 @@ boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_logs(const nl
 
 // https://eth.wiki/json-rpc/API#eth_getfilterchanges
 boost::asio::awaitable<void> EthereumRpcApi::handle_eth_get_filter_changes(const nlohmann::json& request, nlohmann::json& reply) {
+    auto params = request["params"];
+    if (params.size() != 1) {
+        auto error_msg = "invalid eth_getFilterChanges params: " + params.dump();
+        SILKRPC_ERROR << error_msg << "\n";
+        reply = make_json_error(request["id"], 100, error_msg);
+        co_return;
+    }
+    auto filter_id = params[0].get<std::string>();
+    SILKRPC_INFO << "filter_id: " << filter_id << "\n";
+
+    const auto filter_opt = filter_storage_.get_filter(filter_id);
+
+    if (!filter_opt) {
+        reply = make_json_error(request["id"], -32000, "filter not found");
+        co_return;
+    }
+
+    auto& filter = filter_opt.value().get();
     auto tx = co_await database_->begin();
 
     try {
         ethdb::TransactionDatabase tx_database{*tx};
 
-        reply = make_json_content(request["id"], to_quantity(0));
+        const auto [start, end] = co_await get_block_numbers(filter, tx_database);
+
+        std::vector<Log> logs;
+        if (filter.start == start && filter.end != end) {
+            co_await get_logs(tx_database, start, end, filter.addresses, filter.topics, logs);
+            filter.logs.insert(filter.logs.end(), logs.begin(), logs.end());
+        } else if (filter.start != start && filter.end != end) {
+            co_await get_logs(tx_database, start, end, filter.addresses, filter.topics, logs);
+            filter.logs.clear();
+            filter.logs.insert(filter.logs.end(), logs.begin(), logs.end());
+        }
+        filter.start = start;
+        filter.end = end;
+
+        reply = make_json_content(request["id"], logs);
     } catch (const std::exception& e) {
         SILKRPC_ERROR << "exception: " << e.what() << " processing request: " << request.dump() << "\n";
         reply = make_json_error(request["id"], 100, e.what());
