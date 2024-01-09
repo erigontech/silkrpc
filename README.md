@@ -1,4 +1,4 @@
-# SilkRPC Daemon
+# :no_entry_sign: SilkRPC Daemon has been moved into [Silkworm](https://github.com/erigontech/silkworm) :no_entry_sign:
 
 C++ implementation of the daemon component exposing the [Ethereum JSON RPC protocol](https://eth.wiki/json-rpc/API) within the [Erigon](https://github.com/ledgerwatch/erigon) architecture.
 
